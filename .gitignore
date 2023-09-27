@@ -1,4 +1,3 @@
-.vs
-.vscode
-/Out
-/Source/Plugin
+.vs*/*
+!/.vscode/launch.json
+/Out/**
