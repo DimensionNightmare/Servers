@@ -4,7 +4,7 @@
 
 using namespace hv;
 
-int main()
+int main2131()
 {
     HttpService router;
 
@@ -88,4 +88,6 @@ int main()
     server.start();
     while (getchar() != '\n');
         hv::async::cleanup();
+
+    return 0;
 }

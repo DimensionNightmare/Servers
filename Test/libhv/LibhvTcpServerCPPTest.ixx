@@ -3,7 +3,7 @@
 
 using namespace hv;
 
-int main1() {
+int main() {
     hlog_set_level(LOG_LEVEL_DEBUG);
 
     TcpServer srv;
@@ -28,8 +28,8 @@ int main1() {
     srv.setThreadNum(4);
 
     srv.start();
-
     std::string str;
+  
     while (std::getline(std::cin, str)) {
         if (str == "close") {
             srv.closesocket();

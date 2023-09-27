@@ -11,28 +11,34 @@ endif()
 
 project (DimensionNightmare)
 
-# 库目录和库头文件
-include_directories(Source/Plugin/libhv/include)
-link_directories(Source/Plugin/libhv/lib)
-
 # 添加库文件的define定义 防止出错
 add_compile_definitions(HV_STATICLIB)
 
+# 库目录和库头文件 Debug
+include_directories(../Environment/Install/libhv/Debug/include)
+link_directories(../Environment/Install/libhv/Debug/lib)
+include_directories(../Environment/Install/protobuf/Debug/include)
+set(PB_LIB_DIR ../Environment/Install/protobuf/Debug/lib)
+file(GLOB PB_LIB_FILES CONFIGURE_DEPENDS "${PB_LIB_DIR}/*.lib")
+
 # 将源代码添加到此项目的可执行文件。
 add_executable(DimensionNightmare)
-file(GLOB_RECURSE sources CONFIGURE_DEPENDS DimensionNightmare.ixx)
+file(GLOB_RECURSE sources CONFIGURE_DEPENDS DimensionNightmare.ixx Source/**)
 target_sources(DimensionNightmare PUBLIC ${sources})
 
 # 添加链接的库文件
 target_link_libraries(DimensionNightmare PRIVATE hv_static.lib)
 
 # 将源代码添加到此项目的可执行文件。
-add_executable(Test)
-file(GLOB_RECURSE sourcesTest CONFIGURE_DEPENDS "Test/*.ixx")
-target_sources(Test PUBLIC ${sourcesTest})
+add_executable(LibhvTest)
+file(GLOB_RECURSE srcLibhvTest CONFIGURE_DEPENDS "Test/libhv/*.ixx")
+target_sources(LibhvTest PUBLIC ${srcLibhvTest})
+target_link_libraries(LibhvTest PRIVATE hv_static.lib)
 
-# 添加链接的库文件
-target_link_libraries(Test PRIVATE hv_static.lib)
+add_executable(GrpcTest)
+file(GLOB_RECURSE srcGrpcTest CONFIGURE_DEPENDS "Test/grpc/*.ixx" "../Environment/GameConfig/Gen/Code/*.cc")
+target_sources(GrpcTest PUBLIC ${srcGrpcTest})
+target_link_libraries(GrpcTest PRIVATE ${PB_LIB_FILES})
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET DimensionNightmare PROPERTY CXX_STANDARD 20)
