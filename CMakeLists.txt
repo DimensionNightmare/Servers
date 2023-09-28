@@ -49,10 +49,10 @@ add_compile_definitions(DimensionNightmare HV_STATICLIB)
 target_link_libraries(DimensionNightmare PRIVATE hv_static.lib)
 
 # 将源代码添加到此项目的可执行文件。
-# add_executable(LibhvTest)
-# file(GLOB_RECURSE srcLibhvTest CONFIGURE_DEPENDS Test/libhv/*.ixx)
-# target_sources(LibhvTest PUBLIC ${srcLibhvTest})
-# target_link_libraries(LibhvTest PRIVATE hv_static.lib)
+add_executable(LibhvTest)
+file(GLOB_RECURSE srcLibhvTest CONFIGURE_DEPENDS Test/libhv/*.ixx)
+target_sources(LibhvTest PUBLIC ${srcLibhvTest})
+target_link_libraries(LibhvTest PRIVATE hv_static.lib)
 
 # add_executable(GrpcTest)
 # file(GLOB_RECURSE srcGrpcTest CONFIGURE_DEPENDS Test/grpc/*.ixx ../Environment/GameConfig/Gen/Code/*.cc)

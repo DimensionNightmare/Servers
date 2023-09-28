@@ -3,7 +3,7 @@
 
 using namespace hv;
 
-int main() {
+int main1234() {
     hlog_set_level(LOG_LEVEL_DEBUG);
 
     TcpServer srv;

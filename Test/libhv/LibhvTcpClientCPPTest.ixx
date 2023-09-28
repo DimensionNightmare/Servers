@@ -4,8 +4,9 @@
 
 using namespace hv;
 
-int main3(int port = 555){
+int main(){
     TcpClient cli;
+	int port = 555;
     int connfd = cli.createsocket(port);
     if (connfd < 0) {
         return -20;
