@@ -1,20 +1,27 @@
-﻿#include "TestExport.h"
-
 #include <iostream>
-#include "hv/hv.h"
 #include "hv/HttpServer.h"
-#include "hv/hthread.h"    // import hv_gettid
-#include "hv/hasync.h"     // import hv::async
+
+#ifdef HOTRELOAD_BUILD
+#define MY_LIBRARY_API __declspec(dllexport)
+#else
+#define MY_LIBRARY_API __declspec(dllimport)
+#endif
 
 using namespace hv;
 
-static HttpServer*  server;
 
-int ServerStart()
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+MY_LIBRARY_API int ServerInit(HttpServer*  server, HttpService* router);
+
+#ifdef __cplusplus
+}
+#endif
+
+int ServerInit(HttpServer*  server, HttpService* router)
 {
-	hlog_disable();
-	HttpService* router = new HttpService();
-
     /* Static file service */
     // curl -v http://ip:port/
     router->Static("/", "./html");
@@ -67,22 +74,6 @@ int ServerStart()
         return ctx->send(resp.dump(2));
     });
 
-    // curl -v http://ip:port/async
-    router->GET("/async", [](const HttpRequestPtr& req, const HttpResponseWriterPtr& writer) {
-        writer->Begin();
-        writer->WriteHeader("X-Response-tid", hv_gettid());
-        writer->WriteHeader("Content-Type", "text/plain");
-        writer->WriteBody("This is an async response.\n");
-        writer->End();
-    });
-
-    // middleware
-    router->AllowCORS();
-    router->Use([](HttpRequest* req, HttpResponse* resp) {
-        resp->SetHeader("X-Request-tid", hv::to_string(hv_gettid()));
-        return HTTP_STATUS_NEXT;
-    });
-
 	if(server == nullptr)
     	server = new HttpServer();
 
@@ -96,16 +87,4 @@ int ServerStart()
 
     server->start();
     return 0;
-}
-
-int ServerStop()
-{
-	if(server != nullptr)
-	{
-		server->stop();
-	}
-	server = nullptr;
-	
-	hv::async::cleanup();
-	return 0;
 }

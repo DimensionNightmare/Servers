@@ -1,6 +1,6 @@
 module;
-import DNTcpServer;
 export module SessionServer;
+import DNTcpServer;
 
 
 export class SessionServer : DNTcpServer

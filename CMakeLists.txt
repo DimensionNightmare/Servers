@@ -9,40 +9,43 @@ if (POLICY CMP0141)
   set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
 endif()
 
-set(CMAKE_CXX_STANDARD 20)
-
-# 添加库文件的define定义 防止出错
-add_compile_definitions(HV_STATICLIB)
-
 # 库目录和库头文件 Debug
 include_directories(../Environment/Install/libhv/Debug/include)
-include_directories(../Environment/Install/protobuf/Debug/include)
 link_directories(../Environment/Install/libhv/Debug/lib)
+include_directories(../Environment/Install/protobuf/Debug/include)
 set(PB_LIB_DIR ../Environment/Install/protobuf/Debug/lib)
-file(GLOB PB_LIB_FILES CONFIGURE_DEPENDS ${PB_LIB_DIR}/*.lib)
+
+# file(GLOB PB_LIB_FILES CONFIGURE_DEPENDS ${PB_LIB_DIR}/*.lib)
 
 
-file(GLOB_RECURSE srcDll CONFIGURE_DEPENDS 
-	Source/Servers/base/*.ixx
-	Source/Servers/*.ixx
-	Source/*.cpp
+file(GLOB_RECURSE srcHotReload CONFIGURE_DEPENDS 
+	Source/*
 )
-project(DimensionNightmareLib)
-add_library( DimensionNightmareLib SHARED ${srcDll} )
-target_compile_definitions(DimensionNightmareLib PRIVATE MY_LIBRARY_EXPORTS)
-target_link_libraries(DimensionNightmareLib PRIVATE hv_static.lib)
-# target_compile_definitions( DimensionNightmareLib PRIVATE MY_LIBRARY_EXPORTS)
-#target_include_directories( DimensionNightmareLib PUBLIC ${PROJECT_SOURCE_DIR}/Source)
-#install(TARGETS DimensionNightmareLib DESTINATION ${EXECUTABLE_OUTPUT_PATH})
+
+# 添加库文件的define定义 防止出错
+project (HotReload)
+add_library( HotReload SHARED ${srcHotReload} )
+add_compile_definitions(HotReload PRIVATE HV_STATICLIB)
+target_compile_definitions(HotReload PRIVATE HOTRELOAD_BUILD)
+target_link_libraries(HotReload PRIVATE hv_static.lib)
+#target_include_directories( HotReload PUBLIC ${PROJECT_SOURCE_DIR}/Source)
+#install(TARGETS HotReload DESTINATION ${EXECUTABLE_OUTPUT_PATH})
+
+if (CMAKE_VERSION VERSION_GREATER 3.12)
+  set_property(TARGET HotReload PROPERTY CXX_STANDARD 20)
+endif()
 
 
 # DimensionNightmare
 project (DimensionNightmare)
 add_executable(DimensionNightmare)
-file(GLOB_RECURSE srcProject CONFIGURE_DEPENDS 
-	Source/**
-)
+# file(GLOB libDir CONFIGURE_DEPENDS 
+# 	${EXECUTABLE_OUTPUT_PATH}/HotReload.lib
+#   ${EXECUTABLE_OUTPUT_PATH}/HotReload.dll
+# )
+
 target_sources(DimensionNightmare PUBLIC ${PROJECT_SOURCE_DIR}/DimensionNightmare.ixx )
+add_compile_definitions(DimensionNightmare HV_STATICLIB)
 target_link_libraries(DimensionNightmare PRIVATE hv_static.lib)
 
 # 将源代码添加到此项目的可执行文件。
