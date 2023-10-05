@@ -26,9 +26,9 @@ int ServerInit(TcpServer&  server)
     server.onConnection = [](const SocketChannelPtr& channel) {
         std::string peeraddr = channel->peeraddr();
         if (channel->isConnected()) {
-            printf("%s connected! connfdasdas=%d id=%d \n", peeraddr.c_str(), channel->fd(), channel->id());
+            printf("%s connected! connfd=%d id=%d \n", peeraddr.c_str(), channel->fd(), channel->id());
         } else {
-            printf("%s disconnected! connfdasdsad=%d id=%d \n", peeraddr.c_str(), channel->fd(), channel->id());
+            printf("%s disconnected! connfd=%d id=%d \n", peeraddr.c_str(), channel->fd(), channel->id());
         }
     };
     server.onMessage = [](const SocketChannelPtr& channel, Buffer* buf) {

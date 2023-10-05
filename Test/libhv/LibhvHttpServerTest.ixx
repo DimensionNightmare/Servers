@@ -1,4 +1,4 @@
-﻿#include "hv/HttpServer.h"
+#include "hv/HttpServer.h"
 #include "hv/hthread.h"    // import hv_gettid
 #include "hv/hasync.h"     // import hv::async
 

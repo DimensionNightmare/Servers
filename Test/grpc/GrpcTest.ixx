@@ -1,4 +1,4 @@
-﻿#include "../../../Environment/GameConfig/Gen/Code/schema.pb.h"
+#include "../../../Environment/GameConfig/Gen/Code/schema.pb.h"
 #include <fstream>
 
 #include "google/protobuf/io/coded_stream.h"
@@ -7,6 +7,8 @@ using namespace google::protobuf::io;
 
 #include "google/protobuf/util/json_util.h"
 using namespace google::protobuf::util;
+
+#include "google/protobuf/message.h"
 
 int main()
 {
@@ -26,7 +28,23 @@ int main()
 				MessageToJsonString(one, &str);
 				std::cout <<  str << std::endl << std::endl;
 			}
-			
+
+			auto res = table->Get(0);
+			int size = res.ByteSize();
+			google::protobuf::Any toMsg;
+			toMsg.PackFrom(res);
+			std::string data;
+			toMsg.SerializeToString(&data);
+
+			google::protobuf::Any anyMsg;
+			anyMsg.ParseFromString(data);
+			int size1 = anyMsg.ByteSize();
+			if(anyMsg.Is<GCfg::WeaponInfo>())
+			{
+				GCfg::WeaponInfo item;
+				anyMsg.UnpackTo(&item);
+
+			}
 		}
 		else
 		{
