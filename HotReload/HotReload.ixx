@@ -1,5 +1,12 @@
 #include <iostream>
-#include "hv/TcpServer.h"
+#include <codecvt>
+
+#include "hv/Channel.h"
+#include "hv/hloop.h"
+#include "schema.pb.h"
+#include "google/protobuf/any.pb.h"
+
+import BaseServer;
 
 #ifdef HOTRELOAD_BUILD
 #define HOTRELOAD __declspec(dllexport)
@@ -8,38 +15,65 @@
 #endif
 
 using namespace hv;
-
+using namespace std;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-HOTRELOAD int ServerInit(TcpServer&  server);
-HOTRELOAD int ServerUnload(TcpServer&  server);
+HOTRELOAD int ServerInit(BaseServer&  server);
+HOTRELOAD int ServerUnload(BaseServer&  server);
 
 #ifdef __cplusplus
 }
 #endif
 
-int ServerInit(TcpServer&  server)
+int ServerInit(BaseServer&  server)
 {
-    server.onConnection = [](const SocketChannelPtr& channel) {
-        std::string peeraddr = channel->peeraddr();
+    static int headLen = 0;
+    if(server.unpack_setting)
+    {
+        headLen = server.unpack_setting->body_offset;
+    }
+
+    server.onConnection = [](const SocketChannelPtr& channel) 
+    {
+        string peeraddr = channel->peeraddr();
         if (channel->isConnected()) {
             printf("%s connected! connfd=%d id=%d \n", peeraddr.c_str(), channel->fd(), channel->id());
         } else {
             printf("%s disconnected! connfd=%d id=%d \n", peeraddr.c_str(), channel->fd(), channel->id());
         }
     };
-    server.onMessage = [](const SocketChannelPtr& channel, Buffer* buf) {
-        // echo
-        printf("< %.*s\n", (int)buf->size(), (char*)buf->data());
+
+    server.onMessage = [](const SocketChannelPtr& channel, Buffer* buf) 
+    {
+        int msgSize = (int)buf->size() - headLen;
+        assert(msgSize > 0);
+        unsigned char* pData = (unsigned char*)buf->data() + headLen;
+
+        google::protobuf::Any msg;
+        if(msg.ParseFromArray(pData, msgSize))
+        {
+            if(msg.Is<GCfg::WeaponInfo>())
+            {
+                GCfg::WeaponInfo weaponInfo;
+                msg.UnpackTo(&weaponInfo);
+                static wstring_convert<codecvt_utf8<wchar_t>> converter;
+                wstring wideString = converter.from_bytes(weaponInfo.Utf8DebugString());
+                wcout << wideString << endl;
+            }
+        }
+        else
+            printf("%d < %.*s\n", (int)buf->size(),(int)buf->size(), (char*)buf->data());
+        
         channel->write(buf);
     };
+
     return 0;
 }
 
-int ServerUnload(TcpServer&  server)
+int ServerUnload(BaseServer&  server)
 {
     server.onConnection = nullptr;
     server.onMessage = nullptr;

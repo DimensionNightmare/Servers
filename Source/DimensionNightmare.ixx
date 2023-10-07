@@ -1,21 +1,12 @@
 module;
-
-
-#include "hv/hv.h"
-#include "hv/TcpServer.h"
 #include "hv/hasync.h"
-#include "hv/hthread.h"
-
+#include "hv/EventLoop.h"
 #include <Windows.h>
-#include <future>
 #include <iostream>
-#include <string>
-#include <fstream>
 #include <filesystem>
+export module DimensionNightmare;
 
 import BaseServer;
-
-export module DimensionNightmare;
 
 using namespace hv;
 using namespace std;
@@ -81,11 +72,11 @@ struct HotReloadDll
 		return GetProcAddress(oLibHandle, funcName.c_str());
 	}
 
-	bool OnRegServer(TcpServer* server)
+	bool OnRegServer(BaseServer* server)
 	{
 		if(auto funtPtr = GetFuncPtr("ServerInit"))
 		{
-			typedef int (*ServerInit)(TcpServer&);
+			typedef int (*ServerInit)(BaseServer&);
 			auto func = reinterpret_cast<ServerInit>(funtPtr);
 			if(func)
 			{
@@ -97,11 +88,11 @@ struct HotReloadDll
 		return false;
 	}
 
-	bool OnUnregServer(TcpServer* server)
+	bool OnUnregServer(BaseServer* server)
 	{
 		if(auto funtPtr = GetFuncPtr("ServerUnload"))
 		{
-			typedef int (*ServerUnload)(TcpServer&);
+			typedef int (*ServerUnload)(BaseServer&);
 			auto func = reinterpret_cast<ServerUnload>(funtPtr);
 			if(func)
 			{
@@ -158,19 +149,23 @@ bool DimensionNightmare::Init()
 		return false;
 
 	pServer = new BaseServer();
+	int listenfd = pServer->createsocket(555);
+	if (listenfd < 0) {
+		cout << "createsocket error\n";
+		return false;
+	}
+	printf("pServer listen on port %d, listenfd=%d ...\n", 555, listenfd);
+	unpack_setting_t setting;
+	setting.mode = unpack_mode_e::UNPACK_BY_LENGTH_FIELD;
+	setting.length_field_coding = unpack_coding_e::ENCODE_BY_BIG_ENDIAN;
+	setting.body_offset = 4;
+	setting.length_field_bytes = 1;
+	setting.length_field_offset = 0;
+	pServer->setUnpack(&setting);
+	pServer->setThreadNum(4);
+
 	if(pHotDll->OnRegServer(pServer))
 	{
-		int listenfd = pServer->createsocket(555);
-		if (listenfd < 0) {
-			cout << "createsocket error\n";
-			return false;
-		}
-		unpack_setting_t setting;
-		setting.fixed_length = 30;
-		setting.mode = unpack_mode_e::UNPACK_BY_FIXED_LENGTH;
-		// pServer->setUnpack(&setting);
-		printf("pServer listen on port %d, listenfd=%d ...\n", 555, listenfd);
-		pServer->setThreadNum(4);
 		pServer->start();
 	}
 

@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <Windows.h>
+#include <locale>
 
 import DimensionNightmare;
 
@@ -8,6 +9,9 @@ using namespace std;
 
 int main(int argc, char** argv)
 {
+	// local output
+    std::locale::global(std::locale(""));
+
 	DimensionNightmare* dn = GetDimensionNightmare();
 	dn->Init();
 	
