@@ -1,19 +1,57 @@
-#include <iostream>
-#include <string>
+
 #include <Windows.h>
-#include <locale>
 
 import DimensionNightmare;
+import std.core;
 
 using namespace std;
 
+enum class LunchType
+{
+	GLOBAL,
+	PULL,
+};
+
 int main(int argc, char** argv)
 {
+	
 	// local output
-    std::locale::global(std::locale(""));
+    locale::global(locale(""));
+	
+	//lunch param
+	map<string,string> lunchParam;
+	{
+		string split;
+		vector<string> tokens;
+		for (int i = 1; i < argc; i++)
+		{
+			tokens.clear();
+			stringstream param(argv[i]);
+			
+			while (getline(param, split, '=')) 
+			{
+				tokens.push_back(split);
+			}
+
+			if(tokens.empty() || tokens.size() != 2)
+			{
+				cerr << "program lunch param error! Pos: " << i << endl;
+				return 0;
+			}
+
+			lunchParam.emplace(tokens.front(), tokens.back());
+		}
+	}
+
+	
+	if(lunchParam.count("lunchtype") == 0)
+	{
+
+	}
 
 	DimensionNightmare* dn = GetDimensionNightmare();
-	dn->Init();
+	if(!dn->Init(lunchParam))
+		return 0;
 	
 	auto CtrlHandler = [](DWORD signal) -> BOOL{
 		cout << "CtrlHandler Tirrger...";

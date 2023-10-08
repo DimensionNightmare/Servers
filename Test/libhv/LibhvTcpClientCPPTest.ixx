@@ -4,7 +4,7 @@
 #include <fstream>
 #include <sstream>
 
-#include "../../../Environment/GameConfig/Gen/Code/schema.pb.h"
+#include "schema.pb.h"
 #include "google/protobuf/io/coded_stream.h"
 #include "google/protobuf/io/zero_copy_stream_impl.h"
 using namespace google::protobuf::io;
@@ -16,6 +16,8 @@ using namespace google::protobuf::util;
 
 using namespace hv;
 using namespace std;
+
+import MessagePack;
 
 int main(){
     TcpClient cli;
@@ -46,6 +48,9 @@ int main(){
     unsigned char* pSize = (unsigned char*)&dataSize;
     string lenStr((char*)pSize, 4);
     stream << lenStr << msgStr;
+
+    string datatest;
+    //MessagePack(msgStr.data(), msgStr.length(), datatest);
 
     cli.onConnection = [&cli, &stream](const SocketChannelPtr& channel) {
         string peeraddr = channel->peeraddr();

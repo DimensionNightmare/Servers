@@ -20,18 +20,20 @@ link_directories(../Environment/Install/protobuf/Debug/lib)
 project (HotReload)
 
 file(GLOB_RECURSE srcHotReload CONFIGURE_DEPENDS 
-  Source/Server/*
 	HotReload/*
-  ../Environment/GameConfig/Gen/Code/*
+	Source/Server/*
+	Source/Message/*
+	../Environment/GameConfig/Gen/Code/*.cc
 )
 add_library( HotReload SHARED ${srcHotReload} )
+target_compile_options(HotReload PRIVATE "/experimental:module")
 add_compile_definitions(HotReload PRIVATE HV_STATICLIB)
 target_compile_definitions(HotReload PRIVATE HOTRELOAD_BUILD)
 target_link_libraries(HotReload PRIVATE hv_static.lib libprotobufd.lib)
 set_target_properties(HotReload PROPERTIES RUNTIME_OUTPUT_DIRECTORY  ${CMAKE_BINARY_DIR}/Runtime)
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
-  set_property(TARGET HotReload PROPERTY CXX_STANDARD 20)
+	set_property(TARGET HotReload PROPERTY CXX_STANDARD 23)
 endif()
 
 
@@ -39,22 +41,30 @@ endif()
 project (DNServer)
 add_executable(DNServer)
 file(GLOB_RECURSE srcDn CONFIGURE_DEPENDS 
-  main.ixx
-	Source/*
+	main.ixx
+	Source/**
 )
-
 target_sources(DNServer PUBLIC ${srcDn})
+target_compile_options(DNServer PRIVATE "/experimental:module")
 add_compile_definitions(DNServer HV_STATICLIB)
 target_link_libraries(DNServer PRIVATE hv_static.lib)
 if (CMAKE_VERSION VERSION_GREATER 3.12)
-  set_property(TARGET DNServer PROPERTY CXX_STANDARD 20)
+  set_property(TARGET DNServer PROPERTY CXX_STANDARD 23)
 endif()
 
 # 将源代码添加到此项目的可执行文件。
 add_executable(LibhvTest)
-file(GLOB_RECURSE srcLibhvTest CONFIGURE_DEPENDS Test/libhv/*.ixx ../Environment/GameConfig/Gen/Code/*.cc)
+file(GLOB_RECURSE srcLibhvTest CONFIGURE_DEPENDS 
+	Test/libhv/*.ixx 
+	../Environment/GameConfig/Gen/Code/*.cc 
+	Source/Message/*.ixx
+)
 target_sources(LibhvTest PUBLIC ${srcLibhvTest})
+target_compile_options(LibhvTest PRIVATE "/experimental:module")
 target_link_libraries(LibhvTest PRIVATE hv_static.lib libprotobufd.lib)
+if (CMAKE_VERSION VERSION_GREATER 3.12)
+  set_property(TARGET LibhvTest PROPERTY CXX_STANDARD 23)
+endif()
 
 add_executable(GrpcTest)
 file(GLOB_RECURSE srcGrpcTest CONFIGURE_DEPENDS Test/grpc/*.ixx ../Environment/GameConfig/Gen/Code/*.cc)

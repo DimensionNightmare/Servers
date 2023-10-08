@@ -1,4 +1,4 @@
-#include "../../../Environment/GameConfig/Gen/Code/schema.pb.h"
+#include "schema.pb.h"
 #include <fstream>
 
 #include "google/protobuf/io/coded_stream.h"
@@ -30,7 +30,7 @@ int main()
 			}
 
 			auto res = table->Get(0);
-			int size = res.ByteSize();
+			size_t size = res.ByteSizeLong();
 			google::protobuf::Any toMsg;
 			toMsg.PackFrom(res);
 			std::string data;
@@ -38,7 +38,7 @@ int main()
 
 			google::protobuf::Any anyMsg;
 			anyMsg.ParseFromString(data);
-			int size1 = anyMsg.ByteSize();
+			size_t size1 = anyMsg.ByteSizeLong();
 			if(anyMsg.Is<GCfg::WeaponInfo>())
 			{
 				GCfg::WeaponInfo item;

@@ -2,11 +2,11 @@ module;
 #include "hv/hasync.h"
 #include "hv/EventLoop.h"
 #include <Windows.h>
-#include <iostream>
-#include <filesystem>
 export module DimensionNightmare;
 
 import BaseServer;
+import std.core;
+import std.filesystem;
 
 using namespace hv;
 using namespace std;
@@ -111,7 +111,7 @@ export class DimensionNightmare
 public:
 	DimensionNightmare();
 
-	bool Init();
+	bool Init(map<string,string>& param);
 
 	void InitCmdHandle();
 
@@ -142,19 +142,28 @@ DimensionNightmare::DimensionNightmare()
 	pServer = nullptr;
 }
 
-bool DimensionNightmare::Init()
+bool DimensionNightmare::Init(map<string,string>& param)
 {
+	if(!param.count("ip") || !param.count("port"))
+	{
+		cerr << "ip or port Need " << endl;
+		return false;
+	}
+
 	pHotDll = new HotReloadDll();
 	if(!pHotDll->ReloadHandle())
 		return false;
 
 	pServer = new BaseServer();
-	int listenfd = pServer->createsocket(555);
+	int port = stoi(param["port"]);
+	int listenfd = pServer->createsocket(port, param["ip"].c_str());
 	if (listenfd < 0) {
 		cout << "createsocket error\n";
 		return false;
 	}
-	printf("pServer listen on port %d, listenfd=%d ...\n", 555, listenfd);
+	
+	printf("pServer listen on port %d, listenfd=%d ...\n", port, listenfd);
+
 	unpack_setting_t setting;
 	setting.mode = unpack_mode_e::UNPACK_BY_LENGTH_FIELD;
 	setting.length_field_coding = unpack_coding_e::ENCODE_BY_BIG_ENDIAN;
