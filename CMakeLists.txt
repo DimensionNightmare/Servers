@@ -30,7 +30,6 @@ target_compile_options(HotReload PRIVATE "/experimental:module")
 add_compile_definitions(HotReload PRIVATE HV_STATICLIB)
 target_compile_definitions(HotReload PRIVATE HOTRELOAD_BUILD)
 target_link_libraries(HotReload PRIVATE hv_static.lib libprotobufd.lib)
-set_target_properties(HotReload PROPERTIES RUNTIME_OUTPUT_DIRECTORY  ${CMAKE_BINARY_DIR}/Runtime)
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
 	set_property(TARGET HotReload PROPERTY CXX_STANDARD 23)

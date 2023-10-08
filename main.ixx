@@ -51,7 +51,10 @@ int main(int argc, char** argv)
 
 	DimensionNightmare* dn = GetDimensionNightmare();
 	if(!dn->Init(lunchParam))
+	{
+		dn->ShutDown();
 		return 0;
+	}
 	
 	auto CtrlHandler = [](DWORD signal) -> BOOL{
 		cout << "CtrlHandler Tirrger...";

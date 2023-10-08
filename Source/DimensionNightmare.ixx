@@ -1,4 +1,5 @@
 module;
+#include "hv/hv.h"
 #include "hv/hasync.h"
 #include "hv/EventLoop.h"
 #include <Windows.h>
@@ -13,15 +14,17 @@ using namespace std;
 
 struct HotReloadDll
 {
-	inline static string SDllName = "HotReload";
 	inline static string SDllDir = "Runtime";
+	inline static string SDllName = "HotReload";
+	inline static string SDllNameSuffix[] = {".dll", };//".pdb"
+
+	string sDllDirRand;
 
 	HMODULE oLibHandle;
 
 	bool LoadHandle()
 	{
-
-		oLibHandle = LoadLibraryEx(SDllName.c_str(), NULL, 0);
+		oLibHandle = LoadLibraryEx((sDllDirRand + SDllName).c_str(), NULL, 0);
 		if(!oLibHandle)
 		{
 			cout << "LoadHandle:: cant Success!" << SDllName << endl;
@@ -38,6 +41,13 @@ struct HotReloadDll
 			FreeLibrary(oLibHandle);
 			oLibHandle = nullptr;
 		}
+
+		if(!sDllDirRand.empty())
+		{
+			filesystem::remove_all(sDllDirRand.c_str());
+		}
+		
+		sDllDirRand.clear();
 	};
 
 	bool ReloadHandle()
@@ -50,10 +60,13 @@ struct HotReloadDll
 			return false;
 		}
 
-		for (const auto& entry : filesystem::directory_iterator(SDllDir)) {
-			remove(entry.path().filename());
-            filesystem::copy_file(entry.path(), entry.path().filename());
-        }
+		sDllDirRand = SDllDir + to_string(hv_rand(10000, 99999)) + "/";
+		filesystem::create_directories(sDllDirRand.c_str());
+		for(string suffix : SDllNameSuffix)
+		{
+			filesystem::copy(SDllName + suffix, sDllDirRand.c_str(), filesystem::copy_options::overwrite_existing);
+		}
+
 		return LoadHandle();
 	};
 
@@ -144,19 +157,21 @@ DimensionNightmare::DimensionNightmare()
 
 bool DimensionNightmare::Init(map<string,string>& param)
 {
-	if(!param.count("ip") || !param.count("port"))
+	/*if(!param.count("ip") || !param.count("port"))
 	{
 		cerr << "ip or port Need " << endl;
 		return false;
-	}
+	}*/
 
 	pHotDll = new HotReloadDll();
 	if(!pHotDll->ReloadHandle())
 		return false;
 
 	pServer = new BaseServer();
-	int port = stoi(param["port"]);
-	int listenfd = pServer->createsocket(port, param["ip"].c_str());
+	/*int port = stoi(param["port"]);
+	int listenfd = pServer->createsocket(port, param["ip"].c_str());*/
+	int port = 555;
+	int listenfd = pServer->createsocket(port);
 	if (listenfd < 0) {
 		cout << "createsocket error\n";
 		return false;
