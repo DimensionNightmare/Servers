@@ -2,6 +2,8 @@ module;
 #include "hv/TcpServer.h"
 export module BaseServer;
 
+import std.core;
+
 using namespace hv;
 using namespace std;
 

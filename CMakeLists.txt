@@ -17,6 +17,8 @@ include_directories(../Environment/GameConfig/Gen/Code)
 link_directories(../Environment/Install/libhv/Debug/lib)
 link_directories(../Environment/Install/protobuf/Debug/lib)
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /experimental:module")
+
 project (HotReload)
 
 file(GLOB_RECURSE srcHotReload CONFIGURE_DEPENDS 
@@ -26,9 +28,7 @@ file(GLOB_RECURSE srcHotReload CONFIGURE_DEPENDS
 	../Environment/GameConfig/Gen/Code/*.cc
 )
 add_library( HotReload SHARED ${srcHotReload} )
-target_compile_options(HotReload PRIVATE "/experimental:module")
-add_compile_definitions(HotReload PRIVATE HV_STATICLIB)
-target_compile_definitions(HotReload PRIVATE HOTRELOAD_BUILD)
+target_compile_definitions(HotReload PRIVATE HV_STATICLIB HOTRELOAD_BUILD)
 target_link_libraries(HotReload PRIVATE hv_static.lib libprotobufd.lib)
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
@@ -44,32 +44,10 @@ file(GLOB_RECURSE srcDn CONFIGURE_DEPENDS
 	Source/**
 )
 target_sources(DNServer PUBLIC ${srcDn})
-target_compile_options(DNServer PRIVATE "/experimental:module")
 add_compile_definitions(DNServer HV_STATICLIB)
 target_link_libraries(DNServer PRIVATE hv_static.lib)
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET DNServer PROPERTY CXX_STANDARD 23)
 endif()
-
-# 将源代码添加到此项目的可执行文件。
-add_executable(LibhvTest)
-file(GLOB_RECURSE srcLibhvTest CONFIGURE_DEPENDS 
-	Test/libhv/*.ixx 
-	../Environment/GameConfig/Gen/Code/*.cc 
-	Source/Message/*.ixx
-)
-target_sources(LibhvTest PUBLIC ${srcLibhvTest})
-target_compile_options(LibhvTest PRIVATE "/experimental:module")
-target_link_libraries(LibhvTest PRIVATE hv_static.lib libprotobufd.lib)
-if (CMAKE_VERSION VERSION_GREATER 3.12)
-  set_property(TARGET LibhvTest PROPERTY CXX_STANDARD 23)
-endif()
-
-add_executable(GrpcTest)
-file(GLOB_RECURSE srcGrpcTest CONFIGURE_DEPENDS Test/grpc/*.ixx ../Environment/GameConfig/Gen/Code/*.cc)
-target_sources(GrpcTest PUBLIC ${srcGrpcTest})
-target_link_libraries(GrpcTest PRIVATE libprotobufd.lib)
-
-
 
 # TODO: 如有需要，请添加测试并安装目标。
