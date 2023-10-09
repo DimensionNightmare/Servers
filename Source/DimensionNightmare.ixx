@@ -3,11 +3,14 @@ module;
 #include "hv/hasync.h"
 #include "hv/EventLoop.h"
 #include <Windows.h>
+#include <DbgHelp.h>
 export module DimensionNightmare;
 
 import BaseServer;
 import std.core;
 import std.filesystem;
+
+#pragma comment(lib, "DbgHelp.lib")
 
 using namespace hv;
 using namespace std;
@@ -238,10 +241,29 @@ void DimensionNightmare::InitCmdHandle()
 		}
 	};
 
+	auto loadPdb = [this]()
+	{
+		if (SymInitialize(GetCurrentProcess(), nullptr, TRUE)) {
+
+			string pdbfile = pHotDll->sDllDirRand + "HotReload.pdb";
+
+			int filesize = filesystem::file_size(pdbfile);
+			DWORD64 baseAddress = SymLoadModuleEx(GetCurrentProcess(), nullptr, pdbfile.c_str(), nullptr, 0, filesize, nullptr, 0);
+
+			if (baseAddress == 0) {
+				DWORD error = GetLastError();
+				std::cerr << "rttot" << error << std::endl;
+			}
+
+			SymCleanup(GetCurrentProcess());
+		}
+	};
+
     mCmdHandle = {
 		{"pause", pause},
 		{"resume", resume},
 		{"reload", reload},
+		{"loadPdb", loadPdb},
 	};
 }
 

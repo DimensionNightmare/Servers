@@ -43,12 +43,6 @@ int main(int argc, char** argv)
 		}
 	}
 
-	
-	if(lunchParam.count("lunchtype") == 0)
-	{
-
-	}
-
 	DimensionNightmare* dn = GetDimensionNightmare();
 	if(!dn->Init(lunchParam))
 	{
@@ -56,12 +50,13 @@ int main(int argc, char** argv)
 		return 0;
 	}
 	
-	auto CtrlHandler = [](DWORD signal) -> BOOL{
+	auto CtrlHandler = [](DWORD signal) -> BOOL WINAPI{
 		cout << "CtrlHandler Tirrger...";
-		switch( signal )
+		switch (signal)
 		{
 			case CTRL_C_EVENT:
 			case CTRL_CLOSE_EVENT:
+			case CTRL_SHUTDOWN_EVENT:
 			{
 				GetDimensionNightmare()->ShutDown();
 				return false;
@@ -78,7 +73,9 @@ int main(int argc, char** argv)
 	}
 
 	string str;
-    while (getline(cin, str)) {
+    while (true) 
+	{
+		cin >> str;
         if (str == "quit") 
 		{
 			CtrlHandler(0);
