@@ -1,7 +1,6 @@
 module;
+#include <string>
 export module MessagePack;
-
-import std.core;
 
 using namespace std;
 

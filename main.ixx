@@ -1,8 +1,12 @@
 
 #include <Windows.h>
+#include <locale>
+#include <sstream>
+#include <map>
+#include <vector>
+#include <iostream>
 
 import DimensionNightmare;
-import std.core;
 
 using namespace std;
 

@@ -4,11 +4,10 @@ module;
 #include "hv/EventLoop.h"
 #include <Windows.h>
 #include <DbgHelp.h>
+#include <filesystem>
 export module DimensionNightmare;
 
 import BaseServer;
-import std.core;
-import std.filesystem;
 
 #pragma comment(lib, "DbgHelp.lib")
 

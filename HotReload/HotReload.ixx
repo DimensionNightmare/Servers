@@ -4,8 +4,9 @@
 #include "schema.pb.h"
 #include "google/protobuf/any.pb.h"
 
+#include <codecvt>
+
 import BaseServer;
-import std.core;
 
 #ifdef HOTRELOAD_BUILD
 #define HOTRELOAD __declspec(dllexport)
