@@ -4,8 +4,6 @@
 #include "schema.pb.h"
 #include "google/protobuf/any.pb.h"
 
-#include <codecvt>
-
 import BaseServer;
 
 #ifdef HOTRELOAD_BUILD
@@ -91,14 +89,30 @@ int ServerInit(BaseServer&  server)
             if(msg.Is<GCfg::WeaponInfo>())
             {
                 GCfg::WeaponInfo weaponInfo;
-                msg.UnpackTo(&weaponInfo);
-                static wstring_convert<codecvt_utf8<wchar_t>> converter;
-                wstring wideString = converter.from_bytes(weaponInfo.Utf8DebugString());
-                wcout << wideString << endl;
+                if(auto descaaaa = weaponInfo.GetDescriptor())
+                {
+                    if(descaaaa->field_count() > 0)
+                    {
+                        cout << descaaaa->name() <<endl;
+                    }
+                    else
+                    {
+                        cout << "name is Null" <<endl;
+                    }
+                }
+                else
+                {
+                    cout << "desc is Null" <<endl;
+                }
+                //cout << weaponInfo->GetDescriptor()->full_name() << endl;
+                // msg.UnpackTo(weaponInfo);
+                //cout << weaponInfo.DebugString() << endl;
             }
         }
         else
+        {
             printf("%d < %.*s\n", (int)buf->size(),(int)buf->size(), (char*)buf->data());
+        }
         
         channel->write(buf);
     };

@@ -5,6 +5,7 @@
 #include <map>
 #include <vector>
 #include <iostream>
+#include <dbghelp.h>
 
 import DimensionNightmare;
 
@@ -54,7 +55,7 @@ int main(int argc, char** argv)
 		return 0;
 	}
 	
-	auto CtrlHandler = [](DWORD signal) -> BOOL WINAPI{
+	auto CtrlHandler = [](DWORD signal) -> BOOL {
 		cout << "CtrlHandler Tirrger...";
 		switch (signal)
 		{
@@ -72,7 +73,50 @@ int main(int argc, char** argv)
 
 	if(!SetConsoleCtrlHandler(CtrlHandler, true))
 	{
-		cout << "Cant Set ConsoleCtrlHandler!";
+		cout << "Cant Set SetConsoleCtrlHandler!";
+		return 0;
+	}
+
+	auto exceptionPtr = SetUnhandledExceptionFilter([](EXCEPTION_POINTERS* ExceptionInfo)->long {
+		cout << "SetUnhandledExceptionFilter Tirrger!";
+		
+		HANDLE hDumpFile = CreateFileW(
+			L"MiniDump.dmp", // minidump 文件名
+			GENERIC_WRITE,
+			0,
+			nullptr,
+			CREATE_ALWAYS,
+			FILE_ATTRIBUTE_NORMAL,
+			nullptr
+		);
+
+		if (hDumpFile != INVALID_HANDLE_VALUE) {
+			MINIDUMP_EXCEPTION_INFORMATION info;
+			info.ThreadId = GetCurrentThreadId();
+			info.ExceptionPointers = ExceptionInfo;
+			info.ClientPointers = FALSE;
+
+			// 生成 minidump 文件
+			MiniDumpWriteDump(
+				GetCurrentProcess(),
+				GetCurrentProcessId(),
+				hDumpFile,
+				MiniDumpNormal,
+				&info,
+				nullptr,
+				nullptr
+			);
+
+			CloseHandle(hDumpFile);
+		}
+
+		GetDimensionNightmare()->ShutDown();
+
+		return EXCEPTION_CONTINUE_SEARCH;
+	});
+	
+	if(!exceptionPtr){
+		cout << "Cant Set SetUnhandledExceptionFilter!";
 		return 0;
 	}
 
@@ -82,12 +126,19 @@ int main(int argc, char** argv)
 		cin >> str;
         if (str == "quit") 
 		{
-			CtrlHandler(0);
             break;
         }
-
-		dn->ExecCommand(str);
+		else if(str == "abort")
+		{
+			int a =100;
+			int b = 0;
+			int c = a/b;
+		}
+		else
+			dn->ExecCommand(str);
     }
+
+	CtrlHandler(0);
 	
 	return 0;
 }

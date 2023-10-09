@@ -19,7 +19,7 @@
                 }
             ],
             "console": "integratedTerminal",
-            "requireExactSource": false,
+            "requireExactSource": false
         }
     ]
 }

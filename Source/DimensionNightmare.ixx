@@ -18,7 +18,6 @@ struct HotReloadDll
 {
 	inline static string SDllDir = "Runtime";
 	inline static string SDllName = "HotReload";
-	inline static string SDllNameSuffix[] = {".dll", };//".pdb"
 
 	string sDllDirRand;
 
@@ -26,7 +25,9 @@ struct HotReloadDll
 
 	bool LoadHandle()
 	{
-		oLibHandle = LoadLibraryEx((sDllDirRand + SDllName).c_str(), NULL, 0);
+		int ret = SetDefaultDllDirectories(LOAD_LIBRARY_SEARCH_USER_DIRS);
+		ret = SetDllDirectory(sDllDirRand.c_str());
+		oLibHandle = LoadLibraryEx((SDllName).c_str(), NULL, LOAD_LIBRARY_SEARCH_USER_DIRS);
 		if(!oLibHandle)
 		{
 			cout << "LoadHandle:: cant Success!" << SDllName << endl;
@@ -64,10 +65,7 @@ struct HotReloadDll
 
 		sDllDirRand = SDllDir + to_string(hv_rand(10000, 99999)) + "/";
 		filesystem::create_directories(sDllDirRand.c_str());
-		for(string suffix : SDllNameSuffix)
-		{
-			filesystem::copy(SDllName + suffix, sDllDirRand.c_str(), filesystem::copy_options::overwrite_existing);
-		}
+		filesystem::copy(SDllDir.c_str(), sDllDirRand.c_str(), filesystem::copy_options::overwrite_existing);
 
 		return LoadHandle();
 	};
@@ -247,7 +245,7 @@ void DimensionNightmare::InitCmdHandle()
 			string pdbfile = pHotDll->sDllDirRand + "HotReload.pdb";
 
 			int filesize = filesystem::file_size(pdbfile);
-			DWORD64 baseAddress = SymLoadModuleEx(GetCurrentProcess(), nullptr, pdbfile.c_str(), nullptr, 0, filesize, nullptr, 0);
+			DWORD64 baseAddress = SymLoadModuleEx(GetCurrentProcess(), nullptr, pdbfile.c_str(), nullptr, (DWORD64)pHotDll->oLibHandle, 0, nullptr, 0);
 
 			if (baseAddress == 0) {
 				DWORD error = GetLastError();
