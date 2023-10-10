@@ -9,8 +9,6 @@ export module DimensionNightmare;
 
 import BaseServer;
 
-#pragma comment(lib, "DbgHelp.lib")
-
 using namespace hv;
 using namespace std;
 
@@ -179,13 +177,14 @@ bool DimensionNightmare::Init(map<string,string>& param)
 	
 	printf("pServer listen on port %d, listenfd=%d ...\n", port, listenfd);
 
-	unpack_setting_t setting;
-	setting.mode = unpack_mode_e::UNPACK_BY_LENGTH_FIELD;
-	setting.length_field_coding = unpack_coding_e::ENCODE_BY_BIG_ENDIAN;
-	setting.body_offset = 4;
-	setting.length_field_bytes = 1;
-	setting.length_field_offset = 0;
-	pServer->setUnpack(&setting);
+	auto setting = make_shared<unpack_setting_t>();
+
+	setting->mode = unpack_mode_e::UNPACK_BY_LENGTH_FIELD;
+	setting->length_field_coding = unpack_coding_e::ENCODE_BY_BIG_ENDIAN;
+	setting->body_offset = 4;
+	setting->length_field_bytes = 1;
+	setting->length_field_offset = 0;
+	pServer->setUnpack(setting.get());
 	pServer->setThreadNum(4);
 
 	if(pHotDll->OnRegServer(pServer))

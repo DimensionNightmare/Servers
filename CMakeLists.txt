@@ -41,10 +41,11 @@ add_executable(DNServer)
 file(GLOB_RECURSE srcDn CONFIGURE_DEPENDS 
 	"main.ixx"
 	"Source/*"
+	"../Environment/GameConfig/Gen/Code/*.cc"
 )
 target_sources(DNServer PUBLIC ${srcDn})
 add_compile_definitions(DNServer HV_STATICLIB)
-target_link_libraries(DNServer PRIVATE "hv_static.lib")
+target_link_libraries(DNServer PRIVATE "hv_static.lib" "libprotobufd.lib")
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET DNServer PROPERTY CXX_STANDARD 23)
 endif()

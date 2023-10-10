@@ -57,7 +57,7 @@ int main(){
         if (channel->isConnected()) {
             printf("connected to %s! connfd=%d\n", peeraddr.c_str(), channel->fd());
             // send(time) every 3s
-            setInterval(3000, [channel, &stream](TimerID timerID){
+            setInterval(1000, [channel, &stream](TimerID timerID){
                 if (channel->isConnected()) {
                     // char str[DATETIME_FMT_BUFLEN] = {0};
                     // datetime_t dt = datetime_now();

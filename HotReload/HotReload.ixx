@@ -30,30 +30,30 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL,  // handle to DLL module
     DWORD fdwReason,     // reason for calling function
     LPVOID lpvReserved )  // reserved
 {
+    cout << "DllMain Tick:" << fdwReason << endl;
     // Perform actions based on the reason for calling.
     switch( fdwReason ) 
     { 
-        case DLL_PROCESS_ATTACH:
-         // Initialize once for each new process.
-         // Return FALSE to fail DLL load.
-            break;
-
-        case DLL_THREAD_ATTACH:
-         // Do thread-specific initialization.
-            break;
-
-        case DLL_THREAD_DETACH:
-         	google::protobuf::ShutdownProtobufLibrary();
-            break;
-
         case DLL_PROCESS_DETACH:
         
+            google::protobuf::ShutdownProtobufLibrary();
             if (lpvReserved != nullptr)
             {
                 break; // do not do cleanup if process termination scenario
             }
             
-         // Perform any necessary cleanup.
+            // Perform any necessary cleanup.
+            break;
+        case DLL_PROCESS_ATTACH:
+            // Initialize once for each new process.
+            // Return FALSE to fail DLL load.
+            break;
+         case DLL_THREAD_ATTACH:
+            // Do thread-specific initialization.
+            break;
+
+        case DLL_THREAD_DETACH:
+         	
             break;
     }
     return TRUE;  // Successful DLL_PROCESS_ATTACH.
@@ -61,7 +61,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL,  // handle to DLL module
 
 int ServerInit(BaseServer&  server)
 {
-    static int headLen = 0;
+    int headLen = 0;
     if(server.unpack_setting)
     {
         headLen = server.unpack_setting->body_offset;
@@ -77,7 +77,7 @@ int ServerInit(BaseServer&  server)
         }
     };
 
-    server.onMessage = [](const SocketChannelPtr& channel, Buffer* buf) 
+    server.onMessage = [&server,headLen](const SocketChannelPtr& channel, Buffer* buf) 
     {
         int msgSize = (int)buf->size() - headLen;
         assert(msgSize > 0);
@@ -88,25 +88,24 @@ int ServerInit(BaseServer&  server)
         {
             if(msg.Is<GCfg::WeaponInfo>())
             {
+                static int countOP = 0;
                 GCfg::WeaponInfo weaponInfo;
                 if(auto descaaaa = weaponInfo.GetDescriptor())
                 {
                     if(descaaaa->field_count() > 0)
                     {
-                        cout << descaaaa->name() <<endl;
+                        cout << ++countOP << " > " << descaaaa->name() <<endl;
+                        msg.UnpackTo(&weaponInfo);
                     }
                     else
                     {
-                        cout << "name is Null" <<endl;
+                        cout <<  countOP << " > " << "name is Null" <<endl;
                     }
                 }
                 else
                 {
-                    cout << "desc is Null" <<endl;
+                    cout <<  countOP << " > " << "desc is Null" <<endl;
                 }
-                //cout << weaponInfo->GetDescriptor()->full_name() << endl;
-                // msg.UnpackTo(weaponInfo);
-                //cout << weaponInfo.DebugString() << endl;
             }
         }
         else
