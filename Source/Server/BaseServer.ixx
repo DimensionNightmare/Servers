@@ -8,8 +8,19 @@ using namespace std;
 export class BaseServer :public TcpServer
 {
 public:
+    BaseServer();
     void LoopEvent(function<void(EventLoopPtr)> func);
+
+    void SetChannelUserData(SocketChannelPtr& channel);
+public:
+    //Control By Self
+    map<string, SocketChannelPtr> mChild;
 };
+
+BaseServer::BaseServer()
+{
+    mChild.clear();
+}
 
 void BaseServer::LoopEvent(function<void(EventLoopPtr)> func)
 {

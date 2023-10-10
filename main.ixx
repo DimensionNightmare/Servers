@@ -9,6 +9,8 @@
 
 import DimensionNightmare;
 
+#pragma comment(lib, "dbghelp.lib")
+
 using namespace std;
 
 enum class LunchType

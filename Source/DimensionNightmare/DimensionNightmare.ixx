@@ -8,6 +8,7 @@ module;
 export module DimensionNightmare;
 
 import BaseServer;
+import ActorManager;
 
 using namespace hv;
 using namespace std;
@@ -70,7 +71,7 @@ struct HotReloadDll
 
 	HotReloadDll()
 	{
-		memset(this, 0, sizeof(*this));
+		memset(this, 0, sizeof *this);
 	};
 
 	~HotReloadDll()
@@ -81,38 +82,6 @@ struct HotReloadDll
 	FARPROC GetFuncPtr(string funcName)
 	{
 		return GetProcAddress(oLibHandle, funcName.c_str());
-	}
-
-	bool OnRegServer(BaseServer* server)
-	{
-		if(auto funtPtr = GetFuncPtr("ServerInit"))
-		{
-			typedef int (*ServerInit)(BaseServer&);
-			auto func = reinterpret_cast<ServerInit>(funtPtr);
-			if(func)
-			{
-				func(*server);
-				return true;
-			}
-		}
-
-		return false;
-	}
-
-	bool OnUnregServer(BaseServer* server)
-	{
-		if(auto funtPtr = GetFuncPtr("ServerUnload"))
-		{
-			typedef int (*ServerUnload)(BaseServer&);
-			auto func = reinterpret_cast<ServerUnload>(funtPtr);
-			if(func)
-			{
-				func(*server);
-				return true;
-			}
-		}
-
-		return false;
 	}
 };
 
@@ -130,18 +99,27 @@ public:
 
 	void ShutDown();
 
+	BaseServer* GetServer();
+	ActorManager* GetActorManager();
+
+    bool OnRegHotReload();
+
+    bool OnUnregHotReload();
+
 private:
 	HotReloadDll* pHotDll;
 
 	BaseServer* pServer;
 
 	map<string, function<void()>> mCmdHandle;
+
+	ActorManager* pActorManager;
 };
 
 export DimensionNightmare* GetDimensionNightmare(){
 	static DimensionNightmare* PInstance = nullptr;
 	if(!PInstance){
-		PInstance = new DimensionNightmare();
+		PInstance = new DimensionNightmare;
 	}
 
 	return PInstance;
@@ -151,6 +129,7 @@ DimensionNightmare::DimensionNightmare()
 {
 	pHotDll = nullptr;
 	pServer = nullptr;
+	pActorManager = nullptr;
 }
 
 bool DimensionNightmare::Init(map<string,string>& param)
@@ -161,11 +140,7 @@ bool DimensionNightmare::Init(map<string,string>& param)
 		return false;
 	}*/
 
-	pHotDll = new HotReloadDll();
-	if(!pHotDll->ReloadHandle())
-		return false;
-
-	pServer = new BaseServer();
+	pServer = new BaseServer;
 	/*int port = stoi(param["port"]);
 	int listenfd = pServer->createsocket(port, param["ip"].c_str());*/
 	int port = 555;
@@ -187,10 +162,16 @@ bool DimensionNightmare::Init(map<string,string>& param)
 	pServer->setUnpack(setting.get());
 	pServer->setThreadNum(4);
 
-	if(pHotDll->OnRegServer(pServer))
+	pHotDll = new HotReloadDll;
+	if(!pHotDll->ReloadHandle())
+		return false;
+
+	if(OnRegHotReload())
 	{
 		pServer->start();
 	}
+
+	pActorManager = new ActorManager;
 
 	InitCmdHandle();
 
@@ -221,45 +202,17 @@ void DimensionNightmare::InitCmdHandle()
 
 	auto reload = [&, pause, resume]()
 	{
-		if(pServer)
-		{
-			pause();
-			pHotDll->OnUnregServer(pServer);
-		}
-			
-		if(pHotDll->ReloadHandle())
-		{
-			if(pServer)
-			{
-				pHotDll->OnRegServer(pServer);
-				resume();
-			}
-		}
-	};
-
-	auto loadPdb = [this]()
-	{
-		if (SymInitialize(GetCurrentProcess(), nullptr, TRUE)) {
-
-			string pdbfile = pHotDll->sDllDirRand + "HotReload.pdb";
-
-			int filesize = filesystem::file_size(pdbfile);
-			DWORD64 baseAddress = SymLoadModuleEx(GetCurrentProcess(), nullptr, pdbfile.c_str(), nullptr, (DWORD64)pHotDll->oLibHandle, 0, nullptr, 0);
-
-			if (baseAddress == 0) {
-				DWORD error = GetLastError();
-				std::cerr << "rttot" << error << std::endl;
-			}
-
-			SymCleanup(GetCurrentProcess());
-		}
+		pause();
+		OnUnregHotReload();
+		pHotDll->ReloadHandle();
+		OnRegHotReload();
+		resume();
 	};
 
     mCmdHandle = {
 		{"pause", pause},
 		{"resume", resume},
 		{"reload", reload},
-		{"loadPdb", loadPdb},
 	};
 }
 
@@ -280,8 +233,56 @@ void DimensionNightmare::ShutDown()
 		pServer = nullptr; 
 	}
 
+	if(pActorManager)
+	{
+		delete pActorManager;
+		pActorManager = nullptr;
+	}
+
 	if(pHotDll){
 		delete pHotDll;
 		pHotDll = nullptr;
 	}
+}
+
+BaseServer *DimensionNightmare::GetServer()
+{
+    return pServer;
+}
+
+ActorManager *DimensionNightmare::GetActorManager()
+{
+    return pActorManager;
+}
+
+bool DimensionNightmare::OnRegHotReload()
+{
+	if(auto funtPtr = pHotDll->GetFuncPtr("InitHotReload"))
+	{
+		typedef int (*InitHotReload)(DimensionNightmare&);
+		auto func = reinterpret_cast<InitHotReload>(funtPtr);
+		if(func)
+		{
+			func(*this);
+			return true;
+		}
+	}
+
+	return false;
+}
+
+bool DimensionNightmare::OnUnregHotReload()
+{
+	if(auto funtPtr = pHotDll->GetFuncPtr("ShutdownHotReload"))
+	{
+		typedef int (*ShutdownHotReload)(DimensionNightmare&);
+		auto func = reinterpret_cast<ShutdownHotReload>(funtPtr);
+		if(func)
+		{
+			func(*this);
+			return true;
+		}
+	}
+
+	return false;
 }

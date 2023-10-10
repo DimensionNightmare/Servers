@@ -4,26 +4,42 @@ export module MessagePack;
 
 using namespace std;
 
-struct MessageHead
-{
-    unsigned int Lenth;
-    string a;
-    char g;
-    bool c;
-};
- 
-export bool MessagePack(char* data, int len, string& packData)
-{
-    packData.clear();
+class Message;
 
-    if(!len && !data)
+enum class MsgDir : unsigned char
+{
+    Outer, //Client Msg
+    Inner, //Server Msg
+};
+
+struct MessagePacket
+{
+    unsigned int pkgLenth;
+    MsgDir opType;
+    unsigned int msgId;
+
+    Message* reqData; //virtual
+    Message* retData; //virtual
+    MessagePacket()
+    {
+        memset(this, 0 , sizeof *this);
+    }
+};
+
+export bool MessagePack(Message* reqMsg, MessagePacket& packet)
+{
+    if(reqMsg == nullptr)
         return false;
 
+    // mp.opType = MsgDir::Outer;
+    // mp.msgId = msgId;
+    
+    string name;
     
     return true;
 }
 
-export bool MessageUnpack(char* data, int len)
+export bool MessageUnpack(char* reqMsg, int len)
 {
     return true;
 }

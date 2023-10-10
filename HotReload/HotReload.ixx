@@ -2,9 +2,8 @@
 #include "hv/Channel.h"
 #include "hv/hloop.h"
 #include "schema.pb.h"
-#include "google/protobuf/any.pb.h"
 
-import BaseServer;
+import DimensionNightmare;
 
 #ifdef HOTRELOAD_BUILD
 #define HOTRELOAD __declspec(dllexport)
@@ -16,112 +15,77 @@ using namespace hv;
 using namespace std;
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
-HOTRELOAD int ServerInit(BaseServer&  server);
-HOTRELOAD int ServerUnload(BaseServer&  server);
+    HOTRELOAD int InitHotReload(DimensionNightmare &server);
+    HOTRELOAD int ShutdownHotReload(DimensionNightmare &server);
 
 #ifdef __cplusplus
 }
 #endif
 
-BOOL WINAPI DllMain(HINSTANCE hinstDLL,  // handle to DLL module
-    DWORD fdwReason,     // reason for calling function
-    LPVOID lpvReserved )  // reserved
+BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
-    cout << "DllMain Tick:" << fdwReason << endl;
     // Perform actions based on the reason for calling.
-    switch( fdwReason ) 
-    { 
-        case DLL_PROCESS_DETACH:
-        
-            google::protobuf::ShutdownProtobufLibrary();
-            if (lpvReserved != nullptr)
-            {
-                break; // do not do cleanup if process termination scenario
-            }
-            
-            // Perform any necessary cleanup.
-            break;
-        case DLL_PROCESS_ATTACH:
-            // Initialize once for each new process.
-            // Return FALSE to fail DLL load.
-            break;
-         case DLL_THREAD_ATTACH:
-            // Do thread-specific initialization.
-            break;
+    switch (fdwReason)
+    {
+    case DLL_PROCESS_DETACH:
 
-        case DLL_THREAD_DETACH:
-         	
-            break;
+        google::protobuf::ShutdownProtobufLibrary();
+        if (lpvReserved != nullptr)
+        {
+            break; // do not do cleanup if process termination scenario
+        }
+
+        // Perform any necessary cleanup.
+        break;
+    case DLL_PROCESS_ATTACH:
+        // Initialize once for each new process.
+        // Return FALSE to fail DLL load.
+        break;
+    case DLL_THREAD_ATTACH:
+        // Do thread-specific initialization.
+        break;
+
+    case DLL_THREAD_DETACH:
+
+        break;
     }
-    return TRUE;  // Successful DLL_PROCESS_ATTACH.
+    return TRUE; // Successful DLL_PROCESS_ATTACH.
 }
 
-int ServerInit(BaseServer&  server)
+int InitHotReload(DimensionNightmare &nightmare)
 {
-    int headLen = 0;
-    if(server.unpack_setting)
-    {
-        headLen = server.unpack_setting->body_offset;
-    }
-
-    server.onConnection = [](const SocketChannelPtr& channel) 
+    nightmare.GetServer()->onConnection = [&nightmare](const SocketChannelPtr &channel)
     {
         string peeraddr = channel->peeraddr();
-        if (channel->isConnected()) {
+        if (channel->isConnected())
+        {
+            static int entityId = 0;
+            nightmare.GetActorManager()->AddEntity(channel.get(), ++entityId);
+
             printf("%s connected! connfd=%d id=%d \n", peeraddr.c_str(), channel->fd(), channel->id());
-        } else {
+        }
+        else
+        {
+            nightmare.GetActorManager()->RemoveEntity(channel.get());
             printf("%s disconnected! connfd=%d id=%d \n", peeraddr.c_str(), channel->fd(), channel->id());
         }
     };
 
-    server.onMessage = [&server,headLen](const SocketChannelPtr& channel, Buffer* buf) 
+    nightmare.GetServer()->onMessage = [&nightmare](const SocketChannelPtr &channel, Buffer *buf) 
     {
-        int msgSize = (int)buf->size() - headLen;
-        assert(msgSize > 0);
-        unsigned char* pData = (unsigned char*)buf->data() + headLen;
-
-        google::protobuf::Any msg;
-        if(msg.ParseFromArray(pData, msgSize))
-        {
-            if(msg.Is<GCfg::WeaponInfo>())
-            {
-                static int countOP = 0;
-                GCfg::WeaponInfo weaponInfo;
-                if(auto descaaaa = weaponInfo.GetDescriptor())
-                {
-                    if(descaaaa->field_count() > 0)
-                    {
-                        cout << ++countOP << " > " << descaaaa->name() <<endl;
-                        msg.UnpackTo(&weaponInfo);
-                    }
-                    else
-                    {
-                        cout <<  countOP << " > " << "name is Null" <<endl;
-                    }
-                }
-                else
-                {
-                    cout <<  countOP << " > " << "desc is Null" <<endl;
-                }
-            }
-        }
-        else
-        {
-            printf("%d < %.*s\n", (int)buf->size(),(int)buf->size(), (char*)buf->data());
-        }
         
-        channel->write(buf);
     };
 
     return 0;
 }
 
-int ServerUnload(BaseServer&  server)
+int ShutdownHotReload(DimensionNightmare &nightmare)
 {
-    server.onConnection = nullptr;
-    server.onMessage = nullptr;
+    nightmare.GetServer()->onConnection = nullptr;
+    nightmare.GetServer()->onMessage = nullptr;
     return 0;
 }
