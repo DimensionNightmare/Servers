@@ -5,9 +5,13 @@
 #include <map>
 #include <vector>
 #include <iostream>
+#include <coroutine>
+#include <chrono>
 #include <dbghelp.h>
 
 import DimensionNightmare;
+
+import DNTask;
 
 #pragma comment(lib, "dbghelp.lib")
 
@@ -21,7 +25,35 @@ enum class LunchType
 
 int main(int argc, char** argv)
 {
-	
+	auto task1 = []() -> DNTask<int>
+	{
+		cout << "sleep 5s" << endl;
+		using namespace std::chrono_literals;
+		// while(true){}
+		co_await suspend_always{};
+		cout << "coroti end 111" << endl;
+		co_await suspend_always{};
+		cout << "coroti end 222" << endl;
+		co_await suspend_always{};
+		cout << "coroti end 333" << endl;
+
+		co_return 50;
+	};
+
+	auto promis = task1();
+
+	string zxc;
+	while (true) 
+	{
+		getline(cin, zxc);
+		if(zxc == "resume")
+		{
+			promis.GetHandle().promise().return_value(1);
+			promis.GetHandle().resume();
+		}
+	}
+
+	return 0;
 	// local output
     locale::global(locale(""));
 	
@@ -83,7 +115,7 @@ int main(int argc, char** argv)
 		cout << "SetUnhandledExceptionFilter Tirrger!";
 		
 		HANDLE hDumpFile = CreateFileW(
-			L"MiniDump.dmp", // minidump 文件名
+			L"MiniDump.dmp",
 			GENERIC_WRITE,
 			0,
 			nullptr,
@@ -98,7 +130,6 @@ int main(int argc, char** argv)
 			info.ExceptionPointers = ExceptionInfo;
 			info.ClientPointers = FALSE;
 
-			// 生成 minidump 文件
 			MiniDumpWriteDump(
 				GetCurrentProcess(),
 				GetCurrentProcessId(),
@@ -122,10 +153,14 @@ int main(int argc, char** argv)
 		return 0;
 	}
 
+	stringstream ss;
 	string str;
     while (true) 
 	{
-		cin >> str;
+		getline(cin, str);
+		ss.str(str);
+		ss << str;
+		ss >> str;
         if (str == "quit") 
 		{
             break;
@@ -137,7 +172,7 @@ int main(int argc, char** argv)
 			int c = a/b;
 		}
 		else
-			dn->ExecCommand(str);
+			dn->ExecCommand(&str, &ss);
     }
 
 	CtrlHandler(0);

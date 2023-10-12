@@ -8,10 +8,18 @@ module;
 export module DimensionNightmare;
 
 import BaseServer;
+import ControlServer;
+import GlobalServer;
+import SessionServer;
+
 import ActorManager;
 
 using namespace hv;
 using namespace std;
+
+struct HotReloadDll;
+export class DimensionNightmare;
+export DimensionNightmare *GetDimensionNightmare();
 
 struct HotReloadDll
 {
@@ -27,7 +35,7 @@ struct HotReloadDll
 		int ret = SetDefaultDllDirectories(LOAD_LIBRARY_SEARCH_USER_DIRS);
 		ret = SetDllDirectory(sDllDirRand.c_str());
 		oLibHandle = LoadLibraryEx((SDllName).c_str(), NULL, LOAD_LIBRARY_SEARCH_USER_DIRS);
-		if(!oLibHandle)
+		if (!oLibHandle)
 		{
 			cout << "LoadHandle:: cant Success!" << SDllName << endl;
 			return false;
@@ -38,17 +46,17 @@ struct HotReloadDll
 
 	void FreeHandle()
 	{
-		if(oLibHandle)
+		if (oLibHandle)
 		{
 			FreeLibrary(oLibHandle);
 			oLibHandle = nullptr;
 		}
 
-		if(!sDllDirRand.empty())
+		if (!sDllDirRand.empty())
 		{
 			filesystem::remove_all(sDllDirRand.c_str());
 		}
-		
+
 		sDllDirRand.clear();
 	};
 
@@ -56,7 +64,7 @@ struct HotReloadDll
 	{
 		FreeHandle();
 
-		if(SDllName.empty())
+		if (SDllName.empty())
 		{
 			cout << "Dll Name is Error!" << endl;
 			return false;
@@ -85,40 +93,44 @@ struct HotReloadDll
 	}
 };
 
-export class DimensionNightmare
+class DimensionNightmare
 {
 
 public:
 	DimensionNightmare();
 
-	bool Init(map<string,string>& param);
+	bool Init(map<string, string> &param);
 
 	void InitCmdHandle();
 
-	void ExecCommand(string cmd);
+	void ExecCommand(string* cmd, stringstream* ss);
 
 	void ShutDown();
 
-	BaseServer* GetServer();
-	ActorManager* GetActorManager();
+	inline BaseServer *GetServer() { return pServer; };
+	inline ActorManager *GetActorManager() { return pActorManager; };
 
-    bool OnRegHotReload();
+	bool OnRegHotReload();
 
-    bool OnUnregHotReload();
+	bool OnUnregHotReload();
 
 private:
-	HotReloadDll* pHotDll;
+	HotReloadDll *pHotDll;
 
-	BaseServer* pServer;
+	BaseServer *pServer;
 
-	map<string, function<void()>> mCmdHandle;
+	map<string, function<void(stringstream*)>> mCmdHandle;
 
-	ActorManager* pActorManager;
+	ActorManager *pActorManager;
 };
 
-export DimensionNightmare* GetDimensionNightmare(){
-	static DimensionNightmare* PInstance = nullptr;
-	if(!PInstance){
+module:private;
+
+DimensionNightmare *GetDimensionNightmare()
+{
+	static DimensionNightmare *PInstance = nullptr;
+	if (!PInstance)
+	{
 		PInstance = new DimensionNightmare;
 	}
 
@@ -132,46 +144,50 @@ DimensionNightmare::DimensionNightmare()
 	pActorManager = nullptr;
 }
 
-bool DimensionNightmare::Init(map<string,string>& param)
+bool DimensionNightmare::Init(map<string, string> &param)
 {
 	/*if(!param.count("ip") || !param.count("port"))
 	{
 		cerr << "ip or port Need " << endl;
 		return false;
 	}*/
-
-	pServer = new BaseServer;
-	/*int port = stoi(param["port"]);
-	int listenfd = pServer->createsocket(port, param["ip"].c_str());*/
-	int port = 555;
-	int listenfd = pServer->createsocket(port);
-	if (listenfd < 0) {
-		cout << "createsocket error\n";
+	if(!param.count("svrType"))
+	{
+		cout << "lunch param svrType is null" << endl;
 		return false;
 	}
-	
-	printf("pServer listen on port %d, listenfd=%d ...\n", port, listenfd);
 
-	auto setting = make_shared<unpack_setting_t>();
+	ServerType serverType = (ServerType)stoi(param["svrType"]);
+	// ServerType serverType = ServerType::ControlServer;
+	switch (serverType)
+	{
+	case ServerType::ControlServer:
+		pServer = new ControlServer;
+		break;
+	case ServerType::GlobalServer:
+		pServer = new GlobalServer;
+		break;
+	case ServerType::SessionServer:
+		pServer = new SessionServer;
+		break;
+	default:
+		cout << "ServerType is Not Vaild!" << endl;
+		return false;
+	}
 
-	setting->mode = unpack_mode_e::UNPACK_BY_LENGTH_FIELD;
-	setting->length_field_coding = unpack_coding_e::ENCODE_BY_BIG_ENDIAN;
-	setting->body_offset = 4;
-	setting->length_field_bytes = 1;
-	setting->length_field_offset = 0;
-	pServer->setUnpack(setting.get());
-	pServer->setThreadNum(4);
+	if(!pServer->Init(param))
+		return false;
 
 	pHotDll = new HotReloadDll;
-	if(!pHotDll->ReloadHandle())
+	if (!pHotDll->ReloadHandle())
 		return false;
 
-	if(OnRegHotReload())
-	{
-		pServer->start();
-	}
-
 	pActorManager = new ActorManager;
+
+	if (OnRegHotReload())
+	{
+		pServer->Start();
+	}
 
 	InitCmdHandle();
 
@@ -180,90 +196,82 @@ bool DimensionNightmare::Init(map<string,string>& param)
 
 void DimensionNightmare::InitCmdHandle()
 {
-	auto pause = [this]()
+	auto pause = [this](stringstream*)
 	{
-		if(pServer)
+		if (pServer)
 		{
-			pServer->LoopEvent([](EventLoopPtr loop){
-				loop->pause();
+			pServer->LoopEvent([](EventLoopPtr loop)
+			{ 
+				loop->pause(); 
 			});
 		}
 	};
 
-	auto resume = [this]()
+	auto resume = [this](stringstream*)
 	{
-		if(pServer)
+		if (pServer)
 		{
-			pServer->LoopEvent([](EventLoopPtr loop){
-				loop->resume();
+			pServer->LoopEvent([](EventLoopPtr loop)
+			{ 
+				loop->resume(); 
 			});
 		}
 	};
 
-	auto reload = [&, pause, resume]()
+	auto reload = [&, pause, resume](stringstream *ss)
 	{
-		pause();
+		pause(nullptr);
 		OnUnregHotReload();
 		pHotDll->ReloadHandle();
 		OnRegHotReload();
-		resume();
+		resume(nullptr);
 	};
 
-    mCmdHandle = {
+	mCmdHandle = {
 		{"pause", pause},
 		{"resume", resume},
 		{"reload", reload},
 	};
 }
 
-void DimensionNightmare::ExecCommand(string cmd)
+void DimensionNightmare::ExecCommand(string* cmd, stringstream* ss)
 {
-	if(mCmdHandle.find(cmd) != mCmdHandle.end())
+	if (mCmdHandle.find(*cmd) != mCmdHandle.end())
 	{
-		mCmdHandle[cmd]();
+		mCmdHandle[*cmd](ss);
 	}
 }
 
 void DimensionNightmare::ShutDown()
 {
-	if(pServer)
+	if (pServer)
 	{
-		pServer->stop();
-		hv::async::cleanup();
-		pServer = nullptr; 
+		pServer->Stop();
+		pServer = nullptr;
 	}
 
-	if(pActorManager)
+	if (pActorManager)
 	{
 		delete pActorManager;
 		pActorManager = nullptr;
 	}
 
-	if(pHotDll){
+	if (pHotDll)
+	{
 		delete pHotDll;
 		pHotDll = nullptr;
 	}
 }
 
-BaseServer *DimensionNightmare::GetServer()
-{
-    return pServer;
-}
-
-ActorManager *DimensionNightmare::GetActorManager()
-{
-    return pActorManager;
-}
-
 bool DimensionNightmare::OnRegHotReload()
 {
-	if(auto funtPtr = pHotDll->GetFuncPtr("InitHotReload"))
+	if (auto funtPtr = pHotDll->GetFuncPtr("InitHotReload"))
 	{
-		typedef int (*InitHotReload)(DimensionNightmare&);
+		typedef int (*InitHotReload)(BaseServer &);
 		auto func = reinterpret_cast<InitHotReload>(funtPtr);
-		if(func)
+		if (func)
 		{
-			func(*this);
+			func(*pServer);
 			return true;
 		}
 	}
@@ -273,13 +281,13 @@ bool DimensionNightmare::OnRegHotReload()
 
 bool DimensionNightmare::OnUnregHotReload()
 {
-	if(auto funtPtr = pHotDll->GetFuncPtr("ShutdownHotReload"))
+	if (auto funtPtr = pHotDll->GetFuncPtr("ShutdownHotReload"))
 	{
-		typedef int (*ShutdownHotReload)(DimensionNightmare&);
+		typedef int (*ShutdownHotReload)(BaseServer &);
 		auto func = reinterpret_cast<ShutdownHotReload>(funtPtr);
-		if(func)
+		if (func)
 		{
-			func(*this);
+			func(*pServer);
 			return true;
 		}
 	}

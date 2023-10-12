@@ -1,41 +1,65 @@
 module;
 #include "hv/TcpServer.h"
+#include "hv/TcpClient.h"
 export module BaseServer;
 
-using namespace hv;
 using namespace std;
+using namespace hv;
 
-export class BaseServer :public TcpServer
+export enum class ServerType : int;
+export class BaseServer;
+export class DnServer;
+export class DnClient;
+
+
+enum class ServerType : int
 {
+    None,
+    ControlServer,
+    GlobalServer,
+
+    SessionServer,
+};
+
+class BaseServer
+{
+
 public:
     BaseServer();
-    void LoopEvent(function<void(EventLoopPtr)> func);
 
-    void SetChannelUserData(SocketChannelPtr& channel);
+	virtual bool Init(map<string, string> &param) = 0;
+
+	virtual bool Start() = 0;
+
+	virtual bool Stop() = 0;
+
+    inline ServerType GetServerType(){return emServerType;};
+
+	inline virtual void LoopEvent(function<void(EventLoopPtr)> func){};
+
 public:
-    //Control By Self
-    map<string, SocketChannelPtr> mChild;
+	unsigned int iMsgId;
+
+protected:
+    ServerType emServerType;
 };
+
+class DnServer : public TcpServer
+{
+public:
+
+};
+
+class DnClient : public TcpClient
+{
+public:
+	unsigned int iMsgId;
+};
+
+module:private;
 
 BaseServer::BaseServer()
 {
-    mChild.clear();
-}
-
-void BaseServer::LoopEvent(function<void(EventLoopPtr)> func)
-{
-    map<long,EventLoopPtr> looped;
-    while(EventLoopPtr pLoop = loop()){
-        long id = pLoop->tid();
-        if(looped.find(id) == looped.end())
-        {
-            func(pLoop);
-            looped[id] = pLoop;
-        }
-        else
-        {
-            break;
-        }
-    };
-    
+    emServerType = ServerType::None;
+	iMsgId = 1;
 }

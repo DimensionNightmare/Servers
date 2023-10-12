@@ -21,7 +21,7 @@ project (HotReload)
 
 file(GLOB_RECURSE srcHotReload CONFIGURE_DEPENDS 
 	"HotReload/*"
-	"Source/*"
+	"Source/Server/*"
 	"../Environment/GameConfig/Gen/Code/*.cc"
 )
 add_library( HotReload SHARED ${srcHotReload} )

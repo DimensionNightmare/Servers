@@ -4,8 +4,15 @@ export module MessagePack;
 
 using namespace std;
 
+// declare
 class Message;
+enum class MsgDir : unsigned char;
+struct MessagePacket;
 
+export bool MessagePack(Message* reqMsg, MessagePacket& packet);
+export bool MessageUnpack(char* reqMsg, int len);
+
+// define
 enum class MsgDir : unsigned char
 {
     Outer, //Client Msg
@@ -16,6 +23,7 @@ struct MessagePacket
 {
     unsigned int pkgLenth;
     MsgDir opType;
+	unsigned short serverId;
     unsigned int msgId;
 
     Message* reqData; //virtual
@@ -26,7 +34,10 @@ struct MessagePacket
     }
 };
 
-export bool MessagePack(Message* reqMsg, MessagePacket& packet)
+// implement
+module:private;
+
+bool MessagePack(Message* reqMsg, MessagePacket& packet)
 {
     if(reqMsg == nullptr)
         return false;
@@ -39,7 +50,7 @@ export bool MessagePack(Message* reqMsg, MessagePacket& packet)
     return true;
 }
 
-export bool MessageUnpack(char* reqMsg, int len)
+bool MessageUnpack(char* reqMsg, int len)
 {
     return true;
 }

@@ -3,6 +3,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <map>
 
 #include "schema.pb.h"
 #include "google/protobuf/io/coded_stream.h"
@@ -19,9 +20,39 @@ using namespace std;
 
 import MessagePack;
 
-int main(){
+int main(int argc, char** argv)
+{
+	map<string,string> lunchParam;
+	{
+		string split;
+		vector<string> tokens;
+		for (int i = 1; i < argc; i++)
+		{
+			tokens.clear();
+			stringstream param(argv[i]);
+			
+			while (getline(param, split, '=')) 
+			{
+				tokens.push_back(split);
+			}
+
+			if(tokens.empty() || tokens.size() != 2)
+			{
+				cerr << "program lunch param error! Pos: " << i << endl;
+				return 0;
+			}
+
+			lunchParam.emplace(tokens.front(), tokens.back());
+		}
+	}
+
     TcpClient cli;
-	int port = 555;
+	int port = 0;
+	if(lunchParam.count("port"))
+	{
+		port = stoi(lunchParam["port"]);
+	}
+
     int connfd = cli.createsocket(port);
     if (connfd < 0) {
         return -20;

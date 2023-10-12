@@ -7,7 +7,10 @@ export import Entity;
 
 using namespace std;
 using namespace hv;
-export class ActorManager
+
+export class ActorManager;
+
+class ActorManager
 {
 public:
     ActorManager();
@@ -17,6 +20,8 @@ public:
 public:
     map<int, Entity*> mEntityMap;
 };
+
+module:private;
 
 ActorManager::ActorManager()
 {

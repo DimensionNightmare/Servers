@@ -9,7 +9,7 @@
             "type": "cppvsdbg",
             "request": "launch",
             "program": "${command:cmake.launchTargetPath}",
-            "args": ["port=555","ip=127.0.0.1"],
+            "args": ["svrType=2", "byCtl=0", ],
             "stopAtEntry": false,
             "cwd": "${command:cmake.getLaunchTargetDirectory}",
             "environment": [

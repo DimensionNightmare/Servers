@@ -1,22 +1,21 @@
 module;
 #include "hv/hasync.h"
-#include "hv/hv.h"
 #include "hv/EventLoop.h"
 
 #include <iostream>
-export module GlobalServer;
+export module ControlServer;
 
 import BaseServer;
 
 using namespace std;
 using namespace hv;
 
-export class GlobalServer;
+export class ControlServer;
 
-class GlobalServer : public BaseServer
+class ControlServer : public BaseServer
 {
 public:
-	GlobalServer();
+	ControlServer();
 
 	virtual bool Init(map<string, string> &param) override;
 
@@ -25,32 +24,29 @@ public:
 	virtual bool Stop() override;
 
 	virtual void LoopEvent(function<void(EventLoopPtr)> func) override;
-	
+
 	inline DnServer* GetSSock(){return pSSock;};
-	inline DnClient* GetCSock(){return pCSock;};
 private:
 	DnServer* pSSock;
-	DnClient* pCSock;
 };
 
 module:private;
 
-GlobalServer::GlobalServer()
+ControlServer::ControlServer()
 {
-	emServerType = ServerType::GlobalServer;
+	emServerType = ServerType::ControlServer;
 	pSSock = nullptr;
-	pCSock = nullptr;
 }
 
-bool GlobalServer::Init(map<string, string> &param)
+bool ControlServer::Init(map<string, string> &param)
 {
-	int port = 0;
-	
-	if(param.count("port") > 0)
+	if(!param.count("ip") || !param.count("port"))
 	{
-		port = stoi(param["port"]);
+		cerr << "ip or port Need " << endl;
+		return false;
 	}
-	
+
+	int port = stoi(param["port"]);
 	pSSock = new DnServer;
 
 	int listenfd = pSSock->createsocket(port);
@@ -60,18 +56,7 @@ bool GlobalServer::Init(map<string, string> &param)
 		return false;
 	}
 
-	if(port == 0)
-	{
-		struct sockaddr_in addr;
-		socklen_t addrLen = sizeof(addr);
-		if (getsockname(listenfd, (struct sockaddr*)&addr, &addrLen) < 0) {
-			perror("Error in getsockname");
-			return false;
-		}
-
-		pSSock->port = ntohs(addr.sin_port);
-	}
-	
+    // 输出分配的端口号
 	printf("pSSock listen on port %d, listenfd=%d ...\n", pSSock->port, listenfd);
 
 	auto setting = make_shared<unpack_setting_t>();
@@ -82,44 +67,23 @@ bool GlobalServer::Init(map<string, string> &param)
 	setting->length_field_offset = 0;
 	pSSock->setUnpack(setting.get());
 	pSSock->setThreadNum(4);
-
-	
-	//connet ControlServer
-	if(atoi(param["byCtl"].c_str()) > 0 && param.count("ctlPort") > 0 && param.count("ctlIp") > 0)
-	{
-		pCSock = new DnClient;
-		auto reconn = make_shared<reconn_setting_t>();
-		reconn->min_delay = 1000;
-		reconn->max_delay = 10000;
-		reconn->delay_policy = 2;
-		pCSock->setReconnect(reconn.get());
-		port = stoi(param["byCtl"]);
-		pCSock->createsocket(port, param["ctlIp"].c_str());
-	}
-	
-
 	return true;
 }
 
-bool GlobalServer::Start()
+bool ControlServer::Start()
 {
-	if(!pSSock)
-	{
-		cout << "Server not Initialed" <<endl;
-		return false;
-	}
 	pSSock->start();
 	return true;
 }
 
-bool GlobalServer::Stop()
+bool ControlServer::Stop()
 {
 	pSSock->stop();
 	hv::async::cleanup();
 	return true;
 }
 
-void GlobalServer::LoopEvent(function<void(EventLoopPtr)> func)
+void ControlServer::LoopEvent(function<void(EventLoopPtr)> func)
 {
     map<long,EventLoopPtr> looped;
     while(EventLoopPtr pLoop = pSSock->loop()){
@@ -134,5 +98,4 @@ void GlobalServer::LoopEvent(function<void(EventLoopPtr)> func)
             break;
         }
     };
-    
 }
