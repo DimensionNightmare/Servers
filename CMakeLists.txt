@@ -38,8 +38,8 @@ endif()
 project (DNServer)
 add_executable(DNServer)
 file(GLOB_RECURSE srcDn CONFIGURE_DEPENDS 
-	"main.ixx"
 	"Source/*"
+	"main.ixx"
 )
 target_sources(DNServer PUBLIC ${srcDn})
 add_compile_definitions(DNServer HV_STATICLIB)

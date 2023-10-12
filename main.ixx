@@ -5,13 +5,9 @@
 #include <map>
 #include <vector>
 #include <iostream>
-#include <coroutine>
-#include <chrono>
 #include <dbghelp.h>
 
 import DimensionNightmare;
-
-import DNTask;
 
 #pragma comment(lib, "dbghelp.lib")
 
@@ -25,35 +21,6 @@ enum class LunchType
 
 int main(int argc, char** argv)
 {
-	auto task1 = []() -> DNTask<int>
-	{
-		cout << "sleep 5s" << endl;
-		using namespace std::chrono_literals;
-		// while(true){}
-		co_await suspend_always{};
-		cout << "coroti end 111" << endl;
-		co_await suspend_always{};
-		cout << "coroti end 222" << endl;
-		co_await suspend_always{};
-		cout << "coroti end 333" << endl;
-
-		co_return 50;
-	};
-
-	auto promis = task1();
-
-	string zxc;
-	while (true) 
-	{
-		getline(cin, zxc);
-		if(zxc == "resume")
-		{
-			promis.GetHandle().promise().return_value(1);
-			promis.GetHandle().resume();
-		}
-	}
-
-	return 0;
 	// local output
     locale::global(locale(""));
 	

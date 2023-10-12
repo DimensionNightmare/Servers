@@ -6,6 +6,7 @@ module;
 export module GlobalServerInit;
 
 import GlobalServer;
+import GlobalMessage;
 
 using namespace hv;
 using namespace std;
@@ -51,9 +52,7 @@ void HandleGlobalServerInit(GlobalServer *server)
 				printf("%s connected! connfd=%d id=%d \n", peeraddr.c_str(), channel->fd(), channel->id());
 
 				// send RegistInfo
-				
-				
-				
+				Msg_RegistSelf((int)ServerType::GlobalServer, *server->GetSSock());
 			}
 			else
 			{

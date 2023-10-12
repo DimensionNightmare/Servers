@@ -7,24 +7,26 @@ module;
 export module Msg_RegistSelf;
 
 import DNTask;
+import BaseServer;
 
 using namespace GMsg::Common;
 
-void Msg_RegistSelf()
+export DNTaskVoid Msg_RegistSelf(int serverType, DnServer& server)
 {
-	static auto reply = []()-> DNTask<COM_RegistInfo*>
-	{
-		COM_RegistSelf regist;
-		// regist.set_server_type((int)ServerType::GlobalServer);
-		// if(auto sSock = server->GetSSock())
-		// {
-		// 	regist.set_ip(sSock->host);
-		// 	regist.set_port(sSock->port);
-		// }
-		co_await std::suspend_always{};
+	COM_RegistSelf Request;
+	COM_RegistInfo Response;
 
-		co_return;
+	Request.set_server_type(serverType);
+	Request.set_ip(server.host);
+	Request.set_port(server.port);
+	
+
+	auto handle = [Response]()-> DNTask<COM_RegistInfo>
+	{
+		co_return Response;
 	};
 
-	reply();
+	Response = co_await handle();
+		
+	co_return;
 }
