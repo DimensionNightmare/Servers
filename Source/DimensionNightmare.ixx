@@ -5,6 +5,10 @@ module;
 #include <Windows.h>
 #include <DbgHelp.h>
 #include <filesystem>
+
+#include "Common.pb.h"
+#include "google/protobuf/message.h"
+#include <coroutine>
 export module DimensionNightmare;
 
 import BaseServer;
@@ -13,6 +17,8 @@ import GlobalServer;
 import SessionServer;
 
 import ActorManager;
+
+import DNTask;
 
 using namespace hv;
 using namespace std;
@@ -146,6 +152,52 @@ DimensionNightmare::DimensionNightmare()
 
 bool DimensionNightmare::Init(map<string, string> &param)
 {
+	using namespace GMsg::Common;
+	using namespace google::protobuf;
+
+	
+	DNTask<Message>* pTas = nullptr;
+
+	COM_RegistSelf req;
+	COM_RegistInfo res;
+
+	DNTask<COM_RegistInfo> zxcqq;
+
+
+	auto task = [&]()->DNTaskVoid
+	{
+		int a = 32;
+		
+		auto funcRet = [&res]()-> DNTask<COM_RegistInfo>
+		{
+			co_return res;
+		};
+
+		auto handle = funcRet();
+		pTas = (DNTask<Message>*)&handle;
+		res = co_await handle;
+
+		cout << "a:" <<a <<endl;
+			
+		co_return;
+	};
+
+	auto tvoid = task();
+
+	while(true)
+	{
+		string asd;
+		getline(cin,asd);
+		if(asd == "aaa")
+		{
+			if(pTas)
+			{
+				COM_RegistInfo res;
+				pTas->Resume();
+			}
+		}
+	}
+	return false;
 	/*if(!param.count("ip") || !param.count("port"))
 	{
 		cerr << "ip or port Need " << endl;

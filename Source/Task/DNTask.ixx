@@ -36,16 +36,20 @@ struct DNTask
 
 		void unhandled_exception() { terminate(); }
 
-		const T* getResult() const { return oResult; }
+		const T* GetResult() const { return oResult; }
 
 		const T* oResult;
 	};
+
+	DNTask()
+	{
+		memset(this, 0, sizeof *this);
+	}
 
 	DNTask(auto handle)
 	{
 		memset(this, 0, sizeof *this);
 		tHandle = handle;
-		pCaller = nullptr;
 	}
 
 	~DNTask()
@@ -55,7 +59,7 @@ struct DNTask
 
 	constexpr bool await_ready() const noexcept 
 	{
-		if( tHandle.promise().getResult() != nullptr)
+		if(tHandle.done())
 			return true; 
 		else
 			return false;
@@ -83,7 +87,7 @@ struct DNTask
 
 	auto GetResult()
 	{
-		return *tHandle.promise().getResult();
+		return *tHandle.promise().GetResult();
 	}
 
 	void SetResult(T& res)
@@ -94,6 +98,11 @@ struct DNTask
         	pCaller.resume();
 			pCaller = nullptr;
 		}
+	}
+
+	auto GetHandle()
+	{
+		return tHandle;
 	}
 
 private:
@@ -123,7 +132,7 @@ export struct DNTaskVoid
 
 		auto initial_suspend() { return suspend_never{}; }
 
-		auto final_suspend() noexcept { return suspend_never{}; }
+		auto final_suspend() noexcept { return suspend_always{}; }
 
 		void unhandled_exception() { terminate(); }
 	};

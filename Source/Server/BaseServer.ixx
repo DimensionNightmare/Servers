@@ -53,6 +53,7 @@ public:
 class DnClient : public TcpClient
 {
 public:
+	// only oddnumber
 	unsigned int iMsgId;
 };
 

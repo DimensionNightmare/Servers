@@ -4,15 +4,20 @@ module;
 #include "Common.pb.h"
 
 #include <coroutine>
+#include <map>
 export module Msg_RegistSelf;
 
 import DNTask;
 import BaseServer;
 
 using namespace GMsg::Common;
+using namespace std;
 
-export DNTaskVoid Msg_RegistSelf(int serverType, DnServer& server)
+// client request
+export void Msg_RegistSelf(int serverType, DnServer& server)
 {
+
+	
 	COM_RegistSelf Request;
 	COM_RegistInfo Response;
 
@@ -20,13 +25,13 @@ export DNTaskVoid Msg_RegistSelf(int serverType, DnServer& server)
 	Request.set_ip(server.host);
 	Request.set_port(server.port);
 	
-
-	auto handle = [Response]()-> DNTask<COM_RegistInfo>
+	auto handle = [Response]()-> DNTaskVoid
 	{
-		co_return Response;
-	};
+		co_return;
+	}();
 
-	Response = co_await handle();
-		
-	co_return;
+
+	map<int, DNTaskVoid*> tasks;
+	tasks.emplace(3, &handle);
+
 }
