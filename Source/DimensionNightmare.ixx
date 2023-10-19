@@ -58,6 +58,12 @@ struct HotReloadDll
 
 	bool ReloadHandle()
 	{
+		if(!std::filesystem::exists(SDllDir))
+		{
+			cout << "dll menu not exist!!" <<endl;
+			return false;
+		}
+
 		FreeHandle();
 
 		if (SDllName.empty())

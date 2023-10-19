@@ -14,24 +14,31 @@ using namespace GMsg::Common;
 using namespace std;
 
 // client request
-export void Msg_RegistSelf(int serverType, DNServerProxy& server)
+export void Msg_RegistSelf(DNClientProxy& client, int serverType, DNServerProxy& server)
 {
-
-	
-	COM_RegistSelf Request;
-	COM_RegistInfo Response;
-
-	Request.set_server_type(serverType);
-	Request.set_ip(server.host);
-	Request.set_port(server.port);
-	
-	auto handle = [Response]()-> DNTaskVoid
+	auto handle = [&serverType, &server]()-> DNTaskVoid
 	{
+		COM_RegistSelf Request;
+
+		Request.set_server_type(serverType);
+		Request.set_ip(server.host);
+		Request.set_port(server.port);
+
+		//client
+
+		auto Res = []()->DNTask<COM_RegistInfo*>
+		{
+			co_return new COM_RegistInfo;
+		};
+
+		auto resHandle = Res();
+
+		co_await resHandle;
+
 		co_return;
 	}();
 
-
-	map<int, DNTaskVoid*> tasks;
-	tasks.emplace(3, &handle);
+	// task
+	client.InsertMsg(client.GetMsgId(), &handle);
 
 }

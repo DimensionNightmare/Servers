@@ -6,6 +6,7 @@
 #include <vector>
 #include <iostream>
 #include <dbghelp.h>
+#include <filesystem>
 
 import DimensionNightmare;
 
@@ -23,7 +24,9 @@ int main(int argc, char** argv)
 {
 	// local output
     locale::global(locale(""));
-	
+
+	filesystem::path execPath = argv[0];
+	SetCurrentDirectory(execPath.parent_path().string().c_str());
 	//lunch param
 	map<string,string> lunchParam;
 	{

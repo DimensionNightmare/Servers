@@ -46,8 +46,11 @@ file(GLOB_RECURSE srcHotReloadModule CONFIGURE_DEPENDS
 	"Source/Message/*"
 )
 add_library( HotReload SHARED)
-target_sources(HotReload PUBLIC PUBLIC ${srcHotReloadNormal}  PUBLIC FILE_SET all_my_modules TYPE CXX_MODULES FILES
-   	${srcHotReloadModule}
+target_sources(HotReload 
+	PUBLIC 
+		${srcHotReloadNormal}  
+	PUBLIC FILE_SET all_my_modules TYPE CXX_MODULES FILES
+   		${srcHotReloadModule}
 )
 target_compile_definitions(HotReload PRIVATE HV_STATICLIB HOTRELOAD_BUILD)
 set_target_properties(HotReload PROPERTIES RUNTIME_OUTPUT_DIRECTORY  ${CMAKE_BINARY_DIR}/Runtime)
@@ -69,8 +72,11 @@ file(GLOB_RECURSE DNSourceModule CONFIGURE_DEPENDS
 
 add_executable(DimensionNightmareServer)
 
-target_sources(DimensionNightmareServer PUBLIC ${DNSourceNormal} PUBLIC FILE_SET all_my_modules TYPE CXX_MODULES FILES
-	${DNSourceModule}
+target_sources(DimensionNightmareServer 
+	PUBLIC 
+		${DNSourceNormal} 
+	PUBLIC FILE_SET all_my_modules TYPE CXX_MODULES FILES
+		${DNSourceModule}
 )
 add_compile_definitions(DimensionNightmareServer HV_STATICLIB)
 target_link_libraries(DimensionNightmareServer PRIVATE "hv_static.lib" "libprotobufd.lib")
@@ -78,16 +84,16 @@ if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET DimensionNightmareServer PROPERTY CXX_STANDARD 23)
 endif()
 
-add_executable(LibhvTest)
-file(GLOB_RECURSE srcLibhvTest CONFIGURE_DEPENDS 
-	Test/libhv/*.ixx 
-	../Environment/GameConfig/Gen/Code/*.cc 
-	Source/Message/*.ixx
-)
-target_sources(LibhvTest PUBLIC ${srcLibhvTest})
-target_link_libraries(LibhvTest PRIVATE hv_static.lib libprotobufd.lib)
-if (CMAKE_VERSION VERSION_GREATER 3.12)
-  set_property(TARGET LibhvTest PROPERTY CXX_STANDARD 23)
-endif()
+# add_executable(LibhvTest)
+# file(GLOB_RECURSE srcLibhvTest CONFIGURE_DEPENDS 
+# 	Test/libhv/*.ixx 
+# 	../Environment/GameConfig/Gen/Code/*.cc 
+# 	Source/Message/*.ixx
+# )
+# target_sources(LibhvTest PUBLIC ${srcLibhvTest})
+# target_link_libraries(LibhvTest PRIVATE hv_static.lib libprotobufd.lib)
+# if (CMAKE_VERSION VERSION_GREATER 3.12)
+#   set_property(TARGET LibhvTest PROPERTY CXX_STANDARD 23)
+# endif()
 
 # TODO: 如有需要，请添加测试并安装目标。

@@ -50,12 +50,18 @@ export class DNClientProxy : public TcpClient
 public:
 	DNClientProxy();
 
-	inline auto GetMsgMap(){return &tasks;}
+	inline auto GetMsgId(){return iMsgId++;}
+
+	inline auto GetMsgMap(){return &mMsgList;}
+
+	void InsertMsg(int msgId, DNTaskVoid* task);
+
+	// auto popMsg(int msgId);
 private:
 	// only oddnumber
 	unsigned int iMsgId;
 
-	map<int, pair<DNTaskVoid*, DNTask<any*>* >> tasks;
+	map<int, DNTaskVoid*> mMsgList;
 };
 
 module:private;
@@ -71,8 +77,11 @@ DNServerProxy::DNServerProxy()
 
 DNClientProxy::DNClientProxy()
 {
-	iMsgId = 1;
-	tasks.clear();
+	iMsgId = 0;
+	mMsgList.clear();
 }
 
-
+void DNClientProxy::InsertMsg(int msgId, DNTaskVoid *task)
+{
+	mMsgList[msgId] = task;
+}

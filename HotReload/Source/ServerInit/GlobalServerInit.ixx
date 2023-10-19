@@ -15,10 +15,23 @@ using namespace google::protobuf;
 export void HandleGlobalServerInit(GlobalServer *server);
 export void HandleGlobalServerShutdown(GlobalServer *server);
 
+
 module:private;
+
+static GlobalServer* PGlobalServer = nullptr;
+GlobalServer* GetGlobalServer(GlobalServer* server = nullptr)
+{
+	if(server)
+	{
+		PGlobalServer = server;
+	}
+
+	return PGlobalServer;
+}
 
 void HandleGlobalServerInit(GlobalServer *server)
 {
+	GetGlobalServer(server);
 	if (auto sSock = server->GetSSock())
 	{
 		auto onConnection = [&](const SocketChannelPtr &channel)
@@ -44,7 +57,7 @@ void HandleGlobalServerInit(GlobalServer *server)
 
 	if (auto cSock = server->GetCSock())
 	{
-		auto onConnection = [&cSock, &server](const SocketChannelPtr &channel)
+		auto onConnection = [](const SocketChannelPtr &channel)
 		{
 			string peeraddr = channel->peeraddr();
 			if (channel->isConnected())
@@ -59,7 +72,7 @@ void HandleGlobalServerInit(GlobalServer *server)
 				printf("%s disconnected! connfd=%d id=%d \n", peeraddr.c_str(), channel->fd(), channel->id());
 			}
 
-			if(cSock->isReconnect())
+			if(GetGlobalServer()->GetCSock()->isReconnect())
 			{
 
 			}
