@@ -32,7 +32,7 @@ void HandleControlServerInit(ControlServer *server)
 		};
 
 		auto onMessage = [](const SocketChannelPtr &channel, Buffer *buf) {
-
+			auto data = buf->data();
 		};
 
 		sSock->onConnection = onConnection;

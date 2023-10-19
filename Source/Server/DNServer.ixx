@@ -2,13 +2,14 @@ module;
 #include "hv/TcpServer.h"
 #include "hv/TcpClient.h"
 
-#include <any>
+#include "google/protobuf/message.h"
 export module DNServer;
 
 import DNTask;
 
 using namespace std;
 using namespace hv;
+using namespace google::protobuf;
 
 export enum class ServerType : int
 {
@@ -54,14 +55,12 @@ public:
 
 	inline auto GetMsgMap(){return &mMsgList;}
 
-	void InsertMsg(int msgId, DNTaskVoid* task);
-
 	// auto popMsg(int msgId);
 private:
 	// only oddnumber
 	unsigned int iMsgId;
 
-	map<int, DNTaskVoid*> mMsgList;
+	map<int, pair<DNTaskVoid*, DNTask<Message*>*> > mMsgList;
 };
 
 module:private;
@@ -79,9 +78,4 @@ DNClientProxy::DNClientProxy()
 {
 	iMsgId = 0;
 	mMsgList.clear();
-}
-
-void DNClientProxy::InsertMsg(int msgId, DNTaskVoid *task)
-{
-	mMsgList[msgId] = task;
 }

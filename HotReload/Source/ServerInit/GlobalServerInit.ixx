@@ -60,19 +60,21 @@ void HandleGlobalServerInit(GlobalServer *server)
 		auto onConnection = [](const SocketChannelPtr &channel)
 		{
 			string peeraddr = channel->peeraddr();
+			auto globalSrv = GetGlobalServer();
 			if (channel->isConnected())
 			{
 				printf("%s connected! connfd=%d id=%d \n", peeraddr.c_str(), channel->fd(), channel->id());
 
 				// send RegistInfo
-				// Msg_RegistSelf((int)ServerType::GlobalServer, *server->GetSSock());
+				
+				Msg_RegistSelf((int)ServerType::GlobalServer, *globalSrv->GetCSock(), *globalSrv->GetSSock());
 			}
 			else
 			{
 				printf("%s disconnected! connfd=%d id=%d \n", peeraddr.c_str(), channel->fd(), channel->id());
 			}
 
-			if(GetGlobalServer()->GetCSock()->isReconnect())
+			if(globalSrv->GetCSock()->isReconnect())
 			{
 
 			}

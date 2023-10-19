@@ -4,41 +4,46 @@ module;
 #include "Common.pb.h"
 
 #include <coroutine>
-#include <map>
 export module Msg_RegistSelf;
 
 import DNTask;
 import DNServer;
+import MessagePack;
 
 using namespace GMsg::Common;
 using namespace std;
+using namespace google::protobuf;
 
 // client request
-export void Msg_RegistSelf(DNClientProxy& client, int serverType, DNServerProxy& server)
+export void Msg_RegistSelf(int serverType, DNClientProxy& client, DNServerProxy& server)
 {
-	auto handle = [&serverType, &server]()-> DNTaskVoid
+
+	COM_RegistSelf Request;
+
+	Request.set_server_type(serverType);
+	Request.set_ip(server.host);
+	Request.set_port(server.port);
+
+	//client
+	auto dataChannel = []()->DNTask<COM_RegistInfo*>
 	{
-		COM_RegistSelf Request;
+		co_return new COM_RegistInfo;
+	}();
 
-		Request.set_server_type(serverType);
-		Request.set_ip(server.host);
-		Request.set_port(server.port);
-
-		//client
-
-		auto Res = []()->DNTask<COM_RegistInfo*>
-		{
-			co_return new COM_RegistInfo;
-		};
-
-		auto resHandle = Res();
-
-		co_await resHandle;
+	auto taskChannel = [&dataChannel]()-> DNTaskVoid
+	{
+		
+		co_await dataChannel;
 
 		co_return;
 	}();
 
+	string binData;
+	binData.resize(Request.ByteSize());
+	Request.SerializeToArray(binData.data(), binData.size());
 	// task
-	client.InsertMsg(client.GetMsgId(), &handle);
-
+	auto msgId = client.GetMsgId();
+	client.GetMsgMap()->emplace(msgId, make_pair(&taskChannel,  (DNTask<Message*>*)&dataChannel));
+	MessagePack(msgId, binData);
+	client.send(binData);
 }

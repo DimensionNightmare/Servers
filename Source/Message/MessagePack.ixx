@@ -7,41 +7,44 @@ using namespace std;
 // define
 enum class MsgDir : unsigned char
 {
-    Outer, //Client Msg
-    Inner, //Server Msg
+	Outer, // Client Msg
+	Inner, // Server Msg
 };
 
 export struct MessagePacket
 {
-    unsigned int pkgLenth;
-    MsgDir opType;
+	static int HeadLen;
+	unsigned int pkgLenth;
+	MsgDir opType;
 	unsigned short serverId;
-    unsigned int msgId;
+	unsigned int msgId;
 
-    MessagePacket()
-    {
-        memset(this, 0 , sizeof *this);
-    }
+	MessagePacket()
+	{
+		memset(this, 0, sizeof *this);
+	}
 };
 
-// export bool MessagePack(Message* reqMsg, MessagePacket& packet);
+int MessagePacket::HeadLen = sizeof MessagePacket;
+
+export bool MessagePack(unsigned int msgId, string &data);
 // export bool MessageUnpack(char* reqMsg, int len);
 
 // implement
-module:private;
+module :private;
 
-// bool MessagePack(Message* reqMsg, MessagePacket& packet)
-// {
-//     if(reqMsg == nullptr)
-//         return false;
-
-//     // mp.opType = MsgDir::Outer;
-//     // mp.msgId = msgId;
-    
-//     string name;
-    
-//     return true;
-// }
+bool MessagePack(unsigned int msgId, string &data)
+{
+	MessagePacket packet;
+	packet.msgId = msgId;
+	int datalen = data.size();
+	packet.pkgLenth = datalen;
+	data.resize(MessagePacket::HeadLen + datalen);
+	
+	memmove_s(data.data() + MessagePacket::HeadLen, datalen, data.data(), datalen);
+	memcpy(data.data(), &packet, MessagePacket::HeadLen);
+	return true;
+}
 
 // bool MessageUnpack(char* reqMsg, int len)
 // {

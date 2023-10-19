@@ -63,7 +63,7 @@ bool ControlServer::Init(map<string, string> &param)
 	auto setting = make_shared<unpack_setting_t>();
 	setting->mode = unpack_mode_e::UNPACK_BY_LENGTH_FIELD;
 	setting->length_field_coding = unpack_coding_e::ENCODE_BY_BIG_ENDIAN;
-	setting->body_offset = sizeof MessagePacket;
+	setting->body_offset = MessagePacket::HeadLen;
 	setting->length_field_bytes = 1;
 	setting->length_field_offset = 0;
 	pSSock->setUnpack(setting.get());
