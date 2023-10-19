@@ -8,13 +8,13 @@ module;
 export module Msg_RegistSelf;
 
 import DNTask;
-import BaseServer;
+import DNServer;
 
 using namespace GMsg::Common;
 using namespace std;
 
 // client request
-export void Msg_RegistSelf(int serverType, DnServer& server)
+export void Msg_RegistSelf(int serverType, DNServerProxy& server)
 {
 
 	

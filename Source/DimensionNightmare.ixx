@@ -6,26 +6,16 @@ module;
 #include <DbgHelp.h>
 #include <filesystem>
 
-#include "Common.pb.h"
-#include "google/protobuf/message.h"
-#include <coroutine>
 export module DimensionNightmare;
 
-import BaseServer;
+import DNServer;
 import ControlServer;
 import GlobalServer;
-import SessionServer;
 
 import ActorManager;
 
-import DNTask;
-
 using namespace hv;
 using namespace std;
-
-struct HotReloadDll;
-export class DimensionNightmare;
-export DimensionNightmare *GetDimensionNightmare();
 
 struct HotReloadDll
 {
@@ -99,7 +89,7 @@ struct HotReloadDll
 	}
 };
 
-class DimensionNightmare
+export class DimensionNightmare
 {
 
 public:
@@ -113,8 +103,8 @@ public:
 
 	void ShutDown();
 
-	inline BaseServer *GetServer() { return pServer; };
-	inline ActorManager *GetActorManager() { return pActorManager; };
+	inline DNServer *GetServer() { return pServer; }
+	inline ActorManager *GetActorManager() { return pActorManager; }
 
 	bool OnRegHotReload();
 
@@ -123,12 +113,14 @@ public:
 private:
 	HotReloadDll *pHotDll;
 
-	BaseServer *pServer;
+	DNServer *pServer;
 
 	map<string, function<void(stringstream*)>> mCmdHandle;
 
 	ActorManager *pActorManager;
 };
+
+export DimensionNightmare *GetDimensionNightmare();
 
 module:private;
 
@@ -152,52 +144,6 @@ DimensionNightmare::DimensionNightmare()
 
 bool DimensionNightmare::Init(map<string, string> &param)
 {
-	using namespace GMsg::Common;
-	using namespace google::protobuf;
-
-	
-	DNTask<Message>* pTas = nullptr;
-
-	COM_RegistSelf req;
-	COM_RegistInfo res;
-
-	DNTask<COM_RegistInfo> zxcqq;
-
-
-	auto task = [&]()->DNTaskVoid
-	{
-		int a = 32;
-		
-		auto funcRet = [&res]()-> DNTask<COM_RegistInfo>
-		{
-			co_return res;
-		};
-
-		auto handle = funcRet();
-		pTas = (DNTask<Message>*)&handle;
-		res = co_await handle;
-
-		cout << "a:" <<a <<endl;
-			
-		co_return;
-	};
-
-	auto tvoid = task();
-
-	while(true)
-	{
-		string asd;
-		getline(cin,asd);
-		if(asd == "aaa")
-		{
-			if(pTas)
-			{
-				COM_RegistInfo res;
-				pTas->Resume();
-			}
-		}
-	}
-	return false;
 	/*if(!param.count("ip") || !param.count("port"))
 	{
 		cerr << "ip or port Need " << endl;
@@ -218,9 +164,6 @@ bool DimensionNightmare::Init(map<string, string> &param)
 		break;
 	case ServerType::GlobalServer:
 		pServer = new GlobalServer;
-		break;
-	case ServerType::SessionServer:
-		pServer = new SessionServer;
 		break;
 	default:
 		cout << "ServerType is Not Vaild!" << endl;
@@ -319,7 +262,7 @@ bool DimensionNightmare::OnRegHotReload()
 {
 	if (auto funtPtr = pHotDll->GetFuncPtr("InitHotReload"))
 	{
-		typedef int (*InitHotReload)(BaseServer &);
+		typedef int (*InitHotReload)(DNServer &);
 		auto func = reinterpret_cast<InitHotReload>(funtPtr);
 		if (func)
 		{
@@ -335,7 +278,7 @@ bool DimensionNightmare::OnUnregHotReload()
 {
 	if (auto funtPtr = pHotDll->GetFuncPtr("ShutdownHotReload"))
 	{
-		typedef int (*ShutdownHotReload)(BaseServer &);
+		typedef int (*ShutdownHotReload)(DNServer &);
 		auto func = reinterpret_cast<ShutdownHotReload>(funtPtr);
 		if (func)
 		{

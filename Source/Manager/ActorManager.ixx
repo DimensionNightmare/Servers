@@ -8,9 +8,7 @@ export import Entity;
 using namespace std;
 using namespace hv;
 
-export class ActorManager;
-
-class ActorManager
+export class ActorManager
 {
 public:
     ActorManager();

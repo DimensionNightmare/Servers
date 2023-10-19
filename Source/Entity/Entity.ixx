@@ -2,9 +2,7 @@ module;
 
 export module Entity;
 
-export class Entity;
-
-class Entity
+export class Entity
 {
     
 public:

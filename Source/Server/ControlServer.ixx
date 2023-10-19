@@ -5,14 +5,13 @@ module;
 #include <iostream>
 export module ControlServer;
 
-import BaseServer;
+import DNServer;
+import MessagePack;
 
 using namespace std;
 using namespace hv;
 
-export class ControlServer;
-
-class ControlServer : public BaseServer
+export class ControlServer : public DNServer
 {
 public:
 	ControlServer();
@@ -25,9 +24,11 @@ public:
 
 	virtual void LoopEvent(function<void(EventLoopPtr)> func) override;
 
-	inline DnServer* GetSSock(){return pSSock;};
+	inline DNServerProxy* GetSSock(){return pSSock;}
+
+	inline virtual bool ClientSend(void* pData, int len) override { return false;}
 private:
-	DnServer* pSSock;
+	DNServerProxy* pSSock;
 };
 
 module:private;
@@ -47,7 +48,7 @@ bool ControlServer::Init(map<string, string> &param)
 	}
 
 	int port = stoi(param["port"]);
-	pSSock = new DnServer;
+	pSSock = new DNServerProxy;
 
 	int listenfd = pSSock->createsocket(port);
 	if (listenfd < 0)
@@ -62,7 +63,7 @@ bool ControlServer::Init(map<string, string> &param)
 	auto setting = make_shared<unpack_setting_t>();
 	setting->mode = unpack_mode_e::UNPACK_BY_LENGTH_FIELD;
 	setting->length_field_coding = unpack_coding_e::ENCODE_BY_BIG_ENDIAN;
-	setting->body_offset = 4;
+	setting->body_offset = sizeof MessagePacket;
 	setting->length_field_bytes = 1;
 	setting->length_field_offset = 0;
 	pSSock->setUnpack(setting.get());

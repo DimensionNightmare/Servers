@@ -3,14 +3,12 @@ module;
 #include "hv/hloop.h"
 export module RegHandle;
 
-import BaseServer;
+import DNServer;
 import ControlServer;
 import GlobalServer;
-import SessionServer;
 
 import GlobalServerInit;
 import ControlServerInit;
-import SessionServerInit;
 
 #ifdef HOTRELOAD_BUILD
 #define HOTRELOAD __declspec(dllexport)
@@ -20,13 +18,13 @@ import SessionServerInit;
 
 extern "C"
 {
-	HOTRELOAD int InitHotReload(BaseServer &base);
-	HOTRELOAD int ShutdownHotReload(BaseServer &base);
+	HOTRELOAD int InitHotReload(DNServer &base);
+	HOTRELOAD int ShutdownHotReload(DNServer &base);
 }
 
 module:private;
 
-int InitHotReload(BaseServer &base)
+int InitHotReload(DNServer &base)
 {
 	ServerType servertype = base.GetServerType();
 	switch (servertype)
@@ -35,19 +33,14 @@ int InitHotReload(BaseServer &base)
 	{
 		ControlServer *server = (ControlServer *)&base;
 		HandleControlServerInit(server);
+		// DllServer(server);
 		break;
 	}
 	case ServerType::GlobalServer:
 	{
 		GlobalServer *server = (GlobalServer *)&base;
 		HandleGlobalServerInit(server);
-		break;
-	}
-	case ServerType::SessionServer:
-	{
-
-		SessionServer *server = (SessionServer *)&base;
-		HandleSessionServerInit(server);
+		// DllServer(server);
 		break;
 	}
 	}
@@ -55,7 +48,7 @@ int InitHotReload(BaseServer &base)
 	return 0;
 }
 
-int ShutdownHotReload(BaseServer &base)
+int ShutdownHotReload(DNServer &base)
 {
 	ServerType servertype = base.GetServerType();
 	switch (servertype)
@@ -64,23 +57,16 @@ int ShutdownHotReload(BaseServer &base)
 	{
 		ControlServer *server = (ControlServer *)&base;
 		HandleControlServerShutdown(server);
+	break;
 	}
 
-	break;
 	case ServerType::GlobalServer:
 	{
 
 		GlobalServer *server = (GlobalServer *)&base;
 		HandleGlobalServerShutdown(server);
-	}
 	break;
-	case ServerType::SessionServer:
-	{
-		SessionServer *server = (SessionServer *)&base;
-		HandleSessionServerShutdown(server);
 	}
-
-	break;
 	}
 
 	return 0;

@@ -6,14 +6,13 @@ module;
 #include <iostream>
 export module GlobalServer;
 
-import BaseServer;
+import DNServer;
+import MessagePack;
 
 using namespace std;
 using namespace hv;
 
-export class GlobalServer;
-
-class GlobalServer : public BaseServer
+export class GlobalServer : public DNServer
 {
 public:
 	GlobalServer();
@@ -25,12 +24,14 @@ public:
 	virtual bool Stop() override;
 
 	virtual void LoopEvent(function<void(EventLoopPtr)> func) override;
+
+	inline virtual bool ClientSend(void* pData, int len) override;
 	
-	inline DnServer* GetSSock(){return pSSock;};
-	inline DnClient* GetCSock(){return pCSock;};
+	inline DNServerProxy* GetSSock(){return pSSock;}
+	inline DNClientProxy* GetCSock(){return pCSock;}
 private:
-	DnServer* pSSock;
-	DnClient* pCSock;
+	DNServerProxy* pSSock;
+	DNClientProxy* pCSock;
 };
 
 module:private;
@@ -51,7 +52,7 @@ bool GlobalServer::Init(map<string, string> &param)
 		port = stoi(param["port"]);
 	}
 	
-	pSSock = new DnServer;
+	pSSock = new DNServerProxy;
 
 	int listenfd = pSSock->createsocket(port);
 	if (listenfd < 0)
@@ -77,7 +78,7 @@ bool GlobalServer::Init(map<string, string> &param)
 	auto setting = make_shared<unpack_setting_t>();
 	setting->mode = unpack_mode_e::UNPACK_BY_LENGTH_FIELD;
 	setting->length_field_coding = unpack_coding_e::ENCODE_BY_BIG_ENDIAN;
-	setting->body_offset = 4;
+	setting->body_offset = sizeof MessagePacket;
 	setting->length_field_bytes = 1;
 	setting->length_field_offset = 0;
 	pSSock->setUnpack(setting.get());
@@ -87,7 +88,7 @@ bool GlobalServer::Init(map<string, string> &param)
 	//connet ControlServer
 	if(atoi(param["byCtl"].c_str()) > 0 && param.count("ctlPort") > 0 && param.count("ctlIp") > 0)
 	{
-		pCSock = new DnClient;
+		pCSock = new DNClientProxy;
 		auto reconn = make_shared<reconn_setting_t>();
 		reconn->min_delay = 1000;
 		reconn->max_delay = 10000;
@@ -109,12 +110,22 @@ bool GlobalServer::Start()
 		return false;
 	}
 	pSSock->start();
+
+	if(pCSock)
+	{
+		pCSock->start();
+	}
+
 	return true;
 }
 
 bool GlobalServer::Stop()
 {
 	pSSock->stop();
+	if(pCSock)
+	{
+		pCSock->stop();
+	}
 	hv::async::cleanup();
 	return true;
 }
@@ -135,4 +146,11 @@ void GlobalServer::LoopEvent(function<void(EventLoopPtr)> func)
         }
     };
     
+}
+
+bool GlobalServer::ClientSend(void *pData, int len)
+{
+
+	// pCSock->writeBuf(pData, len);
+	return false;
 }
