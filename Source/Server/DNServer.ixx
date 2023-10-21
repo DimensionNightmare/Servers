@@ -58,7 +58,7 @@ private:
 	// only oddnumber
 	unsigned char iMsgId;
 
-	map<int, pair<DNTaskVoid*, DNTask<Message*>*> > mMsgList;
+	map<int, pair<DNTaskVoid, DNTask<Message*>> > mMsgList;
 };
 
 module:private;

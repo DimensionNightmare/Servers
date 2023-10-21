@@ -84,10 +84,10 @@ void HandleGlobalServerInit(GlobalServer *server)
 						auto pair = (*reqMap)[packet.msgId];
 						reqMap->erase(packet.msgId);
 						
-						pair.first->Resume();
-						// Message* message = pair.second->GetResult();
-						// message->ParseFromArray((const char*)buf->data() + MessagePacket::PackLenth + packet.msgLenth, packet.pkgLenth - packet.msgLenth);
-						// pair.second->CallResume();
+						pair.second.Resume();
+						Message* message = pair.second.GetResult();
+						message->ParseFromArray((const char*)buf->data() + MessagePacket::PackLenth + packet.msgLenth, packet.pkgLenth - packet.msgLenth);
+						pair.first.Resume();
 					}
 				}
 			}

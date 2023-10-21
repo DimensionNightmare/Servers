@@ -25,6 +25,7 @@ export void Msg_RegistSrv(const SocketChannelPtr &channel, unsigned char msgId, 
 	binData.resize(response.ByteSize());
 	response.SerializeToArray(binData.data(), binData.size());
 
-	MessagePack(msgId, MsgDir::Inner, C2G_RegistSrv::GetDescriptor()->full_name(), binData);
+	string name;
+	MessagePack(msgId, MsgDir::Inner, name, binData);
 	channel->write(binData);
 }

@@ -25,25 +25,30 @@ export void Msg_RegistSrv(int serverType, DNClientProxy& client, DNServerProxy& 
 	requset.set_port(server.port);
 
 	//client
-	auto dataChannel = []()->DNTask<C2G_RegistSrv*>
+	auto dataFunc = []()->DNTask<Message*>
 	{
 		co_return new C2G_RegistSrv;
-	}();
+	};
 
-	auto taskChannel = [&dataChannel]()-> DNTaskVoid
+	auto dataChannel = dataFunc();
+
+	auto taskFunc = [](DNTask<Message*> dataChannel)-> DNTaskVoid
 	{
-		
-		co_await dataChannel;
-
+		co_await suspend_always{};
+		auto res = dataChannel.GetResult();
+		cout << "success" << endl;
+		dataChannel.tHandle.destroy();
 		co_return;
-	}();
+	};
+
+	auto taskChannel = taskFunc(dataChannel);
 
 	string binData;
 	binData.resize(requset.ByteSize());
 	requset.SerializeToArray(binData.data(), binData.size());
 	// task
 	auto msgId = client.GetMsgId();
-	client.GetMsgMap()->emplace(msgId, make_pair(&taskChannel,  (DNTask<Message*>*)&dataChannel));
+	client.GetMsgMap()->insert({msgId, {taskChannel,  dataChannel}});
 	MessagePack(msgId, MsgDir::Inner, G2C_RegistSrv::GetDescriptor()->full_name(), binData);
 	client.send(binData);
 }

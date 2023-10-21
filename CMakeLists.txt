@@ -84,16 +84,14 @@ if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET DimensionNightmareServer PROPERTY CXX_STANDARD 23)
 endif()
 
-# add_executable(LibhvTest)
-# file(GLOB_RECURSE srcLibhvTest CONFIGURE_DEPENDS 
-# 	Test/libhv/*.ixx 
-# 	../Environment/GameConfig/Gen/Code/*.cc 
-# 	Source/Message/*.ixx
-# )
-# target_sources(LibhvTest PUBLIC ${srcLibhvTest})
+add_executable(LibhvTest)
+file(GLOB_RECURSE srcLibhvTest CONFIGURE_DEPENDS 
+	Test/libhv/*.ixx 
+)
+target_sources(LibhvTest PUBLIC ${srcLibhvTest})
 # target_link_libraries(LibhvTest PRIVATE hv_static.lib libprotobufd.lib)
-# if (CMAKE_VERSION VERSION_GREATER 3.12)
-#   set_property(TARGET LibhvTest PROPERTY CXX_STANDARD 23)
-# endif()
+if (CMAKE_VERSION VERSION_GREATER 3.12)
+  set_property(TARGET LibhvTest PROPERTY CXX_STANDARD 23)
+endif()
 
 # TODO: 如有需要，请添加测试并安装目标。
