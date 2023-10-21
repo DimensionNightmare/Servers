@@ -11,7 +11,7 @@ using namespace std;
 using namespace hv;
 using namespace google::protobuf;
 
-export enum class ServerType : int
+export enum class ServerType : unsigned char
 {
     None,
     ControlServer,
@@ -33,8 +33,6 @@ public:
     inline ServerType GetServerType(){return emServerType;}
 
 	inline virtual void LoopEvent(function<void(EventLoopPtr)> func){}
-
-	virtual bool ClientSend(void* pData, int len) = 0;
 	
 protected:
     ServerType emServerType;
@@ -51,14 +49,14 @@ export class DNClientProxy : public TcpClient
 public:
 	DNClientProxy();
 
-	inline auto GetMsgId(){return iMsgId++;}
+	inline auto GetMsgId(){return iMsgId +=2;}
 
 	inline auto GetMsgMap(){return &mMsgList;}
 
 	// auto popMsg(int msgId);
 private:
 	// only oddnumber
-	unsigned int iMsgId;
+	unsigned char iMsgId;
 
 	map<int, pair<DNTaskVoid*, DNTask<Message*>*> > mMsgList;
 };
@@ -76,6 +74,6 @@ DNServerProxy::DNServerProxy()
 
 DNClientProxy::DNClientProxy()
 {
-	iMsgId = 0;
+	iMsgId = 1;
 	mMsgList.clear();
 }

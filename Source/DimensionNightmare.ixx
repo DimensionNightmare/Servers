@@ -8,7 +8,6 @@ module;
 
 export module DimensionNightmare;
 
-import DNServer;
 import ControlServer;
 import GlobalServer;
 
@@ -150,19 +149,14 @@ DimensionNightmare::DimensionNightmare()
 
 bool DimensionNightmare::Init(map<string, string> &param)
 {
-	/*if(!param.count("ip") || !param.count("port"))
-	{
-		cerr << "ip or port Need " << endl;
-		return false;
-	}*/
-	if(!param.count("svrType"))
+	if(!param.contains("svrType"))
 	{
 		cout << "lunch param svrType is null" << endl;
 		return false;
 	}
 
 	ServerType serverType = (ServerType)stoi(param["svrType"]);
-	// ServerType serverType = ServerType::ControlServer;
+	
 	switch (serverType)
 	{
 	case ServerType::ControlServer:

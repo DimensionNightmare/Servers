@@ -5,7 +5,7 @@ module;
 #include <iostream>
 export module ControlServer;
 
-import DNServer;
+export import DNServer;
 import MessagePack;
 
 using namespace std;
@@ -25,8 +25,6 @@ public:
 	virtual void LoopEvent(function<void(EventLoopPtr)> func) override;
 
 	inline DNServerProxy* GetSSock(){return pSSock;}
-
-	inline virtual bool ClientSend(void* pData, int len) override { return false;}
 private:
 	DNServerProxy* pSSock;
 };
@@ -41,7 +39,7 @@ ControlServer::ControlServer()
 
 bool ControlServer::Init(map<string, string> &param)
 {
-	if(!param.count("ip") || !param.count("port"))
+	if(!param.contains("ip") || !param.contains("port"))
 	{
 		cerr << "ip or port Need " << endl;
 		return false;
@@ -63,7 +61,7 @@ bool ControlServer::Init(map<string, string> &param)
 	auto setting = make_shared<unpack_setting_t>();
 	setting->mode = unpack_mode_e::UNPACK_BY_LENGTH_FIELD;
 	setting->length_field_coding = unpack_coding_e::ENCODE_BY_BIG_ENDIAN;
-	setting->body_offset = MessagePacket::HeadLen;
+	setting->body_offset = MessagePacket::PackLenth;
 	setting->length_field_bytes = 1;
 	setting->length_field_offset = 0;
 	pSSock->setUnpack(setting.get());

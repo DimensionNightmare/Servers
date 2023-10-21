@@ -6,7 +6,7 @@ module;
 #include <iostream>
 export module GlobalServer;
 
-import DNServer;
+export import DNServer;
 import MessagePack;
 
 using namespace std;
@@ -24,8 +24,6 @@ public:
 	virtual bool Stop() override;
 
 	virtual void LoopEvent(function<void(EventLoopPtr)> func) override;
-
-	inline virtual bool ClientSend(void* pData, int len) override;
 	
 	inline DNServerProxy* GetSSock(){return pSSock;}
 	inline DNClientProxy* GetCSock(){return pCSock;}
@@ -47,7 +45,7 @@ bool GlobalServer::Init(map<string, string> &param)
 {
 	int port = 0;
 	
-	if(param.count("port") > 0)
+	if(param.contains("port"))
 	{
 		port = stoi(param["port"]);
 	}
@@ -78,7 +76,7 @@ bool GlobalServer::Init(map<string, string> &param)
 	auto setting = new unpack_setting_t;
 	setting->mode = unpack_mode_e::UNPACK_BY_LENGTH_FIELD;
 	setting->length_field_coding = unpack_coding_e::ENCODE_BY_BIG_ENDIAN;
-	setting->body_offset = MessagePacket::HeadLen;
+	setting->body_offset = MessagePacket::PackLenth;
 	setting->length_field_bytes = 1;
 	setting->length_field_offset = 0;
 	pSSock->setUnpack(setting);
@@ -86,7 +84,7 @@ bool GlobalServer::Init(map<string, string> &param)
 
 	
 	//connet ControlServer
-	if(atoi(param["byCtl"].c_str()) > 0 && param.count("ctlPort") > 0 && param.count("ctlIp") > 0)
+	if(atoi(param["byCtl"].c_str()) && param.contains("ctlPort") && param.contains("ctlIp"))
 	{
 		pCSock = new DNClientProxy;
 		auto reconn = new reconn_setting_t;
@@ -146,11 +144,4 @@ void GlobalServer::LoopEvent(function<void(EventLoopPtr)> func)
         }
     };
     
-}
-
-bool GlobalServer::ClientSend(void *pData, int len)
-{
-
-	// pCSock->writeBuf(pData, len);
-	return false;
 }

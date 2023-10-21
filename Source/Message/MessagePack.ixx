@@ -4,20 +4,21 @@ export module MessagePack;
 
 using namespace std;
 
-// define
-enum class MsgDir : unsigned char
+export enum class MsgDir : unsigned char
 {
-	Outer, // Client Msg
+	Outer = 1, // Client Msg
 	Inner, // Server Msg
 };
 
+#pragma pack(1) // net struct need this
 export struct MessagePacket
 {
-	static int HeadLen;
-	unsigned int pkgLenth;
+	static int PackLenth; 
+	unsigned int pkgLenth;	 //Pin Top !
 	MsgDir opType;
-	unsigned short serverId;
-	unsigned int msgId;
+	unsigned char serverId;
+	unsigned char msgId;
+	unsigned char msgLenth;
 
 	MessagePacket()
 	{
@@ -25,28 +26,29 @@ export struct MessagePacket
 	}
 };
 
-int MessagePacket::HeadLen = sizeof MessagePacket;
+#pragma pack()
 
-export bool MessagePack(unsigned int msgId, string &data);
-// export bool MessageUnpack(char* reqMsg, int len);
+int MessagePacket::PackLenth = sizeof MessagePacket;
+
+export bool MessagePack(unsigned int msgId, MsgDir dir, const string &pbName, string &data);
 
 // implement
 module :private;
 
-bool MessagePack(unsigned int msgId, string &data)
+bool MessagePack(unsigned int msgId, MsgDir dir,  const string &pbName, string &data)
 {
+	int dataLen = (int)data.size();
+	int msgNameLen = (int)pbName.size();
+
 	MessagePacket packet;
 	packet.msgId = msgId;
-	int datalen = data.size();
-	packet.pkgLenth = datalen;
-	data.resize(MessagePacket::HeadLen + datalen);
+	packet.opType = dir;
+	packet.msgLenth = msgNameLen;
+	packet.pkgLenth = dataLen + msgNameLen;
+	data.resize(MessagePacket::PackLenth + packet.pkgLenth);
 	
-	memmove_s(data.data() + MessagePacket::HeadLen, datalen, data.data(), datalen);
-	memcpy(data.data(), &packet, MessagePacket::HeadLen);
+	memmove_s(data.data() + MessagePacket::PackLenth + msgNameLen, dataLen, data.data(), dataLen);
+	memcpy(data.data() + MessagePacket::PackLenth, pbName.data(), msgNameLen);
+	memcpy(data.data(), &packet, MessagePacket::PackLenth);
 	return true;
 }
-
-// bool MessageUnpack(char* reqMsg, int len)
-// {
-//     return true;
-// }

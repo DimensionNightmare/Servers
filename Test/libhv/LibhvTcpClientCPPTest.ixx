@@ -48,7 +48,7 @@ int main(int argc, char** argv)
 
     TcpClient cli;
 	int port = 0;
-	if(lunchParam.count("port"))
+	if(lunchParam.contains("port"))
 	{
 		port = stoi(lunchParam["port"]);
 	}

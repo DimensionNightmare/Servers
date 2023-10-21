@@ -2,11 +2,12 @@ module;
 #include "hv/Channel.h"
 #include "hv/hloop.h"
 
-#include "Common.pb.h"
+#include "GlobalControl.pb.h"
 export module GlobalServerInit;
 
-import GlobalServer;
-import GlobalMessage;
+export import GlobalMessage;
+import DNTask;
+import MessagePack;
 
 using namespace hv;
 using namespace std;
@@ -18,20 +19,10 @@ export void HandleGlobalServerShutdown(GlobalServer *server);
 
 module:private;
 
-static GlobalServer* PGlobalServer = nullptr;
-GlobalServer* GetGlobalServer(GlobalServer* server = nullptr)
-{
-	if(server)
-	{
-		PGlobalServer = server;
-	}
-
-	return PGlobalServer;
-}
-
 void HandleGlobalServerInit(GlobalServer *server)
 {
 	GetGlobalServer(server);
+
 	if (auto sSock = server->GetSSock())
 	{
 		auto onConnection = [&](const SocketChannelPtr &channel)
@@ -48,7 +39,7 @@ void HandleGlobalServerInit(GlobalServer *server)
 		};
 
 		auto onMessage = [](const SocketChannelPtr &channel, Buffer *buf) {
-
+			
 		};
 
 		sSock->onConnection = onConnection;
@@ -67,7 +58,7 @@ void HandleGlobalServerInit(GlobalServer *server)
 
 				// send RegistInfo
 				
-				Msg_RegistSelf((int)ServerType::GlobalServer, *globalSrv->GetCSock(), *globalSrv->GetSSock());
+				Msg_RegistSrv((int)ServerType::GlobalServer, *globalSrv->GetCSock(), *globalSrv->GetSSock());
 			}
 			else
 			{
@@ -80,7 +71,26 @@ void HandleGlobalServerInit(GlobalServer *server)
 			}
 		};
 		auto onMessage = [](const SocketChannelPtr &channel, Buffer *buf) {
+			MessagePacket packet;
+			memcpy(&packet, buf->data(), MessagePacket::PackLenth);
+			if(packet.opType == MsgDir::Inner)
+			{
 
+				if(packet.msgId) //client sock request
+				{
+					auto reqMap = GetGlobalServer()->GetCSock()->GetMsgMap();
+					if(reqMap->contains(packet.msgId)) 
+					{
+						auto pair = (*reqMap)[packet.msgId];
+						reqMap->erase(packet.msgId);
+						
+						pair.first->Resume();
+						// Message* message = pair.second->GetResult();
+						// message->ParseFromArray((const char*)buf->data() + MessagePacket::PackLenth + packet.msgLenth, packet.pkgLenth - packet.msgLenth);
+						// pair.second->CallResume();
+					}
+				}
+			}
 		};
 
 		cSock->onConnection = onConnection;

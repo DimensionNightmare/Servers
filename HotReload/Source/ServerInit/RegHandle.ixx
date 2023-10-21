@@ -4,9 +4,6 @@ module;
 export module RegHandle;
 
 import DNServer;
-import ControlServer;
-import GlobalServer;
-
 import GlobalServerInit;
 import ControlServerInit;
 
@@ -33,14 +30,12 @@ int InitHotReload(DNServer &base)
 	{
 		ControlServer *server = (ControlServer *)&base;
 		HandleControlServerInit(server);
-		// DllServer(server);
 		break;
 	}
 	case ServerType::GlobalServer:
 	{
 		GlobalServer *server = (GlobalServer *)&base;
 		HandleGlobalServerInit(server);
-		// DllServer(server);
 		break;
 	}
 	}
