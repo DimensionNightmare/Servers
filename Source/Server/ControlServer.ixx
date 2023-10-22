@@ -18,6 +18,8 @@ public:
 
 	virtual bool Init(map<string, string> &param) override;
 
+	virtual void InitCmd(map<string, function<void(stringstream*)>> &cmdMap) override;
+
 	virtual bool Start() override;
 
 	virtual bool Stop() override;
@@ -67,6 +69,11 @@ bool ControlServer::Init(map<string, string> &param)
 	pSSock->setUnpack(setting.get());
 	pSSock->setThreadNum(4);
 	return true;
+}
+
+void ControlServer::InitCmd(map<string, function<void(stringstream *)>> &cmdMap)
+{
+	
 }
 
 bool ControlServer::Start()

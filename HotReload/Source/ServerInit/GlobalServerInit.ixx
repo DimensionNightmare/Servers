@@ -58,7 +58,7 @@ void HandleGlobalServerInit(GlobalServer *server)
 
 				// send RegistInfo
 				
-				Msg_RegistSrv((int)ServerType::GlobalServer, *globalSrv->GetCSock(), *globalSrv->GetSSock());
+				Msg_RegistSrv((int)ServerType::GlobalServer, globalSrv->GetCSock(), globalSrv->GetSSock());
 			}
 			else
 			{
@@ -75,20 +75,18 @@ void HandleGlobalServerInit(GlobalServer *server)
 			memcpy(&packet, buf->data(), MessagePacket::PackLenth);
 			if(packet.opType == MsgDir::Inner)
 			{
-
-				if(packet.msgId) //client sock request
+				auto reqMap = GetGlobalServer()->GetCSock()->GetMsgMap();
+				if(reqMap->contains(packet.msgId)) //client sock request
 				{
-					auto reqMap = GetGlobalServer()->GetCSock()->GetMsgMap();
-					if(reqMap->contains(packet.msgId)) 
-					{
-						auto pair = (*reqMap)[packet.msgId];
-						reqMap->erase(packet.msgId);
-						
-						pair.second.Resume();
-						Message* message = pair.second.GetResult();
-						message->ParseFromArray((const char*)buf->data() + MessagePacket::PackLenth + packet.msgLenth, packet.pkgLenth - packet.msgLenth);
-						pair.first.Resume();
-					}
+					auto task = reqMap->at(packet.msgId);
+					task->Resume();
+					Message* message = task->GetResult();
+					message->ParseFromArray((const char*)buf->data() + MessagePacket::PackLenth + packet.msgLenth, packet.pkgLenth - packet.msgLenth);
+					task->CallResume();
+				}
+				else
+				{
+					cout << "cant find msgid" << endl;
 				}
 			}
 		};

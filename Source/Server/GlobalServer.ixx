@@ -19,6 +19,8 @@ public:
 
 	virtual bool Init(map<string, string> &param) override;
 
+	virtual void InitCmd(map<string, function<void(stringstream*)>> &cmdMap) override;
+
 	virtual bool Start() override;
 
 	virtual bool Stop() override;
@@ -98,6 +100,10 @@ bool GlobalServer::Init(map<string, string> &param)
 	
 
 	return true;
+}
+
+void GlobalServer::InitCmd(map<string, function<void(stringstream *)>> &cmdMap)
+{
 }
 
 bool GlobalServer::Start()

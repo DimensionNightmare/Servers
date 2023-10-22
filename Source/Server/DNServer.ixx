@@ -3,6 +3,9 @@ module;
 #include "hv/TcpClient.h"
 
 #include "google/protobuf/message.h"
+
+#include <mutex>
+
 export module DNServer;
 
 import DNTask;
@@ -20,11 +23,11 @@ export enum class ServerType : unsigned char
 
 export class DNServer
 {
-
 public:
-    DNServer();
 
 	virtual bool Init(map<string, string> &param) = 0;
+
+	virtual void InitCmd(map<string, function<void(stringstream*)>> &cmdMap) = 0;
 
 	virtual bool Start() = 0;
 
@@ -33,6 +36,9 @@ public:
     inline ServerType GetServerType(){return emServerType;}
 
 	inline virtual void LoopEvent(function<void(EventLoopPtr)> func){}
+
+protected:
+	DNServer();
 	
 protected:
     ServerType emServerType;
@@ -44,21 +50,27 @@ public:
 	DNServerProxy();
 };
 
+mutex idMutex;
+
 export class DNClientProxy : public TcpClient
 {
 public:
 	DNClientProxy();
 
-	inline auto GetMsgId(){return iMsgId +=2;}
+	inline auto GetMsgId()
+	{
+		std::lock_guard<std::mutex> lock(idMutex); 
+		return ++iMsgId;
+	}
 
 	inline auto GetMsgMap(){return &mMsgList;}
 
 	// auto popMsg(int msgId);
 private:
 	// only oddnumber
-	unsigned char iMsgId;
-
-	map<int, pair<DNTaskVoid, DNTask<Message*>> > mMsgList;
+	unsigned int iMsgId;
+	//unordered_
+	map<unsigned int, DNTask<Message*>* > mMsgList;
 };
 
 module:private;

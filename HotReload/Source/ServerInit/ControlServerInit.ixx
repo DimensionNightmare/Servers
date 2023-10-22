@@ -54,6 +54,8 @@ void HandleControlServerInit(ControlServer *server)
 					{
 						ControlMessageHandle::MsgHandle(channel, packet.msgId, msgName, message);
 					}
+					delete message;
+					message = nullptr;
 				}
 			}
 		};

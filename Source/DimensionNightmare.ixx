@@ -227,6 +227,11 @@ void DimensionNightmare::InitCmdHandle()
 		{"resume", resume},
 		{"reload", reload},
 	};
+
+	if(pServer)
+	{
+		pServer->InitCmd(mCmdHandle);
+	}
 }
 
 void DimensionNightmare::ExecCommand(string* cmd, stringstream* ss)

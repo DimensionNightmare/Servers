@@ -2,24 +2,21 @@ module;
 
 #include "hv/Channel.h"
 #include "GlobalControl.pb.h"
-
-#include <coroutine>
 export module ControlGlobal;
 
 import DNTask;
-import DNServer;
 import MessagePack;
 
 using namespace GMsg::GlobalControl;
-using namespace std;
 using namespace google::protobuf;
 using namespace hv;
+using namespace std;
 
 // client request
-export void Msg_RegistSrv(const SocketChannelPtr &channel, unsigned char msgId, Message *msg)
+export void Msg_RegistSrv(const SocketChannelPtr &channel, unsigned int msgId, Message *msg)
 {
 	C2G_RegistSrv response;
-	response.set_success(true);
+	response.set_success(false);
 	
 	string binData;
 	binData.resize(response.ByteSize());

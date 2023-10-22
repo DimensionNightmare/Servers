@@ -30,18 +30,16 @@ export ControlServer *GetControlServer(ControlServer *server = nullptr)
 export class ControlMessageHandle
 {
 public:
-	static void MsgHandle(const SocketChannelPtr &channel, unsigned char msgId, string name, Message *msg);
+	static void MsgHandle(const SocketChannelPtr &channel, unsigned int msgId, string name, Message *msg);
 	static void RegMsgHandle();
 public:
-	inline static map<string, function<void(const SocketChannelPtr &, unsigned char, Message *)>> MHandleMap;
+	inline static map<string, function<void(const SocketChannelPtr &, unsigned int, Message *)>> MHandleMap;
 };
 
 module :private;
 
-void ControlMessageHandle::MsgHandle(const SocketChannelPtr &channel, unsigned char msgId, string name, Message *msg)
+void ControlMessageHandle::MsgHandle(const SocketChannelPtr &channel, unsigned int msgId, string name, Message *msg)
 {
-	cout << "ControlMessageHandle:"
-		 << "COM_RegistInfo" << endl;
 	if (MHandleMap.contains(name))
 	{
 		MHandleMap[name](channel, msgId, msg);
