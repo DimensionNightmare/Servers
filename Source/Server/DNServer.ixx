@@ -4,8 +4,6 @@ module;
 
 #include "google/protobuf/message.h"
 
-#include <mutex>
-
 export module DNServer;
 
 import DNTask;
@@ -59,7 +57,6 @@ public:
 
 	inline auto GetMsgId()
 	{
-		std::lock_guard<std::mutex> lock(idMutex); 
 		return ++iMsgId;
 	}
 
