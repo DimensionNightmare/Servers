@@ -59,7 +59,6 @@ void HandleGlobalServerInit(GlobalServer *server)
 				printf("%s connected! connfd=%d id=%d \n", peeraddr.c_str(), channel->fd(), channel->id());
 
 				// send RegistInfo
-				
 				Msg_RegistSrv((int)ServerType::GlobalServer, globalSrv->GetCSock(), globalSrv->GetSSock());
 			}
 			else
@@ -95,7 +94,10 @@ void HandleGlobalServerInit(GlobalServer *server)
 
 		cSock->onConnection = onConnection;
 		cSock->onMessage = onMessage;
+		
 	}
+
+	// regist self if need
 }
 
 void HandleGlobalServerShutdown(GlobalServer *server)

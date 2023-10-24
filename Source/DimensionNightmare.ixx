@@ -29,10 +29,15 @@ struct HotReloadDll
 	{
 		int ret = SetDefaultDllDirectories(LOAD_LIBRARY_SEARCH_USER_DIRS);
 		ret = SetDllDirectory(sDllDirRand.c_str());
+		if(!ret)
+		{
+			cout << "LoadHandle:: cant set dll path! error code=" << GetLastError() << endl;
+			return false;
+		}
 		oLibHandle = LoadLibraryEx((SDllName).c_str(), NULL, LOAD_LIBRARY_SEARCH_USER_DIRS);
 		if (!oLibHandle)
 		{
-			cout << "LoadHandle:: cant Success!" << SDllName << endl;
+			cout << "LoadHandle:: cant Success! error code=" << GetLastError() << endl;
 			return false;
 		}
 

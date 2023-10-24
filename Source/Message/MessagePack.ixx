@@ -17,7 +17,7 @@ export struct MessagePacket
 	unsigned int pkgLenth;	 //Pin Top !
 	MsgDir opType;
 	unsigned char serverId;
-	unsigned int msgId;
+	unsigned char msgId;
 	unsigned char msgLenth;
 
 	MessagePacket()

@@ -61,10 +61,9 @@ public:
 
 	inline auto GetMsgMap(){return &mMsgList;}
 
-	// auto popMsg(int msgId);
 private:
 	// only oddnumber
-	unsigned int iMsgId;
+	unsigned char iMsgId;
 	//unordered_
 	map<unsigned int, DNTask<Message*>* > mMsgList;
 };
@@ -82,6 +81,6 @@ DNServerProxy::DNServerProxy()
 
 DNClientProxy::DNClientProxy()
 {
-	iMsgId = 1;
+	iMsgId = 0;
 	mMsgList.clear();
 }
