@@ -1,8 +1,10 @@
 module;
+#include "GlobalControl.pb.h"
+
+
 #include "hv/Channel.h"
 #include "hv/hloop.h"
 
-#include "GlobalControl.pb.h"
 export module GlobalServerInit;
 
 export import GlobalMessage;

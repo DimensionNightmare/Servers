@@ -1,7 +1,8 @@
 module;
+#include "google/protobuf/dynamic_message.h"
+
 #include "hv/Channel.h"
 #include "hv/hloop.h"
-#include "google/protobuf/dynamic_message.h"
 export module ControlServerInit;
 
 export import ControlMessage;

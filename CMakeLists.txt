@@ -9,7 +9,6 @@ if (POLICY CMP0141)
 	set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
 endif()
 
-set(CMAKE_CXX_STANDARD 23)
 # module is the experimental function. cmake experimental api needs to be enabled
 if (CMAKE_VERSION EQUAL 3.25)
     set(CMAKE_EXPERIMENTAL_CXX_MODULE_CMAKE_API "3c375311-a3c9-4396-a187-3227ef642046")
@@ -21,22 +20,28 @@ else()
     message(WARNING "Newer CMake version, CMAKE_EXPERIMENTAL_CXX_MODULE_CMAKE_API may not be set.")
 endif()
 
+set(CMAKE_CXX_STANDARD 23)
+
 set(CMAKE_EXPERIMENTAL_CXX_MODULE_DYNDEP ON)
 
-# 库目录和库头文件 Debug
-include_directories("../Environment/Install/libhv/Debug/include")
-include_directories("../Environment/Install/protobuf/Debug/include")
+set(CMAKE_PREFIX_PATH
+"D:/Project/DimensionNightmare/Environment/Install/libhv/Debug/lib/cmake"
+"D:/Project/DimensionNightmare/Environment/Install/grpc/Debug/cmake"
+"D:/Project/DimensionNightmare/Environment/Install/grpc/Debug/lib/cmake"
+)
+
+# DimensionNightmareServer
+project (DimensionNightmareServer)
+find_package(libhv REQUIRED)
+find_package(Protobuf REQUIRED)
+find_package(gRPC REQUIRED)
+
+include_directories("../Environment/Install/grpc/Debug/include")
 include_directories("../Environment/GameConfig/Gen/Code")
 
-link_directories("../Environment/Install/libhv/Debug/lib")
-link_directories("../Environment/Install/protobuf/Debug/lib")
-
-
-project (HotReload)
-
-file(GLOB_RECURSE srcHotReloadNormal CONFIGURE_DEPENDS
-	"../Environment/GameConfig/Gen/Code/*.cc"
+file(GLOB_RECURSE srcHotReloadNormal CONFIGURE_DEPENDS 
 	"HotReload/*.cpp"
+	"../Environment/GameConfig/Gen/Code/*.cc"
 )
 
 file(GLOB_RECURSE srcHotReloadModule CONFIGURE_DEPENDS 
@@ -47,51 +52,42 @@ file(GLOB_RECURSE srcHotReloadModule CONFIGURE_DEPENDS
 )
 add_library( HotReload SHARED)
 target_sources(HotReload 
-	PUBLIC 
-		${srcHotReloadNormal}  
-	PUBLIC FILE_SET all_my_modules TYPE CXX_MODULES FILES
+	PRIVATE 
+		${srcHotReloadNormal}
+	PRIVATE FILE_SET all_my_modules TYPE CXX_MODULES FILES
    		${srcHotReloadModule}
 )
 target_compile_definitions(HotReload PRIVATE HV_STATICLIB HOTRELOAD_BUILD)
 set_target_properties(HotReload PROPERTIES RUNTIME_OUTPUT_DIRECTORY  ${CMAKE_BINARY_DIR}/Runtime)
-target_link_libraries(HotReload PRIVATE "hv_static.lib" "libprotobufd.lib")
-
+target_link_libraries(HotReload PRIVATE hv_static  protobuf::libprotobuf gRPC::grpc++)
 if (CMAKE_VERSION VERSION_GREATER 3.12)
 	set_property(TARGET HotReload PROPERTY CXX_STANDARD 23)
 endif()
 
-
-# DimensionNightmareServer
-project (DimensionNightmareServer)
-file(GLOB_RECURSE DNSourceNormal CONFIGURE_DEPENDS 
-	"main.cpp"
-)
 file(GLOB_RECURSE DNSourceModule CONFIGURE_DEPENDS 
 	"Source/*"
 )
 
 add_executable(DimensionNightmareServer)
 
-target_sources(DimensionNightmareServer 
-	PUBLIC 
-		${DNSourceNormal} 
-	PUBLIC FILE_SET all_my_modules TYPE CXX_MODULES FILES
+target_sources(DimensionNightmareServer
+	PRIVATE  "main.cpp"
+	PRIVATE FILE_SET all_my_modules TYPE CXX_MODULES FILES
 		${DNSourceModule}
 )
 add_compile_definitions(DimensionNightmareServer HV_STATICLIB)
-target_link_libraries(DimensionNightmareServer PRIVATE "hv_static.lib" "libprotobufd.lib")
+target_link_libraries(DimensionNightmareServer PRIVATE hv_static protobuf::libprotobuf)
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET DimensionNightmareServer PROPERTY CXX_STANDARD 23)
 endif()
 
-add_executable(LibhvTest)
-file(GLOB_RECURSE srcLibhvTest CONFIGURE_DEPENDS 
-	Test/libhv/*.ixx 
-)
-target_sources(LibhvTest PUBLIC ${srcLibhvTest})
-# target_link_libraries(LibhvTest PRIVATE hv_static.lib libprotobufd.lib)
-if (CMAKE_VERSION VERSION_GREATER 3.12)
-  set_property(TARGET LibhvTest PROPERTY CXX_STANDARD 23)
-endif()
+# add_executable(LibhvTest)
+# file(GLOB_RECURSE srcLibhvTest CONFIGURE_DEPENDS 
+# 	Test/libhv/*.ixx 
+# )
+# target_sources(LibhvTest PRIVATE ${srcLibhvTest})
+# if (CMAKE_VERSION VERSION_GREATER 3.12)
+#   set_property(TARGET LibhvTest PROPERTY CXX_STANDARD 23)
+# endif()
 
 # TODO: 如有需要，请添加测试并安装目标。

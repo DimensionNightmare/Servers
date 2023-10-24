@@ -1,6 +1,7 @@
 module;
-#include "hv/Channel.h"
 #include "GlobalControl.pb.h"
+
+#include "hv/Channel.h"
 
 #include <iostream>
 #include <map>
