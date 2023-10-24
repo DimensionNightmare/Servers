@@ -34,12 +34,7 @@ project (DimensionNightmareServer)
 find_package(libhv REQUIRED)
 find_package(Protobuf REQUIRED)
 
-include_directories("../Environment/Install/libhv/Debug/include")
-include_directories("../Environment/Install/protobuf/Debug/include")
 include_directories("../Environment/GameConfig/Gen/Code")
-
-link_directories("../Environment/Install/libhv/Debug/lib")
-link_directories("../Environment/Install/protobuf/Debug/lib")
 
 file(GLOB_RECURSE srcHotReloadNormal CONFIGURE_DEPENDS 
 	"HotReload/*.cpp"
@@ -61,7 +56,7 @@ target_sources(HotReload
 )
 target_compile_definitions(HotReload PRIVATE HV_STATICLIB HOTRELOAD_BUILD)
 set_target_properties(HotReload PROPERTIES RUNTIME_OUTPUT_DIRECTORY  ${CMAKE_BINARY_DIR}/Runtime)
-target_link_libraries(HotReload PRIVATE "hv_static.lib" "libprotobufd.lib")
+target_link_libraries(HotReload PRIVATE hv_static protobuf::libprotobuf)
 if (CMAKE_VERSION VERSION_GREATER 3.12)
 	set_property(TARGET HotReload PROPERTY CXX_STANDARD 23)
 endif()
@@ -78,7 +73,7 @@ target_sources(DimensionNightmareServer
 		${DNSourceModule}
 )
 add_compile_definitions(DimensionNightmareServer HV_STATICLIB)
-target_link_libraries(DimensionNightmareServer PRIVATE "hv_static.lib" "libprotobufd.lib")
+target_link_libraries(DimensionNightmareServer PRIVATE hv_static protobuf::libprotobuf)
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET DimensionNightmareServer PROPERTY CXX_STANDARD 23)
 endif()
