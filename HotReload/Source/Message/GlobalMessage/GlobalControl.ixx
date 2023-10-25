@@ -30,7 +30,7 @@ export DNTaskVoid Msg_RegistSrv(int serverType, DNClientProxy* client, DNServerP
 	string binData;
 	binData.resize(requset.ByteSize());
 	requset.SerializeToArray(binData.data(), binData.size());
-	MessagePack(msgId, MsgDir::Inner, G2C_RegistSrv::GetDescriptor()->full_name(), binData);
+	MessagePack(msgId, MsgDir::Inner, requset.GetDescriptor()->full_name(), binData);
 	
 	// data alloc
 	C2G_RegistSrv response;
@@ -47,16 +47,15 @@ export DNTaskVoid Msg_RegistSrv(int serverType, DNClientProxy* client, DNServerP
 	// wait data parse
 	client->send(binData);
 	co_await dataChannel;
-	reqMap->erase(msgId);
 	
 	if(!response.success())
 	{
 		cout << "regist false" << (int)msgId << endl;
-		Msg_RegistSrv(serverType, client, server); //error tick
 	}
 	else{
 		cout << "regist true" << (int)msgId << endl;
 	}
+
 	dataChannel.Destroy();
 
 	co_return;

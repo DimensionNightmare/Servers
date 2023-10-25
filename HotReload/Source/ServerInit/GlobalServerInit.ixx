@@ -80,6 +80,7 @@ void HandleGlobalServerInit(GlobalServer *server)
 				if(reqMap->contains(packet.msgId)) //client sock request
 				{
 					auto task = reqMap->at(packet.msgId);
+					reqMap->erase(packet.msgId);
 					task->Resume();
 					Message* message = task->GetResult();
 					message->ParseFromArray((const char*)buf->data() + MessagePacket::PackLenth + packet.msgLenth, packet.pkgLenth - packet.msgLenth);
@@ -110,6 +111,11 @@ void HandleGlobalServerShutdown(GlobalServer *server)
 
 	if (auto cSock = server->GetCSock())
 	{
+		for(auto& kv : *cSock->GetMsgMap())
+		{
+			kv.second->Destroy();
+		}
+		cSock->GetMsgMap()->clear();
 		cSock->onConnection = nullptr;
 		cSock->onMessage = nullptr;
 	}
