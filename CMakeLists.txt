@@ -25,8 +25,8 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_EXPERIMENTAL_CXX_MODULE_DYNDEP ON)
 
 set(CMAKE_PREFIX_PATH
-"D:/Project/DimensionNightmare/Environment/Install/libhv/Debug/lib/cmake"
-"D:/Project/DimensionNightmare/Environment/Install/protobuf/Debug/cmake"
+"../Environment/Install/libhv/Debug/lib/cmake"
+"../Environment/Install/protobuf/Debug/cmake"
 )
 
 # DimensionNightmareServer
@@ -34,12 +34,8 @@ project (DimensionNightmareServer)
 find_package(libhv REQUIRED)
 find_package(Protobuf REQUIRED)
 
-include_directories("../Environment/GameConfig/Gen/Code")
-
-file(GLOB_RECURSE srcHotReloadNormal CONFIGURE_DEPENDS 
-	"HotReload/*.cpp"
-	"../Environment/GameConfig/Gen/Code/*.cc"
-)
+include_directories("../Environment/Install/protobufGen/Debug/include")
+link_directories("../Environment/Install/protobufGen/Debug/lib")
 
 file(GLOB_RECURSE srcHotReloadModule CONFIGURE_DEPENDS 
 	"HotReload/Source/*"
@@ -50,13 +46,13 @@ file(GLOB_RECURSE srcHotReloadModule CONFIGURE_DEPENDS
 add_library( HotReload SHARED)
 target_sources(HotReload 
 	PRIVATE 
-		${srcHotReloadNormal}
+		HotReload/HotReload.cpp
 	PRIVATE FILE_SET all_my_modules TYPE CXX_MODULES FILES
    		${srcHotReloadModule}
 )
 target_compile_definitions(HotReload PRIVATE HV_STATICLIB HOTRELOAD_BUILD)
 set_target_properties(HotReload PROPERTIES RUNTIME_OUTPUT_DIRECTORY  ${CMAKE_BINARY_DIR}/Runtime)
-target_link_libraries(HotReload PRIVATE hv_static protobuf::libprotobuf)
+target_link_libraries(HotReload PRIVATE hv_static protobuf::libprotobuf protobufGen.lib)
 if (CMAKE_VERSION VERSION_GREATER 3.12)
 	set_property(TARGET HotReload PROPERTY CXX_STANDARD 23)
 endif()
