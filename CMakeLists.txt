@@ -74,13 +74,14 @@ if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET DimensionNightmareServer PROPERTY CXX_STANDARD 23)
 endif()
 
-# add_executable(LibhvTest)
-# file(GLOB_RECURSE srcLibhvTest CONFIGURE_DEPENDS 
-# 	Test/libhv/*.ixx 
-# )
-# target_sources(LibhvTest PRIVATE ${srcLibhvTest})
-# if (CMAKE_VERSION VERSION_GREATER 3.12)
-#   set_property(TARGET LibhvTest PROPERTY CXX_STANDARD 23)
-# endif()
+add_executable(DNTest)
+file(GLOB_RECURSE srcDNTest CONFIGURE_DEPENDS 
+	Test/*.ixx 
+)
+target_sources(DNTest PRIVATE ${srcDNTest})
+target_link_libraries(DNTest PRIVATE protobuf::libprotobuf protobufGen.lib)
+if (CMAKE_VERSION VERSION_GREATER 3.12)
+  set_property(TARGET DNTest PROPERTY CXX_STANDARD 23)
+endif()
 
 # TODO: 如有需要，请添加测试并安装目标。
