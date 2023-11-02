@@ -6,7 +6,7 @@ cmake_minimum_required (VERSION 3.8)
 # Enable Hot Reload for MSVC compilers if supported.
 if (POLICY CMP0141)
 	cmake_policy(SET CMP0141 NEW)
-	set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
+	set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:${CMAKE_BUILD_TYPE},RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:${CMAKE_BUILD_TYPE},RelWithDebInfo>:ProgramDatabase>>")
 endif()
 
 # module is the experimental function. cmake experimental api needs to be enabled
@@ -24,9 +24,9 @@ set(CMAKE_CXX_STANDARD 23)
 
 set(CMAKE_EXPERIMENTAL_CXX_MODULE_DYNDEP ON)
 
-set(CMAKE_PREFIX_PATH
-"../Environment/Install/libhv/Debug/lib/cmake"
-"../Environment/Install/protobuf/Debug/cmake"
+set(CMAKE_MODULE_PATH
+"../Environment/Install/libhv/${CMAKE_BUILD_TYPE}/lib/cmake;"
+"../Environment/Install/protobuf/${CMAKE_BUILD_TYPE}/cmake;"
 )
 
 # DimensionNightmareServer
@@ -34,8 +34,8 @@ project (DimensionNightmareServer)
 find_package(libhv REQUIRED)
 find_package(Protobuf REQUIRED)
 
-include_directories("../Environment/Install/protobufGen/Debug/include")
-link_directories("../Environment/Install/protobufGen/Debug/lib")
+include_directories("../Environment/Install/protobufGen/${CMAKE_BUILD_TYPE}/include")
+link_directories("../Environment/Install/protobufGen/${CMAKE_BUILD_TYPE}/lib")
 
 file(GLOB_RECURSE srcHotReloadModule CONFIGURE_DEPENDS 
 	"HotReload/Source/*"

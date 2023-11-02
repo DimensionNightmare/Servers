@@ -14,6 +14,7 @@ int main()
 	 {
 		if(Weapons.ParseFromIstream(&input))
 		{
+			Weapons.Clear();
 			auto map = Weapons.data_map();
 			for(auto one:map)
 			{
