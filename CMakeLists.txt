@@ -24,7 +24,7 @@ set(CMAKE_CXX_STANDARD 23)
 
 set(CMAKE_EXPERIMENTAL_CXX_MODULE_DYNDEP ON)
 
-set(CMAKE_MODULE_PATH
+set(CMAKE_PREFIX_PATH
 "../Environment/Install/libhv/${CMAKE_BUILD_TYPE}/lib/cmake;"
 "../Environment/Install/protobuf/${CMAKE_BUILD_TYPE}/cmake;"
 )
