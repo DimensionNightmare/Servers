@@ -80,6 +80,7 @@ file(GLOB_RECURSE srcDNTest CONFIGURE_DEPENDS
 )
 target_sources(DNTest PRIVATE ${srcDNTest})
 target_link_libraries(DNTest PRIVATE protobuf::libprotobuf protobufGen.lib)
+target_compile_definitions(DNTest PRIVATE -DUNICODE)
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET DNTest PROPERTY CXX_STANDARD 23)
 endif()
