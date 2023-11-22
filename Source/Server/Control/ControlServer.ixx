@@ -31,6 +31,17 @@ private:
 	DNServerProxy* pSSock;
 };
 
+static ControlServer *PControlServer = nullptr;
+
+export void SetControlServer(ControlServer *server)
+{
+	PControlServer = server;
+}
+export ControlServer *GetControlServer()
+{
+	return PControlServer;
+}
+
 module:private;
 
 ControlServer::ControlServer()

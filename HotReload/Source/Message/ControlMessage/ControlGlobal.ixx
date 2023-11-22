@@ -6,6 +6,7 @@ export module ControlGlobal;
 
 import DNTask;
 import MessagePack;
+import ControlServer;
 
 using namespace GMsg::GlobalControl;
 using namespace google::protobuf;
@@ -24,5 +25,6 @@ export void Msg_RegistSrv(const SocketChannelPtr &channel, unsigned int msgId, M
 
 	string name;
 	MessagePack(msgId, MsgDeal::Res, name, binData);
+	//GetControlServer()->
 	channel->write(binData);
 }

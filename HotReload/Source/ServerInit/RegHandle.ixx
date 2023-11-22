@@ -4,6 +4,8 @@ module;
 export module RegHandle;
 
 import DNServer;
+import ControlServer;
+import GlobalServer;
 import GlobalServerInit;
 import ControlServerInit;
 

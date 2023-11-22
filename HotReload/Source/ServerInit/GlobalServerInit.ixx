@@ -7,6 +7,7 @@ export module GlobalServerInit;
 
 export import GlobalMessage;
 import MessagePack;
+import GlobalServer;
 
 using namespace hv;
 using namespace std;

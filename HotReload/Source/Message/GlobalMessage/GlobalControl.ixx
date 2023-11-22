@@ -9,6 +9,7 @@ export module GlobalControl;
 
 import DNTask;
 import DNServer;
+//import GlobalServer;
 import MessagePack;
 
 using namespace GMsg::GlobalControl;
@@ -50,14 +51,10 @@ export DNTaskVoid Msg_RegistSrv(int serverType, DNClientProxy* client, DNServerP
 	
 	if(!response.success())
 	{
-		string timeStr;
-		timeStr.resize(30);
-		datetime_t dt = datetime_now();
-		datetime_fmt(&dt, timeStr.data());
-		cout << "regist false" << (int)msgId << timeStr << endl;
+		cout << "regist Server error" << endl;
 	}
 	else{
-		cout << "regist true" << (int)msgId << endl;
+		cout << "regist Server success" << endl;
 		client->SetRegisted(true);
 	}
 

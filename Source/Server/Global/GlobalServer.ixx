@@ -34,6 +34,18 @@ private:
 	DNClientProxy* pCSock;
 };
 
+static GlobalServer* PGlobalServer = nullptr;
+
+export void SetGlobalServer(GlobalServer* server)
+{
+	PGlobalServer = server;
+}
+
+export GlobalServer* GetGlobalServer()
+{
+	return PGlobalServer;
+}
+
 module:private;
 
 GlobalServer::GlobalServer()
@@ -61,6 +73,7 @@ bool GlobalServer::Init(map<string, string> &param)
 		return false;
 	}
 
+	// if not set port mean need get port by self 
 	if(port == 0)
 	{
 		struct sockaddr_in addr;
@@ -86,7 +99,7 @@ bool GlobalServer::Init(map<string, string> &param)
 
 	
 	//connet ControlServer
-	if(atoi(param["byCtl"].c_str()) && param.contains("ctlPort") && param.contains("ctlIp"))
+	if(stoi(param["byCtl"]) && param.contains("ctlPort") && param.contains("ctlIp"))
 	{
 		pCSock = new DNClientProxy;
 		auto reconn = new reconn_setting_t;

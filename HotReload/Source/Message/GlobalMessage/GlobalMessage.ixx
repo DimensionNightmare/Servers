@@ -7,24 +7,11 @@ module;
 #include <functional>
 export module GlobalMessage;
 
-export import GlobalServer;
 export import GlobalControl;
 
 using namespace std;
 using namespace hv;
 using namespace google::protobuf;
-
-static GlobalServer* PGlobalServer = nullptr;
-
-export void SetGlobalServer(GlobalServer* server)
-{
-	PGlobalServer = server;
-}
-
-export GlobalServer* GetGlobalServer()
-{
-	return PGlobalServer;
-}
 
 export class GlobalMessageHandle
 {

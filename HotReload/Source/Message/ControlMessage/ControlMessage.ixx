@@ -8,24 +8,12 @@ module;
 #include <functional>
 export module ControlMessage;
 
-export import ControlServer;
 export import ControlGlobal;
 
 using namespace std;
 using namespace hv;
 using namespace google::protobuf;
 using namespace GMsg::GlobalControl;
-
-static ControlServer *PControlServer = nullptr;
-
-export void SetControlServer(ControlServer *server)
-{
-	PControlServer = server;
-}
-export ControlServer *GetControlServer()
-{
-	return PControlServer;
-}
 
 export class ControlMessageHandle
 {

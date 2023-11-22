@@ -5,7 +5,6 @@ module;
 #include <Windows.h>
 #include <DbgHelp.h>
 #include <filesystem>
-#include <coroutine>
 export module DimensionNightmare;
 
 import ControlServer;
@@ -114,7 +113,6 @@ public:
 	void ShutDown();
 
 	inline DNServer *GetServer() { return pServer; }
-	inline ActorManager *GetActorManager() { return pActorManager; }
 
 	bool OnRegHotReload();
 
@@ -126,8 +124,6 @@ private:
 	DNServer *pServer;
 
 	map<string, function<void(stringstream*)>> mCmdHandle;
-
-	ActorManager *pActorManager;
 };
 
 export DimensionNightmare *GetDimensionNightmare();
@@ -149,7 +145,6 @@ DimensionNightmare::DimensionNightmare()
 {
 	pHotDll = nullptr;
 	pServer = nullptr;
-	pActorManager = nullptr;
 	mCmdHandle.clear();
 }
 
@@ -182,8 +177,6 @@ bool DimensionNightmare::Init(map<string, string> &param)
 	pHotDll = new HotReloadDll;
 	if (!pHotDll->ReloadHandle())
 		return false;
-
-	pActorManager = new ActorManager;
 
 	if (OnRegHotReload())
 	{
@@ -255,12 +248,6 @@ void DimensionNightmare::ShutDown()
 	{
 		pServer->Stop();
 		pServer = nullptr;
-	}
-
-	if (pActorManager)
-	{
-		delete pActorManager;
-		pActorManager = nullptr;
 	}
 
 	if (pHotDll)

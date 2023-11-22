@@ -7,6 +7,7 @@ export module ControlServerInit;
 
 export import ControlMessage;
 import MessagePack;
+import ControlServer;
 
 using namespace hv;
 using namespace std;
