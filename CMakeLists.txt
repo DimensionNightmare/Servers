@@ -38,10 +38,10 @@ include_directories("../Environment/Install/protobufGen/${CMAKE_BUILD_TYPE}/incl
 link_directories("../Environment/Install/protobufGen/${CMAKE_BUILD_TYPE}/lib")
 
 file(GLOB_RECURSE srcHotReloadModule CONFIGURE_DEPENDS 
-	"HotReload/Source/*"
+	"Source/Message/*"
 	"Source/Server/*"
 	"Source/Task/*"
-	"Source/Message/*"
+	"HotReload/Source/*"
 )
 add_library( HotReload SHARED)
 target_sources(HotReload 
@@ -50,7 +50,8 @@ target_sources(HotReload
 	PRIVATE FILE_SET all_my_modules TYPE CXX_MODULES FILES
    		${srcHotReloadModule}
 )
-target_compile_definitions(HotReload PRIVATE HV_STATICLIB HOTRELOAD_BUILD)
+
+target_compile_definitions(HotReload PRIVATE HOTRELOAD_BUILD)
 set_target_properties(HotReload PROPERTIES RUNTIME_OUTPUT_DIRECTORY  ${CMAKE_BINARY_DIR}/Runtime)
 target_link_libraries(HotReload PRIVATE hv_static protobuf::libprotobuf protobufGen.lib)
 if (CMAKE_VERSION VERSION_GREATER 3.12)
@@ -68,7 +69,7 @@ target_sources(DimensionNightmareServer
 	PRIVATE FILE_SET all_my_modules TYPE CXX_MODULES FILES
 		${DNSourceModule}
 )
-add_compile_definitions(DimensionNightmareServer HV_STATICLIB)
+
 target_link_libraries(DimensionNightmareServer PRIVATE hv_static protobuf::libprotobuf)
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET DimensionNightmareServer PROPERTY CXX_STANDARD 23)
@@ -76,7 +77,7 @@ endif()
 
 add_executable(DNTest)
 file(GLOB_RECURSE srcDNTest CONFIGURE_DEPENDS 
-	Test/*.ixx 
+	"Test/*.ixx" 
 )
 target_sources(DNTest PRIVATE ${srcDNTest})
 target_link_libraries(DNTest PRIVATE protobuf::libprotobuf protobufGen.lib)

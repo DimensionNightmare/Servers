@@ -6,8 +6,15 @@ using namespace std;
 
 export enum class MsgDir : unsigned char
 {
-	Outer = 1, // Client Msg
-	Inner, // Server Msg
+	Outer = 1, 	// Client Msg
+	Inner, 		// Server Msg
+};
+
+export enum class MsgDeal : unsigned char
+{
+	Req = 1, 	// msg deal with
+	Res, 		//
+	Ret,
 };
 
 #pragma pack(1) // net struct need this
@@ -15,7 +22,9 @@ export struct MessagePacket
 {
 	static int PackLenth; 
 	unsigned int pkgLenth;	 //Pin Top !
+
 	MsgDir opType;
+	MsgDeal dealType;
 	unsigned char serverId;
 	unsigned char msgId;
 	unsigned char msgLenth;
@@ -30,19 +39,19 @@ export struct MessagePacket
 
 int MessagePacket::PackLenth = sizeof MessagePacket;
 
-export bool MessagePack(unsigned int msgId, MsgDir dir, const string &pbName, string &data);
+export bool MessagePack(unsigned int msgId, MsgDeal deal, const string &pbName, string &data);
 
 // implement
 module :private;
 
-bool MessagePack(unsigned int msgId, MsgDir dir,  const string &pbName, string &data)
+bool MessagePack(unsigned int msgId, MsgDeal deal,  const string &pbName, string &data)
 {
 	int dataLen = (int)data.size();
 	int msgNameLen = (int)pbName.size();
 
 	MessagePacket packet;
 	packet.msgId = msgId;
-	packet.opType = dir;
+	packet.dealType = deal;
 	packet.msgLenth = msgNameLen;
 	packet.pkgLenth = dataLen + msgNameLen;
 	data.resize(MessagePacket::PackLenth + packet.pkgLenth);

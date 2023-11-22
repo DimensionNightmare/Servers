@@ -1,14 +1,11 @@
 module;
-#include "GlobalControl.pb.h"
-
+#include "google/protobuf/dynamic_message.h"
 
 #include "hv/Channel.h"
 #include "hv/hloop.h"
-
 export module GlobalServerInit;
 
 export import GlobalMessage;
-import DNTask;
 import MessagePack;
 
 using namespace hv;
@@ -18,12 +15,11 @@ using namespace google::protobuf;
 export void HandleGlobalServerInit(GlobalServer *server);
 export void HandleGlobalServerShutdown(GlobalServer *server);
 
-
 module:private;
 
 void HandleGlobalServerInit(GlobalServer *server)
 {
-	GetGlobalServer(server);
+	SetGlobalServer(server);
 
 	if (auto sSock = server->GetSSock())
 	{
@@ -54,27 +50,30 @@ void HandleGlobalServerInit(GlobalServer *server)
 		{
 			string peeraddr = channel->peeraddr();
 			auto globalSrv = GetGlobalServer();
+
 			if (channel->isConnected())
 			{
 				printf("%s connected! connfd=%d id=%d \n", peeraddr.c_str(), channel->fd(), channel->id());
 
 				// send RegistInfo
-				Msg_RegistSrv((int)ServerType::GlobalServer, globalSrv->GetCSock(), globalSrv->GetSSock());
+				// globalSrv->GetCSock()->ExecTaskByDll<int, DNClientProxy*, DNServerProxy*>(&Msg_RegistSrv, (int)ServerType::GlobalServer, globalSrv->GetCSock(), globalSrv->GetSSock());
+				globalSrv->GetCSock()->RegistSelf<int, DNClientProxy*, DNServerProxy*>(&Msg_RegistSrv, (int)ServerType::GlobalServer, globalSrv->GetCSock(), globalSrv->GetSSock());
 			}
 			else
 			{
 				printf("%s disconnected! connfd=%d id=%d \n", peeraddr.c_str(), channel->fd(), channel->id());
+				globalSrv->GetCSock()->SetRegisted(false);
 			}
 
 			if(globalSrv->GetCSock()->isReconnect())
 			{
-
+				
 			}
 		};
 		auto onMessage = [](const SocketChannelPtr &channel, Buffer *buf) {
 			MessagePacket packet;
 			memcpy(&packet, buf->data(), MessagePacket::PackLenth);
-			if(packet.opType == MsgDir::Inner)
+			if(packet.dealType == MsgDeal::Res)
 			{
 				auto reqMap = GetGlobalServer()->GetCSock()->GetMsgMap();
 				if(reqMap->contains(packet.msgId)) //client sock request
@@ -89,6 +88,34 @@ void HandleGlobalServerInit(GlobalServer *server)
 				else
 				{
 					cout << "cant find msgid" << endl;
+				}
+			}
+			else if(packet.dealType == MsgDeal::Req)
+			{
+				string msgName;
+				msgName.resize(packet.msgLenth);
+				memcpy(msgName.data(), (char*)buf->data() + MessagePacket::PackLenth, msgName.size());
+
+				const Descriptor* descriptor = DescriptorPool::generated_pool()->FindMessageTypeByName(msgName); 
+				if(descriptor)
+				{
+					static DynamicMessageFactory factory;
+					const Message* prototype = factory.GetPrototype(descriptor);
+					auto message = prototype->New();
+					if(message->ParseFromArray((const char*)buf->data() + MessagePacket::PackLenth + msgName.size(), packet.pkgLenth - msgName.size()))
+					{
+						GlobalMessageHandle::MsgHandle(channel, packet.msgId, msgName, message);
+					}
+					else
+					{
+						cout << "cant deal msg parse" << endl;
+					}
+					delete message;
+					message = nullptr;
+				}
+				else
+				{
+					cout << "cant find msg deal" << endl;
 				}
 			}
 		};

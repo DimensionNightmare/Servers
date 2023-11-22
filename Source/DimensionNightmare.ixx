@@ -5,7 +5,7 @@ module;
 #include <Windows.h>
 #include <DbgHelp.h>
 #include <filesystem>
-
+#include <coroutine>
 export module DimensionNightmare;
 
 import ControlServer;
@@ -150,6 +150,7 @@ DimensionNightmare::DimensionNightmare()
 	pHotDll = nullptr;
 	pServer = nullptr;
 	pActorManager = nullptr;
+	mCmdHandle.clear();
 }
 
 bool DimensionNightmare::Init(map<string, string> &param)
@@ -196,7 +197,7 @@ bool DimensionNightmare::Init(map<string, string> &param)
 
 void DimensionNightmare::InitCmdHandle()
 {
-	auto pause = [this](stringstream*)
+	auto pause = [this](stringstream* = nullptr)
 	{
 		if (pServer)
 		{
@@ -207,7 +208,7 @@ void DimensionNightmare::InitCmdHandle()
 		}
 	};
 
-	auto resume = [this](stringstream*)
+	auto resume = [this](stringstream* = nullptr)
 	{
 		if (pServer)
 		{
@@ -218,14 +219,14 @@ void DimensionNightmare::InitCmdHandle()
 		}
 	};
 
-	auto reload = [&, pause, resume](stringstream *ss)
+	auto reload = [&, pause, resume](stringstream *ss = nullptr)
 	{
-		pause(nullptr);
+		pause();
 		Sleep(500);
 		OnUnregHotReload();
 		pHotDll->ReloadHandle();
 		OnRegHotReload();
-		resume(nullptr);
+		resume();
 	};
 
 	mCmdHandle = {

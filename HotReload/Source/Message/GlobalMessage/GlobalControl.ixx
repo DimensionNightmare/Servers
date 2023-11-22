@@ -2,7 +2,7 @@ module;
 
 #include "GlobalControl.pb.h"
 #include "hv/Channel.h"
-
+#include "hv/htime.h"
 
 #include <coroutine>
 export module GlobalControl;
@@ -30,7 +30,7 @@ export DNTaskVoid Msg_RegistSrv(int serverType, DNClientProxy* client, DNServerP
 	string binData;
 	binData.resize(requset.ByteSize());
 	requset.SerializeToArray(binData.data(), binData.size());
-	MessagePack(msgId, MsgDir::Inner, requset.GetDescriptor()->full_name(), binData);
+	MessagePack(msgId, MsgDeal::Req, requset.GetDescriptor()->full_name(), binData);
 	
 	// data alloc
 	C2G_RegistSrv response;
@@ -50,10 +50,15 @@ export DNTaskVoid Msg_RegistSrv(int serverType, DNClientProxy* client, DNServerP
 	
 	if(!response.success())
 	{
-		cout << "regist false" << (int)msgId << endl;
+		string timeStr;
+		timeStr.resize(30);
+		datetime_t dt = datetime_now();
+		datetime_fmt(&dt, timeStr.data());
+		cout << "regist false" << (int)msgId << timeStr << endl;
 	}
 	else{
 		cout << "regist true" << (int)msgId << endl;
+		client->SetRegisted(true);
 	}
 
 	dataChannel.Destroy();

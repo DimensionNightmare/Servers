@@ -3,12 +3,13 @@ module;
 
 #include "hv/TcpServer.h"
 #include "hv/TcpClient.h"
+#include "hv/htime.h"
+#include "hv/EventLoop.h"
 export module DNServer;
 
 import DNTask;
 
 using namespace std;
-using namespace hv;
 using namespace google::protobuf;
 
 export enum class ServerType : unsigned char
@@ -32,7 +33,7 @@ public:
 
     inline ServerType GetServerType(){return emServerType;}
 
-	inline virtual void LoopEvent(function<void(EventLoopPtr)> func){}
+	inline virtual void LoopEvent(function<void(hv::EventLoopPtr)> func){}
 
 protected:
 	DNServer();
@@ -41,32 +42,50 @@ protected:
     ServerType emServerType;
 };
 
-export class DNServerProxy : public TcpServer
+export class DNServerProxy : public hv::TcpServer
 {
 public:
 	DNServerProxy();
 };
 
-mutex idMutex;
-
-export class DNClientProxy : public TcpClient
+export class DNClientProxy : public hv::TcpClient
 {
 public:
 	DNClientProxy();
 
-	inline auto GetMsgId()
-	{
-		return ++iMsgId;
-	}
+	inline auto GetMsgId() { return ++iMsgId; }
 
-	inline auto GetMsgMap(){return &mMsgList;}
+	inline auto GetMsgMap(){ return &mMsgList; }
 
+	template <typename... Args>
+	inline void ExecTaskByDll(function<DNTaskVoid(Args...)> func, Args... args) { func(args...);}
+
+	inline bool IsRegisted(){return bIsRegisted;}
+	inline void SetRegisted(bool isRegisted){bIsRegisted = isRegisted;}
+
+	template <typename... Args>
+	void RegistSelf(function<DNTaskVoid(Args...)> func, Args... args);
 private:
 	// only oddnumber
 	unsigned char iMsgId;
-	//unordered_
+	// unordered_
 	map<unsigned int, DNTask<Message*>* > mMsgList;
+	// status
+	bool bIsRegisted;
 };
+
+// template function can!t after module:private; impl !!!!!!!!!!!!!!!!
+template <typename... Args>
+void DNClientProxy::RegistSelf(function<DNTaskVoid(Args...)> func, Args... args)
+{
+	loop()->setInterval(3000, [func, args..., this](hv::TimerID timerID){
+		if (channel->isConnected() && !IsRegisted()) {
+			func(args...);
+		} else {
+			loop()->killTimer(timerID);
+		}
+	});
+}
 
 module:private;
 
@@ -83,4 +102,5 @@ DNClientProxy::DNClientProxy()
 {
 	iMsgId = 0;
 	mMsgList.clear();
+	bIsRegisted = false;
 }

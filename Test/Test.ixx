@@ -8,6 +8,18 @@
 #include <locale>
 #include <random>
 
+class DNClientProxy {
+public:
+    template <typename... Args>
+    void RegistSelf(Args... args);
+};
+
+template <typename... Args>
+void DNClientProxy::RegistSelf(Args... args) {
+    ((std::cout << args << " "), ...);
+    std::cout << std::endl;
+}
+
 int main() 
 {
 	GCfg::CharacterPlayer Weapons;
@@ -34,6 +46,9 @@ int main()
 	std::bernoulli_distribution  u;
 	for(int i = 0; i < 5; i++)
 	std::cout << u(gen) << std::endl;
+
+	DNClientProxy* res = new DNClientProxy;
+	res->RegistSelf<int,int,int,int,int>(3,5,6,8,7);
 
     return 0;
 }

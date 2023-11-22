@@ -19,7 +19,7 @@ module:private;
 
 void HandleControlServerInit(ControlServer *server)
 {
-	GetControlServer(server);
+	SetControlServer(server);
 	
 	if (auto sSock = server->GetSSock())
 	{
@@ -39,7 +39,7 @@ void HandleControlServerInit(ControlServer *server)
 		auto onMessage = [](const SocketChannelPtr &channel, Buffer *buf) {
 			MessagePacket packet;
 			memcpy(&packet, buf->data(), MessagePacket::PackLenth);
-			if(packet.opType == MsgDir::Inner)
+			if(packet.dealType == MsgDeal::Req)
 			{
 				string msgName;
 				msgName.resize(packet.msgLenth);
