@@ -32,7 +32,7 @@ set(CMAKE_PREFIX_PATH
 # DimensionNightmareServer
 project (DimensionNightmareServer)
 find_package(libhv REQUIRED)
-find_package(Protobuf REQUIRED)
+find_package(Protobuf CONFIG REQUIRED)
 
 include_directories("../Environment/Install/protobufGen/${CMAKE_BUILD_TYPE}/include")
 link_directories("../Environment/Install/protobufGen/${CMAKE_BUILD_TYPE}/lib")
