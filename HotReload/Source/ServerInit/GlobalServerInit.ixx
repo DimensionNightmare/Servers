@@ -5,7 +5,7 @@ module;
 #include "hv/hloop.h"
 export module GlobalServerInit;
 
-export import GlobalMessage;
+import GlobalMessage;
 import MessagePack;
 import GlobalServer;
 import GlobalServerHelper;

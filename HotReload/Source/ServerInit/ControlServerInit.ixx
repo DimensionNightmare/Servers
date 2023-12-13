@@ -5,7 +5,7 @@ module;
 #include "hv/hloop.h"
 export module ControlServerInit;
 
-export import ControlMessage;
+import ControlMessage;
 import MessagePack;
 import ControlServer;
 import ControlServerHelper;

@@ -2,7 +2,6 @@ module;
 
 #include "GlobalControl.pb.h"
 #include "hv/Channel.h"
-#include "hv/htime.h"
 
 #include <coroutine>
 export module GlobalControl;
