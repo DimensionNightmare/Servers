@@ -3,7 +3,6 @@ module;
 
 #include "hv/Channel.h"
 
-#include <iostream>
 #include <map>
 #include <functional>
 export module ControlMessage;

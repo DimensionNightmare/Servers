@@ -60,7 +60,7 @@ int main(int argc, char** argv)
 	}
 	
 	auto CtrlHandler = [](DWORD signal) -> BOOL {
-		cout << "CtrlHandler Tirrger...";
+		cout << "EXITTING... CtrlHandler Tirrger..." << endl;
 		switch (signal)
 		{
 			case CTRL_C_EVENT:

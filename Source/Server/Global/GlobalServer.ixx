@@ -3,7 +3,6 @@ module;
 #include "hv/hv.h"
 #include "hv/EventLoop.h"
 
-#include <iostream>
 export module GlobalServer;
 
 export import DNServer;
@@ -17,6 +16,8 @@ export class GlobalServer : public DNServer
 public:
 	GlobalServer();
 
+	~GlobalServer();
+
 	virtual bool Init(map<string, string> &param) override;
 
 	virtual void InitCmd(map<string, function<void(stringstream*)>> &cmdMap) override;
@@ -27,24 +28,12 @@ public:
 
 	virtual void LoopEvent(function<void(EventLoopPtr)> func) override;
 	
-	inline DNServerProxy* GetSSock(){return pSSock;}
-	inline DNClientProxy* GetCSock(){return pCSock;}
+	DNServerProxy* GetSSock(){return pSSock;}
+	DNClientProxy* GetCSock(){return pCSock;}
 private:
 	DNServerProxy* pSSock;
 	DNClientProxy* pCSock;
 };
-
-static GlobalServer* PGlobalServer = nullptr;
-
-export void SetGlobalServer(GlobalServer* server)
-{
-	PGlobalServer = server;
-}
-
-export GlobalServer* GetGlobalServer()
-{
-	return PGlobalServer;
-}
 
 module:private;
 
@@ -53,6 +42,23 @@ GlobalServer::GlobalServer()
 	emServerType = ServerType::GlobalServer;
 	pSSock = nullptr;
 	pCSock = nullptr;
+}
+
+GlobalServer::~GlobalServer()
+{
+	if(pSSock)
+	{
+		pSSock->setUnpack(nullptr);
+		delete pSSock;
+		pSSock = nullptr;
+	}
+
+	if(pCSock)
+	{
+		pCSock->setReconnect(nullptr);
+		delete pCSock;
+		pCSock = nullptr;
+	}
 }
 
 bool GlobalServer::Init(map<string, string> &param)
@@ -69,7 +75,7 @@ bool GlobalServer::Init(map<string, string> &param)
 	int listenfd = pSSock->createsocket(port);
 	if (listenfd < 0)
 	{
-		cout << "createsocket error\n";
+		fprintf(stderr, "%s->createsocket error! \n", __FUNCTION__);
 		return false;
 	}
 
@@ -79,14 +85,14 @@ bool GlobalServer::Init(map<string, string> &param)
 		struct sockaddr_in addr;
 		socklen_t addrLen = sizeof(addr);
 		if (getsockname(listenfd, (struct sockaddr*)&addr, &addrLen) < 0) {
-			perror("Error in getsockname");
+			fprintf(stderr, "%s->Error in getsockname \n", __FUNCTION__);
 			return false;
 		}
 
 		pSSock->port = ntohs(addr.sin_port);
 	}
 	
-	printf("pSSock listen on port %d, listenfd=%d ...\n", pSSock->port, listenfd);
+	printf("%s->pSSock listen on port %d, listenfd=%d ...\n", __FUNCTION__, pSSock->port, listenfd);
 
 	auto setting = new unpack_setting_t;
 	setting->mode = unpack_mode_e::UNPACK_BY_LENGTH_FIELD;
@@ -123,7 +129,7 @@ bool GlobalServer::Start()
 {
 	if(!pSSock)
 	{
-		cout << "Server not Initialed" <<endl;
+		fprintf(stderr, "%s->Server not Initialed! \n", __FUNCTION__);
 		return false;
 	}
 	pSSock->start();

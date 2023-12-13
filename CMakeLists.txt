@@ -38,9 +38,7 @@ include_directories("../Environment/Install/protobufGen/${CMAKE_BUILD_TYPE}/incl
 link_directories("../Environment/Install/protobufGen/${CMAKE_BUILD_TYPE}/lib")
 
 file(GLOB_RECURSE srcHotReloadModule CONFIGURE_DEPENDS 
-	"Source/Message/*"
-	"Source/Server/*"
-	"Source/Task/*"
+	"Source/*"
 	"HotReload/Source/*"
 )
 add_library( HotReload SHARED)

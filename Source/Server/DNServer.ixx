@@ -3,7 +3,6 @@ module;
 
 #include "hv/TcpServer.h"
 #include "hv/TcpClient.h"
-#include "hv/htime.h"
 #include "hv/EventLoop.h"
 export module DNServer;
 
@@ -31,9 +30,9 @@ public:
 
 	virtual bool Stop() = 0;
 
-    inline ServerType GetServerType(){return emServerType;}
+    ServerType GetServerType(){return emServerType;}
 
-	inline virtual void LoopEvent(function<void(hv::EventLoopPtr)> func){}
+	virtual void LoopEvent(function<void(hv::EventLoopPtr)> func){}
 
 protected:
 	DNServer();
@@ -53,18 +52,12 @@ export class DNClientProxy : public hv::TcpClient
 public:
 	DNClientProxy();
 
-	inline auto GetMsgId() { return ++iMsgId; }
+	auto GetMsgId() { return ++iMsgId; }
 
-	inline auto GetMsgMap(){ return &mMsgList; }
+	auto& GetMsgMap(){ return mMsgList; }
 
-	template <typename... Args>
-	inline void ExecTaskByDll(function<DNTaskVoid(Args...)> func, Args... args) { func(args...);}
-
-	inline bool IsRegisted(){return bIsRegisted;}
-	inline void SetRegisted(bool isRegisted){bIsRegisted = isRegisted;}
-
-	template <typename... Args>
-	void RegistSelf(function<DNTaskVoid(Args...)> func, Args... args);
+	bool IsRegisted(){return bIsRegisted;}
+	void SetRegisted(bool isRegisted){bIsRegisted = isRegisted;}
 private:
 	// only oddnumber
 	unsigned char iMsgId;
@@ -73,19 +66,6 @@ private:
 	// status
 	bool bIsRegisted;
 };
-
-// template function can!t after module:private; impl !!!!!!!!!!!!!!!!
-template <typename... Args>
-void DNClientProxy::RegistSelf(function<DNTaskVoid(Args...)> func, Args... args)
-{
-	loop()->setInterval(3000, [func, args..., this](hv::TimerID timerID){
-		if (channel->isConnected() && !IsRegisted()) {
-			func(args...);
-		} else {
-			loop()->killTimer(timerID);
-		}
-	});
-}
 
 module:private;
 

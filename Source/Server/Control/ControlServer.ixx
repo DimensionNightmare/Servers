@@ -2,11 +2,12 @@ module;
 #include "hv/hasync.h"
 #include "hv/EventLoop.h"
 
-#include <iostream>
 export module ControlServer;
 
 export import DNServer;
 import MessagePack;
+import ServerEntity;
+import EntityManager;
 
 using namespace std;
 using namespace hv;
@@ -15,6 +16,8 @@ export class ControlServer : public DNServer
 {
 public:
 	ControlServer();
+
+	~ControlServer();
 
 	virtual bool Init(map<string, string> &param) override;
 
@@ -26,21 +29,14 @@ public:
 
 	virtual void LoopEvent(function<void(EventLoopPtr)> func) override;
 
-	inline DNServerProxy* GetSSock(){return pSSock;}
+	DNServerProxy* GetSSock(){return pSSock;}
+
+	EntityManager<ServerEntity>* GetEntityManager(){return pEntityMan;}
 private:
 	DNServerProxy* pSSock;
+
+	EntityManager<ServerEntity>* pEntityMan;
 };
-
-static ControlServer *PControlServer = nullptr;
-
-export void SetControlServer(ControlServer *server)
-{
-	PControlServer = server;
-}
-export ControlServer *GetControlServer()
-{
-	return PControlServer;
-}
 
 module:private;
 
@@ -48,13 +44,26 @@ ControlServer::ControlServer()
 {
 	emServerType = ServerType::ControlServer;
 	pSSock = nullptr;
+	pEntityMan = new EntityManager<ServerEntity>;
+}
+
+ControlServer::~ControlServer()
+{
+	delete pEntityMan;
+	pEntityMan = nullptr;
+
+	if(pSSock)
+	{
+		delete pSSock;
+		pSSock = nullptr;
+	}
 }
 
 bool ControlServer::Init(map<string, string> &param)
 {
 	if(!param.contains("ip") || !param.contains("port"))
 	{
-		cerr << "ip or port Need " << endl;
+		fprintf(stderr, "%s->ip or port Need! \n", __FUNCTION__);
 		return false;
 	}
 
@@ -64,12 +73,12 @@ bool ControlServer::Init(map<string, string> &param)
 	int listenfd = pSSock->createsocket(port);
 	if (listenfd < 0)
 	{
-		cout << "createsocket error\n";
+		fprintf(stderr, "%s->createsocket error \n", __FUNCTION__);
 		return false;
 	}
 
     // 输出分配的端口号
-	printf("pSSock listen on port %d, listenfd=%d ...\n", pSSock->port, listenfd);
+	printf("%s->pSSock listen on port %d, listenfd=%d ...\n", __FUNCTION__, pSSock->port, listenfd);
 
 	auto setting = make_shared<unpack_setting_t>();
 	setting->mode = unpack_mode_e::UNPACK_BY_LENGTH_FIELD;

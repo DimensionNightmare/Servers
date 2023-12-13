@@ -6,7 +6,7 @@ export module ControlGlobal;
 
 import DNTask;
 import MessagePack;
-import ControlServer;
+import ControlServerHelper;
 
 using namespace GMsg::GlobalControl;
 using namespace google::protobuf;
@@ -25,6 +25,7 @@ export void Msg_RegistSrv(const SocketChannelPtr &channel, unsigned int msgId, M
 
 	string name;
 	MessagePack(msgId, MsgDeal::Res, name, binData);
-	//GetControlServer()->
+	auto entity = GetControlServer()->GetEntityManager()->AddEntity(channel, channel->id());
+	entity->emServerType = ServerType::ControlServer;
 	channel->write(binData);
 }

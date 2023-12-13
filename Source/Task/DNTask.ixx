@@ -1,6 +1,4 @@
 module;
-#include <iostream>
-#include <functional>
 #include <coroutine>
 export module DNTask;
 
@@ -27,7 +25,7 @@ struct DNTask
 
 		auto final_suspend() noexcept { return suspend_always{}; }
 
-		void unhandled_exception() { terminate(); }
+		void unhandled_exception() { }
 
 		const T* GetResult() const { return oResult; }
 
@@ -102,10 +100,10 @@ export struct DNTaskVoid
 
 		auto final_suspend() noexcept { return suspend_never{}; }
 
-		void unhandled_exception() { terminate(); }
+		void unhandled_exception() {  }
 	};
 
-	// Awaitable
+	// Awaitable Start
 	bool await_ready() const noexcept 
 	{
 		return tHandle.done();
@@ -118,7 +116,7 @@ export struct DNTaskVoid
 	void await_resume() noexcept 
 	{
 	}
-	// Awaitable
+	// Awaitable End
 
 	DNTaskVoid(auto handle): tHandle(handle){}
 

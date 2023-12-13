@@ -1,6 +1,5 @@
 module;
 #include "hv/hv.h"
-#include "hv/hasync.h"
 #include "hv/EventLoop.h"
 #include <Windows.h>
 #include <DbgHelp.h>
@@ -9,8 +8,6 @@ export module DimensionNightmare;
 
 import ControlServer;
 import GlobalServer;
-
-import ActorManager;
 
 using namespace hv;
 using namespace std;
@@ -30,13 +27,13 @@ struct HotReloadDll
 		ret = SetDllDirectory(sDllDirRand.c_str());
 		if(!ret)
 		{
-			cout << "LoadHandle:: cant set dll path! error code=" << GetLastError() << endl;
+			fprintf(stderr, "%s->cant set dll path! error code=%d! \n", __FUNCTION__, GetLastError());
 			return false;
 		}
 		oLibHandle = LoadLibraryEx((SDllName).c_str(), NULL, LOAD_LIBRARY_SEARCH_USER_DIRS);
 		if (!oLibHandle)
 		{
-			cout << "LoadHandle:: cant Success! error code=" << GetLastError() << endl;
+			fprintf(stderr, "%s->cant Success! error code=%d! \n", __FUNCTION__, GetLastError());
 			return false;
 		}
 
@@ -63,7 +60,7 @@ struct HotReloadDll
 	{
 		if(!std::filesystem::exists(SDllDir))
 		{
-			cout << "dll menu not exist!!" <<endl;
+			fprintf(stderr, "%s->dll menu not exist! \n", __FUNCTION__);
 			return false;
 		}
 
@@ -71,7 +68,7 @@ struct HotReloadDll
 
 		if (SDllName.empty())
 		{
-			cout << "Dll Name is Error!" << endl;
+			fprintf(stderr, "%s->Dll Name is Error! \n", __FUNCTION__);
 			return false;
 		}
 
@@ -104,6 +101,8 @@ export class DimensionNightmare
 public:
 	DimensionNightmare();
 
+	~DimensionNightmare();
+
 	bool Init(map<string, string> &param);
 
 	void InitCmdHandle();
@@ -112,7 +111,7 @@ public:
 
 	void ShutDown();
 
-	inline DNServer *GetServer() { return pServer; }
+	DNServer *GetServer() { return pServer; }
 
 	bool OnRegHotReload();
 
@@ -148,11 +147,26 @@ DimensionNightmare::DimensionNightmare()
 	mCmdHandle.clear();
 }
 
+DimensionNightmare::~DimensionNightmare()
+{
+	if(pHotDll)
+	{
+		delete pHotDll;
+		pHotDll = nullptr;
+	}
+
+	if(pServer)
+	{
+		delete pServer;
+		pServer = nullptr;
+	}
+}
+
 bool DimensionNightmare::Init(map<string, string> &param)
 {
 	if(!param.contains("svrType"))
 	{
-		cout << "lunch param svrType is null" << endl;
+		fprintf(stderr, "%s->lunch param svrType is null! \n", __FUNCTION__);
 		return false;
 	}
 
@@ -167,7 +181,7 @@ bool DimensionNightmare::Init(map<string, string> &param)
 		pServer = new GlobalServer;
 		break;
 	default:
-		cout << "ServerType is Not Vaild!" << endl;
+		fprintf(stderr, "%s->ServerType is Not Vaild! \n", __FUNCTION__);
 		return false;
 	}
 
@@ -232,6 +246,12 @@ void DimensionNightmare::InitCmdHandle()
 	{
 		pServer->InitCmd(mCmdHandle);
 	}
+
+	printf("%s->cmds: ", __FUNCTION__);
+	for(auto &iter : mCmdHandle)
+		printf("%s,", iter.first.c_str());
+	
+	printf("\n");
 }
 
 void DimensionNightmare::ExecCommand(string* cmd, stringstream* ss)
@@ -261,7 +281,7 @@ bool DimensionNightmare::OnRegHotReload()
 {
 	if (auto funtPtr = pHotDll->GetFuncPtr("InitHotReload"))
 	{
-		typedef int (*InitHotReload)(DNServer &);
+		using InitHotReload = int (*)(DNServer &);
 		auto func = reinterpret_cast<InitHotReload>(funtPtr);
 		if (func)
 		{
@@ -277,7 +297,7 @@ bool DimensionNightmare::OnUnregHotReload()
 {
 	if (auto funtPtr = pHotDll->GetFuncPtr("ShutdownHotReload"))
 	{
-		typedef int (*ShutdownHotReload)(DNServer &);
+		using ShutdownHotReload = int (*)(DNServer &);
 		auto func = reinterpret_cast<ShutdownHotReload>(funtPtr);
 		if (func)
 		{

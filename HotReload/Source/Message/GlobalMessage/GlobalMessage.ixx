@@ -2,7 +2,6 @@ module;
 #include "GlobalControl.pb.h"
 #include "hv/Channel.h"
 
-#include <iostream>
 #include <map>
 #include <functional>
 export module GlobalMessage;
@@ -34,5 +33,5 @@ void GlobalMessageHandle::MsgHandle(const SocketChannelPtr &channel, unsigned in
 
 void GlobalMessageHandle::RegMsgHandle()
 {
-	// MHandleMap[ G2C_RegistSrv::GetDescriptor()->full_name()] = &Msg_RegistSrv;
+	
 }

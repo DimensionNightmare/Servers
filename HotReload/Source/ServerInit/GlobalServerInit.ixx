@@ -8,6 +8,7 @@ export module GlobalServerInit;
 export import GlobalMessage;
 import MessagePack;
 import GlobalServer;
+import GlobalServerHelper;
 
 using namespace hv;
 using namespace std;
@@ -29,11 +30,11 @@ void HandleGlobalServerInit(GlobalServer *server)
 			string peeraddr = channel->peeraddr();
 			if (channel->isConnected())
 			{
-				printf("%s connected! connfd=%d id=%d \n", peeraddr.c_str(), channel->fd(), channel->id());
+				printf("%s-> %s connected! connfd=%d id=%d \n", __FUNCTION__, peeraddr.c_str(), channel->fd(), channel->id());
 			}
 			else
 			{
-				printf("%s disconnected! connfd=%d id=%d \n", peeraddr.c_str(), channel->fd(), channel->id());
+				printf("%s-> %s disconnected! connfd=%d id=%d \n", __FUNCTION__, peeraddr.c_str(), channel->fd(), channel->id());
 			}
 		};
 
@@ -54,15 +55,14 @@ void HandleGlobalServerInit(GlobalServer *server)
 
 			if (channel->isConnected())
 			{
-				printf("%s connected! connfd=%d id=%d \n", peeraddr.c_str(), channel->fd(), channel->id());
+				printf("%s-> %s connected! connfd=%d id=%d \n", __FUNCTION__, peeraddr.c_str(), channel->fd(), channel->id());
 
 				// send RegistInfo
-				// globalSrv->GetCSock()->ExecTaskByDll<int, DNClientProxy*, DNServerProxy*>(&Msg_RegistSrv, (int)ServerType::GlobalServer, globalSrv->GetCSock(), globalSrv->GetSSock());
-				globalSrv->GetCSock()->RegistSelf<int, DNClientProxy*, DNServerProxy*>(&Msg_RegistSrv, (int)ServerType::GlobalServer, globalSrv->GetCSock(), globalSrv->GetSSock());
+				globalSrv->RegistSelf<GlobalServerHelper*>(&Msg_RegistSrv);
 			}
 			else
 			{
-				printf("%s disconnected! connfd=%d id=%d \n", peeraddr.c_str(), channel->fd(), channel->id());
+				printf("%s-> %s disconnected! connfd=%d id=%d \n", __FUNCTION__, peeraddr.c_str(), channel->fd(), channel->id());
 				globalSrv->GetCSock()->SetRegisted(false);
 			}
 
@@ -76,11 +76,11 @@ void HandleGlobalServerInit(GlobalServer *server)
 			memcpy(&packet, buf->data(), MessagePacket::PackLenth);
 			if(packet.dealType == MsgDeal::Res)
 			{
-				auto reqMap = GetGlobalServer()->GetCSock()->GetMsgMap();
-				if(reqMap->contains(packet.msgId)) //client sock request
+				auto& reqMap = GetGlobalServer()->GetCSock()->GetMsgMap();
+				if(reqMap.contains(packet.msgId)) //client sock request
 				{
-					auto task = reqMap->at(packet.msgId);
-					reqMap->erase(packet.msgId);
+					auto task = reqMap.at(packet.msgId);
+					reqMap.erase(packet.msgId);
 					task->Resume();
 					Message* message = task->GetResult();
 					message->ParseFromArray((const char*)buf->data() + MessagePacket::PackLenth + packet.msgLenth, packet.pkgLenth - packet.msgLenth);
@@ -88,7 +88,7 @@ void HandleGlobalServerInit(GlobalServer *server)
 				}
 				else
 				{
-					cout << "cant find msgid" << endl;
+					fprintf(stderr, "%s->cant find msgid! \n", __FUNCTION__);
 				}
 			}
 			else if(packet.dealType == MsgDeal::Req)
@@ -109,14 +109,14 @@ void HandleGlobalServerInit(GlobalServer *server)
 					}
 					else
 					{
-						cout << "cant deal msg parse" << endl;
+						fprintf(stderr, "%s->cant deal msg parse! \n", __FUNCTION__);
 					}
 					delete message;
 					message = nullptr;
 				}
 				else
 				{
-					cout << "cant find msg deal" << endl;
+					fprintf(stderr, "%s->cant find msg deal! \n", __FUNCTION__);
 				}
 			}
 		};
@@ -139,11 +139,11 @@ void HandleGlobalServerShutdown(GlobalServer *server)
 
 	if (auto cSock = server->GetCSock())
 	{
-		for(auto& kv : *cSock->GetMsgMap())
+		for(auto& kv : cSock->GetMsgMap())
 		{
 			kv.second->Destroy();
 		}
-		cSock->GetMsgMap()->clear();
+		cSock->GetMsgMap().clear();
 		cSock->onConnection = nullptr;
 		cSock->onMessage = nullptr;
 	}

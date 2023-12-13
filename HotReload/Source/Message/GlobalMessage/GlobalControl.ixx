@@ -9,21 +9,23 @@ export module GlobalControl;
 
 import DNTask;
 import DNServer;
-//import GlobalServer;
 import MessagePack;
+import GlobalServerHelper;
 
 using namespace GMsg::GlobalControl;
 using namespace std;
 using namespace google::protobuf;
 
 // client request
-export DNTaskVoid Msg_RegistSrv(int serverType, DNClientProxy* client, DNServerProxy* server)
+export DNTaskVoid Msg_RegistSrv(GlobalServerHelper* globalServer)
 {
+	auto client = globalServer->GetCSock();
+	auto server = globalServer->GetSSock();
 	auto msgId = client->GetMsgId();
-	auto reqMap = client->GetMsgMap();
+	auto& reqMap = client->GetMsgMap();
 
 	G2C_RegistSrv requset;
-	requset.set_server_type(serverType);
+	requset.set_server_type((int)globalServer->GetServerType());
 	requset.set_ip(server->host);
 	requset.set_port(server->port);
 	
@@ -39,11 +41,11 @@ export DNTaskVoid Msg_RegistSrv(int serverType, DNClientProxy* client, DNServerP
 		{
 			co_return &response;
 		}();
-	if(reqMap->contains(msgId))
+	if(reqMap.contains(msgId))
 	{
-		cout << "+++++++++++++++++++++++++++++++++++++++" <<endl;
+		printf("%s->+++++++++++++++++++++++++++++++++++++++! \n", __FUNCTION__);
 	}
-	reqMap->emplace(msgId, &dataChannel);
+	reqMap.emplace(msgId, &dataChannel);
 	
 	// wait data parse
 	client->send(binData);
@@ -51,10 +53,10 @@ export DNTaskVoid Msg_RegistSrv(int serverType, DNClientProxy* client, DNServerP
 	
 	if(!response.success())
 	{
-		cout << "regist Server error" << endl;
+		printf("%s->regist Server error! \n", __FUNCTION__);
 	}
 	else{
-		cout << "regist Server success" << endl;
+		printf("%s->regist Server success! \n", __FUNCTION__);
 		client->SetRegisted(true);
 	}
 
