@@ -35,11 +35,13 @@ EntityManager<TEntity>::EntityManager()
 template <class TEntity>
 EntityManager<TEntity>::~EntityManager()
 {
-	for(auto& iter : mEntityMap)
+	for(auto& [k,v] : mEntityMap)
 	{
-		delete iter.second;
-		mEntityMap.erase(iter.first);
+		delete v;
+		v = nullptr;
 	}
+
+	mEntityMap.clear();
 }
 
 template <class TEntity>

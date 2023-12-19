@@ -248,8 +248,8 @@ void DimensionNightmare::InitCmdHandle()
 	}
 
 	printf("%s->cmds: ", __FUNCTION__);
-	for(auto &iter : mCmdHandle)
-		printf("%s,", iter.first.c_str());
+	for(auto &[k,v] : mCmdHandle)
+		printf("%s,", k.c_str());
 	
 	printf("\n");
 }

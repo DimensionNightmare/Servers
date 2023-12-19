@@ -27,7 +27,7 @@ export struct MessagePacket
 	MsgDeal dealType;
 	unsigned char serverId;
 	unsigned char msgId;
-	unsigned char msgLenth;
+	unsigned int msgLenth;
 
 	MessagePacket()
 	{

@@ -139,10 +139,12 @@ void HandleGlobalServerShutdown(GlobalServer *server)
 
 	if (auto cSock = server->GetCSock())
 	{
-		for(auto& kv : cSock->GetMsgMap())
+		for(auto& [k,v] : cSock->GetMsgMap())
 		{
-			kv.second->Destroy();
+			v->Destroy();
+			v = nullptr;
 		}
+		
 		cSock->GetMsgMap().clear();
 		cSock->onConnection = nullptr;
 		cSock->onMessage = nullptr;
