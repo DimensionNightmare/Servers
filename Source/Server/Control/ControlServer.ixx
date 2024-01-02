@@ -112,7 +112,8 @@ bool ControlServer::Stop()
 void ControlServer::LoopEvent(function<void(EventLoopPtr)> func)
 {
     map<long,EventLoopPtr> looped;
-    while(EventLoopPtr pLoop = pSSock->loop()){
+    while(EventLoopPtr pLoop = pSSock->loop())
+	{
         long id = pLoop->tid();
         if(looped.find(id) == looped.end())
         {

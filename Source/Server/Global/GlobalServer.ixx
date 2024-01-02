@@ -84,7 +84,8 @@ bool GlobalServer::Init(map<string, string> &param)
 	{
 		struct sockaddr_in addr;
 		socklen_t addrLen = sizeof(addr);
-		if (getsockname(listenfd, (struct sockaddr*)&addr, &addrLen) < 0) {
+		if (getsockname(listenfd, (struct sockaddr*)&addr, &addrLen) < 0) 
+		{
 			fprintf(stderr, "%s->Error in getsockname \n", __FUNCTION__);
 			return false;
 		}
@@ -156,7 +157,8 @@ bool GlobalServer::Stop()
 void GlobalServer::LoopEvent(function<void(EventLoopPtr)> func)
 {
     map<long,EventLoopPtr> looped;
-    while(EventLoopPtr pLoop = pSSock->loop()){
+    while(EventLoopPtr pLoop = pSSock->loop())
+	{
         long id = pLoop->tid();
         if(looped.find(id) == looped.end())
         {
@@ -168,5 +170,24 @@ void GlobalServer::LoopEvent(function<void(EventLoopPtr)> func)
             break;
         }
     };
+
+	if(pCSock)
+	{
+		looped.clear();
+		while(EventLoopPtr pLoop = pCSock->loop())
+		{
+			long id = pLoop->tid();
+			if(looped.find(id) == looped.end())
+			{
+				func(pLoop);
+				looped[id] = pLoop;
+			}
+			else
+			{
+				break;
+			}
+		};
+	}
+	
     
 }

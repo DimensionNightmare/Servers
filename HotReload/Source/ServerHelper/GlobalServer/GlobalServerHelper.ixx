@@ -33,10 +33,14 @@ export GlobalServerHelper* GetGlobalServer()
 template <typename... Args>
 void GlobalServerHelper::RegistSelf(function<DNTaskVoid(Args...)> func)
 {
-	GetCSock()->loop()->setInterval(10, [func, this](TimerID timerID){
-		if (GetCSock()->channel->isConnected() && !GetCSock()->IsRegisted()) {
+	GetCSock()->loop()->setInterval(100, [func, this](TimerID timerID)
+	{
+		if (GetCSock()->channel->isConnected() && !GetCSock()->IsRegisted()) 
+		{
 			func(this);
-		} else {
+		} 
+		else 
+		{
 			GetCSock()->loop()->killTimer(timerID);
 		}
 	});

@@ -94,7 +94,8 @@ int main(int argc, char** argv)
 			nullptr
 		);
 
-		if (hDumpFile != INVALID_HANDLE_VALUE) {
+		if (hDumpFile != INVALID_HANDLE_VALUE) 
+		{
 			MINIDUMP_EXCEPTION_INFORMATION info;
 			info.ThreadId = GetCurrentThreadId();
 			info.ExceptionPointers = ExceptionInfo;
@@ -142,7 +143,9 @@ int main(int argc, char** argv)
 			int c = a/b;
 		}
 		else
+		{
 			dn->ExecCommand(&str, &ss);
+		}
     }
 
 	CtrlHandler(0);

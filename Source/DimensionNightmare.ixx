@@ -186,11 +186,15 @@ bool DimensionNightmare::Init(map<string, string> &param)
 	}
 
 	if(!pServer->Init(param))
+	{
 		return false;
+	}
 
 	pHotDll = new HotReloadDll;
 	if (!pHotDll->ReloadHandle())
+	{
 		return false;
+	}
 
 	if (OnRegHotReload())
 	{

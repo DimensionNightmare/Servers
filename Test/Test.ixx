@@ -15,7 +15,8 @@ public:
 };
 
 template <typename... Args>
-void DNClientProxy::RegistSelf(Args... args) {
+void DNClientProxy::RegistSelf(Args... args) 
+{
     ((std::cout << args << " "), ...);
     std::cout << std::endl;
 }

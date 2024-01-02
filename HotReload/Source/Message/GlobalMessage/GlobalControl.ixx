@@ -37,14 +37,19 @@ export DNTaskVoid Msg_RegistSrv(GlobalServerHelper* globalServer)
 	// data alloc
 	C2G_RegistSrv response;
 	auto dataChannel = [&]()->DNTask<Message*>
-		{
-			co_return &response;
-		}();
+	{
+		co_return &response;
+	}();
+
 	if(reqMap.contains(msgId))
 	{
-		printf("%s->+++++++++++++++++++++++++++++++++++++++! %d, \n", __FUNCTION__, msgId);
-
+		printf("%s-> +++++ %d, \n", __FUNCTION__, msgId);
 	}
+	else
+	{
+		printf("%s-> ----- %d, \n", __FUNCTION__, msgId);
+	}
+
 	reqMap.emplace(msgId, (DNTask<void*>*)&dataChannel);
 	
 	// wait data parse
@@ -55,7 +60,8 @@ export DNTaskVoid Msg_RegistSrv(GlobalServerHelper* globalServer)
 	{
 		// printf("%s->regist Server error! \n", __FUNCTION__);
 	}
-	else{
+	else
+	{
 		printf("%s->regist Server success! \n", __FUNCTION__);
 		client->SetRegisted(true);
 	}

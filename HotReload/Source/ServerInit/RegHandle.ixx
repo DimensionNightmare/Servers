@@ -51,19 +51,18 @@ int ShutdownHotReload(DNServer &base)
 	switch (servertype)
 	{
 	case ServerType::ControlServer:
-	{
-		ControlServer *server = (ControlServer *)&base;
-		HandleControlServerShutdown(server);
-	break;
-	}
+		{
+			ControlServer *server = (ControlServer *)&base;
+			HandleControlServerShutdown(server);
+		}
+		break;
 
 	case ServerType::GlobalServer:
-	{
-
-		GlobalServer *server = (GlobalServer *)&base;
-		HandleGlobalServerShutdown(server);
-	break;
-	}
+		{
+			GlobalServer *server = (GlobalServer *)&base;
+			HandleGlobalServerShutdown(server);
+		}
+		break;
 	}
 
 	return 0;

@@ -53,7 +53,9 @@ struct DNTask
 	void Resume()
 	{
 		if(!tHandle || tHandle.done())
+		{
 			return;
+		}
 
 		tHandle.resume();
 	}
@@ -61,7 +63,9 @@ struct DNTask
 	void CallResume()
 	{
 		if(!pCallPause)
+		{
 			return;
+		}
 
 		pCallPause.resume();
 	}
@@ -123,7 +127,9 @@ export struct DNTaskVoid
 	void Resume()
 	{
 		if(!tHandle || tHandle.done())
+		{
 			return;
+		}
 
 		tHandle.resume();
 	}

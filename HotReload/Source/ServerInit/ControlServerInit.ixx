@@ -38,7 +38,8 @@ void HandleControlServerInit(ControlServer *server)
 			}
 		};
 
-		auto onMessage = [](const SocketChannelPtr &channel, Buffer *buf) {
+		auto onMessage = [](const SocketChannelPtr &channel, Buffer *buf) 
+		{
 			MessagePacket packet;
 			memcpy(&packet, buf->data(), MessagePacket::PackLenth);
 			if(packet.dealType == MsgDeal::Req)

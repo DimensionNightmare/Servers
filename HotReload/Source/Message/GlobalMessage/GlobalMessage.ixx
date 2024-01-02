@@ -36,7 +36,9 @@ void GlobalMessageHandle::MsgHandle(const SocketChannelPtr &channel, unsigned in
 		auto& handle = MHandleMap[msgHashId];
 		auto message = handle.first->New();
 		if(message->ParseFromArray(msgData.data(), msgData.length()))
+		{	
 			handle.second(channel, msgId, message);
+		}
 		
 		delete message;
 	}

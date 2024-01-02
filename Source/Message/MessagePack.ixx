@@ -52,9 +52,13 @@ bool MessagePack(unsigned int msgId, MsgDeal deal,  const string& pbName, string
 	packet.pkgLenth = unsigned int(data.size());
 
 	if( pbName.empty()) [[unlikely]]
+	{	
 		packet.msgHashId = 0;
+	}
 	else [[likely]]
+	{
 		packet.msgHashId = std::hash<string>::_Do_hash(pbName);
+	}
 
 	data.resize(MessagePacket::PackLenth + packet.pkgLenth);
 	
