@@ -68,7 +68,7 @@ target_sources(DimensionNightmareServer
 		${DNSourceModule}
 )
 
-target_link_libraries(DimensionNightmareServer PRIVATE hv_static protobuf::libprotobuf)
+target_link_libraries(DimensionNightmareServer PRIVATE hv_static)
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET DimensionNightmareServer PROPERTY CXX_STANDARD 23)
 endif()

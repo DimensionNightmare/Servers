@@ -4,7 +4,7 @@
 #include <unordered_map>
 #include <fstream>
 #include "schema.pb.h"
-#include <Windows.h>
+// #include <Windows.h>
 #include <locale>
 #include <random>
 
@@ -49,6 +49,13 @@ int main()
 
 	DNClientProxy* res = new DNClientProxy;
 	res->RegistSelf<int,int,int,int,int>(3,5,6,8,7);
+
+	std::hash<std::string> hashstr;
+
+	std::string msgName = GCfg::CharacterPlayer::GetDescriptor()->full_name();
+	std::cout << msgName.size() << " " << msgName.length() << " " <<  strlen(msgName.c_str()) << std::endl;
+	auto hashres = hashstr.operator()("");
+	std::cout << size_t(hashres) << " " <<  hashres << std::endl;
 
     return 0;
 }

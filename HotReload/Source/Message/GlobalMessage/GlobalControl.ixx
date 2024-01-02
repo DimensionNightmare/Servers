@@ -42,9 +42,10 @@ export DNTaskVoid Msg_RegistSrv(GlobalServerHelper* globalServer)
 		}();
 	if(reqMap.contains(msgId))
 	{
-		printf("%s->+++++++++++++++++++++++++++++++++++++++! \n", __FUNCTION__);
+		printf("%s->+++++++++++++++++++++++++++++++++++++++! %d, \n", __FUNCTION__, msgId);
+
 	}
-	reqMap.emplace(msgId, &dataChannel);
+	reqMap.emplace(msgId, (DNTask<void*>*)&dataChannel);
 	
 	// wait data parse
 	client->send(binData);
@@ -52,7 +53,7 @@ export DNTaskVoid Msg_RegistSrv(GlobalServerHelper* globalServer)
 	
 	if(!response.success())
 	{
-		printf("%s->regist Server error! \n", __FUNCTION__);
+		// printf("%s->regist Server error! \n", __FUNCTION__);
 	}
 	else{
 		printf("%s->regist Server success! \n", __FUNCTION__);

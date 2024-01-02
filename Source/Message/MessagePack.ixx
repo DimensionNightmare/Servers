@@ -25,9 +25,9 @@ export struct MessagePacket
 
 	MsgDir opType;
 	MsgDeal dealType;
-	unsigned char serverId;
-	unsigned char msgId;
-	unsigned int msgLenth;
+	unsigned short serverId;
+	unsigned short msgId;
+	size_t msgHashId;
 
 	MessagePacket()
 	{
@@ -39,25 +39,26 @@ export struct MessagePacket
 
 int MessagePacket::PackLenth = sizeof MessagePacket;
 
-export bool MessagePack(unsigned int msgId, MsgDeal deal, const string &pbName, string &data);
+export bool MessagePack(unsigned int msgId, MsgDeal deal, const string& pbName, string &data);
 
 // implement
 module :private;
 
-bool MessagePack(unsigned int msgId, MsgDeal deal,  const string &pbName, string &data)
+bool MessagePack(unsigned int msgId, MsgDeal deal,  const string& pbName, string &data)
 {
-	int dataLen = (int)data.size();
-	int msgNameLen = (int)pbName.size();
-
 	MessagePacket packet;
 	packet.msgId = msgId;
 	packet.dealType = deal;
-	packet.msgLenth = msgNameLen;
-	packet.pkgLenth = dataLen + msgNameLen;
+	packet.pkgLenth = unsigned int(data.size());
+
+	if( pbName.empty()) [[unlikely]]
+		packet.msgHashId = 0;
+	else [[likely]]
+		packet.msgHashId = std::hash<string>::_Do_hash(pbName);
+
 	data.resize(MessagePacket::PackLenth + packet.pkgLenth);
 	
-	memmove_s(data.data() + MessagePacket::PackLenth + msgNameLen, dataLen, data.data(), dataLen);
-	memcpy(data.data() + MessagePacket::PackLenth, pbName.data(), msgNameLen);
+	memmove_s(data.data() + MessagePacket::PackLenth, packet.pkgLenth, data.data(), packet.pkgLenth);
 	memcpy(data.data(), &packet, MessagePacket::PackLenth);
 	return true;
 }

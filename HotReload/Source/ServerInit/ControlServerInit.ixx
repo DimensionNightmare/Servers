@@ -43,23 +43,8 @@ void HandleControlServerInit(ControlServer *server)
 			memcpy(&packet, buf->data(), MessagePacket::PackLenth);
 			if(packet.dealType == MsgDeal::Req)
 			{
-				string msgName;
-				msgName.resize(packet.msgLenth);
-				memcpy(msgName.data(), (char*)buf->data() + MessagePacket::PackLenth, msgName.size());
-
-				const Descriptor* descriptor = DescriptorPool::generated_pool()->FindMessageTypeByName(msgName); 
-				if(descriptor)
-				{
-					static DynamicMessageFactory factory;
-					const Message* prototype = factory.GetPrototype(descriptor);
-					auto message = prototype->New();
-					if(message->ParseFromArray((const char*)buf->data() + MessagePacket::PackLenth + msgName.size(), packet.pkgLenth - msgName.size()))
-					{
-						ControlMessageHandle::MsgHandle(channel, packet.msgId, msgName, message);
-					}
-					delete message;
-					message = nullptr;
-				}
+				string msgData((char*)buf->data() + MessagePacket::PackLenth, packet.pkgLenth);
+				ControlMessageHandle::MsgHandle(channel, packet.msgId, packet.msgHashId, msgData);
 			}
 		};
 

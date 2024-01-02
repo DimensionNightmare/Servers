@@ -1,5 +1,4 @@
 module;
-#include "google/protobuf/message.h"
 
 #include "hv/TcpServer.h"
 #include "hv/TcpClient.h"
@@ -9,7 +8,6 @@ export module DNServer;
 import DNTask;
 
 using namespace std;
-using namespace google::protobuf;
 
 export enum class ServerType : unsigned char
 {
@@ -62,7 +60,7 @@ private:
 	// only oddnumber
 	unsigned char iMsgId;
 	// unordered_
-	map<unsigned int, DNTask<Message*>* > mMsgList;
+	map<unsigned int, DNTask<void*>* > mMsgList;
 	// status
 	bool bIsRegisted;
 };

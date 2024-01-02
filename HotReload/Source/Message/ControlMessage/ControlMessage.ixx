@@ -17,23 +17,37 @@ using namespace GMsg::GlobalControl;
 export class ControlMessageHandle
 {
 public:
-	static void MsgHandle(const SocketChannelPtr &channel, unsigned int msgId, string name, Message *msg);
+	static void MsgHandle(const SocketChannelPtr &channel, unsigned int msgId, size_t msgHashId, const string& msgData);
 	static void RegMsgHandle();
 public:
-	inline static map<string, function<void(const SocketChannelPtr &, unsigned int, Message *)>> MHandleMap;
+	inline static map<
+		size_t, 
+		pair<
+			const Message*, 
+			function<void(const SocketChannelPtr &, unsigned int, Message *)> 
+		> 
+	> MHandleMap;
 };
 
 module :private;
 
-void ControlMessageHandle::MsgHandle(const SocketChannelPtr &channel, unsigned int msgId, string name, Message *msg)
+void ControlMessageHandle::MsgHandle(const SocketChannelPtr &channel, unsigned int msgId, size_t msgHashId, const string& msgData)
 {
-	if (MHandleMap.contains(name))
+	if (MHandleMap.contains(msgHashId))
 	{
-		MHandleMap[name](channel, msgId, msg);
+		auto& handle = MHandleMap[msgHashId];
+		auto message = handle.first->New();
+		if(message->ParseFromArray(msgData.data(), msgData.length()))
+			handle.second(channel, msgId, message);
+		
+		delete message;
 	}
 }
 
 void ControlMessageHandle::RegMsgHandle()
 {
-	MHandleMap[ G2C_RegistSrv::GetDescriptor()->full_name()] = &Msg_RegistSrv;
+	std::hash<string> hashStr;
+
+	const Message* msg = G2C_RegistSrv::internal_default_instance();
+	MHandleMap.emplace( hashStr(msg->GetDescriptor()->full_name()), make_pair(msg, &Msg_RegistSrv));
 }

@@ -17,14 +17,13 @@ using namespace std;
 export void Msg_RegistSrv(const SocketChannelPtr &channel, unsigned int msgId, Message *msg)
 {
 	C2G_RegistSrv response;
-	response.set_success(true);
+	response.set_success(false);
 	
 	string binData;
 	binData.resize(response.ByteSize());
 	response.SerializeToArray(binData.data(), binData.size());
 
-	string name;
-	MessagePack(msgId, MsgDeal::Res, name, binData);
+	MessagePack(msgId, MsgDeal::Res, "", binData);
 	auto entity = GetControlServer()->GetEntityManager()->AddEntity(channel, channel->id());
 	entity->emServerType = ServerType::ControlServer;
 	channel->write(binData);

@@ -82,8 +82,8 @@ void HandleGlobalServerInit(GlobalServer *server)
 					auto task = reqMap.at(packet.msgId);
 					reqMap.erase(packet.msgId);
 					task->Resume();
-					Message* message = task->GetResult();
-					message->ParseFromArray((const char*)buf->data() + MessagePacket::PackLenth + packet.msgLenth, packet.pkgLenth - packet.msgLenth);
+					Message* message = ((DNTask<Message*>*)task)->GetResult();
+					message->ParseFromArray((const char*)buf->data() + MessagePacket::PackLenth, packet.pkgLenth);
 					task->CallResume();
 				}
 				else
@@ -93,30 +93,12 @@ void HandleGlobalServerInit(GlobalServer *server)
 			}
 			else if(packet.dealType == MsgDeal::Req)
 			{
-				string msgName;
-				msgName.resize(packet.msgLenth);
-				memcpy(msgName.data(), (char*)buf->data() + MessagePacket::PackLenth, msgName.size());
-
-				const Descriptor* descriptor = DescriptorPool::generated_pool()->FindMessageTypeByName(msgName); 
-				if(descriptor)
+				MessagePacket packet;
+				memcpy(&packet, buf->data(), MessagePacket::PackLenth);
+				if(packet.dealType == MsgDeal::Req)
 				{
-					static DynamicMessageFactory factory;
-					const Message* prototype = factory.GetPrototype(descriptor);
-					auto message = prototype->New();
-					if(message->ParseFromArray((const char*)buf->data() + MessagePacket::PackLenth + msgName.size(), packet.pkgLenth - msgName.size()))
-					{
-						GlobalMessageHandle::MsgHandle(channel, packet.msgId, msgName, message);
-					}
-					else
-					{
-						fprintf(stderr, "%s->cant deal msg parse! \n", __FUNCTION__);
-					}
-					delete message;
-					message = nullptr;
-				}
-				else
-				{
-					fprintf(stderr, "%s->cant find msg deal! \n", __FUNCTION__);
+					string msgData((char*)buf->data() + MessagePacket::PackLenth, packet.pkgLenth);
+					GlobalMessageHandle::MsgHandle(channel, packet.msgId, packet.msgHashId, msgData);
 				}
 			}
 		};
