@@ -149,17 +149,26 @@ DimensionNightmare::DimensionNightmare()
 
 DimensionNightmare::~DimensionNightmare()
 {
+	if(pServer)
+	{
+		pServer->LoopEvent([](EventLoopPtr loop)
+		{ 
+			loop->pause(); 
+		});
+
+		OnUnregHotReload();
+		
+		delete pServer;
+		pServer = nullptr;
+	}
+
 	if(pHotDll)
 	{
 		delete pHotDll;
 		pHotDll = nullptr;
 	}
 
-	if(pServer)
-	{
-		delete pServer;
-		pServer = nullptr;
-	}
+	
 }
 
 bool DimensionNightmare::Init(map<string, string> &param)
@@ -233,7 +242,7 @@ void DimensionNightmare::InitCmdHandle()
 	auto reload = [&, pause, resume](stringstream *ss = nullptr)
 	{
 		pause();
-		Sleep(500);
+		// Sleep(500);
 		OnUnregHotReload();
 		pHotDll->ReloadHandle();
 		OnRegHotReload();
@@ -268,17 +277,7 @@ void DimensionNightmare::ExecCommand(string* cmd, stringstream* ss)
 
 void DimensionNightmare::ShutDown()
 {
-	if (pServer)
-	{
-		pServer->Stop();
-		pServer = nullptr;
-	}
-
-	if (pHotDll)
-	{
-		delete pHotDll;
-		pHotDll = nullptr;
-	}
+	delete this;
 }
 
 bool DimensionNightmare::OnRegHotReload()

@@ -124,13 +124,6 @@ void HandleGlobalServerShutdown(GlobalServer *server)
 
 	if (auto cSock = server->GetCSock())
 	{
-		for(auto& [k,v] : cSock->GetMsgMap())
-		{
-			v->Destroy();
-			v = nullptr;
-		}
-		
-		cSock->GetMsgMap().clear();
 		cSock->onConnection = nullptr;
 		cSock->onMessage = nullptr;
 	}

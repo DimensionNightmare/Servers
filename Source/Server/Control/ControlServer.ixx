@@ -17,7 +17,7 @@ export class ControlServer : public DNServer
 public:
 	ControlServer();
 
-	~ControlServer();
+	virtual ~ControlServer() override;
 
 	virtual bool Init(map<string, string> &param) override;
 
@@ -49,6 +49,8 @@ ControlServer::ControlServer()
 
 ControlServer::~ControlServer()
 {
+	Stop();
+	
 	delete pEntityMan;
 	pEntityMan = nullptr;
 

@@ -16,7 +16,7 @@ export class GlobalServer : public DNServer
 public:
 	GlobalServer();
 
-	~GlobalServer();
+	virtual ~GlobalServer() override;
 
 	virtual bool Init(map<string, string> &param) override;
 
@@ -46,6 +46,8 @@ GlobalServer::GlobalServer()
 
 GlobalServer::~GlobalServer()
 {
+	Stop();
+
 	if(pSSock)
 	{
 		pSSock->setUnpack(nullptr);

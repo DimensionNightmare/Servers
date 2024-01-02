@@ -132,6 +132,11 @@ int main(int argc, char** argv)
 		ss.str(str);
 		ss << str;
 		ss >> str;
+		if(str.empty())
+		{
+			continue;
+		}
+		
         if (str == "quit") 
 		{
             break;

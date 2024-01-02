@@ -19,6 +19,10 @@ export enum class ServerType : unsigned char
 export class DNServer
 {
 public:
+	DNServer();
+	virtual ~DNServer();
+
+public:
 
 	virtual bool Init(map<string, string> &param) = 0;
 
@@ -32,8 +36,7 @@ public:
 
 	virtual void LoopEvent(function<void(hv::EventLoopPtr)> func){}
 
-protected:
-	DNServer();
+
 	
 protected:
     ServerType emServerType;
@@ -43,12 +46,14 @@ export class DNServerProxy : public hv::TcpServer
 {
 public:
 	DNServerProxy();
+	~DNServerProxy();
 };
 
 export class DNClientProxy : public hv::TcpClient
 {
 public:
 	DNClientProxy();
+	~DNClientProxy();
 
 	auto GetMsgId() { return ++iMsgId; }
 
@@ -72,7 +77,15 @@ DNServer::DNServer()
     emServerType = ServerType::None;
 }
 
+DNServer::~DNServer()
+{
+}
+
 DNServerProxy::DNServerProxy()
+{
+}
+
+DNServerProxy::~DNServerProxy()
 {
 }
 
@@ -81,4 +94,14 @@ DNClientProxy::DNClientProxy()
 	iMsgId = 0;
 	mMsgList.clear();
 	bIsRegisted = false;
+}
+
+DNClientProxy::~DNClientProxy()
+{
+	for(auto& [k,v] : mMsgList)
+	{
+		v->Destroy();
+	}
+		
+	mMsgList.clear();
 }

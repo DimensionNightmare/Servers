@@ -16,9 +16,9 @@ public:
 
 	~EntityManager();
 
-    decltype(auto) AddEntity(SocketChannelPtr channel, int entityId);
+    decltype(auto) AddEntity(const SocketChannelPtr& channel, int entityId);
 
-    void RemoveEntity(SocketChannelPtr channel);
+    void RemoveEntity(const SocketChannelPtr& channel);
 
 protected:
     map<int, TEntity*> mEntityMap;
@@ -45,7 +45,7 @@ EntityManager<TEntity>::~EntityManager()
 }
 
 template <class TEntity>
-decltype(auto) EntityManager<TEntity>::AddEntity(SocketChannelPtr channel, int entityId)
+decltype(auto) EntityManager<TEntity>::AddEntity(const SocketChannelPtr& channel, int entityId)
 {
 	TEntity* entity = nullptr;
 	if(mEntityMap.count(entityId))
@@ -66,7 +66,7 @@ decltype(auto) EntityManager<TEntity>::AddEntity(SocketChannelPtr channel, int e
 }
 
 template <class TEntity>
-void EntityManager<TEntity>::RemoveEntity(SocketChannelPtr channel)
+void EntityManager<TEntity>::RemoveEntity(const SocketChannelPtr& channel)
 {
 	if(TEntity* entity = channel->getContext<TEntity>())
 	{

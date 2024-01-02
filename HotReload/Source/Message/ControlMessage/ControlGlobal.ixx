@@ -17,7 +17,7 @@ using namespace std;
 export void Msg_RegistSrv(const SocketChannelPtr &channel, unsigned int msgId, Message *msg)
 {
 	C2G_RegistSrv response;
-	response.set_success(false);
+	response.set_success(true);
 	
 	string binData;
 	binData.resize(response.ByteSize());
