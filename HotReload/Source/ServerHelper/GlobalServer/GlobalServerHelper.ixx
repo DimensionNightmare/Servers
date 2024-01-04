@@ -17,8 +17,8 @@ export class GlobalServerHelper : public GlobalServer
 private:
 	GlobalServerHelper(){};
 public:
-	template <typename... Args>
-	void RegistSelf(function<DNTaskVoid(Args...)> func);
+	// template <typename... Args>
+	// void RegistSelf(function<DNTaskVoid(Args...)> func);
 
 	DNClientProxyHelper* GetCSock(){ return nullptr;}
 };
@@ -36,18 +36,8 @@ export GlobalServerHelper* GetGlobalServer()
 	return PGlobalServerHelper;
 }
 
-template <typename... Args>
-void GlobalServerHelper::RegistSelf(function<DNTaskVoid(Args...)> func)
-{
-	GetCSock()->loop()->setInterval(1000, [func, this](TimerID timerID)
-	{
-		if (GetCSock()->channel->isConnected() && !GetCSock()->IsRegisted()) 
-		{
-			func(this);
-		} 
-		else 
-		{
-			GetCSock()->loop()->killTimer(timerID);
-		}
-	});
-}
+// template <typename... Args>
+// void GlobalServerHelper::RegistSelf(function<DNTaskVoid(Args...)> func)
+// {
+	
+// }

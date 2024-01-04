@@ -22,6 +22,17 @@ export DNTaskVoid Msg_RegistSrv(GlobalServerHelper* globalServer)
 	auto server = globalServer->GetSSock();
 	auto msgId = client->GetMsgId();
 	auto& reqMap = client->GetMsgMap();
+	
+	// first Can send Msg?
+	if(reqMap.contains(msgId))
+	{
+		printf("%s-> +++++ %d, \n", __FUNCTION__, msgId);
+		co_return;
+	}
+	else
+	{
+		printf("%s-> ----- %d, \n", __FUNCTION__, msgId);
+	}
 
 	G2C_RegistSrv requset;
 	requset.set_server_type((int)globalServer->GetServerType());
@@ -41,14 +52,7 @@ export DNTaskVoid Msg_RegistSrv(GlobalServerHelper* globalServer)
 		co_return &response;
 	}();
 
-	if(reqMap.contains(msgId))
-	{
-		printf("%s-> +++++ %d, \n", __FUNCTION__, msgId);
-	}
-	else
-	{
-		printf("%s-> ----- %d, \n", __FUNCTION__, msgId);
-	}
+	
 
 	reqMap.emplace(msgId, (DNTask<void*>*)&dataChannel);
 	
@@ -58,7 +62,7 @@ export DNTaskVoid Msg_RegistSrv(GlobalServerHelper* globalServer)
 	
 	if(!response.success())
 	{
-		// printf("%s->regist Server error! \n", __FUNCTION__);
+		printf("%s->regist Server error! msg:%d \n", __FUNCTION__, msgId);
 	}
 	else
 	{

@@ -120,6 +120,7 @@ bool GlobalServer::Init(map<string, string> &param)
 		pCSock->setReconnect(reconn);
 		port = stoi(param["ctlPort"]);
 		pCSock->createsocket(port, param["ctlIp"].c_str());
+		pCSock->setUnpack(setting);
 	}
 	
 

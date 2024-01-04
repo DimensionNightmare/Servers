@@ -59,7 +59,23 @@ void HandleGlobalServerInit(GlobalServer *server)
 				printf("%s-> %s connected! connfd=%d id=%d \n", __FUNCTION__, peeraddr.c_str(), channel->fd(), channel->id());
 
 				// send RegistInfo
-				globalSrv->RegistSelf<GlobalServerHelper*>(&Msg_RegistSrv);
+				// globalSrv->RegistSelf<GlobalServerHelper*>(&Msg_RegistSrv);
+				auto cSock = globalSrv->GetCSock();
+				auto loop = cSock->loop();
+				loop->setInterval(1000, [globalSrv](TimerID timerID)
+				{
+					auto cSock = globalSrv->GetCSock();
+					auto loop = cSock->loop();
+
+					if (cSock->channel->isConnected() && !cSock->IsRegisted()) 
+					{
+						Msg_RegistSrv(globalSrv);
+					} 
+					else 
+					{
+						loop->killTimer(timerID);
+					}
+				});
 			}
 			else
 			{

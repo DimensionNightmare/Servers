@@ -18,11 +18,13 @@ using namespace std;
 export void Msg_RegistSrv(const SocketChannelPtr &channel, unsigned int msgId, Message *msg)
 {
 	C2G_RegistSrv response;
-	response.set_success(true);
+	response.set_success(false);
 	
 	string binData;
 	binData.resize(response.ByteSize());
 	response.SerializeToArray(binData.data(), binData.size());
+
+	// cout << channel->peeraddr() << endl;
 
 	MessagePack(msgId, MsgDeal::Res, "", binData);
 	channel->write(binData);
