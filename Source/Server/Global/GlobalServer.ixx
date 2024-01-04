@@ -5,7 +5,7 @@ module;
 
 export module GlobalServer;
 
-export import DNServer;
+import DNServer;
 import MessagePack;
 
 using namespace std;
@@ -16,7 +16,7 @@ export class GlobalServer : public DNServer
 public:
 	GlobalServer();
 
-	virtual ~GlobalServer() override;
+	~GlobalServer();
 
 	virtual bool Init(map<string, string> &param) override;
 
@@ -27,10 +27,13 @@ public:
 	virtual bool Stop() override;
 
 	virtual void LoopEvent(function<void(EventLoopPtr)> func) override;
-	
-	DNServerProxy* GetSSock(){return pSSock;}
-	DNClientProxy* GetCSock(){return pCSock;}
-private:
+
+public: // dll override
+	// virtual GlobalServer* GetSelf(){ return this;}
+	virtual DNServerProxy* GetSSock(){return pSSock;}
+	virtual DNClientProxy* GetCSock(){return pCSock;}
+
+protected: // dll proxy
 	DNServerProxy* pSSock;
 	DNClientProxy* pCSock;
 };

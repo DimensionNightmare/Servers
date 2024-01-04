@@ -17,7 +17,7 @@ export class ControlServer : public DNServer
 public:
 	ControlServer();
 
-	virtual ~ControlServer() override;
+	~ControlServer();
 
 	virtual bool Init(map<string, string> &param) override;
 
@@ -29,10 +29,12 @@ public:
 
 	virtual void LoopEvent(function<void(EventLoopPtr)> func) override;
 
-	DNServerProxy* GetSSock(){return pSSock;}
+public: // dll override
+	// virtual ControlServer* GetSelf(){ return this;}
+	virtual DNServerProxy* GetSSock(){return pSSock;}
+	virtual EntityManager<ServerEntity>* GetEntityManager(){return pEntityMan;}
 
-	EntityManager<ServerEntity>* GetEntityManager(){return pEntityMan;}
-private:
+protected: // dll proxy
 	DNServerProxy* pSSock;
 
 	EntityManager<ServerEntity>* pEntityMan;
@@ -44,7 +46,7 @@ ControlServer::ControlServer()
 {
 	emServerType = ServerType::ControlServer;
 	pSSock = nullptr;
-	pEntityMan = new EntityManager<ServerEntity>;
+	pEntityMan = nullptr;
 }
 
 ControlServer::~ControlServer()
@@ -90,6 +92,9 @@ bool ControlServer::Init(map<string, string> &param)
 	setting->length_field_offset = 0;
 	pSSock->setUnpack(setting.get());
 	pSSock->setThreadNum(4);
+
+	pEntityMan = new EntityManager<ServerEntity>;
+
 	return true;
 }
 

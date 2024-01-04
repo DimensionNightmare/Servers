@@ -6,10 +6,26 @@ using namespace hv;
 
 export class Entity
 {
-    
 public:
+	Entity();
+	virtual ~Entity();
+
+public: // dll override
+	// virtual Entity* GetSelf(){ return this;}
+
+protected: // dll proxy
     unsigned int iId;
 	SocketChannelPtr pSock;
 };
 
 module:private;
+
+Entity::Entity()
+{
+	iId = 0;
+	pSock = nullptr;
+}
+
+Entity::~Entity()
+{
+}

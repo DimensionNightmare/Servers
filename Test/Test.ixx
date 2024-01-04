@@ -8,18 +8,28 @@
 #include <locale>
 #include <random>
 
-class DNClientProxy {
+class A
+{
 public:
-    template <typename... Args>
-    void RegistSelf(Args... args);
+	A() {}
+	// virtual
+	~A() {}
+
+public:
+	 void msg() { std::cout << "A" << std::endl; }
+
+private:
+	int a;
 };
 
-template <typename... Args>
-void DNClientProxy::RegistSelf(Args... args) 
+class B : public A
 {
-    ((std::cout << args << " "), ...);
-    std::cout << std::endl;
-}
+public:
+B() {}
+	// virtual
+	~B() {}
+	 void msg() { std::cout << "B" << std::endl; }
+};
 
 int main() 
 {
@@ -48,9 +58,6 @@ int main()
 	for(int i = 0; i < 5; i++)
 	std::cout << u(gen) << std::endl;
 
-	DNClientProxy* res = new DNClientProxy;
-	res->RegistSelf<int,int,int,int,int>(3,5,6,8,7);
-
 	std::hash<std::string> hashstr;
 
 	std::string msgName = GCfg::CharacterPlayer::GetDescriptor()->full_name();
@@ -58,5 +65,17 @@ int main()
 	auto hashres = hashstr.operator()("");
 	std::cout << size_t(hashres) << " " <<  hashres << std::endl;
 
+	using namespace std;
+	A a;
+	B* b = (B*)&a;
+	b->msg();
+	B c;
+	// c.msg();
+	A* d = &c;
+	d->msg();
+	cout << sizeof(a) << endl;
+
     return 0;
 }
+
+

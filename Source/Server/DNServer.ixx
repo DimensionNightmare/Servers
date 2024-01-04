@@ -19,8 +19,8 @@ export enum class ServerType : unsigned char
 export class DNServer
 {
 public:
-	DNServer();
-	virtual ~DNServer();
+	DNServer():emServerType(ServerType::None){};
+	virtual ~DNServer(){};
 
 public:
 
@@ -36,8 +36,9 @@ public:
 
 	virtual void LoopEvent(function<void(hv::EventLoopPtr)> func){}
 
+public: // dll override
+	// virtual DNServer* GetSelf(){ return this;}
 
-	
 protected:
     ServerType emServerType;
 };
@@ -45,8 +46,11 @@ protected:
 export class DNServerProxy : public hv::TcpServer
 {
 public:
-	DNServerProxy();
-	~DNServerProxy();
+	DNServerProxy(){};
+	~DNServerProxy(){};
+
+public: // dll override
+	// virtual DNServerProxy* GetSelf(){ return this;}
 };
 
 export class DNClientProxy : public hv::TcpClient
@@ -55,13 +59,10 @@ public:
 	DNClientProxy();
 	~DNClientProxy();
 
-	auto GetMsgId() { return ++iMsgId; }
+public: // dll override
+	// virtual DNClientProxy* GetSelf(){ return this;}
 
-	auto& GetMsgMap(){ return mMsgList; }
-
-	bool IsRegisted(){return bIsRegisted;}
-	void SetRegisted(bool isRegisted){bIsRegisted = isRegisted;}
-private:
+protected: // dll proxy
 	// only oddnumber
 	unsigned char iMsgId;
 	// unordered_
@@ -71,23 +72,6 @@ private:
 };
 
 module:private;
-
-DNServer::DNServer()
-{
-    emServerType = ServerType::None;
-}
-
-DNServer::~DNServer()
-{
-}
-
-DNServerProxy::DNServerProxy()
-{
-}
-
-DNServerProxy::~DNServerProxy()
-{
-}
 
 DNClientProxy::DNClientProxy()
 {

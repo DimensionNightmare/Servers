@@ -3,7 +3,7 @@ module;
 #include <map>
 export module EntityManager;
 
-export import Entity;
+import Entity;
 
 using namespace std;
 using namespace hv;
@@ -16,11 +16,10 @@ public:
 
 	~EntityManager();
 
-    decltype(auto) AddEntity(const SocketChannelPtr& channel, int entityId);
+public: // dll override
+	// virtual EntityManager* GetSelf(){ return this;}
 
-    void RemoveEntity(const SocketChannelPtr& channel);
-
-protected:
+protected: // dll proxy
     map<int, TEntity*> mEntityMap;
 };
 
@@ -42,37 +41,4 @@ EntityManager<TEntity>::~EntityManager()
 	}
 
 	mEntityMap.clear();
-}
-
-template <class TEntity>
-decltype(auto) EntityManager<TEntity>::AddEntity(const SocketChannelPtr& channel, int entityId)
-{
-	TEntity* entity = nullptr;
-	if(mEntityMap.count(entityId))
-	{
-		entity = mEntityMap[entityId];
-	}
-	else
-	{
-		entity = new TEntity;
-		entity->iId = entityId;
-		mEntityMap.emplace(entityId, entity);
-		channel->setContext(entity);
-	}
-
-	entity->pSock = channel;
-	
-	return entity;
-}
-
-template <class TEntity>
-void EntityManager<TEntity>::RemoveEntity(const SocketChannelPtr& channel)
-{
-	if(TEntity* entity = channel->getContext<TEntity>())
-	{
-		channel->setContext(nullptr);
-		mEntityMap.erase(entity->iId);
-		delete entity;
-	}
-	
 }
