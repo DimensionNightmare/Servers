@@ -17,7 +17,6 @@ public:
 	~EntityManager();
 
 public: // dll override
-	// virtual EntityManager* GetSelf(){ return this;}
 
 protected: // dll proxy
     map<int, TEntity*> mEntityMap;

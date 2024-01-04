@@ -14,7 +14,6 @@ private:
 	DNServerProxyHelper(){};
 
 public:
-	// DNServerProxyHelper* GetSelf(){ return nullptr;}
 };
 
 export class DNClientProxyHelper : public DNClientProxy
@@ -22,7 +21,6 @@ export class DNClientProxyHelper : public DNClientProxy
 private:
 	DNClientProxyHelper();
 public:
-	// DNClientProxyHelper* GetSelf(){ return nullptr;}
 
 	auto GetMsgId() { return ++iMsgId; }
 

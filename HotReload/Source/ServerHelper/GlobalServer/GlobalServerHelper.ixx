@@ -20,8 +20,6 @@ public:
 	template <typename... Args>
 	void RegistSelf(function<DNTaskVoid(Args...)> func);
 
-	// GlobalServerHelper* GetSelf(){ return nullptr;}
-
 	DNClientProxyHelper* GetCSock(){ return nullptr;}
 };
 

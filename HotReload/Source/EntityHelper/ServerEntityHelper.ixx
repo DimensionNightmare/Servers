@@ -13,7 +13,8 @@ export class ServerEntityHelper : public ServerEntity
 private:
 	ServerEntityHelper(){}
 public:
-	// EntityHelper* GetSelf(){ return this;}
+	EntityHelper* GetChild(){ return nullptr;}
+
 	void SetServerType(ServerType type){emServerType = type;}
 	ServerType GetServerType(){ return emServerType;}
 };

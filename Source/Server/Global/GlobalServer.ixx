@@ -29,7 +29,6 @@ public:
 	virtual void LoopEvent(function<void(EventLoopPtr)> func) override;
 
 public: // dll override
-	// virtual GlobalServer* GetSelf(){ return this;}
 	virtual DNServerProxy* GetSSock(){return pSSock;}
 	virtual DNClientProxy* GetCSock(){return pCSock;}
 

@@ -17,13 +17,15 @@ class EntityManagerHelper : public EntityManager<TEntity>
 private:
 	EntityManagerHelper(){}
 public:
-    TEntity* AddEntity(const SocketChannelPtr& channel, int entityId);
+	template<class CastTEntity = EntityHelper>
+    CastTEntity* AddEntity(const SocketChannelPtr& channel, int entityId);
 
     void RemoveEntity(const SocketChannelPtr& channel);
 };
 
 template <class TEntity>
-TEntity* EntityManagerHelper<TEntity>::AddEntity(const SocketChannelPtr& channel, int entityId)
+template <class CastTEntity>
+CastTEntity* EntityManagerHelper<TEntity>::AddEntity(const SocketChannelPtr& channel, int entityId)
 {
 	TEntity* entity = nullptr;
 	if (EntityManager<TEntity>::mEntityMap.count(entityId))
@@ -37,7 +39,7 @@ TEntity* EntityManagerHelper<TEntity>::AddEntity(const SocketChannelPtr& channel
 		channel->setContext(entity);
 	}
 
-	return entity;
+	return static_cast<CastTEntity*>(entity);
 }
 
 template <class TEntity>

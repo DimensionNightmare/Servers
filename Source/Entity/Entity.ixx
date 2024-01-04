@@ -11,7 +11,6 @@ public:
 	virtual ~Entity();
 
 public: // dll override
-	// virtual Entity* GetSelf(){ return this;}
 
 protected: // dll proxy
     unsigned int iId;

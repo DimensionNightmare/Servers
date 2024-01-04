@@ -37,7 +37,6 @@ public:
 	virtual void LoopEvent(function<void(hv::EventLoopPtr)> func){}
 
 public: // dll override
-	// virtual DNServer* GetSelf(){ return this;}
 
 protected:
     ServerType emServerType;
@@ -50,7 +49,6 @@ public:
 	~DNServerProxy(){};
 
 public: // dll override
-	// virtual DNServerProxy* GetSelf(){ return this;}
 };
 
 export class DNClientProxy : public hv::TcpClient
@@ -60,7 +58,6 @@ public:
 	~DNClientProxy();
 
 public: // dll override
-	// virtual DNClientProxy* GetSelf(){ return this;}
 
 protected: // dll proxy
 	// only oddnumber

@@ -30,7 +30,6 @@ public:
 	virtual void LoopEvent(function<void(EventLoopPtr)> func) override;
 
 public: // dll override
-	// virtual ControlServer* GetSelf(){ return this;}
 	virtual DNServerProxy* GetSSock(){return pSSock;}
 	virtual EntityManager<ServerEntity>* GetEntityManager(){return pEntityMan;}
 
