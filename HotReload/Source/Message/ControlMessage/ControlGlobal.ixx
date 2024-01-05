@@ -24,8 +24,6 @@ export void Msg_RegistSrv(const SocketChannelPtr &channel, unsigned int msgId, M
 	binData.resize(response.ByteSize());
 	response.SerializeToArray(binData.data(), binData.size());
 
-	// cout << channel->peeraddr() << endl;
-
 	MessagePack(msgId, MsgDeal::Res, "", binData);
 	channel->write(binData);
 	

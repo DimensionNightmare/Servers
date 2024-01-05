@@ -24,12 +24,12 @@ export DNTaskVoid Msg_RegistSrv()
 	// first Can send Msg?
 	if(reqMap.contains(msgId))
 	{
-		printf("%s-> +++++ %d, \n", __FUNCTION__, msgId);
+		printf("%s->+++++ %d, \n", __FUNCTION__, msgId);
 		co_return;
 	}
 	else
 	{
-		printf("%s-> ----- %d, \n", __FUNCTION__, msgId);
+		printf("%s->----- %d, \n", __FUNCTION__, msgId);
 	}
 
 	G2C_RegistSrv requset;
@@ -39,8 +39,8 @@ export DNTaskVoid Msg_RegistSrv()
 	
 	// pack data
 	string binData;
-	binData.resize(requset.ByteSize());
-	requset.SerializeToArray(binData.data(), binData.size());
+	binData.resize(requset.ByteSizeLong());
+	requset.SerializeToArray(binData.data(), (int)binData.size());
 	MessagePack(msgId, MsgDeal::Req, requset.GetDescriptor()->full_name(), binData);
 	
 	// data alloc

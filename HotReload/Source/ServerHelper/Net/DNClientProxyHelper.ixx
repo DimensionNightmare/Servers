@@ -35,6 +35,7 @@ void DNClientProxyHelper::SetRegistEvent(function<void()> event)
 
 void DNClientProxyHelper::StartRegist()
 {
+	// setInterval can!t runtime modify
 	loop()->setInterval(1000, [this](TimerID timerID)
 	{
 		if (channel->isConnected() && !IsRegisted()) 
@@ -42,6 +43,10 @@ void DNClientProxyHelper::StartRegist()
 			if(pRegistEvent)
 			{
 				pRegistEvent();
+			}
+			else
+			{
+				printf("%s->Not RegistEvent to Call!! \n", __FUNCTION__);
 			}
 		} 
 		else 

@@ -32,11 +32,11 @@ void HandleControlServerInit(DNServer *server)
 			string peeraddr = channel->peeraddr();
 			if (channel->isConnected())
 			{
-				printf("%s-> %s connected! connfd=%d id=%d \n", __FUNCTION__, peeraddr.c_str(), channel->fd(), channel->id());
+				printf("%s->%s connected! connfd=%d id=%d \n", __FUNCTION__, peeraddr.c_str(), channel->fd(), channel->id());
 			}
 			else
 			{
-				printf("%s-> %s disconnected! connfd=%d id=%d \n", __FUNCTION__, peeraddr.c_str(), channel->fd(), channel->id());
+				printf("%s->%s disconnected! connfd=%d id=%d \n", __FUNCTION__, peeraddr.c_str(), channel->fd(), channel->id());
 			}
 		};
 
