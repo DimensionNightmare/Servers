@@ -1,11 +1,11 @@
 module;
 #include "hv/Channel.h"
+
 #include <map>
 export module EntityManagerHelper;
 
 import Entity;
 import EntityHelper;
-import ServerEntityHelper;
 import EntityManager;
 
 using namespace std;

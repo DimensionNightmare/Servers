@@ -1,15 +1,16 @@
 module;
-#include "hv/hv.h"
+#include "hv/hbase.h"
 #include "hv/EventLoop.h"
+
 #include <Windows.h>
 #include <DbgHelp.h>
 #include <filesystem>
 export module DimensionNightmare;
 
+import DNServer;
 import ControlServer;
 import GlobalServer;
 
-using namespace hv;
 using namespace std;
 
 struct HotReloadDll
@@ -58,7 +59,7 @@ struct HotReloadDll
 
 	bool ReloadHandle()
 	{
-		if(!std::filesystem::exists(SDllDir))
+		if(!filesystem::exists(SDllDir))
 		{
 			fprintf(stderr, "%s->dll menu not exist! \n", __FUNCTION__);
 			return false;
@@ -151,7 +152,7 @@ DimensionNightmare::~DimensionNightmare()
 {
 	if(pServer)
 	{
-		pServer->LoopEvent([](EventLoopPtr loop)
+		pServer->LoopEvent([](hv::EventLoopPtr loop)
 		{ 
 			loop->pause(); 
 		});
@@ -221,7 +222,7 @@ void DimensionNightmare::InitCmdHandle()
 	{
 		if (pServer)
 		{
-			pServer->LoopEvent([](EventLoopPtr loop)
+			pServer->LoopEvent([](hv::EventLoopPtr loop)
 			{ 
 				loop->pause(); 
 			});
@@ -232,7 +233,7 @@ void DimensionNightmare::InitCmdHandle()
 	{
 		if (pServer)
 		{
-			pServer->LoopEvent([](EventLoopPtr loop)
+			pServer->LoopEvent([](hv::EventLoopPtr loop)
 			{ 
 				loop->resume(); 
 			});

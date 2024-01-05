@@ -1,29 +1,31 @@
 module;
-#include "google/protobuf/dynamic_message.h"
-
+#include "google/protobuf/Message.h"
 #include "hv/Channel.h"
-#include "hv/hloop.h"
+
 export module ControlServerInit;
 
-import ControlMessage;
-import MessagePack;
+import DNServer;
 import ControlServer;
 import ControlServerHelper;
+import MessagePack;
+import ControlMessage;
 
 using namespace hv;
 using namespace std;
 using namespace google::protobuf;
 
-export void HandleControlServerInit(ControlServer *server);
-export void HandleControlServerShutdown(ControlServer *server);
+export void HandleControlServerInit(DNServer *server);
+export void HandleControlServerShutdown(DNServer *server);
 
 module:private;
 
-void HandleControlServerInit(ControlServer *server)
+void HandleControlServerInit(DNServer *server)
 {
-	SetControlServer(server);
+	SetControlServer(static_cast<ControlServer*>(server));
+
+	auto serverProxy = GetControlServer();
 	
-	if (auto sSock = server->GetSSock())
+	if (auto sSock = serverProxy->GetSSock())
 	{
 		auto onConnection = [&](const SocketChannelPtr &channel)
 		{
@@ -56,9 +58,10 @@ void HandleControlServerInit(ControlServer *server)
 	}
 }
 
-void HandleControlServerShutdown(ControlServer *server)
+void HandleControlServerShutdown(DNServer *server)
 {
-	if (auto sSock = server->GetSSock())
+	auto serverProxy = GetControlServer();
+	if (auto sSock = serverProxy->GetSSock())
 	{
 		sSock->onConnection = nullptr;
 		sSock->onMessage = nullptr;

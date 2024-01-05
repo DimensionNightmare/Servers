@@ -1,12 +1,11 @@
 module;
-#include "hv/Channel.h"
+
 #include <map>
 export module EntityManager;
 
 import Entity;
 
 using namespace std;
-using namespace hv;
 
 export template<class TEntity = Entity>
 class EntityManager

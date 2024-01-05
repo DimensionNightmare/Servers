@@ -1,29 +1,31 @@
 module;
-#include "google/protobuf/dynamic_message.h"
-
+#include "google/protobuf/Message.h"
 #include "hv/Channel.h"
-#include "hv/hloop.h"
+
 export module GlobalServerInit;
 
-import GlobalMessage;
-import MessagePack;
+import DNServer;
 import GlobalServer;
 import GlobalServerHelper;
+import MessagePack;
+import GlobalMessage;
 
 using namespace hv;
 using namespace std;
 using namespace google::protobuf;
 
-export void HandleGlobalServerInit(GlobalServer *server);
-export void HandleGlobalServerShutdown(GlobalServer *server);
+export void HandleGlobalServerInit(DNServer *server);
+export void HandleGlobalServerShutdown(DNServer *server);
 
 module:private;
 
-void HandleGlobalServerInit(GlobalServer *server)
+void HandleGlobalServerInit(DNServer *server)
 {
-	SetGlobalServer(server);
+	SetGlobalServer(static_cast<GlobalServer*>(server));
 
-	if (auto sSock = server->GetSSock())
+	auto serverProxy = GetGlobalServer();
+
+	if (auto sSock = serverProxy->GetSSock())
 	{
 		auto onConnection = [&](const SocketChannelPtr &channel)
 		{
@@ -47,7 +49,7 @@ void HandleGlobalServerInit(GlobalServer *server)
 		sSock->onMessage = onMessage;
 	}
 
-	if (auto cSock = server->GetCSock())
+	if (auto cSock = serverProxy->GetCSock())
 	{
 		auto onConnection = [](const SocketChannelPtr &channel)
 		{
@@ -59,23 +61,7 @@ void HandleGlobalServerInit(GlobalServer *server)
 				printf("%s-> %s connected! connfd=%d id=%d \n", __FUNCTION__, peeraddr.c_str(), channel->fd(), channel->id());
 
 				// send RegistInfo
-				// globalSrv->RegistSelf<GlobalServerHelper*>(&Msg_RegistSrv);
-				auto cSock = globalSrv->GetCSock();
-				auto loop = cSock->loop();
-				loop->setInterval(1000, [globalSrv](TimerID timerID)
-				{
-					auto cSock = globalSrv->GetCSock();
-					auto loop = cSock->loop();
-
-					if (cSock->channel->isConnected() && !cSock->IsRegisted()) 
-					{
-						Msg_RegistSrv(globalSrv);
-					} 
-					else 
-					{
-						loop->killTimer(timerID);
-					}
-				});
+				globalSrv->GetCSock()->StartRegist();
 			}
 			else
 			{
@@ -124,23 +110,26 @@ void HandleGlobalServerInit(GlobalServer *server)
 
 		cSock->onConnection = onConnection;
 		cSock->onMessage = onMessage;
-		
+		cSock->SetRegistEvent(&Msg_RegistSrv);
 	}
 
 	// regist self if need
 }
 
-void HandleGlobalServerShutdown(GlobalServer *server)
+void HandleGlobalServerShutdown(DNServer *server)
 {
-	if (auto sSock = server->GetSSock())
+	auto serverProxy = GetGlobalServer();
+
+	if (auto sSock = serverProxy->GetSSock())
 	{
 		sSock->onConnection = nullptr;
 		sSock->onMessage = nullptr;
 	}
 
-	if (auto cSock = server->GetCSock())
+	if (auto cSock = serverProxy->GetCSock())
 	{
 		cSock->onConnection = nullptr;
 		cSock->onMessage = nullptr;
+		cSock->SetRegistEvent(nullptr);
 	}
 }

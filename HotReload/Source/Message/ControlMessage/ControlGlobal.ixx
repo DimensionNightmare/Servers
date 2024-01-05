@@ -1,7 +1,7 @@
 module;
-
 #include "GlobalControl.pb.h"
 #include "hv/Channel.h"
+
 export module ControlGlobal;
 
 import DNTask;

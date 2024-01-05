@@ -1,9 +1,10 @@
 module;
-#include <functional>
+
 #include <assert.h>
 export module ControlServerHelper;
 
 import ControlServer;
+import DNServerProxyHelper;
 import EntityManagerHelper;
 import ServerEntity;
 
@@ -14,9 +15,7 @@ class ControlServerHelper : public ControlServer
 private:
 	ControlServerHelper(){}
 public:
-
-	// ControlServerHelper* GetSelf(){ return nullptr;}
-
+	DNServerProxyHelper* GetSSock(){ return nullptr;}
 	EntityManagerHelper<ServerEntity>* GetEntityManager(){ return nullptr;}
 };
 

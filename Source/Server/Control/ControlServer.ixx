@@ -4,7 +4,8 @@ module;
 
 export module ControlServer;
 
-export import DNServer;
+import DNServer;
+import DNServerProxy;
 import MessagePack;
 import ServerEntity;
 import EntityManager;
@@ -111,7 +112,7 @@ bool ControlServer::Start()
 bool ControlServer::Stop()
 {
 	pSSock->stop();
-	hv::async::cleanup();
+	async::cleanup();
 	return true;
 }
 

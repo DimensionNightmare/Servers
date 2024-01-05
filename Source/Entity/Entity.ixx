@@ -1,5 +1,6 @@
 module;
 #include "hv/Channel.h"
+
 export module Entity;
 
 using namespace hv;

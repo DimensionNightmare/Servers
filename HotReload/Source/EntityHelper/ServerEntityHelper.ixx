@@ -1,12 +1,9 @@
 module;
-#include "hv/Channel.h"
 export module ServerEntityHelper;
 
-import ServerEntity;
 import DNServer;
+import ServerEntity;
 import EntityHelper;
-
-using namespace hv;
 
 export class ServerEntityHelper : public ServerEntity
 {

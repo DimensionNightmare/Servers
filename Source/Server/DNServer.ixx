@@ -1,11 +1,8 @@
 module;
-
-#include "hv/TcpServer.h"
-#include "hv/TcpClient.h"
 #include "hv/EventLoop.h"
-export module DNServer;
 
-import DNTask;
+#include <functional> 
+export module DNServer;
 
 using namespace std;
 
@@ -41,48 +38,3 @@ public: // dll override
 protected:
     ServerType emServerType;
 };
-
-export class DNServerProxy : public hv::TcpServer
-{
-public:
-	DNServerProxy(){};
-	~DNServerProxy(){};
-
-public: // dll override
-};
-
-export class DNClientProxy : public hv::TcpClient
-{
-public:
-	DNClientProxy();
-	~DNClientProxy();
-
-public: // dll override
-
-protected: // dll proxy
-	// only oddnumber
-	unsigned char iMsgId;
-	// unordered_
-	map<unsigned int, DNTask<void*>* > mMsgList;
-	// status
-	bool bIsRegisted;
-};
-
-module:private;
-
-DNClientProxy::DNClientProxy()
-{
-	iMsgId = 0;
-	mMsgList.clear();
-	bIsRegisted = false;
-}
-
-DNClientProxy::~DNClientProxy()
-{
-	for(auto& [k,v] : mMsgList)
-	{
-		v->Destroy();
-	}
-		
-	mMsgList.clear();
-}

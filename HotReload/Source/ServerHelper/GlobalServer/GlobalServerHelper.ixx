@@ -1,15 +1,11 @@
 module;
-#include "hv/htime.h"
-#include "hv/EventLoop.h"
 
-#include <functional>
+#include <assert.h>
 export module GlobalServerHelper;
 
 import GlobalServer;
-import DNTask;
-import DNServerHelper;
+import DNClientProxyHelper;
 
-using namespace hv;
 using namespace std;
 
 export class GlobalServerHelper : public GlobalServer
@@ -17,8 +13,6 @@ export class GlobalServerHelper : public GlobalServer
 private:
 	GlobalServerHelper(){};
 public:
-	// template <typename... Args>
-	// void RegistSelf(function<DNTaskVoid(Args...)> func);
 
 	DNClientProxyHelper* GetCSock(){ return nullptr;}
 };
@@ -35,9 +29,3 @@ export GlobalServerHelper* GetGlobalServer()
 {
 	return PGlobalServerHelper;
 }
-
-// template <typename... Args>
-// void GlobalServerHelper::RegistSelf(function<DNTaskVoid(Args...)> func)
-// {
-	
-// }

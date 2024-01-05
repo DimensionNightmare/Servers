@@ -1,11 +1,13 @@
 module;
 #include "hv/hasync.h"
-#include "hv/hv.h"
+#include "hv/hsocket.h"
 #include "hv/EventLoop.h"
 
 export module GlobalServer;
 
 import DNServer;
+import DNServerProxy;
+import DNClientProxy;
 import MessagePack;
 
 using namespace std;
@@ -155,7 +157,7 @@ bool GlobalServer::Stop()
 	{
 		pCSock->stop();
 	}
-	hv::async::cleanup();
+	async::cleanup();
 	return true;
 }
 

@@ -1,11 +1,7 @@
 module;
-#include "hv/Channel.h"
-#include "hv/hloop.h"
 export module RegHandle;
 
 import DNServer;
-import ControlServer;
-import GlobalServer;
 import GlobalServerInit;
 import ControlServerInit;
 
@@ -30,14 +26,12 @@ int InitHotReload(DNServer &base)
 	{
 	case ServerType::ControlServer:
 	{
-		ControlServer *server = (ControlServer *)&base;
-		HandleControlServerInit(server);
+		HandleControlServerInit(&base);
 		break;
 	}
 	case ServerType::GlobalServer:
 	{
-		GlobalServer *server = (GlobalServer *)&base;
-		HandleGlobalServerInit(server);
+		HandleGlobalServerInit(&base);
 		break;
 	}
 	}
@@ -52,15 +46,13 @@ int ShutdownHotReload(DNServer &base)
 	{
 	case ServerType::ControlServer:
 		{
-			ControlServer *server = (ControlServer *)&base;
-			HandleControlServerShutdown(server);
+			HandleControlServerShutdown(&base);
 		}
 		break;
 
 	case ServerType::GlobalServer:
 		{
-			GlobalServer *server = (GlobalServer *)&base;
-			HandleGlobalServerShutdown(server);
+			HandleGlobalServerShutdown(&base);
 		}
 		break;
 	}

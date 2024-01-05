@@ -1,13 +1,10 @@
 module;
-
 #include "GlobalControl.pb.h"
-#include "hv/Channel.h"
 
 #include <coroutine>
 export module GlobalControl;
 
 import DNTask;
-import DNServer;
 import MessagePack;
 import GlobalServerHelper;
 
@@ -16,8 +13,9 @@ using namespace std;
 using namespace google::protobuf;
 
 // client request
-export DNTaskVoid Msg_RegistSrv(GlobalServerHelper* globalServer)
+export DNTaskVoid Msg_RegistSrv()
 {
+	auto globalServer = GetGlobalServer();
 	auto client = globalServer->GetCSock();
 	auto server = globalServer->GetSSock();
 	auto msgId = client->GetMsgId();
