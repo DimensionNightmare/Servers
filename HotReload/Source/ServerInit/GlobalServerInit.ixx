@@ -54,22 +54,22 @@ void HandleGlobalServerInit(DNServer *server)
 		auto onConnection = [](const SocketChannelPtr &channel)
 		{
 			string peeraddr = channel->peeraddr();
-			auto globalSrv = GetGlobalServer();
+			auto cProxy = GetGlobalServer()->GetCSock();
 
 			if (channel->isConnected())
 			{
 				printf("%s->%s connected! connfd=%d id=%d \n", __FUNCTION__, peeraddr.c_str(), channel->fd(), channel->id());
 
 				// send RegistInfo
-				globalSrv->GetCSock()->StartRegist();
+				cProxy->StartRegist();
 			}
 			else
 			{
 				printf("%s->%s disconnected! connfd=%d id=%d \n", __FUNCTION__, peeraddr.c_str(), channel->fd(), channel->id());
-				globalSrv->GetCSock()->SetRegisted(false);
+				cProxy->SetRegisted(false);
 			}
 
-			if(globalSrv->GetCSock()->isReconnect())
+			if(cProxy->isReconnect())
 			{
 				
 			}
@@ -113,7 +113,6 @@ void HandleGlobalServerInit(DNServer *server)
 		cSock->SetRegistEvent(&Msg_RegistSrv);
 	}
 
-	// regist self if need
 }
 
 void HandleGlobalServerShutdown(DNServer *server)

@@ -4,6 +4,7 @@ export module RegHandle;
 import DNServer;
 import GlobalServerInit;
 import ControlServerInit;
+import AuthServerInit;
 
 #ifdef HOTRELOAD_BUILD
 #define HOTRELOAD __declspec(dllexport)
@@ -25,15 +26,20 @@ int InitHotReload(DNServer &base)
 	switch (servertype)
 	{
 	case ServerType::ControlServer:
-	{
-		HandleControlServerInit(&base);
+		{
+			HandleControlServerInit(&base);
+		}
 		break;
-	}
 	case ServerType::GlobalServer:
-	{
-		HandleGlobalServerInit(&base);
+		{
+			HandleGlobalServerInit(&base);
+		}
 		break;
-	}
+	case ServerType::AuthServer:
+		{
+			HandleAuthServerInit(&base);
+		}
+		break;
 	}
 
 	return 0;
@@ -49,10 +55,14 @@ int ShutdownHotReload(DNServer &base)
 			HandleControlServerShutdown(&base);
 		}
 		break;
-
 	case ServerType::GlobalServer:
 		{
 			HandleGlobalServerShutdown(&base);
+		}
+		break;
+	case ServerType::AuthServer:
+		{
+			HandleAuthServerShutdown(&base);
 		}
 		break;
 	}

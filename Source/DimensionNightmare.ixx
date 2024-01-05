@@ -10,6 +10,7 @@ export module DimensionNightmare;
 import DNServer;
 import ControlServer;
 import GlobalServer;
+import AuthServer;
 
 using namespace std;
 
@@ -189,6 +190,9 @@ bool DimensionNightmare::Init(map<string, string> &param)
 		break;
 	case ServerType::GlobalServer:
 		pServer = new GlobalServer;
+		break;
+	case ServerType::AuthServer:
+		pServer = new AuthServer;
 		break;
 	default:
 		fprintf(stderr, "%s->ServerType is Not Vaild! \n", __FUNCTION__);

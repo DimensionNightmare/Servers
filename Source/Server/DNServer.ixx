@@ -11,6 +11,7 @@ export enum class ServerType : unsigned char
     None,
     ControlServer,
     GlobalServer,
+	AuthServer,
 };
 
 export class DNServer
