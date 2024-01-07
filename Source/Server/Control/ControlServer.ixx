@@ -1,5 +1,4 @@
 module;
-#include "hv/hasync.h"
 #include "hv/EventLoop.h"
 
 export module ControlServer;
@@ -122,7 +121,6 @@ bool ControlServer::Start()
 bool ControlServer::Stop()
 {
 	pSSock->stop();
-	async::cleanup();
 	return true;
 }
 

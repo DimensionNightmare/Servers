@@ -1,7 +1,5 @@
 module;
-#include "hv/hasync.h"
 #include "hv/EventLoop.h"
-#include "hv/hsocket.h"
 
 export module AuthServer;
 
@@ -136,7 +134,6 @@ bool AuthServer::Stop()
 	{
 		pCSock->stop();
 	}
-	async::cleanup();
 	return true;
 }
 

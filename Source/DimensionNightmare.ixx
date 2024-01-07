@@ -210,12 +210,12 @@ bool DimensionNightmare::Init(map<string, string> &param)
 		return false;
 	}
 
+	InitCmdHandle();
+
 	if (OnRegHotReload())
 	{
 		pServer->Start();
 	}
-
-	InitCmdHandle();
 
 	return true;
 }

@@ -1,6 +1,4 @@
 module;
-#include "hv/hasync.h"
-#include "hv/hsocket.h"
 #include "hv/EventLoop.h"
 
 export module GlobalServer;
@@ -164,7 +162,6 @@ bool GlobalServer::Stop()
 		pCSock->stop();
 	}
 
-	async::cleanup();
 	return true;
 }
 

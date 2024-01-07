@@ -25,6 +25,7 @@ protected: // dll proxy
 	bool bIsRegisted;
 
 	function<void()> pRegistEvent;
+	hv::Channel::Status eState;
 };
 
 module:private;
@@ -35,6 +36,7 @@ DNClientProxy::DNClientProxy()
 	mMsgList.clear();
 	bIsRegisted = false;
 	pRegistEvent = nullptr;
+	eState = hv::Channel::Status::CLOSED;
 }
 
 DNClientProxy::~DNClientProxy()

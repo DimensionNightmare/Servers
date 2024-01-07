@@ -56,13 +56,11 @@ void HandleGlobalServerInit(DNServer *server)
 		{
 			string peeraddr = channel->peeraddr();
 			auto cProxy = GetGlobalServer()->GetCSock();
+			cProxy->UpdateClientState(channel->status);
 
 			if (channel->isConnected())
 			{
 				printf("%s->%s connected! connfd=%d id=%d \n", __FUNCTION__, peeraddr.c_str(), channel->fd(), channel->id());
-				channel->onclose = std::bind(&DNClientProxyHelper::ServerDisconnect, cProxy);
-				// send RegistInfo
-				cProxy->StartRegist();
 			}
 			else
 			{

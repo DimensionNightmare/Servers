@@ -7,7 +7,10 @@
 // #include <Windows.h>
 #include <locale>
 #include <random>
-
+#include "hv/TcpClient.h"
+#include <string>
+#include "hv/EventLoop.h"
+#include "hv/hloop.h" 
 class A
 {
 public:
@@ -31,7 +34,7 @@ B() {}
 	 void msg() { std::cout << "B" << std::endl; }
 };
 
-int main() 
+int main1() 
 {
 	GCfg::CharacterPlayer Weapons;
 	std::ifstream input("D:\\Project\\DimensionNightmare\\Environment\\GameConfig\\Gen\\Data\\character_player.bytes", std::ios::in | std::ios::binary);
@@ -79,3 +82,68 @@ int main()
 }
 
 
+int main()
+{
+	using namespace hv;
+	using namespace std;
+	TcpClient* pCSock = new TcpClient;
+	pCSock->createsocket(1270);
+
+	auto onConnection = [](const SocketChannelPtr &channel)
+		{
+			string peeraddr = channel->peeraddr();
+
+
+			if (channel->isConnected())
+			{
+				printf("%s->%s connected! connfd=%d id=%d \n", __FUNCTION__, peeraddr.c_str(), channel->fd(), channel->id());
+			}
+			else
+			{
+				printf("%s->%s disconnected! connfd=%d id=%d \n", __FUNCTION__, peeraddr.c_str(), channel->fd(), channel->id());
+			}
+
+		};
+
+	auto onMessage = [](const SocketChannelPtr &channel, Buffer *buf) 
+	{
+		
+	};
+
+	pCSock->onConnection = onConnection;
+	pCSock->onMessage = onMessage;
+
+	stringstream ss;
+	string str;
+    while (true) 
+	{
+		getline(cin, str);
+		ss.str(str);
+		ss << str;
+		ss >> str;
+		if(str.empty())
+		{
+			continue;
+		}
+		
+        if (str == "quit") 
+		{
+            break;
+        }
+		else if(str == "start")
+		{
+			auto loop = ((EventLoopThread*)pCSock)->loop();
+			if(!loop->loop())
+			{
+				pCSock->TcpClientTmpl::TcpClientTmpl();
+			}
+			pCSock->start();
+		}
+		else if(str == "stop")
+		{
+			pCSock->stop();
+		}
+    }
+
+	return 0;
+}

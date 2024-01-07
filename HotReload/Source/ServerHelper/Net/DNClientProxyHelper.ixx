@@ -23,8 +23,9 @@ public:
 	bool IsRegisted(){return bIsRegisted;}
 	void SetRegisted(bool isRegisted){bIsRegisted = isRegisted;}
 	void SetRegistEvent(function<void()> event);
-	void StartRegist();
 
+	void UpdateClientState(Channel::Status state);
+	void StartRegist();
 	void ServerDisconnect();
 };
 
@@ -33,6 +34,30 @@ module:private;
 void DNClientProxyHelper::SetRegistEvent(function<void()> event)
 {
 	pRegistEvent = event;
+}
+
+void DNClientProxyHelper::UpdateClientState(Channel::Status state)
+{
+	if(state == eState)
+	{
+		return;
+	}
+
+	eState = state;
+
+	switch (eState)
+	{
+	case Channel::Status::CONNECTED :
+		StartRegist();
+		break;
+
+	case Channel::Status::CLOSED :
+	case Channel::Status::DISCONNECTED :
+		ServerDisconnect();
+	default:
+		break;
+	}
+
 }
 
 void DNClientProxyHelper::StartRegist()
@@ -68,6 +93,4 @@ void DNClientProxyHelper::ServerDisconnect()
 	}
 		
 	mMsgList.clear();
-
-	startReconnect();
 }
