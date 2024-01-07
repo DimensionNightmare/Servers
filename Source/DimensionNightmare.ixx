@@ -224,24 +224,12 @@ void DimensionNightmare::InitCmdHandle()
 {
 	auto pause = [this](stringstream* = nullptr)
 	{
-		if (pServer)
-		{
-			pServer->LoopEvent([](hv::EventLoopPtr loop)
-			{ 
-				loop->pause(); 
-			});
-		}
+		pServer->Pause();
 	};
 
 	auto resume = [this](stringstream* = nullptr)
 	{
-		if (pServer)
-		{
-			pServer->LoopEvent([](hv::EventLoopPtr loop)
-			{ 
-				loop->resume(); 
-			});
-		}
+		pServer->Resume();
 	};
 
 	auto reload = [&, pause, resume](stringstream *ss = nullptr)

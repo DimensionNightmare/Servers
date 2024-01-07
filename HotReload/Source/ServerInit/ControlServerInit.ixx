@@ -49,6 +49,10 @@ void HandleControlServerInit(DNServer *server)
 				string msgData((char*)buf->data() + MessagePacket::PackLenth, packet.pkgLenth);
 				ControlMessageHandle::MsgHandle(channel, packet.msgId, packet.msgHashId, msgData);
 			}
+			else
+			{
+				fprintf(stderr, "%s->packet.dealType not matching! \n", __FUNCTION__);
+			}
 		};
 
 		sSock->onConnection = onConnection;

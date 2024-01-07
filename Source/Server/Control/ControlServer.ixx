@@ -28,6 +28,10 @@ public:
 
 	virtual bool Stop() override;
 
+	virtual void Pause() override;
+
+	virtual void Resume() override;
+
 	virtual void LoopEvent(function<void(EventLoopPtr)> func) override;
 
 public: // dll override
@@ -105,6 +109,12 @@ void ControlServer::InitCmd(map<string, function<void(stringstream *)>> &cmdMap)
 
 bool ControlServer::Start()
 {
+	if(!pSSock)
+	{
+		fprintf(stderr, "%s->Server not Initialed! \n", __FUNCTION__);
+		return false;
+	}
+	
 	pSSock->start();
 	return true;
 }
@@ -114,6 +124,22 @@ bool ControlServer::Stop()
 	pSSock->stop();
 	async::cleanup();
 	return true;
+}
+
+void ControlServer::Pause()
+{
+	LoopEvent([](hv::EventLoopPtr loop)
+	{ 
+		loop->pause(); 
+	});
+}
+
+void ControlServer::Resume()
+{
+	LoopEvent([](hv::EventLoopPtr loop)
+	{ 
+		loop->pause(); 
+	});
 }
 
 void ControlServer::LoopEvent(function<void(EventLoopPtr)> func)

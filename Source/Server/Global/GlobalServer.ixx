@@ -28,6 +28,10 @@ public:
 
 	virtual bool Stop() override;
 
+	virtual void Pause() override;
+
+	virtual void Resume() override;
+
 	virtual void LoopEvent(function<void(EventLoopPtr)> func) override;
 
 public: // dll override
@@ -140,9 +144,10 @@ bool GlobalServer::Start()
 		fprintf(stderr, "%s->Server not Initialed! \n", __FUNCTION__);
 		return false;
 	}
+
 	pSSock->start();
 
-	if(pCSock)
+	if(pCSock) // client
 	{
 		pCSock->start();
 	}
@@ -153,12 +158,30 @@ bool GlobalServer::Start()
 bool GlobalServer::Stop()
 {
 	pSSock->stop();
-	if(pCSock)
+
+	if(pCSock) // client
 	{
 		pCSock->stop();
 	}
+
 	async::cleanup();
 	return true;
+}
+
+void GlobalServer::Pause()
+{
+	LoopEvent([](hv::EventLoopPtr loop)
+	{ 
+		loop->pause(); 
+	});
+}
+
+void GlobalServer::Resume()
+{
+	LoopEvent([](hv::EventLoopPtr loop)
+	{ 
+		loop->pause(); 
+	});
 }
 
 void GlobalServer::LoopEvent(function<void(EventLoopPtr)> func)

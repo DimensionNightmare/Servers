@@ -28,6 +28,10 @@ public:
 
 	virtual bool Stop() override;
 
+	virtual void Pause() override;
+
+	virtual void Resume() override;
+
 	virtual void LoopEvent(function<void(EventLoopPtr)> func) override;
 
 public: // dll override
@@ -134,6 +138,26 @@ bool AuthServer::Stop()
 	}
 	async::cleanup();
 	return true;
+}
+
+void AuthServer::Pause()
+{
+	pSSock->stop();
+
+	LoopEvent([](hv::EventLoopPtr loop)
+	{ 
+		loop->pause(); 
+	});
+}
+
+void AuthServer::Resume()
+{
+	pSSock->start();
+
+	LoopEvent([](hv::EventLoopPtr loop)
+	{ 
+		loop->resume(); 
+	});
 }
 
 void AuthServer::LoopEvent(function<void(EventLoopPtr)> func)

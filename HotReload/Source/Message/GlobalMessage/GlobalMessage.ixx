@@ -42,6 +42,10 @@ void GlobalMessageHandle::MsgHandle(const SocketChannelPtr &channel, unsigned in
 		
 		delete message;
 	}
+	else
+	{
+		fprintf(stderr, "%s->cant find msgid Deal Handle! \n", __FUNCTION__);
+	}
 }
 
 void GlobalMessageHandle::RegMsgHandle()

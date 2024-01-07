@@ -2,6 +2,7 @@ module;
 #include "google/protobuf/Message.h"
 #include "hv/Channel.h"
 
+#include <functional>
 export module GlobalServerInit;
 
 import DNServer;
@@ -59,14 +60,13 @@ void HandleGlobalServerInit(DNServer *server)
 			if (channel->isConnected())
 			{
 				printf("%s->%s connected! connfd=%d id=%d \n", __FUNCTION__, peeraddr.c_str(), channel->fd(), channel->id());
-
+				channel->onclose = std::bind(&DNClientProxyHelper::ServerDisconnect, cProxy);
 				// send RegistInfo
 				cProxy->StartRegist();
 			}
 			else
 			{
 				printf("%s->%s disconnected! connfd=%d id=%d \n", __FUNCTION__, peeraddr.c_str(), channel->fd(), channel->id());
-				cProxy->SetRegisted(false);
 			}
 
 			if(cProxy->isReconnect())
@@ -98,13 +98,12 @@ void HandleGlobalServerInit(DNServer *server)
 			}
 			else if(packet.dealType == MsgDeal::Req)
 			{
-				MessagePacket packet;
-				memcpy(&packet, buf->data(), MessagePacket::PackLenth);
-				if(packet.dealType == MsgDeal::Req)
-				{
-					string msgData((char*)buf->data() + MessagePacket::PackLenth, packet.pkgLenth);
-					GlobalMessageHandle::MsgHandle(channel, packet.msgId, packet.msgHashId, msgData);
-				}
+				string msgData((char*)buf->data() + MessagePacket::PackLenth, packet.pkgLenth);
+				GlobalMessageHandle::MsgHandle(channel, packet.msgId, packet.msgHashId, msgData);
+			}
+			else
+			{
+				fprintf(stderr, "%s->packet.dealType not matching! \n", __FUNCTION__);
 			}
 		};
 

@@ -24,6 +24,8 @@ public:
 	void SetRegisted(bool isRegisted){bIsRegisted = isRegisted;}
 	void SetRegistEvent(function<void()> event);
 	void StartRegist();
+
+	void ServerDisconnect();
 };
 
 module:private;
@@ -54,4 +56,18 @@ void DNClientProxyHelper::StartRegist()
 			loop()->killTimer(timerID);
 		}
 	});
+}
+
+void DNClientProxyHelper::ServerDisconnect()
+{
+	SetRegisted(false);
+
+	for(auto& [k,v] : mMsgList)
+	{
+		v->Destroy();
+	}
+		
+	mMsgList.clear();
+
+	startReconnect();
 }

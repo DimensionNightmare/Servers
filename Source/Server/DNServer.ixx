@@ -30,6 +30,10 @@ public:
 
 	virtual bool Stop() = 0;
 
+	virtual void Pause() = 0;
+
+	virtual void Resume() = 0;
+
     ServerType GetServerType(){return emServerType;}
 
 	virtual void LoopEvent(function<void(hv::EventLoopPtr)> func){}

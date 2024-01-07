@@ -38,8 +38,8 @@ include_directories("../Environment/Install/protobufGen/${CMAKE_BUILD_TYPE}/incl
 link_directories("../Environment/Install/protobufGen/${CMAKE_BUILD_TYPE}/lib")
 
 file(GLOB_RECURSE srcHotReloadModule CONFIGURE_DEPENDS 
-	"Source/*"
-	"HotReload/Source/*"
+	"Source/*.ixx"
+	"HotReload/Source/*.ixx"
 )
 add_library( HotReload SHARED)
 target_sources(HotReload 
@@ -57,7 +57,7 @@ if (CMAKE_VERSION VERSION_GREATER 3.12)
 endif()
 
 file(GLOB_RECURSE DNSourceModule CONFIGURE_DEPENDS 
-	"Source/*"
+	"Source/*.ixx"
 )
 
 add_executable(DimensionNightmareServer)
