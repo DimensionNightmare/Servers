@@ -1,5 +1,6 @@
 module;
 #include "hv/EventLoop.h"
+#include "hv/hsocket.h"
 
 export module GlobalServer;
 
@@ -114,7 +115,7 @@ bool GlobalServer::Init(map<string, string> &param)
 
 	
 	//connet ControlServer
-	if(stoi(param["byCtl"]) && param.contains("ctlPort") && param.contains("ctlIp"))
+	if(stoi(param["byCtl"]) && param.contains("ctlPort") && param.contains("ctlIp") && is_ipaddr(param["ctlIp"].c_str()))
 	{
 		pCSock = new DNClientProxy;
 		auto reconn = new reconn_setting_t;

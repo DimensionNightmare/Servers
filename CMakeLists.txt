@@ -43,15 +43,14 @@ file(GLOB_RECURSE srcHotReloadModule CONFIGURE_DEPENDS
 )
 add_library( HotReload SHARED)
 target_sources(HotReload 
-	PRIVATE 
-		HotReload/HotReload.cpp
-	PRIVATE FILE_SET all_my_modules TYPE CXX_MODULES FILES
+	PUBLIC HotReload/HotReload.cpp
+	PUBLIC FILE_SET all_my_modules TYPE CXX_MODULES FILES
    		${srcHotReloadModule}
 )
 
-target_compile_definitions(HotReload PRIVATE HOTRELOAD_BUILD)
+target_compile_definitions(HotReload PUBLIC HOTRELOAD_BUILD)
 set_target_properties(HotReload PROPERTIES RUNTIME_OUTPUT_DIRECTORY  ${CMAKE_BINARY_DIR}/Runtime)
-target_link_libraries(HotReload PRIVATE hv_static protobuf::libprotobuf protobufGen.lib)
+target_link_libraries(HotReload hv_static protobuf::libprotobuf protobufGen.lib)
 if (CMAKE_VERSION VERSION_GREATER 3.12)
 	set_property(TARGET HotReload PROPERTY CXX_STANDARD 23)
 endif()
@@ -63,12 +62,12 @@ file(GLOB_RECURSE DNSourceModule CONFIGURE_DEPENDS
 add_executable(DimensionNightmareServer)
 
 target_sources(DimensionNightmareServer
-	PRIVATE  "main.cpp"
-	PRIVATE FILE_SET all_my_modules TYPE CXX_MODULES FILES
+	PUBLIC "main.cpp"
+	PUBLIC FILE_SET all_my_modules TYPE CXX_MODULES FILES
 		${DNSourceModule}
 )
 
-target_link_libraries(DimensionNightmareServer PRIVATE hv_static)
+target_link_libraries(DimensionNightmareServer hv_static)
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET DimensionNightmareServer PROPERTY CXX_STANDARD 23)
 endif()
@@ -77,9 +76,9 @@ add_executable(DNTest)
 file(GLOB_RECURSE srcDNTest CONFIGURE_DEPENDS 
 	"Test/*.ixx" 
 )
-target_sources(DNTest PRIVATE ${srcDNTest})
-target_link_libraries(DNTest PRIVATE protobuf::libprotobuf protobufGen.lib hv_static)
-target_compile_definitions(DNTest PRIVATE -DUNICODE)
+target_sources(DNTest PUBLIC ${srcDNTest})
+target_link_libraries(DNTest protobuf::libprotobuf protobufGen.lib hv_static)
+target_compile_definitions(DNTest PUBLIC -DUNICODE)
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET DNTest PROPERTY CXX_STANDARD 23)
 endif()

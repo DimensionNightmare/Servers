@@ -1,5 +1,6 @@
 module;
 #include "hv/EventLoop.h"
+#include "hv/hsocket.h"
 
 export module AuthServer;
 
@@ -81,7 +82,7 @@ bool AuthServer::Init(map<string, string> &param)
 	pSSock->setThreadNum(4);
 
 	//connet ControlServer
-	if(stoi(param["byCtl"]) && param.contains("ctlPort") && param.contains("ctlIp"))
+	if(stoi(param["byCtl"]) && param.contains("ctlPort") && param.contains("ctlIp") && is_ipaddr(param["ctlIp"].c_str()))
 	{
 		auto setting = new unpack_setting_t;
 		setting->mode = unpack_mode_e::UNPACK_BY_LENGTH_FIELD;

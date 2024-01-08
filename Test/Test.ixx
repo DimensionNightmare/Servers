@@ -11,6 +11,7 @@
 #include <string>
 #include "hv/EventLoop.h"
 #include "hv/hloop.h" 
+#include "hv/requests.h"
 class A
 {
 public:
@@ -86,64 +87,13 @@ int main()
 {
 	using namespace hv;
 	using namespace std;
-	TcpClient* pCSock = new TcpClient;
-	pCSock->createsocket(1270);
-
-	auto onConnection = [](const SocketChannelPtr &channel)
-		{
-			string peeraddr = channel->peeraddr();
-
-
-			if (channel->isConnected())
-			{
-				printf("%s->%s connected! connfd=%d id=%d \n", __FUNCTION__, peeraddr.c_str(), channel->fd(), channel->id());
-			}
-			else
-			{
-				printf("%s->%s disconnected! connfd=%d id=%d \n", __FUNCTION__, peeraddr.c_str(), channel->fd(), channel->id());
-			}
-
-		};
-
-	auto onMessage = [](const SocketChannelPtr &channel, Buffer *buf) 
-	{
-		
-	};
-
-	pCSock->onConnection = onConnection;
-	pCSock->onMessage = onMessage;
-
-	stringstream ss;
-	string str;
-    while (true) 
-	{
-		getline(cin, str);
-		ss.str(str);
-		ss << str;
-		ss >> str;
-		if(str.empty())
-		{
-			continue;
-		}
-		
-        if (str == "quit") 
-		{
-            break;
-        }
-		else if(str == "start")
-		{
-			auto loop = ((EventLoopThread*)pCSock)->loop();
-			if(!loop->loop())
-			{
-				pCSock->TcpClientTmpl::TcpClientTmpl();
-			}
-			pCSock->start();
-		}
-		else if(str == "stop")
-		{
-			pCSock->stop();
-		}
+	 
+    size_t filesize = requests::downloadFile("http://127.0.0.1:1212/DimensionNightmareServer.pdb", "DimensionNightmareServer.pdb");
+    if (filesize == 0) {
+        printf("downloadFile failed!\n");
+    } else {
+        printf("downloadFile success!\n");
     }
-
+    
 	return 0;
 }
