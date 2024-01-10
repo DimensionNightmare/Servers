@@ -1,4 +1,6 @@
 module;
+
+#include <string>
 export module ServerEntity;
 
 import Entity;
@@ -15,6 +17,7 @@ public: // dll override
 	
 protected: // dll proxy
     ServerType emServerType;
+	std::string sIpAddr;
 };
 
 module:private;
@@ -22,6 +25,7 @@ module:private;
 ServerEntity::ServerEntity()
 {
 	emServerType = ServerType::None;
+	sIpAddr = "";
 }
 
 ServerEntity::~ServerEntity()

@@ -1,4 +1,6 @@
 module;
+
+#include <string>
 export module ServerEntityHelper;
 
 import DNServer;
@@ -14,6 +16,9 @@ public:
 
 	void SetServerType(ServerType type){emServerType = type;}
 	ServerType GetServerType(){ return emServerType;}
+
+	void SetServerIp(std::string& type){sIpAddr = type;}
+	auto GetServerIp(){ return sIpAddr;}
 };
 
 module:private;

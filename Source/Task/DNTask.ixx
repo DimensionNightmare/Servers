@@ -103,7 +103,7 @@ export struct DNTaskVoid
 
 		auto initial_suspend() { return suspend_never{}; }
 
-		auto final_suspend() noexcept { return suspend_never{}; }
+		auto final_suspend() noexcept { return suspend_always{}; }
 
 		void unhandled_exception() {  }
 	};

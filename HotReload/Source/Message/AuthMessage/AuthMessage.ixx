@@ -1,4 +1,5 @@
 module;
+#include "google/protobuf/Message.h"
 #include "AuthControl.pb.h"
 #include "hv/Channel.h"
 #include "hv/HttpService.h"

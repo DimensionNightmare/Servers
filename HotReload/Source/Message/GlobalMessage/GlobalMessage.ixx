@@ -1,4 +1,5 @@
 module;
+#include "google/protobuf/Message.h"
 #include "GlobalControl.pb.h"
 #include "hv/Channel.h"
 

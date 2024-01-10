@@ -5,7 +5,7 @@ export module ControlServerHelper;
 
 import ControlServer;
 import DNServerProxyHelper;
-import EntityManagerHelper;
+import EntityManagerControlHelper;
 import ServerEntity;
 
 using namespace std;
@@ -16,7 +16,7 @@ private:
 	ControlServerHelper(){}
 public:
 	DNServerProxyHelper* GetSSock(){ return nullptr;}
-	EntityManagerHelper<ServerEntity>* GetEntityManager(){ return nullptr;}
+	EntityManagerControlHelper<ServerEntity>* GetEntityManager(){ return nullptr;}
 };
 
 static ControlServerHelper* PControlServerHelper = nullptr;

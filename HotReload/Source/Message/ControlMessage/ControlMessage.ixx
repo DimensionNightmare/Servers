@@ -1,4 +1,6 @@
 module;
+#include "google/protobuf/Message.h"
+#include "Common.pb.h"
 #include "GlobalControl.pb.h"
 #include "AuthControl.pb.h"
 #include "hv/Channel.h"
@@ -7,7 +9,9 @@ module;
 #include <functional>
 export module ControlMessage;
 
-export import ControlGlobal;
+import ControlGlobal;
+import ControlCommon;
+import ControlAuth;
 import AfxCommon;
 
 #define DNPrint(fmt, ...) printf("[%s] {%s} ->" "\n" fmt "\n", GetNowTimeStr(), __FUNCTION__, ##__VA_ARGS__);
@@ -17,6 +21,7 @@ using namespace std;
 using namespace hv;
 using namespace google::protobuf;
 
+using namespace GMsg::Common;
 using namespace GMsg::GlobalControl;
 using namespace GMsg::AuthControl;
 
@@ -60,9 +65,9 @@ void ControlMessageHandle::RegMsgHandle()
 {
 	std::hash<string> hashStr;
 
-	const Message* msg = G2C_RegistSrv::internal_default_instance();
+	const Message* msg = COM_ReqRegistSrv::internal_default_instance();
 	MHandleMap.emplace( hashStr(msg->GetDescriptor()->full_name()), make_pair(msg, &Msg_RegistSrv));
 
-	msg = A2C_RegistSrv::internal_default_instance();
-	MHandleMap.emplace( hashStr(msg->GetDescriptor()->full_name()), make_pair(msg, &Msg_RegistSrv));
+	msg = A2C_AuthAccount::internal_default_instance();
+	MHandleMap.emplace( hashStr(msg->GetDescriptor()->full_name()), make_pair(msg, &Msg_AuthAccount));
 }

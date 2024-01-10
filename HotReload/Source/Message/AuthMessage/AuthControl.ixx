@@ -1,4 +1,5 @@
 module;
+#include "Common.pb.h"
 #include "AuthControl.pb.h"
 
 #include <coroutine>
@@ -12,9 +13,9 @@ import AfxCommon;
 #define DNPrint(fmt, ...) printf("[%s] {%s} ->" "\n" fmt "\n", GetNowTimeStr(), __FUNCTION__, ##__VA_ARGS__);
 #define DNPrintErr(fmt, ...) fprintf(stderr, "[%s] {%s} ->" "\n" fmt "\n", GetNowTimeStr(), __FUNCTION__, ##__VA_ARGS__);
 
-using namespace GMsg::AuthControl;
 using namespace std;
 using namespace google::protobuf;
+using namespace GMsg::Common;
 
 // client request
 export DNTaskVoid Msg_RegistSrv()
@@ -36,7 +37,7 @@ export DNTaskVoid Msg_RegistSrv()
 		DNPrint("----- %lu, \n", msgId);
 	}
 
-	A2C_RegistSrv requset;
+	COM_ReqRegistSrv requset;
 	requset.set_server_type((int)AuthServer->GetServerType());
 	requset.set_ip(server->host);
 	requset.set_port(server->port);
@@ -48,7 +49,7 @@ export DNTaskVoid Msg_RegistSrv()
 	MessagePack(msgId, MsgDeal::Req, requset.GetDescriptor()->full_name(), binData);
 	
 	// data alloc
-	C2A_RegistSrv response;
+	COM_ResRegistSrv response;
 	auto dataChannel = [&]()->DNTask<Message*>
 	{
 		co_return &response;
