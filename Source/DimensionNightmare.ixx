@@ -11,6 +11,10 @@ import DNServer;
 import ControlServer;
 import GlobalServer;
 import AuthServer;
+import AfxCommon;
+
+#define DNPrint(fmt, ...) printf("[%s] {%s} ->" "\n" fmt "\n", GetNowTimeStr(), __FUNCTION__, ##__VA_ARGS__);
+#define DNPrintErr(fmt, ...) fprintf(stderr, "[%s] {%s} ->" "\n" fmt "\n", GetNowTimeStr(), __FUNCTION__, ##__VA_ARGS__);
 
 using namespace std;
 
@@ -29,13 +33,13 @@ struct HotReloadDll
 		ret = SetDllDirectory(sDllDirRand.c_str());
 		if(!ret)
 		{
-			fprintf(stderr, "%s->cant set dll path! error code=%d! \n", __FUNCTION__, GetLastError());
+			DNPrintErr("cant set dll path! error code=%d! \n", GetLastError());
 			return false;
 		}
 		oLibHandle = LoadLibraryEx((SDllName).c_str(), NULL, LOAD_LIBRARY_SEARCH_USER_DIRS);
 		if (!oLibHandle)
 		{
-			fprintf(stderr, "%s->cant Success! error code=%d! \n", __FUNCTION__, GetLastError());
+			DNPrintErr("cant Success! error code=%d! \n", GetLastError());
 			return false;
 		}
 
@@ -62,7 +66,7 @@ struct HotReloadDll
 	{
 		if(!filesystem::exists(SDllDir))
 		{
-			fprintf(stderr, "%s->dll menu not exist! \n", __FUNCTION__);
+			DNPrintErr("dll menu not exist! \n");
 			return false;
 		}
 
@@ -70,7 +74,7 @@ struct HotReloadDll
 
 		if (SDllName.empty())
 		{
-			fprintf(stderr, "%s->Dll Name is Error! \n", __FUNCTION__);
+			DNPrintErr("Dll Name is Error! \n");
 			return false;
 		}
 
@@ -177,7 +181,7 @@ bool DimensionNightmare::Init(map<string, string> &param)
 {
 	if(!param.contains("svrType"))
 	{
-		fprintf(stderr, "%s->lunch param svrType is null! \n", __FUNCTION__);
+		DNPrintErr("lunch param svrType is null! \n");
 		return false;
 	}
 
@@ -195,7 +199,7 @@ bool DimensionNightmare::Init(map<string, string> &param)
 		pServer = new AuthServer;
 		break;
 	default:
-		fprintf(stderr, "%s->ServerType is Not Vaild! \n", __FUNCTION__);
+		DNPrintErr("ServerType is Not Vaild! \n");
 		return false;
 	}
 
@@ -253,11 +257,11 @@ void DimensionNightmare::InitCmdHandle()
 		pServer->InitCmd(mCmdHandle);
 	}
 
-	printf("%s->cmds: ", __FUNCTION__);
+	DNPrint("cmds: ");
 	for(auto &[k,v] : mCmdHandle)
 		printf("%s,", k.c_str());
 	
-	printf("\n");
+	printf("\n\n");
 }
 
 void DimensionNightmare::ExecCommand(string* cmd, stringstream* ss)

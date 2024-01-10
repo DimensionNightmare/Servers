@@ -18,9 +18,9 @@ public: // dll override
 
 protected: // dll proxy
 	// only oddnumber
-	unsigned char iMsgId;
+	atomic<uint32_t> iMsgId;
 	// unordered_
-	map<unsigned int, DNTask<void*>* > mMsgList;
+	map<uint32_t, DNTask<void*>* > mMsgList;
 	// status
 	bool bIsRegisted;
 
@@ -32,7 +32,7 @@ module:private;
 
 DNClientProxy::DNClientProxy()
 {
-	iMsgId = 0;
+	iMsgId = ATOMIC_VAR_INIT(0);
 	mMsgList.clear();
 	bIsRegisted = false;
 	pRegistEvent = nullptr;

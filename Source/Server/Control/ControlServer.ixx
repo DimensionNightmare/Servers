@@ -8,6 +8,10 @@ import DNServerProxy;
 import MessagePack;
 import ServerEntity;
 import EntityManager;
+import AfxCommon;
+
+#define DNPrint(fmt, ...) printf("[%s] {%s} ->" "\n" fmt "\n", GetNowTimeStr(), __FUNCTION__, ##__VA_ARGS__);
+#define DNPrintErr(fmt, ...) fprintf(stderr, "[%s] {%s} ->" "\n" fmt "\n", GetNowTimeStr(), __FUNCTION__, ##__VA_ARGS__);
 
 using namespace std;
 using namespace hv;
@@ -70,7 +74,7 @@ bool ControlServer::Init(map<string, string> &param)
 {
 	if(!param.contains("ip") || !param.contains("port"))
 	{
-		fprintf(stderr, "%s->ip or port Need! \n", __FUNCTION__);
+		DNPrintErr("ip or port Need! \n");
 		return false;
 	}
 
@@ -80,12 +84,12 @@ bool ControlServer::Init(map<string, string> &param)
 	int listenfd = pSSock->createsocket(port);
 	if (listenfd < 0)
 	{
-		fprintf(stderr, "%s->createsocket error \n", __FUNCTION__);
+		DNPrintErr("createsocket error \n");
 		return false;
 	}
 
     // 输出分配的端口号
-	printf("%s->pSSock listen on port %d, listenfd=%d ...\n", __FUNCTION__, pSSock->port, listenfd);
+	DNPrint("pSSock listen on port %d, listenfd=%d ... \n", pSSock->port, listenfd);
 
 	auto setting = make_shared<unpack_setting_t>();
 	setting->mode = unpack_mode_e::UNPACK_BY_LENGTH_FIELD;
@@ -110,7 +114,7 @@ bool ControlServer::Start()
 {
 	if(!pSSock)
 	{
-		fprintf(stderr, "%s->Server not Initialed! \n", __FUNCTION__);
+		DNPrintErr("Server not Initialed! \n");
 		return false;
 	}
 	

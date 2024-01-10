@@ -12,6 +12,9 @@
 #include "hv/EventLoop.h"
 #include "hv/hloop.h" 
 #include "hv/requests.h"
+#include <signal.h>
+#include <thread>
+#include <chrono>
 class A
 {
 public:
@@ -83,17 +86,19 @@ int main1()
 }
 
 
+
 int main()
 {
 	using namespace hv;
 	using namespace std;
 	 
-    size_t filesize = requests::downloadFile("http://127.0.0.1:1212/DimensionNightmareServer.pdb", "DimensionNightmareServer.pdb");
-    if (filesize == 0) {
-        printf("downloadFile failed!\n");
-    } else {
-        printf("downloadFile success!\n");
-    }
+    // size_t filesize = requests::downloadFile("http://127.0.0.1:1212/DimensionNightmareServer.pdb", "DimensionNightmareServer.pdb");
+    // if (filesize == 0) {
+    //     printf("downloadFile failed!\n");
+    // } else {
+    //     printf("downloadFile success!\n");
+    // } 
+
     
 	return 0;
 }

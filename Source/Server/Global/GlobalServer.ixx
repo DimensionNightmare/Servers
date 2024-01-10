@@ -8,6 +8,10 @@ import DNServer;
 import DNServerProxy;
 import DNClientProxy;
 import MessagePack;
+import AfxCommon;
+
+#define DNPrint(fmt, ...) printf("[%s] {%s} ->" "\n" fmt "\n", GetNowTimeStr(), __FUNCTION__, ##__VA_ARGS__);
+#define DNPrintErr(fmt, ...) fprintf(stderr, "[%s] {%s} ->" "\n" fmt "\n", GetNowTimeStr(), __FUNCTION__, ##__VA_ARGS__);
 
 using namespace std;
 using namespace hv;
@@ -84,7 +88,7 @@ bool GlobalServer::Init(map<string, string> &param)
 	int listenfd = pSSock->createsocket(port);
 	if (listenfd < 0)
 	{
-		fprintf(stderr, "%s->createsocket error! \n", __FUNCTION__);
+		DNPrintErr("createsocket error! \n");
 		return false;
 	}
 
@@ -95,14 +99,14 @@ bool GlobalServer::Init(map<string, string> &param)
 		socklen_t addrLen = sizeof(addr);
 		if (getsockname(listenfd, (struct sockaddr*)&addr, &addrLen) < 0) 
 		{
-			fprintf(stderr, "%s->Error in getsockname \n", __FUNCTION__);
+			DNPrintErr("Error in getsockname \n");
 			return false;
 		}
 
 		pSSock->port = ntohs(addr.sin_port);
 	}
 	
-	printf("%s->pSSock listen on port %d, listenfd=%d ...\n", __FUNCTION__, pSSock->port, listenfd);
+	DNPrint("pSSock listen on port %d, listenfd=%d ... \n", pSSock->port, listenfd);
 
 	auto setting = new unpack_setting_t;
 	setting->mode = unpack_mode_e::UNPACK_BY_LENGTH_FIELD;
@@ -140,7 +144,7 @@ bool GlobalServer::Start()
 {
 	if(!pSSock)
 	{
-		fprintf(stderr, "%s->Server not Initialed! \n", __FUNCTION__);
+		DNPrintErr("Server not Initialed! \n");
 		return false;
 	}
 

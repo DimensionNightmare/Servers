@@ -7,6 +7,10 @@ export module GlobalControl;
 import DNTask;
 import MessagePack;
 import GlobalServerHelper;
+import AfxCommon;
+
+#define DNPrint(fmt, ...) printf("[%s] {%s} ->" "\n" fmt "\n", GetNowTimeStr(), __FUNCTION__, ##__VA_ARGS__);
+#define DNPrintErr(fmt, ...) fprintf(stderr, "[%s] {%s} ->" "\n" fmt "\n", GetNowTimeStr(), __FUNCTION__, ##__VA_ARGS__);
 
 using namespace GMsg::GlobalControl;
 using namespace std;
@@ -24,12 +28,12 @@ export DNTaskVoid Msg_RegistSrv()
 	// first Can send Msg?
 	if(reqMap.contains(msgId))
 	{
-		printf("%s->+++++ %d, \n", __FUNCTION__, msgId);
+		DNPrintErr("+++++ %lu, \n", msgId);
 		co_return;
 	}
 	else
 	{
-		printf("%s->----- %d, \n", __FUNCTION__, msgId);
+		DNPrint("----- %lu, \n", msgId);
 	}
 
 	G2C_RegistSrv requset;
@@ -60,11 +64,11 @@ export DNTaskVoid Msg_RegistSrv()
 	
 	if(!response.success())
 	{
-		printf("%s->regist Server error! msg:%d \n", __FUNCTION__, msgId);
+		DNPrint("regist Server error! msg:%lu \n", msgId);
 	}
 	else
 	{
-		printf("%s->regist Server success! \n", __FUNCTION__);
+		DNPrint("regist Server success! \n");
 		client->SetRegisted(true);
 	}
 

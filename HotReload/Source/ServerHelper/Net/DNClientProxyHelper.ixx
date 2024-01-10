@@ -5,6 +5,10 @@ module;
 export module DNClientProxyHelper;
 
 import DNClientProxy;
+import AfxCommon;
+
+#define DNPrint(fmt, ...) printf("[%s] {%s} ->" "\n" fmt "\n", GetNowTimeStr(), __FUNCTION__, ##__VA_ARGS__);
+#define DNPrintErr(fmt, ...) fprintf(stderr, "[%s] {%s} ->" "\n" fmt "\n", GetNowTimeStr(), __FUNCTION__, ##__VA_ARGS__);
 
 using namespace std;
 using namespace hv;
@@ -73,7 +77,7 @@ void DNClientProxyHelper::StartRegist()
 			}
 			else
 			{
-				printf("%s->Not RegistEvent to Call!! \n", __FUNCTION__);
+				DNPrintErr("Not RegistEvent to Call!! \n");
 			}
 		} 
 		else 

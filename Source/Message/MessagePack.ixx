@@ -27,7 +27,7 @@ export struct MessagePacket
 	MsgDir opType;
 	MsgDeal dealType;
 	unsigned short serverId;
-	unsigned short msgId;
+	unsigned int msgId;
 	size_t msgHashId;
 
 	MessagePacket()

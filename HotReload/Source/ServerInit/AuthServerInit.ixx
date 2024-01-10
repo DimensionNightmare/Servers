@@ -9,6 +9,10 @@ import AuthServer;
 import AuthServerHelper;
 import MessagePack;
 import AuthMessage;
+import AfxCommon;
+
+#define DNPrint(fmt, ...) printf("[%s] {%s} ->" "\n" fmt "\n", GetNowTimeStr(), __FUNCTION__, ##__VA_ARGS__);
+#define DNPrintErr(fmt, ...) fprintf(stderr, "[%s] {%s} ->" "\n" fmt "\n", GetNowTimeStr(), __FUNCTION__, ##__VA_ARGS__);
 
 using namespace hv;
 using namespace std;
@@ -45,11 +49,11 @@ void HandleAuthServerInit(DNServer *server)
 
 			if (channel->isConnected())
 			{
-				printf("%s->%s connected! connfd=%d id=%d \n", __FUNCTION__, peeraddr.c_str(), channel->fd(), channel->id());
+				DNPrint("%s connected! connfd=%d id=%d \n", peeraddr.c_str(), channel->fd(), channel->id());
 			}
 			else
 			{
-				printf("%s->%s disconnected! connfd=%d id=%d \n", __FUNCTION__, peeraddr.c_str(), channel->fd(), channel->id());
+				DNPrint("%s disconnected! connfd=%d id=%d \n", peeraddr.c_str(), channel->fd(), channel->id());
 			}
 
 			if(cProxy->isReconnect())
@@ -76,12 +80,12 @@ void HandleAuthServerInit(DNServer *server)
 				}
 				else
 				{
-					fprintf(stderr, "%s->cant find msgid! \n", __FUNCTION__);
+					DNPrintErr("cant find msgid! \n");
 				}
 			}
 			else
 			{
-				fprintf(stderr, "%s->packet.dealType not matching! \n", __FUNCTION__);
+				DNPrintErr("packet.dealType not matching! \n");
 			}
 		};
 

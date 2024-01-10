@@ -24,42 +24,25 @@ set(CMAKE_CXX_STANDARD 23)
 
 set(CMAKE_EXPERIMENTAL_CXX_MODULE_DYNDEP ON)
 
+include_directories("../Environment/Install/protobufGen/${CMAKE_BUILD_TYPE}/include")
+link_directories("../Environment/Install/protobufGen/${CMAKE_BUILD_TYPE}/lib")
+
 set(CMAKE_PREFIX_PATH
 "../Environment/Install/libhv/${CMAKE_BUILD_TYPE}/lib/cmake;"
 "../Environment/Install/protobuf/${CMAKE_BUILD_TYPE}/cmake;"
 )
 
-# DimensionNightmareServer
-project (DimensionNightmareServer)
 find_package(libhv CONFIG REQUIRED)
 find_package(Protobuf CONFIG REQUIRED)
 
-include_directories("../Environment/Install/protobufGen/${CMAKE_BUILD_TYPE}/include")
-link_directories("../Environment/Install/protobufGen/${CMAKE_BUILD_TYPE}/lib")
+################################ DimensionNightmareServer ################################
+project (DimensionNightmareServer)
 
-file(GLOB_RECURSE srcHotReloadModule CONFIGURE_DEPENDS 
-	"Source/*.ixx"
-	"HotReload/Source/*.ixx"
-)
-add_library( HotReload SHARED)
-target_sources(HotReload 
-	PUBLIC HotReload/HotReload.cpp
-	PUBLIC FILE_SET all_my_modules TYPE CXX_MODULES FILES
-   		${srcHotReloadModule}
-)
-
-target_compile_definitions(HotReload PUBLIC HOTRELOAD_BUILD)
-set_target_properties(HotReload PROPERTIES RUNTIME_OUTPUT_DIRECTORY  ${CMAKE_BINARY_DIR}/Runtime)
-target_link_libraries(HotReload hv_static protobuf::libprotobuf protobufGen.lib)
-if (CMAKE_VERSION VERSION_GREATER 3.12)
-	set_property(TARGET HotReload PROPERTY CXX_STANDARD 23)
-endif()
+add_executable(DimensionNightmareServer)
 
 file(GLOB_RECURSE DNSourceModule CONFIGURE_DEPENDS 
 	"Source/*.ixx"
 )
-
-add_executable(DimensionNightmareServer)
 
 target_sources(DimensionNightmareServer
 	PUBLIC "main.cpp"
@@ -68,17 +51,50 @@ target_sources(DimensionNightmareServer
 )
 
 target_link_libraries(DimensionNightmareServer hv_static)
+
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET DimensionNightmareServer PROPERTY CXX_STANDARD 23)
 endif()
 
+################################ HotReload ################################
+
+file(GLOB_RECURSE srcHotReloadModule CONFIGURE_DEPENDS 
+	"Source/*.ixx"
+	"HotReload/Source/*.ixx"
+)
+
+add_library( HotReload SHARED)
+
+target_sources(HotReload 
+	PUBLIC HotReload/HotReload.cpp
+	PUBLIC FILE_SET all_my_modules TYPE CXX_MODULES FILES
+   		${srcHotReloadModule}
+)
+
+target_compile_definitions(HotReload PUBLIC HOTRELOAD_BUILD)
+
+set_target_properties(HotReload PROPERTIES RUNTIME_OUTPUT_DIRECTORY  ${CMAKE_BINARY_DIR}/Runtime)
+
+target_link_libraries(HotReload hv_static protobuf::libprotobuf protobufGen.lib)
+
+if (CMAKE_VERSION VERSION_GREATER 3.12)
+	set_property(TARGET HotReload PROPERTY CXX_STANDARD 23)
+endif()
+
+################################ DNTest ################################
+
 add_executable(DNTest)
+
 file(GLOB_RECURSE srcDNTest CONFIGURE_DEPENDS 
 	"Test/*.ixx" 
 )
-target_sources(DNTest PUBLIC ${srcDNTest})
+
 target_link_libraries(DNTest protobuf::libprotobuf protobufGen.lib hv_static)
+
+target_sources(DNTest PUBLIC ${srcDNTest})
+
 target_compile_definitions(DNTest PUBLIC -DUNICODE)
+
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET DNTest PROPERTY CXX_STANDARD 23)
 endif()

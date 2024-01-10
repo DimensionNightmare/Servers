@@ -8,6 +8,10 @@ import DNServer;
 import DNWebProxy;
 import DNClientProxy;
 import MessagePack;
+import AfxCommon;
+
+#define DNPrint(fmt, ...) printf("[%s] {%s} ->" "\n" fmt "\n", GetNowTimeStr(), __FUNCTION__, ##__VA_ARGS__);
+#define DNPrintErr(fmt, ...) fprintf(stderr, "[%s] {%s} ->" "\n" fmt "\n", GetNowTimeStr(), __FUNCTION__, ##__VA_ARGS__);
 
 using namespace std;
 using namespace hv;
@@ -114,7 +118,7 @@ bool AuthServer::Start()
 {
 	if(!pSSock)
 	{
-		fprintf(stderr, "%s->Server not Initialed! \n", __FUNCTION__);
+		DNPrintErr("Server not Initialed! \n");
 		return false;
 	}
 	pSSock->start();

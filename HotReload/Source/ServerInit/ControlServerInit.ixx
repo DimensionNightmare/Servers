@@ -9,6 +9,10 @@ import ControlServer;
 import ControlServerHelper;
 import MessagePack;
 import ControlMessage;
+import AfxCommon;
+
+#define DNPrint(fmt, ...) printf("[%s] {%s} ->" "\n" fmt "\n", GetNowTimeStr(), __FUNCTION__, ##__VA_ARGS__);
+#define DNPrintErr(fmt, ...) fprintf(stderr, "[%s] {%s} ->" "\n" fmt "\n", GetNowTimeStr(), __FUNCTION__, ##__VA_ARGS__);
 
 using namespace hv;
 using namespace std;
@@ -32,11 +36,11 @@ void HandleControlServerInit(DNServer *server)
 			string peeraddr = channel->peeraddr();
 			if (channel->isConnected())
 			{
-				printf("%s->%s connected! connfd=%d id=%d \n", __FUNCTION__, peeraddr.c_str(), channel->fd(), channel->id());
+				DNPrint("%s connected! connfd=%d id=%d \n", peeraddr.c_str(), channel->fd(), channel->id());
 			}
 			else
 			{
-				printf("%s->%s disconnected! connfd=%d id=%d \n", __FUNCTION__, peeraddr.c_str(), channel->fd(), channel->id());
+				DNPrint("%s disconnected! connfd=%d id=%d \n", peeraddr.c_str(), channel->fd(), channel->id());
 			}
 		};
 
@@ -51,7 +55,7 @@ void HandleControlServerInit(DNServer *server)
 			}
 			else
 			{
-				fprintf(stderr, "%s->packet.dealType not matching! \n", __FUNCTION__);
+				DNPrintErr("packet.dealType not matching! \n");
 			}
 		};
 

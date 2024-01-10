@@ -1,3 +1,4 @@
+#include "hv/hlog.h"
 
 #include <Windows.h>
 #include <locale>
@@ -9,6 +10,10 @@
 #include <filesystem>
 
 import DimensionNightmare;
+import AfxCommon;
+
+#define DNPrint(fmt, ...) printf("[%s] {%s} ->" "\n" fmt "\n", GetNowTimeStr(), __FUNCTION__, ##__VA_ARGS__);
+#define DNPrintErr(fmt, ...) fprintf(stderr, "[%s] {%s} ->" "\n" fmt "\n", GetNowTimeStr(), __FUNCTION__, ##__VA_ARGS__);
 
 #pragma comment(lib, "dbghelp.lib")
 
@@ -22,6 +27,7 @@ enum class LunchType
 
 int main(int argc, char** argv)
 {
+	hlog_disable();
 	// local output
     locale::global(locale(""));
 
@@ -44,7 +50,7 @@ int main(int argc, char** argv)
 
 			if(tokens.empty() || tokens.size() != 2)
 			{
-				cerr << "program lunch param error! Pos: " << i << endl;
+				DNPrintErr("program lunch param error! Pos:%d \n", i);
 				return 0;
 			}
 
@@ -60,7 +66,7 @@ int main(int argc, char** argv)
 	}
 	
 	auto CtrlHandler = [](DWORD signal) -> BOOL {
-		cout << "EXITTING... CtrlHandler Tirrger..." << endl;
+		DNPrint("EXITTING... CtrlHandler Tirrger... \n");
 		switch (signal)
 		{
 			case CTRL_C_EVENT:
@@ -77,12 +83,12 @@ int main(int argc, char** argv)
 
 	if(!SetConsoleCtrlHandler(CtrlHandler, true))
 	{
-		cout << "Cant Set SetConsoleCtrlHandler!";
+		DNPrintErr("Cant Set SetConsoleCtrlHandler! \n");
 		return 0;
 	}
 
 	auto exceptionPtr = SetUnhandledExceptionFilter([](EXCEPTION_POINTERS* ExceptionInfo)->long {
-		cout << "SetUnhandledExceptionFilter Tirrger!";
+		DNPrint("SetUnhandledExceptionFilter Tirrger! \n");
 		
 		HANDLE hDumpFile = CreateFileW(
 			L"MiniDump.dmp",
@@ -120,7 +126,8 @@ int main(int argc, char** argv)
 	});
 	
 	if(!exceptionPtr){
-		cout << "Cant Set SetUnhandledExceptionFilter!";
+		DNPrintErr("Cant Set SetUnhandledExceptionFilter! \n");
+		
 		return 0;
 	}
 

@@ -7,6 +7,10 @@ module;
 export module GlobalMessage;
 
 export import GlobalControl;
+import AfxCommon;
+
+#define DNPrint(fmt, ...) printf("[%s] {%s} ->" "\n" fmt "\n", GetNowTimeStr(), __FUNCTION__, ##__VA_ARGS__);
+#define DNPrintErr(fmt, ...) fprintf(stderr, "[%s] {%s} ->" "\n" fmt "\n", GetNowTimeStr(), __FUNCTION__, ##__VA_ARGS__);
 
 using namespace std;
 using namespace hv;
@@ -44,7 +48,7 @@ void GlobalMessageHandle::MsgHandle(const SocketChannelPtr &channel, unsigned in
 	}
 	else
 	{
-		fprintf(stderr, "%s->cant find msgid Deal Handle! \n", __FUNCTION__);
+		DNPrintErr("cant find msgid Deal Handle! \n");
 	}
 }
 
