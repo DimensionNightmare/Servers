@@ -2,6 +2,7 @@ module;
 #include "hv/TcpClient.h"
 
 #include <functional> 
+#include <shared_mutex>
 export module DNClientProxy;
 
 import DNTask;
@@ -18,14 +19,17 @@ public: // dll override
 
 protected: // dll proxy
 	// only oddnumber
-	atomic<uint32_t> iMsgId;
+	atomic<unsigned int> iMsgId;
 	// unordered_
-	map<uint32_t, DNTask<void*>* > mMsgList;
+	map<unsigned int, DNTask<void*>* > mMsgList;
 	// status
 	bool bIsRegisted;
 
 	function<void()> pRegistEvent;
+
 	hv::Channel::Status eState;
+
+	std::shared_mutex oMsgMutex;
 };
 
 module:private;

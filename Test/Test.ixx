@@ -15,6 +15,9 @@
 #include <signal.h>
 #include <thread>
 #include <chrono>
+
+using namespace hv;
+
 class A
 {
 public:
@@ -85,6 +88,18 @@ int main1()
     return 0;
 }
 
+void request(HttpClient* cli, HttpRequestPtr req, int num) 
+{
+    int ret = cli->sendAsync(req, [&](const HttpResponsePtr& resp) {
+        printf("test_http_async_client response thread tid=%ld\n", hv_gettid());
+        if (resp == NULL) {
+            printf("request failed! %d\n", num);
+        } else {
+            printf("%d %s\r\n", resp->status_code, resp->status_message());
+            printf("%s\n", resp->body.c_str());
+        }
+    });
+}
 
 
 int main()
@@ -99,6 +114,34 @@ int main()
     //     printf("downloadFile success!\n");
     // } 
 
+	HttpClient cli;
+
+	HttpRequestPtr req = std::make_shared<HttpRequest>();
+    req->method = HTTP_POST;
+    req->url = "http://127.0.0.1:1212/Login/Auth";
+    req->headers["Connection"] = "keep-alive";
+	req->headers["Content-Type"] = "application/json";
+    req->timeout = 10;
+
+	hv::Json jroot;
+    jroot["username"] = "admin";
+    jroot["password"] = "123456";
+    
+	req->body = jroot.dump();
+
+	std::array<std::thread, 4000> threads;
+
+	for (size_t i = 0; i < threads.size(); i++)
+	{
+		threads[i] =  std::thread(request, &cli, req, ref(i));
+	}
+
+	for (auto & ele : threads)
+	{
+		ele.join();
+	}
+	
+	this_thread::sleep_for(10s);
     
 	return 0;
 }

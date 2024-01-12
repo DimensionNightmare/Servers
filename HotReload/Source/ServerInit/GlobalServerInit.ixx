@@ -12,8 +12,8 @@ import MessagePack;
 import GlobalMessage;
 import AfxCommon;
 
-#define DNPrint(fmt, ...) printf("[%s] {%s} ->" "\n" fmt "\n", GetNowTimeStr(), __FUNCTION__, ##__VA_ARGS__);
-#define DNPrintErr(fmt, ...) fprintf(stderr, "[%s] {%s} ->" "\n" fmt "\n", GetNowTimeStr(), __FUNCTION__, ##__VA_ARGS__);
+#define DNPrint(fmt, ...) printf("[%s] {%s} ->" "\n" fmt "\n", GetNowTimeStr().c_str(), __FUNCTION__, ##__VA_ARGS__);
+#define DNPrintErr(fmt, ...) fprintf(stderr, "[%s] {%s} ->" "\n" fmt "\n", GetNowTimeStr().c_str(), __FUNCTION__, ##__VA_ARGS__);
 
 using namespace hv;
 using namespace std;
@@ -56,11 +56,10 @@ void HandleGlobalServerInit(DNServer *server)
 
 	if (auto cSock = serverProxy->GetCSock())
 	{
-		auto onConnection = [](const SocketChannelPtr &channel)
+		auto onConnection = [cSock](const SocketChannelPtr &channel)
 		{
 			string peeraddr = channel->peeraddr();
-			auto cProxy = GetGlobalServer()->GetCSock();
-			cProxy->UpdateClientState(channel->status);
+			cSock->UpdateClientState(channel->status);
 
 			if (channel->isConnected())
 			{
@@ -71,23 +70,21 @@ void HandleGlobalServerInit(DNServer *server)
 				DNPrint("%s disconnected! connfd=%d id=%d \n", peeraddr.c_str(), channel->fd(), channel->id());
 			}
 
-			if(cProxy->isReconnect())
+			if(cSock->isReconnect())
 			{
 				
 			}
 		};
 
-		auto onMessage = [](const SocketChannelPtr &channel, Buffer *buf) 
+		auto onMessage = [cSock](const SocketChannelPtr &channel, Buffer *buf) 
 		{
 			MessagePacket packet;
 			memcpy(&packet, buf->data(), MessagePacket::PackLenth);
 			if(packet.dealType == MsgDeal::Res)
 			{
-				auto& reqMap = GetGlobalServer()->GetCSock()->GetMsgMap();
-				if(reqMap.contains(packet.msgId)) //client sock request
+				if(auto task = cSock->GetMsg(packet.msgId)) //client sock request
 				{
-					auto task = reqMap.at(packet.msgId);
-					reqMap.erase(packet.msgId);
+					cSock->DelMsg(packet.msgId);
 					task->Resume();
 					Message* message = ((DNTask<Message*>*)task)->GetResult();
 					message->ParseFromArray((const char*)buf->data() + MessagePacket::PackLenth, packet.pkgLenth);

@@ -10,8 +10,8 @@ import MessagePack;
 import AuthServerHelper;
 import AfxCommon;
 
-#define DNPrint(fmt, ...) printf("[%s] {%s} ->" "\n" fmt "\n", GetNowTimeStr(), __FUNCTION__, ##__VA_ARGS__);
-#define DNPrintErr(fmt, ...) fprintf(stderr, "[%s] {%s} ->" "\n" fmt "\n", GetNowTimeStr(), __FUNCTION__, ##__VA_ARGS__);
+#define DNPrint(fmt, ...) printf("[%s] {%s} ->" "\n" fmt "\n", GetNowTimeStr().c_str(), __FUNCTION__, ##__VA_ARGS__);
+#define DNPrintErr(fmt, ...) fprintf(stderr, "[%s] {%s} ->" "\n" fmt "\n", GetNowTimeStr().c_str(), __FUNCTION__, ##__VA_ARGS__);
 
 using namespace std;
 using namespace google::protobuf;
@@ -24,18 +24,17 @@ export DNTaskVoid Msg_RegistSrv()
 	auto client = AuthServer->GetCSock();
 	auto server = AuthServer->GetSSock();
 	auto msgId = client->GetMsgId();
-	auto& reqMap = client->GetMsgMap();
 	
 	// first Can send Msg?
-	if(reqMap.contains(msgId))
+	if(client->GetMsg(msgId))
 	{
 		DNPrintErr("+++++ %lu, \n", msgId);
 		co_return;
 	}
-	else
-	{
-		DNPrint("----- %lu, \n", msgId);
-	}
+	// else
+	// {
+	// 	printf("----- %lu, \n", msgId);
+	// }
 
 	COM_ReqRegistSrv requset;
 	requset.set_server_type((int)AuthServer->GetServerType());
@@ -56,8 +55,7 @@ export DNTaskVoid Msg_RegistSrv()
 	}();
 
 	
-
-	reqMap.emplace(msgId, (DNTask<void*>*)&dataChannel);
+	client->AddMsg(msgId, (DNTask<void*>*)&dataChannel);
 	
 	// wait data parse
 	client->send(binData);
