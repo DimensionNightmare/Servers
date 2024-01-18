@@ -7,6 +7,7 @@ cmake_minimum_required (VERSION 3.8)
 if (POLICY CMP0141)
 	cmake_policy(SET CMP0141 NEW)
 	set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:${CMAKE_BUILD_TYPE},RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:${CMAKE_BUILD_TYPE},RelWithDebInfo>:ProgramDatabase>>")
+	set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDLL$<$<CONFIG:${CMAKE_BUILD_TYPE}>:${CMAKE_BUILD_TYPE}>")
 endif()
 
 # module is the experimental function. cmake experimental api needs to be enabled
@@ -34,6 +35,8 @@ set(CMAKE_PREFIX_PATH
 
 find_package(libhv CONFIG REQUIRED)
 find_package(Protobuf CONFIG REQUIRED)
+
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /Od")
 
 ################################ DimensionNightmareServer ################################
 project (DimensionNightmareServer)

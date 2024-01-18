@@ -47,7 +47,7 @@ DNClientProxy::~DNClientProxy()
 {
 	for(auto& [k,v] : mMsgList)
 	{
-		v->Destroy();
+		v->CallResume();
 	}
 		
 	mMsgList.clear();

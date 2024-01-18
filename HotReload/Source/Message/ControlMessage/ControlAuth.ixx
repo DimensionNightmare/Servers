@@ -26,5 +26,12 @@ export void Msg_AuthAccount(const SocketChannelPtr &channel, unsigned int msgId,
 	response.SerializeToArray(binData.data(), binData.size());
 
 	MessagePack(msgId, MsgDeal::Res, "", binData);
-	channel->write(binData);
+	
+	GetControlServer()->GetEntityManager();
+
+	// GetControlServer()->GetSSock()->loop()->setTimeout(10000, [channel, binData](TimerID timerID) 
+	// {
+        channel->write(binData);
+    // });
+
 }

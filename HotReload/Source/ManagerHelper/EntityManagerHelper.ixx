@@ -37,6 +37,10 @@ CastTEntity* EntityManagerHelper<TEntity>::AddEntity(const SocketChannelPtr& cha
 		entity = new TEntity;
 		EntityManager<TEntity>::mEntityMap.emplace(entityId, entity);
 		channel->setContext(entity);
+
+		auto castEntity = static_cast<CastTEntity*>(entity);
+		castEntity->SetID(entityId);
+		castEntity->SetSock(channel);
 	}
 
 	return static_cast<CastTEntity*>(entity);

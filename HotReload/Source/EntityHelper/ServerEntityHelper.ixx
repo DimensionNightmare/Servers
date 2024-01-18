@@ -19,6 +19,9 @@ public:
 
 	void SetServerIp(std::string& type){sIpAddr = type;}
 	auto GetServerIp(){ return sIpAddr;}
+
+	void SetConnNum(unsigned int num){IConnNum = num;}
+	auto GetConnNum(){ return IConnNum;}
 };
 
 module:private;

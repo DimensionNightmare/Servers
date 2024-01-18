@@ -7,7 +7,7 @@ import DNServer;
 import DNServerProxy;
 import MessagePack;
 import ServerEntity;
-import EntityManager;
+import ServerEntityManager;
 import AfxCommon;
 
 #define DNPrint(fmt, ...) printf("[%s] {%s} ->" "\n" fmt "\n", GetNowTimeStr().c_str(), __FUNCTION__, ##__VA_ARGS__);
@@ -39,12 +39,12 @@ public:
 
 public: // dll override
 	virtual DNServerProxy* GetSSock(){return pSSock;}
-	virtual EntityManager<ServerEntity>* GetEntityManager(){return pEntityMan;}
+	virtual ServerEntityManager<ServerEntity>* GetEntityManager(){return pEntityMan;}
 
 protected: // dll proxy
 	DNServerProxy* pSSock;
 
-	EntityManager<ServerEntity>* pEntityMan;
+	ServerEntityManager<ServerEntity>* pEntityMan;
 };
 
 module:private;
@@ -100,7 +100,7 @@ bool ControlServer::Init(map<string, string> &param)
 	pSSock->setUnpack(setting.get());
 	pSSock->setThreadNum(4);
 
-	pEntityMan = new EntityManager<ServerEntity>;
+	pEntityMan = new ServerEntityManager<ServerEntity>;
 
 	return true;
 }

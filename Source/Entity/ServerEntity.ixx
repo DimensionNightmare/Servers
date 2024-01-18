@@ -18,6 +18,7 @@ public: // dll override
 protected: // dll proxy
     ServerType emServerType;
 	std::string sIpAddr;
+	unsigned int IConnNum;
 };
 
 module:private;
@@ -26,6 +27,7 @@ ServerEntity::ServerEntity()
 {
 	emServerType = ServerType::None;
 	sIpAddr = "";
+	IConnNum = 0;
 }
 
 ServerEntity::~ServerEntity()

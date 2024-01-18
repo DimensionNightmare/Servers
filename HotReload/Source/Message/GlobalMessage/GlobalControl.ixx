@@ -49,7 +49,7 @@ export DNTaskVoid Msg_RegistSrv()
 	
 	// data alloc
 	COM_ResRegistSrv response;
-	auto dataChannel = [&]()->DNTask<Message*>
+	auto dataChannel = [&response]()->DNTask<Message*>
 	{
 		co_return &response;
 	}();

@@ -1,4 +1,5 @@
 module;
+#include "google/protobuf/util/json_util.h"
 #include "AuthControl.pb.h"
 #include "hv/HThread.h"
 #include "hv/HttpMessage.h"
@@ -72,9 +73,9 @@ export void ApiLogin(HttpService* service)
 			return;
 		}
 
-		[&]()-> DNTaskVoid
+		[username,password,writer]()-> DNTaskVoid
 		{
-			auto writerProxy = writer;
+			// auto writerProxy = writer;
 			A2C_AuthAccount requset;
 			requset.set_username(username);
 			requset.set_password(password);
@@ -103,35 +104,55 @@ export void ApiLogin(HttpService* service)
 			MessagePack(msgId, MsgDeal::Req, requset.GetDescriptor()->full_name(), binData);
 			
 			// data alloc
-			auto dataChannel = [&]()->DNTask<Message*>
+			auto dataChannel = [&response]()->DNTask<Message*>
 			{
 				co_return &response;
 			}();
 
 			client->AddMsg(msgId, (DNTask<void*>*)&dataChannel);
+
+			// regist Close event to release memory
+			if(writer->onclose)
+			{
+				writer->onclose();
+				writer->onclose = nullptr;
+			}
+
+			writer->onclose = [&dataChannel, client, msgId]()
+			{
+				client->DelMsg(msgId);
+				dataChannel.CallResume();
+			};
 			
 			// wait data parse
 			client->send(binData);
 			co_await dataChannel;
 
+			writer->onclose = nullptr;
+
 			Json retData;
 
 			retData["code"] = HTTP_STATUS_OK;
+			response.set_ip_addr("asdasda");
+			response.set_token("asdas");
+			response.set_state_code(958);
+			response.set_expired_timespan(65664);
+			binData.clear();
+			util::MessageToJsonString(response, &binData);
+			retData["data"] = Json::parse(binData);
+			// {
+			// 	{"timespan"	, 50505005005	},
+			// 	{"token"	, 3.140225005	},
+			// 	{"servPort"	, 90			},
+			// 	{"userId"	, "hello"		},
+			// 	{"servIp"	, "127.0.0.1"	},
+			// 	{"roleList"	, {127,265}	},
+			// 	{"rolemap"	, { {"job", {1,1}},{"sex" ,{1,2}}}},
+			// };
 
-			retData["data"]  =
-			{
-				{"timespan"	, 50505005005	},
-				{"token"	, 3.140225005	},
-				{"servPort"	, 90			},
-				{"userId"	, "hello"		},
-				{"servIp"	, "127.0.0.1"	},
-				{"roleList"	, {127,265}	},
-				{"rolemap"	, { {"job", {1,1}},{"sex" ,{1,2}}}},
-			};
+			writer->response->SetBody(retData.dump());
 
-			writerProxy->response->SetBody(retData.dump());
-
-			writerProxy->End();
+			writer->End();
 
 			dataChannel.Destroy();
 

@@ -20,23 +20,39 @@ export void Msg_RegistSrv(const SocketChannelPtr &channel, unsigned int msgId, M
 	COM_ReqRegistSrv* requset = (COM_ReqRegistSrv*)msg;
 	COM_ResRegistSrv response;
 
+	auto entityMan = GetControlServer()->GetEntityManager();
+
 	//exist?
 	if (auto entity = channel->getContext<ServerEntityHelper>())
 	{
 		response.set_success(false);
 	}
 
-	else if (auto entity =  GetControlServer()->GetEntityManager()->GetEntity<ServerEntityHelper>(channel->peeraddr()))
+	else if (auto entity =  entityMan->GetEntity<ServerEntityHelper>(channel->peeraddr()))
 	{
-		response.set_success(false);
+		auto child = entity->GetChild();
+		// wait destroy`s destroy
+		if (auto timerId = child->GetTimerId())
+		{
+			child->SetTimerId(0);
+			GetControlServer()->GetSSock()->loop()->killTimer(timerId);
+		}
+
+		// already connect
+		if(auto sock = child->GetSock())
+		{
+			response.set_success(false);
+		}
+		else
+		{
+			child->SetSock(channel);
+			response.set_success(true);
+		}
+		
 	}
 
-	else if (auto entity = GetControlServer()->GetEntityManager()->AddEntity<ServerEntityHelper>(channel, channel->id()))
+	else if (auto entity = entityMan->AddEntity<ServerEntityHelper>(channel, channel->id(), (ServerType)requset->server_type()))
 	{
-		entity->SetServerType((ServerType)requset->server_type());
-		auto base = entity->GetChild();
-		base->SetID(channel->id());
-		base->SetSock(channel);
 		response.set_success(true);
 	}
 	

@@ -32,7 +32,7 @@ void HandleGlobalServerInit(DNServer *server)
 
 	if (auto sSock = serverProxy->GetSSock())
 	{
-		auto onConnection = [&](const SocketChannelPtr &channel)
+		auto onConnection = [](const SocketChannelPtr &channel)
 		{
 			string peeraddr = channel->peeraddr();
 			if (channel->isConnected())
