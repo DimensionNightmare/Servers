@@ -8,7 +8,7 @@ module;
 #include <functional>
 export module AuthMessage;
 
-export import AuthControl;
+export import :AuthControl;
 import ApiManager;
 import AfxCommon;
 

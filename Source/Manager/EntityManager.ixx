@@ -18,7 +18,7 @@ public:
 public: // dll override
 
 protected: // dll proxy
-    map<int, TEntity*> mEntityMap;
+    map<unsigned int, TEntity*> mEntityMap;
 };
 
 module:private;

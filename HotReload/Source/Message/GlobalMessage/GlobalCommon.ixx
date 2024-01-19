@@ -2,11 +2,11 @@ module;
 #include "Common.pb.h"
 #include "hv/Channel.h"
 
-export module ControlMessage:ControlCommon;
+export module GlobalMessage:GlobalCommon;
 
 import DNTask;
 import MessagePack;
-import ControlServerHelper;
+import GlobalServerHelper;
 import ServerEntityHelper;
 
 using namespace google::protobuf;
@@ -20,12 +20,44 @@ export void EXE_Msg_RegistSrv(const SocketChannelPtr &channel, unsigned int msgI
 	COM_ReqRegistSrv* requset = (COM_ReqRegistSrv*)msg;
 	COM_ResRegistSrv response;
 
-	auto entityMan = GetControlServer()->GetEntityManager();
+	auto entityMan = GetGlobalServer()->GetEntityManager();
 
 	//exist?
 	if (auto entity = channel->getContext<ServerEntityHelper>())
 	{
 		response.set_success(false);
+	}
+
+	// take task to regist !
+	else if (requset->server_index())
+	{
+		auto entity = entityMan->GetEntity<ServerEntityHelper>(requset->server_index());
+		if (entity)
+		{
+			auto child = entity->GetChild();
+			// wait destroy`s destroy
+			if (auto timerId = child->GetTimerId())
+			{
+				child->SetTimerId(0);
+				GetGlobalServer()->GetSSock()->loop()->killTimer(timerId);
+			}
+
+			// already connect
+			if(auto sock = child->GetSock())
+			{
+				response.set_success(false);
+			}
+			else
+			{
+				child->SetSock(channel);
+				response.set_success(true);
+			}
+		}
+		else
+		{
+			response.set_success(false);
+		}
+		
 	}
 
 	else if (auto entity = entityMan->AddEntity<ServerEntityHelper>(channel, entityMan->GetServerIndex(), (ServerType)requset->server_type()))

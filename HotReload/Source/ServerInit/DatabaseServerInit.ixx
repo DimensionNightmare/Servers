@@ -3,13 +3,13 @@ module;
 #include "hv/Channel.h"
 
 #include <functional>
-export module GlobalServerInit;
+export module DatabaseServerInit;
 
 import DNServer;
-import GlobalServer;
-import GlobalServerHelper;
+import DatabaseServer;
+import DatabaseServerHelper;
 import MessagePack;
-import GlobalMessage;
+import DatabaseMessage;
 import AfxCommon;
 
 #define DNPrint(fmt, ...) printf("[%s] {%s} ->" "\n" fmt "\n", GetNowTimeStr().c_str(), __FUNCTION__, ##__VA_ARGS__);
@@ -19,16 +19,16 @@ using namespace hv;
 using namespace std;
 using namespace google::protobuf;
 
-export void HandleGlobalServerInit(DNServer *server);
-export void HandleGlobalServerShutdown(DNServer *server);
+export void HandleDatabaseServerInit(DNServer *server);
+export void HandleDatabaseServerShutdown(DNServer *server);
 
 module:private;
 
-void HandleGlobalServerInit(DNServer *server)
+void HandleDatabaseServerInit(DNServer *server)
 {
-	SetGlobalServer(static_cast<GlobalServer*>(server));
+	SetDatabaseServer(static_cast<DatabaseServer*>(server));
 
-	auto serverProxy = GetGlobalServer();
+	auto serverProxy = GetDatabaseServer();
 
 	if (auto sSock = serverProxy->GetSSock())
 	{
@@ -111,7 +111,7 @@ void HandleGlobalServerInit(DNServer *server)
 			else if(packet.dealType == MsgDeal::Req)
 			{
 				string msgData((char*)buf->data() + MessagePacket::PackLenth, packet.pkgLenth);
-				GlobalMessageHandle::MsgHandle(channel, packet.msgId, packet.msgHashId, msgData);
+				DatabaseMessageHandle::MsgHandle(channel, packet.msgId, packet.msgHashId, msgData);
 			}
 			else
 			{
@@ -126,9 +126,9 @@ void HandleGlobalServerInit(DNServer *server)
 
 }
 
-void HandleGlobalServerShutdown(DNServer *server)
+void HandleDatabaseServerShutdown(DNServer *server)
 {
-	auto serverProxy = GetGlobalServer();
+	auto serverProxy = GetDatabaseServer();
 
 	if (auto sSock = serverProxy->GetSSock())
 	{

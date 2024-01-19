@@ -73,9 +73,9 @@ export void ApiLogin(HttpService* service)
 			return;
 		}
 
-		[username,password,writer]()-> DNTaskVoid
+		[username,password,&writer]()-> DNTaskVoid
 		{
-			// auto writerProxy = writer;
+			auto writerProxy = writer;	//sharedptr ref count ++
 			A2C_AuthAccount requset;
 			requset.set_username(username);
 			requset.set_password(password);
@@ -112,13 +112,13 @@ export void ApiLogin(HttpService* service)
 			client->AddMsg(msgId, (DNTask<void*>*)&dataChannel);
 
 			// regist Close event to release memory
-			if(writer->onclose)
+			if(writerProxy->onclose)
 			{
-				writer->onclose();
-				writer->onclose = nullptr;
+				writerProxy->onclose();
+				writerProxy->onclose = nullptr;
 			}
 
-			writer->onclose = [&dataChannel, client, msgId]()
+			writerProxy->onclose = [&dataChannel, client, msgId]()
 			{
 				client->DelMsg(msgId);
 				dataChannel.CallResume();
@@ -128,7 +128,7 @@ export void ApiLogin(HttpService* service)
 			client->send(binData);
 			co_await dataChannel;
 
-			writer->onclose = nullptr;
+			writerProxy->onclose = nullptr;
 
 			Json retData;
 
@@ -150,9 +150,9 @@ export void ApiLogin(HttpService* service)
 			// 	{"rolemap"	, { {"job", {1,1}},{"sex" ,{1,2}}}},
 			// };
 
-			writer->response->SetBody(retData.dump());
+			writerProxy->response->SetBody(retData.dump());
 
-			writer->End();
+			writerProxy->End();
 
 			dataChannel.Destroy();
 

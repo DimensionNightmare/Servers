@@ -1,13 +1,12 @@
 module;
 #include "Common.pb.h"
-#include "GlobalControl.pb.h"
 
 #include <coroutine>
-export module GlobalMessage:GlobalControl;
+export module LogicMessage:LogicGlobal;
 
 import DNTask;
 import MessagePack;
-import GlobalServerHelper;
+import LogicServerHelper;
 import AfxCommon;
 
 #define DNPrint(fmt, ...) printf("[%s] {%s} ->" "\n" fmt "\n", GetNowTimeStr().c_str(), __FUNCTION__, ##__VA_ARGS__);
@@ -20,9 +19,9 @@ using namespace GMsg::Common;
 // client request
 export DNTaskVoid Msg_RegistSrv()
 {
-	auto globalServer = GetGlobalServer();
-	auto client = globalServer->GetCSock();
-	auto server = globalServer->GetSSock();
+	auto logicServer = GetLogicServer();
+	auto client = logicServer->GetCSock();
+	auto server = logicServer->GetSSock();
 	auto msgId = client->GetMsgId();
 	
 	// first Can send Msg?
@@ -37,7 +36,7 @@ export DNTaskVoid Msg_RegistSrv()
 	// }
 
 	COM_ReqRegistSrv requset;
-	requset.set_server_type((int)globalServer->GetServerType());
+	requset.set_server_type((int)logicServer->GetServerType());
 	requset.set_ip(server->host);
 	requset.set_port(server->port);
 	

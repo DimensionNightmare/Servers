@@ -9,9 +9,9 @@ module;
 #include <functional>
 export module ControlMessage;
 
-import ControlGlobal;
-import ControlCommon;
-import ControlAuth;
+export import :ControlGlobal;
+import :ControlCommon;
+import :ControlAuth;
 import AfxCommon;
 
 #define DNPrint(fmt, ...) printf("[%s] {%s} ->" "\n" fmt "\n", GetNowTimeStr().c_str(), __FUNCTION__, ##__VA_ARGS__);
@@ -65,9 +65,11 @@ void ControlMessageHandle::RegMsgHandle()
 {
 	std::hash<string> hashStr;
 
-	const Message* msg = COM_ReqRegistSrv::internal_default_instance();
-	MHandleMap.emplace( hashStr(msg->GetDescriptor()->full_name()), make_pair(msg, &Msg_RegistSrv));
+	const Message* msg = nullptr;
+	
+	msg = COM_ReqRegistSrv::internal_default_instance();
+	MHandleMap.emplace( hashStr(msg->GetDescriptor()->full_name()), make_pair(msg, &EXE_Msg_RegistSrv));
 
 	msg = A2C_AuthAccount::internal_default_instance();
-	MHandleMap.emplace( hashStr(msg->GetDescriptor()->full_name()), make_pair(msg, &Msg_AuthAccount));
+	MHandleMap.emplace( hashStr(msg->GetDescriptor()->full_name()), make_pair(msg, &EXE_Msg_AuthAccount));
 }

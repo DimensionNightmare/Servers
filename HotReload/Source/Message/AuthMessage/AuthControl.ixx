@@ -3,7 +3,7 @@ module;
 #include "AuthControl.pb.h"
 
 #include <coroutine>
-export module AuthControl;
+export module AuthMessage:AuthControl;
 
 import DNTask;
 import MessagePack;

@@ -4,7 +4,7 @@ module;
 #include "hv/Channel.h"
 
 #include <coroutine>
-export module ControlMessage:ControlAuth;
+export module GlobalMessage:GlobalAuth;
 
 import DNTask;
 import MessagePack;
@@ -53,7 +53,7 @@ export DNTaskVoid EXE_Msg_AuthAccount(const SocketChannelPtr &channel, unsigned 
 	else
 	{
 		// response.set_state_code(0);
-
+		
 		// message change to global
 		auto dataChannel = [&response]()->DNTask<Message*>
 		{
@@ -80,10 +80,7 @@ export DNTaskVoid EXE_Msg_AuthAccount(const SocketChannelPtr &channel, unsigned 
 
 	MessagePack(msgId, MsgDeal::Res, "", binData);
 	
-	// GetControlServer()->GetSSock()->loop()->setTimeout(10000, [channel, binData](TimerID timerID) 
-	// {
-        channel->write(binData);
-    // });
+	channel->write(binData);
 
 	co_return;
 }

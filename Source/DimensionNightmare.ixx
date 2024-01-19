@@ -12,6 +12,9 @@ import ControlServer;
 import GlobalServer;
 import AuthServer;
 import AfxCommon;
+import GateServer;
+import DatabaseServer;
+import LogicServer;
 
 #define DNPrint(fmt, ...) printf("[%s] {%s} ->" "\n" fmt "\n", GetNowTimeStr().c_str(), __FUNCTION__, ##__VA_ARGS__);
 #define DNPrintErr(fmt, ...) fprintf(stderr, "[%s] {%s} ->" "\n" fmt "\n", GetNowTimeStr().c_str(), __FUNCTION__, ##__VA_ARGS__);
@@ -197,6 +200,15 @@ bool DimensionNightmare::Init(map<string, string> &param)
 		break;
 	case ServerType::AuthServer:
 		pServer = new AuthServer;
+		break;
+	case ServerType::GateServer:
+		pServer = new GateServer;
+		break;
+	case ServerType::DatabaseServer:
+		pServer = new DatabaseServer;
+		break;
+	case ServerType::LogicServer:
+		pServer = new LogicServer;
 		break;
 	default:
 		DNPrintErr("ServerType is Not Vaild! \n");

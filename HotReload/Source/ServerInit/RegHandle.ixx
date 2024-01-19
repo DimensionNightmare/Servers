@@ -5,6 +5,9 @@ import DNServer;
 import GlobalServerInit;
 import ControlServerInit;
 import AuthServerInit;
+import GateServerInit;
+import DatabaseServerInit;
+import LogicServerInit;
 
 #ifdef HOTRELOAD_BUILD
 #define HOTRELOAD __declspec(dllexport)
@@ -38,6 +41,21 @@ int InitHotReload(DNServer &base)
 	case ServerType::AuthServer:
 		{
 			HandleAuthServerInit(&base);
+		}
+		break;
+	case ServerType::GateServer:
+		{
+			HandleGateServerInit(&base);
+		}
+		break;
+	case ServerType::DatabaseServer:
+		{
+			HandleDatabaseServerInit(&base);
+		}
+		break;
+	case ServerType::LogicServer:
+		{
+			HandleLogicServerInit(&base);
 		}
 		break;
 	}

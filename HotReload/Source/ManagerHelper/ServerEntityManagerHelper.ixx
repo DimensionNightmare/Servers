@@ -24,7 +24,11 @@ public:
     void RemoveEntity(const SocketChannelPtr& channel);
 
 	template<class CastTEntity = ServerEntityHelper>
-    CastTEntity* GetEntity(const string& ip);
+    CastTEntity* GetEntity(unsigned int id);
+
+	auto& GetEntity(ServerType type);
+
+	[[nodiscard]] unsigned int GetServerIndex();
 };
 
 template <class TEntity>
@@ -32,14 +36,14 @@ template <class CastTEntity>
 CastTEntity* ServerEntityManagerHelper<TEntity>::AddEntity(const SocketChannelPtr& channel, unsigned int entityId, ServerType serverType)
 {
 	TEntity* entity = nullptr;
-	if (ServerEntityManager<TEntity>::mEntityMap.count(entityId))
+	if (this->mEntityMap.count(entityId))
 	{
-		entity = ServerEntityManager<TEntity>::mEntityMap[entityId];
+		entity = this->mEntityMap[entityId];
 	}
 	else
 	{
 		entity = new TEntity;
-		ServerEntityManager<TEntity>::mEntityMap.emplace(entityId, entity);
+		this->mEntityMap.emplace(entityId, entity);
 		channel->setContext(entity);
 
 		auto castEntity = static_cast<CastTEntity*>(entity);
@@ -49,12 +53,7 @@ CastTEntity* ServerEntityManagerHelper<TEntity>::AddEntity(const SocketChannelPt
 
 		castEntity->SetServerType(serverType);
 
-		// if(!ServerEntityManager<TEntity>::mEntityMapList.count(serverType))
-		// {
-		// 	ServerEntityManager<TEntity>::mEntityMapList[serverType] = new list<TEntity*>();
-		// }
-
-		ServerEntityManager<TEntity>::mEntityMapList[serverType].emplace_back(entity);
+		this->mEntityMapList[serverType].emplace_back(entity);
 
 		return castEntity;
 	}
@@ -73,8 +72,10 @@ void ServerEntityManagerHelper<TEntity>::RemoveEntity(const SocketChannelPtr& ch
 		printf("destory entity\n");
 		channel->setContext(nullptr);
 		auto castEntity = static_cast<CastTEntity*>(entity);
-		ServerEntityManager<TEntity>::mEntityMap.erase(castEntity->GetChild()->GetID());
-		ServerEntityManager<TEntity>::mEntityMapList[castEntity->GetServerType()].remove(entity);
+		auto serverIndex = castEntity->GetChild()->GetID();
+		this->mEntityMap.erase(serverIndex);
+		this->mIdleServerId.push_back(serverIndex);
+		this->mEntityMapList[castEntity->GetServerType()].remove(entity);
 		delete entity;
 
 	}
@@ -83,13 +84,26 @@ void ServerEntityManagerHelper<TEntity>::RemoveEntity(const SocketChannelPtr& ch
 
 template <class TEntity>
 template <class CastTEntity>
-CastTEntity *ServerEntityManagerHelper<TEntity>::GetEntity(const string& ip)
+CastTEntity *ServerEntityManagerHelper<TEntity>::GetEntity(unsigned int id)
 {
-	for(auto &[k,v]: ServerEntityManager<TEntity>::mEntityMap)
+	// allow return empty
+	return static_cast<CastTEntity*>(this->mEntityMap[id]);
+}
+
+template <class TEntity>
+auto& ServerEntityManagerHelper<TEntity>::GetEntity(ServerType type)
+{
+	return this->mEntityMapList[type];
+}
+
+template <class TEntity>
+unsigned int ServerEntityManagerHelper<TEntity>::GetServerIndex()
+{
+	if(this->mIdleServerId.size() > 0)
 	{
-		auto castObj = static_cast<CastTEntity*>(v);
-		if(castObj->GetServerIp() == ip)
-			return castObj;
+		auto index = this->mIdleServerId.front();
+		this->mIdleServerId.pop_front();
+		return index;
 	}
-	return nullptr;
+	return this->iServerId++;
 }

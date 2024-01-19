@@ -2,7 +2,7 @@ module;
 #include "hv/EventLoop.h"
 #include "hv/hsocket.h"
 
-export module GlobalServer;
+export module DatabaseServer;
 
 import DNServer;
 import DNServerProxy;
@@ -18,12 +18,12 @@ import ServerEntityManager;
 using namespace std;
 using namespace hv;
 
-export class GlobalServer : public DNServer
+export class DatabaseServer : public DNServer
 {
 public:
-	GlobalServer();
+	DatabaseServer();
 
-	~GlobalServer();
+	~DatabaseServer();
 
 	virtual bool Init(map<string, string> &param) override;
 
@@ -43,32 +43,23 @@ public: // dll override
 	virtual DNServerProxy* GetSSock(){return pSSock;}
 	virtual DNClientProxy* GetCSock(){return pCSock;}
 
-	virtual ServerEntityManager<ServerEntity>* GetEntityManager(){return pEntityMan;}
-
 protected: // dll proxy
 	DNServerProxy* pSSock;
 	DNClientProxy* pCSock;
-
-	ServerEntityManager<ServerEntity>* pEntityMan;
 };
 
 module:private;
 
-GlobalServer::GlobalServer()
+DatabaseServer::DatabaseServer()
 {
-	emServerType = ServerType::GlobalServer;
+	emServerType = ServerType::DatabaseServer;
 	pSSock = nullptr;
 	pCSock = nullptr;
-
-	pEntityMan = nullptr;
 }
 
-GlobalServer::~GlobalServer()
+DatabaseServer::~DatabaseServer()
 {
 	Stop();
-
-	delete pEntityMan;
-	pEntityMan = nullptr;
 
 	if(pSSock)
 	{
@@ -85,7 +76,7 @@ GlobalServer::~GlobalServer()
 	}
 }
 
-bool GlobalServer::Init(map<string, string> &param)
+bool DatabaseServer::Init(map<string, string> &param)
 {
 	int port = 0;
 	
@@ -143,16 +134,14 @@ bool GlobalServer::Init(map<string, string> &param)
 		pCSock->setUnpack(setting);
 	}
 	
-	pEntityMan = new ServerEntityManager<ServerEntity>;
-
 	return true;
 }
 
-void GlobalServer::InitCmd(map<string, function<void(stringstream *)>> &cmdMap)
+void DatabaseServer::InitCmd(map<string, function<void(stringstream *)>> &cmdMap)
 {
 }
 
-bool GlobalServer::Start()
+bool DatabaseServer::Start()
 {
 	if(!pSSock)
 	{
@@ -170,7 +159,7 @@ bool GlobalServer::Start()
 	return true;
 }
 
-bool GlobalServer::Stop()
+bool DatabaseServer::Stop()
 {
 	pSSock->stop();
 
@@ -182,7 +171,7 @@ bool GlobalServer::Stop()
 	return true;
 }
 
-void GlobalServer::Pause()
+void DatabaseServer::Pause()
 {
 	LoopEvent([](hv::EventLoopPtr loop)
 	{ 
@@ -190,7 +179,7 @@ void GlobalServer::Pause()
 	});
 }
 
-void GlobalServer::Resume()
+void DatabaseServer::Resume()
 {
 	LoopEvent([](hv::EventLoopPtr loop)
 	{ 
@@ -198,7 +187,7 @@ void GlobalServer::Resume()
 	});
 }
 
-void GlobalServer::LoopEvent(function<void(EventLoopPtr)> func)
+void DatabaseServer::LoopEvent(function<void(EventLoopPtr)> func)
 {
     map<long,EventLoopPtr> looped;
     while(EventLoopPtr pLoop = pSSock->loop())

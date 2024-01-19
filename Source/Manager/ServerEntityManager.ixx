@@ -22,6 +22,9 @@ public: // dll override
 
 protected: // dll proxy
     map<ServerType, list<TEntity*> > mEntityMapList;
+	// server pull server
+	atomic<unsigned int> iServerId;
+	list<unsigned int> mIdleServerId;
 };
 
 module:private;
@@ -30,6 +33,8 @@ template <class TEntity>
 ServerEntityManager<TEntity>::ServerEntityManager()
 {
 	mEntityMapList.clear();
+	iServerId = 0;
+	mIdleServerId.clear();
 }
 
 template <class TEntity>

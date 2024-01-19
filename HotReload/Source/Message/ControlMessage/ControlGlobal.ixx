@@ -2,7 +2,7 @@ module;
 #include "GlobalControl.pb.h"
 #include "hv/Channel.h"
 
-export module ControlGlobal;
+export module ControlMessage:ControlGlobal;
 
 import DNTask;
 import MessagePack;
