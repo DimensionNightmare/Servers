@@ -18,6 +18,8 @@ public:
 
 	DNClientProxyHelper* GetCSock(){ return nullptr;}
 	ServerEntityManagerHelper<ServerEntity>* GetEntityManager(){ return nullptr;}
+
+	void UpdateServerGroup();
 };
 
 static GlobalServerHelper* PGlobalServerHelper = nullptr;
@@ -31,4 +33,13 @@ export void SetGlobalServer(GlobalServer* server)
 export GlobalServerHelper* GetGlobalServer()
 {
 	return PGlobalServerHelper;
+}
+
+void GlobalServerHelper::UpdateServerGroup()
+{
+	auto gates = GetEntityManager()->GetEntity(ServerType::GateServer);
+	auto dbs = GetEntityManager()->GetEntity(ServerType::DatabaseServer);
+	auto logics = GetEntityManager()->GetEntity(ServerType::LogicServer);
+
+	
 }

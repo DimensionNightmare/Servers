@@ -83,6 +83,21 @@ int ShutdownHotReload(DNServer &base)
 			HandleAuthServerShutdown(&base);
 		}
 		break;
+	case ServerType::GateServer:
+		{
+			HandleGateServerShutdown(&base);
+		}
+		break;
+	case ServerType::DatabaseServer:
+		{
+			HandleDatabaseServerShutdown(&base);
+		}
+		break;
+	case ServerType::LogicServer:
+		{
+			HandleLogicServerShutdown(&base);
+		}
+		break;
 	}
 
 	return 0;

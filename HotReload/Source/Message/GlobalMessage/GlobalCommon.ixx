@@ -22,6 +22,13 @@ export void EXE_Msg_RegistSrv(const SocketChannelPtr &channel, unsigned int msgI
 
 	auto entityMan = GetGlobalServer()->GetEntityManager();
 
+	ServerType regType = (ServerType)requset->server_type();
+	
+	if(regType < ServerType::GateServer || regType >= ServerType::Max)
+	{
+		response.set_success(false);
+	}
+
 	//exist?
 	if (auto entity = channel->getContext<ServerEntityHelper>())
 	{
@@ -60,7 +67,7 @@ export void EXE_Msg_RegistSrv(const SocketChannelPtr &channel, unsigned int msgI
 		
 	}
 
-	else if (auto entity = entityMan->AddEntity<ServerEntityHelper>(channel, entityMan->GetServerIndex(), (ServerType)requset->server_type()))
+	else if (auto entity = entityMan->AddEntity<ServerEntityHelper>(channel, entityMan->GetServerIndex(), regType))
 	{
 		response.set_success(true);
 	}
@@ -71,4 +78,11 @@ export void EXE_Msg_RegistSrv(const SocketChannelPtr &channel, unsigned int msgI
 
 	MessagePack(msgId, MsgDeal::Res, "", binData);
 	channel->write(binData);
+
+	if(!response.success())
+	{
+		return;
+	}
+
+	GetGlobalServer()->UpdateServerGroup();
 }

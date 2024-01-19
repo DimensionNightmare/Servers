@@ -8,6 +8,7 @@ import DNTask;
 import MessagePack;
 import ControlServerHelper;
 import ServerEntityHelper;
+import DNServer;
 
 using namespace google::protobuf;
 using namespace GMsg::Common;
@@ -22,17 +23,24 @@ export void EXE_Msg_RegistSrv(const SocketChannelPtr &channel, unsigned int msgI
 
 	auto entityMan = GetControlServer()->GetEntityManager();
 
-	//exist?
-	if (auto entity = channel->getContext<ServerEntityHelper>())
+	ServerType regType = (ServerType)requset->server_type();
+	
+	if(regType != ServerType::GlobalServer)
 	{
 		response.set_success(false);
 	}
 
-	else if (auto entity = entityMan->AddEntity<ServerEntityHelper>(channel, entityMan->GetServerIndex(), (ServerType)requset->server_type()))
+	//exist?
+	else if (auto entity = channel->getContext<ServerEntityHelper>())
+	{
+		response.set_success(false);
+	}
+
+	else if (auto entity = entityMan->AddEntity<ServerEntityHelper>(channel, entityMan->GetServerIndex(), regType))
 	{
 		response.set_success(true);
 	}
-	
+
 	string binData;
 	binData.resize(response.ByteSize());
 	response.SerializeToArray(binData.data(), binData.size());
