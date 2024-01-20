@@ -230,6 +230,7 @@ bool DimensionNightmare::Init(map<string, string> &param)
 
 	if (OnRegHotReload())
 	{
+		pServer->SetRun(true); 
 		pServer->Start();
 	}
 
@@ -307,6 +308,10 @@ bool DimensionNightmare::OnRegHotReload()
 
 bool DimensionNightmare::OnUnregHotReload()
 {
+	// launch error pHotDll is Null
+	if(!pHotDll)
+		return false;
+
 	if (auto funtPtr = pHotDll->GetFuncPtr("ShutdownHotReload"))
 	{
 		using ShutdownHotReload = int (*)(DNServer &);

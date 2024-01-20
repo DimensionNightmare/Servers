@@ -56,6 +56,7 @@ export void EXE_Msg_RegistSrv(const SocketChannelPtr &channel, unsigned int msgI
 			}
 			else
 			{
+				entity->SetLinkNode(nullptr);
 				child->SetSock(channel);
 				response.set_success(true);
 			}

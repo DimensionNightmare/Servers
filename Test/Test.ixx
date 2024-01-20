@@ -18,6 +18,8 @@
 
 using namespace hv;
 
+using namespace std;
+
 class A
 {
 public:
@@ -90,23 +92,21 @@ int main1()
 
 void request(HttpClient* cli, HttpRequestPtr req, int num) 
 {
-    int ret = cli->sendAsync(req, [&](const HttpResponsePtr& resp) {
-        printf("test_http_async_client response thread tid=%ld\n", hv_gettid());
+    int ret = cli->sendAsync(req, [=](const HttpResponsePtr& resp) {
+        // printf("test_http_async_client response thread tid=%ld\n", hv_gettid());
         if (resp == NULL) {
             printf("request failed! %d\n", num);
         } else {
-            printf("%d %s\r\n", resp->status_code, resp->status_message());
-            printf("%s\n", resp->body.c_str());
+            // printf("%d %s\r\n", resp->status_code, resp->status_message());
+            // printf("%s\n", resp->body.c_str());
+			printf("request success! %d\n", num);
         }
     });
 }
 
 
-int main()
-{
-	using namespace hv;
-	using namespace std;
-	 
+int main2()
+{	 
     // size_t filesize = requests::downloadFile("http://127.0.0.1:1212/DimensionNightmareServer.pdb", "DimensionNightmareServer.pdb");
     // if (filesize == 0) {
     //     printf("downloadFile failed!\n");
@@ -118,7 +118,8 @@ int main()
 
 	HttpRequestPtr req = std::make_shared<HttpRequest>();
     req->method = HTTP_POST;
-    req->url = "http://127.0.0.1:1212/Login/Auth";
+    // req->url = "http://127.0.0.1:1212/Login/Auth";
+	req->url = "http://114.55.30.239:10300/Login/Auth";
     req->headers["Connection"] = "keep-alive";
 	req->headers["Content-Type"] = "application/json";
     req->timeout = 10;
@@ -129,19 +130,55 @@ int main()
     
 	req->body = jroot.dump();
 
-	std::array<std::thread, 4000> threads;
+	std::array<std::thread, 1500> threads;
 
 	for (size_t i = 0; i < threads.size(); i++)
 	{
-		threads[i] =  std::thread(request, &cli, req, ref(i));
+		// threads[i] =  std::thread(request, &cli, req, ref(i));
+		HttpResponse resp;
+		int ret = cli.send(req.get(), &resp);
+		if (ret != 0)
+		{
+			printf("request failed! %zd\n", i);
+		} 
+		else 
+		{
+			printf("request success! %zd\n", i);
+		}
+		
 	}
 
-	for (auto & ele : threads)
-	{
-		ele.join();
-	}
+	// for (auto & ele : threads)
+	// {
+	// 	ele.join();
+	// }
 	
-	this_thread::sleep_for(10s);
+	// this_thread::sleep_for(20s);
     
 	return 0;
+}
+
+enum class ServerType : int
+{
+    None,
+    ControlServer,
+    GlobalServer,
+	AuthServer,
+	GateServer,
+	DatabaseServer,
+	LogicServer,
+};
+
+int main()
+{
+	int a = 7;
+	auto res = (ServerType)a;
+	if(res < ServerType::None || res > ServerType::LogicServer)
+	{
+		print("no");
+	}
+	else
+	{
+		print("yes");
+	}
 }

@@ -18,10 +18,13 @@ public:
 	ServerType GetServerType(){ return emServerType;}
 
 	void SetServerIp(std::string& type){sIpAddr = type;}
-	auto GetServerIp(){ return sIpAddr;}
+	std::string& GetServerIp(){ return sIpAddr;}
 
 	void SetConnNum(unsigned int num){IConnNum = num;}
-	auto GetConnNum(){ return IConnNum;}
+	unsigned int GetConnNum(){ return IConnNum;}
+
+	void SetLinkNode(ServerEntity* node){pLink = node;}
+	ServerEntity* GetLinkNode(){ return pLink;}
 };
 
 module:private;

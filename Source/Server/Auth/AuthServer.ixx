@@ -74,6 +74,12 @@ AuthServer::~AuthServer()
 
 bool AuthServer::Init(map<string, string> &param)
 {
+	if(!param.count("byCtl"))
+	{
+		DNPrintErr("Server need by Control! \n");
+		return false;
+	}
+
 	int port = 0;
 	
 	if(param.contains("port"))
@@ -86,7 +92,7 @@ bool AuthServer::Init(map<string, string> &param)
 	pSSock->setThreadNum(4);
 
 	//connet ControlServer
-	if(stoi(param["byCtl"]) && param.contains("ctlPort") && param.contains("ctlIp") && is_ipaddr(param["ctlIp"].c_str()))
+	if(param.contains("ctlPort") && param.contains("ctlIp") && is_ipaddr(param["ctlIp"].c_str()))
 	{
 		auto setting = new unpack_setting_t;
 		setting->mode = unpack_mode_e::UNPACK_BY_LENGTH_FIELD;
@@ -133,7 +139,10 @@ bool AuthServer::Start()
 
 bool AuthServer::Stop()
 {
-	pSSock->stop();
+	if(pSSock)
+	{
+		pSSock->stop();
+	}
 	
 	if(pCSock)
 	{
@@ -165,17 +174,21 @@ void AuthServer::Resume()
 void AuthServer::LoopEvent(function<void(EventLoopPtr)> func)
 {
     map<long,EventLoopPtr> looped;
-    while(EventLoopPtr pLoop = pCSock->loop())
+    if(pCSock)
 	{
-        long id = pLoop->tid();
-        if(looped.find(id) == looped.end())
-        {
-            func(pLoop);
-            looped[id] = pLoop;
-        }
-        else
-        {
-            break;
-        }
-    };
+		looped.clear();
+		while(EventLoopPtr pLoop = pCSock->loop())
+		{
+			long id = pLoop->tid();
+			if(looped.find(id) == looped.end())
+			{
+				func(pLoop);
+				looped[id] = pLoop;
+			}
+			else
+			{
+				break;
+			}
+		};
+	}
 }

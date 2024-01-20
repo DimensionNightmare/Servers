@@ -65,6 +65,8 @@ void HandleLogicServerInit(DNServer *server)
 
 		sSock->onConnection = onConnection;
 		sSock->onMessage = onMessage;
+
+		LogicMessageHandle::RegMsgHandle();
 	}
 
 	if (auto cSock = serverProxy->GetCSock())

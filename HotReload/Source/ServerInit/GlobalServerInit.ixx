@@ -44,27 +44,29 @@ void HandleGlobalServerInit(DNServer *server)
 				DNPrint("%s disconnected! connfd=%d id=%d \n", peeraddr.c_str(), channel->fd(), channel->id());
 
 				auto entityMan = serverProxy->GetEntityManager();
-				auto timerID = sSock->loop()->setTimeout(10000, [entityMan,channel](TimerID timerId)
-				{
-					entityMan->RemoveEntity<ServerEntityHelper>(channel);
-				});
-
-				if(auto entity = channel->getContext<ServerEntityHelper>())
-				{
-					auto child = entity->GetChild();
-					child->SetTimerId(timerID);
-					child->SetSock(nullptr);
-				}
+				entityMan->RemoveEntity<ServerEntityHelper>(channel, false);
 			}
 		};
 
 		auto onMessage = [](const SocketChannelPtr &channel, Buffer *buf) 
 		{
-			
+			MessagePacket packet;
+			memcpy(&packet, buf->data(), MessagePacket::PackLenth);
+			if(packet.dealType == MsgDeal::Req)
+			{
+				string msgData((char*)buf->data() + MessagePacket::PackLenth, packet.pkgLenth);
+				GlobalMessageHandle::MsgHandle(channel, packet.msgId, packet.msgHashId, msgData);
+			}
+			else
+			{
+				DNPrintErr("packet.dealType not matching! \n");
+			}
 		};
 
 		sSock->onConnection = onConnection;
 		sSock->onMessage = onMessage;
+
+		GlobalMessageHandle::RegMsgHandle();
 	}
 
 	if (auto cSock = serverProxy->GetCSock())

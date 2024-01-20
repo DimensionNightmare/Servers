@@ -63,6 +63,7 @@ export DNTaskVoid Msg_RegistSrv()
 	if(!response.success())
 	{
 		DNPrint("regist Server error! msg:%lu \n", msgId);
+		databaseServer->SetRun(false); //exit application
 	}
 	else
 	{

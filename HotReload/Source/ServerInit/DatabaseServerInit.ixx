@@ -65,6 +65,8 @@ void HandleDatabaseServerInit(DNServer *server)
 
 		sSock->onConnection = onConnection;
 		sSock->onMessage = onMessage;
+
+		DatabaseMessageHandle::RegMsgHandle();
 	}
 
 	if (auto cSock = serverProxy->GetCSock())

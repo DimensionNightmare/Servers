@@ -87,6 +87,12 @@ GateServer::~GateServer()
 
 bool GateServer::Init(map<string, string> &param)
 {
+	if(!param.count("byCtl"))
+	{
+		DNPrintErr("Server need by Control! \n");
+		return false;
+	}
+
 	int port = 0;
 	
 	if(param.contains("port"))
@@ -130,7 +136,7 @@ bool GateServer::Init(map<string, string> &param)
 
 	
 	//connet ControlServer
-	if(stoi(param["byCtl"]) && param.contains("ctlPort") && param.contains("ctlIp") && is_ipaddr(param["ctlIp"].c_str()))
+	if(param.contains("ctlPort") && param.contains("ctlIp") && is_ipaddr(param["ctlIp"].c_str()))
 	{
 		pCSock = new DNClientProxy;
 		auto reconn = new reconn_setting_t;
@@ -172,7 +178,10 @@ bool GateServer::Start()
 
 bool GateServer::Stop()
 {
-	pSSock->stop();
+	if(pSSock)
+	{
+		pSSock->stop();
+	}
 
 	if(pCSock) // client
 	{
@@ -201,19 +210,22 @@ void GateServer::Resume()
 void GateServer::LoopEvent(function<void(EventLoopPtr)> func)
 {
     map<long,EventLoopPtr> looped;
-    while(EventLoopPtr pLoop = pSSock->loop())
+    if(pSSock)
 	{
-        long id = pLoop->tid();
-        if(looped.find(id) == looped.end())
-        {
-            func(pLoop);
-            looped[id] = pLoop;
-        }
-        else
-        {
-            break;
-        }
-    };
+		while(EventLoopPtr pLoop = pSSock->loop())
+		{
+			long id = pLoop->tid();
+			if(looped.find(id) == looped.end())
+			{
+				func(pLoop);
+				looped[id] = pLoop;
+			}
+			else
+			{
+				break;
+			}
+		};
+	}
 
 	if(pCSock)
 	{

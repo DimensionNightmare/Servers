@@ -37,7 +37,8 @@ export DNTaskVoid Msg_RegistSrv()
 	// }
 
 	COM_ReqRegistSrv requset;
-	requset.set_server_type((int)globalServer->GetServerType());
+	// requset.set_server_type((int)globalServer->GetServerType());
+	requset.set_server_type((int)ServerType::None);
 	requset.set_ip(server->host);
 	requset.set_port(server->port);
 	
@@ -64,6 +65,7 @@ export DNTaskVoid Msg_RegistSrv()
 	if(!response.success())
 	{
 		DNPrint("regist Server error! msg:%lu \n", msgId);
+		globalServer->SetRun(false); //exit application
 	}
 	else
 	{

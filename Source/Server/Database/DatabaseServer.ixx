@@ -46,6 +46,10 @@ public: // dll override
 protected: // dll proxy
 	DNServerProxy* pSSock;
 	DNClientProxy* pCSock;
+
+	// record orgin info
+	string sCtlIp;
+	int iCtlPort;
 };
 
 module:private;
@@ -78,6 +82,12 @@ DatabaseServer::~DatabaseServer()
 
 bool DatabaseServer::Init(map<string, string> &param)
 {
+	if(!param.count("byCtl"))
+	{
+		DNPrintErr("Server need by Control! \n");
+		return false;
+	}
+
 	int port = 0;
 	
 	if(param.contains("port"))
@@ -121,7 +131,7 @@ bool DatabaseServer::Init(map<string, string> &param)
 
 	
 	//connet ControlServer
-	if(stoi(param["byCtl"]) && param.contains("ctlPort") && param.contains("ctlIp") && is_ipaddr(param["ctlIp"].c_str()))
+	if(param.contains("ctlPort") && param.contains("ctlIp") && is_ipaddr(param["ctlIp"].c_str()))
 	{
 		pCSock = new DNClientProxy;
 		auto reconn = new reconn_setting_t;
@@ -132,6 +142,9 @@ bool DatabaseServer::Init(map<string, string> &param)
 		port = stoi(param["ctlPort"]);
 		pCSock->createsocket(port, param["ctlIp"].c_str());
 		pCSock->setUnpack(setting);
+
+		sCtlIp = param["ctlIp"];
+		iCtlPort = port;
 	}
 	
 	return true;
@@ -161,7 +174,10 @@ bool DatabaseServer::Start()
 
 bool DatabaseServer::Stop()
 {
-	pSSock->stop();
+	if(pSSock)
+	{
+		pSSock->stop();
+	}
 
 	if(pCSock) // client
 	{
@@ -190,19 +206,22 @@ void DatabaseServer::Resume()
 void DatabaseServer::LoopEvent(function<void(EventLoopPtr)> func)
 {
     map<long,EventLoopPtr> looped;
-    while(EventLoopPtr pLoop = pSSock->loop())
+	if(pSSock)
 	{
-        long id = pLoop->tid();
-        if(looped.find(id) == looped.end())
-        {
-            func(pLoop);
-            looped[id] = pLoop;
-        }
-        else
-        {
-            break;
-        }
-    };
+		while(EventLoopPtr pLoop = pSSock->loop())
+		{
+			long id = pLoop->tid();
+			if(looped.find(id) == looped.end())
+			{
+				func(pLoop);
+				looped[id] = pLoop;
+			}
+			else
+			{
+				break;
+			}
+		};
+	}
 
 	if(pCSock)
 	{

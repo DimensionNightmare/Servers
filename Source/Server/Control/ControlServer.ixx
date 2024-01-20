@@ -124,7 +124,10 @@ bool ControlServer::Start()
 
 bool ControlServer::Stop()
 {
-	pSSock->stop();
+	if(pSSock)
+	{
+		pSSock->stop();
+	}
 	return true;
 }
 
@@ -147,17 +150,20 @@ void ControlServer::Resume()
 void ControlServer::LoopEvent(function<void(EventLoopPtr)> func)
 {
     map<long,EventLoopPtr> looped;
-    while(EventLoopPtr pLoop = pSSock->loop())
+    if(pSSock)
 	{
-        long id = pLoop->tid();
-        if(looped.find(id) == looped.end())
-        {
-            func(pLoop);
-            looped[id] = pLoop;
-        }
-        else
-        {
-            break;
-        }
-    };
+		while(EventLoopPtr pLoop = pSSock->loop())
+		{
+			long id = pLoop->tid();
+			if(looped.find(id) == looped.end())
+			{
+				func(pLoop);
+				looped[id] = pLoop;
+			}
+			else
+			{
+				break;
+			}
+		};
+	}
 }

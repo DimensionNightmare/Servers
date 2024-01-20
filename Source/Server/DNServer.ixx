@@ -23,7 +23,7 @@ export enum class ServerType : unsigned char
 export class DNServer
 {
 public:
-	DNServer():emServerType(ServerType::None){};
+	DNServer():emServerType(ServerType::None),bInRun(false){};
 	virtual ~DNServer(){};
 
 public:
@@ -44,8 +44,13 @@ public:
 
 	virtual void LoopEvent(function<void(hv::EventLoopPtr)> func){}
 
+	bool IsRun(){ return bInRun;}
+	void SetRun(bool state){bInRun = state;}
+
 public: // dll override
 
 protected:
     ServerType emServerType;
+
+	bool bInRun;
 };

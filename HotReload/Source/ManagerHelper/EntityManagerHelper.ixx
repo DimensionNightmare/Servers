@@ -28,14 +28,14 @@ template <class CastTEntity>
 CastTEntity* EntityManagerHelper<TEntity>::AddEntity(const SocketChannelPtr& channel, int entityId)
 {
 	TEntity* entity = nullptr;
-	if (EntityManager<TEntity>::mEntityMap.count(entityId))
+	if (this->mEntityMap.count(entityId))
 	{
-		entity = EntityManager<TEntity>::mEntityMap[entityId];
+		entity = this->mEntityMap[entityId];
 	}
 	else
 	{
 		entity = new TEntity;
-		EntityManager<TEntity>::mEntityMap.emplace(entityId, entity);
+		this->mEntityMap.emplace(entityId, entity);
 		channel->setContext(entity);
 
 		auto castEntity = static_cast<CastTEntity*>(entity);
@@ -52,7 +52,7 @@ void EntityManagerHelper<TEntity>::RemoveEntity(const SocketChannelPtr& channel)
 	if(TEntity* entity = channel->getContext<TEntity>())
 	{
 		channel->setContext(nullptr);
-		EntityManager<TEntity>::mEntityMap.erase(entity->iId);
+		this->mEntityMap.erase(entity->iId);
 		delete entity;
 	}
 	

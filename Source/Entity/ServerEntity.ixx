@@ -19,6 +19,8 @@ protected: // dll proxy
     ServerType emServerType;
 	std::string sIpAddr;
 	unsigned int IConnNum;
+
+	ServerEntity* pLink;
 };
 
 module:private;
@@ -28,6 +30,7 @@ ServerEntity::ServerEntity()
 	emServerType = ServerType::None;
 	sIpAddr = "";
 	IConnNum = 0;
+	pLink = nullptr;
 }
 
 ServerEntity::~ServerEntity()

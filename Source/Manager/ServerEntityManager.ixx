@@ -2,6 +2,7 @@ module;
 
 #include <map>
 #include <list>
+#include <shared_mutex>
 export module ServerEntityManager;
 
 import DNServer;
@@ -25,6 +26,8 @@ protected: // dll proxy
 	// server pull server
 	atomic<unsigned int> iServerId;
 	list<unsigned int> mIdleServerId;
+
+	shared_mutex oMapMutex;
 };
 
 module:private;

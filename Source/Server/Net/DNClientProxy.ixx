@@ -29,7 +29,7 @@ protected: // dll proxy
 
 	hv::Channel::Status eState;
 
-	std::shared_mutex oMsgMutex;
+	shared_mutex oMsgMutex;
 };
 
 module:private;

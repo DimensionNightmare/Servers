@@ -130,7 +130,7 @@ bool GlobalServer::Init(map<string, string> &param)
 
 	
 	//connet ControlServer
-	if(stoi(param["byCtl"]) && param.contains("ctlPort") && param.contains("ctlIp") && is_ipaddr(param["ctlIp"].c_str()))
+	if(param.contains("byCtl") && stoi(param["byCtl"]) && param.contains("ctlPort") && param.contains("ctlIp") && is_ipaddr(param["ctlIp"].c_str()))
 	{
 		pCSock = new DNClientProxy;
 		auto reconn = new reconn_setting_t;
@@ -172,7 +172,10 @@ bool GlobalServer::Start()
 
 bool GlobalServer::Stop()
 {
-	pSSock->stop();
+	if(pSSock)
+	{
+		pSSock->stop();
+	}
 
 	if(pCSock) // client
 	{
@@ -201,19 +204,22 @@ void GlobalServer::Resume()
 void GlobalServer::LoopEvent(function<void(EventLoopPtr)> func)
 {
     map<long,EventLoopPtr> looped;
-    while(EventLoopPtr pLoop = pSSock->loop())
+    if(pSSock)
 	{
-        long id = pLoop->tid();
-        if(looped.find(id) == looped.end())
-        {
-            func(pLoop);
-            looped[id] = pLoop;
-        }
-        else
-        {
-            break;
-        }
-    };
+		while(EventLoopPtr pLoop = pSSock->loop())
+		{
+			long id = pLoop->tid();
+			if(looped.find(id) == looped.end())
+			{
+				func(pLoop);
+				looped[id] = pLoop;
+			}
+			else
+			{
+				break;
+			}
+		};
+	}
 
 	if(pCSock)
 	{
