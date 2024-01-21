@@ -2,7 +2,7 @@ module;
 #include "Common.pb.h"
 
 #include <coroutine>
-export module LogicMessage:LogicGlobal;
+export module LogicMessage:LogicCommon;
 
 import DNTask;
 import MessagePack;
@@ -19,9 +19,9 @@ using namespace GMsg::Common;
 // client request
 export DNTaskVoid Msg_RegistSrv()
 {
-	auto logicServer = GetLogicServer();
-	auto client = logicServer->GetCSock();
-	auto server = logicServer->GetSSock();
+	auto dnServer = GetLogicServer();
+	auto client = dnServer->GetCSock();
+	auto server = dnServer->GetSSock();
 	auto msgId = client->GetMsgId();
 	
 	// first Can send Msg?
@@ -30,15 +30,23 @@ export DNTaskVoid Msg_RegistSrv()
 		DNPrintErr("+++++ %lu, \n", msgId);
 		co_return;
 	}
-	// else
-	// {
-	// 	printf("----- %lu, \n", msgId);
-	// }
+	else
+	{
+		DNPrint("Msg_RegistSrv ----- %lu, \n", msgId);
+	}
 
 	COM_ReqRegistSrv requset;
-	requset.set_server_type((int)logicServer->GetServerType());
-	requset.set_ip(server->host);
+	requset.set_server_type((int)dnServer->GetServerType());
+	if(server->host == "0.0.0.0")
+	{
+		requset.set_ip("127.0.0.1");
+	}
+	else
+	{
+		requset.set_ip(server->host);
+	}
 	requset.set_port(server->port);
+	requset.set_server_index(dnServer->GetServerIndex());
 	
 	// pack data
 	string binData;
@@ -63,11 +71,15 @@ export DNTaskVoid Msg_RegistSrv()
 	if(!response.success())
 	{
 		DNPrint("regist Server error! msg:%lu \n", msgId);
-		logicServer->SetRun(false); //exit application
+		// dnServer->SetRun(false); //exit application
 	}
 	else
 	{
 		DNPrint("regist Server success! \n");
+		if(dnServer->GetServerIndex() == 0 && response.server_index())
+		{
+			
+		}
 		client->SetRegisted(true);
 	}
 

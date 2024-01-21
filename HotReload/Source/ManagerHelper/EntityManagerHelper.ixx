@@ -34,7 +34,7 @@ CastTEntity* EntityManagerHelper<TEntity>::AddEntity(const SocketChannelPtr& cha
 	}
 	else
 	{
-		entity = new TEntity;
+		entity = make_shared<TEntity>();
 		this->mEntityMap.emplace(entityId, entity);
 		channel->setContext(entity);
 

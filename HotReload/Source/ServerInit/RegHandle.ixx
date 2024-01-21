@@ -1,4 +1,7 @@
 module;
+
+#include <functional>
+#include <string>
 export module RegHandle;
 
 import DNServer;
@@ -8,6 +11,9 @@ import AuthServerInit;
 import GateServerInit;
 import DatabaseServerInit;
 import LogicServerInit;
+
+import DNClientProxy;
+import DNClientProxyHelper;
 
 #ifdef HOTRELOAD_BUILD
 #define HOTRELOAD __declspec(dllexport)
@@ -19,6 +25,8 @@ extern "C"
 {
 	HOTRELOAD int InitHotReload(DNServer &base);
 	HOTRELOAD int ShutdownHotReload(DNServer &base);
+
+	HOTRELOAD int RegClientReconnectFunc(std::function<void(DNClientProxy *, const std::string&, int)> func);
 }
 
 module:private;
@@ -100,5 +108,11 @@ int ShutdownHotReload(DNServer &base)
 		break;
 	}
 
+	return 0;
+}
+
+int RegClientReconnectFunc(std::function<void(DNClientProxy *, const std::string&, int)> func)
+{
+	SetClientReconnectFunc(func);
 	return 0;
 }

@@ -15,6 +15,7 @@ import AfxCommon;
 import GateServer;
 import DatabaseServer;
 import LogicServer;
+import DNClientProxy;
 
 #define DNPrint(fmt, ...) printf("[%s] {%s} ->" "\n" fmt "\n", GetNowTimeStr().c_str(), __FUNCTION__, ##__VA_ARGS__);
 #define DNPrintErr(fmt, ...) fprintf(stderr, "[%s] {%s} ->" "\n" fmt "\n", GetNowTimeStr().c_str(), __FUNCTION__, ##__VA_ARGS__);
@@ -126,6 +127,8 @@ public:
 
 	bool OnUnregHotReload();
 
+	bool OnRegClientReconnectFunc();
+
 private:
 	HotReloadDll *pHotDll;
 
@@ -234,6 +237,7 @@ bool DimensionNightmare::Init(map<string, string> &param)
 		pServer->Start();
 	}
 
+	OnRegClientReconnectFunc();
 	return true;
 }
 
@@ -294,8 +298,8 @@ bool DimensionNightmare::OnRegHotReload()
 {
 	if (auto funtPtr = pHotDll->GetFuncPtr("InitHotReload"))
 	{
-		using InitHotReload = int (*)(DNServer &);
-		auto func = reinterpret_cast<InitHotReload>(funtPtr);
+		using funcSign = int (*)(DNServer &);
+		auto func = reinterpret_cast<funcSign>(funtPtr);
 		if (func)
 		{
 			func(*pServer);
@@ -314,11 +318,27 @@ bool DimensionNightmare::OnUnregHotReload()
 
 	if (auto funtPtr = pHotDll->GetFuncPtr("ShutdownHotReload"))
 	{
-		using ShutdownHotReload = int (*)(DNServer &);
-		auto func = reinterpret_cast<ShutdownHotReload>(funtPtr);
+		using funcSign = int (*)(DNServer &);
+		auto func = reinterpret_cast<funcSign>(funtPtr);
 		if (func)
 		{
 			func(*pServer);
+			return true;
+		}
+	}
+
+	return false;
+}
+
+bool DimensionNightmare::OnRegClientReconnectFunc()
+{
+	if (auto funtPtr = pHotDll->GetFuncPtr("RegClientReconnectFunc"))
+	{
+		using funcSign = int (*)(std::function<void(DNClientProxy *, const string&, int)>);
+		auto func = reinterpret_cast<funcSign>(funtPtr);
+		if (func)
+		{
+			func(&HotReloadClient);
 			return true;
 		}
 	}

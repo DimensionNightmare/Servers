@@ -16,7 +16,7 @@ using namespace hv;
 using namespace std;
 
 // client request
-export void EXE_Msg_RegistSrv(const SocketChannelPtr &channel, unsigned int msgId, Message *msg)
+export void Exe_RegistSrv(const SocketChannelPtr &channel, unsigned int msgId, Message *msg)
 {
 	COM_ReqRegistSrv* requset = (COM_ReqRegistSrv*)msg;
 	COM_ResRegistSrv response;
@@ -25,7 +25,7 @@ export void EXE_Msg_RegistSrv(const SocketChannelPtr &channel, unsigned int msgI
 
 	ServerType regType = (ServerType)requset->server_type();
 	
-	if(regType != ServerType::GlobalServer)
+	if(regType < ServerType::GlobalServer || regType > ServerType::AuthServer)
 	{
 		response.set_success(false);
 	}
@@ -39,6 +39,8 @@ export void EXE_Msg_RegistSrv(const SocketChannelPtr &channel, unsigned int msgI
 	else if (auto entity = entityMan->AddEntity<ServerEntityHelper>(channel, entityMan->GetServerIndex(), regType))
 	{
 		response.set_success(true);
+		entity->SetServerIp(requset->ip());
+		entity->SetServerPort(requset->port());
 	}
 
 	string binData;

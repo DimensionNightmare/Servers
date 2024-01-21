@@ -1,12 +1,12 @@
 module;
-#include "google/protobuf/Message.h"
+#include "Common.pb.h"
 #include "hv/Channel.h"
 
 #include <map>
 #include <functional>
 export module GateMessage;
 
-export import :GateGlobal;
+export import :GateCommon;
 import AfxCommon;
 
 #define DNPrint(fmt, ...) printf("[%s] {%s} ->" "\n" fmt "\n", GetNowTimeStr().c_str(), __FUNCTION__, ##__VA_ARGS__);
@@ -15,6 +15,7 @@ import AfxCommon;
 using namespace std;
 using namespace hv;
 using namespace google::protobuf;
+using namespace GMsg::Common;
 
 export class GateMessageHandle
 {
@@ -43,6 +44,10 @@ void GateMessageHandle::MsgHandle(const SocketChannelPtr &channel, unsigned int 
 		{	
 			handle.second(channel, msgId, message);
 		}
+		else
+		{
+			DNPrintErr("cant parse msg Deal Handle! \n");
+		}
 		
 		delete message;
 	}
@@ -56,4 +61,7 @@ void GateMessageHandle::RegMsgHandle()
 {
 	std::hash<string> hashStr;
 	const Message* msg = nullptr;
+
+	msg = COM_ReqRegistSrv::internal_default_instance();
+	MHandleMap.emplace( hashStr(msg->GetDescriptor()->full_name()), make_pair(msg, &Exe_RegistSrv));
 }

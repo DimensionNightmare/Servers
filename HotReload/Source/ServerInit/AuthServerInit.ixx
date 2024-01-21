@@ -29,22 +29,25 @@ void HandleAuthServerInit(DNServer *server)
 
 	auto serverProxy = GetAuthServer();
 
-	if(auto sSock = serverProxy->GetSSock())
+	if(auto serverSock = serverProxy->GetSSock())
 	{
 		HttpService* service = new HttpService;
 		
 		AuthMessageHandle::RegApiHandle(service);
 
-		sSock->registerHttpService(service);
+		serverSock->registerHttpService(service);
 	}
 
-	if (auto cSock = serverProxy->GetCSock())
+	if (auto clientSock = serverProxy->GetCSock())
 	{
-		auto onConnection = [cSock](const SocketChannelPtr &channel)
+		clientSock->onConnection = nullptr;
+		clientSock->onMessage = nullptr;
+
+		auto onConnection = [clientSock](const SocketChannelPtr &channel)
 		{
 			string peeraddr = channel->peeraddr();
 
-			cSock->UpdateClientState(channel->status);
+			clientSock->UpdateClientState(channel->status);
 
 			if (channel->isConnected())
 			{
@@ -55,21 +58,21 @@ void HandleAuthServerInit(DNServer *server)
 				DNPrint("%s disconnected! connfd=%d id=%d \n", peeraddr.c_str(), channel->fd(), channel->id());
 			}
 
-			if(cSock->isReconnect())
+			if(clientSock->isReconnect())
 			{
 				
 			}
 		};
 
-		auto onMessage = [cSock](const SocketChannelPtr &channel, Buffer *buf) 
+		auto onMessage = [clientSock](const SocketChannelPtr &channel, Buffer *buf) 
 		{
 			MessagePacket packet;
 			memcpy(&packet, buf->data(), MessagePacket::PackLenth);
 			if(packet.dealType == MsgDeal::Res)
 			{
-				if(auto task = cSock->GetMsg(packet.msgId)) //client sock request
+				if(auto task = clientSock->GetMsg(packet.msgId)) //client sock request
 				{
-					cSock->DelMsg(packet.msgId);
+					clientSock->DelMsg(packet.msgId);
 					task->Resume();
 					Message* message = ((DNTask<Message*>*)task)->GetResult();
 					message->ParseFromArray((const char*)buf->data() + MessagePacket::PackLenth, packet.pkgLenth);
@@ -86,9 +89,9 @@ void HandleAuthServerInit(DNServer *server)
 			}
 		};
 
-		cSock->onConnection = onConnection;
-		cSock->onMessage = onMessage;
-		cSock->SetRegistEvent(&Msg_RegistSrv);
+		clientSock->onConnection = onConnection;
+		clientSock->onMessage = onMessage;
+		clientSock->SetRegistEvent(&Msg_RegistSrv);
 	}
 
 }
@@ -97,19 +100,19 @@ void HandleAuthServerShutdown(DNServer *server)
 {
 	auto serverProxy = GetAuthServer();
 
-	if (auto sSock = serverProxy->GetSSock())
+	if (auto serverSock = serverProxy->GetSSock())
 	{
-		if(sSock->service != nullptr)
+		if(serverSock->service != nullptr)
 		{
-			delete sSock->service;
-			sSock->service = nullptr;
+			delete serverSock->service;
+			serverSock->service = nullptr;
 		}
 	}
 
-	if (auto cSock = serverProxy->GetCSock())
+	if (auto clientSock = serverProxy->GetCSock())
 	{
-		cSock->onConnection = nullptr;
-		cSock->onMessage = nullptr;
-		cSock->SetRegistEvent(nullptr);
+		clientSock->onConnection = nullptr;
+		clientSock->onMessage = nullptr;
+		clientSock->SetRegistEvent(nullptr);
 	}
 }

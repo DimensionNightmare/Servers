@@ -8,7 +8,7 @@ module;
 #include <functional>
 export module AuthMessage;
 
-export import :AuthControl;
+export import :AuthCommon;
 import ApiManager;
 import AfxCommon;
 
@@ -48,6 +48,10 @@ void AuthMessageHandle::MsgHandle(const SocketChannelPtr &channel, unsigned int 
 		if(message->ParseFromArray(msgData.data(), msgData.length()))
 		{
 			handle.second(channel, msgId, message);
+		}
+		else
+		{
+			DNPrintErr("cant parse msg Deal Handle! \n");
 		}
 		
 		delete message;

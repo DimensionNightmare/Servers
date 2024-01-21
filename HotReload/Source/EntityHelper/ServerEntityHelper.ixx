@@ -17,8 +17,11 @@ public:
 	void SetServerType(ServerType type){emServerType = type;}
 	ServerType GetServerType(){ return emServerType;}
 
-	void SetServerIp(std::string& type){sIpAddr = type;}
-	std::string& GetServerIp(){ return sIpAddr;}
+	void SetServerIp(const std::string& ip){sServIp = ip;}
+	std::string& GetServerIp(){ return sServIp;}
+
+	void SetServerPort(unsigned short port){iServPort = port;}
+	unsigned short GetServerPort(){ return iServPort;}
 
 	void SetConnNum(unsigned int num){IConnNum = num;}
 	unsigned int GetConnNum(){ return IConnNum;}

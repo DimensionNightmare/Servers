@@ -87,6 +87,8 @@ GlobalServer::~GlobalServer()
 
 bool GlobalServer::Init(map<string, string> &param)
 {
+	DNServer::Init(param);
+	
 	int port = 0;
 	
 	if(param.contains("port"))
@@ -197,7 +199,7 @@ void GlobalServer::Resume()
 {
 	LoopEvent([](hv::EventLoopPtr loop)
 	{ 
-		loop->pause(); 
+		loop->resume(); 
 	});
 }
 

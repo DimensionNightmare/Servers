@@ -23,12 +23,12 @@ export enum class ServerType : unsigned char
 export class DNServer
 {
 public:
-	DNServer():emServerType(ServerType::None),bInRun(false){};
+	DNServer();
 	virtual ~DNServer(){};
 
 public:
 
-	virtual bool Init(map<string, string> &param) = 0;
+	virtual bool Init(map<string, string> &param);
 
 	virtual void InitCmd(map<string, function<void(stringstream*)>> &cmdMap) = 0;
 
@@ -41,6 +41,7 @@ public:
 	virtual void Resume() = 0;
 
     ServerType GetServerType(){return emServerType;}
+	unsigned int GetServerIndex(){return iServerIndex;}
 
 	virtual void LoopEvent(function<void(hv::EventLoopPtr)> func){}
 
@@ -53,4 +54,22 @@ protected:
     ServerType emServerType;
 
 	bool bInRun;
+	unsigned int iServerIndex;
 };
+
+DNServer::DNServer()
+{
+	emServerType = ServerType::None;
+	bInRun = false;
+	iServerIndex = 0;
+}
+
+bool DNServer::Init(map<string, string> &param)
+{
+	if(param.contains("svrIndex"))
+	{
+		iServerIndex = stoi(param["svrIndex"]);
+	}
+
+	return true;
+}

@@ -93,6 +93,8 @@ bool GateServer::Init(map<string, string> &param)
 		return false;
 	}
 
+	DNServer::Init(param);
+
 	int port = 0;
 	
 	if(param.contains("port"))
@@ -203,7 +205,7 @@ void GateServer::Resume()
 {
 	LoopEvent([](hv::EventLoopPtr loop)
 	{ 
-		loop->pause(); 
+		loop->resume(); 
 	});
 }
 

@@ -1,5 +1,4 @@
 module;
-#include "google/protobuf/Message.h"
 #include "Common.pb.h"
 #include "GlobalControl.pb.h"
 #include "AuthControl.pb.h"
@@ -52,6 +51,10 @@ void ControlMessageHandle::MsgHandle(const SocketChannelPtr &channel, unsigned i
 		{
 			handle.second(channel, msgId, message);
 		}
+		else
+		{
+			DNPrintErr("cant parse msg Deal Handle! \n");
+		}
 		
 		delete message;
 	}
@@ -68,8 +71,8 @@ void ControlMessageHandle::RegMsgHandle()
 	const Message* msg = nullptr;
 	
 	msg = COM_ReqRegistSrv::internal_default_instance();
-	MHandleMap.emplace( hashStr(msg->GetDescriptor()->full_name()), make_pair(msg, &EXE_Msg_RegistSrv));
+	MHandleMap.emplace( hashStr(msg->GetDescriptor()->full_name()), make_pair(msg, &Exe_RegistSrv));
 
 	msg = A2C_AuthAccount::internal_default_instance();
-	MHandleMap.emplace( hashStr(msg->GetDescriptor()->full_name()), make_pair(msg, &EXE_Msg_AuthAccount));
+	MHandleMap.emplace( hashStr(msg->GetDescriptor()->full_name()), make_pair(msg, &Exe_AuthAccount));
 }

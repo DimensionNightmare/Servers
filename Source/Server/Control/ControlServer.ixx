@@ -78,6 +78,8 @@ bool ControlServer::Init(map<string, string> &param)
 		return false;
 	}
 
+	DNServer::Init(param);
+
 	int port = stoi(param["port"]);
 	pSSock = new DNServerProxy;
 
@@ -143,7 +145,7 @@ void ControlServer::Resume()
 {
 	LoopEvent([](hv::EventLoopPtr loop)
 	{ 
-		loop->pause(); 
+		loop->resume(); 
 	});
 }
 

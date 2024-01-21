@@ -82,14 +82,12 @@ void ServerEntityManagerHelper<TEntity>::RemoveEntity(const SocketChannelPtr& ch
 			this->mEntityMap.erase(serverIndex);
 			this->mIdleServerId.push_back(serverIndex);
 			this->mEntityMapList[castEntity->GetServerType()].remove(entity);
+			delete entity;
 		}
 		else
 		{
 			castEntity->GetChild()->SetSock(nullptr);
 		}
-		
-		delete entity;
-
 	}
 	
 }

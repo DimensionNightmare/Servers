@@ -1,13 +1,13 @@
 module;
 #include "Common.pb.h"
-#include "AuthControl.pb.h"
+#include "hv/Channel.h"
 
 #include <coroutine>
-export module AuthMessage:AuthControl;
+export module DatabaseMessage:DatabaseCommon;
 
 import DNTask;
 import MessagePack;
-import AuthServerHelper;
+import DatabaseServerHelper;
 import AfxCommon;
 
 #define DNPrint(fmt, ...) printf("[%s] {%s} ->" "\n" fmt "\n", GetNowTimeStr().c_str(), __FUNCTION__, ##__VA_ARGS__);
@@ -16,13 +16,14 @@ import AfxCommon;
 using namespace std;
 using namespace google::protobuf;
 using namespace GMsg::Common;
+using namespace hv;
 
 // client request
 export DNTaskVoid Msg_RegistSrv()
 {
-	auto AuthServer = GetAuthServer();
-	auto client = AuthServer->GetCSock();
-	auto server = AuthServer->GetSSock();
+	auto dnServer = GetDatabaseServer();
+	auto client = dnServer->GetCSock();
+	auto server = dnServer->GetSSock();
 	auto msgId = client->GetMsgId();
 	
 	// first Can send Msg?
@@ -31,15 +32,23 @@ export DNTaskVoid Msg_RegistSrv()
 		DNPrintErr("+++++ %lu, \n", msgId);
 		co_return;
 	}
-	// else
-	// {
-	// 	printf("----- %lu, \n", msgId);
-	// }
+	else
+	{
+		DNPrint("Msg_RegistSrv ----- %lu, \n", msgId);
+	}
 
 	COM_ReqRegistSrv requset;
-	requset.set_server_type((int)AuthServer->GetServerType());
-	requset.set_ip(server->host);
+	requset.set_server_type((int)dnServer->GetServerType());
+	if(server->host == "0.0.0.0")
+	{
+		requset.set_ip("127.0.0.1");
+	}
+	else
+	{
+		requset.set_ip(server->host);
+	}
 	requset.set_port(server->port);
+	requset.set_server_index(dnServer->GetServerIndex());
 	
 	// pack data
 	string binData;
@@ -54,7 +63,7 @@ export DNTaskVoid Msg_RegistSrv()
 		co_return &response;
 	}();
 
-	
+
 	client->AddMsg(msgId, (DNTask<void*>*)&dataChannel);
 	
 	// wait data parse
@@ -64,15 +73,30 @@ export DNTaskVoid Msg_RegistSrv()
 	if(!response.success())
 	{
 		DNPrint("regist Server error! msg:%lu \n", msgId);
-		AuthServer->SetRun(false); //exit application
+		// dnServer->SetRun(false); //exit application
 	}
 	else
 	{
 		DNPrint("regist Server success! \n");
+		if(dnServer->GetServerIndex() == 0 && response.server_index())
+		{
+
+		}
 		client->SetRegisted(true);
 	}
 
 	dataChannel.Destroy();
 
 	co_return;
+}
+
+export void Exe_RetChangeCtlSrv(const SocketChannelPtr &channel, unsigned int msgId, Message *msg)
+{
+	COM_RetChangeCtlSrv* requset = (COM_RetChangeCtlSrv*)msg;
+	auto dnServer = GetDatabaseServer();
+	auto client = dnServer->GetCSock();
+
+	client->UpdateClientState(Channel::Status::CONNECTING);
+	
+	GetClientReconnectFunc()(client, requset->ip(), requset->port());
 }

@@ -38,6 +38,22 @@ public:
 	void DelMsg(unsigned int msgId);
 };
 
+#pragma region // ClientReconnectFunc
+
+static std::function<void(DNClientProxy *, const string&, int)> PClientReconnectFunc = nullptr;
+
+export void SetClientReconnectFunc( std::function<void(DNClientProxy *, const string&, int)> func)
+{
+	PClientReconnectFunc = func;
+}
+
+export std::function<void(DNClientProxy *, const string&, int)> GetClientReconnectFunc()
+{
+	return PClientReconnectFunc;
+}
+
+#pragma endregion
+
 module:private;
 
 void DNClientProxyHelper::SetRegistEvent(function<void()> event)

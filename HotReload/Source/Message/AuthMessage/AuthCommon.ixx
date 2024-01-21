@@ -1,12 +1,13 @@
 module;
 #include "Common.pb.h"
+#include "AuthControl.pb.h"
 
 #include <coroutine>
-export module DatabaseMessage:DatabaseGate;
+export module AuthMessage:AuthCommon;
 
 import DNTask;
 import MessagePack;
-import DatabaseServerHelper;
+import AuthServerHelper;
 import AfxCommon;
 
 #define DNPrint(fmt, ...) printf("[%s] {%s} ->" "\n" fmt "\n", GetNowTimeStr().c_str(), __FUNCTION__, ##__VA_ARGS__);
@@ -19,9 +20,9 @@ using namespace GMsg::Common;
 // client request
 export DNTaskVoid Msg_RegistSrv()
 {
-	auto databaseServer = GetDatabaseServer();
-	auto client = databaseServer->GetCSock();
-	auto server = databaseServer->GetSSock();
+	auto dnServer = GetAuthServer();
+	auto client = dnServer->GetCSock();
+	auto server = dnServer->GetSSock();
 	auto msgId = client->GetMsgId();
 	
 	// first Can send Msg?
@@ -30,14 +31,21 @@ export DNTaskVoid Msg_RegistSrv()
 		DNPrintErr("+++++ %lu, \n", msgId);
 		co_return;
 	}
-	// else
-	// {
-	// 	printf("----- %lu, \n", msgId);
-	// }
+	else
+	{
+		DNPrint("Msg_RegistSrv ----- %lu, \n", msgId);
+	}
 
 	COM_ReqRegistSrv requset;
-	requset.set_server_type((int)databaseServer->GetServerType());
-	requset.set_ip(server->host);
+	requset.set_server_type((int)dnServer->GetServerType());
+	if(server->host == "0.0.0.0")
+	{
+		requset.set_ip("127.0.0.1");
+	}
+	else
+	{
+		requset.set_ip(server->host);
+	}
 	requset.set_port(server->port);
 	
 	// pack data
@@ -53,7 +61,7 @@ export DNTaskVoid Msg_RegistSrv()
 		co_return &response;
 	}();
 
-
+	
 	client->AddMsg(msgId, (DNTask<void*>*)&dataChannel);
 	
 	// wait data parse
@@ -63,7 +71,7 @@ export DNTaskVoid Msg_RegistSrv()
 	if(!response.success())
 	{
 		DNPrint("regist Server error! msg:%lu \n", msgId);
-		databaseServer->SetRun(false); //exit application
+		// dnServer->SetRun(false); //exit application
 	}
 	else
 	{

@@ -6,7 +6,7 @@ module;
 #include <functional>
 export module LogicMessage;
 
-export import :LogicGlobal;
+export import :LogicCommon;
 import AfxCommon;
 
 #define DNPrint(fmt, ...) printf("[%s] {%s} ->" "\n" fmt "\n", GetNowTimeStr().c_str(), __FUNCTION__, ##__VA_ARGS__);
@@ -42,6 +42,10 @@ void LogicMessageHandle::MsgHandle(const SocketChannelPtr &channel, unsigned int
 		if(message->ParseFromArray(msgData.data(), msgData.length()))
 		{	
 			handle.second(channel, msgId, message);
+		}
+		else
+		{
+			DNPrintErr("cant parse msg Deal Handle! \n");
 		}
 		
 		delete message;

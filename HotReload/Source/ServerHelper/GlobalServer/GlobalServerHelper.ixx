@@ -1,4 +1,6 @@
 module;
+#include "Common.pb.h"
+#include "hv/Channel.h"
 
 #include <assert.h>
 export module GlobalServerHelper;
@@ -8,7 +10,11 @@ import DNClientProxyHelper;
 import ServerEntityManagerHelper;
 import ServerEntity;
 
+import MessagePack;
+
 using namespace std;
+using namespace GMsg::Common;
+using namespace hv;
 
 export class GlobalServerHelper : public GlobalServer
 {
@@ -83,13 +89,17 @@ void GlobalServerHelper::UpdateServerGroup()
 	// idle gate
 	for(auto it : gates)
 	{
+		auto entityHelper = static_cast<ServerEntityHelper*>(it);
+
+		if(!entityHelper->GetChild()->GetSock())
+			continue;
+
 		if(gateMap.count(it) && gateMap[it][0] && gateMap[it][1])
 		{
 
 		}
 		else
 		{
-			auto entityHelper = static_cast<ServerEntityHelper*>(it);
 			gatesTemp.emplace_back(entityHelper);
 		}
 	}
@@ -101,18 +111,40 @@ void GlobalServerHelper::UpdateServerGroup()
 	// alloc gate
 	int dbPos = 0;
 	int logicPos = 0;
+	COM_RetChangeCtlSrv retMsg;
+	string binData;
+
+	auto changeControl = [&retMsg, &binData](ServerEntityHelper* entity, const SocketChannelPtr& channel)
+	{
+		binData.clear();
+		
+		retMsg.set_ip(entity->GetServerIp());
+		retMsg.set_port(entity->GetServerPort());
+
+		binData.resize(retMsg.ByteSize());
+		retMsg.SerializeToArray(binData.data(), binData.size());
+
+		MessagePack(0, MsgDeal::Req, retMsg.GetDescriptor()->full_name(), binData);
+
+		channel->write(binData);
+	};
+	
 	for(auto it : gatesTemp)
 	{
 		auto idles = gateMap[it];
 		if(!idles[0] && dbPos < dbsTemp.size())
 		{
 			dbsTemp[dbPos]->SetLinkNode(it);
+
+			changeControl(it, dbsTemp[dbPos]->GetChild()->GetSock());
 			dbPos++;
 		}
 
 		if(!idles[1] && logicPos < logicsTemp.size())
 		{
 			logicsTemp[logicPos]->SetLinkNode(it);
+
+			changeControl(it, dbsTemp[dbPos]->GetChild()->GetSock());
 			logicPos++;
 		}
 	}

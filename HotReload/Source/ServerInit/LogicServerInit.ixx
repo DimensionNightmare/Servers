@@ -30,9 +30,12 @@ void HandleLogicServerInit(DNServer *server)
 
 	auto serverProxy = GetLogicServer();
 
-	if (auto sSock = serverProxy->GetSSock())
+	if (auto serverSock = serverProxy->GetSSock())
 	{
-		auto onConnection = [sSock,serverProxy](const SocketChannelPtr &channel)
+		serverSock->onConnection = nullptr;
+		serverSock->onMessage = nullptr;
+
+		auto onConnection = [serverSock,serverProxy](const SocketChannelPtr &channel)
 		{
 			string peeraddr = channel->peeraddr();
 			if (channel->isConnected())
@@ -44,7 +47,7 @@ void HandleLogicServerInit(DNServer *server)
 				DNPrint("%s disconnected! connfd=%d id=%d \n", peeraddr.c_str(), channel->fd(), channel->id());
 
 				auto entityMan = serverProxy->GetEntityManager();
-				auto timerID = sSock->loop()->setTimeout(10000, [entityMan,channel](TimerID timerId)
+				auto timerID = serverSock->loop()->setTimeout(10000, [entityMan,channel](TimerID timerId)
 				{
 					entityMan->RemoveEntity<ServerEntityHelper>(channel);
 				});
@@ -63,18 +66,21 @@ void HandleLogicServerInit(DNServer *server)
 			
 		};
 
-		sSock->onConnection = onConnection;
-		sSock->onMessage = onMessage;
+		serverSock->onConnection = onConnection;
+		serverSock->onMessage = onMessage;
 
 		LogicMessageHandle::RegMsgHandle();
 	}
 
-	if (auto cSock = serverProxy->GetCSock())
+	if (auto clientSock = serverProxy->GetCSock())
 	{
-		auto onConnection = [cSock](const SocketChannelPtr &channel)
+		clientSock->onConnection = nullptr;
+		clientSock->onMessage = nullptr;
+		
+		auto onConnection = [clientSock](const SocketChannelPtr &channel)
 		{
 			string peeraddr = channel->peeraddr();
-			cSock->UpdateClientState(channel->status);
+			clientSock->UpdateClientState(channel->status);
 
 			if (channel->isConnected())
 			{
@@ -85,21 +91,21 @@ void HandleLogicServerInit(DNServer *server)
 				DNPrint("%s disconnected! connfd=%d id=%d \n", peeraddr.c_str(), channel->fd(), channel->id());
 			}
 
-			if(cSock->isReconnect())
+			if(clientSock->isReconnect())
 			{
 				
 			}
 		};
 
-		auto onMessage = [cSock](const SocketChannelPtr &channel, Buffer *buf) 
+		auto onMessage = [clientSock](const SocketChannelPtr &channel, Buffer *buf) 
 		{
 			MessagePacket packet;
 			memcpy(&packet, buf->data(), MessagePacket::PackLenth);
 			if(packet.dealType == MsgDeal::Res)
 			{
-				if(auto task = cSock->GetMsg(packet.msgId)) //client sock request
+				if(auto task = clientSock->GetMsg(packet.msgId)) //client sock request
 				{
-					cSock->DelMsg(packet.msgId);
+					clientSock->DelMsg(packet.msgId);
 					task->Resume();
 					Message* message = ((DNTask<Message*>*)task)->GetResult();
 					message->ParseFromArray((const char*)buf->data() + MessagePacket::PackLenth, packet.pkgLenth);
@@ -121,9 +127,9 @@ void HandleLogicServerInit(DNServer *server)
 			}
 		};
 
-		cSock->onConnection = onConnection;
-		cSock->onMessage = onMessage;
-		cSock->SetRegistEvent(&Msg_RegistSrv);
+		clientSock->onConnection = onConnection;
+		clientSock->onMessage = onMessage;
+		clientSock->SetRegistEvent(&Msg_RegistSrv);
 	}
 
 }
@@ -132,16 +138,16 @@ void HandleLogicServerShutdown(DNServer *server)
 {
 	auto serverProxy = GetLogicServer();
 
-	if (auto sSock = serverProxy->GetSSock())
+	if (auto serverSock = serverProxy->GetSSock())
 	{
-		sSock->onConnection = nullptr;
-		sSock->onMessage = nullptr;
+		serverSock->onConnection = nullptr;
+		serverSock->onMessage = nullptr;
 	}
 
-	if (auto cSock = serverProxy->GetCSock())
+	if (auto clientSock = serverProxy->GetCSock())
 	{
-		cSock->onConnection = nullptr;
-		cSock->onMessage = nullptr;
-		cSock->SetRegistEvent(nullptr);
+		clientSock->onConnection = nullptr;
+		clientSock->onMessage = nullptr;
+		clientSock->SetRegistEvent(nullptr);
 	}
 }

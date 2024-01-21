@@ -29,9 +29,12 @@ void HandleControlServerInit(DNServer *server)
 
 	auto serverProxy = GetControlServer();
 	
-	if (auto sSock = serverProxy->GetSSock())
+	if (auto serverSock = serverProxy->GetSSock())
 	{
-		auto onConnection = [sSock,serverProxy](const SocketChannelPtr &channel)
+		serverSock->onConnection = nullptr;
+		serverSock->onMessage = nullptr;
+		
+		auto onConnection = [serverSock,serverProxy](const SocketChannelPtr &channel)
 		{
 			string peeraddr = channel->peeraddr();
 			if (channel->isConnected())
@@ -63,8 +66,8 @@ void HandleControlServerInit(DNServer *server)
 			}
 		};
 
-		sSock->onConnection = onConnection;
-		sSock->onMessage = onMessage;
+		serverSock->onConnection = onConnection;
+		serverSock->onMessage = onMessage;
 
 		ControlMessageHandle::RegMsgHandle();
 	}
@@ -73,9 +76,9 @@ void HandleControlServerInit(DNServer *server)
 void HandleControlServerShutdown(DNServer *server)
 {
 	auto serverProxy = GetControlServer();
-	if (auto sSock = serverProxy->GetSSock())
+	if (auto serverSock = serverProxy->GetSSock())
 	{
-		sSock->onConnection = nullptr;
-		sSock->onMessage = nullptr;
+		serverSock->onConnection = nullptr;
+		serverSock->onMessage = nullptr;
 	}
 }

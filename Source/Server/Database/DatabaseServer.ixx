@@ -49,7 +49,7 @@ protected: // dll proxy
 
 	// record orgin info
 	string sCtlIp;
-	int iCtlPort;
+	unsigned short iCtlPort;
 };
 
 module:private;
@@ -87,6 +87,8 @@ bool DatabaseServer::Init(map<string, string> &param)
 		DNPrintErr("Server need by Control! \n");
 		return false;
 	}
+
+	DNServer::Init(param);
 
 	int port = 0;
 	
@@ -199,7 +201,7 @@ void DatabaseServer::Resume()
 {
 	LoopEvent([](hv::EventLoopPtr loop)
 	{ 
-		loop->pause(); 
+		loop->resume(); 
 	});
 }
 

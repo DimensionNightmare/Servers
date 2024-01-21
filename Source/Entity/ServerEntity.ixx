@@ -6,6 +6,8 @@ export module ServerEntity;
 import Entity;
 import DNServer;
 
+using namespace std;
+
 export class ServerEntity : public Entity
 {
 public:
@@ -17,7 +19,8 @@ public: // dll override
 	
 protected: // dll proxy
     ServerType emServerType;
-	std::string sIpAddr;
+	string sServIp;
+	unsigned short iServPort;
 	unsigned int IConnNum;
 
 	ServerEntity* pLink;
@@ -28,8 +31,9 @@ module:private;
 ServerEntity::ServerEntity()
 {
 	emServerType = ServerType::None;
-	sIpAddr = "";
+	sServIp = "";
 	IConnNum = 0;
+	iServPort = 0;
 	pLink = nullptr;
 }
 

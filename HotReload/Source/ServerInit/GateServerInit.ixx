@@ -30,9 +30,12 @@ void HandleGateServerInit(DNServer *server)
 
 	auto serverProxy = GetGateServer();
 
-	if (auto sSock = serverProxy->GetSSock())
+	if (auto serverSock = serverProxy->GetSSock())
 	{
-		auto onConnection = [sSock,serverProxy](const SocketChannelPtr &channel)
+		serverSock->onConnection = nullptr;
+		serverSock->onMessage = nullptr;
+
+		auto onConnection = [serverSock,serverProxy](const SocketChannelPtr &channel)
 		{
 			string peeraddr = channel->peeraddr();
 			if (channel->isConnected())
@@ -47,21 +50,34 @@ void HandleGateServerInit(DNServer *server)
 
 		auto onMessage = [](const SocketChannelPtr &channel, Buffer *buf) 
 		{
-			
+			MessagePacket packet;
+			memcpy(&packet, buf->data(), MessagePacket::PackLenth);
+			if(packet.dealType == MsgDeal::Req)
+			{
+				string msgData((char*)buf->data() + MessagePacket::PackLenth, packet.pkgLenth);
+				GateMessageHandle::MsgHandle(channel, packet.msgId, packet.msgHashId, msgData);
+			}
+			else
+			{
+				DNPrintErr("packet.dealType not matching! \n");
+			}
 		};
 
-		sSock->onConnection = onConnection;
-		sSock->onMessage = onMessage;
+		serverSock->onConnection = onConnection;
+		serverSock->onMessage = onMessage;
 
 		GateMessageHandle::RegMsgHandle();
 	}
 
-	if (auto cSock = serverProxy->GetCSock())
+	if (auto clientSock = serverProxy->GetCSock())
 	{
-		auto onConnection = [cSock](const SocketChannelPtr &channel)
+		clientSock->onConnection = nullptr;
+		clientSock->onMessage = nullptr;
+		
+		auto onConnection = [clientSock](const SocketChannelPtr &channel)
 		{
 			string peeraddr = channel->peeraddr();
-			cSock->UpdateClientState(channel->status);
+			clientSock->UpdateClientState(channel->status);
 
 			if (channel->isConnected())
 			{
@@ -72,21 +88,21 @@ void HandleGateServerInit(DNServer *server)
 				DNPrint("%s disconnected! connfd=%d id=%d \n", peeraddr.c_str(), channel->fd(), channel->id());
 			}
 
-			if(cSock->isReconnect())
+			if(clientSock->isReconnect())
 			{
 				
 			}
 		};
 
-		auto onMessage = [cSock](const SocketChannelPtr &channel, Buffer *buf) 
+		auto onMessage = [clientSock](const SocketChannelPtr &channel, Buffer *buf) 
 		{
 			MessagePacket packet;
 			memcpy(&packet, buf->data(), MessagePacket::PackLenth);
 			if(packet.dealType == MsgDeal::Res)
 			{
-				if(auto task = cSock->GetMsg(packet.msgId)) //client sock request
+				if(auto task = clientSock->GetMsg(packet.msgId)) //client sock request
 				{
-					cSock->DelMsg(packet.msgId);
+					clientSock->DelMsg(packet.msgId);
 					task->Resume();
 					Message* message = ((DNTask<Message*>*)task)->GetResult();
 					message->ParseFromArray((const char*)buf->data() + MessagePacket::PackLenth, packet.pkgLenth);
@@ -108,9 +124,9 @@ void HandleGateServerInit(DNServer *server)
 			}
 		};
 
-		cSock->onConnection = onConnection;
-		cSock->onMessage = onMessage;
-		cSock->SetRegistEvent(&Msg_RegistSrv);
+		clientSock->onConnection = onConnection;
+		clientSock->onMessage = onMessage;
+		clientSock->SetRegistEvent(&Msg_RegistSrv);
 	}
 
 }
@@ -119,16 +135,16 @@ void HandleGateServerShutdown(DNServer *server)
 {
 	auto serverProxy = GetGateServer();
 
-	if (auto sSock = serverProxy->GetSSock())
+	if (auto serverSock = serverProxy->GetSSock())
 	{
-		sSock->onConnection = nullptr;
-		sSock->onMessage = nullptr;
+		serverSock->onConnection = nullptr;
+		serverSock->onMessage = nullptr;
 	}
 
-	if (auto cSock = serverProxy->GetCSock())
+	if (auto clientSock = serverProxy->GetCSock())
 	{
-		cSock->onConnection = nullptr;
-		cSock->onMessage = nullptr;
-		cSock->SetRegistEvent(nullptr);
+		clientSock->onConnection = nullptr;
+		clientSock->onMessage = nullptr;
+		clientSock->SetRegistEvent(nullptr);
 	}
 }
