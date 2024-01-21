@@ -48,6 +48,8 @@ public:
 	bool IsRun(){ return bInRun;}
 	void SetRun(bool state){bInRun = state;}
 
+	virtual void ReClientEvent(const char* ip, int port){};
+
 public: // dll override
 
 protected:

@@ -15,7 +15,6 @@ import AfxCommon;
 import GateServer;
 import DatabaseServer;
 import LogicServer;
-import DNClientProxy;
 
 #define DNPrint(fmt, ...) printf("[%s] {%s} ->" "\n" fmt "\n", GetNowTimeStr().c_str(), __FUNCTION__, ##__VA_ARGS__);
 #define DNPrintErr(fmt, ...) fprintf(stderr, "[%s] {%s} ->" "\n" fmt "\n", GetNowTimeStr().c_str(), __FUNCTION__, ##__VA_ARGS__);
@@ -334,11 +333,16 @@ bool DimensionNightmare::OnRegClientReconnectFunc()
 {
 	if (auto funtPtr = pHotDll->GetFuncPtr("RegClientReconnectFunc"))
 	{
-		using funcSign = int (*)(std::function<void(DNClientProxy *, const string&, int)>);
+		using funcSign = int (*)(std::function<void(const char*, int)>);
 		auto func = reinterpret_cast<funcSign>(funtPtr);
 		if (func)
 		{
-			func(&HotReloadClient);
+			// auto funcProxy = std::bind(&DNServer::ReClientEvent, pServer);
+			auto funcProxy = [this](const char* ip, int port)
+			{
+				pServer->ReClientEvent(ip, port);
+			};
+			func(funcProxy);
 			return true;
 		}
 	}

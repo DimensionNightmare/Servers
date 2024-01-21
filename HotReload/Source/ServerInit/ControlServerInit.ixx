@@ -34,7 +34,7 @@ void HandleControlServerInit(DNServer *server)
 		serverSock->onConnection = nullptr;
 		serverSock->onMessage = nullptr;
 		
-		auto onConnection = [serverSock,serverProxy](const SocketChannelPtr &channel)
+		auto onConnection = [serverProxy](const SocketChannelPtr &channel)
 		{
 			string peeraddr = channel->peeraddr();
 			if (channel->isConnected())

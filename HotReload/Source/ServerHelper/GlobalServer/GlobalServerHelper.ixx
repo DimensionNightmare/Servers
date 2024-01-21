@@ -144,7 +144,7 @@ void GlobalServerHelper::UpdateServerGroup()
 		{
 			logicsTemp[logicPos]->SetLinkNode(it);
 
-			changeControl(it, dbsTemp[dbPos]->GetChild()->GetSock());
+			changeControl(it, logicsTemp[logicPos]->GetChild()->GetSock());
 			logicPos++;
 		}
 	}

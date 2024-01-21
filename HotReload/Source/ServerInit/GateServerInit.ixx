@@ -35,7 +35,7 @@ void HandleGateServerInit(DNServer *server)
 		serverSock->onConnection = nullptr;
 		serverSock->onMessage = nullptr;
 
-		auto onConnection = [serverSock,serverProxy](const SocketChannelPtr &channel)
+		auto onConnection = [serverProxy](const SocketChannelPtr &channel)
 		{
 			string peeraddr = channel->peeraddr();
 			if (channel->isConnected())
@@ -74,8 +74,10 @@ void HandleGateServerInit(DNServer *server)
 		clientSock->onConnection = nullptr;
 		clientSock->onMessage = nullptr;
 		
-		auto onConnection = [clientSock](const SocketChannelPtr &channel)
+		auto onConnection = [serverProxy](const SocketChannelPtr &channel)
 		{
+			auto clientSock = serverProxy->GetCSock();
+
 			string peeraddr = channel->peeraddr();
 			clientSock->UpdateClientState(channel->status);
 
@@ -94,12 +96,14 @@ void HandleGateServerInit(DNServer *server)
 			}
 		};
 
-		auto onMessage = [clientSock](const SocketChannelPtr &channel, Buffer *buf) 
+		auto onMessage = [serverProxy](const SocketChannelPtr &channel, Buffer *buf) 
 		{
 			MessagePacket packet;
 			memcpy(&packet, buf->data(), MessagePacket::PackLenth);
 			if(packet.dealType == MsgDeal::Res)
 			{
+				auto clientSock = serverProxy->GetCSock();
+
 				if(auto task = clientSock->GetMsg(packet.msgId)) //client sock request
 				{
 					clientSock->DelMsg(packet.msgId);

@@ -1,5 +1,6 @@
 module;
 #include "Common.pb.h"
+#include "hv/Channel.h"
 
 #include <coroutine>
 export module LogicMessage:LogicCommon;
@@ -15,6 +16,7 @@ import AfxCommon;
 using namespace std;
 using namespace google::protobuf;
 using namespace GMsg::Common;
+using namespace hv;
 
 // client request
 export DNTaskVoid Msg_RegistSrv()
@@ -86,4 +88,15 @@ export DNTaskVoid Msg_RegistSrv()
 	dataChannel.Destroy();
 
 	co_return;
+}
+
+export void Exe_RetChangeCtlSrv(const SocketChannelPtr &channel, unsigned int msgId, Message *msg)
+{
+	COM_RetChangeCtlSrv* requset = (COM_RetChangeCtlSrv*)msg;
+	auto dnServer = GetLogicServer();
+	auto client = dnServer->GetCSock();
+
+	client->UpdateClientState(Channel::Status::CLOSED);
+
+	GetClientReconnectFunc()(requset->ip().c_str(), requset->port());
 }

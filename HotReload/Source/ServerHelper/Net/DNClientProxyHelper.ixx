@@ -40,14 +40,14 @@ public:
 
 #pragma region // ClientReconnectFunc
 
-static std::function<void(DNClientProxy *, const string&, int)> PClientReconnectFunc = nullptr;
+static std::function<void(const char*, int)> PClientReconnectFunc = nullptr;
 
-export void SetClientReconnectFunc( std::function<void(DNClientProxy *, const string&, int)> func)
+export void SetClientReconnectFunc( std::function<void(const char*, int)> func)
 {
 	PClientReconnectFunc = func;
 }
 
-export std::function<void(DNClientProxy *, const string&, int)> GetClientReconnectFunc()
+export std::function<void(const char*, int)> GetClientReconnectFunc()
 {
 	return PClientReconnectFunc;
 }

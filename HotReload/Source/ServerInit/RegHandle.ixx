@@ -12,7 +12,6 @@ import GateServerInit;
 import DatabaseServerInit;
 import LogicServerInit;
 
-import DNClientProxy;
 import DNClientProxyHelper;
 
 #ifdef HOTRELOAD_BUILD
@@ -26,7 +25,7 @@ extern "C"
 	HOTRELOAD int InitHotReload(DNServer &base);
 	HOTRELOAD int ShutdownHotReload(DNServer &base);
 
-	HOTRELOAD int RegClientReconnectFunc(std::function<void(DNClientProxy *, const std::string&, int)> func);
+	HOTRELOAD int RegClientReconnectFunc(std::function<void(const char*, int)> func);
 }
 
 module:private;
@@ -111,7 +110,7 @@ int ShutdownHotReload(DNServer &base)
 	return 0;
 }
 
-int RegClientReconnectFunc(std::function<void(DNClientProxy *, const std::string&, int)> func)
+int RegClientReconnectFunc(std::function<void(const char*, int)> func)
 {
 	SetClientReconnectFunc(func);
 	return 0;

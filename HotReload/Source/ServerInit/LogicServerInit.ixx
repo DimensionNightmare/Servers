@@ -35,8 +35,10 @@ void HandleLogicServerInit(DNServer *server)
 		serverSock->onConnection = nullptr;
 		serverSock->onMessage = nullptr;
 
-		auto onConnection = [serverSock,serverProxy](const SocketChannelPtr &channel)
+		auto onConnection = [serverProxy](const SocketChannelPtr &channel)
 		{
+			auto serverSock = serverProxy->GetCSock();
+
 			string peeraddr = channel->peeraddr();
 			if (channel->isConnected())
 			{
@@ -77,18 +79,23 @@ void HandleLogicServerInit(DNServer *server)
 		clientSock->onConnection = nullptr;
 		clientSock->onMessage = nullptr;
 		
-		auto onConnection = [clientSock](const SocketChannelPtr &channel)
+		auto onConnection = [serverProxy](const SocketChannelPtr &channel)
 		{
+			auto clientSock = serverProxy->GetCSock();
+
 			string peeraddr = channel->peeraddr();
 			clientSock->UpdateClientState(channel->status);
 
 			if (channel->isConnected())
 			{
 				DNPrint("%s connected! connfd=%d id=%d \n", peeraddr.c_str(), channel->fd(), channel->id());
+				clientSock->SetRegistEvent(&Msg_RegistSrv);
+				clientSock->UpdateClientState(channel->status);
 			}
 			else
 			{
 				DNPrint("%s disconnected! connfd=%d id=%d \n", peeraddr.c_str(), channel->fd(), channel->id());
+				clientSock->UpdateClientState(channel->status);
 			}
 
 			if(clientSock->isReconnect())
@@ -97,12 +104,14 @@ void HandleLogicServerInit(DNServer *server)
 			}
 		};
 
-		auto onMessage = [clientSock](const SocketChannelPtr &channel, Buffer *buf) 
+		auto onMessage = [serverProxy](const SocketChannelPtr &channel, Buffer *buf) 
 		{
 			MessagePacket packet;
 			memcpy(&packet, buf->data(), MessagePacket::PackLenth);
 			if(packet.dealType == MsgDeal::Res)
 			{
+				auto clientSock = serverProxy->GetCSock();
+
 				if(auto task = clientSock->GetMsg(packet.msgId)) //client sock request
 				{
 					clientSock->DelMsg(packet.msgId);

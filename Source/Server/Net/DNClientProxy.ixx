@@ -32,9 +32,6 @@ protected: // dll proxy
 	shared_mutex oMsgMutex;
 };
 
-
-export int HotReloadClient(DNClientProxy* client, const string& ip, int port);
-
 module:private;
 
 DNClientProxy::DNClientProxy()
@@ -54,27 +51,4 @@ DNClientProxy::~DNClientProxy()
 	}
 		
 	mMsgList.clear();
-}
-
-int HotReloadClient(DNClientProxy *client, const string& ip, int port)
-{
-	auto reconn_setting = new reconn_setting_t;
-	memcpy(reconn_setting, client->reconn_setting, sizeof reconn_setting);
-	auto unpack_setting = client->unpack_setting;
-	auto onConnection = client->onConnection;
-	auto onMessage = client->onMessage;
-
-	client->stop();
-	delete client;
-	client = new DNClientProxy;
-
-	client->reconn_setting = reconn_setting;
-	client->unpack_setting = unpack_setting;
-	
-
-	client->createsocket(port, ip.c_str());
-	client->onConnection = onConnection;
-	client->onMessage = onMessage;
-	client->start();
-	return 0;
 }

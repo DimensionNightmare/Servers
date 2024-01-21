@@ -96,7 +96,7 @@ export void Exe_RetChangeCtlSrv(const SocketChannelPtr &channel, unsigned int ms
 	auto dnServer = GetDatabaseServer();
 	auto client = dnServer->GetCSock();
 
-	client->UpdateClientState(Channel::Status::CONNECTING);
-	
-	GetClientReconnectFunc()(client, requset->ip(), requset->port());
+	client->UpdateClientState(Channel::Status::CLOSED);
+
+	GetClientReconnectFunc()(requset->ip().c_str(), requset->port());
 }

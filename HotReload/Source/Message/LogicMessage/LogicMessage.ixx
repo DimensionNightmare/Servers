@@ -1,5 +1,5 @@
 module;
-#include "google/protobuf/Message.h"
+#include "Common.pb.h"
 #include "hv/Channel.h"
 
 #include <map>
@@ -15,6 +15,7 @@ import AfxCommon;
 using namespace std;
 using namespace hv;
 using namespace google::protobuf;
+using namespace GMsg::Common;
 
 export class LogicMessageHandle
 {
@@ -60,4 +61,7 @@ void LogicMessageHandle::RegMsgHandle()
 {
 	std::hash<string> hashStr;
 	const Message* msg = nullptr;
+
+	msg = COM_RetChangeCtlSrv::internal_default_instance();
+	MHandleMap.emplace( hashStr(msg->GetDescriptor()->full_name()), make_pair(msg, &Exe_RetChangeCtlSrv));
 }
