@@ -28,6 +28,8 @@ void HandleGateServerInit(DNServer *server)
 {
 	SetGateServer(static_cast<GateServer*>(server));
 
+	GateMessageHandle::RegMsgHandle();
+
 	auto serverProxy = GetGateServer();
 
 	if (auto serverSock = serverProxy->GetSSock())
@@ -65,8 +67,6 @@ void HandleGateServerInit(DNServer *server)
 
 		serverSock->onConnection = onConnection;
 		serverSock->onMessage = onMessage;
-
-		GateMessageHandle::RegMsgHandle();
 	}
 
 	if (auto clientSock = serverProxy->GetCSock())

@@ -28,6 +28,8 @@ void HandleControlServerInit(DNServer *server)
 {
 	SetControlServer(static_cast<ControlServer*>(server));
 
+	ControlMessageHandle::RegMsgHandle();
+
 	auto serverProxy = GetControlServer();
 	
 	if (auto serverSock = serverProxy->GetSSock())
@@ -73,8 +75,6 @@ void HandleControlServerInit(DNServer *server)
 
 		serverSock->onConnection = onConnection;
 		serverSock->onMessage = onMessage;
-
-		ControlMessageHandle::RegMsgHandle();
 	}
 }
 

@@ -99,7 +99,7 @@ void GlobalServerHelper::UpdateServerGroup()
 		if(gateMap.count(it) && gateMap[it][0] && gateMap[it][1])
 		{
 			// not exist pos
-			manager->UnMountEntity(entityHelper->GetServerType(), it);
+			// manager->UnMountEntity(entityHelper->GetServerType(), it);
 		}
 		else
 		{
@@ -149,7 +149,7 @@ void GlobalServerHelper::UpdateServerGroup()
 		{
 			ServerEntityHelper* entity = dbsTemp[dbPos];
 			registControl(it, entity);
-			manager->UnMountEntity(entity->GetServerType(), entity);
+			// manager->UnMountEntity(entity->GetServerType(), entity);
 			dbPos++;
 		}
 
@@ -157,7 +157,7 @@ void GlobalServerHelper::UpdateServerGroup()
 		{
 			ServerEntityHelper* entity = logicsTemp[logicPos];
 			registControl(it, entity);
-			manager->UnMountEntity(entity->GetServerType(), entity);
+			// manager->UnMountEntity(entity->GetServerType(), entity);
 			logicPos++;
 		}
 	}

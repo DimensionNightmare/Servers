@@ -28,38 +28,9 @@ void HandleDatabaseServerInit(DNServer *server)
 {
 	SetDatabaseServer(static_cast<DatabaseServer*>(server));
 
+	DatabaseMessageHandle::RegMsgHandle();
+	
 	auto serverProxy = GetDatabaseServer();
-
-	if (auto serverSock = serverProxy->GetSSock())
-	{
-		serverSock->onConnection = nullptr;
-		serverSock->onMessage = nullptr;
-
-		auto onConnection = [serverProxy](const SocketChannelPtr &channel)
-		{
-			auto serverSock = serverProxy->GetSSock();
-
-			string peeraddr = channel->peeraddr();
-			if (channel->isConnected())
-			{
-				DNPrint("%s connected! connfd=%d id=%d \n", peeraddr.c_str(), channel->fd(), channel->id());
-			}
-			else
-			{
-				DNPrint("%s disconnected! connfd=%d id=%d \n", peeraddr.c_str(), channel->fd(), channel->id());
-			}
-		};
-
-		auto onMessage = [](const SocketChannelPtr &channel, Buffer *buf) 
-		{
-			
-		};
-
-		serverSock->onConnection = onConnection;
-		serverSock->onMessage = onMessage;
-
-		DatabaseMessageHandle::RegMsgHandle();
-	}
 
 	if (auto clientSock = serverProxy->GetCSock())
 	{
@@ -131,12 +102,6 @@ void HandleDatabaseServerInit(DNServer *server)
 void HandleDatabaseServerShutdown(DNServer *server)
 {
 	auto serverProxy = GetDatabaseServer();
-
-	if (auto serverSock = serverProxy->GetSSock())
-	{
-		serverSock->onConnection = nullptr;
-		serverSock->onMessage = nullptr;
-	}
 
 	if (auto clientSock = serverProxy->GetCSock())
 	{

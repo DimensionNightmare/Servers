@@ -23,7 +23,6 @@ export DNTaskVoid Msg_RegistSrv()
 {
 	auto dnServer = GetDatabaseServer();
 	auto client = dnServer->GetCSock();
-	auto server = dnServer->GetSSock();
 	auto msgId = client->GetMsgId();
 	
 	// first Can send Msg?
@@ -39,15 +38,6 @@ export DNTaskVoid Msg_RegistSrv()
 
 	COM_ReqRegistSrv requset;
 	requset.set_server_type((int)dnServer->GetServerType());
-	if(server->host == "0.0.0.0")
-	{
-		requset.set_ip("127.0.0.1");
-	}
-	else
-	{
-		requset.set_ip(server->host);
-	}
-	requset.set_port(server->port);
 	requset.set_server_index(dnServer->GetServerIndex());
 	
 	// pack data

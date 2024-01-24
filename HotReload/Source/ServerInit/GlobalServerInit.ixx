@@ -29,6 +29,8 @@ void HandleGlobalServerInit(DNServer *server)
 {
 	SetGlobalServer(static_cast<GlobalServer*>(server));
 
+	GlobalMessageHandle::RegMsgHandle();
+
 	auto serverProxy = GetGlobalServer();
 
 	if (auto serverSock = serverProxy->GetSSock())
@@ -72,8 +74,6 @@ void HandleGlobalServerInit(DNServer *server)
 
 		serverSock->onConnection = onConnection;
 		serverSock->onMessage = onMessage;
-
-		GlobalMessageHandle::RegMsgHandle();
 	}
 
 	if (auto clientSock = serverProxy->GetCSock())

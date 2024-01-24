@@ -42,13 +42,11 @@ public:
 	virtual void ReClientEvent(const char* ip, int port) override;
 
 public: // dll override
-	virtual DNServerProxy* GetSSock(){return pSSock;}
 	virtual DNClientProxy* GetCSock(){return pCSock;}
 
 	virtual ServerEntityManager<ServerEntity>* GetEntityManager(){return pEntityMan;}
 
 protected: // dll proxy
-	DNServerProxy* pSSock;
 	DNClientProxy* pCSock;
 
 	ServerEntityManager<ServerEntity>* pEntityMan;
@@ -63,7 +61,6 @@ module:private;
 LogicServer::LogicServer()
 {
 	emServerType = ServerType::LogicServer;
-	pSSock = nullptr;
 	pCSock = nullptr;
 
 	pEntityMan = nullptr;
@@ -75,13 +72,6 @@ LogicServer::~LogicServer()
 
 	delete pEntityMan;
 	pEntityMan = nullptr;
-
-	if(pSSock)
-	{
-		pSSock->setUnpack(nullptr);
-		delete pSSock;
-		pSSock = nullptr;
-	}
 
 	if(pCSock)
 	{
@@ -107,31 +97,6 @@ bool LogicServer::Init(map<string, string> &param)
 	{
 		port = stoi(param["port"]);
 	}
-	
-	pSSock = new DNServerProxy;
-
-	int listenfd = pSSock->createsocket(port);
-	if (listenfd < 0)
-	{
-		DNPrintErr("createsocket error! \n");
-		return false;
-	}
-
-	// if not set port mean need get port by self 
-	if(port == 0)
-	{
-		struct sockaddr_in addr;
-		socklen_t addrLen = sizeof(addr);
-		if (getsockname(listenfd, (struct sockaddr*)&addr, &addrLen) < 0) 
-		{
-			DNPrintErr("Error in getsockname \n");
-			return false;
-		}
-
-		pSSock->port = ntohs(addr.sin_port);
-	}
-	
-	DNPrint("pSSock listen on port %d, listenfd=%d ... \n", pSSock->port, listenfd);
 
 	auto setting = new unpack_setting_t;
 	setting->mode = unpack_mode_e::UNPACK_BY_LENGTH_FIELD;
@@ -139,10 +104,7 @@ bool LogicServer::Init(map<string, string> &param)
 	setting->body_offset = MessagePacket::PackLenth;
 	setting->length_field_bytes = 1;
 	setting->length_field_offset = 0;
-	pSSock->setUnpack(setting);
-	pSSock->setThreadNum(4);
 
-	
 	//connet ControlServer
 	if(param.contains("ctlPort") && param.contains("ctlIp") && is_ipaddr(param["ctlIp"].c_str()))
 	{
@@ -171,14 +133,6 @@ void LogicServer::InitCmd(map<string, function<void(stringstream *)>> &cmdMap)
 
 bool LogicServer::Start()
 {
-	if(!pSSock)
-	{
-		DNPrintErr("Server not Initialed! \n");
-		return false;
-	}
-
-	pSSock->start();
-
 	if(pCSock) // client
 	{
 		pCSock->start();
@@ -189,11 +143,6 @@ bool LogicServer::Start()
 
 bool LogicServer::Stop()
 {
-	if(pSSock)
-	{
-		pSSock->stop();
-	}
-
 	if(pCSock) // client
 	{
 		pCSock->stop();
@@ -221,22 +170,6 @@ void LogicServer::Resume()
 void LogicServer::LoopEvent(function<void(EventLoopPtr)> func)
 {
     map<long,EventLoopPtr> looped;
-    if(pSSock)
-	{
-		while(EventLoopPtr pLoop = pSSock->loop())
-		{
-			long id = pLoop->tid();
-			if(looped.find(id) == looped.end())
-			{
-				func(pLoop);
-				looped[id] = pLoop;
-			}
-			else
-			{
-				break;
-			}
-		};
-	}
 
 	if(pCSock)
 	{
