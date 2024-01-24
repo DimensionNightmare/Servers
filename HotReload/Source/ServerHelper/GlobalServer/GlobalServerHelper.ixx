@@ -11,6 +11,7 @@ import ServerEntityManagerHelper;
 import ServerEntity;
 
 import MessagePack;
+import ServerEntityHelper;
 
 using namespace std;
 using namespace GMsg::Common;
@@ -43,12 +44,13 @@ export GlobalServerHelper* GetGlobalServer()
 
 void GlobalServerHelper::UpdateServerGroup()
 {
-	auto gates = GetEntityManager()->GetEntity(ServerType::GateServer);
+	auto manager = GetEntityManager();
+	auto gates = manager->GetEntityByList(ServerType::GateServer);
 	if(gates.size() <= 0)
 		return;
 
-	auto dbs = GetEntityManager()->GetEntity(ServerType::DatabaseServer);
-	auto logics = GetEntityManager()->GetEntity(ServerType::LogicServer);
+	auto dbs = manager->GetEntityByList(ServerType::DatabaseServer);
+	auto logics = manager->GetEntityByList(ServerType::LogicServer);
 
 	vector<ServerEntityHelper*> gatesTemp;
 	vector<ServerEntityHelper*> dbsTemp;
@@ -96,7 +98,8 @@ void GlobalServerHelper::UpdateServerGroup()
 
 		if(gateMap.count(it) && gateMap[it][0] && gateMap[it][1])
 		{
-
+			// not exist pos
+			manager->UnMountEntity(entityHelper->GetServerType(), it);
 		}
 		else
 		{
@@ -114,19 +117,29 @@ void GlobalServerHelper::UpdateServerGroup()
 	COM_RetChangeCtlSrv retMsg;
 	string binData;
 
-	auto changeControl = [&retMsg, &binData](ServerEntityHelper* entity, const SocketChannelPtr& channel)
+	auto registControl = [&](ServerEntityHelper* beEntity, ServerEntityHelper* entity)
 	{
-		binData.clear();
+		SocketChannelPtr channel = entity->GetChild()->GetSock();
+		entity->SetLinkNode(beEntity);
+		entity->GetChild()->SetSock(nullptr);
+		channel->setContext(nullptr);
 		
-		retMsg.set_ip(entity->GetServerIp());
-		retMsg.set_port(entity->GetServerPort());
-
+		// sendData
+		binData.clear();
+		retMsg.set_ip(beEntity->GetServerIp());
+		retMsg.set_port(beEntity->GetServerPort());
 		binData.resize(retMsg.ByteSize());
 		retMsg.SerializeToArray(binData.data(), binData.size());
-
 		MessagePack(0, MsgDeal::Req, retMsg.GetDescriptor()->full_name(), binData);
-
 		channel->write(binData);
+		
+		// timer destory
+		auto timerId = GetSSock()->loop(0)->setTimeout(10000, [manager, entity](TimerID timerId)
+		{
+			manager->RemoveEntity(entity->GetChild()->GetID());
+		});
+
+		entity->GetChild()->SetTimerId(timerId);
 	};
 	
 	for(auto it : gatesTemp)
@@ -134,17 +147,17 @@ void GlobalServerHelper::UpdateServerGroup()
 		auto idles = gateMap[it];
 		if(!idles[0] && dbPos < dbsTemp.size())
 		{
-			dbsTemp[dbPos]->SetLinkNode(it);
-
-			changeControl(it, dbsTemp[dbPos]->GetChild()->GetSock());
+			ServerEntityHelper* entity = dbsTemp[dbPos];
+			registControl(it, entity);
+			manager->UnMountEntity(entity->GetServerType(), entity);
 			dbPos++;
 		}
 
 		if(!idles[1] && logicPos < logicsTemp.size())
 		{
-			logicsTemp[logicPos]->SetLinkNode(it);
-
-			changeControl(it, logicsTemp[logicPos]->GetChild()->GetSock());
+			ServerEntityHelper* entity = logicsTemp[logicPos];
+			registControl(it, entity);
+			manager->UnMountEntity(entity->GetServerType(), entity);
 			logicPos++;
 		}
 	}

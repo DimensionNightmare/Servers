@@ -22,7 +22,7 @@ export DNTaskVoid Exe_AuthAccount(const SocketChannelPtr &channel, unsigned int 
 	C2A_AuthAccount response;
 
 	ServerEntityHelper* entity = nullptr;
-	auto& servList = GetControlServer()->GetEntityManager()->GetEntity(ServerType::GlobalServer);
+	auto& servList = GetControlServer()->GetEntityManager()->GetEntityByList(ServerType::GlobalServer);
 	for(auto& it : servList)
 	{
 		auto castEntity = static_cast<ServerEntityHelper*>(it);
@@ -80,7 +80,7 @@ export DNTaskVoid Exe_AuthAccount(const SocketChannelPtr &channel, unsigned int 
 
 	MessagePack(msgId, MsgDeal::Res, "", binData);
 	
-	// GetControlServer()->GetSSock()->loop()->setTimeout(10000, [channel, binData](TimerID timerID) 
+	// GetControlServer()->GetSSock()->loop(0)->setTimeout(10000, [channel, binData](TimerID timerID) 
 	// {
         channel->write(binData);
     // });

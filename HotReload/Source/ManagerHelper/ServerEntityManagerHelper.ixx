@@ -18,91 +18,90 @@ class ServerEntityManagerHelper : public ServerEntityManager<TEntity>
 private:
 	ServerEntityManagerHelper(){}
 public:
-	template<class CastTEntity = ServerEntityHelper>
-    CastTEntity* AddEntity(const SocketChannelPtr& channel, unsigned int entityId, ServerType serverType);
+    auto AddEntity(unsigned int entityId, ServerType type);
 
-	template<class CastTEntity = ServerEntityHelper>
-    void RemoveEntity(const SocketChannelPtr& channel, bool isDel = true);
+    void RemoveEntity(unsigned int entityId, bool isDel = true);
 
-	template<class CastTEntity = ServerEntityHelper>
-    CastTEntity* GetEntity(unsigned int id);
+	void MountEntity(ServerType type, TEntity* entity);
 
-	auto& GetEntity(ServerType type);
+    void UnMountEntity(ServerType type, TEntity* entity);
+
+    auto GetEntity(unsigned int id);
+
+	auto& GetEntityByList(ServerType type);
 
 	[[nodiscard]] unsigned int GetServerIndex();
 };
 
 template <class TEntity>
-template <class CastTEntity>
-CastTEntity* ServerEntityManagerHelper<TEntity>::AddEntity(const SocketChannelPtr& channel, unsigned int entityId, ServerType serverType)
+auto ServerEntityManagerHelper<TEntity>::AddEntity(unsigned int entityId, ServerType regType)
 {
 	unique_lock<shared_mutex> ulock(this->oMapMutex);
 
-	TEntity* entity = nullptr;
+	ServerEntityHelper* entity = nullptr;
 
-	CastTEntity* castEntity = nullptr;
-
-	if (this->mEntityMap.count(entityId))
+	if (!this->mEntityMap.count(entityId))
 	{
-		entity = this->mEntityMap[entityId];
-		castEntity = static_cast<CastTEntity*>(entity);
-	}
-	else
-	{
-		entity = new TEntity;
-		this->mEntityMap.emplace(entityId, entity);
-		channel->setContext(entity);
-
-		castEntity = static_cast<CastTEntity*>(entity);
-		castEntity->GetChild()->SetID(entityId);
-
-		castEntity->SetServerType(serverType);
-
-		this->mEntityMapList[serverType].emplace_back(entity);
+		auto oriEntity = new TEntity;
+		this->mEntityMap.emplace(entityId, oriEntity);
+		this->mEntityMapList[regType].emplace_back(oriEntity);
+		
+		entity = static_cast<ServerEntityHelper*>(oriEntity);
+		entity->GetChild()->SetID(entityId);
+		entity->SetServerType(regType);
 	}
 
-	castEntity->GetChild()->SetSock(channel);
-
-	return castEntity;
+	return entity;
 }
 
 template <class TEntity>
-template <class CastTEntity>
-void ServerEntityManagerHelper<TEntity>::RemoveEntity(const SocketChannelPtr& channel, bool isDel)
+void ServerEntityManagerHelper<TEntity>::RemoveEntity(unsigned int entityId, bool isDel)
 {
 	unique_lock<shared_mutex> ulock(this->oMapMutex);
-	if(TEntity* entity = channel->getContext<TEntity>())
+	if(this->mEntityMap.count(entityId))
 	{
-		printf("destory entity\n");
-		channel->setContext(nullptr);
-		auto castEntity = static_cast<CastTEntity*>(entity);
+		auto oriEntity = this->mEntityMap[entityId];
+		auto entity = static_cast<ServerEntityHelper*>(oriEntity);
 		if(isDel)
 		{
-			auto serverIndex = castEntity->GetChild()->GetID();
-			this->mEntityMap.erase(serverIndex);
-			this->mIdleServerId.push_back(serverIndex);
-			this->mEntityMapList[castEntity->GetServerType()].remove(entity);
-			delete entity;
+			printf("destory entity\n");
+			this->mEntityMap.erase(entityId);
+			this->mIdleServerId.push_back(entityId);
+			this->mEntityMapList[entity->GetServerType()].remove(oriEntity);
+			delete oriEntity;
 		}
 		else
 		{
-			castEntity->GetChild()->SetSock(nullptr);
+			entity->GetChild()->SetSock(nullptr);
 		}
 	}
 	
 }
 
 template <class TEntity>
-template <class CastTEntity>
-CastTEntity *ServerEntityManagerHelper<TEntity>::GetEntity(unsigned int id)
+void ServerEntityManagerHelper<TEntity>::UnMountEntity(ServerType type, TEntity *entity)
 {
-	shared_lock<shared_mutex> lock(this->oMapMutex);
-	// allow return empty
-	return static_cast<CastTEntity*>(this->mEntityMap[id]);
+	unique_lock<shared_mutex> ulock(this->oMapMutex);
+	// mEntityMap mEntityMapList
+	this->mEntityMapList[type].remove(entity);
 }
 
 template <class TEntity>
-auto& ServerEntityManagerHelper<TEntity>::GetEntity(ServerType type)
+auto ServerEntityManagerHelper<TEntity>::GetEntity(unsigned int entityId)
+{
+	shared_lock<shared_mutex> lock(this->oMapMutex);
+	ServerEntityHelper* entity = nullptr;
+	if(this->mEntityMap.count(entityId))
+	{
+		auto oriEntity = this->mEntityMap[entityId];
+		return static_cast<ServerEntityHelper*>(oriEntity);
+	}
+	// allow return empty
+	return entity;
+}
+
+template <class TEntity>
+auto& ServerEntityManagerHelper<TEntity>::GetEntityByList(ServerType type)
 {
 	shared_lock<shared_mutex> lock(this->oMapMutex);
 	return this->mEntityMapList[type];

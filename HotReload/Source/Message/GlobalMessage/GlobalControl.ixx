@@ -77,6 +77,7 @@ export DNTaskVoid Msg_RegistSrv()
 	{
 		DNPrint("regist Server success! \n");
 		client->SetRegisted(true);
+		dnServer->SetServerIndex(response.server_index());
 	}
 
 	dataChannel.Destroy();

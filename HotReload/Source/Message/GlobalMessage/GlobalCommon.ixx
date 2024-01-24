@@ -24,7 +24,7 @@ export void Exe_RegistSrv(const SocketChannelPtr &channel, unsigned int msgId, M
 
 	ServerType regType = (ServerType)requset->server_type();
 	
-	if(regType < ServerType::GateServer || regType >= ServerType::Max)
+	if(regType < ServerType::AuthServer || regType > ServerType::LogicServer)
 	{
 		response.set_success(false);
 	}
@@ -38,7 +38,7 @@ export void Exe_RegistSrv(const SocketChannelPtr &channel, unsigned int msgId, M
 	// take task to regist !
 	else if (requset->server_index())
 	{
-		auto entity = entityMan->GetEntity<ServerEntityHelper>(requset->server_index());
+		auto entity = entityMan->GetEntity(requset->server_index());
 		if (entity)
 		{
 			auto child = entity->GetChild();
@@ -46,7 +46,7 @@ export void Exe_RegistSrv(const SocketChannelPtr &channel, unsigned int msgId, M
 			if (auto timerId = child->GetTimerId())
 			{
 				child->SetTimerId(0);
-				GetGlobalServer()->GetSSock()->loop()->killTimer(timerId);
+				GetGlobalServer()->GetSSock()->loop(0)->killTimer(timerId);
 			}
 
 			// already connect
@@ -68,12 +68,16 @@ export void Exe_RegistSrv(const SocketChannelPtr &channel, unsigned int msgId, M
 		
 	}
 
-	else if (auto entity = entityMan->AddEntity<ServerEntityHelper>(channel, entityMan->GetServerIndex(), regType))
+	else if (auto entity = entityMan->AddEntity(entityMan->GetServerIndex(), regType))
 	{
-		response.set_success(true);
-		response.set_server_index(entity->GetChild()->GetID());
 		entity->SetServerIp(requset->ip());
 		entity->SetServerPort(requset->port());
+		entity->GetChild()->SetSock(channel);
+
+		channel->setContext(entity);
+
+		response.set_success(true);
+		response.set_server_index(entity->GetChild()->GetID());
 	}
 	
 	string binData;

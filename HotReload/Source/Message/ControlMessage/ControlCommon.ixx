@@ -36,11 +36,16 @@ export void Exe_RegistSrv(const SocketChannelPtr &channel, unsigned int msgId, M
 		response.set_success(false);
 	}
 
-	else if (auto entity = entityMan->AddEntity<ServerEntityHelper>(channel, entityMan->GetServerIndex(), regType))
+	else if (auto entity = entityMan->AddEntity(entityMan->GetServerIndex(), regType))
 	{
-		response.set_success(true);
 		entity->SetServerIp(requset->ip());
 		entity->SetServerPort(requset->port());
+		entity->GetChild()->SetSock(channel);
+
+		channel->setContext(entity);
+
+		response.set_success(true);
+		response.set_server_index(entity->GetChild()->GetID());
 	}
 
 	string binData;

@@ -10,6 +10,7 @@ import ControlServerHelper;
 import MessagePack;
 import ControlMessage;
 import AfxCommon;
+import ServerEntityHelper;
 
 #define DNPrint(fmt, ...) printf("[%s] {%s} ->" "\n" fmt "\n", GetNowTimeStr().c_str(), __FUNCTION__, ##__VA_ARGS__);
 #define DNPrintErr(fmt, ...) fprintf(stderr, "[%s] {%s} ->" "\n" fmt "\n", GetNowTimeStr().c_str(), __FUNCTION__, ##__VA_ARGS__);
@@ -45,9 +46,13 @@ void HandleControlServerInit(DNServer *server)
 			{
 				DNPrint("%s disconnected! connfd=%d id=%d \n", peeraddr.c_str(), channel->fd(), channel->id());
 
-				// 
-				auto entityMan = serverProxy->GetEntityManager();
-				entityMan->RemoveEntity<ServerEntityHelper>(channel);
+				// not used
+				if(auto entity = channel->getContext<ServerEntityHelper>())
+				{
+					auto entityMan = serverProxy->GetEntityManager();
+					entityMan->RemoveEntity(entity->GetChild()->GetID());
+				}
+				
 			}
 		};
 

@@ -42,6 +42,7 @@ public:
 
     ServerType GetServerType(){return emServerType;}
 	unsigned int GetServerIndex(){return iServerIndex;}
+	void SetServerIndex(unsigned int serverIndex){iServerIndex = serverIndex;}
 
 	virtual void LoopEvent(function<void(hv::EventLoopPtr)> func){}
 

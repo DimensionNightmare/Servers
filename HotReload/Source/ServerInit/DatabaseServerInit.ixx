@@ -47,19 +47,6 @@ void HandleDatabaseServerInit(DNServer *server)
 			else
 			{
 				DNPrint("%s disconnected! connfd=%d id=%d \n", peeraddr.c_str(), channel->fd(), channel->id());
-
-				auto entityMan = serverProxy->GetEntityManager();
-				auto timerID = serverSock->loop()->setTimeout(10000, [entityMan,channel](TimerID timerId)
-				{
-					entityMan->RemoveEntity<ServerEntityHelper>(channel);
-				});
-
-				if(auto entity = channel->getContext<ServerEntityHelper>())
-				{
-					auto child = entity->GetChild();
-					child->SetTimerId(timerID);
-					child->SetSock(nullptr);
-				}
 			}
 		};
 

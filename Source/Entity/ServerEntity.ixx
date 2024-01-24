@@ -1,6 +1,8 @@
 module;
 
 #include <string>
+#include <list>
+#include <map>
 export module ServerEntity;
 
 import Entity;
@@ -12,7 +14,7 @@ export class ServerEntity : public Entity
 {
 public:
 	ServerEntity();
-	~ServerEntity();
+	virtual ~ServerEntity();
 
 public: // dll override
 	virtual Entity* GetChild(){return this;}
@@ -23,7 +25,10 @@ protected: // dll proxy
 	unsigned short iServPort;
 	unsigned int IConnNum;
 
+	// regist node need
 	ServerEntity* pLink;
+	// be regist node need
+	map<ServerType, list< ServerEntity*>> mMapLink;
 };
 
 module:private;
@@ -35,6 +40,7 @@ ServerEntity::ServerEntity()
 	IConnNum = 0;
 	iServPort = 0;
 	pLink = nullptr;
+	mMapLink.clear();
 }
 
 ServerEntity::~ServerEntity()

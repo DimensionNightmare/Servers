@@ -1,5 +1,6 @@
 module;
 #include "Common.pb.h"
+#include "GateGlobal.pb.h"
 #include "hv/Channel.h"
 
 #include <coroutine>
@@ -18,6 +19,7 @@ using namespace std;
 using namespace hv;
 using namespace google::protobuf;
 using namespace GMsg::Common;
+using namespace GMsg::GateGlobal;
 
 // client request
 export DNTaskVoid Msg_RegistSrv()
@@ -79,11 +81,8 @@ export DNTaskVoid Msg_RegistSrv()
 	else
 	{
 		DNPrint("regist Server success! \n");
-		if(dnServer->GetServerIndex() == 0 && response.server_index())
-		{
-
-		}
 		client->SetRegisted(true);
+		dnServer->SetServerIndex(response.server_index());
 	}
 
 	dataChannel.Destroy();
@@ -101,7 +100,7 @@ export void Exe_RegistSrv(const SocketChannelPtr &channel, unsigned int msgId, M
 
 	ServerType regType = (ServerType)requset->server_type();
 	
-	if(regType < ServerType::GateServer || regType >= ServerType::Max)
+	if(regType < ServerType::DatabaseServer || regType > ServerType::LogicServer)
 	{
 		response.set_success(false);
 	}
@@ -112,45 +111,14 @@ export void Exe_RegistSrv(const SocketChannelPtr &channel, unsigned int msgId, M
 		response.set_success(false);
 	}
 
-	// take task to regist !
-	else if (requset->server_index())
+	else if (auto entity = entityMan->AddEntity(requset->server_index(), regType))
 	{
-		auto entity = entityMan->GetEntity<ServerEntityHelper>(requset->server_index());
-		if (entity)
-		{
-			auto child = entity->GetChild();
-			// wait destroy`s destroy
-			if (auto timerId = child->GetTimerId())
-			{
-				child->SetTimerId(0);
-				GetGateServer()->GetSSock()->loop()->killTimer(timerId);
-			}
-
-			// already connect
-			if(auto sock = child->GetSock())
-			{
-				response.set_success(false);
-			}
-			else
-			{
-				entity->SetLinkNode(nullptr);
-				child->SetSock(channel);
-				response.set_success(true);
-			}
-		}
-		else
-		{
-			response.set_success(false);
-		}
+		entity->GetChild()->SetSock(channel);
 		
-	}
+		channel->setContext(entity);
 
-	else if (auto entity = entityMan->AddEntity<ServerEntityHelper>(channel, entityMan->GetServerIndex(), regType))
-	{
 		response.set_success(true);
 		response.set_server_index(entity->GetChild()->GetID());
-		entity->SetServerIp(requset->ip());
-		entity->SetServerPort(requset->port());
 	}
 	
 	string binData;
@@ -159,4 +127,20 @@ export void Exe_RegistSrv(const SocketChannelPtr &channel, unsigned int msgId, M
 
 	MessagePack(msgId, MsgDeal::Res, "", binData);
 	channel->write(binData);
+
+	if(response.success())
+	{
+		binData.clear();
+
+		// up to Global
+		G2G_RetRegistSrv upLoad;
+		upLoad.set_server_index(requset->server_index());
+		binData.resize(upLoad.ByteSizeLong());
+		upLoad.SerializeToArray(binData.data(), (int)binData.size());
+		MessagePack(0, MsgDeal::Req, upLoad.GetDescriptor()->full_name(), binData);
+
+		auto dnServer = GetGateServer();
+		auto client = dnServer->GetCSock();
+		client->send(binData);
+	}
 }

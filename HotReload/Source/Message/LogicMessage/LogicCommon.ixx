@@ -78,11 +78,8 @@ export DNTaskVoid Msg_RegistSrv()
 	else
 	{
 		DNPrint("regist Server success! \n");
-		if(dnServer->GetServerIndex() == 0 && response.server_index())
-		{
-			
-		}
 		client->SetRegisted(true);
+		dnServer->SetServerIndex(response.server_index());
 	}
 
 	dataChannel.Destroy();

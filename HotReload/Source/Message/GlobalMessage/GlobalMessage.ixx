@@ -1,8 +1,8 @@
 module;
-#include "google/protobuf/Message.h"
 #include "GlobalControl.pb.h"
 #include "AuthControl.pb.h"
 #include "Common.pb.h"
+#include "GateGlobal.pb.h"
 #include "hv/Channel.h"
 
 #include <map>
@@ -13,6 +13,7 @@ export import :GlobalControl;
 import AfxCommon;
 import :GlobalCommon;
 import :GlobalAuth;
+import :GlobalGate;
 
 #define DNPrint(fmt, ...) printf("[%s] {%s} ->" "\n" fmt "\n", GetNowTimeStr().c_str(), __FUNCTION__, ##__VA_ARGS__);
 #define DNPrintErr(fmt, ...) fprintf(stderr, "[%s] {%s} ->" "\n" fmt "\n", GetNowTimeStr().c_str(), __FUNCTION__, ##__VA_ARGS__);
@@ -22,6 +23,7 @@ using namespace hv;
 using namespace google::protobuf;
 using namespace GMsg::Common;
 using namespace GMsg::AuthControl;
+using namespace GMsg::GateGlobal;
 
 export class GlobalMessageHandle
 {
@@ -73,4 +75,7 @@ void GlobalMessageHandle::RegMsgHandle()
 
 	msg = A2C_AuthAccount::internal_default_instance();
 	MHandleMap.emplace( hashStr(msg->GetDescriptor()->full_name()), make_pair(msg, &Exe_AuthAccount));
+
+	msg = G2G_RetRegistSrv::internal_default_instance();
+	MHandleMap.emplace( hashStr(msg->GetDescriptor()->full_name()), make_pair(msg, &Exe_RetRegistSrv));
 }

@@ -38,7 +38,7 @@ export DNTaskVoid Msg_RegistSrv()
 
 	COM_ReqRegistSrv requset;
 	requset.set_server_type((int)dnServer->GetServerType());
-	if(server->host == "0.0.0.0")
+	if(!strcmp(server->host, "0.0.0.0"))
 	{
 		requset.set_ip("127.0.0.1");
 	}
@@ -77,6 +77,7 @@ export DNTaskVoid Msg_RegistSrv()
 	{
 		DNPrint("regist Server success! \n");
 		client->SetRegisted(true);
+		dnServer->SetServerIndex(response.server_index());
 	}
 
 	dataChannel.Destroy();
