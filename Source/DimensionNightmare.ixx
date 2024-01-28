@@ -36,15 +36,17 @@ struct HotReloadDll
 		// ret = SetDllDirectory(sDllDirRand.c_str());
 		auto fullPath = filesystem::current_path().append(sDllDirRand).string();
 		wstring wstr(fullPath.begin(), fullPath.end());
-		AddDllDirectory(wstr.c_str());
+		// AddDllDirectory(wstr.c_str());
+		SetDllDirectoryW(wstr.c_str());
+
 		// if(!ret)
 		// {
 		// 	DNPrintErr("cant set dll path! error code=%d! \n", GetLastError());
 		// 	return false;
 		// }
 		// oLibHandle = LoadLibraryEx((SDllName).c_str(), NULL, LOAD_LIBRARY_SEARCH_USER_DIRS);
-		oLibHandle = LoadLibraryEx(SDllName.c_str(), NULL,  LOAD_LIBRARY_SEARCH_DEFAULT_DIRS); //DONT_RESOLVE_DLL_REFERENCES |
-		// oLibHandle = LoadLibrary(SDllName.c_str());
+		// oLibHandle = LoadLibraryEx(SDllName.c_str(), NULL, DONT_RESOLVE_DLL_REFERENCES | LOAD_LIBRARY_SEARCH_DEFAULT_DIRS); //DONT_RESOLVE_DLL_REFERENCES |
+		oLibHandle = LoadLibrary(SDllName.c_str());
 		if (!oLibHandle)
 		{
 			DNPrintErr("cant Success! error code=%d! \n", GetLastError());

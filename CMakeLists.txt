@@ -47,11 +47,11 @@ find_package(libpqxx CONFIG REQUIRED)
 add_executable(DimensionNightmareServer)
 
 file(GLOB_RECURSE DNSourceModule CONFIGURE_DEPENDS 
-	"Source/*.ixx"
+	Source/*.ixx
 )
 
-target_sources(DimensionNightmareServer
-	PUBLIC  "main.cpp"
+target_sources( DimensionNightmareServer
+	PUBLIC main.cpp
 	PUBLIC FILE_SET all_my_modules TYPE CXX_MODULES FILES ${DNSourceModule}
 )
 
@@ -79,7 +79,7 @@ target_compile_definitions(HotReload PUBLIC HOTRELOAD_BUILD)
 
 set_target_properties(HotReload PROPERTIES RUNTIME_OUTPUT_DIRECTORY  ${CMAKE_BINARY_DIR}/Runtime)
 
-target_link_libraries(HotReload hv_static protobuf::libprotobuf protobufGen.lib)
+target_link_libraries(HotReload hv_static protobuf::libprotobuf protobufGen.lib libpqxx::pqxx) #libpqxx::pqxx
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
 	set_property(TARGET HotReload PROPERTY CXX_STANDARD 23)
@@ -93,7 +93,7 @@ file(GLOB_RECURSE srcDNTest CONFIGURE_DEPENDS
 	"Test/*.ixx" 
 )
 
-target_link_libraries(DNTest protobuf::libprotobuf protobufGen.lib hv_static)
+target_link_libraries(DNTest protobuf::libprotobuf protobufGen.lib hv_static libpqxx::pqxx)
 
 target_sources(DNTest PUBLIC ${srcDNTest})
 

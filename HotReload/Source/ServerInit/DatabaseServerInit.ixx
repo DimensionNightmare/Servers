@@ -1,6 +1,7 @@
 module;
 #include "google/protobuf/Message.h"
 #include "hv/Channel.h"
+#include "pqxx/pqxx"
 
 #include <functional>
 export module DatabaseServerInit;
@@ -97,6 +98,15 @@ void HandleDatabaseServerInit(DNServer *server)
 		clientSock->onMessage = onMessage;
 	}
 
+	try
+	{
+		//"postgresql://root@localhost"
+		pqxx::connection c("host=localhost port=5432 dbname=postgres user=postgres password=1270 sslmode=prefer connect_timeout=10");
+	}
+	catch(const std::exception& e)
+	{
+		std::cerr << e.what() << '\n';
+	}
 }
 
 void HandleDatabaseServerShutdown(DNServer *server)
