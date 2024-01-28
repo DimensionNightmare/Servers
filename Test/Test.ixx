@@ -15,6 +15,7 @@
 #include <signal.h>
 #include <thread>
 #include <chrono>
+#include "pqxx/pqxx"
 
 using namespace hv;
 
@@ -171,14 +172,21 @@ enum class ServerType : int
 
 int main()
 {
-	int a = 7;
-	auto res = (ServerType)a;
-	if(res < ServerType::None || res > ServerType::LogicServer)
+	try
 	{
-		print("no");
+		printf("1");
+		//"postgresql://root@localhost"
+		pqxx::connection c;
+		printf("2");
 	}
-	else
+	catch(const std::exception& e)
 	{
-		print("yes");
+		std::cerr << e.what() << '\n';
 	}
+	
+	
+	// pqxx::work w(c);
+	// pqxx::row r = w.exec1("SELECT 1, 2, 'Hello'");
+	// auto [one, two, hello] = r.as<int, int, std::string>();
+	// printf("%s,%d",hello.c_str(), one + two);
 }

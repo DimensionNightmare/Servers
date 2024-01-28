@@ -3,6 +3,9 @@
 #
 cmake_minimum_required (VERSION 3.8)
 
+# Top project
+project (DimensionNightmareServer)
+
 # Enable Hot Reload for MSVC compilers if supported.
 if (POLICY CMP0141)
 	cmake_policy(SET CMP0141 NEW)
@@ -22,8 +25,8 @@ else()
 endif()
 
 set(CMAKE_CXX_STANDARD 23)
-
 set(CMAKE_EXPERIMENTAL_CXX_MODULE_DYNDEP ON)
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /Od")
 
 include_directories("../Environment/Install/protobufGen/${CMAKE_BUILD_TYPE}/include")
 link_directories("../Environment/Install/protobufGen/${CMAKE_BUILD_TYPE}/lib")
@@ -31,15 +34,15 @@ link_directories("../Environment/Install/protobufGen/${CMAKE_BUILD_TYPE}/lib")
 set(CMAKE_PREFIX_PATH
 "../Environment/Install/libhv/${CMAKE_BUILD_TYPE}/lib/cmake;"
 "../Environment/Install/protobuf/${CMAKE_BUILD_TYPE}/cmake;"
+"../Environment/Install/libpqxx/${CMAKE_BUILD_TYPE}/lib/cmake;"
 )
 
 find_package(libhv CONFIG REQUIRED)
 find_package(Protobuf CONFIG REQUIRED)
-
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /Od")
+find_package(libpqxx CONFIG REQUIRED)
 
 ################################ DimensionNightmareServer ################################
-project (DimensionNightmareServer)
+#project (DimensionNightmareServer)
 
 add_executable(DimensionNightmareServer)
 
@@ -48,9 +51,8 @@ file(GLOB_RECURSE DNSourceModule CONFIGURE_DEPENDS
 )
 
 target_sources(DimensionNightmareServer
-	PUBLIC "main.cpp"
-	PUBLIC FILE_SET all_my_modules TYPE CXX_MODULES FILES
-		${DNSourceModule}
+	PUBLIC  "main.cpp"
+	PUBLIC FILE_SET all_my_modules TYPE CXX_MODULES FILES ${DNSourceModule}
 )
 
 target_link_libraries(DimensionNightmareServer hv_static)
@@ -70,8 +72,7 @@ add_library( HotReload SHARED)
 
 target_sources(HotReload 
 	PUBLIC HotReload/HotReload.cpp
-	PUBLIC FILE_SET all_my_modules TYPE CXX_MODULES FILES
-   		${srcHotReloadModule}
+	PUBLIC FILE_SET all_my_modules TYPE CXX_MODULES FILES ${srcHotReloadModule}
 )
 
 target_compile_definitions(HotReload PUBLIC HOTRELOAD_BUILD)

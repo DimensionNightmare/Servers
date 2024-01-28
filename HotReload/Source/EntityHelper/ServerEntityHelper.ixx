@@ -7,6 +7,8 @@ import DNServer;
 import ServerEntity;
 import EntityHelper;
 
+using namespace std;
+
 export class ServerEntityHelper : public ServerEntity
 {
 private:
@@ -28,6 +30,22 @@ public:
 
 	void SetLinkNode(ServerEntity* node){pLink = node;}
 	ServerEntity* GetLinkNode(){ return pLink;}
+	
+	void SetMapLinkNode(ServerType type, ServerEntity* node)
+	{
+		if(type <= ServerType::None || type >= ServerType::Max)
+		{
+			return;
+		}
+
+		mMapLink[type].emplace_back(node);
+	}
+
+	auto& GetMapLinkNode(ServerType type)
+	{
+		return mMapLink[type];
+	}
+	
 };
 
 module:private;

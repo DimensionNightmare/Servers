@@ -20,7 +20,9 @@ export void Exe_RegistSrv(const SocketChannelPtr &channel, unsigned int msgId, M
 	COM_ReqRegistSrv* requset = (COM_ReqRegistSrv*)msg;
 	COM_ResRegistSrv response;
 
-	auto entityMan = GetGlobalServer()->GetEntityManager();
+	auto dnServer = GetGlobalServer();
+	auto entityMan = dnServer->GetEntityManager();
+	auto sSock = dnServer->GetSSock();
 
 	ServerType regType = (ServerType)requset->server_type();
 	
@@ -46,7 +48,7 @@ export void Exe_RegistSrv(const SocketChannelPtr &channel, unsigned int msgId, M
 			if (auto timerId = child->GetTimerId())
 			{
 				child->SetTimerId(0);
-				GetGlobalServer()->GetSSock()->loop(0)->killTimer(timerId);
+				sSock->loop(0)->killTimer(timerId);
 			}
 
 			// already connect
@@ -92,5 +94,5 @@ export void Exe_RegistSrv(const SocketChannelPtr &channel, unsigned int msgId, M
 		return;
 	}
 
-	GetGlobalServer()->UpdateServerGroup();
+	entityMan->UpdateServerGroup(sSock);
 }

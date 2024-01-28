@@ -32,14 +32,19 @@ struct HotReloadDll
 
 	bool LoadHandle()
 	{
-		int ret = SetDefaultDllDirectories(LOAD_LIBRARY_SEARCH_USER_DIRS);
-		ret = SetDllDirectory(sDllDirRand.c_str());
-		if(!ret)
-		{
-			DNPrintErr("cant set dll path! error code=%d! \n", GetLastError());
-			return false;
-		}
-		oLibHandle = LoadLibraryEx((SDllName).c_str(), NULL, LOAD_LIBRARY_SEARCH_USER_DIRS);
+		// int ret = SetDefaultDllDirectories(LOAD_LIBRARY_SEARCH_USER_DIRS);
+		// ret = SetDllDirectory(sDllDirRand.c_str());
+		auto fullPath = filesystem::current_path().append(sDllDirRand).string();
+		wstring wstr(fullPath.begin(), fullPath.end());
+		AddDllDirectory(wstr.c_str());
+		// if(!ret)
+		// {
+		// 	DNPrintErr("cant set dll path! error code=%d! \n", GetLastError());
+		// 	return false;
+		// }
+		// oLibHandle = LoadLibraryEx((SDllName).c_str(), NULL, LOAD_LIBRARY_SEARCH_USER_DIRS);
+		oLibHandle = LoadLibraryEx(SDllName.c_str(), NULL,  LOAD_LIBRARY_SEARCH_DEFAULT_DIRS); //DONT_RESOLVE_DLL_REFERENCES |
+		// oLibHandle = LoadLibrary(SDllName.c_str());
 		if (!oLibHandle)
 		{
 			DNPrintErr("cant Success! error code=%d! \n", GetLastError());
@@ -81,7 +86,7 @@ struct HotReloadDll
 			return false;
 		}
 
-		sDllDirRand = SDllDir + to_string(hv_rand(10000, 99999)) + "/";
+		sDllDirRand = SDllDir + to_string(hv_rand(10000, 99999));
 		filesystem::create_directories(sDllDirRand.c_str());
 		filesystem::copy(SDllDir.c_str(), sDllDirRand.c_str(), filesystem::copy_options::overwrite_existing);
 

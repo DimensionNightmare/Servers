@@ -80,10 +80,7 @@ export DNTaskVoid Exe_AuthAccount(const SocketChannelPtr &channel, unsigned int 
 
 	MessagePack(msgId, MsgDeal::Res, "", binData);
 	
-	// GetControlServer()->GetSSock()->loop(0)->setTimeout(10000, [channel, binData](TimerID timerID) 
-	// {
-        channel->write(binData);
-    // });
+	channel->write(binData);
 
 	co_return;
 }

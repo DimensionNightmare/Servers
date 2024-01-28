@@ -88,7 +88,7 @@ void DNClientProxyHelper::UpdateClientState(Channel::Status state)
 void DNClientProxyHelper::StartRegist()
 {
 	// setInterval can!t runtime modify
-	loop()->setInterval(1000, [this](TimerID timerID)
+	loop()->setInterval(1000, [this](uint64_t timerID)
 	{
 		if (channel->isConnected() && !IsRegisted()) 
 		{
