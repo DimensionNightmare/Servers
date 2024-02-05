@@ -12,7 +12,7 @@ struct DNTask
    	using HandleType = coroutine_handle<promise_type>;
 	struct promise_type
 	{
-		auto get_return_object()
+		DNTask get_return_object()
 		{
 			return DNTask{HandleType::from_promise(*this)};
 		}
@@ -22,9 +22,9 @@ struct DNTask
 			oResult = &value;
 		}
 		
-		auto initial_suspend() { return suspend_always{}; }
+		suspend_always initial_suspend() { return {}; }
 
-		auto final_suspend() noexcept { return suspend_always{}; }
+		suspend_always final_suspend() noexcept { return {}; }
 
 		void unhandled_exception() { }
 
@@ -49,7 +49,7 @@ struct DNTask
 	}
 	// Awaitable
 
-	DNTask(auto handle) : tHandle(handle){}
+	DNTask(HandleType handle) : tHandle(handle){}
 
 	void Resume()
 	{
@@ -96,14 +96,14 @@ export struct DNTaskVoid
 	{
 		void return_void(){}
 
-		auto get_return_object()
+		DNTaskVoid get_return_object()
 		{
 			return DNTaskVoid{HandleType::from_promise(*this)};
 		}
 
-		auto initial_suspend() { return suspend_never{}; }
+		suspend_never initial_suspend() { return {}; }
 
-		auto final_suspend() noexcept { return suspend_never{}; }
+		suspend_never final_suspend() noexcept { return {}; }
 
 		void unhandled_exception() {  }
 	};
@@ -123,7 +123,7 @@ export struct DNTaskVoid
 	}
 	// Awaitable End
 
-	DNTaskVoid(auto handle): tHandle(handle){}
+	DNTaskVoid(HandleType handle): tHandle(handle){}
 
 	void Resume()
 	{

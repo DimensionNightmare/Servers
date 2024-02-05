@@ -20,7 +20,7 @@ export void Exe_RegistSrv(const SocketChannelPtr &channel, unsigned int msgId, M
 	COM_ReqRegistSrv* requset = (COM_ReqRegistSrv*)msg;
 	COM_ResRegistSrv response;
 
-	auto dnServer = GetGlobalServer();
+	GlobalServerHelper* dnServer = GetGlobalServer();
 	auto entityMan = dnServer->GetEntityManager();
 	auto sSock = dnServer->GetSSock();
 
@@ -32,7 +32,7 @@ export void Exe_RegistSrv(const SocketChannelPtr &channel, unsigned int msgId, M
 	}
 
 	//exist?
-	if (auto entity = channel->getContext<ServerEntityHelper>())
+	if (ServerEntityHelper* entity = channel->getContext<ServerEntityHelper>())
 	{
 		response.set_success(false);
 	}
@@ -40,12 +40,12 @@ export void Exe_RegistSrv(const SocketChannelPtr &channel, unsigned int msgId, M
 	// take task to regist !
 	else if (requset->server_index())
 	{
-		auto entity = entityMan->GetEntity(requset->server_index());
+		ServerEntityHelper* entity = entityMan->GetEntity(requset->server_index());
 		if (entity)
 		{
 			auto child = entity->GetChild();
 			// wait destroy`s destroy
-			if (auto timerId = child->GetTimerId())
+			if (uint64_t timerId = child->GetTimerId())
 			{
 				child->SetTimerId(0);
 				sSock->loop(0)->killTimer(timerId);
@@ -70,7 +70,7 @@ export void Exe_RegistSrv(const SocketChannelPtr &channel, unsigned int msgId, M
 		
 	}
 
-	else if (auto entity = entityMan->AddEntity(entityMan->GetServerIndex(), regType))
+	else if (ServerEntityHelper* entity = entityMan->AddEntity(entityMan->GetServerIndex(), regType))
 	{
 		entity->SetServerIp(requset->ip());
 		entity->SetServerPort(requset->port());

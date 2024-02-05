@@ -10,7 +10,7 @@ import ServerEntity;
 
 using namespace std;
 
-class ControlServerHelper : public ControlServer
+export class ControlServerHelper : public ControlServer
 {
 private:
 	ControlServerHelper(){}

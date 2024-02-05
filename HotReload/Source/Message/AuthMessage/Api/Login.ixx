@@ -42,7 +42,7 @@ export void ApiLogin(HttpService* service)
 
 		res->content_type = req->ContentType();
 		
-		auto authServer = GetAuthServer();
+		AuthServerHelper* authServer = GetAuthServer();
 		if(!authServer)
 		{
 			errData["code"] = HTTP_STATUS_BAD_REQUEST;
@@ -75,16 +75,16 @@ export void ApiLogin(HttpService* service)
 
 		[username,password,&writer]()-> DNTaskVoid
 		{
-			auto writerProxy = writer;	//sharedptr ref count ++
+			const HttpResponseWriterPtr& writerProxy = writer;	//sharedptr ref count ++
 			A2C_AuthAccount requset;
 			requset.set_username(username);
 			requset.set_password(password);
 
 			C2A_AuthAccount response;
 			
-			auto authServer = GetAuthServer();
+			AuthServerHelper* authServer = GetAuthServer();
 			auto client = authServer->GetCSock();
-			auto msgId = client->GetMsgId();
+			unsigned int msgId = client->GetMsgId();
 			
 			// first Can send Msg?
 			if(client->GetMsg(msgId))

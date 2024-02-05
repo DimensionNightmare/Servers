@@ -31,7 +31,7 @@ void HandleGlobalServerInit(DNServer *server)
 
 	GlobalMessageHandle::RegMsgHandle();
 
-	auto serverProxy = GetGlobalServer();
+	GlobalServerHelper* serverProxy = GetGlobalServer();
 
 	if (auto serverSock = serverProxy->GetSSock())
 	{
@@ -49,7 +49,7 @@ void HandleGlobalServerInit(DNServer *server)
 			{
 				DNPrint("%s disconnected! connfd=%d id=%d \n", peeraddr.c_str(), channel->fd(), channel->id());
 
-				if(auto entity = channel->getContext<ServerEntityHelper>())
+				if(ServerEntityHelper* entity = channel->getContext<ServerEntityHelper>())
 				{
 					auto entityMan = serverProxy->GetEntityManager();
 					entityMan->RemoveEntity(entity->GetChild()->GetID());
@@ -111,7 +111,7 @@ void HandleGlobalServerInit(DNServer *server)
 			{
 				auto clientSock = serverProxy->GetCSock();
 
-				if(auto task = clientSock->GetMsg(packet.msgId)) //client sock request
+				if(DNTask<void *>* task = clientSock->GetMsg(packet.msgId)) //client sock request
 				{
 					clientSock->DelMsg(packet.msgId);
 					task->Resume();
@@ -144,7 +144,7 @@ void HandleGlobalServerInit(DNServer *server)
 
 void HandleGlobalServerShutdown(DNServer *server)
 {
-	auto serverProxy = GetGlobalServer();
+	GlobalServerHelper* serverProxy = GetGlobalServer();
 
 	if (auto serverSock = serverProxy->GetSSock())
 	{

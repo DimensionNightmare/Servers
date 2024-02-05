@@ -14,7 +14,7 @@ private:
 
 public:
 	void SetID(unsigned int id){iId = id;}
-	auto GetID(){ return iId;}
+	unsigned int GetID(){ return iId;}
 
 	void SetSock(const SocketChannelPtr& channel){ pSock = channel;}
 	const SocketChannelPtr& GetSock(){return pSock;}

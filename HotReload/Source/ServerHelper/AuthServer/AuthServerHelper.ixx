@@ -9,7 +9,7 @@ import DNWebProxyHelper;
 
 using namespace std;
 
-class AuthServerHelper : public AuthServer
+export class AuthServerHelper : public AuthServer
 {
 private:
 	AuthServerHelper(){}

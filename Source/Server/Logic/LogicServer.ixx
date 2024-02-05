@@ -98,7 +98,7 @@ bool LogicServer::Init(map<string, string> &param)
 		port = stoi(param["port"]);
 	}
 
-	auto setting = new unpack_setting_t;
+	unpack_setting_t* setting = new unpack_setting_t;
 	setting->mode = unpack_mode_e::UNPACK_BY_LENGTH_FIELD;
 	setting->length_field_coding = unpack_coding_e::ENCODE_BY_BIG_ENDIAN;
 	setting->body_offset = MessagePacket::PackLenth;
@@ -109,7 +109,7 @@ bool LogicServer::Init(map<string, string> &param)
 	if(param.contains("ctlPort") && param.contains("ctlIp") && is_ipaddr(param["ctlIp"].c_str()))
 	{
 		pCSock = new DNClientProxy;
-		auto reconn = new reconn_setting_t;
+		reconn_setting_t* reconn = new reconn_setting_t;
 		reconn->min_delay = 1000;
 		reconn->max_delay = 10000;
 		reconn->delay_policy = 2;
@@ -194,9 +194,9 @@ void LogicServer::LoopEvent(function<void(EventLoopPtr)> func)
 
 void LogicServer::ReClientEvent(const char* ip, int port)
 {
-	auto reconn_setting = new reconn_setting_t;
+	reconn_setting_t* reconn_setting = new reconn_setting_t;
 	memcpy(reconn_setting, pCSock->reconn_setting, sizeof reconn_setting);
-	auto unpack_setting = pCSock->unpack_setting;
+	unpack_setting_t* unpack_setting = pCSock->unpack_setting;
 	auto onConnection = pCSock->onConnection;
 	auto onMessage = pCSock->onMessage;
 

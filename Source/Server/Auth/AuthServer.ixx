@@ -96,7 +96,7 @@ bool AuthServer::Init(map<string, string> &param)
 	//connet ControlServer
 	if(param.contains("ctlPort") && param.contains("ctlIp") && is_ipaddr(param["ctlIp"].c_str()))
 	{
-		auto setting = new unpack_setting_t;
+		unpack_setting_t* setting = new unpack_setting_t;
 		setting->mode = unpack_mode_e::UNPACK_BY_LENGTH_FIELD;
 		setting->length_field_coding = unpack_coding_e::ENCODE_BY_BIG_ENDIAN;
 		setting->body_offset = MessagePacket::PackLenth;
@@ -104,7 +104,7 @@ bool AuthServer::Init(map<string, string> &param)
 		setting->length_field_offset = 0;
 		
 		pCSock = new DNClientProxy;
-		auto reconn = new reconn_setting_t;
+		reconn_setting_t* reconn = new reconn_setting_t;
 		reconn->min_delay = 1000;
 		reconn->max_delay = 10000;
 		reconn->delay_policy = 2;

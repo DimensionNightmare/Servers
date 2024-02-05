@@ -36,34 +36,22 @@ int InitHotReload(DNServer &base)
 	switch (servertype)
 	{
 	case ServerType::ControlServer:
-		{
-			HandleControlServerInit(&base);
-		}
+		HandleControlServerInit(&base);
 		break;
 	case ServerType::GlobalServer:
-		{
-			HandleGlobalServerInit(&base);
-		}
+		HandleGlobalServerInit(&base);
 		break;
 	case ServerType::AuthServer:
-		{
-			HandleAuthServerInit(&base);
-		}
+		HandleAuthServerInit(&base);
 		break;
 	case ServerType::GateServer:
-		{
-			HandleGateServerInit(&base);
-		}
+		HandleGateServerInit(&base);
 		break;
 	case ServerType::DatabaseServer:
-		{
-			HandleDatabaseServerInit(&base);
-		}
+		HandleDatabaseServerInit(&base);
 		break;
 	case ServerType::LogicServer:
-		{
-			HandleLogicServerInit(&base);
-		}
+		HandleLogicServerInit(&base);
 		break;
 	}
 
@@ -76,34 +64,22 @@ int ShutdownHotReload(DNServer &base)
 	switch (servertype)
 	{
 	case ServerType::ControlServer:
-		{
-			HandleControlServerShutdown(&base);
-		}
+		HandleControlServerShutdown(&base);
 		break;
 	case ServerType::GlobalServer:
-		{
-			HandleGlobalServerShutdown(&base);
-		}
+		HandleGlobalServerShutdown(&base);
 		break;
 	case ServerType::AuthServer:
-		{
-			HandleAuthServerShutdown(&base);
-		}
+		HandleAuthServerShutdown(&base);
 		break;
 	case ServerType::GateServer:
-		{
-			HandleGateServerShutdown(&base);
-		}
+		HandleGateServerShutdown(&base);
 		break;
 	case ServerType::DatabaseServer:
-		{
-			HandleDatabaseServerShutdown(&base);
-		}
+		HandleDatabaseServerShutdown(&base);
 		break;
 	case ServerType::LogicServer:
-		{
-			HandleLogicServerShutdown(&base);
-		}
+		HandleLogicServerShutdown(&base);
 		break;
 	}
 

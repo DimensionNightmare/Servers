@@ -14,7 +14,7 @@ private:
 	DNServerProxyHelper(){};
 
 public:
-	auto GetMsgId() { return ++iMsgId; }
+	unsigned int GetMsgId() { return ++iMsgId; }
 
 	auto& GetMsgMap(){ return mMsgList; }
 

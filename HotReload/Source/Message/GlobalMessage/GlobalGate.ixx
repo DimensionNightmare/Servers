@@ -20,9 +20,9 @@ export void Exe_RetRegistSrv(const SocketChannelPtr &channel, unsigned int msgId
 	G2G_RetRegistSrv* requset = (G2G_RetRegistSrv*)msg;
 
 	auto entityMan = GetGlobalServer()->GetEntityManager();
-	if(auto entity = entityMan->GetEntity(requset->server_index()))
+	if(ServerEntityHelper* entity = entityMan->GetEntity(requset->server_index()))
 	{
-		if(auto timerId = entity->GetChild()->GetTimerId())
+		if(uint64_t timerId = entity->GetChild()->GetTimerId())
 		{
 			entity->GetChild()->SetTimerId(0);
 			GetGlobalServer()->GetSSock()->loop(0)->killTimer(timerId);

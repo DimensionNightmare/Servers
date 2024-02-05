@@ -31,12 +31,12 @@ export void Exe_RegistSrv(const SocketChannelPtr &channel, unsigned int msgId, M
 	}
 
 	//exist?
-	else if (auto entity = channel->getContext<ServerEntityHelper>())
+	else if (ServerEntityHelper* entity = channel->getContext<ServerEntityHelper>())
 	{
 		response.set_success(false);
 	}
 
-	else if (auto entity = entityMan->AddEntity(entityMan->GetServerIndex(), regType))
+	else if (ServerEntityHelper* entity = entityMan->AddEntity(entityMan->GetServerIndex(), regType))
 	{
 		entity->SetServerIp(requset->ip());
 		entity->SetServerPort(requset->port());

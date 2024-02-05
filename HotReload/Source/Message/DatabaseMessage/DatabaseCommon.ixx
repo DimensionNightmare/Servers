@@ -21,9 +21,9 @@ using namespace hv;
 // client request
 export DNTaskVoid Msg_RegistSrv()
 {
-	auto dnServer = GetDatabaseServer();
+	DatabaseServerHelper* dnServer = GetDatabaseServer();
 	auto client = dnServer->GetCSock();
-	auto msgId = client->GetMsgId();
+	unsigned int msgId = client->GetMsgId();
 	
 	// first Can send Msg?
 	if(client->GetMsg(msgId))
@@ -80,7 +80,7 @@ export DNTaskVoid Msg_RegistSrv()
 export void Exe_RetChangeCtlSrv(const SocketChannelPtr &channel, unsigned int msgId, Message *msg)
 {
 	COM_RetChangeCtlSrv* requset = (COM_RetChangeCtlSrv*)msg;
-	auto dnServer = GetDatabaseServer();
+	DatabaseServerHelper* dnServer = GetDatabaseServer();
 	auto client = dnServer->GetCSock();
 
 	client->UpdateClientState(Channel::Status::CLOSED);

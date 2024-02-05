@@ -34,7 +34,7 @@ struct HotReloadDll
 	{
 		// int ret = SetDefaultDllDirectories(LOAD_LIBRARY_SEARCH_USER_DIRS);
 		// ret = SetDllDirectory(sDllDirRand.c_str());
-		auto fullPath = filesystem::current_path().append(sDllDirRand).string();
+		string fullPath = filesystem::current_path().append(sDllDirRand).string();
 		wstring wstr(fullPath.begin(), fullPath.end());
 		// AddDllDirectory(wstr.c_str());
 		SetDllDirectoryW(wstr.c_str());
@@ -302,11 +302,10 @@ void DimensionNightmare::ShutDown()
 
 bool DimensionNightmare::OnRegHotReload()
 {
-	if (auto funtPtr = pHotDll->GetFuncPtr("InitHotReload"))
+	if (FARPROC funtPtr = pHotDll->GetFuncPtr("InitHotReload"))
 	{
 		using funcSign = int (*)(DNServer &);
-		auto func = reinterpret_cast<funcSign>(funtPtr);
-		if (func)
+		if (funcSign func = reinterpret_cast<funcSign>(funtPtr))
 		{
 			func(*pServer);
 			return true;
@@ -322,11 +321,10 @@ bool DimensionNightmare::OnUnregHotReload()
 	if(!pHotDll)
 		return false;
 
-	if (auto funtPtr = pHotDll->GetFuncPtr("ShutdownHotReload"))
+	if (FARPROC funtPtr = pHotDll->GetFuncPtr("ShutdownHotReload"))
 	{
 		using funcSign = int (*)(DNServer &);
-		auto func = reinterpret_cast<funcSign>(funtPtr);
-		if (func)
+		if (funcSign func = reinterpret_cast<funcSign>(funtPtr))
 		{
 			func(*pServer);
 			return true;
@@ -338,11 +336,10 @@ bool DimensionNightmare::OnUnregHotReload()
 
 bool DimensionNightmare::OnRegClientReconnectFunc()
 {
-	if (auto funtPtr = pHotDll->GetFuncPtr("RegClientReconnectFunc"))
+	if (FARPROC funtPtr = pHotDll->GetFuncPtr("RegClientReconnectFunc"))
 	{
 		using funcSign = int (*)(std::function<void(const char*, int)>);
-		auto func = reinterpret_cast<funcSign>(funtPtr);
-		if (func)
+		if (funcSign func = reinterpret_cast<funcSign>(funtPtr))
 		{
 			// auto funcProxy = std::bind(&DNServer::ReClientEvent, pServer);
 			auto funcProxy = [this](const char* ip, int port)

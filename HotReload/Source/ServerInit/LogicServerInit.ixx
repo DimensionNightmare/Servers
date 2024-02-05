@@ -30,7 +30,7 @@ void HandleLogicServerInit(DNServer *server)
 
 	LogicMessageHandle::RegMsgHandle();
 
-	auto serverProxy = GetLogicServer();
+	LogicServerHelper* serverProxy = GetLogicServer();
 	
 	if (auto clientSock = serverProxy->GetCSock())
 	{
@@ -70,7 +70,7 @@ void HandleLogicServerInit(DNServer *server)
 			{
 				auto clientSock = serverProxy->GetCSock();
 
-				if(auto task = clientSock->GetMsg(packet.msgId)) //client sock request
+				if(DNTask<void *>* task = clientSock->GetMsg(packet.msgId)) //client sock request
 				{
 					clientSock->DelMsg(packet.msgId);
 					task->Resume();
@@ -103,7 +103,7 @@ void HandleLogicServerInit(DNServer *server)
 
 void HandleLogicServerShutdown(DNServer *server)
 {
-	auto serverProxy = GetLogicServer();
+	LogicServerHelper* serverProxy = GetLogicServer();
 
 	if (auto clientSock = serverProxy->GetCSock())
 	{

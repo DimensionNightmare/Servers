@@ -93,13 +93,13 @@ bool ControlServer::Init(map<string, string> &param)
     // 输出分配的端口号
 	DNPrint("pSSock listen on port %d, listenfd=%d ... \n", pSSock->port, listenfd);
 
-	auto setting = make_shared<unpack_setting_t>();
+	unpack_setting_t* setting = new unpack_setting_t;
 	setting->mode = unpack_mode_e::UNPACK_BY_LENGTH_FIELD;
 	setting->length_field_coding = unpack_coding_e::ENCODE_BY_BIG_ENDIAN;
 	setting->body_offset = MessagePacket::PackLenth;
 	setting->length_field_bytes = 1;
 	setting->length_field_offset = 0;
-	pSSock->setUnpack(setting.get());
+	pSSock->setUnpack(setting);
 	pSSock->setThreadNum(4);
 
 	pEntityMan = new ServerEntityManager<ServerEntity>;

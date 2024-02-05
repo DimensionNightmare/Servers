@@ -46,7 +46,7 @@ void ControlMessageHandle::MsgHandle(const SocketChannelPtr &channel, unsigned i
 	if (MHandleMap.contains(msgHashId))
 	{
 		auto& handle = MHandleMap[msgHashId];
-		auto message = handle.first->New();
+		Message* message = handle.first->New();
 		if(message->ParseFromArray(msgData.data(), msgData.length()))
 		{
 			handle.second(channel, msgId, message);

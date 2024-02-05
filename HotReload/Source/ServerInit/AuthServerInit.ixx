@@ -27,7 +27,7 @@ void HandleAuthServerInit(DNServer *server)
 {
 	SetAuthServer(static_cast<AuthServer*>(server));
 
-	auto serverProxy = GetAuthServer();
+	AuthServerHelper* serverProxy = GetAuthServer();
 
 	if(auto serverSock = serverProxy->GetSSock())
 	{
@@ -74,7 +74,7 @@ void HandleAuthServerInit(DNServer *server)
 			{
 				auto clientSock = serverProxy->GetCSock();
 
-				if(auto task = clientSock->GetMsg(packet.msgId)) //client sock request
+				if(DNTask<void *>* task = clientSock->GetMsg(packet.msgId)) //client sock request
 				{
 					clientSock->DelMsg(packet.msgId);
 					task->Resume();
@@ -102,7 +102,7 @@ void HandleAuthServerInit(DNServer *server)
 
 void HandleAuthServerShutdown(DNServer *server)
 {
-	auto serverProxy = GetAuthServer();
+	AuthServerHelper* serverProxy = GetAuthServer();
 
 	if (auto serverSock = serverProxy->GetSSock())
 	{

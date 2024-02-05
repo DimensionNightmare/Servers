@@ -22,10 +22,10 @@ export DNTaskVoid Exe_AuthAccount(const SocketChannelPtr &channel, unsigned int 
 	C2A_AuthAccount response;
 
 	ServerEntityHelper* entity = nullptr;
-	auto& servList = GetControlServer()->GetEntityManager()->GetEntityByList(ServerType::GlobalServer);
-	for(auto& it : servList)
+	list<ServerEntity*>& servList = GetControlServer()->GetEntityManager()->GetEntityByList(ServerType::GlobalServer);
+	for(ServerEntity* it : servList)
 	{
-		auto castEntity = static_cast<ServerEntityHelper*>(it);
+		ServerEntityHelper* castEntity = static_cast<ServerEntityHelper*>(it);
 
 		if(castEntity->GetChild()->GetTimerId())
 		{
@@ -61,7 +61,7 @@ export DNTaskVoid Exe_AuthAccount(const SocketChannelPtr &channel, unsigned int 
 		}();
 
 		auto sock = GetControlServer()->GetSSock();
-		auto smsgId = sock->GetMsgId();
+		unsigned int smsgId = sock->GetMsgId();
 		sock->AddMsg(smsgId, (DNTask<void*>*)&dataChannel);
 
 		binData.resize(requset->ByteSize());

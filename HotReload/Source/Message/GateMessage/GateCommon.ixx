@@ -24,10 +24,10 @@ using namespace GMsg::GateGlobal;
 // client request
 export DNTaskVoid Msg_RegistSrv()
 {
-	auto dnServer = GetGateServer();
+	GateServerHelper* dnServer = GetGateServer();
 	auto client = dnServer->GetCSock();
 	auto server = dnServer->GetSSock();
-	auto msgId = client->GetMsgId();
+	unsigned int msgId = client->GetMsgId();
 	
 	// first Can send Msg?
 	if(client->GetMsg(msgId))
@@ -106,12 +106,12 @@ export void Exe_RegistSrv(const SocketChannelPtr &channel, unsigned int msgId, M
 	}
 
 	//exist?
-	if (auto entity = channel->getContext<ServerEntityHelper>())
+	if (ServerEntityHelper* entity = channel->getContext<ServerEntityHelper>())
 	{
 		response.set_success(false);
 	}
 
-	else if (auto entity = entityMan->AddEntity(requset->server_index(), regType))
+	else if (ServerEntityHelper* entity = entityMan->AddEntity(requset->server_index(), regType))
 	{
 		entity->GetChild()->SetSock(channel);
 		
@@ -139,7 +139,7 @@ export void Exe_RegistSrv(const SocketChannelPtr &channel, unsigned int msgId, M
 		upLoad.SerializeToArray(binData.data(), (int)binData.size());
 		MessagePack(0, MsgDeal::Req, upLoad.GetDescriptor()->full_name(), binData);
 
-		auto dnServer = GetGateServer();
+		GateServerHelper* dnServer = GetGateServer();
 		auto client = dnServer->GetCSock();
 		client->send(binData);
 	}

@@ -30,7 +30,7 @@ void HandleControlServerInit(DNServer *server)
 
 	ControlMessageHandle::RegMsgHandle();
 
-	auto serverProxy = GetControlServer();
+	ControlServerHelper* serverProxy = GetControlServer();
 	
 	if (auto serverSock = serverProxy->GetSSock())
 	{
@@ -49,7 +49,7 @@ void HandleControlServerInit(DNServer *server)
 				DNPrint("%s disconnected! connfd=%d id=%d \n", peeraddr.c_str(), channel->fd(), channel->id());
 
 				// not used
-				if(auto entity = channel->getContext<ServerEntityHelper>())
+				if(ServerEntityHelper* entity = channel->getContext<ServerEntityHelper>())
 				{
 					auto entityMan = serverProxy->GetEntityManager();
 					entityMan->RemoveEntity(entity->GetChild()->GetID());
@@ -80,7 +80,7 @@ void HandleControlServerInit(DNServer *server)
 
 void HandleControlServerShutdown(DNServer *server)
 {
-	auto serverProxy = GetControlServer();
+	ControlServerHelper* serverProxy = GetControlServer();
 	if (auto serverSock = serverProxy->GetSSock())
 	{
 		serverSock->onConnection = nullptr;

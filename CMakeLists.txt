@@ -28,9 +28,6 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_EXPERIMENTAL_CXX_MODULE_DYNDEP ON)
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /Od")
 
-include_directories("../Environment/Install/protobufGen/${CMAKE_BUILD_TYPE}/include")
-link_directories("../Environment/Install/protobufGen/${CMAKE_BUILD_TYPE}/lib")
-
 set(CMAKE_PREFIX_PATH
 "../Environment/Install/libhv/${CMAKE_BUILD_TYPE}/lib/cmake;"
 "../Environment/Install/protobuf/${CMAKE_BUILD_TYPE}/cmake;"
@@ -40,6 +37,9 @@ set(CMAKE_PREFIX_PATH
 find_package(libhv CONFIG REQUIRED)
 find_package(Protobuf CONFIG REQUIRED)
 find_package(libpqxx CONFIG REQUIRED)
+
+include_directories("../Environment/Install/protobufGen/${CMAKE_BUILD_TYPE}/include")
+link_directories("../Environment/Install/protobufGen/${CMAKE_BUILD_TYPE}/lib")
 
 ################################ DimensionNightmareServer ################################
 #project (DimensionNightmareServer)
@@ -52,7 +52,7 @@ file(GLOB_RECURSE DNSourceModule CONFIGURE_DEPENDS
 
 target_sources( DimensionNightmareServer
 	PUBLIC main.cpp
-	PUBLIC FILE_SET all_my_modules TYPE CXX_MODULES FILES ${DNSourceModule}
+	PUBLIC FILE_SET cpp20_modules TYPE CXX_MODULES FILES ${DNSourceModule}
 )
 
 target_link_libraries(DimensionNightmareServer hv_static)
@@ -72,14 +72,14 @@ add_library( HotReload SHARED)
 
 target_sources(HotReload 
 	PUBLIC HotReload/HotReload.cpp
-	PUBLIC FILE_SET all_my_modules TYPE CXX_MODULES FILES ${srcHotReloadModule}
+	PUBLIC FILE_SET cpp20_modules TYPE CXX_MODULES FILES ${srcHotReloadModule}
 )
 
 target_compile_definitions(HotReload PUBLIC HOTRELOAD_BUILD)
 
 set_target_properties(HotReload PROPERTIES RUNTIME_OUTPUT_DIRECTORY  ${CMAKE_BINARY_DIR}/Runtime)
 
-target_link_libraries(HotReload hv_static protobuf::libprotobuf protobufGen.lib libpqxx::pqxx) #libpqxx::pqxx
+target_link_libraries(HotReload hv_static protobuf::libprotobuf protobufGen.lib libpqxx::pqxx)
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
 	set_property(TARGET HotReload PROPERTY CXX_STANDARD 23)

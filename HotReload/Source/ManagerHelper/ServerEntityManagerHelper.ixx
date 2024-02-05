@@ -24,7 +24,7 @@ class ServerEntityManagerHelper : public ServerEntityManager<TEntity>
 private:
 	ServerEntityManagerHelper(){}
 public:
-    auto AddEntity(unsigned int entityId, ServerType type);
+    ServerEntityHelper* AddEntity(unsigned int entityId, ServerType type);
 
     void RemoveEntity(unsigned int entityId, bool isDel = true);
 
@@ -32,9 +32,9 @@ public:
 
     void UnMountEntity(ServerType type, TEntity* entity);
 
-    auto GetEntity(unsigned int id);
+    ServerEntityHelper* GetEntity(unsigned int id);
 
-	auto& GetEntityByList(ServerType type);
+	list<TEntity*>& GetEntityByList(ServerType type);
 
 	[[nodiscard]] unsigned int GetServerIndex();
 
@@ -42,7 +42,7 @@ public:
 };
 
 template <class TEntity>
-auto ServerEntityManagerHelper<TEntity>::AddEntity(unsigned int entityId, ServerType regType)
+ServerEntityHelper* ServerEntityManagerHelper<TEntity>::AddEntity(unsigned int entityId, ServerType regType)
 {
 	ServerEntityHelper* entity = nullptr;
 
@@ -50,7 +50,7 @@ auto ServerEntityManagerHelper<TEntity>::AddEntity(unsigned int entityId, Server
 	{
 		unique_lock<shared_mutex> ulock(this->oMapMutex);
 
-		auto oriEntity = new TEntity;
+		TEntity* oriEntity = new TEntity;
 		this->mEntityMap.emplace(entityId, oriEntity);
 		this->mEntityMapList[regType].emplace_back(oriEntity);
 		
@@ -68,8 +68,8 @@ void ServerEntityManagerHelper<TEntity>::RemoveEntity(unsigned int entityId, boo
 	
 	if(this->mEntityMap.count(entityId))
 	{
-		auto oriEntity = this->mEntityMap[entityId];
-		auto entity = CastObj(oriEntity);
+		TEntity* oriEntity = this->mEntityMap[entityId];
+		ServerEntityHelper* entity = CastObj(oriEntity);
 		if(isDel)
 		{
 			unique_lock<shared_mutex> ulock(this->oMapMutex);
@@ -97,13 +97,13 @@ void ServerEntityManagerHelper<TEntity>::UnMountEntity(ServerType type, TEntity 
 }
 
 template <class TEntity>
-auto ServerEntityManagerHelper<TEntity>::GetEntity(unsigned int entityId)
+ServerEntityHelper* ServerEntityManagerHelper<TEntity>::GetEntity(unsigned int entityId)
 {
 	shared_lock<shared_mutex> lock(this->oMapMutex);
 	ServerEntityHelper* entity = nullptr;
 	if(this->mEntityMap.count(entityId))
 	{
-		auto oriEntity = this->mEntityMap[entityId];
+		TEntity* oriEntity = this->mEntityMap[entityId];
 		return CastObj(oriEntity);
 	}
 	// allow return empty
@@ -111,7 +111,7 @@ auto ServerEntityManagerHelper<TEntity>::GetEntity(unsigned int entityId)
 }
 
 template <class TEntity>
-auto& ServerEntityManagerHelper<TEntity>::GetEntityByList(ServerType type)
+list<TEntity*>& ServerEntityManagerHelper<TEntity>::GetEntityByList(ServerType type)
 {
 	shared_lock<shared_mutex> lock(this->oMapMutex);
 	return this->mEntityMapList[type];
@@ -122,7 +122,7 @@ unsigned int ServerEntityManagerHelper<TEntity>::GetServerIndex()
 {
 	if(this->mIdleServerId.size() > 0)
 	{
-		auto index = this->mIdleServerId.front();
+		unsigned int index = this->mIdleServerId.front();
 		this->mIdleServerId.pop_front();
 		return index;
 	}
@@ -132,12 +132,14 @@ unsigned int ServerEntityManagerHelper<TEntity>::GetServerIndex()
 template <class TEntity>
 void ServerEntityManagerHelper<TEntity>::UpdateServerGroup(DNServerProxy* sSock)
 {
-	auto gates = GetEntityByList(ServerType::GateServer);
+	list<TEntity*>& gates = GetEntityByList(ServerType::GateServer);
 	if(gates.size() <= 0)
+	{
 		return;
+	}
 
-	auto dbs = GetEntityByList(ServerType::DatabaseServer);
-	auto logics = GetEntityByList(ServerType::LogicServer);
+	list<TEntity*>& dbs = GetEntityByList(ServerType::DatabaseServer);
+	list<TEntity*>& logics = GetEntityByList(ServerType::LogicServer);
 
 	// alloc gate
 	COM_RetChangeCtlSrv retMsg;
@@ -160,7 +162,7 @@ void ServerEntityManagerHelper<TEntity>::UpdateServerGroup(DNServerProxy* sSock)
 		channel->write(binData);
 		
 		// timer destory
-		auto timerId = sSock->loop(0)->setTimeout(10000, [this, entity](uint64_t timerId)
+		uint64_t timerId = sSock->loop(0)->setTimeout(10000, [this, entity](uint64_t timerId)
 		{
 			RemoveEntity(entity->GetChild()->GetID());
 		});
@@ -168,14 +170,14 @@ void ServerEntityManagerHelper<TEntity>::UpdateServerGroup(DNServerProxy* sSock)
 		entity->GetChild()->SetTimerId(timerId);
 	};
 	
-	for(auto it : gates)
+	for(TEntity* it : gates)
 	{
-		auto gate = CastObj(it);
-		auto& gatesDb = gate->GetMapLinkNode(ServerType::DatabaseServer);
-		auto& gatesLogic = gate->GetMapLinkNode(ServerType::LogicServer);
+		ServerEntityHelper* gate = CastObj(it);
+		list<ServerEntity*>& gatesDb = gate->GetMapLinkNode(ServerType::DatabaseServer);
+		list<ServerEntity*>& gatesLogic = gate->GetMapLinkNode(ServerType::LogicServer);
 		if(!dbs.empty() && gatesDb.size() < 1)
 		{
-			auto ele = dbs.front();
+			TEntity* ele = dbs.front();
 			dbs.pop_front();
 			ServerEntityHelper* entity = CastObj(ele);
 			registControl(gate, entity);
@@ -185,7 +187,7 @@ void ServerEntityManagerHelper<TEntity>::UpdateServerGroup(DNServerProxy* sSock)
 
 		if(!logics.empty() && gatesLogic.size() < 1)
 		{
-			auto ele = logics.front();
+			TEntity* ele = logics.front();
 			logics.pop_front();
 			ServerEntityHelper* entity = CastObj(ele);
 			registControl(gate, entity);

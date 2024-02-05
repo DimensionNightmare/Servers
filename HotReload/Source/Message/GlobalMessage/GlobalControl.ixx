@@ -20,10 +20,10 @@ using namespace GMsg::Common;
 // client request
 export DNTaskVoid Msg_RegistSrv()
 {
-	auto dnServer = GetGlobalServer();
+	GlobalServerHelper* dnServer = GetGlobalServer();
 	auto client = dnServer->GetCSock();
 	auto server = dnServer->GetSSock();
-	auto msgId = client->GetMsgId();
+	unsigned int msgId = client->GetMsgId();
 	
 	// first Can send Msg?
 	if(client->GetMsg(msgId))

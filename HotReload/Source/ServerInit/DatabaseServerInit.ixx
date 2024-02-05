@@ -1,7 +1,6 @@
 module;
 #include "google/protobuf/Message.h"
 #include "hv/Channel.h"
-#include "pqxx/pqxx"
 
 #include <functional>
 export module DatabaseServerInit;
@@ -31,7 +30,7 @@ void HandleDatabaseServerInit(DNServer *server)
 
 	DatabaseMessageHandle::RegMsgHandle();
 	
-	auto serverProxy = GetDatabaseServer();
+	DatabaseServerHelper* serverProxy = GetDatabaseServer();
 
 	if (auto clientSock = serverProxy->GetCSock())
 	{
@@ -70,7 +69,7 @@ void HandleDatabaseServerInit(DNServer *server)
 			{
 				auto clientSock = serverProxy->GetCSock();
 
-				if(auto task = clientSock->GetMsg(packet.msgId)) //client sock request
+				if(DNTask<void *>* task = clientSock->GetMsg(packet.msgId)) //client sock request
 				{
 					clientSock->DelMsg(packet.msgId);
 					task->Resume();
@@ -98,20 +97,12 @@ void HandleDatabaseServerInit(DNServer *server)
 		clientSock->onMessage = onMessage;
 	}
 
-	try
-	{
-		//"postgresql://root@localhost"
-		pqxx::connection c("host=localhost port=5432 dbname=postgres user=postgres password=1270 sslmode=prefer connect_timeout=10");
-	}
-	catch(const std::exception& e)
-	{
-		std::cerr << e.what() << '\n';
-	}
+	serverProxy->InitDabase();
 }
 
 void HandleDatabaseServerShutdown(DNServer *server)
 {
-	auto serverProxy = GetDatabaseServer();
+	DatabaseServerHelper* serverProxy = GetDatabaseServer();
 
 	if (auto clientSock = serverProxy->GetCSock())
 	{

@@ -3,7 +3,7 @@
 #include <map>
 #include <unordered_map>
 #include <fstream>
-#include "schema.pb.h"
+#include "GCfg.pb.h"
 // #include <Windows.h>
 #include <locale>
 #include <random>
@@ -44,23 +44,27 @@ B() {}
 	 void msg() { std::cout << "B" << std::endl; }
 };
 
-int main1() 
+int main3() 
 {
 	GCfg::CharacterPlayer Weapons;
-	std::ifstream input("D:\\Project\\DimensionNightmare\\Environment\\GameConfig\\Gen\\Data\\character_player.bytes", std::ios::in | std::ios::binary);
+	std::ifstream input("C:\\Project\\DimensionNightmare\\Environment\\GameConfig\\Gen\\Data\\character_player.bytes", std::ios::in | std::ios::binary);
 	if(input)
 	{
 		if(Weapons.ParseFromIstream(&input))
 		{
-			Weapons.Clear();
+			// Weapons.Clear();
 			auto map = Weapons.data_map();
 			for(auto one:map)
 			{
 				std::cout << "key" << one.first << std::endl;
-				std::cout << "value"<< one.second.name() << std::endl;
+				std::cout << "value"<< one.second.DebugString() << std::endl;
 			}
 			auto find = map.find(55);
 			std::cout << "success" << std::endl;
+		}
+		else
+		{
+			std::cout << "error" << std::endl;
 		}
 
 	}
@@ -170,23 +174,75 @@ enum class ServerType : int
 	LogicServer,
 };
 
-int main()
+int main4()
 {
-	try
-	{
-		printf("1");
-		//"postgresql://root@localhost"
-		pqxx::connection c;
-		printf("2");
-	}
-	catch(const std::exception& e)
-	{
-		std::cerr << e.what() << '\n';
-	}
+	// try
+	// {
+	// 	printf("1");
+	// 	//"postgresql://root@localhost"
+	// 	pqxx::connection c;
+	// 	printf("2");
+	// }
+	// catch(const std::exception& e)
+	// {
+	// 	std::cerr << e.what() << '\n';
+	// }
 	
 	
 	// pqxx::work w(c);
 	// pqxx::row r = w.exec1("SELECT 1, 2, 'Hello'");
 	// auto [one, two, hello] = r.as<int, int, std::string>();
 	// printf("%s,%d",hello.c_str(), one + two);
+	
+	class Test
+	{
+	private:
+		/* data */
+	public:
+		Test(/* args */){};
+		~Test(){};
+
+	public:
+		int id = 3;
+	};
+	
+	
+	
+	map<int, Test> maps;
+	auto res = maps[0];
+	res.id = 10;
+	maps.erase(0);
+	cout << res.id;
+	return 0;
+}
+
+int main()
+{
+	 std::vector<int> myVector;
+
+    // 原始元素
+    int element1 = 1;
+    int element2 = 2;
+
+    // 使用引用将元素添加到 vector
+    myVector.push_back(element1);
+    myVector.push_back(element2);
+
+    // 输出 vector 中的元素
+    for (const auto& element : myVector) {
+        std::cout << element << " ";
+    }
+    std::cout << std::endl;
+
+    // 修改原始元素
+    element1 = 100;
+    element2 = 200;
+
+    // 输出 vector 中的元素
+    for (const auto& element : myVector) {
+        std::cout << element << " ";
+    }
+    std::cout << std::endl;
+
+	return 0;
 }

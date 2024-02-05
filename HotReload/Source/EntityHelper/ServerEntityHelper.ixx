@@ -41,7 +41,7 @@ public:
 		mMapLink[type].emplace_back(node);
 	}
 
-	auto& GetMapLinkNode(ServerType type)
+	list<ServerEntity*>& GetMapLinkNode(ServerType type)
 	{
 		return mMapLink[type];
 	}

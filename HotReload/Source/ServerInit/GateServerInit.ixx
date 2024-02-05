@@ -30,7 +30,7 @@ void HandleGateServerInit(DNServer *server)
 
 	GateMessageHandle::RegMsgHandle();
 
-	auto serverProxy = GetGateServer();
+	GateServerHelper* serverProxy = GetGateServer();
 
 	if (auto serverSock = serverProxy->GetSSock())
 	{
@@ -104,7 +104,7 @@ void HandleGateServerInit(DNServer *server)
 			{
 				auto clientSock = serverProxy->GetCSock();
 
-				if(auto task = clientSock->GetMsg(packet.msgId)) //client sock request
+				if(DNTask<void *>* task = clientSock->GetMsg(packet.msgId)) //client sock request
 				{
 					clientSock->DelMsg(packet.msgId);
 					task->Resume();
@@ -137,7 +137,7 @@ void HandleGateServerInit(DNServer *server)
 
 void HandleGateServerShutdown(DNServer *server)
 {
-	auto serverProxy = GetGateServer();
+	GateServerHelper* serverProxy = GetGateServer();
 
 	if (auto serverSock = serverProxy->GetSSock())
 	{

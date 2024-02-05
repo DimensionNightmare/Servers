@@ -20,7 +20,7 @@ private:
 	DNClientProxyHelper();
 public:
 
-	auto GetMsgId() { return ++iMsgId; }
+	unsigned int GetMsgId() { return ++iMsgId; }
 
 	auto& GetMsgMap(){ return mMsgList; }
 
@@ -79,6 +79,7 @@ void DNClientProxyHelper::UpdateClientState(Channel::Status state)
 	case Channel::Status::CLOSED :
 	case Channel::Status::DISCONNECTED :
 		ServerDisconnect();
+		break;
 	default:
 		break;
 	}
