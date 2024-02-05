@@ -26,16 +26,18 @@ enum class SqlOpType : char
 	CreateTable,
 	Insert,
 	Query,
+	Update,
 };
 
 const char* GetOpTypeBySqlOpType(SqlOpType eType)
 {
 	switch(eType)
 	{
-#define ONE(type, name, exp) case type: return name exp;
-		ONE(SqlOpType::CreateTable,"CREATE TABLE"," ")
-		ONE(SqlOpType::Insert,"INSERT INTO"," ")
-		ONE(SqlOpType::Query,"SELECT %s FROM"," ")
+#define ONE(type, name) case type: return name;
+		ONE(SqlOpType::CreateTable,	"CREATE TABLE "		)
+		ONE(SqlOpType::Insert,		"INSERT INTO "		)
+		ONE(SqlOpType::Query,		"SELECT "	)
+		ONE(SqlOpType::Update,		"UPDATE "	)
 #undef ONE
 	}
 
@@ -181,6 +183,8 @@ public:
 	DNDbObj<TMessage>& Query(int index = -2, int condIndex = -1, const char* condition = nullptr);
 
 	vector<TMessage> Result(){ return mResult;}
+
+	DNDbObj<TMessage>& Update(TMessage& updata, int condIndex = -1);
 
 private:
 	bool ChangeSqlType(SqlOpType type);
@@ -343,16 +347,8 @@ void DNDbObj<TMessage>::BuildSqlStatement()
 					selectElems += SSplit;
 			}
 
-			const char* fmtStr = GetOpTypeBySqlOpType(eType);
-			static size_t fmtSLen = strlen(fmtStr) - 2; // delete %s
+			ss << GetOpTypeBySqlOpType(eType) << selectElems << " FROM " << GetName();
 			
-			string tempStr = selectElems;
-			tempStr.resize(fmtSLen + tempStr.size());
-		
-			sprintf_s(tempStr.data(), tempStr.size() + 1, fmtStr, selectElems.c_str()); //size(), add '\0'
-
-			ss << tempStr << GetName();
-
 			bool hasCondition = false;
 
 			for (it = mEles.begin();it != itEnd;it++)
@@ -371,6 +367,45 @@ void DNDbObj<TMessage>::BuildSqlStatement()
 
 			ss << SEnd;
 			break;
+		}
+		case SqlOpType::Update:
+		{
+			string selectElems;
+			auto it = mEles.begin();
+			auto itEnd = mEles.end();
+			for (;it != itEnd;it++)
+			{
+				selectElems.append(format("{} = {}", it->first, it->second.front()));
+
+				if(next(it) != itEnd)
+					selectElems += SSplit;
+			}
+
+			ss << GetOpTypeBySqlOpType(eType) << GetName() << " SET "  << selectElems ;
+			
+			bool hasCondition = false;
+
+			for (it = mEles.begin();it != itEnd;it++)
+			{
+
+				for(auto condIt = it->second.begin(); condIt != it->second.end(); condIt++)
+				{
+					if(condIt == it->second.begin())
+					{
+						continue;
+					}
+
+					if(!hasCondition)
+					{
+						hasCondition = true;
+						ss << " WHERE ";
+					}
+
+					ss << *condIt;
+				}
+			}
+
+			ss << SEnd;
 		}
 	}
 
@@ -394,9 +429,17 @@ bool DNDbObj<TMessage>::Commit()
 	 		pWork->exec0(sSqlStatement);
 			break;
 		case SqlOpType::Query:
-	 		pqxx::result result = pWork->exec(sSqlStatement);
+		{
+			pqxx::result result = pWork->exec(sSqlStatement);
 			PaserQuery(result);
 			break;
+		}
+		case SqlOpType::Update:
+		{
+			pqxx::result result = pWork->exec(sSqlStatement);
+			break;
+		}
+			
 	}
 
 	eType = SqlOpType::None;
@@ -558,4 +601,39 @@ void DNDbObj<TMessage>::PaserQuery(pqxx::result &result)
 		}
 		mResult.push_back(gen);
 	}
+}
+
+template <class TMessage>
+DNDbObj<TMessage> &DNDbObj<TMessage>::Update(TMessage& updata, int condIndex)
+{
+	ChangeSqlType(SqlOpType::Update);
+
+	const Descriptor* descriptor = this->pMessage->GetDescriptor();
+	const Reflection* reflection = this->pMessage->GetReflection();
+
+	string sData;
+
+	for(int i = 0; i < descriptor->field_count(); i++)
+	{
+		bool isKey = condIndex == i;
+		const FieldDescriptor* field = descriptor->field(i);
+		if (!reflection->HasField(updata, field)) 
+		{
+			if(isKey)
+			{
+				throw new exception("update key not set");
+			}
+			continue;
+        } 
+
+		InsertFieldByProtoType(field, reflection, updata, sData);
+        mEles[field->name()].emplace_back(sData);
+
+		if(isKey)
+		{
+			mEles.begin()->second.emplace_back( format("{} = {}", field->name(), sData));
+		}
+	}
+
+	return *this;
 }

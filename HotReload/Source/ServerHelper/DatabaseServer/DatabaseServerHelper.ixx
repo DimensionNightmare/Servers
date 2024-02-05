@@ -74,16 +74,22 @@ void DatabaseServerHelper::InitDabase()
 
 			// accountInfo.AddRecord(datas).Commit();
 
-			accountInfo
-				.Query(-1)
-				// .Query(0, 0, " %s > 2")
-				.Query(-2,2, " %s = 324")
-				.Commit();
+			// accountInfo
+			// 	.Query(-1)
+			// 	// .Query(0, 0, " %s > 2")
+			// 	.Query(-2,2, " %s = 324")
+			// 	.Commit();
 
-			for(Account& msg : accountInfo.Result())
-			{
-				printf("%s \n\n", msg.DebugString().c_str());
-			}
+			// for(Account& msg : accountInfo.Result())
+			// {
+			// 	printf("%s \n\n", msg.DebugString().c_str());
+			// }
+
+			temp.Clear();
+			temp.set_accountid(1);
+			temp.set_email("hello");
+			temp.set_createtime(5454555);
+			accountInfo.Update( temp, -1).Commit();
 			
 		}
 
