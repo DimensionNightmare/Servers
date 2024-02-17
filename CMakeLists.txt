@@ -42,48 +42,46 @@ include_directories("../Environment/Install/protobufGen/${CMAKE_BUILD_TYPE}/incl
 link_directories("../Environment/Install/protobufGen/${CMAKE_BUILD_TYPE}/lib")
 
 ################################ DimensionNightmareServer ################################
-#project (DimensionNightmareServer)
-
-add_executable(DimensionNightmareServer)
-
 file(GLOB_RECURSE DNSourceModule CONFIGURE_DEPENDS 
-	Source/*.ixx
+	"Source/*.ixx"
 )
 
-target_sources( DimensionNightmareServer
-	PUBLIC main.cpp
+add_library(MainSource)
+
+target_sources( MainSource
 	PUBLIC FILE_SET cpp20_modules TYPE CXX_MODULES FILES ${DNSourceModule}
 )
 
-target_link_libraries(DimensionNightmareServer hv_static)
+target_link_libraries(MainSource PUBLIC hv_static)
+set_property(TARGET MainSource PROPERTY CXX_STANDARD 23)
 
-if (CMAKE_VERSION VERSION_GREATER 3.12)
-  set_property(TARGET DimensionNightmareServer PROPERTY CXX_STANDARD 23)
-endif()
+add_executable(DimensionNightmareServer "main.cpp")
+target_link_libraries(DimensionNightmareServer PRIVATE MainSource)
+set_property(TARGET DimensionNightmareServer PROPERTY CXX_STANDARD 23)
 
 ################################ HotReload ################################
 
 file(GLOB_RECURSE srcHotReloadModule CONFIGURE_DEPENDS 
-	"Source/*.ixx"
 	"HotReload/Source/*.ixx"
 )
 
-add_library( HotReload SHARED)
+add_library(HotloadSource)
 
-target_sources(HotReload 
-	PUBLIC HotReload/HotReload.cpp
-	PUBLIC FILE_SET cpp20_modules TYPE CXX_MODULES FILES ${srcHotReloadModule}
+target_sources(HotloadSource 
+	PUBLIC FILE_SET cpp20_modules TYPE CXX_MODULES FILES  ${srcHotReloadModule}
 )
+
+target_link_libraries(HotloadSource PUBLIC MainSource protobuf::libprotobuf protobufGen.lib libpqxx::pqxx)
+
+set_property(TARGET HotloadSource PROPERTY CXX_STANDARD 23)
+
+add_library( HotReload SHARED "HotReload/HotReload.cpp")
 
 target_compile_definitions(HotReload PUBLIC HOTRELOAD_BUILD)
 
 set_target_properties(HotReload PROPERTIES RUNTIME_OUTPUT_DIRECTORY  ${CMAKE_BINARY_DIR}/Runtime)
 
-target_link_libraries(HotReload hv_static protobuf::libprotobuf protobufGen.lib libpqxx::pqxx)
-
-if (CMAKE_VERSION VERSION_GREATER 3.12)
-	set_property(TARGET HotReload PROPERTY CXX_STANDARD 23)
-endif()
+target_link_libraries(HotReload PUBLIC HotloadSource)
 
 ################################ DNTest ################################
 
