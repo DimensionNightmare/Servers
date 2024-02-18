@@ -282,7 +282,9 @@ void DimensionNightmare::InitCmdHandle()
 
 	DNPrint("cmds: ");
 	for(auto &[k,v] : mCmdHandle)
+	{
 		printf("%s,", k.c_str());
+	}
 	
 	printf("\n\n");
 }

@@ -19,6 +19,7 @@ using namespace google::protobuf;
 #define SSplit ","
 #define SSpace " "
 #define SDefault "DEFAULT"
+#define SCombo " AND "
 
 enum class SqlOpType : char
 {
@@ -27,6 +28,7 @@ enum class SqlOpType : char
 	Insert,
 	Query,
 	Update,
+	Delete,
 };
 
 const char* GetOpTypeBySqlOpType(SqlOpType eType)
@@ -38,6 +40,7 @@ const char* GetOpTypeBySqlOpType(SqlOpType eType)
 		ONE(SqlOpType::Insert,		"INSERT INTO "		)
 		ONE(SqlOpType::Query,		"SELECT "	)
 		ONE(SqlOpType::Update,		"UPDATE "	)
+		ONE(SqlOpType::Delete,		"DELETE FROM "	)
 #undef ONE
 	}
 
@@ -186,8 +189,14 @@ public:
 
 	DNDbObj<TMessage>& Update(TMessage& updata, int condIndex = -1);
 
+	DNDbObj<TMessage>& Delete(TMessage& updata, int condIndex = -1);
+
+	bool IsSuccess(){return bExecResult;}
+
 private:
 	bool ChangeSqlType(SqlOpType type);
+
+	void SetResult(int affectedRows);
 
 	void BuildSqlStatement();
 
@@ -207,6 +216,9 @@ private:
 	pqxx::transaction<>* pWork;
 
 	string sSqlStatement;
+
+	bool bExecResult;
+	int iExecResultCount;
 };
 
 module:private;
@@ -220,6 +232,8 @@ DNDbObj<TMessage>::DNDbObj()
 	mEles.clear();
 	pWork = nullptr;
 	sSqlStatement.clear();
+	bExecResult = false;
+	iExecResultCount = 0;
 }
 
 template <class TMessage>
@@ -238,14 +252,45 @@ bool DNDbObj<TMessage>::ChangeSqlType(SqlOpType type)
 	}
 
 	eType = type;
+	bExecResult = false;
+	iExecResultCount = 0;
 	return true;
+}
+
+template <class TMessage>
+void DNDbObj<TMessage>::SetResult(int affectedRows)
+{
+	switch(eType)
+	{
+		case SqlOpType::Update:
+		case SqlOpType::Delete:
+		case SqlOpType::Query:
+		{
+			bExecResult = affectedRows > 0;
+			break;
+		}
+		case SqlOpType::Insert:
+		case SqlOpType::CreateTable:
+		{
+			bExecResult = affectedRows == iExecResultCount;
+			break;
+		}
+		default:
+			throw new exception("Please Imp SetResult Case!");
+	}
+	
+	iExecResultCount = 0;
+	eType = SqlOpType::None;
+	mEles.clear();
 }
 
 template <class TMessage>
 void DNDbObj<TMessage>::BuildSqlStatement()
 {
 	if(eType == SqlOpType::None)
+	{
 		return;
+	}
 
 	stringstream ss;
 	
@@ -273,12 +318,17 @@ void DNDbObj<TMessage>::BuildSqlStatement()
 				}
 
 				if(next(it) != itEnd)
+				{
 					ss << SSplit;
+				}
 				else
+				{
 					ss << SSMEnd;
+				}
 			}
 			ss << SEnd;
 
+			iExecResultCount = 1;
 			break;
 		}
 		case SqlOpType::Insert:
@@ -309,9 +359,13 @@ void DNDbObj<TMessage>::BuildSqlStatement()
 				mapping.push_back(it->second);
 
 				if(next(it) != itEnd)
+				{
 					ss << SSplit;
+				}
 				else
+				{
 					ss << SSMEnd;
+				}
 			}
 
 			ss << "VALUES";
@@ -325,12 +379,18 @@ void DNDbObj<TMessage>::BuildSqlStatement()
 					ss << mapping[pos].front();
 					mapping[pos].pop_front();
 					if(mappingSize != pos)
+					{
 						ss << SSplit;
+					}
 				}
 				ss << SSMEnd;
 
 				if(lst + 1 != dataLen)
+				{
 					ss << SSplit;
+				}
+
+				iExecResultCount = iExecResultCount + 1;
 			}
 			ss << SEnd;
 			break;
@@ -344,7 +404,9 @@ void DNDbObj<TMessage>::BuildSqlStatement()
 			{
 				selectElems.append(it->first);
 				if(next(it) != itEnd)
+				{
 					selectElems += SSplit;
+				}
 			}
 
 			ss << GetOpTypeBySqlOpType(eType) << selectElems << " FROM " << GetName();
@@ -378,7 +440,9 @@ void DNDbObj<TMessage>::BuildSqlStatement()
 				selectElems.append(format("{} = {}", it->first, it->second.front()));
 
 				if(next(it) != itEnd)
+				{
 					selectElems += SSplit;
+				}
 			}
 
 			ss << GetOpTypeBySqlOpType(eType) << GetName() << " SET "  << selectElems ;
@@ -406,7 +470,37 @@ void DNDbObj<TMessage>::BuildSqlStatement()
 			}
 
 			ss << SEnd;
+			break;
 		}
+		case SqlOpType::Delete:
+		{
+			ss << GetOpTypeBySqlOpType(eType) << GetName();
+			
+			if(mEles.size())
+			{
+				ss << " WHERE ";
+				string selectElems;
+				auto it = mEles.begin();
+				auto itEnd = mEles.end();
+				for (;it != itEnd;it++)
+				{
+					selectElems.append(format("{} = {}", it->first, it->second.front()));
+
+					if(next(it) != itEnd)
+					{
+						selectElems += SCombo;
+					}
+				}
+
+				ss << selectElems;
+			}
+
+
+			ss << SEnd;
+			break;
+		}
+		default:
+			throw new exception("Please Imp BuildSqlStatement Case!");
 	}
 
 	sSqlStatement = ss.str();
@@ -418,32 +512,20 @@ bool DNDbObj<TMessage>::Commit()
 	BuildSqlStatement();
 
 	if(!pWork || sSqlStatement.empty())
+	{
 		return false;
+	}
 
 	printf("%s \n\n", sSqlStatement.c_str());
 
-	switch(eType)
+	pqxx::result result = pWork->exec(sSqlStatement);
+
+	if(eType == SqlOpType::Query)
 	{
-		case SqlOpType::CreateTable:
-		case SqlOpType::Insert:
-	 		pWork->exec0(sSqlStatement);
-			break;
-		case SqlOpType::Query:
-		{
-			pqxx::result result = pWork->exec(sSqlStatement);
-			PaserQuery(result);
-			break;
-		}
-		case SqlOpType::Update:
-		{
-			pqxx::result result = pWork->exec(sSqlStatement);
-			break;
-		}
-			
+		PaserQuery(result);
 	}
 
-	eType = SqlOpType::None;
-	mEles.clear();
+	SetResult(result.affected_rows());
 
 	return true;
 }
@@ -457,13 +539,15 @@ DNDbObj<TMessage>& DNDbObj<TMessage>::InitTable()
 
 	for(int i = 0; i < descriptor->field_count();i++)
 	{
-		FieldDescriptor* field = descriptor->field(i);
+		const FieldDescriptor* field = descriptor->field(i);
 		list<string> params;
 		InitFieldByProtoType(field, params);
 
 		//unregist type
-		if(params.size() == 0) 
+		if(params.size() == 0)
+		{
 			continue;
+		} 
 
 		mEles.emplace(make_pair(field->name(), params));
 	}
@@ -479,7 +563,9 @@ DNDbObj<TMessage>& DNDbObj<TMessage>::AddRecord(list<TMessage>& datas)
 	if(datas.size())
 	{
 		for(TMessage& one : datas)
+		{
 			AddRecord(one);
+		}
 	}
 
 	return *this;
@@ -495,7 +581,7 @@ DNDbObj<TMessage>& DNDbObj<TMessage>::AddRecord(TMessage& data)
 
 	for(int i = 0; i < descriptor->field_count();i++)
 	{
-		FieldDescriptor* field = descriptor->field(i);
+		const FieldDescriptor* field = descriptor->field(i);
 		
 		InsertFieldByProtoType(field, reflection, data, params);
 
@@ -622,6 +708,41 @@ DNDbObj<TMessage> &DNDbObj<TMessage>::Update(TMessage& updata, int condIndex)
 			if(isKey)
 			{
 				throw new exception("update key not set");
+			}
+			continue;
+        } 
+
+		InsertFieldByProtoType(field, reflection, updata, sData);
+        mEles[field->name()].emplace_back(sData);
+
+		if(isKey)
+		{
+			mEles.begin()->second.emplace_back( format("{} = {}", field->name(), sData));
+		}
+	}
+
+	return *this;
+}
+
+template <class TMessage>
+DNDbObj<TMessage> &DNDbObj<TMessage>::Delete(TMessage &updata, int condIndex)
+{
+	ChangeSqlType(SqlOpType::Delete);
+
+	const Descriptor* descriptor = this->pMessage->GetDescriptor();
+	const Reflection* reflection = this->pMessage->GetReflection();
+
+	string sData;
+
+	for(int i = 0; i < descriptor->field_count(); i++)
+	{
+		bool isKey = condIndex == i;
+		const FieldDescriptor* field = descriptor->field(i);
+		if (!reflection->HasField(updata, field)) 
+		{
+			if(isKey)
+			{
+				throw new exception("Delete key not set");
 			}
 			continue;
         } 

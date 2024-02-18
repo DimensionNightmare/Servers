@@ -57,20 +57,20 @@ void DatabaseServerHelper::InitDabase()
 			DNDbObj<Account> accountInfo(txn);
 			// accountInfo.InitTable().Commit();
 
-			list<Account> datas;
+			// list<Account> datas;
 			Account temp;
-			temp.set_accountid(1);
-			temp.set_createtime(123123);
-			temp.set_updatetime(324);
-			temp.set_authstring("2342");
-			temp.set_authname("zxcxfd");
-			temp.set_email("iopi");
+			// temp.set_accountid(1);
+			// temp.set_createtime(123123);
+			// temp.set_updatetime(324);
+			// temp.set_authstring("2342");
+			// temp.set_authname("zxcxfd");
+			// temp.set_email("iopi");
 
-			datas.emplace_back(temp);
-			temp.set_accountid(2);
-			datas.emplace_back(temp);
-			temp.set_accountid(3);
-			datas.emplace_back(temp);
+			// datas.emplace_back(temp);
+			// temp.set_accountid(2);
+			// datas.emplace_back(temp);
+			// temp.set_accountid(3);
+			// datas.emplace_back(temp);
 
 			// accountInfo.AddRecord(datas).Commit();
 
@@ -85,11 +85,9 @@ void DatabaseServerHelper::InitDabase()
 			// 	printf("%s \n\n", msg.DebugString().c_str());
 			// }
 
-			temp.Clear();
-			temp.set_accountid(1);
-			temp.set_email("hello");
-			temp.set_createtime(5454555);
-			accountInfo.Update( temp, -1).Commit();
+			// temp.Clear();
+			// temp.set_accountid(1);
+			// accountInfo.Delete( temp, -1).Commit();
 			
 		}
 
