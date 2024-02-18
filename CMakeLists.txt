@@ -6,6 +6,8 @@ cmake_minimum_required (VERSION 3.8)
 # Top project
 project (DimensionNightmareServer)
 
+message("${CMAKE_VERSION} ${MSVC_VERSION} ${CMAKE_SYSTEM_VERSION}")
+
 # Enable Hot Reload for MSVC compilers if supported.
 if (POLICY CMP0141)
 	cmake_policy(SET CMP0141 NEW)
