@@ -1,5 +1,5 @@
 module;
-#include "Common.pb.h"
+#include "CommonMsg.pb.h"
 #include "hv/Channel.h"
 
 #include <map>
@@ -9,13 +9,12 @@ export module GateMessage;
 export import :GateCommon;
 import AfxCommon;
 
-#define DNPrint(fmt, ...) printf("[%s] {%s} ->" "\n" fmt "\n", GetNowTimeStr().c_str(), __FUNCTION__, ##__VA_ARGS__);
-#define DNPrintErr(fmt, ...) fprintf(stderr, "[%s] {%s} ->" "\n" fmt "\n", GetNowTimeStr().c_str(), __FUNCTION__, ##__VA_ARGS__);
+#define DNPrint(code, level, ...) LoggerPrint(level, code, __FUNCTION__, ##__VA_ARGS__);
 
 using namespace std;
 using namespace hv;
 using namespace google::protobuf;
-using namespace GMsg::Common;
+using namespace GMsg::CommonMsg;
 
 export class GateMessageHandle
 {
@@ -46,14 +45,14 @@ void GateMessageHandle::MsgHandle(const SocketChannelPtr &channel, unsigned int 
 		}
 		else
 		{
-			DNPrintErr("cant parse msg Deal Handle! \n");
+			DNPrint(14, LoggerLevel::Error, nullptr);
 		}
 		
 		delete message;
 	}
 	else
 	{
-		DNPrintErr("cant find msgid Deal Handle! \n");
+		DNPrint(15, LoggerLevel::Error, nullptr);
 	}
 }
 

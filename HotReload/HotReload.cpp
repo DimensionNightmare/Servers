@@ -6,6 +6,7 @@
 #include <string>
 
 import DNServer;
+import DimensionNightmare;
 import GlobalServerInit;
 import ControlServerInit;
 import AuthServerInit;
@@ -47,62 +48,66 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 
 extern "C"
 {
-	HOTRELOAD int InitHotReload(DNServer &base);
-	HOTRELOAD int ShutdownHotReload(DNServer &base);
+	HOTRELOAD int InitHotReload(DimensionNightmare &mainObj);
+	HOTRELOAD int ShutdownHotReload(DimensionNightmare &mainObj);
 
 	HOTRELOAD int RegClientReconnectFunc(std::function<void(const char*, int)> func);
 }
 
-int InitHotReload(DNServer &base)
+int InitHotReload(DimensionNightmare &mainObj)
 {
-	ServerType servertype = base.GetServerType();
+	mainObj.InitDllEnv();
+	
+	DNServer* base = mainObj.GetServer();
+	ServerType servertype = base->GetServerType();
 	switch (servertype)
 	{
 	case ServerType::ControlServer:
-		HandleControlServerInit(&base);
+		HandleControlServerInit(base);
 		break;
 	case ServerType::GlobalServer:
-		HandleGlobalServerInit(&base);
+		HandleGlobalServerInit(base);
 		break;
 	case ServerType::AuthServer:
-		HandleAuthServerInit(&base);
+		HandleAuthServerInit(base);
 		break;
 	case ServerType::GateServer:
-		HandleGateServerInit(&base);
+		HandleGateServerInit(base);
 		break;
 	case ServerType::DatabaseServer:
-		HandleDatabaseServerInit(&base);
+		HandleDatabaseServerInit(base);
 		break;
 	case ServerType::LogicServer:
-		HandleLogicServerInit(&base);
+		HandleLogicServerInit(base);
 		break;
 	}
 
 	return 0;
 }
 
-int ShutdownHotReload(DNServer &base)
+int ShutdownHotReload(DimensionNightmare &mainObj)
 {
-	ServerType servertype = base.GetServerType();
+	DNServer* base = mainObj.GetServer();
+	ServerType servertype = base->GetServerType();
 	switch (servertype)
 	{
 	case ServerType::ControlServer:
-		HandleControlServerShutdown(&base);
+		HandleControlServerShutdown(base);
 		break;
 	case ServerType::GlobalServer:
-		HandleGlobalServerShutdown(&base);
+		HandleGlobalServerShutdown(base);
 		break;
 	case ServerType::AuthServer:
-		HandleAuthServerShutdown(&base);
+		HandleAuthServerShutdown(base);
 		break;
 	case ServerType::GateServer:
-		HandleGateServerShutdown(&base);
+		HandleGateServerShutdown(base);
 		break;
 	case ServerType::DatabaseServer:
-		HandleDatabaseServerShutdown(&base);
+		HandleDatabaseServerShutdown(base);
 		break;
 	case ServerType::LogicServer:
-		HandleLogicServerShutdown(&base);
+		HandleLogicServerShutdown(base);
 		break;
 	}
 

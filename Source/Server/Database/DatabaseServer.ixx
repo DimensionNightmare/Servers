@@ -12,8 +12,8 @@ import AfxCommon;
 import ServerEntity;
 import ServerEntityManager;
 
-#define DNPrint(fmt, ...) printf("[%s] {%s} ->" "\n" fmt "\n", GetNowTimeStr().c_str(), __FUNCTION__, ##__VA_ARGS__);
-#define DNPrintErr(fmt, ...) fprintf(stderr, "[%s] {%s} ->" "\n" fmt "\n", GetNowTimeStr().c_str(), __FUNCTION__, ##__VA_ARGS__);
+#define DNPrint(code, level, fmt, ...) LoggerPrint(level, code, __FUNCTION__, fmt, ##__VA_ARGS__);
+
 
 using namespace std;
 using namespace hv;
@@ -25,7 +25,7 @@ public:
 
 	~DatabaseServer();
 
-	virtual bool Init(map<string, string> &param) override;
+	virtual bool Init() override;
 
 	virtual void InitCmd(map<string, function<void(stringstream*)>> &cmdMap) override;
 
@@ -72,15 +72,16 @@ DatabaseServer::~DatabaseServer()
 	}
 }
 
-bool DatabaseServer::Init(map<string, string> &param)
+bool DatabaseServer::Init()
 {
-	if(!param.count("byCtl"))
+	string* value = GetLuanchConfigParam("byCtl");
+	if(!value || !stoi(*value))
 	{
-		DNPrintErr("Server need by Control! \n");
+		DNPrint(1, LoggerLevel::Error, nullptr);
 		return false;
 	}
 
-	DNServer::Init(param);
+	DNServer::Init();
 
 	int port = 0;
 
@@ -92,7 +93,9 @@ bool DatabaseServer::Init(map<string, string> &param)
 	setting->length_field_offset = 0;
 	
 	//connet ControlServer
-	if(param.contains("ctlPort") && param.contains("ctlIp") && is_ipaddr(param["ctlIp"].c_str()))
+	string* ctlPort = GetLuanchConfigParam("ctlPort");
+	string* ctlIp = GetLuanchConfigParam("ctlIp");
+	if(ctlPort && ctlIp && is_ipaddr(ctlIp->c_str()))
 	{
 		pCSock = new DNClientProxy;
 		reconn_setting_t* reconn = new reconn_setting_t;
@@ -100,11 +103,11 @@ bool DatabaseServer::Init(map<string, string> &param)
 		reconn->max_delay = 10000;
 		reconn->delay_policy = 2;
 		pCSock->setReconnect(reconn);
-		port = stoi(param["ctlPort"]);
-		pCSock->createsocket(port, param["ctlIp"].c_str());
+		port = stoi(*ctlPort);
+		pCSock->createsocket(port, ctlIp->c_str());
 		pCSock->setUnpack(setting);
 
-		sCtlIp = param["ctlIp"];
+		sCtlIp = *ctlIp;
 		iCtlPort = port;
 	}
 	

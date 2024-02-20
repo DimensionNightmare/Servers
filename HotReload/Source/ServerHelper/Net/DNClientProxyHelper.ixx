@@ -1,4 +1,5 @@
 module;
+#include "google/protobuf/message.h"
 #include "hv/TcpClient.h"
 
 #include <functional>
@@ -8,11 +9,11 @@ export module DNClientProxyHelper;
 import DNClientProxy;
 import AfxCommon;
 
-#define DNPrint(fmt, ...) printf("[%s] {%s} ->" "\n" fmt "\n", GetNowTimeStr().c_str(), __FUNCTION__, ##__VA_ARGS__);
-#define DNPrintErr(fmt, ...) fprintf(stderr, "[%s] {%s} ->" "\n" fmt "\n", GetNowTimeStr().c_str(), __FUNCTION__, ##__VA_ARGS__);
+#define DNPrint(code, level, ...) LoggerPrint(level, code, __FUNCTION__, ##__VA_ARGS__);
 
 using namespace std;
 using namespace hv;
+using namespace google::protobuf;
 
 export class DNClientProxyHelper : public DNClientProxy
 {
@@ -33,8 +34,8 @@ public:
 	void StartRegist();
 	void ServerDisconnect();
 
-	bool AddMsg(unsigned int msgId, DNTask<void*>* msg);
-	DNTask<void*>* GetMsg(unsigned int msgId);
+	bool AddMsg(unsigned int msgId, DNTask<Message*>* msg);
+	DNTask<Message*>* GetMsg(unsigned int msgId);
 	void DelMsg(unsigned int msgId);
 };
 
@@ -99,7 +100,7 @@ void DNClientProxyHelper::StartRegist()
 			}
 			else
 			{
-				DNPrintErr("Not RegistEvent to Call!! \n");
+				DNPrint(16, LoggerLevel::Error, nullptr);
 			}
 		} 
 		else 
@@ -121,14 +122,14 @@ void DNClientProxyHelper::ServerDisconnect()
 	mMsgList.clear();
 }
 
-bool DNClientProxyHelper::AddMsg(unsigned int msgId, DNTask<void *> *msg)
+bool DNClientProxyHelper::AddMsg(unsigned int msgId, DNTask<Message *> *msg)
 {
 	unique_lock<shared_mutex> ulock(oMsgMutex);
 	mMsgList.emplace(msgId, msg);
 	return true;
 }
 
-DNTask<void *> *DNClientProxyHelper::GetMsg(unsigned int msgId)
+DNTask<Message *> *DNClientProxyHelper::GetMsg(unsigned int msgId)
 {;
 	shared_lock<shared_mutex> lock(oMsgMutex);
 	if(mMsgList.contains(msgId))

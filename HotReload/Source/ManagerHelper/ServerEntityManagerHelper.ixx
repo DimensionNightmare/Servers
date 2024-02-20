@@ -1,5 +1,5 @@
 module;
-#include "Common.pb.h"
+#include "CommonMsg.pb.h"
 #include "hv/Channel.h"
 
 #include <map>
@@ -11,11 +11,13 @@ import ServerEntityHelper;
 import ServerEntityManager;
 import MessagePack;
 import DNServerProxy;
+import AfxCommon;
 
 using namespace std;
 using namespace hv;
-using namespace GMsg::Common;
+using namespace GMsg::CommonMsg;
 
+#define DNPrint(code, level, fmt, ...) LoggerPrint(level, code, __FUNCTION__, fmt, ##__VA_ARGS__);
 #define CastObj(entity) static_cast<ServerEntityHelper*>(entity)
 
 export template<class TEntity = ServerEntity>
@@ -74,7 +76,7 @@ void ServerEntityManagerHelper<TEntity>::RemoveEntity(unsigned int entityId, boo
 		{
 			unique_lock<shared_mutex> ulock(this->oMapMutex);
 
-			printf("destory entity\n");
+			DNPrint(-1, LoggerLevel::Debug, "destory entity\n");
 			this->mEntityMap.erase(entityId);
 			this->mIdleServerId.push_back(entityId);
 			this->mEntityMapList[entity->GetServerType()].remove(oriEntity);

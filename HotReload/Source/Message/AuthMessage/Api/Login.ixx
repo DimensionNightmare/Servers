@@ -16,8 +16,7 @@ import DNTask;
 import MessagePack;
 import AfxCommon;
 
-#define DNPrint(fmt, ...) printf("[%s] {%s} ->" "\n" fmt "\n", GetNowTimeStr().c_str(), __FUNCTION__, ##__VA_ARGS__);
-#define DNPrintErr(fmt, ...) fprintf(stderr, "[%s] {%s} ->" "\n" fmt "\n", GetNowTimeStr().c_str(), __FUNCTION__, ##__VA_ARGS__);
+#define DNPrint(code, level, ...) LoggerPrint(level, code, __FUNCTION__, ##__VA_ARGS__);
 
 using namespace std;
 using namespace hv;
@@ -89,12 +88,12 @@ export void ApiLogin(HttpService* service)
 			// first Can send Msg?
 			if(client->GetMsg(msgId))
 			{
-				DNPrintErr("+++++ %lu, \n", msgId);
+				DNPrint(-1, LoggerLevel::Error, "+++++ %lu, \n", msgId);
 				co_return;
 			}
 			// else
 			// {
-				printf("----- %lu, \n", msgId);
+				DNPrint(-1, LoggerLevel::Debug, "----- %lu, \n", msgId);
 			// }
 			
 			// pack data
@@ -109,7 +108,7 @@ export void ApiLogin(HttpService* service)
 				co_return &response;
 			}();
 
-			client->AddMsg(msgId, (DNTask<void*>*)&dataChannel);
+			client->AddMsg(msgId, &dataChannel);
 
 			// regist Close event to release memory
 			if(writerProxy->onclose)

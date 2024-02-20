@@ -1,19 +1,15 @@
 #include "hv/hlog.h"
 
 #include <Windows.h>
-#include <locale>
-#include <sstream>
 #include <map>
-#include <vector>
-#include <iostream>
+#include <string>
 #include <dbghelp.h>
-#include <filesystem>
+#include <iostream>
 
 import DimensionNightmare;
 import AfxCommon;
 
-#define DNPrint(fmt, ...) printf("[%s] {%s} ->" "\n" fmt "\n", GetNowTimeStr().c_str(), __FUNCTION__, ##__VA_ARGS__);
-#define DNPrintErr(fmt, ...) fprintf(stderr, "[%s] {%s} ->" "\n" fmt "\n", GetNowTimeStr().c_str(), __FUNCTION__, ##__VA_ARGS__);
+#define DNPrint(code, level, ...) LoggerPrint(level, code, __FUNCTION__, ##__VA_ARGS__);
 
 #pragma comment(lib, "dbghelp.lib")
 
@@ -28,45 +24,42 @@ enum class LunchType
 int main(int argc, char** argv)
 {
 	hlog_disable();
-	// local output
-    locale::global(locale(""));
-
-	filesystem::path execPath = argv[0];
-	SetCurrentDirectory(execPath.parent_path().string().c_str());
+	
 	//lunch param
 	map<string,string> lunchParam;
+	lunchParam.emplace("luanchPath", argv[0]);
+	
+	for (int i = 1; i < argc; i++)
 	{
-		string split;
-		vector<string> tokens;
-		for (int i = 1; i < argc; i++)
+		string split(argv[i]);
+		
+		size_t pos = split.find('=');
+
+		if (pos == std::string::npos)
 		{
-			tokens.clear();
-			stringstream param(argv[i]);
-			
-			while (getline(param, split, '=')) 
-			{
-				tokens.push_back(split);
-			}
-
-			if(tokens.empty() || tokens.size() != 2)
-			{
-				DNPrintErr("program lunch param error! Pos:%d \n", i);
-				return 0;
-			}
-
-			lunchParam.emplace(tokens.front(), tokens.back());
+			printf("program lunch param error! Pos:%d \n", i);
+			return 0;
 		}
+
+		lunchParam.emplace(split.substr(0, pos), split.substr(pos + 1));
 	}
+	
 
 	DimensionNightmare* dn = GetDimensionNightmare();
-	if(!dn->Init(lunchParam))
+	if(!dn->InitConfig(lunchParam))
+	{
+		dn->ShutDown();
+		return 0;
+	}
+
+	if(!dn->Init())
 	{
 		dn->ShutDown();
 		return 0;
 	}
 	
 	auto CtrlHandler = [](DWORD signal) -> BOOL {
-		DNPrint("EXITTING... CtrlHandler Tirrger... \n");
+		DNPrint(6, LoggerLevel::Normal, nullptr);
 		switch (signal)
 		{
 			case CTRL_C_EVENT:
@@ -83,12 +76,12 @@ int main(int argc, char** argv)
 
 	if(!SetConsoleCtrlHandler(CtrlHandler, true))
 	{
-		DNPrintErr("Cant Set SetConsoleCtrlHandler! \n");
+		DNPrint(10, LoggerLevel::Error, nullptr);
 		return 0;
 	}
 
 	auto exceptionPtr = SetUnhandledExceptionFilter([](EXCEPTION_POINTERS* ExceptionInfo)->long {
-		DNPrint("SetUnhandledExceptionFilter Tirrger! \n");
+		DNPrint(7, LoggerLevel::Normal, nullptr);
 		
 		HANDLE hDumpFile = CreateFileW(
 			L"MiniDump.dmp",
@@ -125,9 +118,9 @@ int main(int argc, char** argv)
 		return EXCEPTION_CONTINUE_SEARCH;
 	});
 	
-	if(!exceptionPtr){
-		DNPrintErr("Cant Set SetUnhandledExceptionFilter! \n");
-		
+	if(!exceptionPtr)
+	{
+		DNPrint(11, LoggerLevel::Error, nullptr);
 		return 0;
 	}
 

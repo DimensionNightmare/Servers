@@ -1,5 +1,5 @@
 module;
-#include "Common.pb.h"
+#include "CommonMsg.pb.h"
 #include "AuthControl.pb.h"
 
 #include <coroutine>
@@ -10,12 +10,11 @@ import MessagePack;
 import AuthServerHelper;
 import AfxCommon;
 
-#define DNPrint(fmt, ...) printf("[%s] {%s} ->" "\n" fmt "\n", GetNowTimeStr().c_str(), __FUNCTION__, ##__VA_ARGS__);
-#define DNPrintErr(fmt, ...) fprintf(stderr, "[%s] {%s} ->" "\n" fmt "\n", GetNowTimeStr().c_str(), __FUNCTION__, ##__VA_ARGS__);
+#define DNPrint(code, level, ...) LoggerPrint(level, code, __FUNCTION__, ##__VA_ARGS__);
 
 using namespace std;
 using namespace google::protobuf;
-using namespace GMsg::Common;
+using namespace GMsg::CommonMsg;
 
 // client request
 export DNTaskVoid Msg_RegistSrv()
@@ -28,12 +27,12 @@ export DNTaskVoid Msg_RegistSrv()
 	// first Can send Msg?
 	if(client->GetMsg(msgId))
 	{
-		DNPrintErr("+++++ %lu, \n", msgId);
+		DNPrint(-1, LoggerLevel::Error, "+++++ %lu, \n", msgId);
 		co_return;
 	}
 	else
 	{
-		DNPrint("Msg_RegistSrv ----- %lu, \n", msgId);
+		// prinfg("Msg_RegistSrv ----- %lu, \n", msgId);
 	}
 
 	COM_ReqRegistSrv requset;
@@ -62,7 +61,7 @@ export DNTaskVoid Msg_RegistSrv()
 	}();
 
 	
-	client->AddMsg(msgId, (DNTask<void*>*)&dataChannel);
+	client->AddMsg(msgId, &dataChannel);
 	
 	// wait data parse
 	client->send(binData);
@@ -70,12 +69,12 @@ export DNTaskVoid Msg_RegistSrv()
 	
 	if(!response.success())
 	{
-		DNPrint("regist Server error! msg:%lu \n", msgId);
+		DNPrint(-1, LoggerLevel::Debug, "regist Server error! msg:%lu \n", msgId);
 		// dnServer->SetRun(false); //exit application
 	}
 	else
 	{
-		DNPrint("regist Server success! \n");
+		DNPrint(-1, LoggerLevel::Debug, "regist Server success! \n");
 		client->SetRegisted(true);
 		dnServer->SetServerIndex(response.server_index());
 	}

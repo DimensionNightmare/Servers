@@ -12,10 +12,13 @@ import ServerEntityManagerHelper;
 import ServerEntity;
 
 import DNDbObj;
+import AfxCommon;
 
 using namespace std;
-using namespace GDef;
+using namespace GDb;
 using namespace google::protobuf;
+
+#define DNPrint(code, level, fmt, ...) LoggerPrint(level, code, __FUNCTION__, fmt, ##__VA_ARGS__);
 
 export class DatabaseServerHelper : public DatabaseServer
 {
@@ -47,18 +50,20 @@ void DatabaseServerHelper::InitDabase()
 	try
 	{
 		//"postgresql://root@localhost"
-		pqxx::connection c("host=localhost port=5432 dbname=postgres user=postgres password=1270 sslmode=prefer connect_timeout=10");
-		c.set_client_encoding("GBK");
+		string* value = GetLuanchConfigParam("connection");
+		pqxx::connection c(*value);
+		value = GetLuanchConfigParam("connectionCliLang");
+		c.set_client_encoding(*value);
 		pqxx::work txn(c);
 		int result = txn.query_value<int>("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public'");
 		// not table empty
-		// if(! result[0][0].as<int>())
+		if(result)
 		{
 			DNDbObj<Account> accountInfo(txn);
-			// accountInfo.InitTable().Commit();
+			accountInfo.InitTable();
 
 			// list<Account> datas;
-			Account temp;
+			// Account temp;
 			// temp.set_accountid(1);
 			// temp.set_createtime(123123);
 			// temp.set_updatetime(324);
@@ -82,7 +87,7 @@ void DatabaseServerHelper::InitDabase()
 
 			// for(Account& msg : accountInfo.Result())
 			// {
-			// 	printf("%s \n\n", msg.DebugString().c_str());
+			// 	("%s \n\n", msg.DebugString().c_str());
 			// }
 
 			// temp.Clear();
@@ -95,6 +100,6 @@ void DatabaseServerHelper::InitDabase()
 	}
 	catch(const exception& e)
 	{
-		printf("%s \n", e.what());
+		DNPrint(-1, LoggerLevel::Error, "%s \n", e.what());
 	}
 }

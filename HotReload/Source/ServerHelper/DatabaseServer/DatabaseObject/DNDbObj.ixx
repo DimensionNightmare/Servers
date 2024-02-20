@@ -1,7 +1,8 @@
 module;
-#include "google/protobuf/Message.h"
+#include "google/protobuf/message.h"
 #include "google/protobuf/reflection.h"
-#include "google/protobuf/util/json_util.h"
+#include "google/protobuf/descriptor.pb.h"
+#include "DbExtend.pb.h"
 #include "pqxx/transaction"
 #include "pqxx/result"
 
@@ -9,8 +10,12 @@ module;
 #include <format>
 export module DNDbObj;
 
+import AfxCommon;
+
 using namespace std;
 using namespace google::protobuf;
+
+#define DNPrint(code, level, fmt, ...) LoggerPrint(level, code, __FUNCTION__, fmt, ##__VA_ARGS__);
 
 //statement
 #define SSMBegin "(" 
@@ -20,6 +25,7 @@ using namespace google::protobuf;
 #define SSpace " "
 #define SDefault "DEFAULT"
 #define SCombo " AND "
+#define SPrimaryKey "PRIMARY KEY"
 
 enum class SqlOpType : char
 {
@@ -64,14 +70,13 @@ const char* GetDbTypeByProtoType(FieldDescriptor::CppType pbType)
 #undef ONE
 		default:
 			throw new exception("Please Regist DbType");
-			// printf("Please Regist Descriptor::Type %d \n\n", pbType);
 			break;
 	}
 	
 	return "";
 }
 
-void InitFieldByProtoType(const FieldDescriptor* field, list<string>& out)
+void InitFieldByProtoType(const FieldDescriptor* field, list<string>& out, list<string>& keys)
 {
 	const char* typeStr = GetDbTypeByProtoType(field->cpp_type());
 
@@ -86,6 +91,13 @@ void InitFieldByProtoType(const FieldDescriptor* field, list<string>& out)
 	{
 		out.emplace_back(format("{0} {1}", SDefault, field->default_value_string()));
 	}
+
+	if(field->options().GetExtension(primary_key))
+	{
+		keys.emplace_back(field->name());
+	}
+
+	auto res1 = field->options().GetExtension(len_limit);
 
 	switch(field->cpp_type())
 	{
@@ -516,7 +528,7 @@ bool DNDbObj<TMessage>::Commit()
 		return false;
 	}
 
-	printf("%s \n\n", sSqlStatement.c_str());
+	DNPrint(-1, LoggerLevel::Debug, "%s \n\n", sSqlStatement.c_str());
 
 	pqxx::result result = pWork->exec(sSqlStatement);
 
@@ -537,11 +549,13 @@ DNDbObj<TMessage>& DNDbObj<TMessage>::InitTable()
 
 	const Descriptor* descriptor = this->pMessage->GetDescriptor();
 
+	list<string> primaryKey;
+
 	for(int i = 0; i < descriptor->field_count();i++)
 	{
 		const FieldDescriptor* field = descriptor->field(i);
 		list<string> params;
-		InitFieldByProtoType(field, params);
+		InitFieldByProtoType(field, params, primaryKey);
 
 		//unregist type
 		if(params.size() == 0)
@@ -551,6 +565,17 @@ DNDbObj<TMessage>& DNDbObj<TMessage>::InitTable()
 
 		mEles.emplace(make_pair(field->name(), params));
 	}
+
+	if(mEles.count(SPrimaryKey))
+	{
+		throw new exception("Not Allow Exist 'PRIMARY KEY' map key!");
+	}
+
+	if (primaryKey.size())
+	{
+		mEles.emplace(make_pair(SPrimaryKey, primaryKey));
+	}
+	
 
 	return *this;
 }

@@ -12,8 +12,7 @@ import AfxCommon;
 import ServerEntity;
 import ServerEntityManager;
 
-#define DNPrint(fmt, ...) printf("[%s] {%s} ->" "\n" fmt "\n", GetNowTimeStr().c_str(), __FUNCTION__, ##__VA_ARGS__);
-#define DNPrintErr(fmt, ...) fprintf(stderr, "[%s] {%s} ->" "\n" fmt "\n", GetNowTimeStr().c_str(), __FUNCTION__, ##__VA_ARGS__);
+#define DNPrint(code, level, fmt, ...) LoggerPrint(level, code, __FUNCTION__, fmt, ##__VA_ARGS__);
 
 using namespace std;
 using namespace hv;
@@ -25,7 +24,7 @@ public:
 
 	~GateServer();
 
-	virtual bool Init(map<string, string> &param) override;
+	virtual bool Init() override;
 
 	virtual void InitCmd(map<string, function<void(stringstream*)>> &cmdMap) override;
 
@@ -85,21 +84,23 @@ GateServer::~GateServer()
 	}
 }
 
-bool GateServer::Init(map<string, string> &param)
+bool GateServer::Init()
 {
-	if(!param.count("byCtl"))
+	string* value = GetLuanchConfigParam("byCtl");
+	if(!value || !stoi(*value))
 	{
-		DNPrintErr("Server need by Control! \n");
+		DNPrint(1, LoggerLevel::Error, nullptr);
 		return false;
 	}
 
-	DNServer::Init(param);
+	DNServer::Init();
 
 	int port = 0;
 	
-	if(param.contains("port"))
+	value = GetLuanchConfigParam("port");
+	if(value)
 	{
-		port = stoi(param["port"]);
+		port = stoi(*value);
 	}
 	
 	pSSock = new DNServerProxy;
@@ -107,7 +108,7 @@ bool GateServer::Init(map<string, string> &param)
 	int listenfd = pSSock->createsocket(port);
 	if (listenfd < 0)
 	{
-		DNPrintErr("createsocket error! \n");
+		DNPrint(8, LoggerLevel::Error, nullptr);
 		return false;
 	}
 
@@ -118,14 +119,14 @@ bool GateServer::Init(map<string, string> &param)
 		socklen_t addrLen = sizeof(addr);
 		if (getsockname(listenfd, (struct sockaddr*)&addr, &addrLen) < 0) 
 		{
-			DNPrintErr("Error in getsockname \n");
+			DNPrint(9, LoggerLevel::Error, nullptr);
 			return false;
 		}
 
 		pSSock->port = ntohs(addr.sin_port);
 	}
 	
-	DNPrint("pSSock listen on port %d, listenfd=%d ... \n", pSSock->port, listenfd);
+	DNPrint(1, LoggerLevel::Debug, nullptr, pSSock->port, listenfd);
 
 	unpack_setting_t* setting = new unpack_setting_t;
 	setting->mode = unpack_mode_e::UNPACK_BY_LENGTH_FIELD;
@@ -138,7 +139,9 @@ bool GateServer::Init(map<string, string> &param)
 
 	
 	//connet ControlServer
-	if(param.contains("ctlPort") && param.contains("ctlIp") && is_ipaddr(param["ctlIp"].c_str()))
+	string* ctlPort = GetLuanchConfigParam("ctlPort");
+	string* ctlIp = GetLuanchConfigParam("ctlIp");
+	if(ctlPort && ctlIp && is_ipaddr(ctlIp->c_str()))
 	{
 		pCSock = new DNClientProxy;
 		reconn_setting_t* reconn = new reconn_setting_t;
@@ -146,8 +149,8 @@ bool GateServer::Init(map<string, string> &param)
 		reconn->max_delay = 10000;
 		reconn->delay_policy = 2;
 		pCSock->setReconnect(reconn);
-		port = stoi(param["ctlPort"]);
-		pCSock->createsocket(port, param["ctlIp"].c_str());
+		port = stoi(*ctlPort);
+		pCSock->createsocket(port, ctlIp->c_str());
 		pCSock->setUnpack(setting);
 	}
 	
@@ -164,7 +167,7 @@ bool GateServer::Start()
 {
 	if(!pSSock)
 	{
-		DNPrintErr("Server not Initialed! \n");
+		DNPrint(6, LoggerLevel::Error, nullptr);
 		return false;
 	}
 

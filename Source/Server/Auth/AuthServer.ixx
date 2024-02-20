@@ -10,8 +10,8 @@ import DNClientProxy;
 import MessagePack;
 import AfxCommon;
 
-#define DNPrint(fmt, ...) printf("[%s] {%s} ->" "\n" fmt "\n", GetNowTimeStr().c_str(), __FUNCTION__, ##__VA_ARGS__);
-#define DNPrintErr(fmt, ...) fprintf(stderr, "[%s] {%s} ->" "\n" fmt "\n", GetNowTimeStr().c_str(), __FUNCTION__, ##__VA_ARGS__);
+#define DNPrint(code, level, fmt, ...) LoggerPrint(level, code, __FUNCTION__, fmt, ##__VA_ARGS__);
+
 
 using namespace std;
 using namespace hv;
@@ -23,7 +23,7 @@ public:
 
 	~AuthServer();
 
-	virtual bool Init(map<string, string> &param) override;
+	virtual bool Init() override;
 
 	virtual void InitCmd(map<string, function<void(stringstream*)>> &cmdMap) override;
 
@@ -72,21 +72,23 @@ AuthServer::~AuthServer()
 	}
 }
 
-bool AuthServer::Init(map<string, string> &param)
+bool AuthServer::Init()
 {
-	if(!param.count("byCtl"))
+	string* value = GetLuanchConfigParam("byCtl");
+	if(!value || !stoi(*value))
 	{
-		DNPrintErr("Server need by Control! \n");
+		DNPrint(1, LoggerLevel::Error, nullptr);
 		return false;
 	}
 
-	DNServer::Init(param);
+	DNServer::Init();
 
 	int port = 0;
 	
-	if(param.contains("port"))
+	value = GetLuanchConfigParam("port");
+	if(value)
 	{
-		port = stoi(param["port"]);
+		port = stoi(*value);
 	}
 
 	pSSock = new DNWebProxy;
@@ -94,7 +96,9 @@ bool AuthServer::Init(map<string, string> &param)
 	pSSock->setThreadNum(4);
 
 	//connet ControlServer
-	if(param.contains("ctlPort") && param.contains("ctlIp") && is_ipaddr(param["ctlIp"].c_str()))
+	string* ctlPort = GetLuanchConfigParam("ctlPort");
+	string* ctlIp = GetLuanchConfigParam("ctlIp");
+	if(ctlPort && ctlIp && is_ipaddr(ctlIp->c_str()))
 	{
 		unpack_setting_t* setting = new unpack_setting_t;
 		setting->mode = unpack_mode_e::UNPACK_BY_LENGTH_FIELD;
@@ -109,8 +113,8 @@ bool AuthServer::Init(map<string, string> &param)
 		reconn->max_delay = 10000;
 		reconn->delay_policy = 2;
 		pCSock->setReconnect(reconn);
-		port = stoi(param["ctlPort"]);
-		pCSock->createsocket(port, param["ctlIp"].c_str());
+		port = stoi(*ctlPort);
+		pCSock->createsocket(port, ctlIp->c_str());
 		pCSock->setUnpack(setting);
 	}
 
@@ -126,7 +130,7 @@ bool AuthServer::Start()
 {
 	if(!pSSock)
 	{
-		DNPrintErr("Server not Initialed! \n");
+		DNPrint(6, LoggerLevel::Error, nullptr);
 		return false;
 	}
 	pSSock->start();

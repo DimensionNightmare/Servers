@@ -10,8 +10,8 @@ import ServerEntity;
 import ServerEntityManager;
 import AfxCommon;
 
-#define DNPrint(fmt, ...) printf("[%s] {%s} ->" "\n" fmt "\n", GetNowTimeStr().c_str(), __FUNCTION__, ##__VA_ARGS__);
-#define DNPrintErr(fmt, ...) fprintf(stderr, "[%s] {%s} ->" "\n" fmt "\n", GetNowTimeStr().c_str(), __FUNCTION__, ##__VA_ARGS__);
+#define DNPrint(code, level, fmt, ...) LoggerPrint(level, code, __FUNCTION__, fmt, ##__VA_ARGS__);
+
 
 using namespace std;
 using namespace hv;
@@ -23,7 +23,7 @@ public:
 
 	~ControlServer();
 
-	virtual bool Init(map<string, string> &param) override;
+	virtual bool Init() override;
 
 	virtual void InitCmd(map<string, function<void(stringstream*)>> &cmdMap) override;
 
@@ -70,28 +70,28 @@ ControlServer::~ControlServer()
 	}
 }
 
-bool ControlServer::Init(map<string, string> &param)
+bool ControlServer::Init()
 {
-	if(!param.contains("ip") || !param.contains("port"))
+	string* ip = GetLuanchConfigParam("ip");
+	string* port = GetLuanchConfigParam("port");
+	if(!ip || !port)
 	{
-		DNPrintErr("ip or port Need! \n");
+		DNPrint(7, LoggerLevel::Error, nullptr);
 		return false;
 	}
 
-	DNServer::Init(param);
+	DNServer::Init();
 
-	int port = stoi(param["port"]);
 	pSSock = new DNServerProxy;
 
-	int listenfd = pSSock->createsocket(port);
+	int listenfd = pSSock->createsocket(stoi(*port));
 	if (listenfd < 0)
 	{
-		DNPrintErr("createsocket error \n");
+		DNPrint(8, LoggerLevel::Error, nullptr);
 		return false;
 	}
 
-    // 输出分配的端口号
-	DNPrint("pSSock listen on port %d, listenfd=%d ... \n", pSSock->port, listenfd);
+	DNPrint(1, LoggerLevel::Debug, nullptr, pSSock->port, listenfd);
 
 	unpack_setting_t* setting = new unpack_setting_t;
 	setting->mode = unpack_mode_e::UNPACK_BY_LENGTH_FIELD;
@@ -116,7 +116,7 @@ bool ControlServer::Start()
 {
 	if(!pSSock)
 	{
-		DNPrintErr("Server not Initialed! \n");
+		DNPrint(6, LoggerLevel::Error, nullptr);
 		return false;
 	}
 	

@@ -5,6 +5,8 @@ module;
 #include <Windows.h>
 #include <DbgHelp.h>
 #include <filesystem>
+#include <locale>
+#include <iostream>
 export module DimensionNightmare;
 
 import DNServer;
@@ -15,9 +17,9 @@ import AfxCommon;
 import GateServer;
 import DatabaseServer;
 import LogicServer;
+import Utils.StrUtils;
 
-#define DNPrint(fmt, ...) printf("[%s] {%s} ->" "\n" fmt "\n", GetNowTimeStr().c_str(), __FUNCTION__, ##__VA_ARGS__);
-#define DNPrintErr(fmt, ...) fprintf(stderr, "[%s] {%s} ->" "\n" fmt "\n", GetNowTimeStr().c_str(), __FUNCTION__, ##__VA_ARGS__);
+#define DNPrint(code, level, fmt, ...) LoggerPrint(level, code, __FUNCTION__, fmt, ##__VA_ARGS__);
 
 using namespace std;
 
@@ -41,7 +43,7 @@ struct HotReloadDll
 
 		// if(!ret)
 		// {
-		// 	DNPrintErr("cant set dll path! error code=%d! \n", GetLastError());
+		// 	("cant set dll path! error code=%d! \n", GetLastError());
 		// 	return false;
 		// }
 		// oLibHandle = LoadLibraryEx((SDllName).c_str(), NULL, LOAD_LIBRARY_SEARCH_USER_DIRS);
@@ -49,7 +51,7 @@ struct HotReloadDll
 		oLibHandle = LoadLibrary(SDllName.c_str());
 		if (!oLibHandle)
 		{
-			DNPrintErr("cant Success! error code=%d! \n", GetLastError());
+			DNPrint(2, LoggerLevel::Error, nullptr, GetLastError());
 			return false;
 		}
 
@@ -76,7 +78,7 @@ struct HotReloadDll
 	{
 		if(!filesystem::exists(SDllDir))
 		{
-			DNPrintErr("dll menu not exist! \n");
+			DNPrint(3, LoggerLevel::Error, nullptr);
 			return false;
 		}
 
@@ -84,7 +86,7 @@ struct HotReloadDll
 
 		if (SDllName.empty())
 		{
-			DNPrintErr("Dll Name is Error! \n");
+			DNPrint( 4, LoggerLevel::Error,nullptr);
 			return false;
 		}
 
@@ -119,7 +121,9 @@ public:
 
 	~DimensionNightmare();
 
-	bool Init(map<string, string> &param);
+	bool InitConfig(map<string, string> &param);
+	bool Init();
+	void InitDllEnv();
 
 	void InitCmdHandle();
 
@@ -141,6 +145,11 @@ private:
 	DNServer *pServer;
 
 	map<string, function<void(stringstream*)>> mCmdHandle;
+
+	// mount param
+	map<string, string>* pLuanchParam;
+
+	DNl10n* pl10n;
 };
 
 export DimensionNightmare *GetDimensionNightmare();
@@ -163,6 +172,8 @@ DimensionNightmare::DimensionNightmare()
 	pHotDll = nullptr;
 	pServer = nullptr;
 	mCmdHandle.clear();
+	pl10n = nullptr;
+	pLuanchParam = nullptr;
 }
 
 DimensionNightmare::~DimensionNightmare()
@@ -186,18 +197,111 @@ DimensionNightmare::~DimensionNightmare()
 		pHotDll = nullptr;
 	}
 
-	
+	if(pl10n)
+	{
+		delete pl10n;
+		pl10n = nullptr;
+	}
 }
 
-bool DimensionNightmare::Init(map<string, string> &param)
+bool DimensionNightmare::InitConfig(map<string, string> &param)
 {
 	if(!param.contains("svrType"))
 	{
-		DNPrintErr("lunch param svrType is null! \n");
+		printf("lunch param svrType is null! \n");
 		return false;
 	}
 
 	ServerType serverType = (ServerType)stoi(param["svrType"]);
+	if(serverType <= ServerType::None || serverType >= ServerType::Max)
+	{
+		printf("serverType Not Invalid! \n");
+		return false;
+	}
+
+	filesystem::path execPath = param["luanchPath"];
+	SetCurrentDirectory(execPath.parent_path().string().c_str());
+
+	{
+		#if _DEBUG
+		LPCSTR iniFilePath = "../../../Config/ServerDebug.ini";
+		#else
+		LPCSTR iniFilePath = "./Config/Server.ini";
+		#endif
+
+		const int bufferSize = 512;
+		
+		CHAR buffer[bufferSize];
+
+		vector<string> sectionNames;
+
+		GetPrivateProfileSectionNamesA(buffer, bufferSize, iniFilePath);
+
+		// get ini Config
+		string_view serverName = enum_name(serverType);
+
+		CHAR * current = buffer;
+		while (*current) 
+		{
+			sectionNames.push_back(current);
+			current += strlen(current) + 1;
+
+			if (sectionNames.back().find_last_of("Server") != std::string::npos && sectionNames.back() != serverName)
+			{
+				sectionNames.pop_back();
+			}
+		}
+
+		for (const auto& sectionName : sectionNames) 
+		{
+            GetPrivateProfileSectionA(sectionName.c_str(), buffer, bufferSize, iniFilePath);
+
+            CHAR* keyValuePair = buffer;
+            while (*keyValuePair) 
+			{
+				string split(keyValuePair);
+				keyValuePair += strlen(keyValuePair) + 1;
+
+				size_t pos = split.find('=');
+				if (pos != std::string::npos) 
+				{
+					string key = split.substr(0, pos);
+					if(param.count(key)) 
+					{
+						continue;
+					}
+
+					param.emplace(key, split.substr(pos + 1));
+				}
+                
+            }
+        }
+	}
+
+	// local output
+    locale::global(locale(param["locale"]));
+
+	// set global Launch config  
+	{
+		pLuanchParam = &param;
+		SetLuanchConfig(pLuanchParam);
+	}
+
+	// I10n Config
+	pl10n = new DNl10n();
+	if(!pl10n->InitConfigData())
+	{
+		printf("Load I10n Config Error!!");
+		return false;
+	}
+
+	return true;
+}
+
+bool DimensionNightmare::Init()
+{
+	string* value = GetLuanchConfigParam("svrType");
+	ServerType serverType = (ServerType)stoi(*value);
 	
 	switch (serverType)
 	{
@@ -220,11 +324,11 @@ bool DimensionNightmare::Init(map<string, string> &param)
 		pServer = new LogicServer;
 		break;
 	default:
-		DNPrintErr("ServerType is Not Vaild! \n");
+		DNPrint(5, LoggerLevel::Error, nullptr);
 		return false;
 	}
 
-	if(!pServer->Init(param))
+	if(!pServer->Init())
 	{
 		return false;
 	}
@@ -245,6 +349,12 @@ bool DimensionNightmare::Init(map<string, string> &param)
 
 	OnRegClientReconnectFunc();
 	return true;
+}
+
+void DimensionNightmare::InitDllEnv()
+{
+	SetLuanchConfig(pLuanchParam);
+	SetDNl10nInstance(pl10n);
 }
 
 void DimensionNightmare::InitCmdHandle()
@@ -280,7 +390,7 @@ void DimensionNightmare::InitCmdHandle()
 		pServer->InitCmd(mCmdHandle);
 	}
 
-	DNPrint("cmds: ");
+	printf("cmds: ");
 	for(auto &[k,v] : mCmdHandle)
 	{
 		printf("%s,", k.c_str());
@@ -306,10 +416,10 @@ bool DimensionNightmare::OnRegHotReload()
 {
 	if (FARPROC funtPtr = pHotDll->GetFuncPtr("InitHotReload"))
 	{
-		using funcSign = int (*)(DNServer &);
+		using funcSign = int (*)(DimensionNightmare&);
 		if (funcSign func = reinterpret_cast<funcSign>(funtPtr))
 		{
-			func(*pServer);
+			func(*this);
 			return true;
 		}
 	}
@@ -325,10 +435,10 @@ bool DimensionNightmare::OnUnregHotReload()
 
 	if (FARPROC funtPtr = pHotDll->GetFuncPtr("ShutdownHotReload"))
 	{
-		using funcSign = int (*)(DNServer &);
+		using funcSign = int (*)(DimensionNightmare&);
 		if (funcSign func = reinterpret_cast<funcSign>(funtPtr))
 		{
-			func(*pServer);
+			func(*this);
 			return true;
 		}
 	}
@@ -340,10 +450,10 @@ bool DimensionNightmare::OnRegClientReconnectFunc()
 {
 	if (FARPROC funtPtr = pHotDll->GetFuncPtr("RegClientReconnectFunc"))
 	{
-		using funcSign = int (*)(std::function<void(const char*, int)>);
+		using funcSign = int (*)(function<void(const char*, int)>);
 		if (funcSign func = reinterpret_cast<funcSign>(funtPtr))
 		{
-			// auto funcProxy = std::bind(&DNServer::ReClientEvent, pServer);
+			// auto funcProxy = bind(&DNServer::ReClientEvent, pServer);
 			auto funcProxy = [this](const char* ip, int port)
 			{
 				pServer->ReClientEvent(ip, port);

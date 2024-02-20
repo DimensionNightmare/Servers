@@ -1,5 +1,5 @@
 module;
-#include "google/protobuf/Message.h"
+#include "google/protobuf/message.h"
 #include "hv/Channel.h"
 
 #include <functional>
@@ -12,8 +12,7 @@ import MessagePack;
 import GateMessage;
 import AfxCommon;
 
-#define DNPrint(fmt, ...) printf("[%s] {%s} ->" "\n" fmt "\n", GetNowTimeStr().c_str(), __FUNCTION__, ##__VA_ARGS__);
-#define DNPrintErr(fmt, ...) fprintf(stderr, "[%s] {%s} ->" "\n" fmt "\n", GetNowTimeStr().c_str(), __FUNCTION__, ##__VA_ARGS__);
+#define DNPrint(code, level, ...) LoggerPrint(level, code, __FUNCTION__, ##__VA_ARGS__);
 
 using namespace hv;
 using namespace std;
@@ -42,11 +41,11 @@ void HandleGateServerInit(DNServer *server)
 			string peeraddr = channel->peeraddr();
 			if (channel->isConnected())
 			{
-				DNPrint("%s connected! connfd=%d id=%d \n", peeraddr.c_str(), channel->fd(), channel->id());
+				DNPrint(2, LoggerLevel::Debug, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
 			}
 			else
 			{
-				DNPrint("%s disconnected! connfd=%d id=%d \n", peeraddr.c_str(), channel->fd(), channel->id());
+				DNPrint(3, LoggerLevel::Debug, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
 			}
 		};
 
@@ -61,7 +60,7 @@ void HandleGateServerInit(DNServer *server)
 			}
 			else
 			{
-				DNPrintErr("packet.dealType not matching! \n");
+				DNPrint(12, LoggerLevel::Error, nullptr);
 			}
 		};
 
@@ -83,11 +82,11 @@ void HandleGateServerInit(DNServer *server)
 
 			if (channel->isConnected())
 			{
-				DNPrint("%s connected! connfd=%d id=%d \n", peeraddr.c_str(), channel->fd(), channel->id());
+				DNPrint(4, LoggerLevel::Debug, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
 			}
 			else
 			{
-				DNPrint("%s disconnected! connfd=%d id=%d \n", peeraddr.c_str(), channel->fd(), channel->id());
+				DNPrint(5, LoggerLevel::Debug, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
 			}
 
 			if(clientSock->isReconnect())
@@ -104,17 +103,17 @@ void HandleGateServerInit(DNServer *server)
 			{
 				auto clientSock = serverProxy->GetCSock();
 
-				if(DNTask<void *>* task = clientSock->GetMsg(packet.msgId)) //client sock request
+				if(DNTask<Message *>* task = clientSock->GetMsg(packet.msgId)) //client sock request
 				{
 					clientSock->DelMsg(packet.msgId);
 					task->Resume();
-					Message* message = ((DNTask<Message*>*)task)->GetResult();
+					Message* message = task->GetResult();
 					message->ParseFromArray((const char*)buf->data() + MessagePacket::PackLenth, packet.pkgLenth);
 					task->CallResume();
 				}
 				else
 				{
-					DNPrintErr("cant find msgid! \n");
+					DNPrint(13, LoggerLevel::Error, nullptr);
 				}
 			}
 			else if(packet.dealType == MsgDeal::Req)
@@ -124,7 +123,7 @@ void HandleGateServerInit(DNServer *server)
 			}
 			else
 			{
-				DNPrintErr("packet.dealType not matching! \n");
+				DNPrint(12, LoggerLevel::Error, nullptr);
 			}
 		};
 

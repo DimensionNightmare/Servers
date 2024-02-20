@@ -1,5 +1,5 @@
 module;
-#include "Common.pb.h"
+#include "CommonMsg.pb.h"
 #include "GlobalControl.pb.h"
 #include "AuthControl.pb.h"
 #include "hv/Channel.h"
@@ -13,14 +13,13 @@ import :ControlCommon;
 import :ControlAuth;
 import AfxCommon;
 
-#define DNPrint(fmt, ...) printf("[%s] {%s} ->" "\n" fmt "\n", GetNowTimeStr().c_str(), __FUNCTION__, ##__VA_ARGS__);
-#define DNPrintErr(fmt, ...) fprintf(stderr, "[%s] {%s} ->" "\n" fmt "\n", GetNowTimeStr().c_str(), __FUNCTION__, ##__VA_ARGS__);
+#define DNPrint(code, level, ...) LoggerPrint(level, code, __FUNCTION__, ##__VA_ARGS__);
 
 using namespace std;
 using namespace hv;
 using namespace google::protobuf;
 
-using namespace GMsg::Common;
+using namespace GMsg::CommonMsg;
 using namespace GMsg::GlobalControl;
 using namespace GMsg::AuthControl;
 
@@ -53,14 +52,14 @@ void ControlMessageHandle::MsgHandle(const SocketChannelPtr &channel, unsigned i
 		}
 		else
 		{
-			DNPrintErr("cant parse msg Deal Handle! \n");
+			DNPrint(14, LoggerLevel::Error, nullptr);
 		}
 		
 		delete message;
 	}
 	else
 	{
-		DNPrintErr("cant find msgid Deal Handle! \n");
+		DNPrint(15, LoggerLevel::Error, nullptr);
 	}
 }
 

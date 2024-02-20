@@ -4,6 +4,8 @@ module;
 #include <functional> 
 export module DNServer;
 
+import AfxCommon;
+
 using namespace std;
 
 export enum class ServerType : unsigned char
@@ -28,7 +30,7 @@ public:
 
 public:
 
-	virtual bool Init(map<string, string> &param);
+	virtual bool Init();
 
 	virtual void InitCmd(map<string, function<void(stringstream*)>> &cmdMap) = 0;
 
@@ -67,11 +69,12 @@ DNServer::DNServer()
 	iServerIndex = 0;
 }
 
-bool DNServer::Init(map<string, string> &param)
+bool DNServer::Init()
 {
-	if(param.contains("svrIndex"))
+	string* value = GetLuanchConfigParam("svrIndex");
+	if(value)
 	{
-		iServerIndex = stoi(param["svrIndex"]);
+		iServerIndex = stoi(*value);
 	}
 
 	return true;

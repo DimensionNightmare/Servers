@@ -54,7 +54,7 @@ target_sources( MainSource
 	PUBLIC FILE_SET cpp20_modules TYPE CXX_MODULES FILES ${DNSourceModule}
 )
 
-target_link_libraries(MainSource PUBLIC hv_static)
+target_link_libraries(MainSource PUBLIC hv_static protobuf::libprotobuf protobufGen.lib)
 set_property(TARGET MainSource PROPERTY CXX_STANDARD 23)
 
 add_executable(DimensionNightmareServer "main.cpp")
@@ -73,7 +73,7 @@ target_sources(HotloadSource
 	PUBLIC FILE_SET cpp20_modules TYPE CXX_MODULES FILES  ${srcHotReloadModule}
 )
 
-target_link_libraries(HotloadSource PUBLIC MainSource protobuf::libprotobuf protobufGen.lib libpqxx::pqxx)
+target_link_libraries(HotloadSource PUBLIC MainSource  libpqxx::pqxx)
 
 set_property(TARGET HotloadSource PROPERTY CXX_STANDARD 23)
 

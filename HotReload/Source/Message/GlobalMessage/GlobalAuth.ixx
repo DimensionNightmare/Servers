@@ -62,7 +62,7 @@ export DNTaskVoid Exe_AuthAccount(const SocketChannelPtr &channel, unsigned int 
 
 		auto sock = GetControlServer()->GetSSock();
 		unsigned int smsgId = sock->GetMsgId();
-		sock->AddMsg(smsgId, (DNTask<void*>*)&dataChannel);
+		sock->AddMsg(smsgId, &dataChannel);
 
 		binData.resize(requset->ByteSize());
 		requset->SerializeToArray(binData.data(), binData.size());
