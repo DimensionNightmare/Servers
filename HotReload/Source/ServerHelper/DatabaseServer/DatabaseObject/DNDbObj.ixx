@@ -566,13 +566,24 @@ DNDbObj<TMessage>& DNDbObj<TMessage>::InitTable()
 		mEles.emplace(make_pair(field->name(), params));
 	}
 
-	if(mEles.count(SPrimaryKey))
-	{
-		throw new exception("Not Allow Exist 'PRIMARY KEY' map key!");
-	}
-
 	if (primaryKey.size())
 	{
+		string temp = SSMBegin;
+		for (auto it = primaryKey.begin(); it != primaryKey.end(); it++)
+		{
+			temp += *it;
+
+			if(next(it) != primaryKey.end())
+			{
+				temp += SSplit;
+			}
+		}
+
+		temp += SSMEnd;
+
+		primaryKey.clear();
+		primaryKey.emplace_back(temp);
+		
 		mEles.emplace(make_pair(SPrimaryKey, primaryKey));
 	}
 	

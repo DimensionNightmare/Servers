@@ -15,6 +15,7 @@ import DatabaseServerInit;
 import LogicServerInit;
 
 import DNClientProxyHelper;
+import AfxCommon;
 
 #ifdef HOTRELOAD_BUILD
 #define HOTRELOAD __declspec(dllexport)
@@ -57,6 +58,8 @@ extern "C"
 int InitHotReload(DimensionNightmare &mainObj)
 {
 	mainObj.InitDllEnv();
+
+	SetLoggerLevel(LoggerLevel::Debug);
 	
 	DNServer* base = mainObj.GetServer();
 	ServerType servertype = base->GetServerType();
