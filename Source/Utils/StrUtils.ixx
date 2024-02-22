@@ -4,6 +4,7 @@ module;
 #include <array>
 #include <format>
 #include <chrono>
+#include <regex>
 export module Utils.StrUtils;
 
 using namespace std;
@@ -62,4 +63,39 @@ export string GetNowTimeStr()
 {
 	chrono::system_clock clock;
 	return format("{:%Y-%m-%d %H:%M:%S}", clock.now());
+}
+
+export double StringToTimestamp(const string& datetimeStr)
+{
+
+    regex pattern(R"((\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\.?(\d{6})?(\+|-)(\d{2}))");
+    smatch match;
+
+    if (!regex_match(datetimeStr, match, pattern)) {
+        throw runtime_error("Invalid datetime format");
+    }
+
+    string datetime = match[1];
+
+    string microseconds_str = match[2];
+
+    int timezone_offset = stoi(match[4]);
+
+    tm tm = {};
+    stringstream ss(datetime);
+    ss >> get_time(&tm, "%Y-%m-%d %H:%M:%S");
+
+    auto tp = chrono::system_clock::from_time_t(mktime(&tm));
+
+    if (!microseconds_str.empty()) 
+	{
+        int microseconds = stoi(microseconds_str);
+        tp += chrono::microseconds(microseconds);
+    }
+
+    // time zone
+    // tp -= chrono::hours(timezone_offset);
+
+	double timestamp = chrono::duration<double>(tp.time_since_epoch()).count();
+    return timestamp;
 }

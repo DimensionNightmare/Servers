@@ -2,6 +2,7 @@ module;
 #include "Common.pb.h"
 
 #include <string>
+#include <format>
 #include <cstdarg>
 export module Logger;
 
@@ -62,5 +63,5 @@ export void LoggerPrint(LoggerLevel level, size_t code, const char* funcName, co
     message.resize(len);
 	va_end(args);
 
-	printf("[%s] {%s} ->" "\n%s\n", GetNowTimeStr().c_str(), funcName, message.c_str());
+	std::cout << format("[{}] {} -> \n{}", GetNowTimeStr(), funcName, message) << std::endl;
 }

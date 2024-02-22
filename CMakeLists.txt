@@ -104,3 +104,6 @@ if (CMAKE_VERSION VERSION_GREATER 3.12)
 endif()
 
 # TODO: 如有需要，请添加测试并安装目标。
+
+add_custom_target(MainTarget)
+add_dependencies(MainTarget DimensionNightmareServer HotReload)

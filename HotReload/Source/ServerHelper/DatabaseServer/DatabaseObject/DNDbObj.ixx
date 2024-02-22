@@ -8,9 +8,11 @@ module;
 
 #include <sstream>
 #include <format>
+#include <ctime>
 export module DNDbObj;
 
 import AfxCommon;
+import Utils.StrUtils;
 
 using namespace std;
 using namespace google::protobuf;
@@ -25,7 +27,16 @@ using namespace google::protobuf;
 #define SSpace " "
 #define SDefault "DEFAULT"
 #define SCombo " AND "
+#define SNOT "NOT"
 #define SPrimaryKey "PRIMARY KEY"
+#define SNULL "NULL"
+#define SNOTNULL "NOT NULL"
+#define SISNULL "IS NULL"
+#define SNOTISNULL SNOT SSpace SISNULL
+#define SWHERE " WHERE "
+#define SSELECTALL "*"
+#define SUPDATE "UPDATE"
+#define SUPDATECOND "UPDATECOND"
 
 enum class SqlOpType : char
 {
@@ -82,73 +93,128 @@ void InitFieldByProtoType(const FieldDescriptor* field, list<string>& out, list<
 
 	out.emplace_back(typeStr);
 
+	// Type First Modify !!!
+	switch (field->cpp_type())
+	{
+		case FieldDescriptor::CPPTYPE_STRING:
+		{
+			if(int lenLimit = field->options().GetExtension(ext_len_limit))
+			{
+				out.back().assign(format("VARCHAR({0})", lenLimit));
+			}
+			break;
+		}
+		case FieldDescriptor::CPPTYPE_UINT32:
+		case FieldDescriptor::CPPTYPE_UINT64:
+		{
+			out.emplace_back(format("CHECK ({0} > -1)", field->name()));
+			break;
+		}
+		case FieldDescriptor::CPPTYPE_DOUBLE:
+		{
+			if(field->options().GetExtension(ext_datetime))
+			{
+				out.back().assign("TIMESTAMP WITH TIME ZONE");
+			}
+		}
+	}
+	
 	if(!field->has_optional_keyword())
 	{
-		out.emplace_back("NOT NULL");
+		out.emplace_back(SNOTNULL);
 	}
 
-	if(field->has_default_value())
+	string defStr = field->options().GetExtension(ext_default);
+	if(defStr.size())
 	{
-		out.emplace_back(format("{0} {1}", SDefault, field->default_value_string()));
+		out.emplace_back(format("{0} {1}", SDefault, defStr));
 	}
 
-	if(field->options().GetExtension(primary_key))
+	if(field->options().GetExtension(ext_primary_key))
 	{
 		keys.emplace_back(field->name());
 	}
 
-	auto res1 = field->options().GetExtension(len_limit);
-
-	switch(field->cpp_type())
+	if(field->options().GetExtension(ext_unique))
 	{
-		case FieldDescriptor::CPPTYPE_UINT32:
-		case FieldDescriptor::CPPTYPE_UINT64:
-			out.emplace_back(format("CHECK ({0} > -1)", field->name()));
-			break;
-
+		out.emplace_back("UNIQUE");
 	}
 }
 
+/// @brief Get Message Field Value to String for *** INSERT *** Table
+/// @param field 
+/// @param reflection 
+/// @param data 
+/// @param out 
+/// @return isNull
 void InsertFieldByProtoType(const FieldDescriptor* field, const Reflection* reflection, Message& data, string& out)
 {
 	out.clear();
 
-	const char* typeStr = GetDbTypeByProtoType(field->cpp_type());
-
 	switch(field->cpp_type())
 	{
 		case FieldDescriptor::CPPTYPE_INT32:
-			out = format("{}", reflection->GetInt32(data, field));
+			out = to_string(reflection->GetInt32(data, field));
 			break;
 		case FieldDescriptor::CPPTYPE_UINT32:
-			out = format("{}", reflection->GetUInt32(data, field));
+			out = to_string(reflection->GetUInt32(data, field));
 			break;
 		case FieldDescriptor::CPPTYPE_INT64:
-			out = format("{}", reflection->GetInt64(data, field));
+			out = to_string(reflection->GetInt64(data, field));
 			break;
 		case FieldDescriptor::CPPTYPE_UINT64:
-			out = format("{}", reflection->GetUInt64(data, field));
+			out = to_string(reflection->GetUInt64(data, field));
 			break;
 		case FieldDescriptor::CPPTYPE_DOUBLE:
-			out = format("{}", reflection->GetDouble(data, field));
+			out = to_string(reflection->GetDouble(data, field));
 			break;
 		case FieldDescriptor::CPPTYPE_FLOAT:
-			out = format("{}", reflection->GetFloat(data, field));
+			out = to_string(reflection->GetFloat(data, field));
 			break;
 		case FieldDescriptor::CPPTYPE_STRING:
-			out = format("'{}'", reflection->GetString(data, field));
+			out = out + "'" + reflection->GetString(data, field) + "'";
 			break;
 		default:
 			throw new exception("Please Regist InsertField::Type");
 			break;
 	}
-	
+
+	switch(field->cpp_type())
+	{
+		case FieldDescriptor::CPPTYPE_DOUBLE: 
+		{
+			if(field->options().GetExtension(ext_datetime))
+			{
+				out = format("TO_TIMESTAMP({})", out);
+			}
+			break;
+		}
+		case FieldDescriptor::CPPTYPE_STRING: // len_limit
+		{
+			if(int len = field->options().GetExtension(ext_len_limit))
+			{
+				if(out.size() > len)
+				{
+					out = format("field {} lenth > {} limit !!!", field->name(), len);
+					throw new exception(out.c_str());
+				}
+			}
+			break;
+		}
+	}
 }
 
-void QueryFieldByProtoType(const FieldDescriptor* field, const Reflection* reflection, Message& data, pqxx::row::reference value)
+void SelectFieldNameByProtoType(const FieldDescriptor* field, string& out)
 {
-	string typeStr = GetDbTypeByProtoType(field->cpp_type());
+	if(field->options().GetExtension(ext_datetime))
+	{
+		out = format("EXTRACT(EPOCH FROM {} at time zone 'UTC') as {}", out, out);
+	}
+		
+}
 
+void SelectFieldByProtoType(const FieldDescriptor* field, const Reflection* reflection, Message& data, pqxx::row::reference value, bool isQueryAll)
+{
 	switch(field->cpp_type())
 	{
 		case FieldDescriptor::CPPTYPE_INT32:
@@ -164,8 +230,17 @@ void QueryFieldByProtoType(const FieldDescriptor* field, const Reflection* refle
 			reflection->SetUInt64(&data, field, value.as<uint64_t>());
 			break;
 		case FieldDescriptor::CPPTYPE_DOUBLE:
+		{
+			if( isQueryAll && field->options().GetExtension(ext_datetime) )
+			{
+				double timestamp = StringToTimestamp(value.as<string>());
+
+				reflection->SetDouble(&data, field,  timestamp);
+				break;
+			}
 			reflection->SetDouble(&data, field, value.as<double>());
 			break;
+		}
 		case FieldDescriptor::CPPTYPE_FLOAT:
 			reflection->SetFloat(&data, field, value.as<float>());
 			break;
@@ -179,40 +254,241 @@ void QueryFieldByProtoType(const FieldDescriptor* field, const Reflection* refle
 	
 }
 
+void SelectFieldCondByProtoType(const FieldDescriptor* field, const Reflection* reflection, Message& data, string& out)
+{
+	out.clear();
+
+	if( field->has_optional_keyword() && !reflection->HasField(data, field))
+	{
+		out = SNULL;
+		return;
+	}
+
+	switch(field->cpp_type())
+	{
+		case FieldDescriptor::CPPTYPE_INT32:
+			out = to_string(reflection->GetInt32(data, field));
+			break;
+		case FieldDescriptor::CPPTYPE_UINT32:
+			out = to_string(reflection->GetUInt32(data, field));
+			break;
+		case FieldDescriptor::CPPTYPE_INT64:
+			out = to_string(reflection->GetInt64(data, field));
+			break;
+		case FieldDescriptor::CPPTYPE_UINT64:
+			out = to_string(reflection->GetUInt64(data, field));
+			break;
+		case FieldDescriptor::CPPTYPE_DOUBLE:
+			out = to_string(reflection->GetDouble(data, field));
+			break;
+		case FieldDescriptor::CPPTYPE_FLOAT:
+			out = to_string(reflection->GetFloat(data, field));
+			break;
+		case FieldDescriptor::CPPTYPE_STRING:
+			out = format("'{}'", reflection->GetString(data, field));
+			break;
+		default:
+			throw new exception("Please Regist InsertField::Type");
+			break;
+	}
+
+	switch(field->cpp_type())
+	{
+		case FieldDescriptor::CPPTYPE_DOUBLE: 
+		{
+			if(field->options().GetExtension(ext_datetime))
+			{
+				out = format("TO_TIMESTAMP({})", out);
+			}
+			break;
+		}
+		case FieldDescriptor::CPPTYPE_STRING: // len_limit
+		{
+			if(int len = field->options().GetExtension(ext_len_limit))
+			{
+				if(out.size() > len)
+				{
+					out = format("field {} lenth > {} limit !!!", field->name(), len);
+					throw new exception(out.c_str());
+				}
+			}
+			break;
+		}
+	}
+	
+}
+
+bool UpdateFieldByProtoType(const FieldDescriptor* field, const Reflection* reflection, Message& data, string& out)
+{
+	out.clear();
+
+	if( field->has_optional_keyword() && !reflection->HasField(data, field))
+	{
+		out = SNULL;
+		return true;
+	}
+
+	switch(field->cpp_type())
+	{
+		case FieldDescriptor::CPPTYPE_INT32:
+			out = to_string(reflection->GetInt32(data, field));
+			break;
+		case FieldDescriptor::CPPTYPE_UINT32:
+			out = to_string(reflection->GetUInt32(data, field));
+			break;
+		case FieldDescriptor::CPPTYPE_INT64:
+			out = to_string(reflection->GetInt64(data, field));
+			break;
+		case FieldDescriptor::CPPTYPE_UINT64:
+			out = to_string(reflection->GetUInt64(data, field));
+			break;
+		case FieldDescriptor::CPPTYPE_DOUBLE:
+			out = to_string(reflection->GetDouble(data, field));
+			break;
+		case FieldDescriptor::CPPTYPE_FLOAT:
+			out = to_string(reflection->GetFloat(data, field));
+			break;
+		case FieldDescriptor::CPPTYPE_STRING:
+			out = format("'{}'", reflection->GetString(data, field));
+			break;
+		default:
+			throw new exception("Please Regist InsertField::Type");
+			break;
+	}
+
+	switch(field->cpp_type())
+	{
+		case FieldDescriptor::CPPTYPE_DOUBLE: 
+		{
+			if(field->options().GetExtension(ext_datetime))
+			{
+				out = format("TO_TIMESTAMP({})", out);
+			}
+			break;
+		}
+		case FieldDescriptor::CPPTYPE_STRING: // len_limit
+		{
+			if(int len = field->options().GetExtension(ext_len_limit))
+			{
+				if(out.size() > len)
+				{
+					out = format("field {} lenth > {} limit !!!", field->name(), len);
+					throw new exception(out.c_str());
+				}
+			}
+			break;
+		}
+	}
+	
+	return true;
+}
+
+void UpdateFieldCondByProtoType(const FieldDescriptor* field, const Reflection* reflection, Message& data, string& out)
+{
+	out.clear();
+
+	if( field->has_optional_keyword() && !reflection->HasField(data, field))
+	{
+		out = SNULL;
+		return;
+	}
+
+	switch(field->cpp_type())
+	{
+		case FieldDescriptor::CPPTYPE_INT32:
+			out = to_string(reflection->GetInt32(data, field));
+			break;
+		case FieldDescriptor::CPPTYPE_UINT32:
+			out = to_string(reflection->GetUInt32(data, field));
+			break;
+		case FieldDescriptor::CPPTYPE_INT64:
+			out = to_string(reflection->GetInt64(data, field));
+			break;
+		case FieldDescriptor::CPPTYPE_UINT64:
+			out = to_string(reflection->GetUInt64(data, field));
+			break;
+		case FieldDescriptor::CPPTYPE_DOUBLE:
+			out = to_string(reflection->GetDouble(data, field));
+			break;
+		case FieldDescriptor::CPPTYPE_FLOAT:
+			out = to_string(reflection->GetFloat(data, field));
+			break;
+		case FieldDescriptor::CPPTYPE_STRING:
+			out = format("'{}'", reflection->GetString(data, field));
+			break;
+		default:
+			throw new exception("Please Regist InsertField::Type");
+			break;
+	}
+
+	switch(field->cpp_type())
+	{
+		case FieldDescriptor::CPPTYPE_DOUBLE: 
+		{
+			if(field->options().GetExtension(ext_datetime))
+			{
+				out = format("TO_TIMESTAMP({})", out);
+			}
+			break;
+		}
+		case FieldDescriptor::CPPTYPE_STRING: // len_limit
+		{
+			if(int len = field->options().GetExtension(ext_len_limit))
+			{
+				if(out.size() > len)
+				{
+					out = format("field {} lenth > {} limit !!!", field->name(), len);
+					throw new exception(out.c_str());
+				}
+			}
+			break;
+		}
+	}
+}
+
 export template <class TMessage = Message>
 class DNDbObj
 {
 public:
-	DNDbObj();
 	DNDbObj(pqxx::transaction<>& work);
 	~DNDbObj(){};
 
 	const string& GetName(){return pMessage->GetDescriptor()->name();};
 	
+	vector<TMessage> Result(){ return mResult;}
+
 	bool Commit();
 	//create table
 	DNDbObj<TMessage>& InitTable();
 	//insert
-	DNDbObj<TMessage>& AddRecord(list<TMessage>& datas);
+	void Inserts(list<TMessage>& inObjs);
 	//query
-	DNDbObj<TMessage>& Query(int index = -2, int condIndex = -1, const char* condition = nullptr);
+	DNDbObj<TMessage>& Select(const char* name, ...);
 
-	vector<TMessage> Result(){ return mResult;}
+	DNDbObj<TMessage>& SelectAll(bool foreach = false);
 
-	DNDbObj<TMessage>& Update(TMessage& updata, int condIndex = -1);
+	DNDbObj<TMessage>& SelectCond(TMessage& selObj, const char* name, const char* cond, const char* splicing, ...);
 
-	DNDbObj<TMessage>& Delete(TMessage& updata, int condIndex = -1);
+	DNDbObj<TMessage>& Update(TMessage& upObj, const char* name, ...);
+
+	DNDbObj<TMessage>& UpdateCond(TMessage& upObj, const char* name, const char* cond, const char* splicing, ...);
+
+	DNDbObj<TMessage>& DeleteCond(TMessage &outObj, const char* name, const char* cond, const char* splicing, ...);
 
 	bool IsSuccess(){return bExecResult;}
 
+	bool IsExist();
+
 private:
+	DNDbObj();
+
 	bool ChangeSqlType(SqlOpType type);
 
 	void SetResult(int affectedRows);
 
 	void BuildSqlStatement();
 
-	DNDbObj<TMessage>& AddRecord(TMessage& data);
+	DNDbObj<TMessage>& Insert(TMessage& inObj);
 
 	void PaserQuery(pqxx::result& result);
 
@@ -252,6 +528,12 @@ template <class TMessage>
 DNDbObj<TMessage>::DNDbObj(pqxx::transaction<> &work):DNDbObj()
 {
 	pWork = &work;
+}
+
+template <class TMessage>
+bool DNDbObj<TMessage>::IsExist()
+{
+	return pWork->query_value<bool>(format("SELECT EXISTS ( SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = lower('{}'));", GetName()));
 }
 
 template <class TMessage>
@@ -427,14 +709,14 @@ void DNDbObj<TMessage>::BuildSqlStatement()
 
 			for (it = mEles.begin();it != itEnd;it++)
 			{
-				if(!hasCondition)
-				{
-					hasCondition = true;
-					ss << " WHERE ";
-				}
-				
 				for(string& cond : it->second)
 				{
+					if(!hasCondition)
+					{
+						hasCondition = true;
+						ss << SWHERE;
+					}
+
 					ss << cond;
 				}
 			}
@@ -444,12 +726,18 @@ void DNDbObj<TMessage>::BuildSqlStatement()
 		}
 		case SqlOpType::Update:
 		{
+			auto& updates = mEles[SUPDATE];
+			if(!updates.size())
+			{
+				throw new exception("NOT SET UPDATE PROPERTY !");
+			}
+
 			string selectElems;
-			auto it = mEles.begin();
-			auto itEnd = mEles.end();
+			auto it = updates.begin();
+			auto itEnd = updates.end();
 			for (;it != itEnd;it++)
 			{
-				selectElems.append(format("{} = {}", it->first, it->second.front()));
+				selectElems.append(*it);
 
 				if(next(it) != itEnd)
 				{
@@ -458,28 +746,22 @@ void DNDbObj<TMessage>::BuildSqlStatement()
 			}
 
 			ss << GetOpTypeBySqlOpType(eType) << GetName() << " SET "  << selectElems ;
+
+			auto& updateConds = mEles[SUPDATECOND];
 			
 			bool hasCondition = false;
 
-			for (it = mEles.begin();it != itEnd;it++)
+			for(auto condIt = updateConds.begin(); condIt != updateConds.end(); condIt++)
 			{
-
-				for(auto condIt = it->second.begin(); condIt != it->second.end(); condIt++)
+				if(!hasCondition)
 				{
-					if(condIt == it->second.begin())
-					{
-						continue;
-					}
-
-					if(!hasCondition)
-					{
-						hasCondition = true;
-						ss << " WHERE ";
-					}
-
-					ss << *condIt;
+					hasCondition = true;
+					ss << SWHERE;
 				}
+
+				ss << *condIt;
 			}
+			
 
 			ss << SEnd;
 			break;
@@ -487,24 +769,27 @@ void DNDbObj<TMessage>::BuildSqlStatement()
 		case SqlOpType::Delete:
 		{
 			ss << GetOpTypeBySqlOpType(eType) << GetName();
+
+			bool hasCondition = false;
 			
 			if(mEles.size())
 			{
-				ss << " WHERE ";
-				string selectElems;
 				auto it = mEles.begin();
 				auto itEnd = mEles.end();
-				for (;it != itEnd;it++)
-				{
-					selectElems.append(format("{} = {}", it->first, it->second.front()));
 
-					if(next(it) != itEnd)
+				for (it = mEles.begin();it != itEnd;it++)
+				{
+					for(string& cond : it->second)
 					{
-						selectElems += SCombo;
+						if(!hasCondition)
+						{
+							hasCondition = true;
+							ss << SWHERE;
+						}
+
+						ss << cond;
 					}
 				}
-
-				ss << selectElems;
 			}
 
 
@@ -566,6 +851,11 @@ DNDbObj<TMessage>& DNDbObj<TMessage>::InitTable()
 		mEles.emplace(make_pair(field->name(), params));
 	}
 
+	if(mEles.count(SPrimaryKey))
+	{
+		throw new exception("Not Allow Exist 'PRIMARY KEY' map key!");
+	}
+
 	if (primaryKey.size())
 	{
 		string temp = SSMBegin;
@@ -592,24 +882,23 @@ DNDbObj<TMessage>& DNDbObj<TMessage>::InitTable()
 }
 
 template <class TMessage>
-DNDbObj<TMessage>& DNDbObj<TMessage>::AddRecord(list<TMessage>& datas)
+void DNDbObj<TMessage>::Inserts(list<TMessage>& inObjs)
 {
-	ChangeSqlType(SqlOpType::Insert);
-
-	if(datas.size())
+	if(inObjs.size())
 	{
-		for(TMessage& one : datas)
+		for(TMessage& one : inObjs)
 		{
-			AddRecord(one);
+			Insert(one);
+			Commit();
 		}
 	}
-
-	return *this;
 }
 
 template <class TMessage>
-DNDbObj<TMessage>& DNDbObj<TMessage>::AddRecord(TMessage& data)
+DNDbObj<TMessage>& DNDbObj<TMessage>::Insert(TMessage& inObj)
 {
+	ChangeSqlType(SqlOpType::Insert);
+
 	const Descriptor* descriptor = this->pMessage->GetDescriptor();
 	const Reflection* reflection = this->pMessage->GetReflection();
 
@@ -618,8 +907,13 @@ DNDbObj<TMessage>& DNDbObj<TMessage>::AddRecord(TMessage& data)
 	for(int i = 0; i < descriptor->field_count();i++)
 	{
 		const FieldDescriptor* field = descriptor->field(i);
+
+		if(!reflection->HasField(inObj, field))
+		{
+			continue;
+		}
 		
-		InsertFieldByProtoType(field, reflection, data, params);
+		InsertFieldByProtoType(field, reflection, inObj, params);
 
 		if(! params.size())
 		{
@@ -632,68 +926,79 @@ DNDbObj<TMessage>& DNDbObj<TMessage>::AddRecord(TMessage& data)
 }
 
 template <class TMessage>
-DNDbObj<TMessage> &DNDbObj<TMessage>::Query(int index, int condIndex, const char* condition)
+DNDbObj<TMessage> &DNDbObj<TMessage>::Select(const char* name, ...)
 {
 	ChangeSqlType(SqlOpType::Query);
 
 	const Descriptor* descriptor = this->pMessage->GetDescriptor();
 	const Reflection* reflection = this->pMessage->GetReflection();
 
-	// range *=-1
-	if(index < -2 || index > descriptor->field_count())
+	if(mEles.count(SSELECTALL))
+	{
+		throw new exception("exist other select statement!!");
+	}
+
+	if(const FieldDescriptor* field = descriptor->FindFieldByLowercaseName(name))
+	{
+		string name = field->name();
+		SelectFieldNameByProtoType(field, name);
+		mEles[name];
+	}
+
+	return *this;
+}
+
+template <class TMessage>
+DNDbObj<TMessage> &DNDbObj<TMessage>::SelectAll(bool foreach)
+{
+	ChangeSqlType(SqlOpType::Query);
+
+	if(foreach)
+	{
+		const Descriptor* descriptor = this->pMessage->GetDescriptor();
+		for(int i = 0; i < descriptor->field_count(); i++)
+		{
+			Select(descriptor->field(i)->lowercase_name().c_str());
+		}
+		return *this;
+	}
+
+	mEles[SSELECTALL];
+
+	if(mEles.size() > 1)
+	{
+		throw new exception("exist other select statement!!");
+	}
+
+	return *this;
+}
+
+template <class TMessage>
+DNDbObj<TMessage> &DNDbObj<TMessage>::SelectCond(TMessage& selObj, const char* name, const char* cond, const char* splicing, ...)
+{
+	const Descriptor* descriptor = this->pMessage->GetDescriptor();
+	const Reflection* reflection = this->pMessage->GetReflection();
+
+	const FieldDescriptor* field = descriptor->FindFieldByLowercaseName(name);
+	if(!field)
 	{
 		return *this;
+	}
+
+	string value;
+	SelectFieldCondByProtoType(field, reflection, selObj, value);
+
+	value = format("{} {} {} {}", splicing, name, cond, value);
+
+	if(mEles.count(SSELECTALL))
+	{
+		mEles[SSELECTALL].emplace_back(value);
+	}
+	else
+	{
+		mEles.begin()->second.emplace_back(value);
 	}
 	
-	bool isExistAll = mEles.count("*");
-
-	// query * not need other
-	if(isExistAll && index > -1)
-	{
-		return *this;
-	}
-
-	if(index == -1)
-	{
-		mEles["*"];
-
-		if(mEles.size() > 1)
-		{
-			throw new exception("exist other select statement!!");
-		}
-
-		isExistAll = true;
-	}
-	else if(index > 0)
-	{
-		if(isExistAll)
-		{
-			throw new exception("exist * select statement!!");
-		}
-
-		const FieldDescriptor* field = descriptor->field(index);
-		mEles[field->name()];
-	}
-
-	if(condIndex > -1 && condition)
-	{
-		const FieldDescriptor* field = descriptor->field(condIndex);
-		string name = field->name();
-
-		string condStr;
-
-		condStr.resize(strlen(condition) - 2 + name.size());
-		sprintf_s(condStr.data(), condStr.size() +1, condition, name.c_str());
-
-		if(isExistAll)
-		{
-			mEles["*"].emplace_back(condStr);
-		}
-		else
-		{
-			mEles[name].emplace_back(condStr);
-		}
-	}
 
 	return *this;
 }
@@ -712,6 +1017,8 @@ void DNDbObj<TMessage>::PaserQuery(pqxx::result &result)
 	const Descriptor* descriptor = this->pMessage->GetDescriptor();
 	const Reflection* reflection = this->pMessage->GetReflection();
 
+	bool isQueryAll = mEles.count(SSELECTALL);
+
 	for(int row = 0;row < result.size(); row++)
 	{
 		TMessage gen;
@@ -719,78 +1026,82 @@ void DNDbObj<TMessage>::PaserQuery(pqxx::result &result)
 		pqxx::row rowInfo = result[row];
 		for(int col = 0; col < rowInfo.size(); col++)
 		{
-			QueryFieldByProtoType(descriptor->FindFieldByLowercaseName(keys[col]), reflection, gen, rowInfo[col]);
+			if(rowInfo[col].is_null())
+			{
+				continue;
+			}
+			SelectFieldByProtoType(descriptor->FindFieldByLowercaseName(keys[col]), reflection, gen, rowInfo[col], isQueryAll);
 		}
 		mResult.push_back(gen);
 	}
 }
 
 template <class TMessage>
-DNDbObj<TMessage> &DNDbObj<TMessage>::Update(TMessage& updata, int condIndex)
+DNDbObj<TMessage> &DNDbObj<TMessage>::Update(TMessage &upObj, const char *name, ...)
 {
 	ChangeSqlType(SqlOpType::Update);
 
 	const Descriptor* descriptor = this->pMessage->GetDescriptor();
 	const Reflection* reflection = this->pMessage->GetReflection();
 
-	string sData;
-
-	for(int i = 0; i < descriptor->field_count(); i++)
+	const FieldDescriptor* field = descriptor->FindFieldByLowercaseName(name);
+	if(!field)
 	{
-		bool isKey = condIndex == i;
-		const FieldDescriptor* field = descriptor->field(i);
-		if (!reflection->HasField(updata, field)) 
-		{
-			if(isKey)
-			{
-				throw new exception("update key not set");
-			}
-			continue;
-        } 
-
-		InsertFieldByProtoType(field, reflection, updata, sData);
-        mEles[field->name()].emplace_back(sData);
-
-		if(isKey)
-		{
-			mEles.begin()->second.emplace_back( format("{} = {}", field->name(), sData));
-		}
+		return *this;
 	}
 
+	string value;
+	UpdateFieldByProtoType(field, reflection, upObj, value);
+
+	mEles[SUPDATE].emplace_back(format("{} = {}", field->name(), value));
+	
 	return *this;
 }
 
 template <class TMessage>
-DNDbObj<TMessage> &DNDbObj<TMessage>::Delete(TMessage &updata, int condIndex)
+DNDbObj<TMessage> &DNDbObj<TMessage>::UpdateCond(TMessage& upObj, const char *name, const char *cond, const char *splicing, ...)
+{
+	ChangeSqlType(SqlOpType::Update);
+
+	const Descriptor* descriptor = this->pMessage->GetDescriptor();
+	const Reflection* reflection = this->pMessage->GetReflection();
+
+	const FieldDescriptor* field = descriptor->FindFieldByLowercaseName(name);
+	if(!field)
+	{
+		return *this;
+	}
+
+	string value;
+	UpdateFieldCondByProtoType(field, reflection, upObj, value);
+	value = format("{} {} {} {}", splicing, name, cond, value);
+
+	mEles[SUPDATECOND].emplace_back(value);
+	
+	return *this;
+}
+
+template <class TMessage>
+DNDbObj<TMessage> &DNDbObj<TMessage>::DeleteCond(TMessage &outObj, const char *name, const char *cond, const char *splicing, ...)
 {
 	ChangeSqlType(SqlOpType::Delete);
 
 	const Descriptor* descriptor = this->pMessage->GetDescriptor();
 	const Reflection* reflection = this->pMessage->GetReflection();
 
-	string sData;
-
-	for(int i = 0; i < descriptor->field_count(); i++)
+	const FieldDescriptor* field = descriptor->FindFieldByLowercaseName(name);
+	if(!field)
 	{
-		bool isKey = condIndex == i;
-		const FieldDescriptor* field = descriptor->field(i);
-		if (!reflection->HasField(updata, field)) 
-		{
-			if(isKey)
-			{
-				throw new exception("Delete key not set");
-			}
-			continue;
-        } 
-
-		InsertFieldByProtoType(field, reflection, updata, sData);
-        mEles[field->name()].emplace_back(sData);
-
-		if(isKey)
-		{
-			mEles.begin()->second.emplace_back( format("{} = {}", field->name(), sData));
-		}
+		return *this;
 	}
+
+	string condStr;
+
+	UpdateFieldCondByProtoType(field, reflection, outObj, condStr);
+
+	condStr = format("{} {} {} {}", splicing, name, cond, condStr);
+
+	mEles[SUPDATECOND].emplace_back(condStr);
 
 	return *this;
 }

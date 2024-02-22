@@ -4,6 +4,7 @@ module;
 #include "GDef.pb.h"
 
 #include <assert.h>
+#include <format>
 export module DatabaseServerHelper;
 
 import DatabaseServer;
@@ -19,6 +20,12 @@ using namespace GDb;
 using namespace google::protobuf;
 
 #define DNPrint(code, level, fmt, ...) LoggerPrint(level, code, __FUNCTION__, fmt, ##__VA_ARGS__);
+
+#define DBSelect(obj, name) .Select(#name, obj.name())
+#define DBSelectCond(obj, name, cond, splicing) .SelectCond(obj, #name, cond, splicing, obj.name())
+#define DBUpdate(obj, name) .Update(obj, #name, obj.name())
+#define DBUpdateCond(obj, name, cond, splicing) .UpdateCond(obj, #name, cond, splicing, obj.name())
+#define DBDeleteCond(obj, name, cond, splicing) .DeleteCond(obj, #name, cond, splicing, obj.name())
 
 export class DatabaseServerHelper : public DatabaseServer
 {
@@ -51,55 +58,20 @@ void DatabaseServerHelper::InitDabase()
 	{
 		//"postgresql://root@localhost"
 		string* value = GetLuanchConfigParam("connection");
-		pqxx::connection c(*value);
-		value = GetLuanchConfigParam("connectionCliLang");
-		c.set_client_encoding(*value);
-		pqxx::work txn(c);
-		int result = txn.query_value<int>("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public'");
-		// not table empty
-		if(result)
+		pqxx::connection conn(*value);
+
+		pqxx::work txn(conn);
+
+		DNDbObj<Account> accountInfo(txn);
+		if(!accountInfo.IsExist())
 		{
-			DNDbObj<Account> accountInfo(txn);
-			accountInfo.InitTable();
-
-			// list<Account> datas;
-			// Account temp;
-			// temp.set_accountid(1);
-			// temp.set_createtime(123123);
-			// temp.set_updatetime(324);
-			// temp.set_authstring("2342");
-			// temp.set_authname("zxcxfd");
-			// temp.set_email("iopi");
-
-			// datas.emplace_back(temp);
-			// temp.set_accountid(2);
-			// datas.emplace_back(temp);
-			// temp.set_accountid(3);
-			// datas.emplace_back(temp);
-
-			// accountInfo.AddRecord(datas).Commit();
-
-			// accountInfo
-			// 	.Query(-1)
-			// 	// .Query(0, 0, " %s > 2")
-			// 	.Query(-2,2, " %s = 324")
-			// 	.Commit();
-
-			// for(Account& msg : accountInfo.Result())
-			// {
-			// 	("%s \n\n", msg.DebugString().c_str());
-			// }
-
-			// temp.Clear();
-			// temp.set_accountid(1);
-			// accountInfo.Delete( temp, -1).Commit();
-			
+			accountInfo.InitTable().Commit();
 		}
 
 		txn.commit();
 	}
 	catch(const exception& e)
 	{
-		DNPrint(-1, LoggerLevel::Error, "%s \n", e.what());
+		DNPrint(-1, LoggerLevel::Error, "%s", e.what());
 	}
 }

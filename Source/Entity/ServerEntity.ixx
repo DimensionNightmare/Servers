@@ -36,7 +36,7 @@ module:private;
 ServerEntity::ServerEntity()
 {
 	emServerType = ServerType::None;
-	sServIp = "";
+	sServIp.clear();
 	IConnNum = 0;
 	iServPort = 0;
 	pLink = nullptr;
