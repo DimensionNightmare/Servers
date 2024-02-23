@@ -134,7 +134,7 @@ unsigned int ServerEntityManagerHelper<TEntity>::GetServerIndex()
 template <class TEntity>
 void ServerEntityManagerHelper<TEntity>::UpdateServerGroup(DNServerProxy* sSock)
 {
-	list<TEntity*>& gates = GetEntityByList(ServerType::GateServer);
+	list<TEntity*> gates = GetEntityByList(ServerType::GateServer);
 	if(gates.size() <= 0)
 	{
 		return;

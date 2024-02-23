@@ -72,7 +72,7 @@ export void ApiLogin(HttpService* service)
 			return;
 		}
 
-		[username,password,&writer]()-> DNTaskVoid
+		[username,password, writer]()-> DNTaskVoid
 		{
 			const HttpResponseWriterPtr& writerProxy = writer;	//sharedptr ref count ++
 			A2C_AuthAccount requset;
