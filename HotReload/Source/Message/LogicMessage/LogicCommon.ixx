@@ -1,4 +1,5 @@
 module;
+#include "StdAfx.h"
 #include "CommonMsg.pb.h"
 #include "hv/Channel.h"
 
@@ -8,9 +9,7 @@ export module LogicMessage:LogicCommon;
 import DNTask;
 import MessagePack;
 import LogicServerHelper;
-import AfxCommon;
 
-#define DNPrint(code, level, ...) LoggerPrint(level, code, __FUNCTION__, ##__VA_ARGS__);
 
 using namespace std;
 using namespace google::protobuf;

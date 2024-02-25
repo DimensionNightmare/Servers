@@ -6,7 +6,7 @@ module;
 export module ServerEntityManager;
 
 import DNServer;
-import ServerEntity;
+export import ServerEntity;
 import EntityManager;
 
 using namespace std;

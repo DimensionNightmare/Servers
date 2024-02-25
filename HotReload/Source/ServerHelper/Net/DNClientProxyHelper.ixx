@@ -1,4 +1,5 @@
 module;
+#include "StdAfx.h"
 #include "google/protobuf/message.h"
 #include "hv/TcpClient.h"
 
@@ -7,9 +8,7 @@ module;
 export module DNClientProxyHelper;
 
 import DNClientProxy;
-import AfxCommon;
 
-#define DNPrint(code, level, ...) LoggerPrint(level, code, __FUNCTION__, ##__VA_ARGS__);
 
 using namespace std;
 using namespace hv;

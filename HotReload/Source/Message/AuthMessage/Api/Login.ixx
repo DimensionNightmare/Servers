@@ -1,6 +1,6 @@
 module;
+#include "StdAfx.h"
 #include "google/protobuf/util/json_util.h"
-#include "AuthControl.pb.h"
 #include "hv/HThread.h"
 #include "hv/HttpMessage.h"
 #include "hv/HttpService.h"
@@ -14,14 +14,10 @@ export module ApiManager:ApiLogin;
 import AuthServerHelper;
 import DNTask;
 import MessagePack;
-import AfxCommon;
-
-#define DNPrint(code, level, ...) LoggerPrint(level, code, __FUNCTION__, ##__VA_ARGS__);
 
 using namespace std;
 using namespace hv;
 using namespace google::protobuf;
-using namespace GMsg::AuthControl;
 
 export void ApiLogin(HttpService* service)
 {
@@ -75,11 +71,11 @@ export void ApiLogin(HttpService* service)
 		[username,password, writer]()-> DNTaskVoid
 		{
 			const HttpResponseWriterPtr& writerProxy = writer;	//sharedptr ref count ++
-			A2C_AuthAccount requset;
-			requset.set_username(username);
-			requset.set_password(password);
+			// A2D_AuthAccount requset;
+			// requset.set_username(username);
+			// requset.set_password(password);
 
-			C2A_AuthAccount response;
+			// D2A_AuthAccount response;
 			
 			AuthServerHelper* authServer = GetAuthServer();
 			auto client = authServer->GetCSock();
@@ -98,17 +94,17 @@ export void ApiLogin(HttpService* service)
 			
 			// pack data
 			string binData;
-			binData.resize(requset.ByteSizeLong());
-			requset.SerializeToArray(binData.data(), (int)binData.size());
-			MessagePack(msgId, MsgDeal::Req, requset.GetDescriptor()->full_name(), binData);
+			// binData.resize(requset.ByteSizeLong());
+			// requset.SerializeToArray(binData.data(), (int)binData.size());
+			// MessagePack(msgId, MsgDeal::Req, requset.GetDescriptor()->full_name(), binData);
 			
 			// data alloc
-			auto dataChannel = [&response]()->DNTask<Message*>
-			{
-				co_return &response;
-			}();
+			// auto dataChannel = [&response]()->DNTask<Message*>
+			// {
+			// 	co_return &response;
+			// }();
 
-			client->AddMsg(msgId, &dataChannel);
+			// client->AddMsg(msgId, &dataChannel);
 
 			// regist Close event to release memory
 			if(writerProxy->onclose)
@@ -117,28 +113,28 @@ export void ApiLogin(HttpService* service)
 				writerProxy->onclose = nullptr;
 			}
 
-			writerProxy->onclose = [&dataChannel, client, msgId]()
-			{
-				client->DelMsg(msgId);
-				dataChannel.CallResume();
-			};
+			// writerProxy->onclose = [&dataChannel, client, msgId]()
+			// {
+			// 	client->DelMsg(msgId);
+			// 	dataChannel.CallResume();
+			// };
 			
 			// wait data parse
-			client->send(binData);
-			co_await dataChannel;
+			// client->send(binData);
+			// co_await dataChannel;
 
 			writerProxy->onclose = nullptr;
 
 			Json retData;
 
 			retData["code"] = HTTP_STATUS_OK;
-			response.set_ip_addr("asdasda");
-			response.set_token("asdas");
-			response.set_state_code(958);
-			response.set_expired_timespan(65664);
-			binData.clear();
-			util::MessageToJsonString(response, &binData);
-			retData["data"] = Json::parse(binData);
+			// response.set_ip_addr("asdasda");
+			// response.set_token("asdas");
+			// response.set_state_code(958);
+			// response.set_expired_timespan(65664);
+			// binData.clear();
+			// util::MessageToJsonString(response, &binData);
+			// retData["data"] = Json::parse(binData);
 			// {
 			// 	{"timespan"	, 50505005005	},
 			// 	{"token"	, 3.140225005	},
@@ -153,7 +149,7 @@ export void ApiLogin(HttpService* service)
 
 			writerProxy->End();
 
-			dataChannel.Destroy();
+			// dataChannel.Destroy();
 
 			co_return;
 		}();

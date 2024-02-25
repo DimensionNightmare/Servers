@@ -1,4 +1,5 @@
 module;
+#include "StdAfx.h"
 #include "hv/hbase.h"
 #include "hv/EventLoop.h"
 
@@ -7,19 +8,18 @@ module;
 #include <filesystem>
 #include <locale>
 #include <iostream>
+#include <format>
 export module DimensionNightmare;
 
 import DNServer;
 import ControlServer;
 import GlobalServer;
 import AuthServer;
-import AfxCommon;
 import GateServer;
 import DatabaseServer;
 import LogicServer;
 import Utils.StrUtils;
 
-#define DNPrint(code, level, fmt, ...) LoggerPrint(level, code, __FUNCTION__, fmt, ##__VA_ARGS__);
 
 using namespace std;
 
@@ -31,6 +31,8 @@ struct HotReloadDll
 	string sDllDirRand;
 
 	HMODULE oLibHandle;
+
+	bool isNormalFree;
 
 	bool LoadHandle()
 	{
@@ -66,7 +68,7 @@ struct HotReloadDll
 			oLibHandle = nullptr;
 		}
 
-		if (!sDllDirRand.empty())
+		if (isNormalFree && !sDllDirRand.empty())
 		{
 			filesystem::remove_all(sDllDirRand.c_str());
 		}
@@ -74,7 +76,7 @@ struct HotReloadDll
 		sDllDirRand.clear();
 	};
 
-	bool ReloadHandle()
+	bool ReloadHandle(ServerType type)
 	{
 		if(!filesystem::exists(SDllDir))
 		{
@@ -90,7 +92,7 @@ struct HotReloadDll
 			return false;
 		}
 
-		sDllDirRand = SDllDir + to_string(hv_rand(10000, 99999));
+		sDllDirRand = format("{}_{}_{}", SDllDir, enum_name(type), hv_rand(10000, 99999));
 		filesystem::create_directories(sDllDirRand.c_str());
 		filesystem::copy(SDllDir.c_str(), sDllDirRand.c_str(), filesystem::copy_options::overwrite_existing);
 
@@ -100,6 +102,7 @@ struct HotReloadDll
 	HotReloadDll()
 	{
 		memset(this, 0, sizeof *this);
+		isNormalFree = true;
 	};
 
 	~HotReloadDll()
@@ -139,6 +142,7 @@ public:
 
 	bool OnRegClientReconnectFunc();
 
+	void SetDllNotNormalFree(){ pHotDll->isNormalFree = false; }
 private:
 	HotReloadDll *pHotDll;
 
@@ -334,18 +338,20 @@ bool DimensionNightmare::Init()
 	}
 
 	pHotDll = new HotReloadDll;
-	if (!pHotDll->ReloadHandle())
+	if (!pHotDll->ReloadHandle(serverType))
 	{
 		return false;
 	}
 
 	InitCmdHandle();
 
-	if (OnRegHotReload())
+	if (!OnRegHotReload())
 	{
-		pServer->SetRun(true); 
-		pServer->Start();
+		return false;	
 	}
+
+	pServer->SetRun(true); 
+	pServer->Start();
 
 	OnRegClientReconnectFunc();
 	return true;
@@ -374,7 +380,7 @@ void DimensionNightmare::InitCmdHandle()
 		pause();
 		// Sleep(500);
 		OnUnregHotReload();
-		pHotDll->ReloadHandle();
+		pHotDll->ReloadHandle(pServer->GetServerType());
 		OnRegHotReload();
 		resume();
 	};
@@ -419,8 +425,7 @@ bool DimensionNightmare::OnRegHotReload()
 		using funcSign = int (*)(DimensionNightmare&);
 		if (funcSign func = reinterpret_cast<funcSign>(funtPtr))
 		{
-			func(*this);
-			return true;
+			return func(*this) == int(true);
 		}
 	}
 
@@ -438,8 +443,7 @@ bool DimensionNightmare::OnUnregHotReload()
 		using funcSign = int (*)(DimensionNightmare&);
 		if (funcSign func = reinterpret_cast<funcSign>(funtPtr))
 		{
-			func(*this);
-			return true;
+			return func(*this) == int(true);
 		}
 	}
 

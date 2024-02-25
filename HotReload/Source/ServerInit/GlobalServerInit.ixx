@@ -1,4 +1,5 @@
 module;
+#include "StdAfx.h"
 #include "google/protobuf/message.h"
 #include "hv/Channel.h"
 
@@ -10,21 +11,19 @@ import GlobalServer;
 import GlobalServerHelper;
 import MessagePack;
 import GlobalMessage;
-import AfxCommon;
 import ServerEntityHelper;
 
-#define DNPrint(code, level, ...) LoggerPrint(level, code, __FUNCTION__, ##__VA_ARGS__);
 
 using namespace hv;
 using namespace std;
 using namespace google::protobuf;
 
-export void HandleGlobalServerInit(DNServer *server);
-export void HandleGlobalServerShutdown(DNServer *server);
+export int HandleGlobalServerInit(DNServer *server);
+export int HandleGlobalServerShutdown(DNServer *server);
 
 module:private;
 
-void HandleGlobalServerInit(DNServer *server)
+int HandleGlobalServerInit(DNServer *server)
 {
 	SetGlobalServer(static_cast<GlobalServer*>(server));
 
@@ -139,9 +138,11 @@ void HandleGlobalServerInit(DNServer *server)
 		clientSock->SetRegistEvent(&Msg_RegistSrv);
 	}
 
+	return true;
+
 }
 
-void HandleGlobalServerShutdown(DNServer *server)
+int HandleGlobalServerShutdown(DNServer *server)
 {
 	GlobalServerHelper* serverProxy = GetGlobalServer();
 
@@ -157,4 +158,6 @@ void HandleGlobalServerShutdown(DNServer *server)
 		clientSock->onMessage = nullptr;
 		clientSock->SetRegistEvent(nullptr);
 	}
+
+	return true;
 }

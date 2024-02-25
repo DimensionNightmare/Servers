@@ -4,20 +4,18 @@ module;
 #include <map>
 export module EntityManagerHelper;
 
-import Entity;
-import EntityHelper;
 import EntityManager;
 
 using namespace std;
 using namespace hv;
 
-export template<class TEntity = Entity>
+export template<class TEntity>
 class EntityManagerHelper : public EntityManager<TEntity>
 {
 private:
 	EntityManagerHelper(){}
 public:
-	template<class CastTEntity = EntityHelper>
+	template<class CastTEntity>
     CastTEntity* AddEntity(const SocketChannelPtr& channel, int entityId);
 
     void RemoveEntity(const SocketChannelPtr& channel);

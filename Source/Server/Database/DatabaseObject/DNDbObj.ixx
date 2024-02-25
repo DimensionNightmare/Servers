@@ -1,4 +1,5 @@
 module;
+#include "StdAfx.h"
 #include "google/protobuf/message.h"
 #include "google/protobuf/reflection.h"
 #include "google/protobuf/descriptor.pb.h"
@@ -11,13 +12,10 @@ module;
 #include <ctime>
 export module DNDbObj;
 
-import AfxCommon;
 import Utils.StrUtils;
 
 using namespace std;
 using namespace google::protobuf;
-
-#define DNPrint(code, level, fmt, ...) LoggerPrint(level, code, __FUNCTION__, fmt, ##__VA_ARGS__);
 
 //statement
 #define SSMBegin "(" 

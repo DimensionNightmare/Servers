@@ -1,4 +1,5 @@
 module;
+#include "StdAfx.h"
 #include "hv/EventLoop.h"
 #include "hv/hsocket.h"
 
@@ -8,12 +9,6 @@ import DNServer;
 import DNServerProxy;
 import DNClientProxy;
 import MessagePack;
-import AfxCommon;
-import ServerEntity;
-import ServerEntityManager;
-
-#define DNPrint(code, level, fmt, ...) LoggerPrint(level, code, __FUNCTION__, fmt, ##__VA_ARGS__);
-
 
 using namespace std;
 using namespace hv;

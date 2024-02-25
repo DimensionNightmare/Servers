@@ -1,6 +1,8 @@
 module;
+#include "StdAfx.h"
 #include "hv/EventLoop.h"
 #include "hv/hsocket.h"
+#include "pqxx/connection"
 
 export module AuthServer;
 
@@ -8,9 +10,7 @@ import DNServer;
 import DNWebProxy;
 import DNClientProxy;
 import MessagePack;
-import AfxCommon;
 
-#define DNPrint(code, level, fmt, ...) LoggerPrint(level, code, __FUNCTION__, fmt, ##__VA_ARGS__);
 
 
 using namespace std;
@@ -36,6 +36,8 @@ public:
 	virtual void Resume() override;
 
 	virtual void LoopEvent(function<void(EventLoopPtr)> func) override;
+	pqxx::connection* GetDbConnection(){return pConnection;}
+	void SetDbConnection(pqxx::connection* conn){pConnection = conn;}
 
 public: // dll override
 	virtual DNWebProxy* GetSSock(){return pSSock;}
@@ -43,6 +45,8 @@ public: // dll override
 protected: // dll proxy
 	DNWebProxy* pSSock;
 	DNClientProxy* pCSock;
+
+	pqxx::connection* pConnection;
 };
 
 module:private;
@@ -52,6 +56,7 @@ AuthServer::AuthServer()
 	emServerType = ServerType::AuthServer;
 	pSSock = nullptr;
 	pCSock = nullptr;
+	pConnection = nullptr;
 }
 
 AuthServer::~AuthServer()

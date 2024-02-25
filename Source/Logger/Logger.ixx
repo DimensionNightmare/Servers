@@ -62,6 +62,7 @@ export void LoggerPrint(LoggerLevel level, size_t code, const char* funcName, co
     vsnprintf(&message[0], len + 1,fmt, args);
     message.resize(len);
 	va_end(args);
-
-	std::cout << format("[{}] {} -> \n{}", GetNowTimeStr(), funcName, message) << std::endl;
+	
+	string fmtStr = format("[{}] {} -> \n{}", GetNowTimeStr(), funcName, message);
+	cout << fmtStr << endl;
 }

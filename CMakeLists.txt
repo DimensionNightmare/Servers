@@ -43,6 +43,8 @@ find_package(libpqxx CONFIG REQUIRED)
 include_directories("../Environment/Install/protobufGen/${CMAKE_BUILD_TYPE}/include")
 link_directories("../Environment/Install/protobufGen/${CMAKE_BUILD_TYPE}/lib")
 
+include_directories("Source/Afx")
+
 ################################ DimensionNightmareServer ################################
 file(GLOB_RECURSE DNSourceModule CONFIGURE_DEPENDS 
 	"Source/*.ixx"
@@ -54,7 +56,7 @@ target_sources( MainSource
 	PUBLIC FILE_SET cpp20_modules TYPE CXX_MODULES FILES ${DNSourceModule}
 )
 
-target_link_libraries(MainSource PUBLIC hv_static protobuf::libprotobuf protobufGen.lib)
+target_link_libraries(MainSource PUBLIC hv_static protobuf::libprotobuf protobufGen.lib libpqxx::pqxx)
 set_property(TARGET MainSource PROPERTY CXX_STANDARD 23)
 
 add_executable(DimensionNightmareServer "main.cpp")
@@ -73,7 +75,7 @@ target_sources(HotloadSource
 	PUBLIC FILE_SET cpp20_modules TYPE CXX_MODULES FILES  ${srcHotReloadModule}
 )
 
-target_link_libraries(HotloadSource PUBLIC MainSource  libpqxx::pqxx)
+target_link_libraries(HotloadSource PUBLIC MainSource)
 
 set_property(TARGET HotloadSource PROPERTY CXX_STANDARD 23)
 

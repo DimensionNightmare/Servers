@@ -1,5 +1,5 @@
 module;
-#include "AuthControl.pb.h"
+#include "AuthGlobal.pb.h"
 #include "GlobalControl.pb.h"
 #include "hv/Channel.h"
 
@@ -10,25 +10,24 @@ export module GlobalMessage:GlobalAuth;
 import DNTask;
 import MessagePack;
 import GlobalServerHelper;
-import ServerEntity;
 import ServerEntityHelper;
 
 using namespace std;
 using namespace hv;
 using namespace google::protobuf;
-using namespace GMsg::AuthControl;
+using namespace GMsg::AuthGlobal;
 
 #define CastObj(entity) static_cast<ServerEntityHelper*>(entity)
 
 export DNTaskVoid Exe_AuthAccount(const SocketChannelPtr &channel, unsigned int msgId, Message *msg)
 {
-	A2C_AuthAccount* requset = (A2C_AuthAccount*)msg;
-	C2A_AuthAccount response;
+	A2G_AuthAccount* requset = (A2G_AuthAccount*)msg;
+	G2A_AuthAccount response;
 
 	ServerEntity* servEntity = nullptr;
 
 	// if has db not need origin
-	list<ServerEntity*> servList = GetGlobalServer()->GetEntityManager()->GetEntityByList(ServerType::DatabaseServer);
+	list<ServerEntity*> servList = GetGlobalServer()->GetEntityManager()->GetEntityByList(ServerType::GateServer);
 	if(servList.size())
 	{
 		//random

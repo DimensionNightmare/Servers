@@ -1,4 +1,5 @@
 module;
+#include "StdAfx.h"
 #include "google/protobuf/message.h"
 #include "hv/Channel.h"
 
@@ -10,20 +11,18 @@ import LogicServer;
 import LogicServerHelper;
 import MessagePack;
 import LogicMessage;
-import AfxCommon;
 
-#define DNPrint(code, level, ...) LoggerPrint(level, code, __FUNCTION__, ##__VA_ARGS__);
 
 using namespace hv;
 using namespace std;
 using namespace google::protobuf;
 
-export void HandleLogicServerInit(DNServer *server);
-export void HandleLogicServerShutdown(DNServer *server);
+export int HandleLogicServerInit(DNServer *server);
+export int HandleLogicServerShutdown(DNServer *server);
 
 module:private;
 
-void HandleLogicServerInit(DNServer *server)
+int HandleLogicServerInit(DNServer *server)
 {
 	SetLogicServer(static_cast<LogicServer*>(server));
 
@@ -98,9 +97,10 @@ void HandleLogicServerInit(DNServer *server)
 		clientSock->SetRegistEvent(&Msg_RegistSrv);
 	}
 
+	return true;
 }
 
-void HandleLogicServerShutdown(DNServer *server)
+int HandleLogicServerShutdown(DNServer *server)
 {
 	LogicServerHelper* serverProxy = GetLogicServer();
 
@@ -110,4 +110,6 @@ void HandleLogicServerShutdown(DNServer *server)
 		clientSock->onMessage = nullptr;
 		clientSock->SetRegistEvent(nullptr);
 	}
+
+	return true;
 }

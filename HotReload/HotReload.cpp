@@ -1,4 +1,5 @@
 
+#include "StdAfx.h"
 #include "google/protobuf/message.h"
 
 #include <Windows.h>
@@ -15,7 +16,6 @@ import DatabaseServerInit;
 import LogicServerInit;
 
 import DNClientProxyHelper;
-import AfxCommon;
 
 #ifdef HOTRELOAD_BUILD
 #define HOTRELOAD __declspec(dllexport)
@@ -66,23 +66,17 @@ int InitHotReload(DimensionNightmare &mainObj)
 	switch (servertype)
 	{
 	case ServerType::ControlServer:
-		HandleControlServerInit(base);
-		break;
+		return HandleControlServerInit(base);
 	case ServerType::GlobalServer:
-		HandleGlobalServerInit(base);
-		break;
+		return HandleGlobalServerInit(base);
 	case ServerType::AuthServer:
-		HandleAuthServerInit(base);
-		break;
+		return HandleAuthServerInit(base);
 	case ServerType::GateServer:
-		HandleGateServerInit(base);
-		break;
+		return HandleGateServerInit(base);
 	case ServerType::DatabaseServer:
-		HandleDatabaseServerInit(base);
-		break;
+		return HandleDatabaseServerInit(base);
 	case ServerType::LogicServer:
-		HandleLogicServerInit(base);
-		break;
+		return HandleLogicServerInit(base);
 	}
 
 	return 0;
@@ -95,23 +89,17 @@ int ShutdownHotReload(DimensionNightmare &mainObj)
 	switch (servertype)
 	{
 	case ServerType::ControlServer:
-		HandleControlServerShutdown(base);
-		break;
+		return HandleControlServerShutdown(base);
 	case ServerType::GlobalServer:
-		HandleGlobalServerShutdown(base);
-		break;
+		return HandleGlobalServerShutdown(base);
 	case ServerType::AuthServer:
-		HandleAuthServerShutdown(base);
-		break;
+		return HandleAuthServerShutdown(base);
 	case ServerType::GateServer:
-		HandleGateServerShutdown(base);
-		break;
+		return HandleGateServerShutdown(base);
 	case ServerType::DatabaseServer:
-		HandleDatabaseServerShutdown(base);
-		break;
+		return HandleDatabaseServerShutdown(base);
 	case ServerType::LogicServer:
-		HandleLogicServerShutdown(base);
-		break;
+		return HandleLogicServerShutdown(base);
 	}
 
 	return 0;

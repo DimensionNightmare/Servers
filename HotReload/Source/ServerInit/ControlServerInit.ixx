@@ -1,4 +1,5 @@
 module;
+#include "StdAfx.h"
 #include "google/protobuf/message.h"
 #include "hv/Channel.h"
 
@@ -9,21 +10,19 @@ import ControlServer;
 import ControlServerHelper;
 import MessagePack;
 import ControlMessage;
-import AfxCommon;
 import ServerEntityHelper;
 
-#define DNPrint(code, level, ...) LoggerPrint(level, code, __FUNCTION__, ##__VA_ARGS__);
 
 using namespace hv;
 using namespace std;
 using namespace google::protobuf;
 
-export void HandleControlServerInit(DNServer *server);
-export void HandleControlServerShutdown(DNServer *server);
+export int HandleControlServerInit(DNServer *server);
+export int HandleControlServerShutdown(DNServer *server);
 
 module:private;
 
-void HandleControlServerInit(DNServer *server)
+int HandleControlServerInit(DNServer *server)
 {
 	SetControlServer(static_cast<ControlServer*>(server));
 
@@ -75,9 +74,11 @@ void HandleControlServerInit(DNServer *server)
 		serverSock->onConnection = onConnection;
 		serverSock->onMessage = onMessage;
 	}
+
+	return true;
 }
 
-void HandleControlServerShutdown(DNServer *server)
+int HandleControlServerShutdown(DNServer *server)
 {
 	ControlServerHelper* serverProxy = GetControlServer();
 	if (auto serverSock = serverProxy->GetSSock())
@@ -85,4 +86,6 @@ void HandleControlServerShutdown(DNServer *server)
 		serverSock->onConnection = nullptr;
 		serverSock->onMessage = nullptr;
 	}
+
+	return true;
 }

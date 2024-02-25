@@ -1,4 +1,5 @@
 module;
+#include "StdAfx.h"
 #include "google/protobuf/message.h"
 #include "hv/Channel.h"
 
@@ -10,20 +11,18 @@ import GateServer;
 import GateServerHelper;
 import MessagePack;
 import GateMessage;
-import AfxCommon;
 
-#define DNPrint(code, level, ...) LoggerPrint(level, code, __FUNCTION__, ##__VA_ARGS__);
 
 using namespace hv;
 using namespace std;
 using namespace google::protobuf;
 
-export void HandleGateServerInit(DNServer *server);
-export void HandleGateServerShutdown(DNServer *server);
+export int HandleGateServerInit(DNServer *server);
+export int HandleGateServerShutdown(DNServer *server);
 
 module:private;
 
-void HandleGateServerInit(DNServer *server)
+int HandleGateServerInit(DNServer *server)
 {
 	SetGateServer(static_cast<GateServer*>(server));
 
@@ -132,9 +131,10 @@ void HandleGateServerInit(DNServer *server)
 		clientSock->SetRegistEvent(&Msg_RegistSrv);
 	}
 
+	return true;
 }
 
-void HandleGateServerShutdown(DNServer *server)
+int HandleGateServerShutdown(DNServer *server)
 {
 	GateServerHelper* serverProxy = GetGateServer();
 
@@ -150,4 +150,6 @@ void HandleGateServerShutdown(DNServer *server)
 		clientSock->onMessage = nullptr;
 		clientSock->SetRegistEvent(nullptr);
 	}
+
+	return true;
 }

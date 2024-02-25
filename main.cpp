@@ -1,3 +1,4 @@
+#include "StdAfx.h"
 #include "hv/hlog.h"
 
 #include <Windows.h>
@@ -7,9 +8,7 @@
 #include <iostream>
 
 import DimensionNightmare;
-import AfxCommon;
 
-#define DNPrint(code, level, ...) LoggerPrint(level, code, __FUNCTION__, ##__VA_ARGS__);
 
 #pragma comment(lib, "dbghelp.lib")
 
@@ -113,6 +112,7 @@ int main(int argc, char** argv)
 			CloseHandle(hDumpFile);
 		}
 
+		GetDimensionNightmare()->SetDllNotNormalFree();
 		GetDimensionNightmare()->ShutDown();
 
 		return EXCEPTION_CONTINUE_SEARCH;

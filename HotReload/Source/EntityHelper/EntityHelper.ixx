@@ -3,7 +3,7 @@ module;
 
 export module EntityHelper;
 
-import Entity;
+export import Entity;
 
 using namespace hv;
 

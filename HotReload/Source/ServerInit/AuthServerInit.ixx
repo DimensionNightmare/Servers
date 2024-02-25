@@ -1,4 +1,5 @@
 module;
+#include "StdAfx.h"
 #include "google/protobuf/message.h"
 #include "hv/Channel.h"
 
@@ -9,20 +10,18 @@ import AuthServer;
 import AuthServerHelper;
 import MessagePack;
 import AuthMessage;
-import AfxCommon;
 
-#define DNPrint(code, level, ...) LoggerPrint(level, code, __FUNCTION__, ##__VA_ARGS__);
 
 using namespace hv;
 using namespace std;
 using namespace google::protobuf;
 
-export void HandleAuthServerInit(DNServer *server);
-export void HandleAuthServerShutdown(DNServer *server);
+export int HandleAuthServerInit(DNServer *server);
+export int HandleAuthServerShutdown(DNServer *server);
 
 module:private;
 
-void HandleAuthServerInit(DNServer *server)
+int HandleAuthServerInit(DNServer *server)
 {
 	SetAuthServer(static_cast<AuthServer*>(server));
 
@@ -97,9 +96,10 @@ void HandleAuthServerInit(DNServer *server)
 		clientSock->SetRegistEvent(&Msg_RegistSrv);
 	}
 
+	return serverProxy->InitDabase();
 }
 
-void HandleAuthServerShutdown(DNServer *server)
+int HandleAuthServerShutdown(DNServer *server)
 {
 	AuthServerHelper* serverProxy = GetAuthServer();
 
@@ -118,4 +118,6 @@ void HandleAuthServerShutdown(DNServer *server)
 		clientSock->onMessage = nullptr;
 		clientSock->SetRegistEvent(nullptr);
 	}
+
+	return true;
 }

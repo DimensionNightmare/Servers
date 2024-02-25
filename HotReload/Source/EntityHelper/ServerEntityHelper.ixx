@@ -4,10 +4,15 @@ module;
 export module ServerEntityHelper;
 
 import DNServer;
-import ServerEntity;
+export import ServerEntity;
 import EntityHelper;
 
 using namespace std;
+
+export enum class ServerEntityFlag
+{
+	Locked = 0,
+};
 
 export class ServerEntityHelper : public ServerEntity
 {

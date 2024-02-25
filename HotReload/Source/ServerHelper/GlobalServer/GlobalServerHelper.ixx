@@ -6,8 +6,8 @@ export module GlobalServerHelper;
 
 import GlobalServer;
 import DNClientProxyHelper;
+import DNServerProxyHelper;
 import ServerEntityManagerHelper;
-import ServerEntity;
 
 import ServerEntityHelper;
 
@@ -21,6 +21,7 @@ private:
 public:
 
 	DNClientProxyHelper* GetCSock(){ return nullptr;}
+	DNServerProxyHelper* GetSSock(){ return nullptr;}
 	ServerEntityManagerHelper<ServerEntity>* GetEntityManager(){ return nullptr;}
 };
 

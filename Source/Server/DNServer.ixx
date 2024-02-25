@@ -1,10 +1,10 @@
 module;
+#include "StdAfx.h"
 #include "hv/EventLoop.h"
 
 #include <functional> 
 export module DNServer;
 
-import AfxCommon;
 
 using namespace std;
 

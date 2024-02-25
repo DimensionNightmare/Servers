@@ -1,4 +1,5 @@
 module;
+#include "StdAfx.h"
 #include "CommonMsg.pb.h"
 #include "hv/Channel.h"
 
@@ -6,18 +7,15 @@ module;
 #include <shared_mutex>
 export module ServerEntityManagerHelper;
 
-import ServerEntity;
 import ServerEntityHelper;
 import ServerEntityManager;
 import MessagePack;
 import DNServerProxy;
-import AfxCommon;
 
 using namespace std;
 using namespace hv;
 using namespace GMsg::CommonMsg;
 
-#define DNPrint(code, level, fmt, ...) LoggerPrint(level, code, __FUNCTION__, fmt, ##__VA_ARGS__);
 #define CastObj(entity) static_cast<ServerEntityHelper*>(entity)
 
 export template<class TEntity = ServerEntity>

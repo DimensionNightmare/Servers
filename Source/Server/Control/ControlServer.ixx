@@ -1,4 +1,5 @@
 module;
+#include "StdAfx.h"
 #include "hv/EventLoop.h"
 
 export module ControlServer;
@@ -6,12 +7,7 @@ export module ControlServer;
 import DNServer;
 import DNServerProxy;
 import MessagePack;
-import ServerEntity;
 import ServerEntityManager;
-import AfxCommon;
-
-#define DNPrint(code, level, fmt, ...) LoggerPrint(level, code, __FUNCTION__, fmt, ##__VA_ARGS__);
-
 
 using namespace std;
 using namespace hv;

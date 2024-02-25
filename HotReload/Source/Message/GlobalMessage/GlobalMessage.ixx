@@ -1,6 +1,7 @@
 module;
+#include "StdAfx.h"
 #include "GlobalControl.pb.h"
-#include "AuthControl.pb.h"
+#include "AuthGlobal.pb.h"
 #include "CommonMsg.pb.h"
 #include "GateGlobal.pb.h"
 #include "hv/Channel.h"
@@ -10,18 +11,16 @@ module;
 export module GlobalMessage;
 
 export import :GlobalControl;
-import AfxCommon;
 import :GlobalCommon;
 import :GlobalAuth;
 import :GlobalGate;
 
-#define DNPrint(code, level, ...) LoggerPrint(level, code, __FUNCTION__, ##__VA_ARGS__);
 
 using namespace std;
 using namespace hv;
 using namespace google::protobuf;
 using namespace GMsg::CommonMsg;
-using namespace GMsg::AuthControl;
+using namespace GMsg::AuthGlobal;
 using namespace GMsg::GateGlobal;
 
 export class GlobalMessageHandle
@@ -72,7 +71,7 @@ void GlobalMessageHandle::RegMsgHandle()
 	msg = COM_ReqRegistSrv::internal_default_instance();
 	MHandleMap.emplace( hashStr(msg->GetDescriptor()->full_name()), make_pair(msg, &Exe_RegistSrv));
 
-	msg = A2C_AuthAccount::internal_default_instance();
+	msg = A2G_AuthAccount::internal_default_instance();
 	MHandleMap.emplace( hashStr(msg->GetDescriptor()->full_name()), make_pair(msg, &Exe_AuthAccount));
 
 	msg = G2G_RetRegistSrv::internal_default_instance();

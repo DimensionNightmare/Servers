@@ -1,5 +1,5 @@
 module;
-#include "AuthControl.pb.h"
+#include "AuthGlobal.pb.h"
 #include "GlobalControl.pb.h"
 #include "hv/Channel.h"
 
@@ -14,12 +14,12 @@ import ServerEntityHelper;
 using namespace std;
 using namespace hv;
 using namespace google::protobuf;
-using namespace GMsg::AuthControl;
+using namespace GMsg::AuthGlobal;
 
 export DNTaskVoid Exe_AuthAccount(const SocketChannelPtr &channel, unsigned int msgId, Message *msg)
 {
-	A2C_AuthAccount* requset = (A2C_AuthAccount*)msg;
-	C2A_AuthAccount response;
+	A2G_AuthAccount* requset = (A2G_AuthAccount*)msg;
+	G2A_AuthAccount response;
 
 	ServerEntityHelper* entity = nullptr;
 	list<ServerEntity*>& servList = GetControlServer()->GetEntityManager()->GetEntityByList(ServerType::GlobalServer);

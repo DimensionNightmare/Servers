@@ -1,4 +1,5 @@
 module;
+#include "StdAfx.h"
 #include "google/protobuf/message.h"
 #include "hv/Channel.h"
 
@@ -10,20 +11,18 @@ import DatabaseServer;
 import DatabaseServerHelper;
 import MessagePack;
 import DatabaseMessage;
-import AfxCommon;
 
-#define DNPrint(code, level, ...) LoggerPrint(level, code, __FUNCTION__, ##__VA_ARGS__);
 
 using namespace hv;
 using namespace std;
 using namespace google::protobuf;
 
-export void HandleDatabaseServerInit(DNServer *server);
-export void HandleDatabaseServerShutdown(DNServer *server);
+export int HandleDatabaseServerInit(DNServer *server);
+export int HandleDatabaseServerShutdown(DNServer *server);
 
 module:private;
 
-void HandleDatabaseServerInit(DNServer *server)
+int HandleDatabaseServerInit(DNServer *server)
 {
 	SetDatabaseServer(static_cast<DatabaseServer*>(server));
 
@@ -96,10 +95,10 @@ void HandleDatabaseServerInit(DNServer *server)
 		clientSock->onMessage = onMessage;
 	}
 
-	serverProxy->InitDabase();
+	return serverProxy->InitDabase();
 }
 
-void HandleDatabaseServerShutdown(DNServer *server)
+int HandleDatabaseServerShutdown(DNServer *server)
 {
 	DatabaseServerHelper* serverProxy = GetDatabaseServer();
 
@@ -109,4 +108,6 @@ void HandleDatabaseServerShutdown(DNServer *server)
 		clientSock->onMessage = nullptr;
 		clientSock->SetRegistEvent(nullptr);
 	}
+
+	return true;
 }

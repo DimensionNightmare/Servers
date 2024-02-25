@@ -1,4 +1,5 @@
 module;
+#include "StdAfx.h"
 #include "CommonMsg.pb.h"
 #include "GateGlobal.pb.h"
 #include "hv/Channel.h"
@@ -9,10 +10,8 @@ export module GateMessage:GateCommon;
 import DNTask;
 import MessagePack;
 import GateServerHelper;
-import AfxCommon;
 import ServerEntityHelper;
 
-#define DNPrint(code, level, ...) LoggerPrint(level, code, __FUNCTION__, ##__VA_ARGS__);
 
 using namespace std;
 using namespace hv;

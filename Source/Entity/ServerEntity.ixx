@@ -3,6 +3,7 @@ module;
 #include <string>
 #include <list>
 #include <map>
+#include <bitset>
 export module ServerEntity;
 
 import Entity;
@@ -29,6 +30,8 @@ protected: // dll proxy
 	ServerEntity* pLink;
 	// be regist node need
 	map<ServerType, list< ServerEntity*>> mMapLink;
+
+	bitset<1> oFlags;
 };
 
 module:private;

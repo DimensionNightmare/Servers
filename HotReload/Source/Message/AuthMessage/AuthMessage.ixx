@@ -1,6 +1,6 @@
 module;
+#include "StdAfx.h"
 #include "google/protobuf/message.h"
-#include "AuthControl.pb.h"
 #include "hv/Channel.h"
 #include "hv/HttpService.h"
 
@@ -10,14 +10,11 @@ export module AuthMessage;
 
 export import :AuthCommon;
 import ApiManager;
-import AfxCommon;
 
-#define DNPrint(code, level, ...) LoggerPrint(level, code, __FUNCTION__, ##__VA_ARGS__);
 
 using namespace std;
 using namespace hv;
 using namespace google::protobuf;
-using namespace GMsg::AuthControl;
 
 export class AuthMessageHandle
 {
