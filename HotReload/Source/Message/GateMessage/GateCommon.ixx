@@ -38,6 +38,8 @@ export DNTaskVoid Msg_RegistSrv()
 		DNPrint(-1, LoggerLevel::Debug, "Msg_RegistSrv ----- %lu, \n", msgId);
 	}
 
+	client->SetIsRegisting(true);
+
 	COM_ReqRegistSrv requset;
 	requset.set_server_type((int)dnServer->GetServerType());
 	if(server->host == "0.0.0.0")
@@ -50,12 +52,33 @@ export DNTaskVoid Msg_RegistSrv()
 	}
 	requset.set_port(server->port);
 	requset.set_server_index(dnServer->GetServerIndex());
+
+	auto entityMan = dnServer->GetEntityManager();
+	auto AddChild = [&requset](ServerEntity* serv)
+	{
+		COM_ReqRegistSrv* child = requset.add_childs();
+		ServerEntityHelper* helper = static_cast<ServerEntityHelper*>(serv);
+		child->set_server_index(helper->GetChild()->GetID());
+		child->set_server_type((uint32_t)helper->GetServerType());
+	};
+
+	list<ServerEntity*>& dbs = entityMan->GetEntityByList(ServerType::DatabaseServer);
+	for (ServerEntity* serv : dbs)
+	{
+		AddChild(serv);
+	}
 	
+	list<ServerEntity*>& logics = entityMan->GetEntityByList(ServerType::LogicServer);
+	for (ServerEntity* serv : logics)
+	{
+		AddChild(serv);
+	}
+
 	// pack data
 	string binData;
 	binData.resize(requset.ByteSizeLong());
 	requset.SerializeToArray(binData.data(), (int)binData.size());
-	MessagePack(msgId, MsgDeal::Req, requset.GetDescriptor()->full_name(), binData);
+	MessagePack(msgId, MsgDeal::Req, requset.GetDescriptor()->full_name().c_str(), binData);
 	
 	// data alloc
 	COM_ResRegistSrv response;
@@ -84,8 +107,29 @@ export DNTaskVoid Msg_RegistSrv()
 	}
 
 	dataChannel.Destroy();
-
+	client->SetIsRegisting(false);
 	co_return;
+}
+
+void ServerEntityCloseEvent(Entity* entity)
+{
+	ServerEntityHelper* castObj = static_cast<ServerEntityHelper*>(entity);
+
+	// up to Global
+	string binData;
+	G2G_RetRegistSrv upLoad;
+	upLoad.set_server_index(castObj->GetChild()->GetID());
+	upLoad.set_is_regist(false);
+	binData.resize(upLoad.ByteSizeLong());
+	upLoad.SerializeToArray(binData.data(), (int)binData.size());
+	MessagePack(0, MsgDeal::Req, upLoad.GetDescriptor()->full_name().c_str(), binData);
+
+	GateServerHelper* dnServer = GetGateServer();
+	auto client = dnServer->GetCSock();
+	client->send(binData);
+	
+	auto entityMan = dnServer->GetEntityManager();
+	entityMan->RemoveEntity(castObj->GetChild()->GetID());
 }
 
 // client request
@@ -117,13 +161,15 @@ export void Exe_RegistSrv(const SocketChannelPtr &channel, unsigned int msgId, M
 
 		response.set_success(true);
 		response.set_server_index(entity->GetChild()->GetID());
+
+		entity->SetCloseEvent(ServerEntityCloseEvent);
 	}
 	
 	string binData;
 	binData.resize(response.ByteSize());
 	response.SerializeToArray(binData.data(), binData.size());
 
-	MessagePack(msgId, MsgDeal::Res, "", binData);
+	MessagePack(msgId, MsgDeal::Res, nullptr, binData);
 	channel->write(binData);
 
 	if(response.success())
@@ -132,10 +178,11 @@ export void Exe_RegistSrv(const SocketChannelPtr &channel, unsigned int msgId, M
 
 		// up to Global
 		G2G_RetRegistSrv upLoad;
+		upLoad.set_is_regist(true);
 		upLoad.set_server_index(requset->server_index());
 		binData.resize(upLoad.ByteSizeLong());
 		upLoad.SerializeToArray(binData.data(), (int)binData.size());
-		MessagePack(0, MsgDeal::Req, upLoad.GetDescriptor()->full_name(), binData);
+		MessagePack(0, MsgDeal::Req, upLoad.GetDescriptor()->full_name().c_str(), binData);
 
 		GateServerHelper* dnServer = GetGateServer();
 		auto client = dnServer->GetCSock();

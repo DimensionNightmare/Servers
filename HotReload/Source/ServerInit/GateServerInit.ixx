@@ -11,7 +11,7 @@ import GateServer;
 import GateServerHelper;
 import MessagePack;
 import GateMessage;
-
+import Entity;
 
 using namespace hv;
 using namespace std;
@@ -45,6 +45,10 @@ int HandleGateServerInit(DNServer *server)
 			else
 			{
 				DNPrint(3, LoggerLevel::Debug, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
+				if(Entity* entity = channel->getContext<Entity>())
+				{
+					entity->TickCloseEvent();
+				}
 			}
 		};
 

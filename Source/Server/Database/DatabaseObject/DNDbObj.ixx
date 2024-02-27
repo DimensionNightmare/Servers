@@ -448,12 +448,12 @@ export template <class TMessage = Message>
 class DNDbObj
 {
 public:
-	DNDbObj(pqxx::transaction<>& work);
+	DNDbObj(pqxx::transaction<>* work);
 	~DNDbObj(){};
 
 	const string& GetName(){return pMessage->GetDescriptor()->name();};
 	
-	vector<TMessage> Result(){ return mResult;}
+	vector<TMessage>& Result(){ return mResult;}
 
 	bool Commit();
 	//create table
@@ -523,9 +523,9 @@ DNDbObj<TMessage>::DNDbObj()
 }
 
 template <class TMessage>
-DNDbObj<TMessage>::DNDbObj(pqxx::transaction<> &work):DNDbObj()
+DNDbObj<TMessage>::DNDbObj(pqxx::transaction<> *work):DNDbObj()
 {
-	pWork = &work;
+	pWork = work;
 }
 
 template <class TMessage>
@@ -986,7 +986,7 @@ DNDbObj<TMessage> &DNDbObj<TMessage>::SelectCond(TMessage& selObj, const char* n
 	string value;
 	SelectFieldCondByProtoType(field, reflection, selObj, value);
 
-	value = format("{} {} {} {}", splicing, name, cond, value);
+	value = format(" {} {} {} {}", splicing, name, cond, value);
 
 	if(mEles.count(SSELECTALL))
 	{

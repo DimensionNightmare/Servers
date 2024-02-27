@@ -25,6 +25,9 @@ public:
 	ServerEntityManagerHelper<ServerEntity>* GetEntityManager(){ return nullptr;}
 
 	bool InitDabase();
+
+	string& GetCtlIp(){ return sCtlIp;}
+	int GetCtlPort(){ return iCtlPort;}
 };
 
 static DatabaseServerHelper* PDatabaseServerHelper = nullptr;

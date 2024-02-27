@@ -36,9 +36,10 @@ protected: // dll proxy
 
 module:private;
 
-ServerEntity::ServerEntity()
+ServerEntity::ServerEntity():Entity()
 {
 	emServerType = ServerType::None;
+	emType = EntityType::Server;
 	sServIp.clear();
 	IConnNum = 0;
 	iServPort = 0;

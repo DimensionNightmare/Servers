@@ -66,7 +66,7 @@ export DNTaskVoid Exe_AuthAccount(const SocketChannelPtr &channel, unsigned int 
 
 		binData.resize(requset->ByteSize());
 		requset->SerializeToArray(binData.data(), binData.size());
-		MessagePack(smsgId, MsgDeal::Req, requset->GetDescriptor()->full_name(), binData);
+		MessagePack(smsgId, MsgDeal::Req, requset->GetDescriptor()->full_name().c_str(), binData);
 		
 		// wait data parse
 		entity->GetChild()->GetSock()->write(binData);
@@ -78,7 +78,7 @@ export DNTaskVoid Exe_AuthAccount(const SocketChannelPtr &channel, unsigned int 
 	binData.resize(response.ByteSize());
 	response.SerializeToArray(binData.data(), binData.size());
 
-	MessagePack(msgId, MsgDeal::Res, "", binData);
+	MessagePack(msgId, MsgDeal::Res, nullptr, binData);
 	
 	channel->write(binData);
 

@@ -19,15 +19,28 @@ export void Exe_RetRegistSrv(const SocketChannelPtr &channel, unsigned int msgId
 {
 	G2G_RetRegistSrv* requset = (G2G_RetRegistSrv*)msg;
 
-	auto entityMan = GetGlobalServer()->GetEntityManager();
+	GlobalServerHelper* dnServer = GetGlobalServer();
+	auto entityMan = ->GetEntityManager();
 	if(ServerEntityHelper* entity = entityMan->GetEntity(requset->server_index()))
 	{
-		if(uint64_t timerId = entity->GetChild()->GetTimerId())
+		if(requset->is_regist())
 		{
-			entity->GetChild()->SetTimerId(0);
-			GetGlobalServer()->GetSSock()->loop(0)->killTimer(timerId);
+			if(uint64_t timerId = entity->GetChild()->GetTimerId())
+			{
+				entity->GetChild()->SetTimerId(0);
+				dnServer->GetSSock()->loop(0)->killTimer(timerId);
+			}
 		}
+		else
+		{
+			ServerEntityHelper* owner = channel->getContext<ServerEntityHelper>();
+			// remove and unlock
+			owner->GetMapLinkNode(entity->GetServerType()).remove(entity);
+			owner->ClearFlag(ServerEntityFlag::Locked);
 
+			entityMan->RemoveEntity(requset->server_index());
+			dnServer->UpdateServerGroup();
+		}
 
 	}
 	

@@ -56,7 +56,7 @@ int HandleControlServerInit(DNServer *server)
 			}
 		};
 
-		auto onMessage = [](const SocketChannelPtr &channel, Buffer *buf) 
+		auto onMessage = [serverProxy](const SocketChannelPtr &channel, Buffer *buf) 
 		{
 			MessagePacket packet;
 			memcpy(&packet, buf->data(), MessagePacket::PackLenth);
@@ -64,6 +64,23 @@ int HandleControlServerInit(DNServer *server)
 			{
 				string msgData((char*)buf->data() + MessagePacket::PackLenth, packet.pkgLenth);
 				ControlMessageHandle::MsgHandle(channel, packet.msgId, packet.msgHashId, msgData);
+			}
+			else if(packet.dealType == MsgDeal::Res)
+			{
+				auto servSock = serverProxy->GetSSock();
+
+				if(DNTask<Message *>* task = servSock->GetMsg(packet.msgId)) //client sock request
+				{
+					servSock->DelMsg(packet.msgId);
+					task->Resume();
+					Message* message = task->GetResult();
+					message->ParseFromArray((const char*)buf->data() + MessagePacket::PackLenth, packet.pkgLenth);
+					task->CallResume();
+				}
+				else
+				{
+					DNPrint(13, LoggerLevel::Error, nullptr);
+				}
 			}
 			else
 			{

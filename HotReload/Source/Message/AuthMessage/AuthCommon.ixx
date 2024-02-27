@@ -33,6 +33,8 @@ export DNTaskVoid Msg_RegistSrv()
 		// prinfg("Msg_RegistSrv ----- %lu, \n", msgId);
 	}
 
+	client->SetIsRegisting(true);
+
 	COM_ReqRegistSrv requset;
 	requset.set_server_type((int)dnServer->GetServerType());
 	if(!strcmp(server->host, "0.0.0.0"))
@@ -49,7 +51,7 @@ export DNTaskVoid Msg_RegistSrv()
 	string binData;
 	binData.resize(requset.ByteSizeLong());
 	requset.SerializeToArray(binData.data(), (int)binData.size());
-	MessagePack(msgId, MsgDeal::Req, requset.GetDescriptor()->full_name(), binData);
+	MessagePack(msgId, MsgDeal::Req, requset.GetDescriptor()->full_name().c_str(), binData);
 	
 	// data alloc
 	COM_ResRegistSrv response;
@@ -79,5 +81,6 @@ export DNTaskVoid Msg_RegistSrv()
 
 	dataChannel.Destroy();
 
+	client->SetIsRegisting(false);
 	co_return;
 }

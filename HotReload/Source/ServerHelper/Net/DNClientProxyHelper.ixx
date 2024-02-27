@@ -9,10 +9,16 @@ export module DNClientProxyHelper;
 
 import DNClientProxy;
 
-
 using namespace std;
 using namespace hv;
 using namespace google::protobuf;
+
+export enum class ProxyStatus : char
+{
+	None,
+	Open,
+	Close,
+};
 
 export class DNClientProxyHelper : public DNClientProxy
 {
@@ -27,9 +33,10 @@ public:
 	// regist to controlserver
 	bool IsRegisted(){return bIsRegisted;}
 	void SetRegisted(bool isRegisted){bIsRegisted = isRegisted;}
+	void SetIsRegisting(bool state) { bIsRegisting = state;}
 	void SetRegistEvent(function<void()> event);
 
-	void UpdateClientState(Channel::Status state);
+	ProxyStatus UpdateClientState(Channel::Status state);
 	void StartRegist();
 	void ServerDisconnect();
 
@@ -61,11 +68,11 @@ void DNClientProxyHelper::SetRegistEvent(function<void()> event)
 	pRegistEvent = event;
 }
 
-void DNClientProxyHelper::UpdateClientState(Channel::Status state)
+ProxyStatus DNClientProxyHelper::UpdateClientState(Channel::Status state)
 {
 	if(state == eState)
 	{
-		return;
+		return ProxyStatus::None;
 	}
 
 	eState = state;
@@ -73,16 +80,20 @@ void DNClientProxyHelper::UpdateClientState(Channel::Status state)
 	switch (eState)
 	{
 	case Channel::Status::CONNECTED :
-		StartRegist();
-		break;
+		{
+			StartRegist();
+			return ProxyStatus::Open;
+		}
 
 	case Channel::Status::CLOSED :
 	case Channel::Status::DISCONNECTED :
-		ServerDisconnect();
-		break;
-	default:
-		break;
+		{
+			ServerDisconnect();
+			return ProxyStatus::Close;
+		}
 	}
+
+	return ProxyStatus::None;
 
 }
 
@@ -91,6 +102,11 @@ void DNClientProxyHelper::StartRegist()
 	// setInterval can!t runtime modify
 	loop()->setInterval(1000, [this](uint64_t timerID)
 	{
+		if(bIsRegisting)
+		{
+			return;
+		}
+		
 		if (channel->isConnected() && !IsRegisted()) 
 		{
 			if(pRegistEvent)

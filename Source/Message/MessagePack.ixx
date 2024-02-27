@@ -40,19 +40,19 @@ export struct MessagePacket
 
 int MessagePacket::PackLenth = sizeof MessagePacket;
 
-export bool MessagePack(unsigned int msgId, MsgDeal deal, const string& pbName, string &data);
+export bool MessagePack(unsigned int msgId, MsgDeal deal, const char* pbName, string &data);
 
 // implement
 module :private;
 
-bool MessagePack(unsigned int msgId, MsgDeal deal,  const string& pbName, string &data)
+bool MessagePack(unsigned int msgId, MsgDeal deal,  const char* pbName, string &data)
 {
 	MessagePacket packet;
 	packet.msgId = msgId;
 	packet.dealType = deal;
 	packet.pkgLenth = unsigned int(data.size());
 
-	if( pbName.empty()) [[unlikely]]
+	if( pbName == nullptr) [[unlikely]]
 	{	
 		packet.msgHashId = 0;
 	}

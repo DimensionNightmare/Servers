@@ -9,7 +9,7 @@ import EntityHelper;
 
 using namespace std;
 
-export enum class ServerEntityFlag
+export enum class ServerEntityFlag : int
 {
 	Locked = 0,
 };
@@ -31,7 +31,7 @@ public:
 	unsigned short GetServerPort(){ return iServPort;}
 
 	void SetConnNum(unsigned int num){IConnNum = num;}
-	unsigned int GetConnNum(){ return IConnNum;}
+	unsigned int& GetConnNum(){ return IConnNum;}
 
 	void SetLinkNode(ServerEntity* node){pLink = node;}
 	ServerEntity* GetLinkNode(){ return pLink;}
@@ -50,6 +50,10 @@ public:
 	{
 		return mMapLink[type];
 	}
+
+	bool HasFlag(ServerEntityFlag flag){ return oFlags.test(int(flag));}
+	void SetFlag(ServerEntityFlag flag){ oFlags.set(int(flag));}
+	void ClearFlag(ServerEntityFlag flag){ oFlags.reset(int(flag));}
 	
 };
 

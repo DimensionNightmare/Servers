@@ -4,6 +4,7 @@ module;
 #include "hv/Channel.h"
 
 #include <functional>
+#include <format>
 export module LogicServerInit;
 
 import DNServer;
@@ -40,18 +41,34 @@ int HandleLogicServerInit(DNServer *server)
 			auto clientSock = serverProxy->GetCSock();
 
 			string peeraddr = channel->peeraddr();
-			clientSock->UpdateClientState(channel->status);
+
+			ProxyStatus state = clientSock->UpdateClientState(channel->status);
+			if(state != ProxyStatus::None)
+			{
+				switch(state)
+				{
+					case ProxyStatus::Close:
+					{
+						// not orgin
+						string origin = format("{}:{}", serverProxy->GetCtlIp(), serverProxy->GetCtlPort());
+						if(peeraddr != origin)
+						{
+							GetClientReconnectFunc()(serverProxy->GetCtlIp().c_str(), serverProxy->GetCtlPort());
+						}
+					}
+				}
+			}
+			
 
 			if (channel->isConnected())
 			{
 				DNPrint(4, LoggerLevel::Debug, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
 				clientSock->SetRegistEvent(&Msg_RegistSrv);
-				clientSock->UpdateClientState(channel->status);
 			}
 			else
 			{
 				DNPrint(5, LoggerLevel::Debug, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
-				clientSock->UpdateClientState(channel->status);
+
 			}
 
 			if(clientSock->isReconnect())

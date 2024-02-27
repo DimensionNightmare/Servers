@@ -52,6 +52,6 @@ export void Exe_RegistSrv(const SocketChannelPtr &channel, unsigned int msgId, M
 	binData.resize(response.ByteSize());
 	response.SerializeToArray(binData.data(), binData.size());
 
-	MessagePack(msgId, MsgDeal::Res, "", binData);
+	MessagePack(msgId, MsgDeal::Res, nullptr, binData);
 	channel->write(binData);
 }

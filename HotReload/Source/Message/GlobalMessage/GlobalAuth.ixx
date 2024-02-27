@@ -5,6 +5,7 @@ module;
 
 #include <coroutine>
 #include <random>
+#include <format>
 export module GlobalMessage:GlobalAuth;
 
 import DNTask;
@@ -24,45 +25,42 @@ export DNTaskVoid Exe_AuthAccount(const SocketChannelPtr &channel, unsigned int 
 	A2G_AuthAccount* requset = (A2G_AuthAccount*)msg;
 	G2A_AuthAccount response;
 
-	ServerEntity* servEntity = nullptr;
-
 	// if has db not need origin
-	list<ServerEntity*> servList = GetGlobalServer()->GetEntityManager()->GetEntityByList(ServerType::GateServer);
-	if(servList.size())
+	list<ServerEntity*>& servList = GetGlobalServer()->GetEntityManager()->GetEntityByList(ServerType::GateServer);
+
+	list<ServerEntityHelper*> tempList;
+	for(ServerEntity* it : servList)
 	{
-		//random
-		random_device rd;
-		mt19937 gen(rd());
-		uniform_int_distribution<> dis(0, servList.size() - 1);
-		int randomIndex = dis(gen);
-
-		auto it = servList.begin();
-    	advance(it, randomIndex);
-		servEntity = *it;
-	}
-
-	if(servEntity)
-	{
-
-		co_return;
-	}
-
-	servList = GetGlobalServer()->GetEntityManager()->GetEntityByList(ServerType::GateServer);
-	if(servList.size())
-	{
-		for(ServerEntity* it : servList)
+		ServerEntityHelper* gate = CastObj(it);
+		if(gate->HasFlag(ServerEntityFlag::Locked))
 		{
-			ServerEntityHelper* gate = CastObj(it);
-			if(!gate->GetMapLinkNode(ServerType::DatabaseServer).size())
-			{
-				servList.remove(it);
-			}
-
+			tempList.emplace_back(gate);
 		}
+	}
 		
+	tempList.sort([](ServerEntityHelper* lhs, ServerEntityHelper* rhs){ return lhs->GetConnNum() < rhs->GetConnNum(); });
+
+
+	if(tempList.size())
+	{
+		ServerEntityHelper* entity = tempList.front();
+		entity->GetConnNum()++;
+		response.set_state_code(0);
+		response.set_ip_addr( format("{}:{}", entity->GetServerIp(), entity->GetServerPort() ));
+
+	}
+	else
+	{
+		response.set_state_code(1);
 	}
 
+	string binData;
+	binData.resize(response.ByteSize());
+	response.SerializeToArray(binData.data(), binData.size());
 
+	MessagePack(msgId, MsgDeal::Res, nullptr, binData);
+	
+	channel->write(binData);
 
 	co_return;
 }

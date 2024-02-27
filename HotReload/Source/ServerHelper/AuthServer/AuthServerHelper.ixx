@@ -48,7 +48,7 @@ bool AuthServerHelper::InitDabase()
 		conn->set_client_encoding("UTF8");
 		pqxx::work txn(*conn);
 
-		DNDbObj<Account> accountInfo(txn);
+		DNDbObj<Account> accountInfo(&txn);
 		if(!accountInfo.IsExist())
 		{
 			accountInfo.InitTable().Commit();
@@ -56,7 +56,7 @@ bool AuthServerHelper::InitDabase()
 
 		txn.commit();
 
-		GetAuthServer()->SetDbConnection(conn);
+		SetDbConnection(conn);
 	}
 	catch(const exception& e)
 	{

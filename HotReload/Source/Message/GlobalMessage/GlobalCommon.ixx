@@ -22,7 +22,6 @@ export void Exe_RegistSrv(const SocketChannelPtr &channel, unsigned int msgId, M
 
 	GlobalServerHelper* dnServer = GetGlobalServer();
 	auto entityMan = dnServer->GetEntityManager();
-	auto sSock = dnServer->GetSSock();
 
 	ServerType regType = (ServerType)requset->server_type();
 	
@@ -48,7 +47,7 @@ export void Exe_RegistSrv(const SocketChannelPtr &channel, unsigned int msgId, M
 			if (uint64_t timerId = child->GetTimerId())
 			{
 				child->SetTimerId(0);
-				sSock->loop(0)->killTimer(timerId);
+				dnServer->GetSSock()->loop(0)->killTimer(timerId);
 			}
 
 			// already connect
@@ -61,11 +60,33 @@ export void Exe_RegistSrv(const SocketChannelPtr &channel, unsigned int msgId, M
 				entity->SetLinkNode(nullptr);
 				child->SetSock(channel);
 				response.set_success(true);
+
+				// Re-enroll
+				entityMan->MountEntity(regType, entity);
 			}
 		}
 		else
 		{
-			response.set_success(false);
+			response.set_success(true);
+			response.set_server_index(requset->server_index());
+
+			entity = entityMan->AddEntity(requset->server_index(), regType);
+			entity->GetChild()->SetSock(channel);
+
+			channel->setContext(entity);
+
+			entity->SetServerIp(requset->ip());
+			entity->SetServerPort(requset->port());
+			
+			for (int i = 0; i < requset->childs_size(); i++)
+			{
+				const COM_ReqRegistSrv& child = requset->childs(i);
+				ServerType childType = (ServerType)child.server_type();
+				ServerEntityHelper* servChild = entityMan->AddEntity(child.server_index(), childType);
+				entity->SetMapLinkNode(childType, servChild);
+			}
+			
+
 		}
 		
 	}
@@ -86,7 +107,7 @@ export void Exe_RegistSrv(const SocketChannelPtr &channel, unsigned int msgId, M
 	binData.resize(response.ByteSize());
 	response.SerializeToArray(binData.data(), binData.size());
 
-	MessagePack(msgId, MsgDeal::Res, "", binData);
+	MessagePack(msgId, MsgDeal::Res, nullptr, binData);
 	channel->write(binData);
 
 	if(!response.success())
@@ -94,5 +115,5 @@ export void Exe_RegistSrv(const SocketChannelPtr &channel, unsigned int msgId, M
 		return;
 	}
 
-	entityMan->UpdateServerGroup(sSock);
+	dnServer->UpdateServerGroup();
 }

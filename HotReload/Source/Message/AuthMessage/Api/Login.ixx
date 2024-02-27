@@ -1,10 +1,14 @@
 module;
 #include "StdAfx.h"
+#include "DbAfx.h"
 #include "google/protobuf/util/json_util.h"
+#include "GDef.pb.h"
+#include "AuthGlobal.pb.h"
 #include "hv/HThread.h"
 #include "hv/HttpMessage.h"
 #include "hv/HttpService.h"
 #include "hv/hurl.h"
+#include "pqxx/transaction"
 
 #include <coroutine>
 #include <thread>
@@ -18,6 +22,7 @@ import MessagePack;
 using namespace std;
 using namespace hv;
 using namespace google::protobuf;
+using namespace GMsg::AuthGlobal;
 
 export void ApiLogin(HttpService* service)
 {
@@ -68,14 +73,50 @@ export void ApiLogin(HttpService* service)
 			return;
 		}
 
-		[username,password, writer]()-> DNTaskVoid
+		GDb::Account accInfo;
+		accInfo.set_auth_name(username);
+		accInfo.set_auth_string(password);
+
+		pqxx::read_transaction query(*authServer->GetDbConnection());
+		DNDbObj<GDb::Account> accounts((pqxx::transaction<>*)&query);
+		try
+		{
+			accounts
+				.SelectAll()
+				DBSelectCond(accInfo, auth_name, "=", "")
+				DBSelectCond(accInfo, auth_string, "=", "AND")
+				.Commit();
+		}
+		catch(exception& e)
+		{
+			DNPrint(-1, LoggerLevel::Error, "%s", e.what());
+			errData["code"] = HTTP_STATUS_BAD_REQUEST;
+			errData["message"] = "Server Error!!";
+			res->SetBody(errData.dump());
+			writer->End();
+			return;
+		}
+		
+
+		if(accounts.Result().size() != 1) 
+		{
+			errData["code"] = HTTP_STATUS_BAD_REQUEST;
+			errData["message"] = "not Account!";
+			res->SetBody(errData.dump());
+			writer->End();
+			return;
+		}
+
+		accInfo = accounts.Result()[0];
+
+
+		[accInfo, writer]()-> DNTaskVoid
 		{
 			const HttpResponseWriterPtr& writerProxy = writer;	//sharedptr ref count ++
-			// A2D_AuthAccount requset;
-			// requset.set_username(username);
-			// requset.set_password(password);
+			A2G_AuthAccount requset;
+			requset.set_account_id(accInfo.account_id());
 
-			// D2A_AuthAccount response;
+			G2A_AuthAccount response;
 			
 			AuthServerHelper* authServer = GetAuthServer();
 			auto client = authServer->GetCSock();
@@ -94,17 +135,17 @@ export void ApiLogin(HttpService* service)
 			
 			// pack data
 			string binData;
-			// binData.resize(requset.ByteSizeLong());
-			// requset.SerializeToArray(binData.data(), (int)binData.size());
-			// MessagePack(msgId, MsgDeal::Req, requset.GetDescriptor()->full_name(), binData);
+			binData.resize(requset.ByteSizeLong());
+			requset.SerializeToArray(binData.data(), (int)binData.size());
+			MessagePack(msgId, MsgDeal::Req, requset.GetDescriptor()->full_name().c_str(), binData);
 			
 			// data alloc
-			// auto dataChannel = [&response]()->DNTask<Message*>
-			// {
-			// 	co_return &response;
-			// }();
+			auto dataChannel = [&response]()->DNTask<Message*>
+			{
+				co_return &response;
+			}();
 
-			// client->AddMsg(msgId, &dataChannel);
+			client->AddMsg(msgId, &dataChannel);
 
 			// regist Close event to release memory
 			if(writerProxy->onclose)
@@ -113,15 +154,15 @@ export void ApiLogin(HttpService* service)
 				writerProxy->onclose = nullptr;
 			}
 
-			// writerProxy->onclose = [&dataChannel, client, msgId]()
-			// {
-			// 	client->DelMsg(msgId);
-			// 	dataChannel.CallResume();
-			// };
+			writerProxy->onclose = [&dataChannel, client, msgId]()
+			{
+				client->DelMsg(msgId);
+				dataChannel.CallResume();
+			};
 			
 			// wait data parse
-			// client->send(binData);
-			// co_await dataChannel;
+			client->send(binData);
+			co_await dataChannel;
 
 			writerProxy->onclose = nullptr;
 
@@ -132,9 +173,9 @@ export void ApiLogin(HttpService* service)
 			// response.set_token("asdas");
 			// response.set_state_code(958);
 			// response.set_expired_timespan(65664);
-			// binData.clear();
-			// util::MessageToJsonString(response, &binData);
-			// retData["data"] = Json::parse(binData);
+			binData.clear();
+			util::MessageToJsonString(response, &binData);
+			retData["data"] = Json::parse(binData);
 			// {
 			// 	{"timespan"	, 50505005005	},
 			// 	{"token"	, 3.140225005	},
@@ -149,7 +190,7 @@ export void ApiLogin(HttpService* service)
 
 			writerProxy->End();
 
-			// dataChannel.Destroy();
+			dataChannel.Destroy();
 
 			co_return;
 		}();

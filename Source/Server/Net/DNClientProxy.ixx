@@ -32,6 +32,8 @@ protected: // dll proxy
 	hv::Channel::Status eState;
 
 	shared_mutex oMsgMutex;
+
+	bool bIsRegisting;
 };
 
 module:private;
@@ -43,6 +45,7 @@ DNClientProxy::DNClientProxy()
 	bIsRegisted = false;
 	pRegistEvent = nullptr;
 	eState = hv::Channel::Status::CLOSED;
+	bIsRegisting = false;
 }
 
 DNClientProxy::~DNClientProxy()
