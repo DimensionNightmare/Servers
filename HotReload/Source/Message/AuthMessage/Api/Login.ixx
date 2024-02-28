@@ -176,6 +176,7 @@ export void ApiLogin(HttpService* service)
 			binData.clear();
 			util::MessageToJsonString(response, &binData);
 			retData["data"] = Json::parse(binData);
+			retData["data"]["accountId"] = accInfo.account_id();
 			// {
 			// 	{"timespan"	, 50505005005	},
 			// 	{"token"	, 3.140225005	},
