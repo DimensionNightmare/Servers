@@ -10,7 +10,7 @@ import DNServerProxy;
 import DNClientProxy;
 import MessagePack;
 import ServerEntityManager;
-
+import ProxyEntityManager;
 
 using namespace std;
 using namespace hv;
@@ -41,12 +41,14 @@ public: // dll override
 	virtual DNClientProxy* GetCSock(){return pCSock;}
 
 	virtual ServerEntityManager<ServerEntity>* GetEntityManager(){return pEntityMan;}
+	virtual ProxyEntityManager<ProxyEntity>* GetProxyEntityManager(){return pProxyEntityMan;}
 
 protected: // dll proxy
 	DNServerProxy* pSSock;
 	DNClientProxy* pCSock;
 
 	ServerEntityManager<ServerEntity>* pEntityMan;
+	ProxyEntityManager<ProxyEntity>* pProxyEntityMan;
 };
 
 module:private;
@@ -58,6 +60,7 @@ GateServer::GateServer()
 	pCSock = nullptr;
 
 	pEntityMan = nullptr;
+	pProxyEntityMan = nullptr;
 }
 
 GateServer::~GateServer()
@@ -153,6 +156,7 @@ bool GateServer::Init()
 	}
 	
 	pEntityMan = new ServerEntityManager<ServerEntity>;
+	pProxyEntityMan = new ProxyEntityManager<ProxyEntity>;
 
 	return true;
 }

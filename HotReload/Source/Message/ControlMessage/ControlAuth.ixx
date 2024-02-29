@@ -1,5 +1,6 @@
 module;
-#include "AuthGlobal.pb.h"
+#include "GlobalAuth.pb.h"
+#include "GlobalGate.pb.h"
 #include "GlobalControl.pb.h"
 #include "hv/Channel.h"
 
@@ -14,12 +15,13 @@ import ServerEntityHelper;
 using namespace std;
 using namespace hv;
 using namespace google::protobuf;
-using namespace GMsg::AuthGlobal;
+using namespace GMsg::GlobalAuth;
+using namespace GMsg::GlobalGate;
 
-export DNTaskVoid Exe_AuthAccount(const SocketChannelPtr &channel, unsigned int msgId, Message *msg)
+export DNTaskVoid Exe_ReqAuthAccount(const SocketChannelPtr &channel, unsigned int msgId, Message *msg)
 {
-	A2G_AuthAccount* requset = (A2G_AuthAccount*)msg;
-	G2A_AuthAccount response;
+	A2G_ReqAuthAccount* requset = (A2G_ReqAuthAccount*)msg;
+	G2A_ResAuthAccount response;
 
 	ServerEntityHelper* entity = nullptr;
 	list<ServerEntity*>& servList = GetControlServer()->GetEntityManager()->GetEntityByList(ServerType::GlobalServer);
@@ -27,7 +29,7 @@ export DNTaskVoid Exe_AuthAccount(const SocketChannelPtr &channel, unsigned int 
 	{
 		ServerEntityHelper* castEntity = static_cast<ServerEntityHelper*>(it);
 
-		if(castEntity->GetChild()->GetTimerId())
+		if(castEntity->GetChild()->TimerId())
 		{
 			continue;
 		}
@@ -60,9 +62,9 @@ export DNTaskVoid Exe_AuthAccount(const SocketChannelPtr &channel, unsigned int 
 			co_return &response;
 		}();
 
-		auto sock = GetControlServer()->GetSSock();
-		unsigned int smsgId = sock->GetMsgId();
-		sock->AddMsg(smsgId, &dataChannel);
+		auto server = GetControlServer()->GetSSock();
+		unsigned int smsgId = server->GetMsgId();
+		server->AddMsg(smsgId, &dataChannel);
 
 		binData.resize(requset->ByteSize());
 		requset->SerializeToArray(binData.data(), binData.size());

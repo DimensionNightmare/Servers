@@ -1,7 +1,7 @@
 module;
 #include "StdAfx.h"
 #include "CommonMsg.pb.h"
-#include "GateGlobal.pb.h"
+#include "GlobalGate.pb.h"
 #include "hv/Channel.h"
 
 #include <coroutine>
@@ -17,7 +17,7 @@ using namespace std;
 using namespace hv;
 using namespace google::protobuf;
 using namespace GMsg::CommonMsg;
-using namespace GMsg::GateGlobal;
+using namespace GMsg::GlobalGate;
 
 // client request
 export DNTaskVoid Msg_RegistSrv()
@@ -58,8 +58,9 @@ export DNTaskVoid Msg_RegistSrv()
 	{
 		COM_ReqRegistSrv* child = requset.add_childs();
 		ServerEntityHelper* helper = static_cast<ServerEntityHelper*>(serv);
-		child->set_server_index(helper->GetChild()->GetID());
-		child->set_server_type((uint32_t)helper->GetServerType());
+		child->set_server_index(helper->GetChild()->ID());
+		ServerType servType = helper->ServerEntityType();
+		child->set_server_type((uint32_t)servType);
 	};
 
 	list<ServerEntity*>& dbs = entityMan->GetEntityByList(ServerType::DatabaseServer);
@@ -118,7 +119,7 @@ void ServerEntityCloseEvent(Entity* entity)
 	// up to Global
 	string binData;
 	G2G_RetRegistSrv upLoad;
-	upLoad.set_server_index(castObj->GetChild()->GetID());
+	upLoad.set_server_index(castObj->GetChild()->ID());
 	upLoad.set_is_regist(false);
 	binData.resize(upLoad.ByteSizeLong());
 	upLoad.SerializeToArray(binData.data(), (int)binData.size());
@@ -129,7 +130,7 @@ void ServerEntityCloseEvent(Entity* entity)
 	client->send(binData);
 	
 	auto entityMan = dnServer->GetEntityManager();
-	entityMan->RemoveEntity(castObj->GetChild()->GetID());
+	entityMan->RemoveEntity(castObj->GetChild()->ID());
 }
 
 // client request
@@ -160,7 +161,7 @@ export void Exe_RegistSrv(const SocketChannelPtr &channel, unsigned int msgId, M
 		channel->setContext(entity);
 
 		response.set_success(true);
-		response.set_server_index(entity->GetChild()->GetID());
+		response.set_server_index(entity->GetChild()->ID());
 
 		entity->SetCloseEvent(ServerEntityCloseEvent);
 	}

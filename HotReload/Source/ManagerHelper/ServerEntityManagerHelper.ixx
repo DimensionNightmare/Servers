@@ -47,8 +47,8 @@ ServerEntityHelper* ServerEntityManagerHelper<TEntity>::AddEntity(unsigned int e
 		this->mEntityMapList[regType].emplace_back(oriEntity);
 		
 		entity = static_cast<ServerEntityHelper*>(oriEntity);
-		entity->GetChild()->SetID(entityId);
-		entity->SetServerType(regType);
+		entity->GetChild()->ID() = entityId;
+		entity->ServerEntityType() = regType;
 	}
 
 	return entity;
@@ -69,7 +69,7 @@ void ServerEntityManagerHelper<TEntity>::RemoveEntity(unsigned int entityId, boo
 			DNPrint(-1, LoggerLevel::Debug, "destory entity\n");
 			this->mEntityMap.erase(entityId);
 			// this->mIdleServerId.push_back(entityId);
-			this->mEntityMapList[entity->GetServerType()].remove(oriEntity);
+			this->mEntityMapList[entity->ServerEntityType()].remove(oriEntity);
 			delete oriEntity;
 		}
 		else

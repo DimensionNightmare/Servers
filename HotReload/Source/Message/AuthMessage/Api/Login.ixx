@@ -3,7 +3,7 @@ module;
 #include "DbAfx.h"
 #include "google/protobuf/util/json_util.h"
 #include "GDef.pb.h"
-#include "AuthGlobal.pb.h"
+#include "GlobalAuth.pb.h"
 #include "hv/HThread.h"
 #include "hv/HttpMessage.h"
 #include "hv/HttpService.h"
@@ -22,11 +22,11 @@ import MessagePack;
 using namespace std;
 using namespace hv;
 using namespace google::protobuf;
-using namespace GMsg::AuthGlobal;
+using namespace GMsg::GlobalAuth;
 
 export void ApiLogin(HttpService* service)
 {
-	service->POST("/Login/Auth", [](const HttpRequestPtr& req, const HttpResponseWriterPtr& writer) 
+	service->POST("/Auth/Login", [](const HttpRequestPtr& req, const HttpResponseWriterPtr& writer) 
 	{
 		HttpResponsePtr res = writer->response;
 		hv::Json errData;
@@ -113,10 +113,11 @@ export void ApiLogin(HttpService* service)
 		[accInfo, writer]()-> DNTaskVoid
 		{
 			const HttpResponseWriterPtr& writerProxy = writer;	//sharedptr ref count ++
-			A2G_AuthAccount requset;
+			A2G_ReqAuthAccount requset;
 			requset.set_account_id(accInfo.account_id());
+			requset.set_ip(writerProxy->peeraddr());
 
-			G2A_AuthAccount response;
+			G2A_ResAuthAccount response;
 			
 			AuthServerHelper* authServer = GetAuthServer();
 			auto client = authServer->GetCSock();

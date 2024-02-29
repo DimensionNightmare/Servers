@@ -44,9 +44,9 @@ export void Exe_RegistSrv(const SocketChannelPtr &channel, unsigned int msgId, M
 		{
 			auto child = entity->GetChild();
 			// wait destroy`s destroy
-			if (uint64_t timerId = child->GetTimerId())
+			if (uint64_t timerId = child->TimerId())
 			{
-				child->SetTimerId(0);
+				child->TimerId() = 0;
 				dnServer->GetSSock()->loop(0)->killTimer(timerId);
 			}
 
@@ -57,7 +57,7 @@ export void Exe_RegistSrv(const SocketChannelPtr &channel, unsigned int msgId, M
 			}
 			else
 			{
-				entity->SetLinkNode(nullptr);
+				entity->LinkNode() = nullptr;
 				child->SetSock(channel);
 				response.set_success(true);
 
@@ -75,8 +75,8 @@ export void Exe_RegistSrv(const SocketChannelPtr &channel, unsigned int msgId, M
 
 			channel->setContext(entity);
 
-			entity->SetServerIp(requset->ip());
-			entity->SetServerPort(requset->port());
+			entity->ServerIp() = requset->ip();
+			entity->ServerPort() = requset->port();
 			
 			for (int i = 0; i < requset->childs_size(); i++)
 			{
@@ -93,14 +93,14 @@ export void Exe_RegistSrv(const SocketChannelPtr &channel, unsigned int msgId, M
 
 	else if (ServerEntityHelper* entity = entityMan->AddEntity(entityMan->GetServerIndex(), regType))
 	{
-		entity->SetServerIp(requset->ip());
-		entity->SetServerPort(requset->port());
+		entity->ServerIp() = requset->ip();
+		entity->ServerPort() = requset->port();
 		entity->GetChild()->SetSock(channel);
 
 		channel->setContext(entity);
 
 		response.set_success(true);
-		response.set_server_index(entity->GetChild()->GetID());
+		response.set_server_index(entity->GetChild()->ID());
 	}
 	
 	string binData;

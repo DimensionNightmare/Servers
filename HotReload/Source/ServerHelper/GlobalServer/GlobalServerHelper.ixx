@@ -66,14 +66,14 @@ void GlobalServerHelper::UpdateServerGroup()
 	auto registControl = [&](ServerEntityHelper* beEntity, ServerEntityHelper* entity)
 	{
 		SocketChannelPtr channel = entity->GetChild()->GetSock();
-		entity->SetLinkNode(beEntity);
+		entity->LinkNode() = beEntity;
 		entity->GetChild()->SetSock(nullptr);
 		channel->setContext(nullptr);
 		
 		// sendData
 		binData.clear();
-		retMsg.set_ip(beEntity->GetServerIp());
-		retMsg.set_port(beEntity->GetServerPort());
+		retMsg.set_ip(beEntity->ServerIp());
+		retMsg.set_port(beEntity->ServerPort());
 		binData.resize(retMsg.ByteSize());
 		retMsg.SerializeToArray(binData.data(), binData.size());
 		MessagePack(0, MsgDeal::Req, retMsg.GetDescriptor()->full_name().c_str(), binData);
@@ -82,10 +82,10 @@ void GlobalServerHelper::UpdateServerGroup()
 		// timer destory
 		uint64_t timerId = GetSSock()->loop(0)->setTimeout(10000, [this, entity](uint64_t timerId)
 		{
-			GetEntityManager()->RemoveEntity(entity->GetChild()->GetID());
+			GetEntityManager()->RemoveEntity(entity->GetChild()->ID());
 		});
 
-		entity->GetChild()->SetTimerId(timerId);
+		entity->GetChild()->TimerId() = timerId;
 	};
 	
 	for(ServerEntity* it : gates)
@@ -104,7 +104,7 @@ void GlobalServerHelper::UpdateServerGroup()
 			dbs.pop_front();
 			ServerEntityHelper* entity = CastObj(ele);
 			registControl(gate, entity);
-			entityMan->UnMountEntity(entity->GetServerType(), ele);
+			entityMan->UnMountEntity(entity->ServerEntityType(), ele);
 			gatesDb.emplace_back(ele);
 		}
 
@@ -114,7 +114,7 @@ void GlobalServerHelper::UpdateServerGroup()
 			logics.pop_front();
 			ServerEntityHelper* entity = CastObj(ele);
 			registControl(gate, entity);
-			entityMan->UnMountEntity(entity->GetServerType(), ele);
+			entityMan->UnMountEntity(entity->ServerEntityType(), ele);
 			gatesLogic.emplace_back(ele);
 		}
 

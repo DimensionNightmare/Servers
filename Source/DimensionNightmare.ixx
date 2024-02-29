@@ -92,7 +92,7 @@ struct HotReloadDll
 			return false;
 		}
 
-		sDllDirRand = format("{}_{}_{}", SDllDir, enum_name(type), hv_rand(10000, 99999));
+		sDllDirRand = format("{}_{}_{}", SDllDir, EnumName(type), hv_rand(10000, 99999));
 		filesystem::create_directories(sDllDirRand.c_str());
 		filesystem::copy(SDllDir.c_str(), sDllDirRand.c_str(), filesystem::copy_options::overwrite_existing);
 
@@ -242,7 +242,7 @@ bool DimensionNightmare::InitConfig(map<string, string> &param)
 		GetPrivateProfileSectionNamesA(buffer, bufferSize, iniFilePath);
 
 		// get ini Config
-		string_view serverName = enum_name(serverType);
+		string_view serverName = EnumName(serverType);
 
 		CHAR * current = buffer;
 		while (*current) 

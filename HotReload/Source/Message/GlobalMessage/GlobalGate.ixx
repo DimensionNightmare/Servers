@@ -1,5 +1,5 @@
 module;
-#include "GateGlobal.pb.h"
+#include "GlobalGate.pb.h"
 #include "hv/Channel.h"
 
 #include <coroutine>
@@ -13,7 +13,7 @@ import ServerEntityHelper;
 using namespace std;
 using namespace hv;
 using namespace google::protobuf;
-using namespace GMsg::GateGlobal;
+using namespace GMsg::GlobalGate;
 
 export void Exe_RetRegistSrv(const SocketChannelPtr &channel, unsigned int msgId, Message *msg)
 {
@@ -25,9 +25,9 @@ export void Exe_RetRegistSrv(const SocketChannelPtr &channel, unsigned int msgId
 	{
 		if(requset->is_regist())
 		{
-			if(uint64_t timerId = entity->GetChild()->GetTimerId())
+			if(uint64_t timerId = entity->GetChild()->TimerId())
 			{
-				entity->GetChild()->SetTimerId(0);
+				entity->GetChild()->TimerId() = 0;
 				dnServer->GetSSock()->loop(0)->killTimer(timerId);
 			}
 		}
@@ -35,7 +35,7 @@ export void Exe_RetRegistSrv(const SocketChannelPtr &channel, unsigned int msgId
 		{
 			ServerEntityHelper* owner = channel->getContext<ServerEntityHelper>();
 			// remove and unlock
-			owner->GetMapLinkNode(entity->GetServerType()).remove(entity);
+			owner->GetMapLinkNode(entity->ServerEntityType()).remove(entity);
 			owner->ClearFlag(ServerEntityFlag::Locked);
 
 			entityMan->RemoveEntity(requset->server_index());

@@ -21,20 +21,15 @@ private:
 public:
 	EntityHelper* GetChild(){ return nullptr;}
 
-	void SetServerType(ServerType type){emServerType = type;}
-	ServerType GetServerType(){ return emServerType;}
+	ServerType& ServerEntityType(){ return emServerType;}
 
-	void SetServerIp(const std::string& ip){sServIp = ip;}
-	std::string& GetServerIp(){ return sServIp;}
+	std::string& ServerIp(){ return sServIp;}
 
-	void SetServerPort(unsigned short port){iServPort = port;}
-	unsigned short GetServerPort(){ return iServPort;}
+	unsigned short& ServerPort(){ return iServPort;}
 
-	void SetConnNum(unsigned int num){IConnNum = num;}
 	unsigned int& GetConnNum(){ return IConnNum;}
 
-	void SetLinkNode(ServerEntity* node){pLink = node;}
-	ServerEntity* GetLinkNode(){ return pLink;}
+	ServerEntity* &LinkNode(){ return pLink;}
 	
 	void SetMapLinkNode(ServerType type, ServerEntity* node)
 	{

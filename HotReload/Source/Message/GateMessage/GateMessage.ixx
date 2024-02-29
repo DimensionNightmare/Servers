@@ -1,6 +1,7 @@
 module;
 #include "StdAfx.h"
 #include "CommonMsg.pb.h"
+#include "GlobalGate.pb.h"
 #include "hv/Channel.h"
 
 #include <map>
@@ -8,12 +9,14 @@ module;
 export module GateMessage;
 
 export import :GateCommon;
+import :GateGlobal;
 
 
 using namespace std;
 using namespace hv;
 using namespace google::protobuf;
 using namespace GMsg::CommonMsg;
+using namespace GMsg::GlobalGate;
 
 export class GateMessageHandle
 {
@@ -62,4 +65,7 @@ void GateMessageHandle::RegMsgHandle()
 
 	msg = COM_ReqRegistSrv::internal_default_instance();
 	MHandleMap.emplace( hashStr(msg->GetDescriptor()->full_name()), make_pair(msg, &Exe_RegistSrv));
+
+	msg = G2G_ReqUserToken::internal_default_instance();
+	MHandleMap.emplace( hashStr(msg->GetDescriptor()->full_name()), make_pair(msg, &Exe_ReqUserToken));
 }

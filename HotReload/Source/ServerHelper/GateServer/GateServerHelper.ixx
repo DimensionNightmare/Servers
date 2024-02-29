@@ -6,7 +6,7 @@ export module GateServerHelper;
 import GateServer;
 import DNClientProxyHelper;
 import ServerEntityManagerHelper;
-import ServerEntity;
+import ProxyEntityManagerHelper;
 
 using namespace std;
 
@@ -18,6 +18,7 @@ public:
 
 	DNClientProxyHelper* GetCSock(){ return nullptr;}
 	ServerEntityManagerHelper<ServerEntity>* GetEntityManager(){ return nullptr;}
+	ProxyEntityManagerHelper<ProxyEntity>* GetProxyEntityManager(){ return nullptr;}
 };
 
 static GateServerHelper* PGateServerHelper = nullptr;

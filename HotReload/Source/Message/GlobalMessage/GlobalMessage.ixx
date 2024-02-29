@@ -1,9 +1,9 @@
 module;
 #include "StdAfx.h"
 #include "GlobalControl.pb.h"
-#include "AuthGlobal.pb.h"
+#include "GlobalAuth.pb.h"
 #include "CommonMsg.pb.h"
-#include "GateGlobal.pb.h"
+#include "GlobalGate.pb.h"
 #include "hv/Channel.h"
 
 #include <map>
@@ -20,8 +20,8 @@ using namespace std;
 using namespace hv;
 using namespace google::protobuf;
 using namespace GMsg::CommonMsg;
-using namespace GMsg::AuthGlobal;
-using namespace GMsg::GateGlobal;
+using namespace GMsg::GlobalAuth;
+using namespace GMsg::GlobalAuth;
 
 export class GlobalMessageHandle
 {
@@ -71,8 +71,8 @@ void GlobalMessageHandle::RegMsgHandle()
 	msg = COM_ReqRegistSrv::internal_default_instance();
 	MHandleMap.emplace( hashStr(msg->GetDescriptor()->full_name()), make_pair(msg, &Exe_RegistSrv));
 
-	msg = A2G_AuthAccount::internal_default_instance();
-	MHandleMap.emplace( hashStr(msg->GetDescriptor()->full_name()), make_pair(msg, &Exe_AuthAccount));
+	msg = A2G_ReqAuthAccount::internal_default_instance();
+	MHandleMap.emplace( hashStr(msg->GetDescriptor()->full_name()), make_pair(msg, &Exe_ReqAuthAccount));
 
 	msg = G2G_RetRegistSrv::internal_default_instance();
 	MHandleMap.emplace( hashStr(msg->GetDescriptor()->full_name()), make_pair(msg, &Exe_RetRegistSrv));

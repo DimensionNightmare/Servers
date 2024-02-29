@@ -223,7 +223,7 @@ enum class Ress
 };
 
 template<auto value>
-constexpr auto enum_name()
+constexpr auto EnumName()
 {
     std::string_view name;
 #if __GNUC__ || __clang__
@@ -245,24 +245,24 @@ constexpr auto enum_name()
 }
 
 template<typename T, std::size_t N = 0> 
-constexpr auto enum_max()
+constexpr auto EnumMax()
 {
     constexpr auto value = static_cast<T>(N);
-    if constexpr (enum_name<value>().find(")") == std::string_view::npos)
-        return enum_max<T, N + 1>();
+    if constexpr (EnumName<value>().find(")") == std::string_view::npos)
+        return EnumMax<T, N + 1>();
     else
         return N;
 }
 
 template<typename T> requires std::is_enum_v<T>
-constexpr auto enum_name(T value)
+constexpr auto EnumName(T value)
 {
-    constexpr auto num = enum_max<T>();
+    constexpr auto num = EnumMax<T>();
     constexpr auto names = []<std::size_t... Is>(std::index_sequence<Is...>)
     {
         return std::array<std::string_view, num>
         { 
-            enum_name<static_cast<T>(Is)>()... 
+            EnumName<static_cast<T>(Is)>()... 
         };
     }(std::make_index_sequence<num>{});
     return names[static_cast<std::size_t>(value)];
@@ -296,7 +296,7 @@ int main()
     }
     std::cout << std::endl;
 	Ress a = Ress::Pink;
-	std::cout << enum_name(a);
+	std::cout << EnumName(a);
 
 	return 0;
 }

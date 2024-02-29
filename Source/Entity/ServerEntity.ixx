@@ -45,6 +45,7 @@ ServerEntity::ServerEntity():Entity()
 	iServPort = 0;
 	pLink = nullptr;
 	mMapLink.clear();
+	oFlags.reset();
 }
 
 ServerEntity::~ServerEntity()

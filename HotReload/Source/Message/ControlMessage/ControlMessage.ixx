@@ -2,7 +2,7 @@ module;
 #include "StdAfx.h"
 #include "CommonMsg.pb.h"
 #include "GlobalControl.pb.h"
-#include "AuthGlobal.pb.h"
+#include "GlobalAuth.pb.h"
 #include "hv/Channel.h"
 
 #include <map>
@@ -19,7 +19,7 @@ using namespace google::protobuf;
 
 using namespace GMsg::CommonMsg;
 using namespace GMsg::GlobalControl;
-using namespace GMsg::AuthGlobal;
+using namespace GMsg::GlobalAuth;
 
 export class ControlMessageHandle
 {
@@ -68,8 +68,8 @@ void ControlMessageHandle::RegMsgHandle()
 	const Message* msg = nullptr;
 	
 	msg = COM_ReqRegistSrv::internal_default_instance();
-	MHandleMap.emplace( hashStr(msg->GetDescriptor()->full_name()), make_pair(msg, &Exe_RegistSrv));
+	MHandleMap.emplace( hashStr(msg->GetDescriptor()->full_name()), make_pair(msg, &Exe_ReqRegistSrv));
 
-	msg = A2G_AuthAccount::internal_default_instance();
-	MHandleMap.emplace( hashStr(msg->GetDescriptor()->full_name()), make_pair(msg, &Exe_AuthAccount));
+	msg = A2G_ReqAuthAccount::internal_default_instance();
+	MHandleMap.emplace( hashStr(msg->GetDescriptor()->full_name()), make_pair(msg, &Exe_ReqAuthAccount));
 }

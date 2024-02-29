@@ -1,5 +1,6 @@
 module;
-#include "AuthGlobal.pb.h"
+#include "GlobalAuth.pb.h"
+#include "GlobalGate.pb.h"
 #include "GlobalControl.pb.h"
 #include "hv/Channel.h"
 
@@ -16,14 +17,15 @@ import ServerEntityHelper;
 using namespace std;
 using namespace hv;
 using namespace google::protobuf;
-using namespace GMsg::AuthGlobal;
+using namespace GMsg::GlobalAuth;
+using namespace GMsg::GlobalGate;
 
 #define CastObj(entity) static_cast<ServerEntityHelper*>(entity)
 
-export DNTaskVoid Exe_AuthAccount(const SocketChannelPtr &channel, unsigned int msgId, Message *msg)
+export DNTaskVoid Exe_ReqAuthAccount(const SocketChannelPtr &channel, unsigned int msgId, Message *msg)
 {
-	A2G_AuthAccount* requset = (A2G_AuthAccount*)msg;
-	G2A_AuthAccount response;
+	A2G_ReqAuthAccount* requset = (A2G_ReqAuthAccount*)msg;
+	G2A_ResAuthAccount response;
 
 	// if has db not need origin
 	list<ServerEntity*>& servList = GetGlobalServer()->GetEntityManager()->GetEntityByList(ServerType::GateServer);
@@ -46,8 +48,35 @@ export DNTaskVoid Exe_AuthAccount(const SocketChannelPtr &channel, unsigned int 
 		ServerEntityHelper* entity = tempList.front();
 		entity->GetConnNum()++;
 		response.set_state_code(0);
-		response.set_ip_addr( format("{}:{}", entity->GetServerIp(), entity->GetServerPort() ));
+		response.set_ip_addr( format("{}:{}", entity->ServerIp(), entity->ServerPort() ));
 
+		G2G_ReqUserToken tokenReq;
+		tokenReq.set_account_id(requset->account_id());
+		tokenReq.set_ip(requset->ip());
+
+		G2G_ResUserToken tokenRes;
+
+		auto server = GetGlobalServer()->GetSSock();
+		unsigned int smsgId = server->GetMsgId();
+		
+		// pack data
+		string binData;
+		binData.resize(tokenReq.ByteSizeLong());
+		tokenReq.SerializeToArray(binData.data(), (int)binData.size());
+		MessagePack(smsgId, MsgDeal::Req, tokenReq.GetDescriptor()->full_name().c_str(), binData);
+		
+		// data alloc
+		auto dataChannel = [&tokenRes]()->DNTask<Message*>
+		{
+			co_return &tokenRes;
+		}();
+
+		server->AddMsg(smsgId, &dataChannel);
+		entity->GetChild()->GetSock()->write(binData);
+		co_await dataChannel;
+
+		response.set_token(tokenRes.token());
+		response.set_expired_timespan(tokenRes.expired_timespan());
 	}
 	else
 	{
