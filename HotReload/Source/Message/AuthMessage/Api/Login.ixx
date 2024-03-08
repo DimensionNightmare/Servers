@@ -26,7 +26,7 @@ using namespace GMsg::GlobalAuth;
 
 export void ApiLogin(HttpService* service)
 {
-	service->POST("/Auth/Login", [](const HttpRequestPtr& req, const HttpResponseWriterPtr& writer) 
+	service->POST("/Auth/LoginToken", [](const HttpRequestPtr& req, const HttpResponseWriterPtr& writer) 
 	{
 		HttpResponsePtr res = writer->response;
 		hv::Json errData;
