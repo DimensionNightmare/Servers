@@ -8,6 +8,8 @@ project (DimensionNightmareServer)
 
 message("${CMAKE_VERSION} ${MSVC_VERSION} ${CMAKE_SYSTEM_VERSION}")
 
+if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+
 # Enable Hot Reload for MSVC compilers if supported.
 if (POLICY CMP0141)
 	cmake_policy(SET CMP0141 NEW)
@@ -24,15 +26,33 @@ elseif (CMAKE_VERSION EQUAL 3.27)
     set(CMAKE_EXPERIMENTAL_CXX_MODULE_CMAKE_API "aa1f7df0-828a-4fcd-9afc-2dc80491aca7")
 else()
     message(WARNING "Newer CMake version, CMAKE_EXPERIMENTAL_CXX_MODULE_CMAKE_API may not be set.")
+	endif()
+
+	set(CMAKE_EXPERIMENTAL_CXX_MODULE_DYNDEP ON)
+	
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fcoroutines")
+
+	set(CMAKE_CXX_MODULE_MAP_FORMAT "gcc")
+
+	string(CONCAT CMAKE_CXX_SCANDEP_SOURCE
+    "<CMAKE_CXX_COMPILER> <DEFINES> <INCLUDES>  -E -x c++ <SOURCE>"
+    " -MT <DYNDEP_FILE> -MD -MF <DEP_FILE>"
+	" -std=c++20"
+    " -o <PREPROCESSED_SOURCE>")
+
+	string(CONCAT CMAKE_CXX_MODULE_MAP_FLAG
+		" -fmodule-mapper=<MODULE_MAP_FILE>"
+		" -MD"
+		" -x c++")
 endif()
 
 set(CMAKE_CXX_STANDARD 23)
-set(CMAKE_EXPERIMENTAL_CXX_MODULE_DYNDEP ON)
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /Od")
 
 set(CMAKE_PREFIX_PATH
 "../Environment/Install/libhv/${CMAKE_BUILD_TYPE}/lib/cmake;"
-"../Environment/Install/protobuf/${CMAKE_BUILD_TYPE}/cmake;"
+"../Environment/Install/protobuf/${CMAKE_BUILD_TYPE}/lib/cmake;"
 "../Environment/Install/libpqxx/${CMAKE_BUILD_TYPE}/lib/cmake;"
 )
 
@@ -56,7 +76,7 @@ target_sources( MainSource
 	PUBLIC FILE_SET cpp20_modules TYPE CXX_MODULES FILES ${DNSourceModule}
 )
 
-target_link_libraries(MainSource PUBLIC hv_static protobuf::libprotobuf protobufGen.lib libpqxx::pqxx)
+target_link_libraries(MainSource PUBLIC hv_static protobuf::libprotobuf protobufGen libpqxx::pqxx)
 set_property(TARGET MainSource PROPERTY CXX_STANDARD 23)
 
 add_executable(DimensionNightmareServer "main.cpp")
@@ -92,10 +112,10 @@ target_link_libraries(HotReload PUBLIC HotloadSource)
 add_executable(DNTest)
 
 file(GLOB_RECURSE srcDNTest CONFIGURE_DEPENDS 
-	"Test/*.ixx" 
+	"Test/*.cpp" 
 )
 
-target_link_libraries(DNTest protobuf::libprotobuf protobufGen.lib hv_static libpqxx::pqxx)
+target_link_libraries(DNTest protobuf::libprotobuf protobufGen hv_static libpqxx::pqxx)
 
 target_sources(DNTest PUBLIC ${srcDNTest})
 

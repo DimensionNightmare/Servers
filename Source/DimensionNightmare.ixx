@@ -3,12 +3,13 @@ module;
 #include "hv/hbase.h"
 #include "hv/EventLoop.h"
 
-#include <Windows.h>
-#include <DbgHelp.h>
 #include <filesystem>
 #include <locale>
 #include <iostream>
 #include <format>
+#ifdef _WIN32
+	#include <Windows.h>
+#endif
 export module DimensionNightmare;
 
 import DNServer;
@@ -29,13 +30,15 @@ struct HotReloadDll
 	inline static string SDllName = "HotReload";
 
 	string sDllDirRand;
-
+#ifdef _WIN32
 	HMODULE oLibHandle;
+#endif
 
 	bool isNormalFree;
 
 	bool LoadHandle()
 	{
+#ifdef _WIN32
 		// int ret = SetDefaultDllDirectories(LOAD_LIBRARY_SEARCH_USER_DIRS);
 		// ret = SetDllDirectory(sDllDirRand.c_str());
 		string fullPath = filesystem::current_path().append(sDllDirRand).string();
@@ -51,6 +54,7 @@ struct HotReloadDll
 		// oLibHandle = LoadLibraryEx((SDllName).c_str(), NULL, LOAD_LIBRARY_SEARCH_USER_DIRS);
 		// oLibHandle = LoadLibraryEx(SDllName.c_str(), NULL, DONT_RESOLVE_DLL_REFERENCES | LOAD_LIBRARY_SEARCH_DEFAULT_DIRS); //DONT_RESOLVE_DLL_REFERENCES |
 		oLibHandle = LoadLibrary(SDllName.c_str());
+#endif
 		if (!oLibHandle)
 		{
 			DNPrint(2, LoggerLevel::Error, nullptr, GetLastError());
@@ -64,7 +68,9 @@ struct HotReloadDll
 	{
 		if (oLibHandle)
 		{
+#ifdef _WIN32
 			FreeLibrary(oLibHandle);
+#endif
 			oLibHandle = nullptr;
 		}
 
@@ -110,9 +116,11 @@ struct HotReloadDll
 		FreeHandle();
 	};
 
-	FARPROC GetFuncPtr(string funcName)
+	void* GetFuncPtr(string funcName)
 	{
+#ifdef _WIN32
 		return GetProcAddress(oLibHandle, funcName.c_str());
+#endif
 	}
 };
 
@@ -235,22 +243,24 @@ bool DimensionNightmare::InitConfig(map<string, string> &param)
 
 		const int bufferSize = 512;
 		
-		CHAR buffer[bufferSize];
+		char buffer[bufferSize] = {0};
 
 		vector<string> sectionNames;
 
+#ifdef _WIN32
 		GetPrivateProfileSectionNamesA(buffer, bufferSize, iniFilePath);
+#endif
 
 		// get ini Config
 		string_view serverName = EnumName(serverType);
 
-		CHAR * current = buffer;
+		char* current = buffer;
 		while (*current) 
 		{
 			sectionNames.push_back(current);
 			current += strlen(current) + 1;
 
-			if (sectionNames.back().find_last_of("Server") != std::string::npos && sectionNames.back() != serverName)
+			if (sectionNames.back().find_last_of("Server") != string::npos && sectionNames.back() != serverName)
 			{
 				sectionNames.pop_back();
 			}
@@ -267,7 +277,7 @@ bool DimensionNightmare::InitConfig(map<string, string> &param)
 				keyValuePair += strlen(keyValuePair) + 1;
 
 				size_t pos = split.find('=');
-				if (pos != std::string::npos) 
+				if (pos != string::npos) 
 				{
 					string key = split.substr(0, pos);
 					if(param.count(key)) 
@@ -350,8 +360,12 @@ bool DimensionNightmare::Init()
 		return false;	
 	}
 
+	if(!pServer->Start())
+	{
+		return false;
+	}
+	
 	pServer->SetRun(true); 
-	pServer->Start();
 
 	OnRegClientReconnectFunc();
 	return true;
@@ -385,10 +399,40 @@ void DimensionNightmare::InitCmdHandle()
 		resume();
 	};
 
+	auto open = [](stringstream* ss)
+	{
+		string str;
+		string allStr = *GetLuanchConfigParam("luanchPath") + " ";
+		while(*ss >> str)
+		{
+			allStr += str + " ";
+		}
+
+		cout << allStr << endl;
+
+#ifdef _WIN32
+		STARTUPINFO startInfo{}; 
+		PROCESS_INFORMATION pinfo{};
+
+		startInfo.wShowWindow = SW_NORMAL;
+		startInfo.dwFlags = STARTF_USESHOWWINDOW;
+		if(CreateProcessA(NULL, (char*)allStr.c_str(),
+			NULL,NULL,FALSE,CREATE_NEW_CONSOLE,NULL,NULL,&startInfo,&pinfo))
+#endif
+		{
+			cout << "success" << endl;
+		}
+		else
+		{
+			cout << "error" << endl;
+		}
+	};
+
 	mCmdHandle = {
 		{"pause", pause},
 		{"resume", resume},
 		{"reload", reload},
+		{"open", open},
 	};
 
 	if(pServer)
@@ -420,7 +464,7 @@ void DimensionNightmare::ShutDown()
 
 bool DimensionNightmare::OnRegHotReload()
 {
-	if (FARPROC funtPtr = pHotDll->GetFuncPtr("InitHotReload"))
+	if (void* funtPtr = pHotDll->GetFuncPtr("InitHotReload"))
 	{
 		using funcSign = int (*)(DimensionNightmare&);
 		if (funcSign func = reinterpret_cast<funcSign>(funtPtr))
@@ -438,7 +482,7 @@ bool DimensionNightmare::OnUnregHotReload()
 	if(!pHotDll)
 		return false;
 
-	if (FARPROC funtPtr = pHotDll->GetFuncPtr("ShutdownHotReload"))
+	if (void* funtPtr = pHotDll->GetFuncPtr("ShutdownHotReload"))
 	{
 		using funcSign = int (*)(DimensionNightmare&);
 		if (funcSign func = reinterpret_cast<funcSign>(funtPtr))
@@ -452,7 +496,7 @@ bool DimensionNightmare::OnUnregHotReload()
 
 bool DimensionNightmare::OnRegClientReconnectFunc()
 {
-	if (FARPROC funtPtr = pHotDll->GetFuncPtr("RegClientReconnectFunc"))
+	if (void* funtPtr = pHotDll->GetFuncPtr("RegClientReconnectFunc"))
 	{
 		using funcSign = int (*)(function<void(const char*, int)>);
 		if (funcSign func = reinterpret_cast<funcSign>(funtPtr))

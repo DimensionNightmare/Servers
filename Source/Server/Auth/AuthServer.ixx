@@ -138,7 +138,12 @@ bool AuthServer::Start()
 		DNPrint(6, LoggerLevel::Error, nullptr);
 		return false;
 	}
-	pSSock->start();
+	int code = pSSock->start();
+	if(code < 0)
+	{
+		printf("start error %d", code);
+		return false;
+	}
 
 	if(pCSock)
 	{

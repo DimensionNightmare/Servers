@@ -2,9 +2,12 @@
 #include "StdAfx.h"
 #include "google/protobuf/message.h"
 
-#include <Windows.h>
 #include <functional>
 #include <string>
+
+#ifdef _WIN32
+	#include <Windows.h>
+#endif
 
 import DNServer;
 import DimensionNightmare;
@@ -23,6 +26,7 @@ import DNClientProxyHelper;
 #define HOTRELOAD __declspec(dllimport)
 #endif
 
+#ifdef _WIN32
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
     // Perform actions based on the reason for calling.
@@ -46,6 +50,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
     }
     return TRUE;
 }
+#endif
 
 extern "C"
 {

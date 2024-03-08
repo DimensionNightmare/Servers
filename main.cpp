@@ -1,16 +1,16 @@
 #include "StdAfx.h"
 #include "hv/hlog.h"
 
-#include <Windows.h>
 #include <map>
 #include <string>
-#include <dbghelp.h>
 #include <iostream>
+#ifdef _WIN32
+	#include <Windows.h>
+	#include <dbghelp.h>
+	#pragma comment(lib, "dbghelp.lib")
+#endif
 
 import DimensionNightmare;
-
-
-#pragma comment(lib, "dbghelp.lib")
 
 using namespace std;
 
@@ -56,6 +56,8 @@ int main(int argc, char** argv)
 		dn->ShutDown();
 		return 0;
 	}
+
+#ifdef _WIN32
 	
 	auto CtrlHandler = [](DWORD signal) -> BOOL {
 		DNPrint(6, LoggerLevel::Normal, nullptr);
@@ -123,14 +125,16 @@ int main(int argc, char** argv)
 		DNPrint(11, LoggerLevel::Error, nullptr);
 		return 0;
 	}
+#endif
 
 	stringstream ss;
 	string str;
     while (true) 
 	{
 		getline(cin, str);
+		ss.clear();
 		ss.str(str);
-		ss << str;
+		str.clear();
 		ss >> str;
 		if(str.empty())
 		{
