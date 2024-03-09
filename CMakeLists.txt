@@ -1,7 +1,7 @@
 # CMakeList.txt: DimensionNightmareServer 的 CMake 项目，在此处包括源代码并定义
 # 项目特定的逻辑。
 #
-cmake_minimum_required (VERSION 3.8)
+cmake_minimum_required (VERSION 3.26 FATAL_ERROR)
 
 # Top project
 project (DimensionNightmareServer)
@@ -10,41 +10,34 @@ message("${CMAKE_VERSION} ${MSVC_VERSION} ${CMAKE_SYSTEM_VERSION}")
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
 
-# Enable Hot Reload for MSVC compilers if supported.
-if (POLICY CMP0141)
-	cmake_policy(SET CMP0141 NEW)
-	set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:${CMAKE_BUILD_TYPE},RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:${CMAKE_BUILD_TYPE},RelWithDebInfo>:ProgramDatabase>>")
-	set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDLL$<$<CONFIG:${CMAKE_BUILD_TYPE}>:${CMAKE_BUILD_TYPE}>")
-endif()
+	if (MSVC_VERSION LESS 1936)
+		message(FATAL_ERROR "MSVC Version < 14 not supported!")
+	endif()
 
-# module is the experimental function. cmake experimental api needs to be enabled
-if (CMAKE_VERSION EQUAL 3.25)
-    set(CMAKE_EXPERIMENTAL_CXX_MODULE_CMAKE_API "3c375311-a3c9-4396-a187-3227ef642046")
-elseif (CMAKE_VERSION EQUAL 3.26)
-    set(CMAKE_EXPERIMENTAL_CXX_MODULE_CMAKE_API "2182bf5c-ef0d-489a-91da-49dbc3090d2a")
-elseif (CMAKE_VERSION EQUAL 3.27)
-    set(CMAKE_EXPERIMENTAL_CXX_MODULE_CMAKE_API "aa1f7df0-828a-4fcd-9afc-2dc80491aca7")
-else()
-    message(WARNING "Newer CMake version, CMAKE_EXPERIMENTAL_CXX_MODULE_CMAKE_API may not be set.")
+	# Enable Hot Reload for MSVC compilers if supported.
+	if (POLICY CMP0141)
+		cmake_policy(SET CMP0141 NEW)
+		set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:${CMAKE_BUILD_TYPE},RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:${CMAKE_BUILD_TYPE},RelWithDebInfo>:ProgramDatabase>>")
+		#set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDLL$<$<CONFIG:${CMAKE_BUILD_TYPE}>:${CMAKE_BUILD_TYPE}>")
+	endif()
+
+	# module is the experimental function. cmake experimental api needs to be enabled
+	if (CMAKE_VERSION EQUAL 3.26)
+		set(CMAKE_EXPERIMENTAL_CXX_MODULE_CMAKE_API "2182bf5c-ef0d-489a-91da-49dbc3090d2a")
+	elseif (CMAKE_VERSION EQUAL 3.27)
+		set(CMAKE_EXPERIMENTAL_CXX_MODULE_CMAKE_API "aa1f7df0-828a-4fcd-9afc-2dc80491aca7")
+	else()
+    	message(WARNING "Newer CMake version, CMAKE_EXPERIMENTAL_CXX_MODULE_CMAKE_API may not be set.")
 	endif()
 
 	set(CMAKE_EXPERIMENTAL_CXX_MODULE_DYNDEP ON)
 	
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fcoroutines")
 
-	set(CMAKE_CXX_MODULE_MAP_FORMAT "gcc")
-
-	string(CONCAT CMAKE_CXX_SCANDEP_SOURCE
-    "<CMAKE_CXX_COMPILER> <DEFINES> <INCLUDES>  -E -x c++ <SOURCE>"
-    " -MT <DYNDEP_FILE> -MD -MF <DEP_FILE>"
-	" -std=c++20"
-    " -o <PREPROCESSED_SOURCE>")
-
-	string(CONCAT CMAKE_CXX_MODULE_MAP_FLAG
-		" -fmodule-mapper=<MODULE_MAP_FILE>"
-		" -MD"
-		" -x c++")
+	if (CMAKE_CXX_COMPILER_VERSION LESS 14)
+		message(FATAL_ERROR "GCC Version < 14 not supported!")
+	endif()
+	
 endif()
 
 set(CMAKE_CXX_STANDARD 23)
@@ -52,6 +45,7 @@ set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /Od")
 
 set(CMAKE_PREFIX_PATH
 "../Environment/Install/libhv/${CMAKE_BUILD_TYPE}/lib/cmake;"
+"../Environment/Install/protobuf/${CMAKE_BUILD_TYPE}/cmake;"
 "../Environment/Install/protobuf/${CMAKE_BUILD_TYPE}/lib/cmake;"
 "../Environment/Install/libpqxx/${CMAKE_BUILD_TYPE}/lib/cmake;"
 )
@@ -73,7 +67,7 @@ file(GLOB_RECURSE DNSourceModule CONFIGURE_DEPENDS
 add_library(MainSource)
 
 target_sources( MainSource
-	PUBLIC FILE_SET cpp20_modules TYPE CXX_MODULES FILES ${DNSourceModule}
+	PUBLIC FILE_SET CXX_MODULES TYPE CXX_MODULES FILES ${DNSourceModule}
 )
 
 target_link_libraries(MainSource PUBLIC hv_static protobuf::libprotobuf protobufGen libpqxx::pqxx)
@@ -92,7 +86,7 @@ file(GLOB_RECURSE srcHotReloadModule CONFIGURE_DEPENDS
 add_library(HotloadSource)
 
 target_sources(HotloadSource 
-	PUBLIC FILE_SET cpp20_modules TYPE CXX_MODULES FILES  ${srcHotReloadModule}
+	PUBLIC FILE_SET CXX_MODULES TYPE CXX_MODULES FILES  ${srcHotReloadModule}
 )
 
 target_link_libraries(HotloadSource PUBLIC MainSource)
