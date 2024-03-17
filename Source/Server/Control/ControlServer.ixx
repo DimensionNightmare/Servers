@@ -43,7 +43,7 @@ protected: // dll proxy
 	ServerEntityManager<ServerEntity>* pEntityMan;
 };
 
-module:private;
+
 
 ControlServer::ControlServer()
 {

@@ -3,7 +3,7 @@ module;
 #include "DbAfx.h"
 #include "google/protobuf/util/json_util.h"
 #include "GDef.pb.h"
-#include "GlobalAuth.pb.h"
+#include "S_Auth.pb.h"
 #include "hv/HThread.h"
 #include "hv/HttpMessage.h"
 #include "hv/HttpService.h"
@@ -22,7 +22,7 @@ import MessagePack;
 using namespace std;
 using namespace hv;
 using namespace google::protobuf;
-using namespace GMsg::GlobalAuth;
+using namespace GMsg::S_Auth;
 
 export void ApiLogin(HttpService* service)
 {
@@ -146,8 +146,6 @@ export void ApiLogin(HttpService* service)
 				co_return &response;
 			}();
 
-			client->AddMsg(msgId, &dataChannel);
-
 			// regist Close event to release memory
 			if(writerProxy->onclose)
 			{
@@ -161,9 +159,16 @@ export void ApiLogin(HttpService* service)
 				dataChannel.CallResume();
 			};
 			
-			// wait data parse
-			client->send(binData);
-			co_await dataChannel;
+			{
+				// wait data parse
+				client->AddMsg(msgId, &dataChannel);
+				client->send(binData);
+				co_await dataChannel;
+				if(dataChannel.HasFlag(DNTaskFlag::Timeout))
+				{
+					
+				}
+			}
 
 			writerProxy->onclose = nullptr;
 

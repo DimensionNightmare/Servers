@@ -1,9 +1,8 @@
 module;
 #include "StdAfx.h"
-#include "GlobalControl.pb.h"
-#include "GlobalAuth.pb.h"
-#include "CommonMsg.pb.h"
-#include "GlobalGate.pb.h"
+#include "S_Auth.pb.h"
+#include "S_Common.pb.h"
+#include "S_Global.pb.h"
 #include "hv/Channel.h"
 
 #include <map>
@@ -19,9 +18,8 @@ import :GlobalGate;
 using namespace std;
 using namespace hv;
 using namespace google::protobuf;
-using namespace GMsg::CommonMsg;
-using namespace GMsg::GlobalAuth;
-using namespace GMsg::GlobalAuth;
+using namespace GMsg::S_Common;
+using namespace GMsg::S_Auth;
 
 export class GlobalMessageHandle
 {
@@ -38,7 +36,7 @@ public:
 	> MHandleMap;
 };
 
-module :private;
+
 
 void GlobalMessageHandle::MsgHandle(const SocketChannelPtr &channel, unsigned int msgId, size_t msgHashId, const string& msgData)
 {

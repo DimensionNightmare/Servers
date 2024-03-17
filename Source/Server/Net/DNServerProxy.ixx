@@ -28,7 +28,7 @@ protected:
 	std::shared_mutex oMsgMutex;
 };
 
-module:private;
+
 
 DNServerProxy::DNServerProxy()
 {

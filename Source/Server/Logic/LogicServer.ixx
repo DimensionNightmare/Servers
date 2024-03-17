@@ -54,7 +54,7 @@ protected: // dll proxy
 	unsigned short iCtlPort;
 };
 
-module:private;
+
 
 LogicServer::LogicServer()
 {

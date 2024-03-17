@@ -20,7 +20,6 @@ using namespace google::protobuf;
 export int HandleControlServerInit(DNServer *server);
 export int HandleControlServerShutdown(DNServer *server);
 
-module:private;
 
 int HandleControlServerInit(DNServer *server)
 {
@@ -34,13 +33,17 @@ int HandleControlServerInit(DNServer *server)
 	{
 		serverSock->onConnection = nullptr;
 		serverSock->onMessage = nullptr;
-		
-		auto onConnection = [serverProxy](const SocketChannelPtr &channel)
+
+		auto onConnection = [serverProxy,serverSock](const SocketChannelPtr &channel)
 		{
 			string peeraddr = channel->peeraddr();
 			if (channel->isConnected())
 			{
 				DNPrint(2, LoggerLevel::Debug, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
+				// if not regist
+
+				// if not recive data
+				// channel->setReadTimeout(15000);
 			}
 			else
 			{

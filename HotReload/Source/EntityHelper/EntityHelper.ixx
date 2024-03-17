@@ -21,4 +21,3 @@ public:
 	uint64_t& TimerId(){return iCloseTimerId;}
 };
 
-module:private;

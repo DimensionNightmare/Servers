@@ -33,7 +33,7 @@ public:
 	> MHandleMap;
 };
 
-module :private;
+
 
 void AuthMessageHandle::MsgHandle(const SocketChannelPtr &channel, unsigned int msgId, size_t msgHashId, const string& msgData)
 {

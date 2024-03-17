@@ -1,7 +1,7 @@
 module;
 #include "StdAfx.h"
-#include "CommonMsg.pb.h"
-#include "GlobalGate.pb.h"
+#include "S_Common.pb.h"
+#include "S_Global.pb.h"
 #include "hv/Channel.h"
 
 #include <coroutine>
@@ -16,8 +16,8 @@ import ServerEntityHelper;
 using namespace std;
 using namespace hv;
 using namespace google::protobuf;
-using namespace GMsg::CommonMsg;
-using namespace GMsg::GlobalGate;
+using namespace GMsg::S_Common;
+using namespace GMsg::S_Global;
 
 // client request
 export DNTaskVoid Msg_RegistSrv()
@@ -89,11 +89,16 @@ export DNTaskVoid Msg_RegistSrv()
 	}();
 
 
-	client->AddMsg(msgId, &dataChannel);
-	
-	// wait data parse
-	client->send(binData);
-	co_await dataChannel;
+	{
+		// wait data parse
+		client->AddMsg(msgId, &dataChannel);
+		client->send(binData);
+		co_await dataChannel;
+		if(dataChannel.HasFlag(DNTaskFlag::Timeout))
+		{
+
+		}
+	}
 	
 	if(!response.success())
 	{

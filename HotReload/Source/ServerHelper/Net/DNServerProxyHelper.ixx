@@ -1,4 +1,5 @@
 module;
+#include "hv/Channel.h"
 #include "google/protobuf/message.h"
 
 #include <functional>
@@ -18,20 +19,28 @@ private:
 public:
 	unsigned int GetMsgId() { return ++iMsgId; }
 
-	auto& GetMsgMap(){ return mMsgList; }
-
-	bool AddMsg(unsigned int msgId, DNTask<Message*>* msg);
+	bool AddMsg(unsigned int msgId, DNTask<Message*>* msg, int breakTime = 10000);
 	DNTask<Message*>* GetMsg(unsigned int msgId);
 	void DelMsg(unsigned int msgId);
+
+	void TickHeartbeat(hio_t *io);
 };
 
-
-module:private;
-
-bool DNServerProxyHelper::AddMsg(unsigned int msgId, DNTask<Message *> *msg)
+bool DNServerProxyHelper::AddMsg(unsigned int msgId, DNTask<Message *> *msg, int breakTime)
 {
 	unique_lock<shared_mutex> ulock(oMsgMutex);
 	mMsgList.emplace(msgId, msg);
+	if(breakTime > 0)
+	{
+		loop()->setTimeout(breakTime, [this,msgId](uint64_t timerID)
+		{
+			if(DNTask<Message *>* task = GetMsg(msgId))
+			{
+				DelMsg(msgId);
+				task->CallResume();
+			}
+		});
+	}
 	return true;
 }
 
@@ -50,3 +59,14 @@ void DNServerProxyHelper::DelMsg(unsigned int msgId)
 	unique_lock<shared_mutex> ulock(oMsgMutex);
 	mMsgList.erase(msgId);
 }
+
+void DNServerProxyHelper::TickHeartbeat(hio_t* io)
+{
+	hv::SocketChannel* channel = (hv::SocketChannel*)hio_context(io);
+	//Regist?
+	if(!channel->context())
+	{
+		channel->close(true);
+		return;
+	}
+};

@@ -21,7 +21,7 @@ using namespace google::protobuf;
 export int HandleDatabaseServerInit(DNServer *server);
 export int HandleDatabaseServerShutdown(DNServer *server);
 
-module:private;
+
 
 int HandleDatabaseServerInit(DNServer *server)
 {

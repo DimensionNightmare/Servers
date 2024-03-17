@@ -1,5 +1,5 @@
 module;
-#include "CommonMsg.pb.h"
+#include "S_Common.pb.h"
 #include "hv/Channel.h"
 
 export module ControlMessage:ControlCommon;
@@ -11,7 +11,7 @@ import ServerEntityHelper;
 import DNServer;
 
 using namespace google::protobuf;
-using namespace GMsg::CommonMsg;
+using namespace GMsg::S_Common;
 using namespace hv;
 using namespace std;
 
@@ -54,4 +54,9 @@ export void Exe_ReqRegistSrv(const SocketChannelPtr &channel, unsigned int msgId
 
 	MessagePack(msgId, MsgDeal::Res, nullptr, binData);
 	channel->write(binData);
+}
+
+export void Exe_RetHeartbeat(const SocketChannelPtr &channel, unsigned int msgId, Message *msg)
+{
+	COM_RetHeartbeat* requset = (COM_RetHeartbeat*)msg;
 }

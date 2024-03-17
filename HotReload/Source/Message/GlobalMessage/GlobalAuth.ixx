@@ -1,7 +1,6 @@
 module;
-#include "GlobalAuth.pb.h"
-#include "GlobalGate.pb.h"
-#include "GlobalControl.pb.h"
+#include "S_Auth.pb.h"
+#include "S_Global.pb.h"
 #include "hv/Channel.h"
 
 #include <coroutine>
@@ -17,8 +16,8 @@ import ServerEntityHelper;
 using namespace std;
 using namespace hv;
 using namespace google::protobuf;
-using namespace GMsg::GlobalAuth;
-using namespace GMsg::GlobalGate;
+using namespace GMsg::S_Auth;
+using namespace GMsg::S_Global;
 
 #define CastObj(entity) static_cast<ServerEntityHelper*>(entity)
 
@@ -50,11 +49,11 @@ export DNTaskVoid Exe_ReqAuthAccount(const SocketChannelPtr &channel, unsigned i
 		response.set_state_code(0);
 		response.set_ip_addr( format("{}:{}", entity->ServerIp(), entity->ServerPort() ));
 
-		G2G_ReqUserToken tokenReq;
+		G2G_ReqLoginToken tokenReq;
 		tokenReq.set_account_id(requset->account_id());
 		tokenReq.set_ip(requset->ip());
 
-		G2G_ResUserToken tokenRes;
+		G2G_ResLoginToken tokenRes;
 
 		auto server = GetGlobalServer()->GetSSock();
 		unsigned int smsgId = server->GetMsgId();
@@ -71,12 +70,20 @@ export DNTaskVoid Exe_ReqAuthAccount(const SocketChannelPtr &channel, unsigned i
 			co_return &tokenRes;
 		}();
 
-		server->AddMsg(smsgId, &dataChannel);
-		entity->GetChild()->GetSock()->write(binData);
-		co_await dataChannel;
+		{
+			server->AddMsg(smsgId, &dataChannel);
+			entity->GetChild()->GetSock()->write(binData);
+			co_await dataChannel;
+			if(dataChannel.HasFlag(DNTaskFlag::Timeout))
+			{
+
+			}
+		}
 
 		response.set_token(tokenRes.token());
 		response.set_expired_timespan(tokenRes.expired_timespan());
+
+		dataChannel.Destroy();
 	}
 	else
 	{

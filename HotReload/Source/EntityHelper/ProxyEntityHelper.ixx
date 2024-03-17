@@ -28,4 +28,3 @@ public:
 	unsigned int & ExpireTime(){ return iExpireTime; }
 };
 
-module:private;

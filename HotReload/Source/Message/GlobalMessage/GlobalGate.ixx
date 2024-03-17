@@ -1,5 +1,5 @@
 module;
-#include "GlobalGate.pb.h"
+#include "S_Global.pb.h"
 #include "hv/Channel.h"
 
 #include <coroutine>
@@ -13,7 +13,7 @@ import ServerEntityHelper;
 using namespace std;
 using namespace hv;
 using namespace google::protobuf;
-using namespace GMsg::GlobalGate;
+using namespace GMsg::S_Global;
 
 export void Exe_RetRegistSrv(const SocketChannelPtr &channel, unsigned int msgId, Message *msg)
 {

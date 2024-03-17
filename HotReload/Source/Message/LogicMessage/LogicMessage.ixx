@@ -1,6 +1,6 @@
 module;
 #include "StdAfx.h"
-#include "CommonMsg.pb.h"
+#include "S_Common.pb.h"
 #include "hv/Channel.h"
 
 #include <map>
@@ -13,7 +13,7 @@ export import :LogicCommon;
 using namespace std;
 using namespace hv;
 using namespace google::protobuf;
-using namespace GMsg::CommonMsg;
+using namespace GMsg::S_Common;
 
 export class LogicMessageHandle
 {
@@ -30,7 +30,7 @@ public:
 	> MHandleMap;
 };
 
-module :private;
+
 
 void LogicMessageHandle::MsgHandle(const SocketChannelPtr &channel, unsigned int msgId, size_t msgHashId, const string& msgData)
 {

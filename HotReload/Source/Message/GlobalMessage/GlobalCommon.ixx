@@ -1,5 +1,5 @@
 module;
-#include "CommonMsg.pb.h"
+#include "S_Common.pb.h"
 #include "hv/Channel.h"
 
 export module GlobalMessage:GlobalCommon;
@@ -10,7 +10,7 @@ import GlobalServerHelper;
 import ServerEntityHelper;
 
 using namespace google::protobuf;
-using namespace GMsg::CommonMsg;
+using namespace GMsg::S_Common;
 using namespace hv;
 using namespace std;
 

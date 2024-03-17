@@ -47,7 +47,7 @@ protected: // dll proxy
 	unsigned short iCtlPort;
 };
 
-module:private;
+
 
 DatabaseServer::DatabaseServer()
 {

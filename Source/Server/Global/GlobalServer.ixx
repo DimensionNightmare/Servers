@@ -50,7 +50,7 @@ protected: // dll proxy
 	ServerEntityManager<ServerEntity>* pEntityMan;
 };
 
-module:private;
+
 
 GlobalServer::GlobalServer()
 {

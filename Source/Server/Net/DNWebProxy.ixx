@@ -12,4 +12,3 @@ public:
 public: // dll override
 };
 
-module:private;

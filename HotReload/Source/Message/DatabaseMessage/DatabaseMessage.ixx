@@ -1,6 +1,6 @@
 module;
 #include "StdAfx.h"
-#include "CommonMsg.pb.h"
+#include "S_Common.pb.h"
 #include "hv/Channel.h"
 
 #include <map>
@@ -13,7 +13,7 @@ export import :DatabaseCommon;
 using namespace std;
 using namespace hv;
 using namespace google::protobuf;
-using namespace GMsg::CommonMsg;
+using namespace GMsg::S_Common;
 
 export class DatabaseMessageHandle
 {
@@ -30,7 +30,7 @@ public:
 	> MHandleMap;
 };
 
-module :private;
+
 
 void DatabaseMessageHandle::MsgHandle(const SocketChannelPtr &channel, unsigned int msgId, size_t msgHashId, const string& msgData)
 {

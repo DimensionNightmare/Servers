@@ -30,7 +30,7 @@ protected: // dll proxy
 	shared_mutex oMapMutex;
 };
 
-module:private;
+
 
 template <class TEntity>
 ServerEntityManager<TEntity>::ServerEntityManager()

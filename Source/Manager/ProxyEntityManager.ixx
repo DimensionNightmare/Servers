@@ -26,7 +26,7 @@ protected: // dll proxy
 	shared_mutex oMapMutex;
 };
 
-module:private;
+
 
 template <class TEntity>
 ProxyEntityManager<TEntity>::ProxyEntityManager()

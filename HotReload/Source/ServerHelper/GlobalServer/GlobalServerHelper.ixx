@@ -1,5 +1,5 @@
 module;
-#include "CommonMsg.pb.h"
+#include "S_Common.pb.h"
 #include "hv/Channel.h"
 
 #include <assert.h>
@@ -15,7 +15,7 @@ import MessagePack;
 
 using namespace std;
 using namespace hv;
-using namespace GMsg::CommonMsg;
+using namespace GMsg::S_Common;
 
 #define CastObj(entity) static_cast<ServerEntityHelper*>(entity)
 
@@ -30,6 +30,9 @@ public:
 	ServerEntityManagerHelper<ServerEntity>* GetEntityManager(){ return nullptr;}
 
 	void UpdateServerGroup();
+
+public:
+	static void TickHeartbeat(hio_t* io);
 };
 
 static GlobalServerHelper* PGlobalServerHelper = nullptr;
@@ -126,3 +129,14 @@ void GlobalServerHelper::UpdateServerGroup()
 		
 	}
 }
+
+void GlobalServerHelper::TickHeartbeat(hio_t* io)
+{
+	SocketChannel* channel = (SocketChannel*)hio_context(io);
+	//Regist?
+	if(!channel->context())
+	{
+		channel->close(true);
+		return;
+	}
+};

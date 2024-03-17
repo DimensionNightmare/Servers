@@ -1,7 +1,6 @@
 module;
 #include "StdAfx.h"
-#include "CommonMsg.pb.h"
-#include "GlobalControl.pb.h"
+#include "S_Common.pb.h"
 
 #include <coroutine>
 export module GlobalMessage:GlobalControl;
@@ -13,7 +12,7 @@ import GlobalServerHelper;
 
 using namespace std;
 using namespace google::protobuf;
-using namespace GMsg::CommonMsg;
+using namespace GMsg::S_Common;
 
 // client request
 export DNTaskVoid Msg_RegistSrv()
@@ -61,12 +60,16 @@ export DNTaskVoid Msg_RegistSrv()
 		co_return &response;
 	}();
 
+	{
+		// wait data parse
+		client->AddMsg(msgId, &dataChannel);
+		client->send(binData);
+		co_await dataChannel;
+		if(dataChannel.HasFlag(DNTaskFlag::Timeout))
+		{
 
-	client->AddMsg(msgId, &dataChannel);
-	
-	// wait data parse
-	client->send(binData);
-	co_await dataChannel;
+		}
+	}
 	
 	if(!response.success())
 	{

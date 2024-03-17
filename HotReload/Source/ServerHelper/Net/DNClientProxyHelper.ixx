@@ -1,6 +1,6 @@
 module;
 #include "StdAfx.h"
-#include "google/protobuf/message.h"
+#include "S_Common.pb.h"
 #include "hv/TcpClient.h"
 
 #include <functional>
@@ -8,6 +8,7 @@ module;
 export module DNClientProxyHelper;
 
 import DNClientProxy;
+import MessagePack;
 
 using namespace std;
 using namespace hv;
@@ -28,21 +29,20 @@ public:
 
 	unsigned int GetMsgId() { return ++iMsgId; }
 
-	auto& GetMsgMap(){ return mMsgList; }
-
 	// regist to controlserver
 	bool IsRegisted(){return bIsRegisted;}
 	void SetRegisted(bool isRegisted){bIsRegisted = isRegisted;}
 	void SetIsRegisting(bool state) { bIsRegisting = state;}
 	void SetRegistEvent(function<void()> event);
-
+	// client status
 	ProxyStatus UpdateClientState(Channel::Status state);
-	void StartRegist();
 	void ServerDisconnect();
-
-	bool AddMsg(unsigned int msgId, DNTask<Message*>* msg);
+	// msg
+	bool AddMsg(unsigned int msgId, DNTask<Message*>* msg, int breakTime = 10000);
 	DNTask<Message*>* GetMsg(unsigned int msgId);
 	void DelMsg(unsigned int msgId);
+	// heartbeat
+	void TickHeartbeat();
 };
 
 #pragma region // ClientReconnectFunc
@@ -61,7 +61,6 @@ export std::function<void(const char*, int)> GetClientReconnectFunc()
 
 #pragma endregion
 
-module:private;
 
 void DNClientProxyHelper::SetRegistEvent(function<void()> event)
 {
@@ -81,7 +80,7 @@ ProxyStatus DNClientProxyHelper::UpdateClientState(Channel::Status state)
 	{
 	case Channel::Status::CONNECTED :
 		{
-			StartRegist();
+			loop()->setInterval(1000, std::bind(&DNClientProxy::TickRegistEvent, (DNClientProxy*)this, placeholders::_1));
 			return ProxyStatus::Open;
 		}
 
@@ -97,50 +96,35 @@ ProxyStatus DNClientProxyHelper::UpdateClientState(Channel::Status state)
 
 }
 
-void DNClientProxyHelper::StartRegist()
-{
-	// setInterval can!t runtime modify
-	loop()->setInterval(1000, [this](uint64_t timerID)
-	{
-		if(bIsRegisting)
-		{
-			return;
-		}
-		
-		if (channel->isConnected() && !IsRegisted()) 
-		{
-			if(pRegistEvent)
-			{
-				pRegistEvent();
-			}
-			else
-			{
-				DNPrint(16, LoggerLevel::Error, nullptr);
-			}
-		} 
-		else 
-		{
-			loop()->killTimer(timerID);
-		}
-	});
-}
-
 void DNClientProxyHelper::ServerDisconnect()
 {
 	SetRegisted(false);
 
 	for(auto& [k,v] : mMsgList)
 	{
-		v->Destroy();
+		v->CallResume();
 	}
 		
 	mMsgList.clear();
 }
 
-bool DNClientProxyHelper::AddMsg(unsigned int msgId, DNTask<Message *> *msg)
+bool DNClientProxyHelper::AddMsg(unsigned int msgId, DNTask<Message *> *msg, int breakTime)
 {
 	unique_lock<shared_mutex> ulock(oMsgMutex);
 	mMsgList.emplace(msgId, msg);
+	// timeout
+	if(breakTime > 0)
+	{
+		loop()->setTimeout(breakTime, [this,msgId](uint64_t timerID)
+		{
+			if(DNTask<Message *>* task = GetMsg(msgId))
+			{
+				DelMsg(msgId);
+				task->SetFlag(DNTaskFlag::Timeout);
+				task->CallResume();
+			}
+		});
+	}
 	return true;
 }
 
@@ -158,4 +142,21 @@ void DNClientProxyHelper::DelMsg(unsigned int msgId)
 {
 	unique_lock<shared_mutex> ulock(oMsgMutex);
 	mMsgList.erase(msgId);
+}
+
+void DNClientProxyHelper::TickHeartbeat()
+{
+	static GMsg::S_Common::COM_RetHeartbeat requset;
+	requset.Clear();
+	int timespan = chrono::duration_cast<chrono::seconds>(chrono::system_clock::now().time_since_epoch()).count();
+	requset.set_timespan(timespan);
+
+	static string binData;
+	binData.clear();
+	binData.resize(requset.ByteSize());
+	requset.SerializeToArray(binData.data(), binData.size());
+
+	MessagePack(0, MsgDeal::Req, requset.GetDescriptor()->full_name().c_str(), binData);
+	
+	send(binData);
 }

@@ -15,7 +15,6 @@ export enum class MsgDeal : unsigned char
 {
 	Req = 1, 	// msg deal with
 	Res, 		//
-	Ret,
 };
 
 #pragma pack(1) // net struct need this
@@ -43,7 +42,7 @@ int MessagePacket::PackLenth = sizeof MessagePacket;
 export bool MessagePack(unsigned int msgId, MsgDeal deal, const char* pbName, string &data);
 
 // implement
-module :private;
+
 
 bool MessagePack(unsigned int msgId, MsgDeal deal,  const char* pbName, string &data)
 {

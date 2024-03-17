@@ -21,7 +21,7 @@ protected: // dll proxy
     map<unsigned int, TEntity*> mEntityMap;
 };
 
-module:private;
+
 
 template <class TEntity>
 EntityManager<TEntity>::EntityManager()

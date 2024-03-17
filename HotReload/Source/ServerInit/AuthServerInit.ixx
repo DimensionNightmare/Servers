@@ -19,7 +19,6 @@ using namespace google::protobuf;
 export int HandleAuthServerInit(DNServer *server);
 export int HandleAuthServerShutdown(DNServer *server);
 
-module:private;
 
 int HandleAuthServerInit(DNServer *server)
 {
@@ -52,6 +51,8 @@ int HandleAuthServerInit(DNServer *server)
 			if (channel->isConnected())
 			{
 				DNPrint(2, LoggerLevel::Debug, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
+				// channel->setHeartbeat(4000, std::bind(&DNClientProxyHelper::TickHeartbeat, clientSock));
+				// channel->setWriteTimeout(12000);
 			}
 			else
 			{

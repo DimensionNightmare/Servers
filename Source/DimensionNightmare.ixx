@@ -26,8 +26,8 @@ using namespace std;
 
 struct HotReloadDll
 {
-	inline static string SDllDir = "Runtime";
-	inline static string SDllName = "HotReload";
+	inline static const char* SDllDir = "Runtime";
+	inline static const char* SDllName = "HotReload";
 
 	string sDllDirRand;
 #ifdef _WIN32
@@ -53,7 +53,9 @@ struct HotReloadDll
 		// }
 		// oLibHandle = LoadLibraryEx((SDllName).c_str(), NULL, LOAD_LIBRARY_SEARCH_USER_DIRS);
 		// oLibHandle = LoadLibraryEx(SDllName.c_str(), NULL, DONT_RESOLVE_DLL_REFERENCES | LOAD_LIBRARY_SEARCH_DEFAULT_DIRS); //DONT_RESOLVE_DLL_REFERENCES |
-		oLibHandle = LoadLibrary(SDllName.c_str());
+		constexpr size_t subLen = sizeof(SDllDir);
+		SetConsoleTitleA(sDllDirRand.substr(subLen).c_str());
+		oLibHandle = LoadLibrary(SDllName);
 #endif
 		if (!oLibHandle)
 		{
@@ -92,7 +94,7 @@ struct HotReloadDll
 
 		FreeHandle();
 
-		if (SDllName.empty())
+		if (!SDllName)
 		{
 			DNPrint( 4, LoggerLevel::Error,nullptr);
 			return false;
@@ -100,7 +102,7 @@ struct HotReloadDll
 
 		sDllDirRand = format("{}_{}_{}", SDllDir, EnumName(type), hv_rand(10000, 99999));
 		filesystem::create_directories(sDllDirRand.c_str());
-		filesystem::copy(SDllDir.c_str(), sDllDirRand.c_str(), filesystem::copy_options::overwrite_existing);
+		filesystem::copy(SDllDir, sDllDirRand.c_str(), filesystem::copy_options::overwrite_existing);
 
 		return LoadHandle();
 	};
@@ -166,7 +168,7 @@ private:
 
 export DimensionNightmare *GetDimensionNightmare();
 
-module:private;
+
 
 DimensionNightmare *GetDimensionNightmare()
 {

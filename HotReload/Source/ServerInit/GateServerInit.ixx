@@ -20,7 +20,7 @@ using namespace google::protobuf;
 export int HandleGateServerInit(DNServer *server);
 export int HandleGateServerShutdown(DNServer *server);
 
-module:private;
+
 
 int HandleGateServerInit(DNServer *server)
 {

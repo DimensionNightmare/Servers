@@ -1,4 +1,5 @@
 module;
+#include "StdAfx.h"
 #include "hv/TcpClient.h"
 #include "google/protobuf/message.h"
 
@@ -18,6 +19,7 @@ public:
 	~DNClientProxy();
 
 public: // dll override
+	void TickRegistEvent(size_t timerID);
 
 protected: // dll proxy
 	// only oddnumber
@@ -36,7 +38,7 @@ protected: // dll proxy
 	bool bIsRegisting;
 };
 
-module:private;
+
 
 DNClientProxy::DNClientProxy()
 {
@@ -56,4 +58,28 @@ DNClientProxy::~DNClientProxy()
 	}
 		
 	mMsgList.clear();
+}
+
+void DNClientProxy::TickRegistEvent(size_t timerID)
+{
+	if(bIsRegisting)
+	{
+		return;
+	}
+	
+	if (channel->isConnected() && !bIsRegisted) 
+	{
+		if(pRegistEvent)
+		{
+			pRegistEvent();
+		}
+		else
+		{
+			DNPrint(16, LoggerLevel::Error, nullptr);
+		}
+	} 
+	else 
+	{
+		loop()->killTimer(timerID);
+	}
 }

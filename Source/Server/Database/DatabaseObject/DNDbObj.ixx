@@ -507,7 +507,7 @@ private:
 	int iExecResultCount;
 };
 
-module:private;
+
 
 template <class TMessage>
 DNDbObj<TMessage>::DNDbObj()

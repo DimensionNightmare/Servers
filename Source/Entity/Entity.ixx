@@ -34,7 +34,7 @@ protected: // dll proxy
 	EntityType emType;
 };
 
-module:private;
+
 
 Entity::Entity()
 {

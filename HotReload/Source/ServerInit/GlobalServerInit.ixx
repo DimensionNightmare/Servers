@@ -21,7 +21,7 @@ using namespace google::protobuf;
 export int HandleGlobalServerInit(DNServer *server);
 export int HandleGlobalServerShutdown(DNServer *server);
 
-module:private;
+
 
 int HandleGlobalServerInit(DNServer *server)
 {
@@ -42,6 +42,8 @@ int HandleGlobalServerInit(DNServer *server)
 			if (channel->isConnected())
 			{
 				DNPrint(2, LoggerLevel::Debug, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
+				// if not regist
+				// hio_set_heartbeat(channel->io(), 5000, &GlobalServerHelper::TickHeartbeat);
 			}
 			else
 			{

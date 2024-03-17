@@ -1,7 +1,5 @@
 module;
-#include "GlobalAuth.pb.h"
-#include "GlobalGate.pb.h"
-#include "GlobalControl.pb.h"
+#include "S_Auth.pb.h"
 #include "hv/Channel.h"
 
 #include <coroutine>
@@ -15,8 +13,7 @@ import ServerEntityHelper;
 using namespace std;
 using namespace hv;
 using namespace google::protobuf;
-using namespace GMsg::GlobalAuth;
-using namespace GMsg::GlobalGate;
+using namespace GMsg::S_Auth;
 
 export DNTaskVoid Exe_ReqAuthAccount(const SocketChannelPtr &channel, unsigned int msgId, Message *msg)
 {
@@ -64,16 +61,23 @@ export DNTaskVoid Exe_ReqAuthAccount(const SocketChannelPtr &channel, unsigned i
 
 		auto server = GetControlServer()->GetSSock();
 		unsigned int smsgId = server->GetMsgId();
-		server->AddMsg(smsgId, &dataChannel);
 
 		binData.resize(requset->ByteSize());
 		requset->SerializeToArray(binData.data(), binData.size());
 		MessagePack(smsgId, MsgDeal::Req, requset->GetDescriptor()->full_name().c_str(), binData);
 		
-		// wait data parse
-		entity->GetChild()->GetSock()->write(binData);
-		co_await dataChannel;
+		{
+			// wait data parse
+			server->AddMsg(smsgId, &dataChannel);
+			entity->GetChild()->GetSock()->write(binData);
+			co_await dataChannel;
+			if(dataChannel.HasFlag(DNTaskFlag::Timeout))
+			{
 
+			}
+		}
+
+		dataChannel.Destroy();
 	}
 
 	

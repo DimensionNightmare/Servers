@@ -1,9 +1,15 @@
 module;
 
 #include <coroutine>
+#include <bitset>
 export module DNTask;
 
 using namespace std;
+
+export enum class DNTaskFlag : int
+{
+	Timeout = 0,
+};
 
 export template <typename T>
 struct DNTask
@@ -83,9 +89,15 @@ struct DNTask
 			tHandle.destroy();
 		}
 	}
+public:
+	bool HasFlag(DNTaskFlag flag){ return oFlags.test(int(flag));}
+	void SetFlag(DNTaskFlag flag){ oFlags.set(int(flag));}
+	void ClearFlag(DNTaskFlag flag){ oFlags.reset(int(flag));}
 
+private:
 	HandleType tHandle;
 	coroutine_handle<> pCallPause;
+	bitset<1> oFlags;
 };
 
 export struct DNTaskVoid

@@ -25,7 +25,7 @@ protected: // dll proxy
 	unsigned int iExpireTime;
 };
 
-module:private;
+
 
 ProxyEntity::ProxyEntity():Entity()
 {

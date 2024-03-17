@@ -1,6 +1,6 @@
 module;
-#include "GlobalGate.pb.h"
-#include "ProxyLogin.pb.h"
+#include "S_Global.pb.h"
+#include "C_Login.pb.h"
 #include "hv/Channel.h"
 
 #include <coroutine>
@@ -15,13 +15,13 @@ import Utils.StrUtils;
 using namespace std;
 using namespace hv;
 using namespace google::protobuf;
-using namespace GMsg::GlobalGate;
-using namespace GMsg::ProxyLogin;
+using namespace GMsg::S_Global;
+using namespace GMsg::C_Login;
 
 export void Exe_ReqUserToken(const SocketChannelPtr &channel, unsigned int msgId, Message *msg)
 {
-	G2G_ReqUserToken* requset = (G2G_ReqUserToken*)msg;
-	G2G_ResUserToken response;
+	G2G_ReqLoginToken* requset = (G2G_ReqLoginToken*)msg;
+	G2G_ResLoginToken response;
 
 	string binData;
 

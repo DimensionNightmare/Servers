@@ -1,6 +1,6 @@
 module;
 #include "StdAfx.h"
-#include "CommonMsg.pb.h"
+#include "S_Common.pb.h"
 #include "hv/Channel.h"
 
 #include <coroutine>
@@ -13,7 +13,7 @@ import LogicServerHelper;
 
 using namespace std;
 using namespace google::protobuf;
-using namespace GMsg::CommonMsg;
+using namespace GMsg::S_Common;
 using namespace hv;
 
 // client request
@@ -53,12 +53,16 @@ export DNTaskVoid Msg_RegistSrv()
 		co_return &response;
 	}();
 
+	{
+		// wait data parse
+		client->AddMsg(msgId, &dataChannel);
+		client->send(binData);
+		co_await dataChannel;
+		if(dataChannel.HasFlag(DNTaskFlag::Timeout))
+		{
 
-	client->AddMsg(msgId, &dataChannel);
-	
-	// wait data parse
-	client->send(binData);
-	co_await dataChannel;
+		}
+	}
 	
 	if(!response.success())
 	{

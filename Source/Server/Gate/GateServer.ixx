@@ -51,7 +51,7 @@ protected: // dll proxy
 	ProxyEntityManager<ProxyEntity>* pProxyEntityMan;
 };
 
-module:private;
+
 
 GateServer::GateServer()
 {

@@ -34,7 +34,7 @@ protected: // dll proxy
 	bitset<1> oFlags;
 };
 
-module:private;
+
 
 ServerEntity::ServerEntity():Entity()
 {

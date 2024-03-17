@@ -21,7 +21,7 @@ using namespace google::protobuf;
 export int HandleLogicServerInit(DNServer *server);
 export int HandleLogicServerShutdown(DNServer *server);
 
-module:private;
+
 
 int HandleLogicServerInit(DNServer *server)
 {

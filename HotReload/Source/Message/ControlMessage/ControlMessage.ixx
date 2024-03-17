@@ -1,8 +1,7 @@
 module;
 #include "StdAfx.h"
-#include "CommonMsg.pb.h"
-#include "GlobalControl.pb.h"
-#include "GlobalAuth.pb.h"
+#include "S_Common.pb.h"
+#include "S_Auth.pb.h"
 #include "hv/Channel.h"
 
 #include <map>
@@ -17,9 +16,8 @@ using namespace std;
 using namespace hv;
 using namespace google::protobuf;
 
-using namespace GMsg::CommonMsg;
-using namespace GMsg::GlobalControl;
-using namespace GMsg::GlobalAuth;
+using namespace GMsg::S_Common;
+using namespace GMsg::S_Auth;
 
 export class ControlMessageHandle
 {
@@ -36,7 +34,7 @@ public:
 	> MHandleMap;
 };
 
-module :private;
+
 
 void ControlMessageHandle::MsgHandle(const SocketChannelPtr &channel, unsigned int msgId, size_t msgHashId, const string& msgData)
 {
@@ -72,4 +70,7 @@ void ControlMessageHandle::RegMsgHandle()
 
 	msg = A2G_ReqAuthAccount::internal_default_instance();
 	MHandleMap.emplace( hashStr(msg->GetDescriptor()->full_name()), make_pair(msg, &Exe_ReqAuthAccount));
+
+	msg = COM_RetHeartbeat::internal_default_instance();
+	MHandleMap.emplace( hashStr(msg->GetDescriptor()->full_name()), make_pair(msg, &Exe_RetHeartbeat));
 }

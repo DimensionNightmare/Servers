@@ -49,7 +49,7 @@ protected: // dll proxy
 	pqxx::connection* pConnection;
 };
 
-module:private;
+
 
 AuthServer::AuthServer()
 {
