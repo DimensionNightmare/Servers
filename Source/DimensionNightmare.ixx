@@ -42,9 +42,11 @@ struct HotReloadDll
 		// int ret = SetDefaultDllDirectories(LOAD_LIBRARY_SEARCH_USER_DIRS);
 		// ret = SetDllDirectory(sDllDirRand.c_str());
 		string fullPath = filesystem::current_path().append(sDllDirRand).string();
-		wstring wstr(fullPath.begin(), fullPath.end());
+		// wstring wstr(fullPath.begin(), fullPath.end());
 		// AddDllDirectory(wstr.c_str());
-		SetDllDirectoryW(wstr.c_str());
+		SetDllDirectory(fullPath.c_str());
+
+		SetEnvironmentVariable("PATH", "./Bin;%PATH%");
 
 		// if(!ret)
 		// {
@@ -54,7 +56,7 @@ struct HotReloadDll
 		// oLibHandle = LoadLibraryEx((SDllName).c_str(), NULL, LOAD_LIBRARY_SEARCH_USER_DIRS);
 		// oLibHandle = LoadLibraryEx(SDllName.c_str(), NULL, DONT_RESOLVE_DLL_REFERENCES | LOAD_LIBRARY_SEARCH_DEFAULT_DIRS); //DONT_RESOLVE_DLL_REFERENCES |
 		constexpr size_t subLen = sizeof(SDllDir);
-		SetConsoleTitleA(sDllDirRand.substr(subLen).c_str());
+		SetConsoleTitle(sDllDirRand.substr(subLen).c_str());
 		oLibHandle = LoadLibrary(SDllName);
 #endif
 		if (!oLibHandle)
@@ -307,7 +309,6 @@ bool DimensionNightmare::InitConfig(map<string, string> &param)
 	pl10n = new DNl10n();
 	if(!pl10n->InitConfigData())
 	{
-		printf("Load I10n Config Error!!");
 		return false;
 	}
 

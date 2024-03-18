@@ -5,8 +5,8 @@
 			"name": "windows-base",
 			"hidden": true,
 			"generator": "Ninja",
-			"binaryDir": "${sourceDir}/Out/build/${presetName}",
-			"installDir": "${sourceDir}/Out/build/install/${presetName}",
+			"binaryDir": "${sourceDir}/Out/Build/${presetName}",
+			"installDir": "${sourceDir}/Out/Install/${presetName}",
 			"cacheVariables": {
 				"CMAKE_C_COMPILER": "cl.exe",
 				"CMAKE_CXX_COMPILER": "cl.exe"
@@ -41,10 +41,11 @@
 			"name": "GNU",
 			"displayName": "GCC 10.5.0 x86_64-linux-gnu",
 			"description": "使用编译器: C = /usr/bin/gcc-10, CXX = /usr/bin/g++-10",
-			"binaryDir": "${sourceDir}/Out/build/${presetName}",
+			"binaryDir": "${sourceDir}/Out/Build/${presetName}",
+			"installDir": "${sourceDir}/Out/Install/${presetName}",
 			"generator": "Ninja",
 			"cacheVariables": {
-				"CMAKE_INSTALL_PREFIX": "${sourceDir}/Out/install/${presetName}",
+				"CMAKE_INSTALL_PREFIX": "${sourceDir}/Out/Install/${presetName}",
 				"CMAKE_C_COMPILER": "/usr/bin/gcc-10",
 				"CMAKE_CXX_COMPILER": "/usr/bin/g++-10",
 				"CMAKE_BUILD_TYPE": "Debug"

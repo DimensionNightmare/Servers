@@ -33,7 +33,6 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
 	endif()
 
 	set(CMAKE_EXPERIMENTAL_CXX_MODULE_DYNDEP ON)
-	set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /Od")
 	
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 
@@ -92,7 +91,6 @@ target_sources(HotloadSource
 )
 
 target_link_libraries(HotloadSource PUBLIC MainSource)
-
 set_property(TARGET HotloadSource PROPERTY CXX_STANDARD 23)
 
 add_library( HotReload SHARED "HotReload/HotReload.cpp")
@@ -121,7 +119,29 @@ if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET DNTest PROPERTY CXX_STANDARD 23)
 endif()
 
+set_target_properties(DNTest PROPERTIES EXCLUDE_FROM_ALL TRUE)
+
 # TODO: 如有需要，请添加测试并安装目标。
 
 add_custom_target(MainTarget)
 add_dependencies(MainTarget DimensionNightmareServer HotReload)
+
+if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+	install(TARGETS DimensionNightmareServer DESTINATION ${CMAKE_INSTALL_PREFIX})
+	
+	install(TARGETS HotReload RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/Runtime)
+
+	install(FILES 
+		${PostgreSQL_LIBRARY_DIRS}/../bin/libpq.dll 
+		${PostgreSQL_LIBRARY_DIRS}/../bin/libcrypto-3-x64.dll
+		${PostgreSQL_LIBRARY_DIRS}/../bin/libiconv-2.dll
+		${PostgreSQL_LIBRARY_DIRS}/../bin/libintl-9.dll
+		${PostgreSQL_LIBRARY_DIRS}/../bin/libssl-3-x64.dll
+		${PostgreSQL_LIBRARY_DIRS}/../bin/libwinpthread-1.dll
+		DESTINATION ${CMAKE_INSTALL_PREFIX}/Bin)
+
+
+	install(FILES Config/Server.ini  DESTINATION ${CMAKE_INSTALL_PREFIX}/Config)
+	install(DIRECTORY ../Environment/GameConfig/Gen/Data DESTINATION ${CMAKE_INSTALL_PREFIX})
+	
+endif()
