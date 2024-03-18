@@ -282,7 +282,7 @@ bool DimensionNightmare::InitConfig(map<string, string> &param)
 				if (pos != string::npos) 
 				{
 					string key = split.substr(0, pos);
-					if(param.count(key)) 
+					if(param.contains(key)) 
 					{
 						continue;
 					}

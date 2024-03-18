@@ -26,8 +26,9 @@ export void Exe_ReqUserToken(const SocketChannelPtr &channel, unsigned int msgId
 	string binData;
 
 	GateServerHelper* dnServer = GetGateServer();
+	ProxyEntityManagerHelper<ProxyEntity>* entityMan = dnServer->GetProxyEntityManager();
 	ProxyEntityHelper* entity = nullptr;
-	if(entity = dnServer->GetProxyEntityManager()->GetEntity(requset->account_id()))
+	if(entity = entityMan->GetEntity(requset->account_id()))
 	{
 		//exit
 		if(SocketChannelPtr online = entity->GetChild()->GetSock())
@@ -38,7 +39,7 @@ export void Exe_ReqUserToken(const SocketChannelPtr &channel, unsigned int msgId
 
 			binData.resize(replace.ByteSizeLong());
 			replace.SerializeToArray(binData.data(), (int)binData.size());
-			MessagePack(0, MsgDeal::Req, replace.GetDescriptor()->full_name().c_str(), binData);
+			MessagePack(0, MsgDeal::Ret, replace.GetDescriptor()->full_name().c_str(), binData);
 
 			online->setContext(nullptr);
 			online->write(binData);
@@ -49,7 +50,7 @@ export void Exe_ReqUserToken(const SocketChannelPtr &channel, unsigned int msgId
 	}
 	else
 	{
-		entity = dnServer->GetProxyEntityManager()->AddEntity(requset->account_id());
+		entity = entityMan->AddEntity(requset->account_id());
 
 		string& token = entity->Token();
 		token = GetNowTimeStr();
@@ -65,10 +66,10 @@ export void Exe_ReqUserToken(const SocketChannelPtr &channel, unsigned int msgId
 
 	if(!entity->GetChild()->TimerId())
 	{
-		entity->GetChild()->TimerId() = dnServer->GetSSock()->loop(0)->setTimeout(30000, [entity](uint64_t timerId)
-		{
-			GetGateServer()->GetProxyEntityManager()->RemoveEntity(entity->GetChild()->ID());
-		});
+		entity->GetChild()->TimerId() = dnServer->GetSSock()->loop(0)->setTimeout(30000, 
+			std::bind(&ProxyEntityManager<ProxyEntity>::EntityTimeoutTimer, (ProxyEntityManager<ProxyEntity>*)entityMan, placeholders::_1));
+
+		entityMan->AddCloseTimer(entity->GetChild()->TimerId(), entity->GetChild()->ID());
 	}
 
 

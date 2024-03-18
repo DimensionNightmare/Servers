@@ -849,7 +849,7 @@ DNDbObj<TMessage>& DNDbObj<TMessage>::InitTable()
 		mEles.emplace(make_pair(field->name(), params));
 	}
 
-	if(mEles.count(SPrimaryKey))
+	if(mEles.contains(SPrimaryKey))
 	{
 		throw new exception("Not Allow Exist 'PRIMARY KEY' map key!");
 	}
@@ -931,7 +931,7 @@ DNDbObj<TMessage> &DNDbObj<TMessage>::Select(const char* name, ...)
 	const Descriptor* descriptor = this->pMessage->GetDescriptor();
 	const Reflection* reflection = this->pMessage->GetReflection();
 
-	if(mEles.count(SSELECTALL))
+	if(mEles.contains(SSELECTALL))
 	{
 		throw new exception("exist other select statement!!");
 	}
@@ -988,7 +988,7 @@ DNDbObj<TMessage> &DNDbObj<TMessage>::SelectCond(TMessage& selObj, const char* n
 
 	value = format(" {} {} {} {}", splicing, name, cond, value);
 
-	if(mEles.count(SSELECTALL))
+	if(mEles.contains(SSELECTALL))
 	{
 		mEles[SSELECTALL].emplace_back(value);
 	}
@@ -1015,7 +1015,7 @@ void DNDbObj<TMessage>::PaserQuery(pqxx::result &result)
 	const Descriptor* descriptor = this->pMessage->GetDescriptor();
 	const Reflection* reflection = this->pMessage->GetReflection();
 
-	bool isQueryAll = mEles.count(SSELECTALL);
+	bool isQueryAll = mEles.contains(SSELECTALL);
 
 	for(int row = 0;row < result.size(); row++)
 	{

@@ -66,6 +66,11 @@ int HandleGlobalServerInit(DNServer *server)
 				string msgData((char*)buf->data() + MessagePacket::PackLenth, packet.pkgLenth);
 				GlobalMessageHandle::MsgHandle(channel, packet.msgId, packet.msgHashId, msgData);
 			}
+			else if(packet.dealType == MsgDeal::Ret)
+			{
+				string msgData((char*)buf->data() + MessagePacket::PackLenth, packet.pkgLenth);
+				GlobalMessageHandle::MsgRetHandle(channel, packet.msgId, packet.msgHashId, msgData);
+			}
 			else if(packet.dealType == MsgDeal::Res)
 			{
 				auto servSock = serverProxy->GetSSock();

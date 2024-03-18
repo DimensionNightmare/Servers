@@ -26,7 +26,7 @@ template <class CastTEntity>
 CastTEntity* EntityManagerHelper<TEntity>::AddEntity(const SocketChannelPtr& channel, int entityId)
 {
 	TEntity* entity = nullptr;
-	if (this->mEntityMap.count(entityId))
+	if (this->mEntityMap.contains(entityId))
 	{
 		entity = this->mEntityMap[entityId];
 	}

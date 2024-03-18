@@ -19,6 +19,8 @@ public:
 
 public: // dll override
 	virtual Entity* GetChild(){return this;}
+
+	ServerType GetType(){return emServerType;}
 	
 protected: // dll proxy
     ServerType emServerType;

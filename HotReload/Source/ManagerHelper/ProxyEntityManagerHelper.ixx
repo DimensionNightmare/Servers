@@ -23,6 +23,8 @@ public:
     void RemoveEntity(unsigned int entityId, bool isDel = true);
 
     ProxyEntityHelper* GetEntity(unsigned int id);
+
+	void AddCloseTimer(size_t timerId, unsigned int entityId);
 };
 
 template <class TEntity>
@@ -30,7 +32,7 @@ ProxyEntityHelper* ProxyEntityManagerHelper<TEntity>::AddEntity(unsigned int ent
 {
 	ProxyEntityHelper* entity = nullptr;
 
-	if (!this->mEntityMap.count(entityId))
+	if (!this->mEntityMap.contains(entityId))
 	{
 		unique_lock<shared_mutex> ulock(this->oMapMutex);
 
@@ -48,7 +50,7 @@ template <class TEntity>
 void ProxyEntityManagerHelper<TEntity>::RemoveEntity(unsigned int entityId, bool isDel)
 {
 	
-	if(this->mEntityMap.count(entityId))
+	if(this->mEntityMap.contains(entityId))
 	{
 		TEntity* oriEntity = this->mEntityMap[entityId];
 		ProxyEntityHelper* entity = static_cast<ProxyEntityHelper*>(oriEntity);
@@ -74,11 +76,17 @@ ProxyEntityHelper* ProxyEntityManagerHelper<TEntity>::GetEntity(unsigned int ent
 {
 	shared_lock<shared_mutex> lock(this->oMapMutex);
 	ProxyEntityHelper* entity = nullptr;
-	if(this->mEntityMap.count(entityId))
+	if(this->mEntityMap.contains(entityId))
 	{
 		TEntity* oriEntity = this->mEntityMap[entityId];
 		return static_cast<ProxyEntityHelper*>(oriEntity);
 	}
 	// allow return empty
 	return entity;
+}
+
+template <class TEntity>
+void ProxyEntityManagerHelper<TEntity>::AddCloseTimer(size_t timerId, unsigned int entityId)
+{
+	this->mEntityCloseTimer.emplace(timerId, entityId);
 }

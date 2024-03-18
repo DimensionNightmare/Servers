@@ -81,7 +81,17 @@ int HandleLogicServerInit(DNServer *server)
 		{
 			MessagePacket packet;
 			memcpy(&packet, buf->data(), MessagePacket::PackLenth);
-			if(packet.dealType == MsgDeal::Res)
+			if(packet.dealType == MsgDeal::Req)
+			{
+				string msgData((char*)buf->data() + MessagePacket::PackLenth, packet.pkgLenth);
+				LogicMessageHandle::MsgHandle(channel, packet.msgId, packet.msgHashId, msgData);
+			}
+			else if(packet.dealType == MsgDeal::Ret)
+			{
+				string msgData((char*)buf->data() + MessagePacket::PackLenth, packet.pkgLenth);
+				LogicMessageHandle::MsgRetHandle(channel, packet.msgId, packet.msgHashId, msgData);
+			}
+			else if(packet.dealType == MsgDeal::Res)
 			{
 				auto clientSock = serverProxy->GetCSock();
 
@@ -97,11 +107,6 @@ int HandleLogicServerInit(DNServer *server)
 				{
 					DNPrint(13, LoggerLevel::Error, nullptr);
 				}
-			}
-			else if(packet.dealType == MsgDeal::Req)
-			{
-				string msgData((char*)buf->data() + MessagePacket::PackLenth, packet.pkgLenth);
-				LogicMessageHandle::MsgHandle(channel, packet.msgId, packet.msgHashId, msgData);
 			}
 			else
 			{

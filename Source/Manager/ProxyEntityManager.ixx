@@ -1,4 +1,5 @@
 module;
+#include "StdAfx.h"
 
 #include <map>
 #include <shared_mutex>
@@ -19,11 +20,14 @@ public:
 	virtual ~ProxyEntityManager();
 
 public: // dll override
+	void EntityTimeoutTimer(uint64_t timerID);
 
 protected: // dll proxy
-	map<unsigned int, TEntity* > mEntityMapList;
+	//
+	map<uint64_t, unsigned int > mEntityCloseTimer;
 
 	shared_mutex oMapMutex;
+	shared_mutex oMapTimerMutex;
 };
 
 
@@ -31,11 +35,33 @@ protected: // dll proxy
 template <class TEntity>
 ProxyEntityManager<TEntity>::ProxyEntityManager()
 {
-	
+	mEntityCloseTimer.clear();
 }
 
 template <class TEntity>
 ProxyEntityManager<TEntity>::~ProxyEntityManager()
 {
-	
+	mEntityCloseTimer.clear();
+}
+
+template <class TEntity>
+void ProxyEntityManager<TEntity>::EntityTimeoutTimer(uint64_t timerID)
+{
+	unique_lock<shared_mutex> ulock(oMapTimerMutex);
+	if(!mEntityCloseTimer.contains(timerID))
+	{
+		return;
+	}
+
+	unsigned int entityId = mEntityCloseTimer[timerID];
+
+	if(this->mEntityMap.contains(entityId))
+	{
+		TEntity* entity = this->mEntityMap[entityId];
+		unique_lock<shared_mutex> ulock(this->oMapMutex);
+
+		DNPrint(-1, LoggerLevel::Debug, "destory entity\n");
+		this->mEntityMap.erase(entityId);
+		delete entity;
+	}
 }

@@ -79,16 +79,14 @@ void GlobalServerHelper::UpdateServerGroup()
 		retMsg.set_port(beEntity->ServerPort());
 		binData.resize(retMsg.ByteSize());
 		retMsg.SerializeToArray(binData.data(), binData.size());
-		MessagePack(0, MsgDeal::Req, retMsg.GetDescriptor()->full_name().c_str(), binData);
+		MessagePack(0, MsgDeal::Ret, retMsg.GetDescriptor()->full_name().c_str(), binData);
 		channel->write(binData);
 		
 		// timer destory
-		uint64_t timerId = GetSSock()->loop(0)->setTimeout(10000, [this, entity](uint64_t timerId)
-		{
-			GetEntityManager()->RemoveEntity(entity->GetChild()->ID());
-		});
+		entity->GetChild()->TimerId() = GetSSock()->loop(0)->setTimeout(10000,
+			std::bind(&ServerEntityManager<ServerEntity>::EntityTimeoutTimer, (ServerEntityManager<ServerEntity>*)entityMan, placeholders::_1));
 
-		entity->GetChild()->TimerId() = timerId;
+		entityMan->AddCloseTimer(entity->GetChild()->ID(), entity->GetChild()->TimerId());
 	};
 	
 	for(ServerEntity* it : gates)

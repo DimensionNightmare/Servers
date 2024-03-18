@@ -18,14 +18,18 @@ public:
 	~DNServerProxy(){};
 
 public: // dll override
+	void MessageTimeoutTimer(uint64_t timerID);
 
 protected:
 	// only oddnumber
 	atomic<unsigned int> iMsgId;
 	// unordered_
 	map<unsigned int, DNTask<Message*>* > mMsgList;
+	//
+	map<uint64_t, unsigned int > mMsgListTimer;
 
-	std::shared_mutex oMsgMutex;
+	shared_mutex oMsgMutex;
+	shared_mutex oMsgTimerMutex;
 };
 
 
@@ -34,4 +38,31 @@ DNServerProxy::DNServerProxy()
 {
 	iMsgId = ATOMIC_VAR_INIT(0);
 	mMsgList.clear();
+}
+
+void DNServerProxy::MessageTimeoutTimer(uint64_t timerID)
+{
+	unsigned int msgId = -1;
+	{
+		if(!mMsgListTimer.contains(timerID))
+		{
+			return;
+		}
+
+		unique_lock<shared_mutex> ulock(oMsgTimerMutex);
+		msgId = mMsgListTimer[timerID];
+		mMsgListTimer.erase(timerID);
+	}
+
+	{
+		if(mMsgList.contains(msgId))
+		{
+			unique_lock<shared_mutex> ulock(oMsgMutex);
+			DNTask<Message *>* task = mMsgList[msgId];
+			mMsgList.erase(msgId);
+			task->SetFlag(DNTaskFlag::Timeout);
+			task->CallResume();
+		}
+	}
+		
 }

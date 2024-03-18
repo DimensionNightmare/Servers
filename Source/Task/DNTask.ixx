@@ -55,7 +55,12 @@ struct DNTask
 	}
 	// Awaitable
 
-	DNTask(HandleType handle) : tHandle(handle){}
+	DNTask(HandleType handle) : tHandle(handle)
+	{
+		pCallPause = nullptr;
+		oFlags.reset();
+		iTimerId = 0;
+	}
 
 	void Resume()
 	{
@@ -94,10 +99,13 @@ public:
 	void SetFlag(DNTaskFlag flag){ oFlags.set(int(flag));}
 	void ClearFlag(DNTaskFlag flag){ oFlags.reset(int(flag));}
 
+	size_t& TimerId(){ return iTimerId;}
+
 private:
 	HandleType tHandle;
 	coroutine_handle<> pCallPause;
 	bitset<1> oFlags;
+	size_t iTimerId;
 };
 
 export struct DNTaskVoid
@@ -135,7 +143,10 @@ export struct DNTaskVoid
 	}
 	// Awaitable End
 
-	DNTaskVoid(HandleType handle): tHandle(handle){}
+	DNTaskVoid(HandleType handle): tHandle(handle)
+	{
+
+	}
 
 	void Resume()
 	{

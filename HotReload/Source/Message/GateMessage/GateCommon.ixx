@@ -128,7 +128,7 @@ void ServerEntityCloseEvent(Entity* entity)
 	upLoad.set_is_regist(false);
 	binData.resize(upLoad.ByteSizeLong());
 	upLoad.SerializeToArray(binData.data(), (int)binData.size());
-	MessagePack(0, MsgDeal::Req, upLoad.GetDescriptor()->full_name().c_str(), binData);
+	MessagePack(0, MsgDeal::Ret, upLoad.GetDescriptor()->full_name().c_str(), binData);
 
 	GateServerHelper* dnServer = GetGateServer();
 	auto client = dnServer->GetCSock();
@@ -139,7 +139,7 @@ void ServerEntityCloseEvent(Entity* entity)
 }
 
 // client request
-export void Exe_RegistSrv(const SocketChannelPtr &channel, unsigned int msgId, Message *msg)
+export void Exe_ReqRegistSrv(const SocketChannelPtr &channel, unsigned int msgId, Message *msg)
 {
 	COM_ReqRegistSrv* requset = (COM_ReqRegistSrv*)msg;
 	COM_ResRegistSrv response;
@@ -188,7 +188,7 @@ export void Exe_RegistSrv(const SocketChannelPtr &channel, unsigned int msgId, M
 		upLoad.set_server_index(requset->server_index());
 		binData.resize(upLoad.ByteSizeLong());
 		upLoad.SerializeToArray(binData.data(), (int)binData.size());
-		MessagePack(0, MsgDeal::Req, upLoad.GetDescriptor()->full_name().c_str(), binData);
+		MessagePack(0, MsgDeal::Ret, upLoad.GetDescriptor()->full_name().c_str(), binData);
 
 		GateServerHelper* dnServer = GetGateServer();
 		auto client = dnServer->GetCSock();

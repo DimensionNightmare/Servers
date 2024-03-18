@@ -37,9 +37,9 @@ public:
 	// client status
 	ProxyStatus UpdateClientState(Channel::Status state);
 	void ServerDisconnect();
-	// msg
-	bool AddMsg(unsigned int msgId, DNTask<Message*>* msg, int breakTime = 10000);
+	// task
 	DNTask<Message*>* GetMsg(unsigned int msgId);
+	bool AddMsg(unsigned int msgId, DNTask<Message*>* task, int breakTime = 10000);
 	void DelMsg(unsigned int msgId);
 	// heartbeat
 	void TickHeartbeat();
@@ -108,28 +108,8 @@ void DNClientProxyHelper::ServerDisconnect()
 	mMsgList.clear();
 }
 
-bool DNClientProxyHelper::AddMsg(unsigned int msgId, DNTask<Message *> *msg, int breakTime)
-{
-	unique_lock<shared_mutex> ulock(oMsgMutex);
-	mMsgList.emplace(msgId, msg);
-	// timeout
-	if(breakTime > 0)
-	{
-		loop()->setTimeout(breakTime, [this,msgId](uint64_t timerID)
-		{
-			if(DNTask<Message *>* task = GetMsg(msgId))
-			{
-				DelMsg(msgId);
-				task->SetFlag(DNTaskFlag::Timeout);
-				task->CallResume();
-			}
-		});
-	}
-	return true;
-}
-
 DNTask<Message *> *DNClientProxyHelper::GetMsg(unsigned int msgId)
-{;
+{
 	shared_lock<shared_mutex> lock(oMsgMutex);
 	if(mMsgList.contains(msgId))
 	{
@@ -138,9 +118,33 @@ DNTask<Message *> *DNClientProxyHelper::GetMsg(unsigned int msgId)
 	return nullptr;
 }
 
+bool DNClientProxyHelper::AddMsg(unsigned int msgId, DNTask<Message *> *task, int breakTime)
+{
+	unique_lock<shared_mutex> ulock(oMsgMutex);
+	mMsgList.emplace(msgId, task);
+	// timeout
+	if(breakTime > 0)
+	{
+		task->TimerId() = loop()->setTimeout(breakTime, std::bind(&DNClientProxy::MessageTimeoutTimer, (DNClientProxy*)this, placeholders::_1));
+		mMsgListTimer[task->TimerId()] = msgId;
+	}
+	return true;
+}
+
 void DNClientProxyHelper::DelMsg(unsigned int msgId)
 {
 	unique_lock<shared_mutex> ulock(oMsgMutex);
+	if(mMsgList.contains(msgId))
+	{
+		if(DNTask<Message *> *task = mMsgList[msgId])
+		{
+			if (size_t timerId = task->TimerId())
+			{
+				loop()->killTimer(timerId);
+				mMsgListTimer.erase(timerId);
+			}
+		}
+	}
 	mMsgList.erase(msgId);
 }
 
@@ -156,7 +160,7 @@ void DNClientProxyHelper::TickHeartbeat()
 	binData.resize(requset.ByteSize());
 	requset.SerializeToArray(binData.data(), binData.size());
 
-	MessagePack(0, MsgDeal::Req, requset.GetDescriptor()->full_name().c_str(), binData);
+	MessagePack(0, MsgDeal::Ret, requset.GetDescriptor()->full_name().c_str(), binData);
 	
 	send(binData);
 }

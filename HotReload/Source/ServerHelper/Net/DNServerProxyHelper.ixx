@@ -19,27 +19,21 @@ private:
 public:
 	unsigned int GetMsgId() { return ++iMsgId; }
 
-	bool AddMsg(unsigned int msgId, DNTask<Message*>* msg, int breakTime = 10000);
+	bool AddMsg(unsigned int msgId, DNTask<Message*>* task, int breakTime = 10000);
 	DNTask<Message*>* GetMsg(unsigned int msgId);
 	void DelMsg(unsigned int msgId);
 
 	void TickHeartbeat(hio_t *io);
 };
 
-bool DNServerProxyHelper::AddMsg(unsigned int msgId, DNTask<Message *> *msg, int breakTime)
+bool DNServerProxyHelper::AddMsg(unsigned int msgId, DNTask<Message *> *task, int breakTime)
 {
 	unique_lock<shared_mutex> ulock(oMsgMutex);
-	mMsgList.emplace(msgId, msg);
+	mMsgList.emplace(msgId, task);
 	if(breakTime > 0)
 	{
-		loop()->setTimeout(breakTime, [this,msgId](uint64_t timerID)
-		{
-			if(DNTask<Message *>* task = GetMsg(msgId))
-			{
-				DelMsg(msgId);
-				task->CallResume();
-			}
-		});
+		task->TimerId() = loop(0)->setTimeout(breakTime, std::bind(&DNServerProxy::MessageTimeoutTimer, (DNServerProxy*)this, placeholders::_1));
+		mMsgListTimer[task->TimerId()] = msgId;
 	}
 	return true;
 }
@@ -57,6 +51,17 @@ DNTask<Message *> *DNServerProxyHelper::GetMsg(unsigned int msgId)
 void DNServerProxyHelper::DelMsg(unsigned int msgId)
 {
 	unique_lock<shared_mutex> ulock(oMsgMutex);
+	if(mMsgList.contains(msgId))
+	{
+		if(DNTask<Message *> *task = mMsgList[msgId])
+		{
+			if (size_t timerId = task->TimerId())
+			{
+				loop(0)->killTimer(timerId);
+				mMsgListTimer.erase(timerId);
+			}
+		}
+	}
 	mMsgList.erase(msgId);
 }
 

@@ -15,6 +15,7 @@ export enum class MsgDeal : unsigned char
 {
 	Req = 1, 	// msg deal with
 	Res, 		//
+	Ret, 
 };
 
 #pragma pack(1) // net struct need this

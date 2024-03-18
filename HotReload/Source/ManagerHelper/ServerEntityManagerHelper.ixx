@@ -31,6 +31,8 @@ public:
 	list<TEntity*>& GetEntityByList(ServerType type);
 
 	[[nodiscard]] unsigned int GetServerIndex();
+
+	void AddCloseTimer(size_t timerId, unsigned int entityId);
 };
 
 template <class TEntity>
@@ -38,7 +40,7 @@ ServerEntityHelper* ServerEntityManagerHelper<TEntity>::AddEntity(unsigned int e
 {
 	ServerEntityHelper* entity = nullptr;
 
-	if (!this->mEntityMap.count(entityId))
+	if (!this->mEntityMap.contains(entityId))
 	{
 		unique_lock<shared_mutex> ulock(this->oMapMutex);
 
@@ -58,7 +60,7 @@ template <class TEntity>
 void ServerEntityManagerHelper<TEntity>::RemoveEntity(unsigned int entityId, bool isDel)
 {
 	
-	if(this->mEntityMap.count(entityId))
+	if(this->mEntityMap.contains(entityId))
 	{
 		TEntity* oriEntity = this->mEntityMap[entityId];
 		ServerEntityHelper* entity = static_cast<ServerEntityHelper*>(oriEntity);
@@ -101,7 +103,7 @@ ServerEntityHelper* ServerEntityManagerHelper<TEntity>::GetEntity(unsigned int e
 {
 	shared_lock<shared_mutex> lock(this->oMapMutex);
 	ServerEntityHelper* entity = nullptr;
-	if(this->mEntityMap.count(entityId))
+	if(this->mEntityMap.contains(entityId))
 	{
 		TEntity* oriEntity = this->mEntityMap[entityId];
 		return static_cast<ServerEntityHelper*>(oriEntity);
@@ -127,4 +129,10 @@ unsigned int ServerEntityManagerHelper<TEntity>::GetServerIndex()
 	// 	return index;
 	// }
 	return ++this->iServerId;
+}
+
+template <class TEntity>
+void ServerEntityManagerHelper<TEntity>::AddCloseTimer(size_t timerId, unsigned int entityId)
+{
+	this->mEntityCloseTimer.emplace(timerId, entityId);
 }

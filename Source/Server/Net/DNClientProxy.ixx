@@ -21,11 +21,15 @@ public:
 public: // dll override
 	void TickRegistEvent(size_t timerID);
 
+	void MessageTimeoutTimer(uint64_t timerID);
+
 protected: // dll proxy
 	// only oddnumber
 	atomic<unsigned int> iMsgId;
 	// unordered_
 	map<unsigned int, DNTask<Message*>* > mMsgList;
+	//
+	map<uint64_t, unsigned int > mMsgListTimer;
 	// status
 	bool bIsRegisted;
 
@@ -34,6 +38,7 @@ protected: // dll proxy
 	hv::Channel::Status eState;
 
 	shared_mutex oMsgMutex;
+	shared_mutex oMsgTimerMutex;
 
 	bool bIsRegisting;
 };
@@ -81,5 +86,31 @@ void DNClientProxy::TickRegistEvent(size_t timerID)
 	else 
 	{
 		loop()->killTimer(timerID);
+	}
+}
+
+void DNClientProxy::MessageTimeoutTimer(uint64_t timerID)
+{
+	unsigned int msgId = -1;
+	{
+		if(!mMsgListTimer.contains(timerID))
+		{
+			return;
+		}
+
+		unique_lock<shared_mutex> ulock(oMsgTimerMutex);
+		msgId = mMsgListTimer[timerID];
+		mMsgListTimer.erase(timerID);
+	}
+
+	{
+		if(mMsgList.contains(msgId))
+		{
+			unique_lock<shared_mutex> ulock(oMsgMutex);
+			DNTask<Message *>* task = mMsgList[msgId];
+			mMsgList.erase(msgId);
+			task->SetFlag(DNTaskFlag::Timeout);
+			task->CallResume();
+		}
 	}
 }

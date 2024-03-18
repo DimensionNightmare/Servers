@@ -68,6 +68,11 @@ int HandleControlServerInit(DNServer *server)
 				string msgData((char*)buf->data() + MessagePacket::PackLenth, packet.pkgLenth);
 				ControlMessageHandle::MsgHandle(channel, packet.msgId, packet.msgHashId, msgData);
 			}
+			else if(packet.dealType == MsgDeal::Ret)
+			{
+				string msgData((char*)buf->data() + MessagePacket::PackLenth, packet.pkgLenth);
+				ControlMessageHandle::MsgRetHandle(channel, packet.msgId, packet.msgHashId, msgData);
+			}
 			else if(packet.dealType == MsgDeal::Res)
 			{
 				auto servSock = serverProxy->GetSSock();
