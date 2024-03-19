@@ -62,7 +62,7 @@ int HandleDatabaseServerInit(DNServer *server)
 			if (channel->isConnected())
 			{
 				DNPrint(4, LoggerLevel::Debug, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
-				clientSock->SetRegistEvent(&Msg_RegistSrv);
+				clientSock->SetRegistEvent(&Evt_ReqRegistSrv);
 			}
 			else
 			{

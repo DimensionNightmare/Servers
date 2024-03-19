@@ -31,8 +31,6 @@ public:
 	list<TEntity*>& GetEntityByList(ServerType type);
 
 	[[nodiscard]] unsigned int GetServerIndex();
-
-	void AddCloseTimer(size_t timerId, unsigned int entityId);
 };
 
 template <class TEntity>
@@ -129,10 +127,4 @@ unsigned int ServerEntityManagerHelper<TEntity>::GetServerIndex()
 	// 	return index;
 	// }
 	return ++this->iServerId;
-}
-
-template <class TEntity>
-void ServerEntityManagerHelper<TEntity>::AddCloseTimer(size_t timerId, unsigned int entityId)
-{
-	this->mEntityCloseTimer.emplace(timerId, entityId);
 }

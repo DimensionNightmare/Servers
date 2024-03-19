@@ -30,6 +30,52 @@ int HandleLogicServerInit(DNServer *server)
 	LogicMessageHandle::RegMsgHandle();
 
 	LogicServerHelper* serverProxy = GetLogicServer();
+
+	if (auto serverSock = serverProxy->GetSSock())
+	{
+		serverSock->onConnection = nullptr;
+		serverSock->onMessage = nullptr;
+
+		auto onConnection = [serverProxy](const SocketChannelPtr &channel)
+		{
+			string peeraddr = channel->peeraddr();
+			if (channel->isConnected())
+			{
+				DNPrint(2, LoggerLevel::Debug, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
+			}
+			else
+			{
+				DNPrint(3, LoggerLevel::Debug, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
+				if(Entity* entity = channel->getContext<Entity>())
+				{
+					entity->CloseEvent()(entity);
+				}
+			}
+		};
+
+		auto onMessage = [](const SocketChannelPtr &channel, Buffer *buf) 
+		{
+			MessagePacket packet;
+			memcpy(&packet, buf->data(), MessagePacket::PackLenth);
+			if(packet.dealType == MsgDeal::Req)
+			{
+				string msgData((char*)buf->data() + MessagePacket::PackLenth, packet.pkgLenth);
+				LogicMessageHandle::MsgHandle(channel, packet.msgId, packet.msgHashId, msgData);
+			}
+			else if(packet.dealType == MsgDeal::Ret)
+			{
+				string msgData((char*)buf->data() + MessagePacket::PackLenth, packet.pkgLenth);
+				LogicMessageHandle::MsgRetHandle(channel, packet.msgId, packet.msgHashId, msgData);
+			}
+			else
+			{
+				DNPrint(12, LoggerLevel::Error, nullptr);
+			}
+		};
+
+		serverSock->onConnection = onConnection;
+		serverSock->onMessage = onMessage;
+	}
 	
 	if (auto clientSock = serverProxy->GetCSock())
 	{
@@ -63,7 +109,7 @@ int HandleLogicServerInit(DNServer *server)
 			if (channel->isConnected())
 			{
 				DNPrint(4, LoggerLevel::Debug, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
-				clientSock->SetRegistEvent(&Msg_RegistSrv);
+				clientSock->SetRegistEvent(&Evt_ReqRegistSrv);
 			}
 			else
 			{
@@ -116,7 +162,7 @@ int HandleLogicServerInit(DNServer *server)
 
 		clientSock->onConnection = onConnection;
 		clientSock->onMessage = onMessage;
-		clientSock->SetRegistEvent(&Msg_RegistSrv);
+		clientSock->SetRegistEvent(&Evt_ReqRegistSrv);
 	}
 
 	return true;

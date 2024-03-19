@@ -80,7 +80,8 @@ ProxyStatus DNClientProxyHelper::UpdateClientState(Channel::Status state)
 	{
 	case Channel::Status::CONNECTED :
 		{
-			loop()->setInterval(1000, std::bind(&DNClientProxy::TickRegistEvent, (DNClientProxy*)this, placeholders::_1));
+			//maybe sometimes tick (wait fix)
+			Timer()->setInterval(1000, std::bind(&DNClientProxy::TickRegistEvent, (DNClientProxy*)this, placeholders::_1));
 			return ProxyStatus::Open;
 		}
 
@@ -125,8 +126,8 @@ bool DNClientProxyHelper::AddMsg(unsigned int msgId, DNTask<Message *> *task, in
 	// timeout
 	if(breakTime > 0)
 	{
-		task->TimerId() = loop()->setTimeout(breakTime, std::bind(&DNClientProxy::MessageTimeoutTimer, (DNClientProxy*)this, placeholders::_1));
-		mMsgListTimer[task->TimerId()] = msgId;
+		task->TimerId() = Timer()->setTimeout(breakTime, std::bind(&DNClientProxy::MessageTimeoutTimer, (DNClientProxy*)this, placeholders::_1));
+		mMapTimer[task->TimerId()] = msgId;
 	}
 	return true;
 }
@@ -140,8 +141,8 @@ void DNClientProxyHelper::DelMsg(unsigned int msgId)
 		{
 			if (size_t timerId = task->TimerId())
 			{
-				loop()->killTimer(timerId);
-				mMsgListTimer.erase(timerId);
+				Timer()->killTimer(timerId);
+				mMapTimer.erase(timerId);
 			}
 		}
 	}

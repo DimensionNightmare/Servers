@@ -17,7 +17,7 @@ using namespace GMsg::S_Common;
 using namespace hv;
 
 // client request
-export DNTaskVoid Msg_RegistSrv()
+export DNTaskVoid Evt_ReqRegistSrv()
 {
 	LogicServerHelper* dnServer = GetLogicServer();
 	auto client = dnServer->GetCSock();
@@ -31,7 +31,7 @@ export DNTaskVoid Msg_RegistSrv()
 	}
 	else
 	{
-		DNPrint(-1, LoggerLevel::Debug, "Msg_RegistSrv ----- %lu, \n", msgId);
+		DNPrint(-1, LoggerLevel::Debug, "Evt_ReqRegistSrv ----- %lu, \n", msgId);
 	}
 
 	client->SetIsRegisting(true);
@@ -90,4 +90,43 @@ export void Exe_RetChangeCtlSrv(const SocketChannelPtr &channel, unsigned int ms
 	client->UpdateClientState(Channel::Status::CLOSED);
 
 	GetClientReconnectFunc()(requset->ip().c_str(), requset->port());
+}
+
+// client request
+export void Msg_ReqRegistSrv(const SocketChannelPtr &channel, unsigned int msgId, Message *msg)
+{
+	COM_ReqRegistSrv* requset = (COM_ReqRegistSrv*)msg;
+	COM_ResRegistSrv response;
+
+	auto entityMan = GetLogicServer()->GetEntityManager();
+
+	ServerType regType = (ServerType)requset->server_type();
+	
+	if(regType != ServerType::DedicatedServer)
+	{
+		response.set_success(false);
+	}
+
+	//exist?
+	else if (ServerEntityHelper* entity = channel->getContext<ServerEntityHelper>())
+	{
+		response.set_success(false);
+	}
+
+	else if (ServerEntityHelper* entity = entityMan->AddEntity(requset->server_index(), regType))
+	{
+		entity->GetChild()->SetSock(channel);
+		
+		channel->setContext(entity);
+
+		response.set_success(true);
+		response.set_server_index(entity->GetChild()->ID());
+	}
+	
+	string binData;
+	binData.resize(response.ByteSize());
+	response.SerializeToArray(binData.data(), binData.size());
+
+	MessagePack(msgId, MsgDeal::Res, nullptr, binData);
+	channel->write(binData);
 }

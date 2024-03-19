@@ -10,8 +10,9 @@ import DNTask;
 
 using namespace std;
 using namespace google::protobuf;
+using namespace hv;
 
-export class DNServerProxy : public hv::TcpServer
+export class DNServerProxy : public TcpServerTmpl<SocketChannel>
 {
 public:
 	DNServerProxy();
@@ -19,6 +20,14 @@ public:
 
 public: // dll override
 	void MessageTimeoutTimer(uint64_t timerID);
+	void ChannelTimeoutTimer(uint64_t timerID);
+
+	const EventLoopPtr& Timer(){return pLoop->loop();}
+	void AddTimerRecord(size_t timerId, unsigned int id);
+
+public:
+	// cant init in tcpclient this class
+	EventLoopThreadPtr pLoop;
 
 protected:
 	// only oddnumber
@@ -26,10 +35,10 @@ protected:
 	// unordered_
 	map<unsigned int, DNTask<Message*>* > mMsgList;
 	//
-	map<uint64_t, unsigned int > mMsgListTimer;
+	map<uint64_t, unsigned int > mMapTimer;
 
 	shared_mutex oMsgMutex;
-	shared_mutex oMsgTimerMutex;
+	shared_mutex oTimerMutex;
 };
 
 
@@ -38,31 +47,64 @@ DNServerProxy::DNServerProxy()
 {
 	iMsgId = ATOMIC_VAR_INIT(0);
 	mMsgList.clear();
+	mMapTimer.clear();
 }
 
 void DNServerProxy::MessageTimeoutTimer(uint64_t timerID)
 {
-	unsigned int msgId = -1;
+	unsigned int id = -1;
 	{
-		if(!mMsgListTimer.contains(timerID))
+		if(!mMapTimer.contains(timerID))
 		{
 			return;
 		}
 
-		unique_lock<shared_mutex> ulock(oMsgTimerMutex);
-		msgId = mMsgListTimer[timerID];
-		mMsgListTimer.erase(timerID);
+		unique_lock<shared_mutex> ulock(oTimerMutex);
+		id = mMapTimer[timerID];
+		mMapTimer.erase(timerID);
 	}
 
 	{
-		if(mMsgList.contains(msgId))
+		if(mMsgList.contains(id))
 		{
 			unique_lock<shared_mutex> ulock(oMsgMutex);
-			DNTask<Message *>* task = mMsgList[msgId];
-			mMsgList.erase(msgId);
+			DNTask<Message *>* task = mMsgList[id];
+			mMsgList.erase(id);
 			task->SetFlag(DNTaskFlag::Timeout);
 			task->CallResume();
 		}
 	}
 		
+}
+
+void DNServerProxy::ChannelTimeoutTimer(uint64_t timerID)
+{
+	unsigned int id = -1;
+	{
+		if(!mMapTimer.contains(timerID))
+		{
+			return;
+		}
+
+		unique_lock<shared_mutex> ulock(oTimerMutex);
+		id = mMapTimer[timerID];
+		mMapTimer.erase(timerID);
+	}
+
+	{
+		if(TSocketChannelPtr channel = getChannelById(id))
+		{
+			if(!channel->context())
+			{
+				channel->close();
+			}
+		}
+	}
+
+}
+
+void DNServerProxy::AddTimerRecord(size_t timerId, unsigned int id)
+{
+	unique_lock<shared_mutex> ulock(oTimerMutex);
+	mMapTimer.emplace(timerId, id);
 }

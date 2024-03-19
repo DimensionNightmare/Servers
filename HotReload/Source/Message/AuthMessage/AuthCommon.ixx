@@ -15,7 +15,7 @@ using namespace google::protobuf;
 using namespace GMsg::S_Common;
 
 // client request
-export DNTaskVoid Msg_RegistSrv()
+export DNTaskVoid Evt_ReqRegistSrv()
 {
 	AuthServerHelper* dnServer = GetAuthServer();
 	auto client = dnServer->GetCSock();
@@ -30,7 +30,7 @@ export DNTaskVoid Msg_RegistSrv()
 	}
 	else
 	{
-		// prinfg("Msg_RegistSrv ----- %lu, \n", msgId);
+		// prinfg("Evt_ReqRegistSrv ----- %lu, \n", msgId);
 	}
 
 	client->SetIsRegisting(true);

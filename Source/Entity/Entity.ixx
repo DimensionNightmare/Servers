@@ -19,8 +19,7 @@ public:
 	virtual ~Entity();
 
 	EntityType GetType(){return emType;}
-	void TickCloseEvent(){if(pOnClose){pOnClose(this);}}
-	void SetCloseEvent(function<void(Entity*)> func){ pOnClose = func;}
+	auto& CloseEvent(){return pOnClose;}
 public: // dll override
 
 public:

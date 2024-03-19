@@ -83,10 +83,10 @@ void GlobalServerHelper::UpdateServerGroup()
 		channel->write(binData);
 		
 		// timer destory
-		entity->GetChild()->TimerId() = GetSSock()->loop(0)->setTimeout(10000,
-			std::bind(&ServerEntityManager<ServerEntity>::EntityTimeoutTimer, (ServerEntityManager<ServerEntity>*)entityMan, placeholders::_1));
+		entity->GetChild()->TimerId() = entityMan->Timer()->setTimeout(10000,
+			std::bind(&ServerEntityManager<ServerEntity>::EntityCloseTimer, entityMan, placeholders::_1));
 
-		entityMan->AddCloseTimer(entity->GetChild()->ID(), entity->GetChild()->TimerId());
+		entityMan->AddTimerRecord(entity->GetChild()->ID(), entity->GetChild()->TimerId());
 	};
 	
 	for(ServerEntity* it : gates)

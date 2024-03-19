@@ -19,15 +19,14 @@ public:
 
 	virtual ~ProxyEntityManager();
 
+	virtual bool Init() override;
+
 public: // dll override
-	void EntityTimeoutTimer(uint64_t timerID);
+	void EntityCloseTimer(uint64_t timerID);
 
 protected: // dll proxy
-	//
-	map<uint64_t, unsigned int > mEntityCloseTimer;
 
-	shared_mutex oMapMutex;
-	shared_mutex oMapTimerMutex;
+	
 };
 
 
@@ -35,25 +34,29 @@ protected: // dll proxy
 template <class TEntity>
 ProxyEntityManager<TEntity>::ProxyEntityManager()
 {
-	mEntityCloseTimer.clear();
 }
 
 template <class TEntity>
 ProxyEntityManager<TEntity>::~ProxyEntityManager()
 {
-	mEntityCloseTimer.clear();
 }
 
 template <class TEntity>
-void ProxyEntityManager<TEntity>::EntityTimeoutTimer(uint64_t timerID)
+bool ProxyEntityManager<TEntity>::Init()
 {
-	unique_lock<shared_mutex> ulock(oMapTimerMutex);
-	if(!mEntityCloseTimer.contains(timerID))
+	return EntityManager<TEntity>::Init();
+}
+
+template <class TEntity>
+void ProxyEntityManager<TEntity>::EntityCloseTimer(uint64_t timerID)
+{
+	unique_lock<shared_mutex> ulock(this->oTimerMutex);
+	if(!this->mMapTimer.contains(timerID))
 	{
 		return;
 	}
 
-	unsigned int entityId = mEntityCloseTimer[timerID];
+	unsigned int entityId = this->mMapTimer[timerID];
 
 	if(this->mEntityMap.contains(entityId))
 	{

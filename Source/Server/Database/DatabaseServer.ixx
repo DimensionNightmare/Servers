@@ -93,6 +93,8 @@ bool DatabaseServer::Init()
 	if(ctlPort && ctlIp && is_ipaddr(ctlIp->c_str()))
 	{
 		pCSock = new DNClientProxy;
+		pCSock->pLoop = make_shared<EventLoopThread>();
+
 		reconn_setting_t* reconn = new reconn_setting_t;
 		reconn->min_delay = 1000;
 		reconn->max_delay = 10000;
@@ -117,6 +119,7 @@ bool DatabaseServer::Start()
 {
 	if(pCSock) // client
 	{
+		pCSock->pLoop->start();
 		pCSock->start();
 	}
 
@@ -127,6 +130,7 @@ bool DatabaseServer::Stop()
 {
 	if(pCSock) // client
 	{
+		pCSock->pLoop->stop(true);
 		pCSock->stop();
 	}
 
@@ -182,9 +186,11 @@ void DatabaseServer::ReClientEvent(const char* ip, int port)
 	auto onConnection = pCSock->onConnection;
 	auto onMessage = pCSock->onMessage;
 
+	pCSock->pLoop->stop();
 	pCSock->stop();
 	// delete pCSock;
 	pCSock = new DNClientProxy;
+	pCSock->pLoop = make_shared<EventLoopThread>();
 
 	pCSock->reconn_setting = reconn_setting;
 	pCSock->unpack_setting = unpack_setting;
@@ -192,5 +198,6 @@ void DatabaseServer::ReClientEvent(const char* ip, int port)
 	pCSock->onMessage = onMessage;
 
 	pCSock->createsocket(port, ip);
+	pCSock->pLoop->start();
 	pCSock->start();
 }

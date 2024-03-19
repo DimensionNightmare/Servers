@@ -96,6 +96,7 @@ bool GlobalServer::Init()
 	}
 	
 	pSSock = new DNServerProxy;
+	pSSock->pLoop = make_shared<EventLoopThread>();
 
 	int listenfd = pSSock->createsocket(port);
 	if (listenfd < 0)
@@ -136,6 +137,8 @@ bool GlobalServer::Init()
 	if(ctlPort && ctlIp && is_ipaddr(ctlIp->c_str()))
 	{
 		pCSock = new DNClientProxy;
+		pCSock->pLoop = make_shared<EventLoopThread>();
+
 		reconn_setting_t* reconn = new reconn_setting_t;
 		reconn->min_delay = 1000;
 		reconn->max_delay = 10000;
@@ -147,6 +150,7 @@ bool GlobalServer::Init()
 	}
 	
 	pEntityMan = new ServerEntityManager<ServerEntity>;
+	pEntityMan->Init();
 
 	return true;
 }
@@ -163,10 +167,12 @@ bool GlobalServer::Start()
 		return false;
 	}
 
+	pSSock->pLoop->start();
 	pSSock->start();
 
 	if(pCSock) // client
 	{
+		pCSock->pLoop->start();
 		pCSock->start();
 	}
 
@@ -177,11 +183,13 @@ bool GlobalServer::Stop()
 {
 	if(pSSock)
 	{
+		pSSock->pLoop->stop(true);
 		pSSock->stop();
 	}
 
 	if(pCSock) // client
 	{
+		pCSock->pLoop->stop(true);
 		pCSock->stop();
 	}
 

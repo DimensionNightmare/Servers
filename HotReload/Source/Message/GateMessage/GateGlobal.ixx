@@ -64,12 +64,13 @@ export void Exe_ReqUserToken(const SocketChannelPtr &channel, unsigned int msgId
 	response.set_token(entity->Token());
 	response.set_expired_timespan(entity->ExpireTime());
 
+	// entity or token expired
 	if(!entity->GetChild()->TimerId())
 	{
-		entity->GetChild()->TimerId() = dnServer->GetSSock()->loop(0)->setTimeout(30000, 
-			std::bind(&ProxyEntityManager<ProxyEntity>::EntityTimeoutTimer, (ProxyEntityManager<ProxyEntity>*)entityMan, placeholders::_1));
+		entity->GetChild()->TimerId() = entityMan->Timer()->setTimeout(30000, 
+			std::bind(&ProxyEntityManager<ProxyEntity>::EntityCloseTimer, entityMan, placeholders::_1));
 
-		entityMan->AddCloseTimer(entity->GetChild()->TimerId(), entity->GetChild()->ID());
+		entityMan->AddTimerRecord(entity->GetChild()->TimerId(), entity->GetChild()->ID());
 	}
 
 

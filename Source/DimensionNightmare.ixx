@@ -46,7 +46,9 @@ struct HotReloadDll
 		// AddDllDirectory(wstr.c_str());
 		SetDllDirectory(fullPath.c_str());
 
+		#ifdef NDEBUG
 		SetEnvironmentVariable("PATH", "./Bin;%PATH%");
+		#endif
 
 		// if(!ret)
 		// {
@@ -239,7 +241,7 @@ bool DimensionNightmare::InitConfig(map<string, string> &param)
 	SetCurrentDirectory(execPath.parent_path().string().c_str());
 
 	{
-		#if _DEBUG
+		#ifndef NDEBUG
 		LPCSTR iniFilePath = "../../../Config/ServerDebug.ini";
 		#else
 		LPCSTR iniFilePath = "./Config/Server.ini";

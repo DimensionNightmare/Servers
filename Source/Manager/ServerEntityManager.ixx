@@ -20,19 +20,17 @@ public:
 
 	virtual ~ServerEntityManager();
 
+	virtual bool Init() override;
+
 public: // dll override
-	void EntityTimeoutTimer(uint64_t timerID);
+	void EntityCloseTimer(uint64_t timerID);
 
 protected: // dll proxy
     map<ServerType, list<TEntity*> > mEntityMapList;
-	//
-	map<uint64_t, unsigned int > mEntityCloseTimer;
 	// server pull server
 	atomic<unsigned int> iServerId;
 	list<unsigned int> mIdleServerId;
 
-	shared_mutex oMapMutex;
-	shared_mutex oMapTimerMutex;
 };
 
 
@@ -41,7 +39,6 @@ template <class TEntity>
 ServerEntityManager<TEntity>::ServerEntityManager()
 {
 	mEntityMapList.clear();
-	mEntityCloseTimer.clear();
 	iServerId = 0;
 	mIdleServerId.clear();
 }
@@ -50,19 +47,24 @@ template <class TEntity>
 ServerEntityManager<TEntity>::~ServerEntityManager()
 {
 	mEntityMapList.clear();
-	mEntityCloseTimer.clear();
 }
 
 template <class TEntity>
-void ServerEntityManager<TEntity>::EntityTimeoutTimer(uint64_t timerID)
+bool ServerEntityManager<TEntity>::Init()
 {
-	unique_lock<shared_mutex> ulock(oMapTimerMutex);
-	if(!mEntityCloseTimer.contains(timerID))
+	return EntityManager<TEntity>::Init();
+}
+
+template <class TEntity>
+void ServerEntityManager<TEntity>::EntityCloseTimer(uint64_t timerID)
+{
+	unique_lock<shared_mutex> ulock(oTimerMutex);
+	if(!mMapTimer.contains(timerID))
 	{
 		return;
 	}
 
-	unsigned int entityId = mEntityCloseTimer[timerID];
+	unsigned int entityId = mMapTimer[timerID];
 
 	if(this->mEntityMap.contains(entityId))
 	{

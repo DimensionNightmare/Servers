@@ -51,8 +51,8 @@ int HandleAuthServerInit(DNServer *server)
 			if (channel->isConnected())
 			{
 				DNPrint(2, LoggerLevel::Debug, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
-				// channel->setHeartbeat(4000, std::bind(&DNClientProxyHelper::TickHeartbeat, clientSock));
-				// channel->setWriteTimeout(12000);
+				channel->setHeartbeat(4000, std::bind(&DNClientProxyHelper::TickHeartbeat, clientSock));
+				channel->setWriteTimeout(12000);
 			}
 			else
 			{
@@ -94,7 +94,7 @@ int HandleAuthServerInit(DNServer *server)
 
 		clientSock->onConnection = onConnection;
 		clientSock->onMessage = onMessage;
-		clientSock->SetRegistEvent(&Msg_RegistSrv);
+		clientSock->SetRegistEvent(&Evt_ReqRegistSrv);
 	}
 
 	return serverProxy->InitDabase();

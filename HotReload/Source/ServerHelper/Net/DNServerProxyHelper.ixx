@@ -32,8 +32,8 @@ bool DNServerProxyHelper::AddMsg(unsigned int msgId, DNTask<Message *> *task, in
 	mMsgList.emplace(msgId, task);
 	if(breakTime > 0)
 	{
-		task->TimerId() = loop(0)->setTimeout(breakTime, std::bind(&DNServerProxy::MessageTimeoutTimer, (DNServerProxy*)this, placeholders::_1));
-		mMsgListTimer[task->TimerId()] = msgId;
+		task->TimerId() = Timer()->setTimeout(breakTime, std::bind(&DNServerProxy::MessageTimeoutTimer, (DNServerProxy*)this, placeholders::_1));
+		mMapTimer[task->TimerId()] = msgId;
 	}
 	return true;
 }
@@ -57,8 +57,8 @@ void DNServerProxyHelper::DelMsg(unsigned int msgId)
 		{
 			if (size_t timerId = task->TimerId())
 			{
-				loop(0)->killTimer(timerId);
-				mMsgListTimer.erase(timerId);
+				Timer()->killTimer(timerId);
+				mMapTimer.erase(timerId);
 			}
 		}
 	}

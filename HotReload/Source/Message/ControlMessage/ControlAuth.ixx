@@ -15,7 +15,7 @@ using namespace hv;
 using namespace google::protobuf;
 using namespace GMsg::S_Auth;
 
-export DNTaskVoid Exe_ReqAuthAccount(const SocketChannelPtr &channel, unsigned int msgId, Message *msg)
+export DNTaskVoid Msg_ReqAuthAccount(const SocketChannelPtr &channel, unsigned int msgId, Message *msg)
 {
 	A2G_ReqAuthAccount* requset = (A2G_ReqAuthAccount*)msg;
 	G2A_ResAuthAccount response;

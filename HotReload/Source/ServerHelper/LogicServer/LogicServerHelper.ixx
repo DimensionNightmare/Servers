@@ -5,6 +5,7 @@ export module LogicServerHelper;
 
 import LogicServer;
 import DNClientProxyHelper;
+import DNServerProxyHelper;
 import ServerEntityManagerHelper;
 import ServerEntity;
 
@@ -17,6 +18,8 @@ private:
 public:
 
 	DNClientProxyHelper* GetCSock(){ return nullptr;}
+	DNServerProxyHelper* GetSSock(){ return nullptr;}
+	
 	ServerEntityManagerHelper<ServerEntity>* GetEntityManager(){ return nullptr;}
 
 	string& GetCtlIp(){ return sCtlIp;}

@@ -36,14 +36,18 @@ int HandleGlobalServerInit(DNServer *server)
 		serverSock->onConnection = nullptr;
 		serverSock->onMessage = nullptr;
 		
-		auto onConnection = [serverProxy](const SocketChannelPtr &channel)
+		auto onConnection = [serverProxy,serverSock](const SocketChannelPtr &channel)
 		{
 			string peeraddr = channel->peeraddr();
 			if (channel->isConnected())
 			{
 				DNPrint(2, LoggerLevel::Debug, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
 				// if not regist
-				// hio_set_heartbeat(channel->io(), 5000, &GlobalServerHelper::TickHeartbeat);
+				// if not regist
+				size_t timerId = serverSock->Timer()->setTimeout(5000, std::bind(&DNServerProxy::ChannelTimeoutTimer, serverSock, placeholders::_1));
+				serverSock->AddTimerRecord(timerId, channel->id());
+				// if not recive data
+				channel->setReadTimeout(15000);
 			}
 			else
 			{
@@ -113,6 +117,8 @@ int HandleGlobalServerInit(DNServer *server)
 			if (channel->isConnected())
 			{
 				DNPrint(4, LoggerLevel::Debug, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
+				channel->setHeartbeat(4000, std::bind(&DNClientProxyHelper::TickHeartbeat, clientSock));
+				channel->setWriteTimeout(12000);
 			}
 			else
 			{
@@ -159,7 +165,7 @@ int HandleGlobalServerInit(DNServer *server)
 
 		clientSock->onConnection = onConnection;
 		clientSock->onMessage = onMessage;
-		clientSock->SetRegistEvent(&Msg_RegistSrv);
+		clientSock->SetRegistEvent(&Evt_ReqRegistSrv);
 	}
 
 	return true;

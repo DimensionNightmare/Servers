@@ -113,6 +113,8 @@ bool AuthServer::Init()
 		setting->length_field_offset = 0;
 		
 		pCSock = new DNClientProxy;
+		pCSock->pLoop = make_shared<EventLoopThread>();
+
 		reconn_setting_t* reconn = new reconn_setting_t;
 		reconn->min_delay = 1000;
 		reconn->max_delay = 10000;
@@ -147,6 +149,7 @@ bool AuthServer::Start()
 
 	if(pCSock)
 	{
+		pCSock->pLoop->start();
 		pCSock->start();
 	}
 	
@@ -155,6 +158,7 @@ bool AuthServer::Start()
 
 bool AuthServer::Stop()
 {
+	//webProxy
 	if(pSSock)
 	{
 		pSSock->stop();
@@ -162,6 +166,7 @@ bool AuthServer::Stop()
 	
 	if(pCSock)
 	{
+		pCSock->pLoop->stop(true);
 		pCSock->stop();
 	}
 	return true;

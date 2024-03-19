@@ -17,7 +17,7 @@ using namespace GMsg::S_Common;
 using namespace hv;
 
 // client request
-export DNTaskVoid Msg_RegistSrv()
+export DNTaskVoid Evt_ReqRegistSrv()
 {
 	DatabaseServerHelper* dnServer = GetDatabaseServer();
 	auto client = dnServer->GetCSock();
@@ -31,7 +31,7 @@ export DNTaskVoid Msg_RegistSrv()
 	}
 	else
 	{
-		DNPrint(-1, LoggerLevel::Debug, "Msg_RegistSrv ----- %lu, \n", msgId);
+		DNPrint(-1, LoggerLevel::Debug, "Evt_ReqRegistSrv ----- %lu, \n", msgId);
 	}
 
 	client->SetIsRegisting(true);

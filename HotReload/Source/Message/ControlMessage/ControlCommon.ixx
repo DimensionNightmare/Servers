@@ -16,7 +16,7 @@ using namespace hv;
 using namespace std;
 
 // client request
-export void Exe_ReqRegistSrv(const SocketChannelPtr &channel, unsigned int msgId, Message *msg)
+export void Msg_ReqRegistSrv(const SocketChannelPtr &channel, unsigned int msgId, Message *msg)
 {
 	COM_ReqRegistSrv* requset = (COM_ReqRegistSrv*)msg;
 	COM_ResRegistSrv response;

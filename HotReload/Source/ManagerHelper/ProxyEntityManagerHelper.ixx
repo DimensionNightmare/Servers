@@ -23,8 +23,6 @@ public:
     void RemoveEntity(unsigned int entityId, bool isDel = true);
 
     ProxyEntityHelper* GetEntity(unsigned int id);
-
-	void AddCloseTimer(size_t timerId, unsigned int entityId);
 };
 
 template <class TEntity>
@@ -83,10 +81,4 @@ ProxyEntityHelper* ProxyEntityManagerHelper<TEntity>::GetEntity(unsigned int ent
 	}
 	// allow return empty
 	return entity;
-}
-
-template <class TEntity>
-void ProxyEntityManagerHelper<TEntity>::AddCloseTimer(size_t timerId, unsigned int entityId)
-{
-	this->mEntityCloseTimer.emplace(timerId, entityId);
 }

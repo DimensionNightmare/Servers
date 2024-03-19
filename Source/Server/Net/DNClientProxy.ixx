@@ -1,6 +1,7 @@
 module;
 #include "StdAfx.h"
 #include "hv/TcpClient.h"
+#include "hv/EventLoopThread.h"
 #include "google/protobuf/message.h"
 
 #include <functional> 
@@ -11,8 +12,9 @@ import DNTask;
 
 using namespace std;
 using namespace google::protobuf;
+using namespace hv;
 
-export class DNClientProxy : public hv::TcpClient
+export class DNClientProxy : public TcpClientTmpl<SocketChannel>
 {
 public:
 	DNClientProxy();
@@ -23,22 +25,30 @@ public: // dll override
 
 	void MessageTimeoutTimer(uint64_t timerID);
 
+	const EventLoopPtr& Timer(){return pLoop->loop();}
+
+	void AddTimerRecord(size_t timerId, unsigned int id);
+
+public:
+	// cant init in tcpclient this class
+	EventLoopThreadPtr pLoop;
+
 protected: // dll proxy
 	// only oddnumber
 	atomic<unsigned int> iMsgId;
 	// unordered_
 	map<unsigned int, DNTask<Message*>* > mMsgList;
 	//
-	map<uint64_t, unsigned int > mMsgListTimer;
+	map<uint64_t, unsigned int > mMapTimer;
 	// status
 	bool bIsRegisted;
 
 	function<void()> pRegistEvent;
 
-	hv::Channel::Status eState;
+	Channel::Status eState;
 
 	shared_mutex oMsgMutex;
-	shared_mutex oMsgTimerMutex;
+	shared_mutex oTimerMutex;
 
 	bool bIsRegisting;
 };
@@ -51,7 +61,7 @@ DNClientProxy::DNClientProxy()
 	mMsgList.clear();
 	bIsRegisted = false;
 	pRegistEvent = nullptr;
-	eState = hv::Channel::Status::CLOSED;
+	eState = Channel::Status::CLOSED;
 	bIsRegisting = false;
 }
 
@@ -85,7 +95,7 @@ void DNClientProxy::TickRegistEvent(size_t timerID)
 	} 
 	else 
 	{
-		loop()->killTimer(timerID);
+		Timer()->killTimer(timerID);
 	}
 }
 
@@ -93,14 +103,14 @@ void DNClientProxy::MessageTimeoutTimer(uint64_t timerID)
 {
 	unsigned int msgId = -1;
 	{
-		if(!mMsgListTimer.contains(timerID))
+		if(!mMapTimer.contains(timerID))
 		{
 			return;
 		}
 
-		unique_lock<shared_mutex> ulock(oMsgTimerMutex);
-		msgId = mMsgListTimer[timerID];
-		mMsgListTimer.erase(timerID);
+		unique_lock<shared_mutex> ulock(oTimerMutex);
+		msgId = mMapTimer[timerID];
+		mMapTimer.erase(timerID);
 	}
 
 	{
@@ -113,4 +123,10 @@ void DNClientProxy::MessageTimeoutTimer(uint64_t timerID)
 			task->CallResume();
 		}
 	}
+}
+
+void DNClientProxy::AddTimerRecord(size_t timerId, unsigned int id)
+{
+	unique_lock<shared_mutex> ulock(oTimerMutex);
+	mMapTimer.emplace(timerId, id);
 }

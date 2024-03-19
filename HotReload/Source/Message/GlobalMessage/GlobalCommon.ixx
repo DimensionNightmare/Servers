@@ -15,7 +15,7 @@ using namespace hv;
 using namespace std;
 
 // client request
-export void Exe_ReqRegistSrv(const SocketChannelPtr &channel, unsigned int msgId, Message *msg)
+export void Msg_ReqRegistSrv(const SocketChannelPtr &channel, unsigned int msgId, Message *msg)
 {
 	COM_ReqRegistSrv* requset = (COM_ReqRegistSrv*)msg;
 	COM_ResRegistSrv response;
@@ -31,7 +31,7 @@ export void Exe_ReqRegistSrv(const SocketChannelPtr &channel, unsigned int msgId
 	}
 
 	//exist?
-	if (ServerEntityHelper* entity = channel->getContext<ServerEntityHelper>())
+	else if (ServerEntityHelper* entity = channel->getContext<ServerEntityHelper>())
 	{
 		response.set_success(false);
 	}
@@ -47,7 +47,7 @@ export void Exe_ReqRegistSrv(const SocketChannelPtr &channel, unsigned int msgId
 			if (uint64_t timerId = child->TimerId())
 			{
 				child->TimerId() = 0;
-				dnServer->GetSSock()->loop(0)->killTimer(timerId);
+				dnServer->GetSSock()->Timer()->killTimer(timerId);
 			}
 
 			// already connect
@@ -116,4 +116,9 @@ export void Exe_ReqRegistSrv(const SocketChannelPtr &channel, unsigned int msgId
 	}
 
 	dnServer->UpdateServerGroup();
+}
+
+export void Exe_RetHeartbeat(const SocketChannelPtr &channel, unsigned int msgId, Message *msg)
+{
+	COM_RetHeartbeat* requset = (COM_RetHeartbeat*)msg;
 }

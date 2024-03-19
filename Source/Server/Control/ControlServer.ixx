@@ -79,6 +79,7 @@ bool ControlServer::Init()
 	DNServer::Init();
 
 	pSSock = new DNServerProxy;
+	pSSock->pLoop = make_shared<EventLoopThread>();
 
 	int listenfd = pSSock->createsocket(stoi(*port));
 	if (listenfd < 0)
@@ -99,6 +100,7 @@ bool ControlServer::Init()
 	pSSock->setThreadNum(4);
 
 	pEntityMan = new ServerEntityManager<ServerEntity>;
+	pEntityMan->Init();
 
 	return true;
 }
@@ -116,6 +118,7 @@ bool ControlServer::Start()
 		return false;
 	}
 	
+	pSSock->pLoop->start();
 	pSSock->start();
 	return true;
 }
@@ -124,6 +127,7 @@ bool ControlServer::Stop()
 {
 	if(pSSock)
 	{
+		pSSock->pLoop->stop(true);
 		pSSock->stop();
 	}
 	return true;
