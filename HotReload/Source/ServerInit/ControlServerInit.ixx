@@ -29,7 +29,7 @@ int HandleControlServerInit(DNServer *server)
 
 	ControlServerHelper* serverProxy = GetControlServer();
 	
-	if (auto serverSock = serverProxy->GetSSock())
+	if (DNServerProxyHelper* serverSock = serverProxy->GetSSock())
 	{
 		serverSock->onConnection = nullptr;
 		serverSock->onMessage = nullptr;
@@ -53,7 +53,7 @@ int HandleControlServerInit(DNServer *server)
 				// not used
 				if(ServerEntityHelper* entity = channel->getContext<ServerEntityHelper>())
 				{
-					auto entityMan = serverProxy->GetEntityManager();
+					ServerEntityManagerHelper<ServerEntity>*  entityMan = serverProxy->GetEntityManager();
 					entityMan->RemoveEntity(entity->GetChild()->ID());
 				}
 				
@@ -76,7 +76,7 @@ int HandleControlServerInit(DNServer *server)
 			}
 			else if(packet.dealType == MsgDeal::Res)
 			{
-				auto servSock = serverProxy->GetSSock();
+				DNServerProxyHelper* servSock = serverProxy->GetSSock();
 
 				if(DNTask<Message *>* task = servSock->GetMsg(packet.msgId)) //client sock request
 				{
@@ -107,7 +107,7 @@ int HandleControlServerInit(DNServer *server)
 int HandleControlServerShutdown(DNServer *server)
 {
 	ControlServerHelper* serverProxy = GetControlServer();
-	if (auto serverSock = serverProxy->GetSSock())
+	if (DNServerProxyHelper* serverSock = serverProxy->GetSSock())
 	{
 		serverSock->onConnection = nullptr;
 		serverSock->onMessage = nullptr;

@@ -48,6 +48,7 @@ B() {}
 	 void msg() { std::cout << "B" << std::endl; }
 };
 
+#if 0
 int main() 
 {
 	GCfg::CharacterPlayer Weapons;
@@ -98,3 +99,35 @@ int main()
 
     return 0;
 }
+#endif
+
+#if 1
+int main()
+{
+	GCfg::CharacterPlayer Weapons;
+	{
+		std::ifstream input("C:\\Project\\DimensionNightmare\\Environment\\GameConfig\\Gen\\Data\\character_player.bytes", std::ios::in | std::ios::binary);
+		if(input)
+		{
+			if(Weapons.ParseFromIstream(&input))
+			{
+				std::cout << "success" << std::endl;
+			}
+			else
+			{
+				std::cout << "error" << std::endl;
+			}
+		}
+	}
+
+	auto item = Weapons.data_map().find(0);
+	if(item != Weapons.data_map().end())
+	{
+		const GCfg::PlayerInfo * info = &item->second;
+		// info->clear_type();
+		const std::string& name = info->name();
+		// name.empty();
+		// info->set_type(GCfg::NTypeCharacterPlayer_Normal);
+	}
+}
+#endif

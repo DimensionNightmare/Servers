@@ -20,7 +20,7 @@ using namespace hv;
 export DNTaskVoid Evt_ReqRegistSrv()
 {
 	LogicServerHelper* dnServer = GetLogicServer();
-	auto client = dnServer->GetCSock();
+	DNClientProxyHelper* client = dnServer->GetCSock();
 	unsigned int msgId = client->GetMsgId();
 	
 	// first Can send Msg?
@@ -85,7 +85,7 @@ export void Exe_RetChangeCtlSrv(const SocketChannelPtr &channel, unsigned int ms
 {
 	COM_RetChangeCtlSrv* requset = (COM_RetChangeCtlSrv*)msg;
 	LogicServerHelper* dnServer = GetLogicServer();
-	auto client = dnServer->GetCSock();
+	DNClientProxyHelper* client = dnServer->GetCSock();
 
 	client->UpdateClientState(Channel::Status::CLOSED);
 
@@ -98,7 +98,7 @@ export void Msg_ReqRegistSrv(const SocketChannelPtr &channel, unsigned int msgId
 	COM_ReqRegistSrv* requset = (COM_ReqRegistSrv*)msg;
 	COM_ResRegistSrv response;
 
-	auto entityMan = GetLogicServer()->GetEntityManager();
+	ServerEntityManagerHelper<ServerEntity>*  entityMan = GetLogicServer()->GetEntityManager();
 
 	ServerType regType = (ServerType)requset->server_type();
 	

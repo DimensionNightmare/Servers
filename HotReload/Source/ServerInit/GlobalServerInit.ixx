@@ -31,7 +31,7 @@ int HandleGlobalServerInit(DNServer *server)
 
 	GlobalServerHelper* serverProxy = GetGlobalServer();
 
-	if (auto serverSock = serverProxy->GetSSock())
+	if (DNServerProxyHelper* serverSock = serverProxy->GetSSock())
 	{
 		serverSock->onConnection = nullptr;
 		serverSock->onMessage = nullptr;
@@ -55,7 +55,7 @@ int HandleGlobalServerInit(DNServer *server)
 
 				if(ServerEntityHelper* entity = channel->getContext<ServerEntityHelper>())
 				{
-					auto entityMan = serverProxy->GetEntityManager();
+					ServerEntityManagerHelper<ServerEntity>*  entityMan = serverProxy->GetEntityManager();
 					entityMan->RemoveEntity(entity->GetChild()->ID());
 				}
 			}
@@ -77,7 +77,7 @@ int HandleGlobalServerInit(DNServer *server)
 			}
 			else if(packet.dealType == MsgDeal::Res)
 			{
-				auto servSock = serverProxy->GetSSock();
+				DNServerProxyHelper* servSock = serverProxy->GetSSock();
 
 				if(DNTask<Message *>* task = servSock->GetMsg(packet.msgId)) //client sock request
 				{
@@ -102,14 +102,14 @@ int HandleGlobalServerInit(DNServer *server)
 		serverSock->onMessage = onMessage;
 	}
 
-	if (auto clientSock = serverProxy->GetCSock())
+	if (DNClientProxyHelper* clientSock = serverProxy->GetCSock())
 	{
 		clientSock->onConnection = nullptr;
 		clientSock->onMessage = nullptr;
 
 		auto onConnection = [serverProxy](const SocketChannelPtr &channel)
 		{
-			auto clientSock = serverProxy->GetCSock();
+			DNClientProxyHelper* clientSock = serverProxy->GetCSock();
 
 			string peeraddr = channel->peeraddr();
 			clientSock->UpdateClientState(channel->status);
@@ -137,7 +137,7 @@ int HandleGlobalServerInit(DNServer *server)
 			memcpy(&packet, buf->data(), MessagePacket::PackLenth);
 			if(packet.dealType == MsgDeal::Res)
 			{
-				auto clientSock = serverProxy->GetCSock();
+				DNClientProxyHelper* clientSock = serverProxy->GetCSock();
 
 				if(DNTask<Message *>* task = clientSock->GetMsg(packet.msgId)) //client sock request
 				{
@@ -176,13 +176,13 @@ int HandleGlobalServerShutdown(DNServer *server)
 {
 	GlobalServerHelper* serverProxy = GetGlobalServer();
 
-	if (auto serverSock = serverProxy->GetSSock())
+	if (DNServerProxyHelper* serverSock = serverProxy->GetSSock())
 	{
 		serverSock->onConnection = nullptr;
 		serverSock->onMessage = nullptr;
 	}
 
-	if (auto clientSock = serverProxy->GetCSock())
+	if (DNClientProxyHelper* clientSock = serverProxy->GetCSock())
 	{
 		clientSock->onConnection = nullptr;
 		clientSock->onMessage = nullptr;

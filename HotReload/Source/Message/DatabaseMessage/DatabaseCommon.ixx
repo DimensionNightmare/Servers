@@ -20,7 +20,7 @@ using namespace hv;
 export DNTaskVoid Evt_ReqRegistSrv()
 {
 	DatabaseServerHelper* dnServer = GetDatabaseServer();
-	auto client = dnServer->GetCSock();
+	DNClientProxyHelper* client = dnServer->GetCSock();
 	unsigned int msgId = client->GetMsgId();
 	
 	// first Can send Msg?
@@ -86,7 +86,7 @@ export void Exe_RetChangeCtlSrv(const SocketChannelPtr &channel, unsigned int ms
 {
 	COM_RetChangeCtlSrv* requset = (COM_RetChangeCtlSrv*)msg;
 	DatabaseServerHelper* dnServer = GetDatabaseServer();
-	auto client = dnServer->GetCSock();
+	DNClientProxyHelper* client = dnServer->GetCSock();
 
 	client->UpdateClientState(Channel::Status::CLOSED);
 

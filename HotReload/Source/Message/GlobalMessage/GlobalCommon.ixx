@@ -21,7 +21,7 @@ export void Msg_ReqRegistSrv(const SocketChannelPtr &channel, unsigned int msgId
 	COM_ResRegistSrv response;
 
 	GlobalServerHelper* dnServer = GetGlobalServer();
-	auto entityMan = dnServer->GetEntityManager();
+	ServerEntityManagerHelper<ServerEntity>*  entityMan = dnServer->GetEntityManager();
 
 	ServerType regType = (ServerType)requset->server_type();
 	

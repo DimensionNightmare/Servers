@@ -18,8 +18,8 @@ using namespace GMsg::S_Common;
 export DNTaskVoid Evt_ReqRegistSrv()
 {
 	GlobalServerHelper* dnServer = GetGlobalServer();
-	auto client = dnServer->GetCSock();
-	auto server = dnServer->GetSSock();
+	DNClientProxyHelper* client = dnServer->GetCSock();
+	DNServerProxyHelper* server = dnServer->GetSSock();
 	unsigned int msgId = client->GetMsgId();
 	
 	// first Can send Msg?

@@ -120,7 +120,7 @@ export void ApiLogin(HttpService* service)
 			G2A_ResAuthAccount response;
 			
 			AuthServerHelper* authServer = GetAuthServer();
-			auto client = authServer->GetCSock();
+			DNClientProxyHelper* client = authServer->GetCSock();
 			unsigned int msgId = client->GetMsgId();
 			
 			// first Can send Msg?

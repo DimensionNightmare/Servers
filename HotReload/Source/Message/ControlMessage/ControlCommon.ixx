@@ -8,6 +8,7 @@ import DNTask;
 import MessagePack;
 import ControlServerHelper;
 import ServerEntityHelper;
+import ServerEntityManagerHelper;
 import DNServer;
 
 using namespace google::protobuf;
@@ -21,7 +22,7 @@ export void Msg_ReqRegistSrv(const SocketChannelPtr &channel, unsigned int msgId
 	COM_ReqRegistSrv* requset = (COM_ReqRegistSrv*)msg;
 	COM_ResRegistSrv response;
 
-	auto entityMan = GetControlServer()->GetEntityManager();
+	ServerEntityManagerHelper<ServerEntity>*  entityMan = GetControlServer()->GetEntityManager();
 
 	ServerType regType = (ServerType)requset->server_type();
 	

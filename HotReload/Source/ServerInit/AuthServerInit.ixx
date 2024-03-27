@@ -26,7 +26,7 @@ int HandleAuthServerInit(DNServer *server)
 
 	AuthServerHelper* serverProxy = GetAuthServer();
 
-	if(auto serverSock = serverProxy->GetSSock())
+	if(DNWebProxyHelper* serverSock = serverProxy->GetSSock())
 	{
 		HttpService* service = new HttpService;
 		
@@ -35,7 +35,7 @@ int HandleAuthServerInit(DNServer *server)
 		serverSock->registerHttpService(service);
 	}
 
-	if (auto clientSock = serverProxy->GetCSock())
+	if (DNClientProxyHelper* clientSock = serverProxy->GetCSock())
 	{
 		clientSock->onConnection = nullptr;
 		clientSock->onMessage = nullptr;
@@ -44,7 +44,7 @@ int HandleAuthServerInit(DNServer *server)
 		{
 			string peeraddr = channel->peeraddr();
 
-			auto clientSock = serverProxy->GetCSock();
+			DNClientProxyHelper* clientSock = serverProxy->GetCSock();
 
 			clientSock->UpdateClientState(channel->status);
 
@@ -71,7 +71,7 @@ int HandleAuthServerInit(DNServer *server)
 			memcpy(&packet, buf->data(), MessagePacket::PackLenth);
 			if(packet.dealType == MsgDeal::Res)
 			{
-				auto clientSock = serverProxy->GetCSock();
+				DNClientProxyHelper* clientSock = serverProxy->GetCSock();
 
 				if(DNTask<Message *>* task = clientSock->GetMsg(packet.msgId)) //client sock request
 				{
@@ -104,7 +104,7 @@ int HandleAuthServerShutdown(DNServer *server)
 {
 	AuthServerHelper* serverProxy = GetAuthServer();
 
-	if (auto serverSock = serverProxy->GetSSock())
+	if (DNWebProxyHelper* serverSock = serverProxy->GetSSock())
 	{
 		if(serverSock->service != nullptr)
 		{
@@ -113,7 +113,7 @@ int HandleAuthServerShutdown(DNServer *server)
 		}
 	}
 
-	if (auto clientSock = serverProxy->GetCSock())
+	if (DNClientProxyHelper* clientSock = serverProxy->GetCSock())
 	{
 		clientSock->onConnection = nullptr;
 		clientSock->onMessage = nullptr;

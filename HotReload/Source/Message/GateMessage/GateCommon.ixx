@@ -11,7 +11,7 @@ import DNTask;
 import MessagePack;
 import GateServerHelper;
 import ServerEntityHelper;
-
+import DNServerProxyHelper;
 
 using namespace std;
 using namespace hv;
@@ -23,8 +23,8 @@ using namespace GMsg::S_Global;
 export DNTaskVoid Evt_ReqRegistSrv()
 {
 	GateServerHelper* dnServer = GetGateServer();
-	auto client = dnServer->GetCSock();
-	auto server = dnServer->GetSSock();
+	DNClientProxyHelper* client = dnServer->GetCSock();
+	DNServerProxy* server = dnServer->GetSSock();
 	unsigned int msgId = client->GetMsgId();
 	
 	// first Can send Msg?
@@ -131,7 +131,7 @@ void ServerEntityCloseEvent(Entity* entity)
 	MessagePack(0, MsgDeal::Ret, upLoad.GetDescriptor()->full_name().c_str(), binData);
 
 	GateServerHelper* dnServer = GetGateServer();
-	auto client = dnServer->GetCSock();
+	DNClientProxyHelper* client = dnServer->GetCSock();
 	client->send(binData);
 	
 	auto entityMan = dnServer->GetEntityManager();
@@ -191,7 +191,7 @@ export void Msg_ReqRegistSrv(const SocketChannelPtr &channel, unsigned int msgId
 		MessagePack(0, MsgDeal::Ret, upLoad.GetDescriptor()->full_name().c_str(), binData);
 
 		GateServerHelper* dnServer = GetGateServer();
-		auto client = dnServer->GetCSock();
+		DNClientProxyHelper* client = dnServer->GetCSock();
 		client->send(binData);
 	}
 }

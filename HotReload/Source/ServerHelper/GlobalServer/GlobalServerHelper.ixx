@@ -51,7 +51,7 @@ export GlobalServerHelper* GetGlobalServer()
 
 void GlobalServerHelper::UpdateServerGroup()
 {
-	auto entityMan = GetEntityManager();
+	ServerEntityManagerHelper<ServerEntity>*  entityMan = GetEntityManager();
 
 	list<ServerEntity*> gates = entityMan->GetEntityByList(ServerType::GateServer);
 	if(gates.size() <= 0)

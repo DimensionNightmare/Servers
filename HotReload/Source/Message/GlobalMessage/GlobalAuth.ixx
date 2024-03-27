@@ -55,7 +55,7 @@ export DNTaskVoid Msg_ReqAuthAccount(const SocketChannelPtr &channel, unsigned i
 
 		G2G_ResLoginToken tokenRes;
 
-		auto server = GetGlobalServer()->GetSSock();
+		DNServerProxyHelper* server = GetGlobalServer()->GetSSock();
 		unsigned int smsgId = server->GetMsgId();
 		
 		// pack data

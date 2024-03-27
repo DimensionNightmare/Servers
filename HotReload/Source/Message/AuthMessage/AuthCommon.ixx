@@ -8,6 +8,7 @@ export module AuthMessage:AuthCommon;
 import DNTask;
 import MessagePack;
 import AuthServerHelper;
+import DNWebProxyHelper;
 
 
 using namespace std;
@@ -18,8 +19,8 @@ using namespace GMsg::S_Common;
 export DNTaskVoid Evt_ReqRegistSrv()
 {
 	AuthServerHelper* dnServer = GetAuthServer();
-	auto client = dnServer->GetCSock();
-	auto server = dnServer->GetSSock();
+	DNClientProxyHelper* client = dnServer->GetCSock();
+	DNWebProxyHelper* server = dnServer->GetSSock();
 	unsigned int msgId = client->GetMsgId();
 	
 	// first Can send Msg?

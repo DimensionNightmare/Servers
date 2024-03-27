@@ -30,7 +30,7 @@ int HandleGateServerInit(DNServer *server)
 
 	GateServerHelper* serverProxy = GetGateServer();
 
-	if (auto serverSock = serverProxy->GetSSock())
+	if (DNServerProxy* serverSock = serverProxy->GetSSock())
 	{
 		serverSock->onConnection = nullptr;
 		serverSock->onMessage = nullptr;
@@ -71,14 +71,14 @@ int HandleGateServerInit(DNServer *server)
 		serverSock->onMessage = onMessage;
 	}
 
-	if (auto clientSock = serverProxy->GetCSock())
+	if (DNClientProxyHelper* clientSock = serverProxy->GetCSock())
 	{
 		clientSock->onConnection = nullptr;
 		clientSock->onMessage = nullptr;
 		
 		auto onConnection = [serverProxy](const SocketChannelPtr &channel)
 		{
-			auto clientSock = serverProxy->GetCSock();
+			DNClientProxyHelper* clientSock = serverProxy->GetCSock();
 
 			string peeraddr = channel->peeraddr();
 			clientSock->UpdateClientState(channel->status);
@@ -106,7 +106,7 @@ int HandleGateServerInit(DNServer *server)
 			memcpy(&packet, buf->data(), MessagePacket::PackLenth);
 			if(packet.dealType == MsgDeal::Res)
 			{
-				auto clientSock = serverProxy->GetCSock();
+				DNClientProxyHelper* clientSock = serverProxy->GetCSock();
 
 				if(DNTask<Message *>* task = clientSock->GetMsg(packet.msgId)) //client sock request
 				{
@@ -144,13 +144,13 @@ int HandleGateServerShutdown(DNServer *server)
 {
 	GateServerHelper* serverProxy = GetGateServer();
 
-	if (auto serverSock = serverProxy->GetSSock())
+	if (DNServerProxy* serverSock = serverProxy->GetSSock())
 	{
 		serverSock->onConnection = nullptr;
 		serverSock->onMessage = nullptr;
 	}
 
-	if (auto clientSock = serverProxy->GetCSock())
+	if (DNClientProxyHelper* clientSock = serverProxy->GetCSock())
 	{
 		clientSock->onConnection = nullptr;
 		clientSock->onMessage = nullptr;

@@ -31,14 +31,14 @@ int HandleDatabaseServerInit(DNServer *server)
 	
 	DatabaseServerHelper* serverProxy = GetDatabaseServer();
 
-	if (auto clientSock = serverProxy->GetCSock())
+	if (DNClientProxyHelper* clientSock = serverProxy->GetCSock())
 	{
 		clientSock->onConnection = nullptr;
 		clientSock->onMessage = nullptr;
 		
 		auto onConnection = [serverProxy](const SocketChannelPtr &channel)
 		{
-			auto clientSock = serverProxy->GetCSock();
+			DNClientProxyHelper* clientSock = serverProxy->GetCSock();
 
 			string peeraddr = channel->peeraddr();
 			
@@ -91,7 +91,7 @@ int HandleDatabaseServerInit(DNServer *server)
 			}
 			else if(packet.dealType == MsgDeal::Res)
 			{
-				auto clientSock = serverProxy->GetCSock();
+				DNClientProxyHelper* clientSock = serverProxy->GetCSock();
 
 				if(DNTask<Message *>* task = clientSock->GetMsg(packet.msgId)) //client sock request
 				{
@@ -123,7 +123,7 @@ int HandleDatabaseServerShutdown(DNServer *server)
 {
 	DatabaseServerHelper* serverProxy = GetDatabaseServer();
 
-	if (auto clientSock = serverProxy->GetCSock())
+	if (DNClientProxyHelper* clientSock = serverProxy->GetCSock())
 	{
 		clientSock->onConnection = nullptr;
 		clientSock->onMessage = nullptr;

@@ -59,7 +59,7 @@ export DNTaskVoid Msg_ReqAuthAccount(const SocketChannelPtr &channel, unsigned i
 			co_return &response;
 		}();
 
-		auto server = GetControlServer()->GetSSock();
+		DNServerProxyHelper* server = GetControlServer()->GetSSock();
 		unsigned int smsgId = server->GetMsgId();
 
 		binData.resize(requset->ByteSize());
