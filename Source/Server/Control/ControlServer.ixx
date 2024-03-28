@@ -88,7 +88,7 @@ bool ControlServer::Init()
 		return false;
 	}
 
-	DNPrint(1, LoggerLevel::Debug, nullptr, pSSock->port, listenfd);
+	DNPrint(1, LoggerLevel::Normal, nullptr, pSSock->port, listenfd);
 
 	unpack_setting_t* setting = new unpack_setting_t;
 	setting->mode = unpack_mode_e::UNPACK_BY_LENGTH_FIELD;

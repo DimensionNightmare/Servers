@@ -97,4 +97,7 @@ void LogicMessageHandle::RegMsgHandle()
 
 	msg = COM_ReqRegistSrv::internal_default_instance();
 	MHandleMap.emplace( hashStr(msg->GetDescriptor()->full_name()), make_pair(msg, &Msg_ReqRegistSrv));
+
+	msg = COM_RetHeartbeat::internal_default_instance();
+	MHandleRetMap.emplace( hashStr(msg->GetDescriptor()->full_name()), make_pair(msg, &Exe_RetHeartbeat));
 }

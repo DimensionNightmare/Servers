@@ -47,14 +47,14 @@ public:
 
 #pragma region // ClientReconnectFunc
 
-static std::function<void(const char*, int)> PClientReconnectFunc = nullptr;
+static std::function<void(const char*, unsigned short)> PClientReconnectFunc = nullptr;
 
-export void SetClientReconnectFunc( std::function<void(const char*, int)> func)
+export void SetClientReconnectFunc( std::function<void(const char*, unsigned short)> func)
 {
 	PClientReconnectFunc = func;
 }
 
-export std::function<void(const char*, int)> GetClientReconnectFunc()
+export std::function<void(const char*, unsigned short)> GetClientReconnectFunc()
 {
 	return PClientReconnectFunc;
 }

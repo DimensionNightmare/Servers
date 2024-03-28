@@ -503,11 +503,11 @@ bool DimensionNightmare::OnRegClientReconnectFunc()
 {
 	if (void* funtPtr = pHotDll->GetFuncPtr("RegClientReconnectFunc"))
 	{
-		using funcSign = int (*)(function<void(const char*, int)>);
+		using funcSign = int (*)(function<void(const char*, unsigned short)>);
 		if (funcSign func = reinterpret_cast<funcSign>(funtPtr))
 		{
 			// auto funcProxy = bind(&DNServer::ReClientEvent, pServer);
-			auto funcProxy = [this](const char* ip, int port)
+			auto funcProxy = [this](const char* ip, unsigned short port)
 			{
 				pServer->ReClientEvent(ip, port);
 			};

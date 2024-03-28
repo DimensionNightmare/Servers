@@ -88,7 +88,7 @@ bool AuthServer::Init()
 
 	DNServer::Init();
 
-	int port = 0;
+	unsigned short port = 0;
 	
 	value = GetLuanchConfigParam("port");
 	if(value)

@@ -34,7 +34,7 @@ public:
 
 	virtual void LoopEvent(function<void(EventLoopPtr)> func) override;
 
-	virtual void ReClientEvent(const char* ip, int port) override;
+	virtual void ReClientEvent(const char* ip, unsigned short port) override;
 
 public: // dll override
 	virtual DNClientProxy* GetCSock(){return pCSock;}
@@ -78,7 +78,7 @@ bool DatabaseServer::Init()
 
 	DNServer::Init();
 
-	int port = 0;
+	unsigned short port = 0;
 
 	unpack_setting_t* setting = new unpack_setting_t;
 	setting->mode = unpack_mode_e::UNPACK_BY_LENGTH_FIELD;
@@ -178,7 +178,7 @@ void DatabaseServer::LoopEvent(function<void(EventLoopPtr)> func)
     
 }
 
-void DatabaseServer::ReClientEvent(const char* ip, int port)
+void DatabaseServer::ReClientEvent(const char* ip, unsigned short port)
 {
 	reconn_setting_t* reconn_setting = new reconn_setting_t;
 	memcpy(reconn_setting, pCSock->reconn_setting, sizeof reconn_setting);

@@ -37,7 +37,7 @@ public:
 
 	virtual void LoopEvent(function<void(EventLoopPtr)> func) override;
 
-	virtual void ReClientEvent(const char* ip, int port) override;
+	virtual void ReClientEvent(const char* ip, unsigned short port) override;
 
 public: // dll override
 	virtual DNServerProxy* GetSSock(){return pSSock;}
@@ -100,7 +100,7 @@ bool LogicServer::Init()
 
 	DNServer::Init();
 
-	int port = 0;
+	unsigned short port = 0;
 	value = GetLuanchConfigParam("port");
 	if(value)
 	{
@@ -131,7 +131,7 @@ bool LogicServer::Init()
 		pSSock->port = ntohs(addr.sin_port);
 	}
 	
-	DNPrint(1, LoggerLevel::Debug, nullptr, pSSock->port, listenfd);
+	DNPrint(1, LoggerLevel::Normal, nullptr, pSSock->port, listenfd);
 
 	unpack_setting_t* setting = new unpack_setting_t;
 	setting->mode = unpack_mode_e::UNPACK_BY_LENGTH_FIELD;
@@ -267,7 +267,7 @@ void LogicServer::LoopEvent(function<void(EventLoopPtr)> func)
     
 }
 
-void LogicServer::ReClientEvent(const char* ip, int port)
+void LogicServer::ReClientEvent(const char* ip, unsigned short port)
 {
 	reconn_setting_t* reconn_setting = new reconn_setting_t;
 	memcpy(reconn_setting, pCSock->reconn_setting, sizeof reconn_setting);

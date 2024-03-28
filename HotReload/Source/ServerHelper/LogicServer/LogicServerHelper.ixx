@@ -23,7 +23,7 @@ public:
 	ServerEntityManagerHelper<ServerEntity>* GetEntityManager(){ return nullptr;}
 
 	string& GetCtlIp(){ return sCtlIp;}
-	int GetCtlPort(){ return iCtlPort;}
+	unsigned short& GetCtlPort(){ return iCtlPort;}
 };
 
 static LogicServerHelper* PLogicServerHelper = nullptr;

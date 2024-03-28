@@ -96,7 +96,7 @@ bool GateServer::Init()
 
 	DNServer::Init();
 
-	int port = 0;
+	unsigned short port = 0;
 	
 	value = GetLuanchConfigParam("port");
 	if(value)
@@ -128,7 +128,7 @@ bool GateServer::Init()
 		pSSock->port = ntohs(addr.sin_port);
 	}
 	
-	DNPrint(1, LoggerLevel::Debug, nullptr, pSSock->port, listenfd);
+	DNPrint(1, LoggerLevel::Normal, nullptr, pSSock->port, listenfd);
 
 	unpack_setting_t* setting = new unpack_setting_t;
 	setting->mode = unpack_mode_e::UNPACK_BY_LENGTH_FIELD;

@@ -36,19 +36,22 @@ int HandleLogicServerInit(DNServer *server)
 		serverSock->onConnection = nullptr;
 		serverSock->onMessage = nullptr;
 
-		auto onConnection = [serverProxy](const SocketChannelPtr &channel)
+		auto onConnection = [serverProxy, serverSock](const SocketChannelPtr &channel)
 		{
 			string peeraddr = channel->peeraddr();
 			if (channel->isConnected())
 			{
 				DNPrint(2, LoggerLevel::Debug, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
+
+				// size_t timerId = serverSock->Timer()->setTimeout(5000, std::bind(&DNServerProxy::ChannelTimeoutTimer, serverSock, placeholders::_1));
+				// serverSock->AddTimerRecord(timerId, channel->id());
 			}
 			else
 			{
 				DNPrint(3, LoggerLevel::Debug, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
 				if(Entity* entity = channel->getContext<Entity>())
 				{
-					entity->CloseEvent()(entity);
+					// entity->CloseEvent()(entity);
 				}
 			}
 		};
@@ -171,6 +174,12 @@ int HandleLogicServerInit(DNServer *server)
 int HandleLogicServerShutdown(DNServer *server)
 {
 	LogicServerHelper* serverProxy = GetLogicServer();
+
+	if (DNServerProxy* serverSock = serverProxy->GetSSock())
+	{
+		serverSock->onConnection = nullptr;
+		serverSock->onMessage = nullptr;
+	}
 
 	if (DNClientProxyHelper* clientSock = serverProxy->GetCSock())
 	{

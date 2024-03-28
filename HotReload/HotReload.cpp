@@ -57,7 +57,7 @@ extern "C"
 	HOTRELOAD int InitHotReload(DimensionNightmare &mainObj);
 	HOTRELOAD int ShutdownHotReload(DimensionNightmare &mainObj);
 
-	HOTRELOAD int RegClientReconnectFunc(std::function<void(const char*, int)> func);
+	HOTRELOAD int RegClientReconnectFunc(std::function<void(const char*, unsigned short)> func);
 }
 
 int InitHotReload(DimensionNightmare &mainObj)
@@ -110,7 +110,7 @@ int ShutdownHotReload(DimensionNightmare &mainObj)
 	return 0;
 }
 
-int RegClientReconnectFunc(std::function<void(const char*, int)> func)
+int RegClientReconnectFunc(std::function<void(const char*, unsigned short)> func)
 {
 	SetClientReconnectFunc(func);
 	return 0;

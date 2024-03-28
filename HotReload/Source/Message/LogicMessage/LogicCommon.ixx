@@ -130,3 +130,8 @@ export void Msg_ReqRegistSrv(const SocketChannelPtr &channel, unsigned int msgId
 	MessagePack(msgId, MsgDeal::Res, nullptr, binData);
 	channel->write(binData);
 }
+
+export void Exe_RetHeartbeat(const SocketChannelPtr &channel, unsigned int msgId, Message *msg)
+{
+	COM_RetHeartbeat* requset = (COM_RetHeartbeat*)msg;
+}

@@ -27,7 +27,7 @@ public:
 	bool InitDabase();
 
 	string& GetCtlIp(){ return sCtlIp;}
-	int GetCtlPort(){ return iCtlPort;}
+	unsigned short& GetCtlPort(){ return iCtlPort;}
 };
 
 static DatabaseServerHelper* PDatabaseServerHelper = nullptr;
