@@ -61,6 +61,11 @@ int HandleGateServerInit(DNServer *server)
 				string msgData((char*)buf->data() + MessagePacket::PackLenth, packet.pkgLenth);
 				GateMessageHandle::MsgHandle(channel, packet.msgId, packet.msgHashId, msgData);
 			}
+			else if(packet.dealType == MsgDeal::Ret)
+			{
+				string msgData((char*)buf->data() + MessagePacket::PackLenth, packet.pkgLenth);
+				GateMessageHandle::MsgRetHandle(channel, packet.msgId, packet.msgHashId, msgData);
+			}
 			else
 			{
 				DNPrint(12, LoggerLevel::Error, nullptr);
