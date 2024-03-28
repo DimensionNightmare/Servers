@@ -54,9 +54,9 @@ export DNTaskVoid Msg_ReqAuthAccount(const SocketChannelPtr &channel, unsigned i
 		// response.set_state_code(0);
 
 		// message change to global
-		auto dataChannel = [&response]()->DNTask<Message*>
+		auto dataChannel = [&response]()->DNTask<Message>
 		{
-			co_return &response;
+			co_return response;
 		}();
 
 		DNServerProxyHelper* server = GetControlServer()->GetSSock();

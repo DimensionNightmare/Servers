@@ -19,14 +19,14 @@ private:
 public:
 	unsigned int GetMsgId() { return ++iMsgId; }
 
-	bool AddMsg(unsigned int msgId, DNTask<Message*>* task, int breakTime = 10000);
-	DNTask<Message*>* GetMsg(unsigned int msgId);
+	bool AddMsg(unsigned int msgId, DNTask<Message>* task, int breakTime = 10000);
+	DNTask<Message>* GetMsg(unsigned int msgId);
 	void DelMsg(unsigned int msgId);
 
 	void TickHeartbeat(hio_t *io);
 };
 
-bool DNServerProxyHelper::AddMsg(unsigned int msgId, DNTask<Message *> *task, int breakTime)
+bool DNServerProxyHelper::AddMsg(unsigned int msgId, DNTask<Message> *task, int breakTime)
 {
 	unique_lock<shared_mutex> ulock(oMsgMutex);
 	mMsgList.emplace(msgId, task);
@@ -38,7 +38,7 @@ bool DNServerProxyHelper::AddMsg(unsigned int msgId, DNTask<Message *> *task, in
 	return true;
 }
 
-DNTask<Message *> *DNServerProxyHelper::GetMsg(unsigned int msgId)
+DNTask<Message> *DNServerProxyHelper::GetMsg(unsigned int msgId)
 {;
 	shared_lock<shared_mutex> lock(oMsgMutex);
 	if(mMsgList.contains(msgId))
@@ -53,7 +53,7 @@ void DNServerProxyHelper::DelMsg(unsigned int msgId)
 	unique_lock<shared_mutex> ulock(oMsgMutex);
 	if(mMsgList.contains(msgId))
 	{
-		if(DNTask<Message *> *task = mMsgList[msgId])
+		if(DNTask<Message> *task = mMsgList[msgId])
 		{
 			if (size_t timerId = task->TimerId())
 			{

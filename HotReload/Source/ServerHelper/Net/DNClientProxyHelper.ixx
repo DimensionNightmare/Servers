@@ -38,8 +38,8 @@ public:
 	ProxyStatus UpdateClientState(Channel::Status state);
 	void ServerDisconnect();
 	// task
-	DNTask<Message*>* GetMsg(unsigned int msgId);
-	bool AddMsg(unsigned int msgId, DNTask<Message*>* task, int breakTime = 10000);
+	DNTask<Message>* GetMsg(unsigned int msgId);
+	bool AddMsg(unsigned int msgId, DNTask<Message>* task, int breakTime = 10000);
 	void DelMsg(unsigned int msgId);
 	// heartbeat
 	void TickHeartbeat();
@@ -109,7 +109,7 @@ void DNClientProxyHelper::ServerDisconnect()
 	mMsgList.clear();
 }
 
-DNTask<Message *> *DNClientProxyHelper::GetMsg(unsigned int msgId)
+DNTask<Message> *DNClientProxyHelper::GetMsg(unsigned int msgId)
 {
 	shared_lock<shared_mutex> lock(oMsgMutex);
 	if(mMsgList.contains(msgId))
@@ -119,7 +119,7 @@ DNTask<Message *> *DNClientProxyHelper::GetMsg(unsigned int msgId)
 	return nullptr;
 }
 
-bool DNClientProxyHelper::AddMsg(unsigned int msgId, DNTask<Message *> *task, int breakTime)
+bool DNClientProxyHelper::AddMsg(unsigned int msgId, DNTask<Message> *task, int breakTime)
 {
 	unique_lock<shared_mutex> ulock(oMsgMutex);
 	mMsgList.emplace(msgId, task);
@@ -137,7 +137,7 @@ void DNClientProxyHelper::DelMsg(unsigned int msgId)
 	unique_lock<shared_mutex> ulock(oMsgMutex);
 	if(mMsgList.contains(msgId))
 	{
-		if(DNTask<Message *> *task = mMsgList[msgId])
+		if(DNTask<Message> *task = mMsgList[msgId])
 		{
 			if (size_t timerId = task->TimerId())
 			{

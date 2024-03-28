@@ -33,7 +33,7 @@ protected:
 	// only oddnumber
 	atomic<unsigned int> iMsgId;
 	// unordered_
-	map<unsigned int, DNTask<Message*>* > mMsgList;
+	map<unsigned int, DNTask<Message>* > mMsgList;
 	//
 	map<uint64_t, unsigned int > mMapTimer;
 
@@ -68,7 +68,7 @@ void DNServerProxy::MessageTimeoutTimer(uint64_t timerID)
 		if(mMsgList.contains(id))
 		{
 			unique_lock<shared_mutex> ulock(oMsgMutex);
-			DNTask<Message *>* task = mMsgList[id];
+			DNTask<Message>* task = mMsgList[id];
 			mMsgList.erase(id);
 			task->SetFlag(DNTaskFlag::Timeout);
 			task->CallResume();

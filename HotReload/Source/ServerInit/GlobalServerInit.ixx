@@ -78,7 +78,7 @@ int HandleGlobalServerInit(DNServer *server)
 			{
 				DNServerProxyHelper* servSock = serverProxy->GetSSock();
 
-				if(DNTask<Message *>* task = servSock->GetMsg(packet.msgId)) //client sock request
+				if(DNTask<Message>* task = servSock->GetMsg(packet.msgId)) //client sock request
 				{
 					servSock->DelMsg(packet.msgId);
 					task->Resume();
@@ -138,7 +138,7 @@ int HandleGlobalServerInit(DNServer *server)
 			{
 				DNClientProxyHelper* clientSock = serverProxy->GetCSock();
 
-				if(DNTask<Message *>* task = clientSock->GetMsg(packet.msgId)) //client sock request
+				if(DNTask<Message>* task = clientSock->GetMsg(packet.msgId)) //client sock request
 				{
 					clientSock->DelMsg(packet.msgId);
 					task->Resume();

@@ -37,7 +37,7 @@ protected: // dll proxy
 	// only oddnumber
 	atomic<unsigned int> iMsgId;
 	// unordered_
-	map<unsigned int, DNTask<Message*>* > mMsgList;
+	map<unsigned int, DNTask<Message>* > mMsgList;
 	//
 	map<uint64_t, unsigned int > mMapTimer;
 	// status
@@ -117,7 +117,7 @@ void DNClientProxy::MessageTimeoutTimer(uint64_t timerID)
 		if(mMsgList.contains(msgId))
 		{
 			unique_lock<shared_mutex> ulock(oMsgMutex);
-			DNTask<Message *>* task = mMsgList[msgId];
+			DNTask<Message>* task = mMsgList[msgId];
 			mMsgList.erase(msgId);
 			task->SetFlag(DNTaskFlag::Timeout);
 			task->CallResume();

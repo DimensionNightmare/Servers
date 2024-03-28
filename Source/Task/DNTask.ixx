@@ -34,9 +34,9 @@ struct DNTask
 
 		void unhandled_exception() { }
 
-		const T* GetResult() const { return oResult; }
+		T* GetResult() const { return oResult; }
 
-		const T* oResult;
+		T* oResult;
 	};
 
 	// Awaitable
@@ -82,9 +82,9 @@ struct DNTask
 		pCallPause.resume();
 	}
 
-	T GetResult()
+	T* GetResult()
 	{
-		return *tHandle.promise().GetResult();
+		return tHandle.promise().GetResult();
 	}
 
 	void Destroy()

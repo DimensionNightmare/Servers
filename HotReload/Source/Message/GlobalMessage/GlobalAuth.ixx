@@ -65,9 +65,9 @@ export DNTaskVoid Msg_ReqAuthAccount(const SocketChannelPtr &channel, unsigned i
 		MessagePack(smsgId, MsgDeal::Req, tokenReq.GetDescriptor()->full_name().c_str(), binData);
 		
 		// data alloc
-		auto dataChannel = [&tokenRes]()->DNTask<Message*>
+		auto dataChannel = [&tokenRes]()->DNTask<Message>
 		{
-			co_return &tokenRes;
+			co_return tokenRes;
 		}();
 
 		{

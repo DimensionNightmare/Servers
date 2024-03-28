@@ -144,7 +144,7 @@ int HandleLogicServerInit(DNServer *server)
 			{
 				DNClientProxyHelper* clientSock = serverProxy->GetCSock();
 
-				if(DNTask<Message *>* task = clientSock->GetMsg(packet.msgId)) //client sock request
+				if(DNTask<Message>* task = clientSock->GetMsg(packet.msgId)) //client sock request
 				{
 					clientSock->DelMsg(packet.msgId);
 					task->Resume();

@@ -78,7 +78,7 @@ int HandleControlServerInit(DNServer *server)
 			{
 				DNServerProxyHelper* servSock = serverProxy->GetSSock();
 
-				if(DNTask<Message *>* task = servSock->GetMsg(packet.msgId)) //client sock request
+				if(DNTask<Message>* task = servSock->GetMsg(packet.msgId)) //client sock request
 				{
 					servSock->DelMsg(packet.msgId);
 					task->Resume();

@@ -141,9 +141,9 @@ export void ApiLogin(HttpService* service)
 			MessagePack(msgId, MsgDeal::Req, requset.GetDescriptor()->full_name().c_str(), binData);
 			
 			// data alloc
-			auto dataChannel = [&response]()->DNTask<Message*>
+			auto dataChannel = [&response]()->DNTask<Message>
 			{
-				co_return &response;
+				co_return response;
 			}();
 
 			// regist Close event to release memory

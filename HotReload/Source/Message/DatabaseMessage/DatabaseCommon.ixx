@@ -48,9 +48,9 @@ export DNTaskVoid Evt_ReqRegistSrv()
 	
 	// data alloc
 	COM_ResRegistSrv response;
-	auto dataChannel = [&response]()->DNTask<Message*>
+	auto dataChannel = [&response]()->DNTask<Message>
 	{
-		co_return &response;
+		co_return response;
 	}();
 
 
