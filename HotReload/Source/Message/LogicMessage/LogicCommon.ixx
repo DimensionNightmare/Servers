@@ -92,6 +92,15 @@ export void Exe_RetChangeCtlSrv(const SocketChannelPtr &channel, unsigned int ms
 	GetClientReconnectFunc()(requset->ip().c_str(), requset->port());
 }
 
+void ServerEntityCloseEvent(Entity* entity)
+{
+	ServerEntityHelper* castObj = static_cast<ServerEntityHelper*>(entity);
+	LogicServerHelper* dnServer = GetLogicServer();
+	
+	auto entityMan = dnServer->GetEntityManager();
+	entityMan->RemoveEntity(castObj->GetChild()->ID());
+}
+
 // client request
 export void Msg_ReqRegistSrv(const SocketChannelPtr &channel, unsigned int msgId, Message *msg)
 {
@@ -121,6 +130,8 @@ export void Msg_ReqRegistSrv(const SocketChannelPtr &channel, unsigned int msgId
 
 		response.set_success(true);
 		response.set_server_index(entity->GetChild()->ID());
+
+		entity->CloseEvent() = &ServerEntityCloseEvent;
 	}
 	
 	string binData;

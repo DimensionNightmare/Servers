@@ -68,12 +68,12 @@ void ServerEntityManager<TEntity>::EntityCloseTimer(uint64_t timerID)
 
 	if(this->mEntityMap.contains(entityId))
 	{
-		TEntity* entity = this->mEntityMap[entityId];
+		TEntity* entity = &this->mEntityMap[entityId];
 		unique_lock<shared_mutex> ulock(this->oMapMutex);
 
+		this->mEntityMapList[entity->GetType()].remove(entity);
+		
 		DNPrint(-1, LoggerLevel::Debug, "destory entity\n");
 		this->mEntityMap.erase(entityId);
-		this->mEntityMapList[entity->GetType()].remove(entity);
-		delete entity;
 	}
 }

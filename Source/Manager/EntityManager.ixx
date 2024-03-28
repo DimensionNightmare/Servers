@@ -25,7 +25,7 @@ public: // dll override
 	void AddTimerRecord(size_t timerId, unsigned int id);
 
 protected: // dll proxy
-    map<unsigned int, TEntity*> mEntityMap;
+    map<unsigned int, TEntity> mEntityMap;
 	shared_mutex oMapMutex;
 	//
 	map<uint64_t, unsigned int > mMapTimer;
@@ -47,12 +47,6 @@ EntityManager<TEntity>::EntityManager()
 template <class TEntity>
 EntityManager<TEntity>::~EntityManager()
 {
-	for(auto& [k,v] : mEntityMap)
-	{
-		delete v;
-		v = nullptr;
-	}
-
 	mEntityMap.clear();
 	mMapTimer.clear();
 	pLoop->stop(true);

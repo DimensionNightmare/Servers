@@ -28,12 +28,11 @@ CastTEntity* EntityManagerHelper<TEntity>::AddEntity(const SocketChannelPtr& cha
 	TEntity* entity = nullptr;
 	if (this->mEntityMap.contains(entityId))
 	{
-		entity = this->mEntityMap[entityId];
+		entity = &this->mEntityMap[entityId];
 	}
 	else
 	{
-		entity = make_shared<TEntity>();
-		this->mEntityMap.emplace(entityId, entity);
+		entity = &this->mEntityMap[entityId];
 		channel->setContext(entity);
 
 		CastTEntity* castEntity = static_cast<CastTEntity*>(entity);

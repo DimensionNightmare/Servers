@@ -60,11 +60,10 @@ void ProxyEntityManager<TEntity>::EntityCloseTimer(uint64_t timerID)
 
 	if(this->mEntityMap.contains(entityId))
 	{
-		TEntity* entity = this->mEntityMap[entityId];
+		TEntity* entity = &this->mEntityMap[entityId];
 		unique_lock<shared_mutex> ulock(this->oMapMutex);
 
 		DNPrint(-1, LoggerLevel::Debug, "destory entity\n");
 		this->mEntityMap.erase(entityId);
-		delete entity;
 	}
 }

@@ -34,8 +34,7 @@ ProxyEntityHelper* ProxyEntityManagerHelper<TEntity>::AddEntity(unsigned int ent
 	{
 		unique_lock<shared_mutex> ulock(this->oMapMutex);
 
-		TEntity* oriEntity = new TEntity;
-		this->mEntityMap.emplace(entityId, oriEntity);
+		TEntity* oriEntity = &this->mEntityMap[entityId];
 		
 		entity = static_cast<ProxyEntityHelper*>(oriEntity);
 		entity->GetChild()->ID() = entityId;
@@ -50,16 +49,16 @@ void ProxyEntityManagerHelper<TEntity>::RemoveEntity(unsigned int entityId, bool
 	
 	if(this->mEntityMap.contains(entityId))
 	{
-		TEntity* oriEntity = this->mEntityMap[entityId];
+		TEntity* oriEntity = &this->mEntityMap[entityId];
 		ProxyEntityHelper* entity = static_cast<ProxyEntityHelper*>(oriEntity);
 		if(isDel)
 		{
 			unique_lock<shared_mutex> ulock(this->oMapMutex);
 
+			// this->mIdleServerId.push_back(entityId);
+			
 			DNPrint(-1, LoggerLevel::Debug, "destory entity\n");
 			this->mEntityMap.erase(entityId);
-			// this->mIdleServerId.push_back(entityId);
-			delete oriEntity;
 		}
 		else
 		{
@@ -76,7 +75,7 @@ ProxyEntityHelper* ProxyEntityManagerHelper<TEntity>::GetEntity(unsigned int ent
 	ProxyEntityHelper* entity = nullptr;
 	if(this->mEntityMap.contains(entityId))
 	{
-		TEntity* oriEntity = this->mEntityMap[entityId];
+		TEntity* oriEntity = &this->mEntityMap[entityId];
 		return static_cast<ProxyEntityHelper*>(oriEntity);
 	}
 	// allow return empty

@@ -51,7 +51,7 @@ int HandleLogicServerInit(DNServer *server)
 				DNPrint(3, LoggerLevel::Debug, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
 				if(Entity* entity = channel->getContext<Entity>())
 				{
-					// entity->CloseEvent()(entity);
+					entity->CloseEvent()(entity);
 				}
 			}
 		};
@@ -112,7 +112,8 @@ int HandleLogicServerInit(DNServer *server)
 			if (channel->isConnected())
 			{
 				DNPrint(4, LoggerLevel::Debug, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
-				clientSock->SetRegistEvent(&Evt_ReqRegistSrv);
+				channel->setHeartbeat(4000, std::bind(&DNClientProxyHelper::TickHeartbeat, clientSock));
+				channel->setWriteTimeout(12000);
 			}
 			else
 			{

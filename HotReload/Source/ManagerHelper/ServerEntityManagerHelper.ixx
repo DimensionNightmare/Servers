@@ -42,8 +42,7 @@ ServerEntityHelper* ServerEntityManagerHelper<TEntity>::AddEntity(unsigned int e
 	{
 		unique_lock<shared_mutex> ulock(this->oMapMutex);
 
-		TEntity* oriEntity = new TEntity;
-		this->mEntityMap.emplace(entityId, oriEntity);
+		TEntity* oriEntity = &this->mEntityMap[entityId];
 		this->mEntityMapList[regType].emplace_back(oriEntity);
 		
 		entity = static_cast<ServerEntityHelper*>(oriEntity);
@@ -60,17 +59,17 @@ void ServerEntityManagerHelper<TEntity>::RemoveEntity(unsigned int entityId, boo
 	
 	if(this->mEntityMap.contains(entityId))
 	{
-		TEntity* oriEntity = this->mEntityMap[entityId];
+		TEntity* oriEntity = &this->mEntityMap[entityId];
 		ServerEntityHelper* entity = static_cast<ServerEntityHelper*>(oriEntity);
 		if(isDel)
 		{
 			unique_lock<shared_mutex> ulock(this->oMapMutex);
 
-			DNPrint(-1, LoggerLevel::Debug, "destory entity\n");
-			this->mEntityMap.erase(entityId);
 			// this->mIdleServerId.push_back(entityId);
 			this->mEntityMapList[entity->ServerEntityType()].remove(oriEntity);
-			delete oriEntity;
+			
+			DNPrint(-1, LoggerLevel::Debug, "destory entity\n");
+			this->mEntityMap.erase(entityId);
 		}
 		else
 		{
@@ -103,7 +102,7 @@ ServerEntityHelper* ServerEntityManagerHelper<TEntity>::GetEntity(unsigned int e
 	ServerEntityHelper* entity = nullptr;
 	if(this->mEntityMap.contains(entityId))
 	{
-		TEntity* oriEntity = this->mEntityMap[entityId];
+		TEntity* oriEntity = &this->mEntityMap[entityId];
 		return static_cast<ServerEntityHelper*>(oriEntity);
 	}
 	// allow return empty

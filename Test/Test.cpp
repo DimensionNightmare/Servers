@@ -28,9 +28,9 @@ using namespace std;
 class A
 {
 public:
-	A() {}
+	A() {std::cout << "A" << std::endl;}
 	// virtual
-	~A() {}
+	~A() {std::cout << "~A" << std::endl;}
 
 public:
 	 void msg() { std::cout << "A" << std::endl; }
@@ -101,7 +101,7 @@ int main()
 }
 #endif
 
-#if 1
+#if 0
 int main()
 {
 	GCfg::CharacterPlayer Weapons;
@@ -129,5 +129,16 @@ int main()
 		// name.empty();
 		// info->set_type(GCfg::NTypeCharacterPlayer_Normal);
 	}
+}
+#endif
+
+#if 1
+int main()
+{
+	std::map<int, A> maps;
+
+	A* a = &maps[1];
+	maps.erase(1);
+	delete a;
 }
 #endif

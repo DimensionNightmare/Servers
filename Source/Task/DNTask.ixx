@@ -23,7 +23,7 @@ struct DNTask
 			return DNTask{HandleType::from_promise(*this)};
 		}
 
-		void return_value(const T& value)
+		void return_value(T& value)
 		{
 			oResult = &value;
 		}
