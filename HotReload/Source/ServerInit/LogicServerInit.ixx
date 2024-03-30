@@ -103,6 +103,7 @@ int HandleLogicServerInit(DNServer *server)
 						if(peeraddr != origin)
 						{
 							GetClientReconnectFunc()(serverProxy->GetCtlIp().c_str(), serverProxy->GetCtlPort());
+							clientSock->SetRegistEvent(&Evt_ReqRegistSrv);
 						}
 					}
 					case ProxyStatus::Open:
