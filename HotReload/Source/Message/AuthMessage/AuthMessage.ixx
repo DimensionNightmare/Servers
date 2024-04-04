@@ -97,5 +97,7 @@ void AuthMessageHandle::RegMsgHandle()
 
 void AuthMessageHandle::RegApiHandle(HttpService* service)
 {
+	service->Static("/", "./");
+	
 	ApiInit(service);
 }

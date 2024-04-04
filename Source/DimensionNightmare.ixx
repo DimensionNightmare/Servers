@@ -44,7 +44,7 @@ struct HotReloadDll
 		string fullPath = filesystem::current_path().append(sDllDirRand).string();
 		// wstring wstr(fullPath.begin(), fullPath.end());
 		// AddDllDirectory(wstr.c_str());
-		SetDllDirectory(fullPath.c_str());
+		SetDllDirectoryA(fullPath.c_str());
 
 		#ifdef NDEBUG
 		SetEnvironmentVariable("PATH", "./Bin;%PATH%");
@@ -58,8 +58,8 @@ struct HotReloadDll
 		// oLibHandle = LoadLibraryEx((SDllName).c_str(), NULL, LOAD_LIBRARY_SEARCH_USER_DIRS);
 		// oLibHandle = LoadLibraryEx(SDllName.c_str(), NULL, DONT_RESOLVE_DLL_REFERENCES | LOAD_LIBRARY_SEARCH_DEFAULT_DIRS); //DONT_RESOLVE_DLL_REFERENCES |
 		constexpr size_t subLen = sizeof(SDllDir);
-		SetConsoleTitle(sDllDirRand.substr(subLen).c_str());
-		oLibHandle = LoadLibrary(SDllName);
+		SetConsoleTitleA(sDllDirRand.substr(subLen).c_str());
+		oLibHandle = LoadLibraryA(SDllName);
 #endif
 		if (!oLibHandle)
 		{
@@ -238,7 +238,7 @@ bool DimensionNightmare::InitConfig(map<string, string> &param)
 	}
 
 	filesystem::path execPath = param["luanchPath"];
-	SetCurrentDirectory(execPath.parent_path().string().c_str());
+	SetCurrentDirectoryA(execPath.parent_path().string().c_str());
 
 	{
 		#ifndef NDEBUG
@@ -299,7 +299,8 @@ bool DimensionNightmare::InitConfig(map<string, string> &param)
 	}
 
 	// local output
-    locale::global(locale(param["locale"]));
+    // locale::global(locale(param["locale"]));
+	system("chcp 65001");
 
 	// set global Launch config  
 	{
@@ -416,13 +417,15 @@ void DimensionNightmare::InitCmdHandle()
 		cout << allStr << endl;
 
 #ifdef _WIN32
-		STARTUPINFO startInfo{}; 
-		PROCESS_INFORMATION pinfo{};
+		PROCESS_INFORMATION pinfo = {}; 
+		STARTUPINFOA startInfo  = {};
+		ZeroMemory(&startInfo, sizeof(startInfo));
+    	startInfo.cb = sizeof(startInfo);
 
 		startInfo.wShowWindow = SW_NORMAL;
 		startInfo.dwFlags = STARTF_USESHOWWINDOW;
 		if(CreateProcessA(NULL, (char*)allStr.c_str(),
-			NULL,NULL,FALSE,CREATE_NEW_CONSOLE,NULL,NULL,&startInfo,&pinfo))
+			NULL,NULL,FALSE,CREATE_NEW_CONSOLE,NULL,NULL, &startInfo, &pinfo))
 #endif
 		{
 			cout << "success" << endl;

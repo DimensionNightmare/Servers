@@ -28,6 +28,7 @@ export void ApiLogin(HttpService* service)
 {
 	service->POST("/Auth/LoginToken", [](const HttpRequestPtr& req, const HttpResponseWriterPtr& writer) 
 	{
+		writer->Begin();
 		HttpResponsePtr res = writer->response;
 		hv::Json errData;
 		if(req->ContentType() == CONTENT_TYPE_NONE)

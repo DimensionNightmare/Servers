@@ -11,7 +11,5 @@ using namespace hv;
 
 export void ApiInit(HttpService* service)
 {
-	// service->Static("/", "./");
-
 	ApiLogin(service);
 }

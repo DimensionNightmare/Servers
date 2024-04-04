@@ -113,8 +113,6 @@ target_link_libraries(DNTest protobuf::libprotobuf protobufGen hv_static libpqxx
 
 target_sources(DNTest PUBLIC ${srcDNTest})
 
-target_compile_definitions(DNTest PUBLIC -DUNICODE)
-
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET DNTest PROPERTY CXX_STANDARD 23)
 endif()
