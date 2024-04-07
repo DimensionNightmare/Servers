@@ -81,7 +81,7 @@ ProxyStatus DNClientProxyHelper::UpdateClientState(Channel::Status state)
 	case Channel::Status::CONNECTED :
 		{
 			//maybe sometimes tick (wait fix)
-			Timer()->setInterval(1000, std::bind(&DNClientProxy::TickRegistEvent, (DNClientProxy*)this, placeholders::_1));
+			Timer()->setInterval(1000, std::bind(&DNClientProxy::TickRegistEvent, reinterpret_cast<DNClientProxy*>(this), placeholders::_1));
 			return ProxyStatus::Open;
 		}
 
@@ -126,7 +126,7 @@ bool DNClientProxyHelper::AddMsg(unsigned int msgId, DNTask<Message> *task, int 
 	// timeout
 	if(breakTime > 0)
 	{
-		task->TimerId() = Timer()->setTimeout(breakTime, std::bind(&DNClientProxy::MessageTimeoutTimer, (DNClientProxy*)this, placeholders::_1));
+		task->TimerId() = Timer()->setTimeout(breakTime, std::bind(&DNClientProxy::MessageTimeoutTimer, reinterpret_cast<DNClientProxy*>(this), placeholders::_1));
 		mMapTimer[task->TimerId()] = msgId;
 	}
 	return true;

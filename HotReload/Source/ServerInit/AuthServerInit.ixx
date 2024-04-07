@@ -78,7 +78,7 @@ int HandleAuthServerInit(DNServer *server)
 					clientSock->DelMsg(packet.msgId);
 					task->Resume();
 					Message* message = task->GetResult();
-					message->ParseFromArray((const char*)buf->data() + MessagePacket::PackLenth, packet.pkgLenth);
+					message->ParseFromArray(buf->base + MessagePacket::PackLenth, packet.pkgLenth);
 					task->CallResume();
 				}
 				else

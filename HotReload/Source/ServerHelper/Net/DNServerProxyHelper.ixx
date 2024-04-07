@@ -32,7 +32,7 @@ bool DNServerProxyHelper::AddMsg(unsigned int msgId, DNTask<Message> *task, int 
 	mMsgList.emplace(msgId, task);
 	if(breakTime > 0)
 	{
-		task->TimerId() = Timer()->setTimeout(breakTime, std::bind(&DNServerProxy::MessageTimeoutTimer, (DNServerProxy*)this, placeholders::_1));
+		task->TimerId() = Timer()->setTimeout(breakTime, std::bind(&DNServerProxy::MessageTimeoutTimer, reinterpret_cast<DNServerProxy*>(this), placeholders::_1));
 		mMapTimer[task->TimerId()] = msgId;
 	}
 	return true;
@@ -67,7 +67,7 @@ void DNServerProxyHelper::DelMsg(unsigned int msgId)
 
 void DNServerProxyHelper::TickHeartbeat(hio_t* io)
 {
-	hv::SocketChannel* channel = (hv::SocketChannel*)hio_context(io);
+	hv::SocketChannel* channel = reinterpret_cast<hv::SocketChannel*>(hio_context(io));
 	//Regist?
 	if(!channel->context())
 	{

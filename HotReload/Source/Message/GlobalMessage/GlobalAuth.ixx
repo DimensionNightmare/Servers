@@ -23,7 +23,7 @@ using namespace GMsg::S_Global;
 
 export DNTaskVoid Msg_ReqAuthAccount(const SocketChannelPtr &channel, unsigned int msgId, Message *msg)
 {
-	A2G_ReqAuthAccount* requset = (A2G_ReqAuthAccount*)msg;
+	A2G_ReqAuthAccount* requset = reinterpret_cast<A2G_ReqAuthAccount*>(msg);
 	G2A_ResAuthAccount response;
 
 	// if has db not need origin

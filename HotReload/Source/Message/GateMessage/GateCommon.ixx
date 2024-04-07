@@ -141,7 +141,7 @@ void ServerEntityCloseEvent(Entity* entity)
 // client request
 export void Msg_ReqRegistSrv(const SocketChannelPtr &channel, unsigned int msgId, Message *msg)
 {
-	COM_ReqRegistSrv* requset = (COM_ReqRegistSrv*)msg;
+	COM_ReqRegistSrv* requset = reinterpret_cast<COM_ReqRegistSrv*>(msg);
 	COM_ResRegistSrv response;
 
 	auto entityMan = GetGateServer()->GetEntityManager();
@@ -198,5 +198,5 @@ export void Msg_ReqRegistSrv(const SocketChannelPtr &channel, unsigned int msgId
 
 export void Exe_RetHeartbeat(const SocketChannelPtr &channel, unsigned int msgId, Message *msg)
 {
-	COM_RetHeartbeat* requset = (COM_RetHeartbeat*)msg;
+	COM_RetHeartbeat* requset = reinterpret_cast<COM_RetHeartbeat*>(msg);
 }

@@ -424,7 +424,7 @@ void DimensionNightmare::InitCmdHandle()
 
 		startInfo.wShowWindow = SW_NORMAL;
 		startInfo.dwFlags = STARTF_USESHOWWINDOW;
-		if(CreateProcessA(NULL, (char*)allStr.c_str(),
+		if(CreateProcessA(NULL, allStr.data(),
 			NULL,NULL,FALSE,CREATE_NEW_CONSOLE,NULL,NULL, &startInfo, &pinfo))
 #endif
 		{

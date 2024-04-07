@@ -130,7 +130,7 @@ void GlobalServerHelper::UpdateServerGroup()
 
 void GlobalServerHelper::TickHeartbeat(hio_t* io)
 {
-	SocketChannel* channel = (SocketChannel*)hio_context(io);
+	SocketChannel* channel = reinterpret_cast<SocketChannel*>(hio_context(io));
 	//Regist?
 	if(!channel->context())
 	{

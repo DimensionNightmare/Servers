@@ -20,7 +20,7 @@ using namespace GMsg::C_Login;
 
 export void Exe_ReqUserToken(const SocketChannelPtr &channel, unsigned int msgId, Message *msg)
 {
-	G2G_ReqLoginToken* requset = (G2G_ReqLoginToken*)msg;
+	G2G_ReqLoginToken* requset = reinterpret_cast<G2G_ReqLoginToken*>(msg);
 	G2G_ResLoginToken response;
 
 	string binData;

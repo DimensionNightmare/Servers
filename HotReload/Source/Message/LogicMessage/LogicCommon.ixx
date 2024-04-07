@@ -83,7 +83,7 @@ export DNTaskVoid Evt_ReqRegistSrv()
 
 export void Exe_RetChangeCtlSrv(const SocketChannelPtr &channel, unsigned int msgId, Message *msg)
 {
-	COM_RetChangeCtlSrv* requset = (COM_RetChangeCtlSrv*)msg;
+	COM_RetChangeCtlSrv* requset = reinterpret_cast<COM_RetChangeCtlSrv*>(msg);
 	LogicServerHelper* dnServer = GetLogicServer();
 	DNClientProxyHelper* client = dnServer->GetCSock();
 
@@ -104,7 +104,7 @@ void ServerEntityCloseEvent(Entity* entity)
 // client request
 export void Msg_ReqRegistSrv(const SocketChannelPtr &channel, unsigned int msgId, Message *msg)
 {
-	COM_ReqRegistSrv* requset = (COM_ReqRegistSrv*)msg;
+	COM_ReqRegistSrv* requset = reinterpret_cast<COM_ReqRegistSrv*>(msg);
 	COM_ResRegistSrv response;
 
 	ServerEntityManagerHelper<ServerEntity>*  entityMan = GetLogicServer()->GetEntityManager();
@@ -144,5 +144,5 @@ export void Msg_ReqRegistSrv(const SocketChannelPtr &channel, unsigned int msgId
 
 export void Exe_RetHeartbeat(const SocketChannelPtr &channel, unsigned int msgId, Message *msg)
 {
-	COM_RetHeartbeat* requset = (COM_RetHeartbeat*)msg;
+	COM_RetHeartbeat* requset = reinterpret_cast<COM_RetHeartbeat*>(msg);
 }

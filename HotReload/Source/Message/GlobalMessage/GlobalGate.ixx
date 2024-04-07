@@ -17,7 +17,7 @@ using namespace GMsg::S_Global;
 
 export void Exe_RetRegistSrv(const SocketChannelPtr &channel, unsigned int msgId, Message *msg)
 {
-	G2G_RetRegistSrv* requset = (G2G_RetRegistSrv*)msg;
+	G2G_RetRegistSrv* requset = reinterpret_cast<G2G_RetRegistSrv*>(msg);
 
 	GlobalServerHelper* dnServer = GetGlobalServer();
 	ServerEntityManagerHelper<ServerEntity>*  entityMan = dnServer->GetEntityManager();

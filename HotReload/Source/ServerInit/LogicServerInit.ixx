@@ -62,12 +62,12 @@ int HandleLogicServerInit(DNServer *server)
 			memcpy(&packet, buf->data(), MessagePacket::PackLenth);
 			if(packet.dealType == MsgDeal::Req)
 			{
-				string msgData((char*)buf->data() + MessagePacket::PackLenth, packet.pkgLenth);
+				string msgData(buf->base + MessagePacket::PackLenth, packet.pkgLenth);
 				LogicMessageHandle::MsgHandle(channel, packet.msgId, packet.msgHashId, msgData);
 			}
 			else if(packet.dealType == MsgDeal::Ret)
 			{
-				string msgData((char*)buf->data() + MessagePacket::PackLenth, packet.pkgLenth);
+				string msgData(buf->base + MessagePacket::PackLenth, packet.pkgLenth);
 				LogicMessageHandle::MsgRetHandle(channel, packet.msgId, packet.msgHashId, msgData);
 			}
 			else
@@ -143,12 +143,12 @@ int HandleLogicServerInit(DNServer *server)
 			memcpy(&packet, buf->data(), MessagePacket::PackLenth);
 			if(packet.dealType == MsgDeal::Req)
 			{
-				string msgData((char*)buf->data() + MessagePacket::PackLenth, packet.pkgLenth);
+				string msgData(buf->base + MessagePacket::PackLenth, packet.pkgLenth);
 				LogicMessageHandle::MsgHandle(channel, packet.msgId, packet.msgHashId, msgData);
 			}
 			else if(packet.dealType == MsgDeal::Ret)
 			{
-				string msgData((char*)buf->data() + MessagePacket::PackLenth, packet.pkgLenth);
+				string msgData(buf->base + MessagePacket::PackLenth, packet.pkgLenth);
 				LogicMessageHandle::MsgRetHandle(channel, packet.msgId, packet.msgHashId, msgData);
 			}
 			else if(packet.dealType == MsgDeal::Res)
@@ -160,7 +160,7 @@ int HandleLogicServerInit(DNServer *server)
 					clientSock->DelMsg(packet.msgId);
 					task->Resume();
 					Message* message = task->GetResult();
-					message->ParseFromArray((const char*)buf->data() + MessagePacket::PackLenth, packet.pkgLenth);
+					message->ParseFromArray(buf->base + MessagePacket::PackLenth, packet.pkgLenth);
 					task->CallResume();
 				}
 				else

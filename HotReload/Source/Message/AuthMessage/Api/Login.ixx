@@ -79,7 +79,7 @@ export void ApiLogin(HttpService* service)
 		accInfo.set_auth_string(password);
 
 		pqxx::read_transaction query(*authServer->GetDbConnection());
-		DNDbObj<GDb::Account> accounts((pqxx::transaction<>*)&query);
+		DNDbObj<GDb::Account> accounts(reinterpret_cast<pqxx::transaction<>*>(&query));
 		try
 		{
 			accounts

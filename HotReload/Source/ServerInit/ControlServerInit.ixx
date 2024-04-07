@@ -66,12 +66,12 @@ int HandleControlServerInit(DNServer *server)
 			memcpy(&packet, buf->data(), MessagePacket::PackLenth);
 			if(packet.dealType == MsgDeal::Req)
 			{
-				string msgData((char*)buf->data() + MessagePacket::PackLenth, packet.pkgLenth);
+				string msgData(buf->base + MessagePacket::PackLenth, packet.pkgLenth);
 				ControlMessageHandle::MsgHandle(channel, packet.msgId, packet.msgHashId, msgData);
 			}
 			else if(packet.dealType == MsgDeal::Ret)
 			{
-				string msgData((char*)buf->data() + MessagePacket::PackLenth, packet.pkgLenth);
+				string msgData(buf->base + MessagePacket::PackLenth, packet.pkgLenth);
 				ControlMessageHandle::MsgRetHandle(channel, packet.msgId, packet.msgHashId, msgData);
 			}
 			else if(packet.dealType == MsgDeal::Res)
@@ -83,7 +83,7 @@ int HandleControlServerInit(DNServer *server)
 					servSock->DelMsg(packet.msgId);
 					task->Resume();
 					Message* message = task->GetResult();
-					message->ParseFromArray((const char*)buf->data() + MessagePacket::PackLenth, packet.pkgLenth);
+					message->ParseFromArray(buf->base + MessagePacket::PackLenth, packet.pkgLenth);
 					task->CallResume();
 				}
 				else

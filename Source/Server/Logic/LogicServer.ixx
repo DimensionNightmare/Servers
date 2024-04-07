@@ -122,7 +122,7 @@ bool LogicServer::Init()
 	{
 		struct sockaddr_in addr;
 		socklen_t addrLen = sizeof(addr);
-		if (getsockname(listenfd, (struct sockaddr*)&addr, &addrLen) < 0) 
+		if (getsockname(listenfd, reinterpret_cast<struct sockaddr*>(&addr), &addrLen) < 0) 
 		{
 			DNPrint(9, LoggerLevel::Error, nullptr);
 			return false;

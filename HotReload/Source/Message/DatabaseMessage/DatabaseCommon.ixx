@@ -84,7 +84,7 @@ export DNTaskVoid Evt_ReqRegistSrv()
 
 export void Exe_RetChangeCtlSrv(const SocketChannelPtr &channel, unsigned int msgId, Message *msg)
 {
-	COM_RetChangeCtlSrv* requset = (COM_RetChangeCtlSrv*)msg;
+	COM_RetChangeCtlSrv* requset = reinterpret_cast<COM_RetChangeCtlSrv*>(msg);
 	DatabaseServerHelper* dnServer = GetDatabaseServer();
 	DNClientProxyHelper* client = dnServer->GetCSock();
 
