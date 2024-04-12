@@ -86,7 +86,7 @@ void GlobalServerHelper::UpdateServerGroup()
 		entity->GetChild()->TimerId() = entityMan->Timer()->setTimeout(10000,
 			std::bind(&ServerEntityManager<ServerEntity>::EntityCloseTimer, entityMan, placeholders::_1));
 
-		entityMan->AddTimerRecord(entity->GetChild()->ID(), entity->GetChild()->TimerId());
+		entityMan->AddTimerRecord(entity->GetChild()->TimerId(), entity->GetChild()->ID());
 	};
 	
 	for(ServerEntity* it : gates)

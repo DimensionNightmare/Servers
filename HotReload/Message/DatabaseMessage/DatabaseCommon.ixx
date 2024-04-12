@@ -68,7 +68,7 @@ export DNTaskVoid Evt_ReqRegistSrv()
 	if(!response.success())
 	{
 		DNPrint(-1, LoggerLevel::Debug, "regist Server error! msg:%lu \n", msgId);
-		// dnServer->SetRun(false); //exit application
+		dnServer->IsRun() = false; //exit application
 	}
 	else
 	{
@@ -90,5 +90,5 @@ export void Exe_RetChangeCtlSrv(const SocketChannelPtr &channel, unsigned int ms
 
 	client->UpdateClientState(Channel::Status::CLOSED);
 
-	dnServer->ReClientEvent(requset->ip().c_str(), requset->port());
+	dnServer->ReClientEvent(requset->ip(), requset->port());
 }

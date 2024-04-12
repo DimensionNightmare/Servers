@@ -53,7 +53,7 @@ int HandleDatabaseServerInit(DNServer *server)
 						string origin = format("{}:{}", serverProxy->GetCtlIp(), serverProxy->GetCtlPort());
 						if(peeraddr != origin)
 						{
-							serverProxy->ReClientEvent(serverProxy->GetCtlIp().c_str(), serverProxy->GetCtlPort());
+							serverProxy->ReClientEvent(serverProxy->GetCtlIp(), serverProxy->GetCtlPort());
 						}
 					}
 				}
@@ -63,12 +63,13 @@ int HandleDatabaseServerInit(DNServer *server)
 			{
 				DNPrint(4, LoggerLevel::Debug, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
 				clientSock->SetRegistEvent(&Evt_ReqRegistSrv);
+				
+				channel->setHeartbeat(4000, std::bind(&DNClientProxyHelper::TickHeartbeat, clientSock));
+				channel->setWriteTimeout(12000);
 			}
 			else
 			{
 				DNPrint(5, LoggerLevel::Debug, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
-				
-				serverProxy->ReClientEvent("127.0.0.1", 1212);
 			}
 
 			if(clientSock->isReconnect())

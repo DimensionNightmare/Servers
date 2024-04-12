@@ -47,8 +47,11 @@ public:
 
 	virtual void LoopEvent(function<void(hv::EventLoopPtr)> func){}
 
-	bool IsRun(){ return bInRun;}
-	void SetRun(bool state){bInRun = state;}
+	bool& IsRun(){ return bInRun;}
+
+	void TickFrame();
+
+	void AddMsgTask(function<void()> func);
 
 public: // dll override
 	DNl10n* pDNl10nInstance;
@@ -60,7 +63,8 @@ protected:
 	bool bInRun;
 	unsigned int iServerIndex;
 
-	DWORD oThreadId;
+	list<function<void()>> mMessageTasks;
+    mutex oTaskMutex;
 };
 
 DNServer::DNServer()
@@ -69,7 +73,7 @@ DNServer::DNServer()
 	bInRun = false;
 	iServerIndex = 0;
 
-	oThreadId = 0;
+	mMessageTasks.clear();
 }
 
 bool DNServer::Init()
@@ -80,7 +84,30 @@ bool DNServer::Init()
 		iServerIndex = stoi(*value);
 	}
 
-	oThreadId = GetCurrentThreadId();
-
 	return true;
+}
+
+void DNServer::TickFrame()
+{
+	// mMessageTasks
+	{
+		lock_guard<mutex> lock(oTaskMutex);
+		if(mMessageTasks.size())
+		{
+			for(function<void()>& func : mMessageTasks)
+			{
+				func();
+			}
+
+			mMessageTasks.clear();
+		}
+	}
+	
+	
+}
+
+void DNServer::AddMsgTask(function<void()> func)
+{
+	std::lock_guard<std::mutex> lock(oTaskMutex);
+	mMessageTasks.push_back(func);
 }

@@ -6,7 +6,7 @@ module;
 #include <map>
 #include <string>
 #include <iostream>
-#include <Thread>
+#include <future>
 #ifdef _WIN32
 #include <Windows.h>
 #include <dbghelp.h>
@@ -73,12 +73,12 @@ export int main(int argc, char **argv)
 		case CTRL_CLOSE_EVENT:
 		case CTRL_SHUTDOWN_EVENT:
 		{
-			GetDimensionNightmare()->ShutDown();
-			return false;
+			GetDimensionNightmare()->ServerIsRun() = false;
+			return true;
 		}
 		}
 
-		return true;
+		return false;
 	};
 
 	if (!SetConsoleCtrlHandler(CtrlHandler, true))
@@ -87,8 +87,8 @@ export int main(int argc, char **argv)
 		return 0;
 	}
 
-	auto exceptionPtr = SetUnhandledExceptionFilter([](EXCEPTION_POINTERS *ExceptionInfo) -> long
-													{
+	auto UnhandledHandler = [](EXCEPTION_POINTERS *ExceptionInfo) -> long
+	{
 		DNPrint(7, LoggerLevel::Normal, nullptr);
 		
 		HANDLE hDumpFile = CreateFileW(
@@ -124,7 +124,10 @@ export int main(int argc, char **argv)
 		GetDimensionNightmare()->SetDllNotNormalFree();
 		GetDimensionNightmare()->ShutDown();
 
-		return EXCEPTION_CONTINUE_SEARCH; });
+		return EXCEPTION_CONTINUE_SEARCH; 
+	};
+
+	auto exceptionPtr = SetUnhandledExceptionFilter(UnhandledHandler);
 
 	if (!exceptionPtr)
 	{
@@ -133,17 +136,20 @@ export int main(int argc, char **argv)
 	}
 #endif
 
-	stringstream ss;
-	string str;
-	
-	cin.sync_with_stdio(false);
-    cin.tie(nullptr);
-
-	while (true)
+	auto InputEvent = async(launch::async, [&dn]()
 	{
-		if (cin.rdbuf()->in_avail() != 0)
+		stringstream ss;
+		string str;
+
+		while (dn->ServerIsRun())
 		{
 			getline(cin, str);
+			if (str.empty())
+			{
+				cout << "1";
+				continue;
+			}
+
 			ss.clear();
 			ss.str(str);
 			str.clear();
@@ -155,6 +161,7 @@ export int main(int argc, char **argv)
 
 			if (str == "quit")
 			{
+				dn->ServerIsRun() = false;
 				break;
 			}
 			else if (str == "abort")
@@ -167,13 +174,16 @@ export int main(int argc, char **argv)
 			{
 				dn->ExecCommand(&str, &ss);
 			}
+		} 
+	});
 
-		}
-
+	while (dn->ServerIsRun())
+	{
+		dn->TickFrame();
 		Sleep(100);
 	}
 
-	CtrlHandler(0);
+	dn->ShutDown();
 
 	return 0;
 }

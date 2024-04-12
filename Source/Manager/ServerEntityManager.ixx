@@ -72,8 +72,13 @@ void ServerEntityManager<TEntity>::EntityCloseTimer(uint64_t timerID)
 		unique_lock<shared_mutex> ulock(this->oMapMutex);
 
 		this->mEntityMapList[entity->GetType()].remove(entity);
+
+		if(TEntity* owner = entity->LinkNode())
+		{
+			owner->ClearFlag(ServerEntityFlag::Locked);
+		}
 		
-		DNPrint(-1, LoggerLevel::Debug, "destory entity\n");
+		DNPrint(-1, LoggerLevel::Debug, "EntityCloseTimer destory entity\n");
 		this->mEntityMap.erase(entityId);
 	}
 }

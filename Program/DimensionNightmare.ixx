@@ -151,6 +151,11 @@ public:
 	bool OnUnregHotReload();
 
 	void SetDllNotNormalFree(){ pHotDll->isNormalFree = false; }
+
+	bool& ServerIsRun(){return pServer->IsRun();}
+
+	void TickFrame();
+
 private:
 	HotReloadDll *pHotDll;
 
@@ -164,11 +169,7 @@ private:
 	DNl10n* pl10n;
 };
 
-export DimensionNightmare *GetDimensionNightmare();
-
-
-
-DimensionNightmare *GetDimensionNightmare()
+export DimensionNightmare *GetDimensionNightmare()
 {
 	static DimensionNightmare *PInstance = nullptr;
 	if (!PInstance)
@@ -366,7 +367,7 @@ bool DimensionNightmare::Init()
 		return false;
 	}
 	
-	pServer->SetRun(true); 
+	pServer->IsRun() = true; 
 
 	return true;
 }
@@ -490,4 +491,9 @@ bool DimensionNightmare::OnUnregHotReload()
 	}
 
 	return false;
+}
+
+void DimensionNightmare::TickFrame()
+{
+	pServer->TickFrame();
 }

@@ -28,7 +28,7 @@ export void Exe_RetRegistSrv(const SocketChannelPtr &channel, unsigned int msgId
 			if(uint64_t timerId = entity->GetChild()->TimerId())
 			{
 				entity->GetChild()->TimerId() = 0;
-				dnServer->GetSSock()->Timer()->killTimer(timerId);
+				entityMan->Timer()->killTimer(timerId);
 			}
 		}
 		else

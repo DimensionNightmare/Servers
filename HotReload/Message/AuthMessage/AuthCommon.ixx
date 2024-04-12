@@ -75,7 +75,7 @@ export DNTaskVoid Evt_ReqRegistSrv()
 	if(!response.success())
 	{
 		DNPrint(-1, LoggerLevel::Debug, "regist Server error! msg:%lu \n", msgId);
-		// dnServer->SetRun(false); //exit application
+		dnServer->IsRun() = false; //exit application
 	}
 	else
 	{

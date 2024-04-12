@@ -11,6 +11,11 @@ import DNServer;
 
 using namespace std;
 
+export enum class ServerEntityFlag : int
+{
+	Locked = 0,
+};
+
 export class ServerEntity : public Entity
 {
 public:
@@ -21,6 +26,12 @@ public: // dll override
 	virtual Entity* GetChild(){return this;}
 
 	ServerType GetType(){return emServerType;}
+
+	ServerEntity* &LinkNode(){ return pLink;}
+
+	bool HasFlag(ServerEntityFlag flag){ return oFlags.test(int(flag));}
+	void SetFlag(ServerEntityFlag flag){ oFlags.set(int(flag));}
+	void ClearFlag(ServerEntityFlag flag){ oFlags.reset(int(flag));}
 	
 protected: // dll proxy
     ServerType emServerType;

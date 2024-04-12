@@ -47,7 +47,7 @@ export void Msg_ReqRegistSrv(const SocketChannelPtr &channel, unsigned int msgId
 			if (uint64_t timerId = child->TimerId())
 			{
 				child->TimerId() = 0;
-				dnServer->GetSSock()->Timer()->killTimer(timerId);
+				entityMan->Timer()->killTimer(timerId);
 			}
 
 			// already connect

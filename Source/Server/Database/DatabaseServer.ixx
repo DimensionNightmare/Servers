@@ -36,8 +36,6 @@ public:
 
 	virtual void LoopEvent(function<void(EventLoopPtr)> func) override;
 
-	void ReClientEvent(const char *ip, unsigned short port);
-
 public: // dll override
 	virtual DNClientProxy *GetCSock() { return pCSock; }
 
@@ -170,71 +168,4 @@ void DatabaseServer::LoopEvent(function<void(EventLoopPtr)> func)
 			}
 		};
 	}
-}
-
-VOID CALLBACK MyAPCProc(ULONG_PTR dwParam)
-{
-	std::cout << "Function executed in target thread." << std::endl;
-	cout << "ThreadId:" << this_thread::get_id() << ", Handle:" << GetThreadId(GetCurrentThread()) << endl;
-}
-
-void DatabaseServer::ReClientEvent(const char *ip, unsigned short port)
-{
-	cout << "ThreadId:" << this_thread::get_id() << endl;
-
-	auto ReClient = [=, this]()
-	{
-		cout << "ThreadId:" << this_thread::get_id() << ", Handle:" << GetCurrentThread() << endl;
-
-		reconn_setting_t *reconn_setting = new reconn_setting_t;
-		memcpy(reconn_setting, pCSock->reconn_setting, sizeof reconn_setting);
-		unpack_setting_t *unpack_setting = pCSock->unpack_setting;
-		auto onConnection = pCSock->onConnection;
-		auto onMessage = pCSock->onMessage;
-
-		pCSock->pLoop->stop();
-		// pCSock->stop();
-		delete pCSock;
-		pCSock = new DNClientProxy;
-		pCSock->pLoop = make_shared<EventLoopThread>();
-
-		pCSock->reconn_setting = reconn_setting;
-		pCSock->unpack_setting = unpack_setting;
-		pCSock->onConnection = onConnection;
-		pCSock->onMessage = onMessage;
-
-		pCSock->createsocket(port, ip);
-		pCSock->pLoop->start();
-		pCSock->start();
-	};
-
-	HANDLE hThread = ::OpenThread(THREAD_ALL_ACCESS, FALSE, oThreadId);
-	if (hThread != NULL)
-	{
-		std::cout << "Thread handle opened successfully." << std::endl;
-		if (!::QueueUserAPC(MyAPCProc, hThread, 0))
-		{
-			std::cerr << "Failed to queue APC." << std::endl;
-			return;
-		}
-
-		if (::QueueUserAPC((PAPCFUNC)0, hThread, 0))
-		{
-			std::cout << "APC queued successfully." << std::endl;
-		}
-		else
-		{
-			std::cerr << "Failed to activate thread alertable state." << std::endl;
-		}
-
-		SleepEx(0, true);
-
-		::CloseHandle(hThread);
-	}
-	else
-	{
-		std::cerr << "Failed to open thread handle." << std::endl;
-	}
-
-	
 }

@@ -68,7 +68,7 @@ void ServerEntityManagerHelper<TEntity>::RemoveEntity(unsigned int entityId, boo
 			// this->mIdleServerId.push_back(entityId);
 			this->mEntityMapList[entity->ServerEntityType()].remove(oriEntity);
 			
-			DNPrint(-1, LoggerLevel::Debug, "destory entity\n");
+			DNPrint(-1, LoggerLevel::Debug, "offline destory entity\n");
 			this->mEntityMap.erase(entityId);
 		}
 		else
