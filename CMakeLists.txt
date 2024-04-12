@@ -60,46 +60,56 @@ link_directories("../Environment/Install/protobufGen/${CMAKE_BUILD_TYPE}/lib")
 
 include_directories("Source/Afx")
 
-################################ DimensionNightmareServer ################################
+################################ MainLib ################################
+
 file(GLOB_RECURSE DNSourceModule CONFIGURE_DEPENDS 
 	"Source/*.ixx"
 )
 
-add_library(MainSource)
-
-target_sources( MainSource
-	PUBLIC FILE_SET CXX_MODULES TYPE CXX_MODULES FILES ${DNSourceModule}
+add_library(MainSource STATIC)
+target_sources(MainSource 
+	PUBLIC FILE_SET CXX_MODULES TYPE CXX_MODULES FILES  
+	${DNSourceModule}
 )
 
 target_link_libraries(MainSource PUBLIC hv_static protobuf::libprotobuf protobufGen libpqxx::pqxx)
+
 set_property(TARGET MainSource PROPERTY CXX_STANDARD 23)
 
-add_executable(DimensionNightmareServer "main.cpp")
-target_link_libraries(DimensionNightmareServer PRIVATE MainSource)
+################################ DimensionNightmareServer ################################
+add_executable(DimensionNightmareServer)
+
+file(GLOB_RECURSE srcProgram CONFIGURE_DEPENDS 
+	"Program/*.ixx"
+)
+
+target_sources(DimensionNightmareServer 
+	PUBLIC FILE_SET CXX_MODULES TYPE CXX_MODULES FILES
+	${srcProgram}
+)
+
+target_link_libraries(DimensionNightmareServer PUBLIC MainSource)
+
 set_property(TARGET DimensionNightmareServer PROPERTY CXX_STANDARD 23)
 
 ################################ HotReload ################################
 
 file(GLOB_RECURSE srcHotReloadModule CONFIGURE_DEPENDS 
-	"HotReload/Source/*.ixx"
+	"HotReload/*.ixx"
 )
 
-add_library(HotloadSource)
+add_library( HotReload SHARED)
 
-target_sources(HotloadSource 
-	PUBLIC FILE_SET CXX_MODULES TYPE CXX_MODULES FILES  ${srcHotReloadModule}
+target_sources(HotReload 
+	PUBLIC FILE_SET CXX_MODULES TYPE CXX_MODULES FILES
+	${srcHotReloadModule}
 )
-
-target_link_libraries(HotloadSource PUBLIC MainSource)
-set_property(TARGET HotloadSource PROPERTY CXX_STANDARD 23)
-
-add_library( HotReload SHARED "HotReload/HotReload.cpp")
 
 target_compile_definitions(HotReload PUBLIC HOTRELOAD_BUILD)
 
 set_target_properties(HotReload PROPERTIES RUNTIME_OUTPUT_DIRECTORY  ${CMAKE_BINARY_DIR}/Runtime)
 
-target_link_libraries(HotReload PUBLIC HotloadSource)
+target_link_libraries(HotReload PUBLIC MainSource)
 
 ################################ DNTest ################################
 

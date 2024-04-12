@@ -1,3 +1,5 @@
+#pragma once
+
 import DNDbObj;
 
 #define DBSelect(obj, name) .Select(#name, obj.name())

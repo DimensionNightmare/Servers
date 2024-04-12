@@ -3,6 +3,8 @@ module;
 #include "hv/EventLoop.h"
 #include "hv/hsocket.h"
 
+#include <Thread>
+#include <iostream>
 export module DatabaseServer;
 
 import DNServer;
@@ -22,7 +24,7 @@ public:
 
 	virtual bool Init() override;
 
-	virtual void InitCmd(map<string, function<void(stringstream*)>> &cmdMap) override;
+	virtual void InitCmd(map<string, function<void(stringstream *)>> &cmdMap) override;
 
 	virtual bool Start() override;
 
@@ -34,20 +36,18 @@ public:
 
 	virtual void LoopEvent(function<void(EventLoopPtr)> func) override;
 
-	virtual void ReClientEvent(const char* ip, unsigned short port) override;
+	void ReClientEvent(const char *ip, unsigned short port);
 
 public: // dll override
-	virtual DNClientProxy* GetCSock(){return pCSock;}
+	virtual DNClientProxy *GetCSock() { return pCSock; }
 
 protected: // dll proxy
-	DNClientProxy* pCSock;
+	DNClientProxy *pCSock;
 
 	// record orgin info
 	string sCtlIp;
 	unsigned short iCtlPort;
 };
-
-
 
 DatabaseServer::DatabaseServer()
 {
@@ -59,7 +59,7 @@ DatabaseServer::~DatabaseServer()
 {
 	Stop();
 
-	if(pCSock)
+	if (pCSock)
 	{
 		pCSock->setReconnect(nullptr);
 		delete pCSock;
@@ -69,8 +69,8 @@ DatabaseServer::~DatabaseServer()
 
 bool DatabaseServer::Init()
 {
-	string* value = GetLuanchConfigParam("byCtl");
-	if(!value || !stoi(*value))
+	string *value = GetLuanchConfigParam("byCtl");
+	if (!value || !stoi(*value))
 	{
 		DNPrint(1, LoggerLevel::Error, nullptr);
 		return false;
@@ -80,22 +80,22 @@ bool DatabaseServer::Init()
 
 	unsigned short port = 0;
 
-	unpack_setting_t* setting = new unpack_setting_t;
+	unpack_setting_t *setting = new unpack_setting_t;
 	setting->mode = unpack_mode_e::UNPACK_BY_LENGTH_FIELD;
 	setting->length_field_coding = unpack_coding_e::ENCODE_BY_BIG_ENDIAN;
 	setting->body_offset = MessagePacket::PackLenth;
 	setting->length_field_bytes = 1;
 	setting->length_field_offset = 0;
-	
-	//connet ControlServer
-	string* ctlPort = GetLuanchConfigParam("ctlPort");
-	string* ctlIp = GetLuanchConfigParam("ctlIp");
-	if(ctlPort && ctlIp && is_ipaddr(ctlIp->c_str()))
+
+	// connet ControlServer
+	string *ctlPort = GetLuanchConfigParam("ctlPort");
+	string *ctlIp = GetLuanchConfigParam("ctlIp");
+	if (ctlPort && ctlIp && is_ipaddr(ctlIp->c_str()))
 	{
 		pCSock = new DNClientProxy;
 		pCSock->pLoop = make_shared<EventLoopThread>();
 
-		reconn_setting_t* reconn = new reconn_setting_t;
+		reconn_setting_t *reconn = new reconn_setting_t;
 		reconn->min_delay = 1000;
 		reconn->max_delay = 10000;
 		reconn->delay_policy = 2;
@@ -107,7 +107,7 @@ bool DatabaseServer::Init()
 		sCtlIp = *ctlIp;
 		iCtlPort = port;
 	}
-	
+
 	return true;
 }
 
@@ -117,7 +117,7 @@ void DatabaseServer::InitCmd(map<string, function<void(stringstream *)>> &cmdMap
 
 bool DatabaseServer::Start()
 {
-	if(pCSock) // client
+	if (pCSock) // client
 	{
 		pCSock->pLoop->start();
 		pCSock->start();
@@ -128,7 +128,7 @@ bool DatabaseServer::Start()
 
 bool DatabaseServer::Stop()
 {
-	if(pCSock) // client
+	if (pCSock) // client
 	{
 		pCSock->pLoop->stop(true);
 		pCSock->stop();
@@ -140,30 +140,26 @@ bool DatabaseServer::Stop()
 void DatabaseServer::Pause()
 {
 	LoopEvent([](hv::EventLoopPtr loop)
-	{ 
-		loop->pause(); 
-	});
+			  { loop->pause(); });
 }
 
 void DatabaseServer::Resume()
 {
 	LoopEvent([](hv::EventLoopPtr loop)
-	{ 
-		loop->resume(); 
-	});
+			  { loop->resume(); });
 }
 
 void DatabaseServer::LoopEvent(function<void(EventLoopPtr)> func)
 {
-    map<long,EventLoopPtr> looped;
+	map<long, EventLoopPtr> looped;
 
-	if(pCSock)
+	if (pCSock)
 	{
 		looped.clear();
-		while(EventLoopPtr pLoop = pCSock->loop())
+		while (EventLoopPtr pLoop = pCSock->loop())
 		{
 			long id = pLoop->tid();
-			if(looped.find(id) == looped.end())
+			if (looped.find(id) == looped.end())
 			{
 				func(pLoop);
 				looped[id] = pLoop;
@@ -174,30 +170,71 @@ void DatabaseServer::LoopEvent(function<void(EventLoopPtr)> func)
 			}
 		};
 	}
-	
-    
 }
 
-void DatabaseServer::ReClientEvent(const char* ip, unsigned short port)
+VOID CALLBACK MyAPCProc(ULONG_PTR dwParam)
 {
-	reconn_setting_t* reconn_setting = new reconn_setting_t;
-	memcpy(reconn_setting, pCSock->reconn_setting, sizeof reconn_setting);
-	unpack_setting_t* unpack_setting = pCSock->unpack_setting;
-	auto onConnection = pCSock->onConnection;
-	auto onMessage = pCSock->onMessage;
+	std::cout << "Function executed in target thread." << std::endl;
+	cout << "ThreadId:" << this_thread::get_id() << ", Handle:" << GetThreadId(GetCurrentThread()) << endl;
+}
 
-	pCSock->pLoop->stop();
-	pCSock->stop();
-	// delete pCSock;
-	pCSock = new DNClientProxy;
-	pCSock->pLoop = make_shared<EventLoopThread>();
+void DatabaseServer::ReClientEvent(const char *ip, unsigned short port)
+{
+	cout << "ThreadId:" << this_thread::get_id() << endl;
 
-	pCSock->reconn_setting = reconn_setting;
-	pCSock->unpack_setting = unpack_setting;
-	pCSock->onConnection = onConnection;
-	pCSock->onMessage = onMessage;
+	auto ReClient = [=, this]()
+	{
+		cout << "ThreadId:" << this_thread::get_id() << ", Handle:" << GetCurrentThread() << endl;
 
-	pCSock->createsocket(port, ip);
-	pCSock->pLoop->start();
-	pCSock->start();
+		reconn_setting_t *reconn_setting = new reconn_setting_t;
+		memcpy(reconn_setting, pCSock->reconn_setting, sizeof reconn_setting);
+		unpack_setting_t *unpack_setting = pCSock->unpack_setting;
+		auto onConnection = pCSock->onConnection;
+		auto onMessage = pCSock->onMessage;
+
+		pCSock->pLoop->stop();
+		// pCSock->stop();
+		delete pCSock;
+		pCSock = new DNClientProxy;
+		pCSock->pLoop = make_shared<EventLoopThread>();
+
+		pCSock->reconn_setting = reconn_setting;
+		pCSock->unpack_setting = unpack_setting;
+		pCSock->onConnection = onConnection;
+		pCSock->onMessage = onMessage;
+
+		pCSock->createsocket(port, ip);
+		pCSock->pLoop->start();
+		pCSock->start();
+	};
+
+	HANDLE hThread = ::OpenThread(THREAD_ALL_ACCESS, FALSE, oThreadId);
+	if (hThread != NULL)
+	{
+		std::cout << "Thread handle opened successfully." << std::endl;
+		if (!::QueueUserAPC(MyAPCProc, hThread, 0))
+		{
+			std::cerr << "Failed to queue APC." << std::endl;
+			return;
+		}
+
+		if (::QueueUserAPC((PAPCFUNC)0, hThread, 0))
+		{
+			std::cout << "APC queued successfully." << std::endl;
+		}
+		else
+		{
+			std::cerr << "Failed to activate thread alertable state." << std::endl;
+		}
+
+		SleepEx(0, true);
+
+		::CloseHandle(hThread);
+	}
+	else
+	{
+		std::cerr << "Failed to open thread handle." << std::endl;
+	}
+
+	
 }

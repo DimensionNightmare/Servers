@@ -5,7 +5,6 @@ module;
 #include <functional> 
 export module DNServer;
 
-
 using namespace std;
 
 export enum class ServerType : unsigned char
@@ -17,8 +16,6 @@ export enum class ServerType : unsigned char
 
 	GateServer,
 	DatabaseServer,
-	LogicServer,
-
 	DedicatedServer,
 	
 	Max,
@@ -45,23 +42,25 @@ public:
 	virtual void Resume() = 0;
 
     ServerType GetServerType(){return emServerType;}
-	unsigned int GetServerIndex(){return iServerIndex;}
-	void SetServerIndex(unsigned int serverIndex){iServerIndex = serverIndex;}
+
+	unsigned int &ServerIndex(){ return iServerIndex;}
 
 	virtual void LoopEvent(function<void(hv::EventLoopPtr)> func){}
 
 	bool IsRun(){ return bInRun;}
 	void SetRun(bool state){bInRun = state;}
 
-	virtual void ReClientEvent(const char* ip, unsigned short port){};
-
 public: // dll override
+	DNl10n* pDNl10nInstance;
+	map<string, string>* pLuanchConfig;
 
 protected:
     ServerType emServerType;
 
 	bool bInRun;
 	unsigned int iServerIndex;
+
+	DWORD oThreadId;
 };
 
 DNServer::DNServer()
@@ -69,6 +68,8 @@ DNServer::DNServer()
 	emServerType = ServerType::None;
 	bInRun = false;
 	iServerIndex = 0;
+
+	oThreadId = 0;
 }
 
 bool DNServer::Init()
@@ -78,6 +79,8 @@ bool DNServer::Init()
 	{
 		iServerIndex = stoi(*value);
 	}
+
+	oThreadId = GetCurrentThreadId();
 
 	return true;
 }
