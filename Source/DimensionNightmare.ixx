@@ -298,7 +298,8 @@ bool DimensionNightmare::InitConfig(map<string, string> &param)
         }
 	}
 
-	// local output
+	// local output 
+	// *** if use locale::global, webProxy cant push file to webclient, dont kown why ***
     // locale::global(locale(param["locale"]));
 	system("chcp 65001");
 

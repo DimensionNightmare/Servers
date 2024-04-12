@@ -103,17 +103,8 @@ int HandleLogicServerInit(DNServer *server)
 						if(peeraddr != origin)
 						{
 							GetClientReconnectFunc()(serverProxy->GetCtlIp().c_str(), serverProxy->GetCtlPort());
-							clientSock->SetRegistEvent(&Evt_ReqRegistSrv);
 						}
-					}
-					case ProxyStatus::Open:
-					{
-						// not orgin
-						string origin = format("{}:{}", serverProxy->GetCtlIp(), serverProxy->GetCtlPort());
-						if(peeraddr != origin)
-						{
-							clientSock->SetRegistEvent(&Evt_ReqRegistSrv);
-						}
+						break;
 					}
 				}
 			}
@@ -124,6 +115,7 @@ int HandleLogicServerInit(DNServer *server)
 				DNPrint(4, LoggerLevel::Debug, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
 				channel->setHeartbeat(4000, std::bind(&DNClientProxyHelper::TickHeartbeat, clientSock));
 				channel->setWriteTimeout(12000);
+				clientSock->SetRegistEvent(&Evt_ReqRegistSrv);
 			}
 			else
 			{
