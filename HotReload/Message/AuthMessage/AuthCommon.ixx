@@ -34,7 +34,7 @@ export DNTaskVoid Evt_ReqRegistSrv()
 		// prinfg("Evt_ReqRegistSrv ----- %lu, \n", msgId);
 	}
 
-	client->SetIsRegisting(true);
+	client->RegistState() = RegistState::Registing;
 
 	COM_ReqRegistSrv requset;
 	requset.set_server_type((int)dnServer->GetServerType());
@@ -76,16 +76,16 @@ export DNTaskVoid Evt_ReqRegistSrv()
 	{
 		DNPrint(-1, LoggerLevel::Debug, "regist Server error! msg:%lu \n", msgId);
 		dnServer->IsRun() = false; //exit application
+		client->RegistState() = RegistState::None;
 	}
 	else
 	{
 		DNPrint(-1, LoggerLevel::Debug, "regist Server success! \n");
-		client->SetRegisted(true);
+		client->RegistState() = RegistState::Registed;
 		dnServer->ServerIndex() = response.server_index();
 	}
 
 	dataChannel.Destroy();
 
-	client->SetIsRegisting(false);
 	co_return;
 }

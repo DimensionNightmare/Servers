@@ -53,7 +53,7 @@ export void ApiLogin(HttpService* service)
 			return;
 		}
 		
-		if(!authServer->GetCSock()->IsRegisted())
+		if(authServer->GetCSock()->RegistState() != RegistState::Registed)
 		{
 			errData["code"] = HTTP_STATUS_BAD_REQUEST;
 			errData["message"] = "Server Disconnect!";

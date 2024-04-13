@@ -179,7 +179,7 @@ export int main(int argc, char **argv)
 
 	while (dn->ServerIsRun())
 	{
-		dn->TickFrame();
+		dn->TickMainFrame();
 		Sleep(100);
 	}
 

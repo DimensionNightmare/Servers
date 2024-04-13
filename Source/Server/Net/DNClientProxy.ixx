@@ -14,6 +14,13 @@ using namespace std;
 using namespace google::protobuf;
 using namespace hv;
 
+export enum class RegistState
+{
+	None,
+	Registing,
+	Registed,
+};
+
 export class DNClientProxy : public TcpClientTmpl<SocketChannel>
 {
 public:
@@ -41,7 +48,7 @@ protected: // dll proxy
 	//
 	map<uint64_t, unsigned int > mMapTimer;
 	// status
-	bool bIsRegisted;
+	RegistState eRegistState;
 
 	function<void()> pRegistEvent;
 
@@ -49,8 +56,6 @@ protected: // dll proxy
 
 	shared_mutex oMsgMutex;
 	shared_mutex oTimerMutex;
-
-	bool bIsRegisting;
 };
 
 
@@ -59,10 +64,9 @@ DNClientProxy::DNClientProxy()
 {
 	iMsgId = ATOMIC_VAR_INIT(0);
 	mMsgList.clear();
-	bIsRegisted = false;
+	eRegistState = RegistState::None;
 	pRegistEvent = nullptr;
 	eState = Channel::Status::CLOSED;
-	bIsRegisting = false;
 }
 
 DNClientProxy::~DNClientProxy()
@@ -77,12 +81,12 @@ DNClientProxy::~DNClientProxy()
 
 void DNClientProxy::TickRegistEvent(size_t timerID)
 {
-	if(bIsRegisting)
+	if(eRegistState == RegistState::Registing)
 	{
 		return;
 	}
 	
-	if (channel->isConnected() && !bIsRegisted) 
+	if (channel->isConnected() && eRegistState != RegistState::Registed) 
 	{
 		if(pRegistEvent)
 		{

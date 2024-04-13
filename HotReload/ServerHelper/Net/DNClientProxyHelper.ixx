@@ -30,9 +30,8 @@ public:
 	unsigned int GetMsgId() { return ++iMsgId; }
 
 	// regist to controlserver
-	bool IsRegisted(){return bIsRegisted;}
-	void SetRegisted(bool isRegisted){bIsRegisted = isRegisted;}
-	void SetIsRegisting(bool state) { bIsRegisting = state;}
+	RegistState& RegistState(){return eRegistState;}
+
 	void SetRegistEvent(function<void()> event);
 	// client status
 	ProxyStatus UpdateClientState(Channel::Status state);
@@ -52,7 +51,7 @@ void DNClientProxyHelper::SetRegistEvent(function<void()> event)
 
 ProxyStatus DNClientProxyHelper::UpdateClientState(Channel::Status state)
 {
-	if(state == eState)
+	if(state == eState || (state == Channel::Status::CONNECTING && eState == Channel::Status::CLOSED))
 	{
 		return ProxyStatus::None;
 	}
@@ -82,7 +81,7 @@ ProxyStatus DNClientProxyHelper::UpdateClientState(Channel::Status state)
 
 void DNClientProxyHelper::ServerDisconnect()
 {
-	SetRegisted(false);
+	eRegistState = RegistState::None;
 
 	for(auto& [k,v] : mMsgList)
 	{

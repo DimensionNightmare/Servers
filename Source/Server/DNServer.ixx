@@ -49,7 +49,7 @@ public:
 
 	bool& IsRun(){ return bInRun;}
 
-	void TickFrame();
+	void TickMainFrame();
 
 	void AddMsgTask(function<void()> func);
 
@@ -87,11 +87,11 @@ bool DNServer::Init()
 	return true;
 }
 
-void DNServer::TickFrame()
+void DNServer::TickMainFrame()
 {
 	// mMessageTasks
 	{
-		lock_guard<mutex> lock(oTaskMutex);
+		unique_lock<mutex> lock(oTaskMutex);
 		if(mMessageTasks.size())
 		{
 			for(function<void()>& func : mMessageTasks)
@@ -103,11 +103,10 @@ void DNServer::TickFrame()
 		}
 	}
 	
-	
 }
 
 void DNServer::AddMsgTask(function<void()> func)
 {
-	std::lock_guard<std::mutex> lock(oTaskMutex);
+	std::unique_lock<std::mutex> lock(oTaskMutex);
 	mMessageTasks.push_back(func);
 }

@@ -154,7 +154,7 @@ public:
 
 	bool& ServerIsRun(){return pServer->IsRun();}
 
-	void TickFrame();
+	void TickMainFrame();
 
 private:
 	HotReloadDll *pHotDll;
@@ -493,7 +493,7 @@ bool DimensionNightmare::OnUnregHotReload()
 	return false;
 }
 
-void DimensionNightmare::TickFrame()
+void DimensionNightmare::TickMainFrame()
 {
-	pServer->TickFrame();
+	pServer->TickMainFrame();
 }
