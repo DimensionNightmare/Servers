@@ -2,7 +2,7 @@ module;
 #include "StdAfx.h"
 #include "S_Common.pb.h"
 #include "S_Global.pb.h"
-#include "S_Dedicated.pb.h"
+#include "C_Auth.pb.h"
 #include "hv/Channel.h"
 
 #include <map>
@@ -19,7 +19,7 @@ using namespace hv;
 using namespace google::protobuf;
 using namespace GMsg::S_Common;
 using namespace GMsg::S_Global;
-using namespace GMsg::S_Dedicated;
+using namespace GMsg::C_Auth;
 
 export class GateMessageHandle
 {
@@ -108,7 +108,7 @@ void GateMessageHandle::RegMsgHandle()
 	msg = COM_RetHeartbeat::internal_default_instance();
 	MHandleRetMap.emplace( hashStr(msg->GetDescriptor()->full_name()), make_pair(msg, &Exe_RetHeartbeat));
 
-	msg = D2G_ReqAuthToken::internal_default_instance();
+	msg = C2S_ReqAuthToken::internal_default_instance();
 	MHandleMap.emplace( hashStr(msg->GetDescriptor()->full_name()), make_pair(msg, &Msg_ReqAuthToken));
 
 }

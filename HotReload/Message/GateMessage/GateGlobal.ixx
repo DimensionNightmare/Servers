@@ -1,6 +1,6 @@
 module;
 #include "S_Global.pb.h"
-#include "C_Login.pb.h"
+#include "C_Auth.pb.h"
 #include "hv/Channel.h"
 
 #include <coroutine>
@@ -16,7 +16,7 @@ using namespace std;
 using namespace hv;
 using namespace google::protobuf;
 using namespace GMsg::S_Global;
-using namespace GMsg::C_Login;
+using namespace GMsg::C_Auth;
 
 export void Exe_ReqUserToken(const SocketChannelPtr &channel, unsigned int msgId, Message *msg)
 {
@@ -34,7 +34,7 @@ export void Exe_ReqUserToken(const SocketChannelPtr &channel, unsigned int msgId
 		if(SocketChannelPtr online = entity->GetChild()->GetSock())
 		{
 			// send to other client
-			G2P_RetAccountReplace replace;
+			S2C_RetAccountReplace replace;
 			replace.set_ip(requset->ip());
 
 			binData.resize(replace.ByteSizeLong());

@@ -35,19 +35,24 @@ int HandleGateServerInit(DNServer *server)
 		serverSock->onConnection = nullptr;
 		serverSock->onMessage = nullptr;
 
-		auto onConnection = [serverProxy](const SocketChannelPtr &channel)
+		auto onConnection = [serverSock](const SocketChannelPtr &channel)
 		{
 			string peeraddr = channel->peeraddr();
 			if (channel->isConnected())
 			{
 				DNPrint(2, LoggerLevel::Debug, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
+				size_t timerId = serverSock->Timer()->setTimeout(5000, std::bind(&DNServerProxy::ChannelTimeoutTimer, serverSock, placeholders::_1));
+				serverSock->AddTimerRecord(timerId, channel->id());
 			}
 			else
 			{
 				DNPrint(3, LoggerLevel::Debug, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
 				if(Entity* entity = channel->getContext<Entity>())
 				{
-					entity->CloseEvent()(entity);
+					if(entity->CloseEvent())
+					{
+						entity->CloseEvent()(entity);
+					}
 				}
 			}
 		};
