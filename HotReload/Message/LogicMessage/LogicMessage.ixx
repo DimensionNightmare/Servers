@@ -1,27 +1,21 @@
 module;
 #include "StdAfx.h"
 #include "S_Common.pb.h"
-#include "S_Global.pb.h"
-#include "S_Dedicated.pb.h"
 #include "hv/Channel.h"
 
 #include <map>
 #include <functional>
-export module GateMessage;
+export module LogicMessage;
 
-export import :GateCommon;
-import :GateGlobal;
-import :GateLogic;
+export import :LogicCommon;
 
 
 using namespace std;
 using namespace hv;
 using namespace google::protobuf;
 using namespace GMsg::S_Common;
-using namespace GMsg::S_Global;
-using namespace GMsg::S_Dedicated;
 
-export class GateMessageHandle
+export class LogicMessageHandle
 {
 public:
 	static void MsgHandle(const SocketChannelPtr &channel, unsigned int msgId, size_t msgHashId, const string& msgData);
@@ -47,7 +41,7 @@ public:
 
 
 
-void GateMessageHandle::MsgHandle(const SocketChannelPtr &channel, unsigned int msgId, size_t msgHashId, const string& msgData)
+void LogicMessageHandle::MsgHandle(const SocketChannelPtr &channel, unsigned int msgId, size_t msgHashId, const string& msgData)
 {
 	if (MHandleMap.contains(msgHashId))
 	{
@@ -70,8 +64,7 @@ void GateMessageHandle::MsgHandle(const SocketChannelPtr &channel, unsigned int 
 	}
 }
 
-
-void GateMessageHandle::MsgRetHandle(const SocketChannelPtr &channel, unsigned int msgId, size_t msgHashId, const string &msgData)
+void LogicMessageHandle::MsgRetHandle(const SocketChannelPtr &channel, unsigned int msgId, size_t msgHashId, const string &msgData)
 {
 	if (MHandleRetMap.contains(msgHashId))
 	{
@@ -94,21 +87,17 @@ void GateMessageHandle::MsgRetHandle(const SocketChannelPtr &channel, unsigned i
 	}
 }
 
-void GateMessageHandle::RegMsgHandle()
+void LogicMessageHandle::RegMsgHandle()
 {
 	std::hash<string> hashStr;
 	const Message* msg = nullptr;
 
+	msg = COM_RetChangeCtlSrv::internal_default_instance();
+	MHandleRetMap.emplace( hashStr(msg->GetDescriptor()->full_name()), make_pair(msg, &Exe_RetChangeCtlSrv));
+
 	msg = COM_ReqRegistSrv::internal_default_instance();
 	MHandleMap.emplace( hashStr(msg->GetDescriptor()->full_name()), make_pair(msg, &Msg_ReqRegistSrv));
 
-	msg = G2G_ReqLoginToken::internal_default_instance();
-	MHandleMap.emplace( hashStr(msg->GetDescriptor()->full_name()), make_pair(msg, &Exe_ReqUserToken));
-
 	msg = COM_RetHeartbeat::internal_default_instance();
 	MHandleRetMap.emplace( hashStr(msg->GetDescriptor()->full_name()), make_pair(msg, &Exe_RetHeartbeat));
-
-	msg = D2G_ReqAuthToken::internal_default_instance();
-	MHandleMap.emplace( hashStr(msg->GetDescriptor()->full_name()), make_pair(msg, &Msg_ReqAuthToken));
-
 }

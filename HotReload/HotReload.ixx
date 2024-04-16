@@ -18,6 +18,7 @@ import ControlServerInit;
 import AuthServerInit;
 import GateServerInit;
 import DatabaseServerInit;
+import LogicServerInit;
 
 import DNClientProxyHelper;
 
@@ -28,7 +29,7 @@ import DNClientProxyHelper;
 #endif
 
 #ifdef _WIN32
-BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
+export BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
     // Perform actions based on the reason for calling.
     switch (fdwReason)
@@ -79,6 +80,8 @@ int InitHotReload(DNServer* server)
 		return HandleGateServerInit(server);
 	case ServerType::DatabaseServer:
 		return HandleDatabaseServerInit(server);
+	case ServerType::LogicServer:
+		return HandleLogicServerInit(server);
 	}
 
 	return 0;
@@ -99,6 +102,8 @@ int ShutdownHotReload(DNServer *server)
 		return HandleGateServerShutdown(server);
 	case ServerType::DatabaseServer:
 		return HandleDatabaseServerShutdown(server);
+	case ServerType::LogicServer:
+		return HandleLogicServerShutdown(server);
 	}
 
 	return 0;

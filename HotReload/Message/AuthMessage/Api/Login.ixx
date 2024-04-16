@@ -62,10 +62,10 @@ export void ApiLogin(HttpService* service)
 			return;
 		}
 
-		string username = req->GetString("username");
-    	string password = req->GetString("password");
+		string authName = req->GetString("authName");
+    	string authString = req->GetString("authString");
 
-		if(username.empty() || password.empty())
+		if(authName.empty() || authString.empty())
 		{
 			errData["code"] = HTTP_STATUS_BAD_REQUEST;
 			errData["message"] = "param error!";
@@ -75,8 +75,8 @@ export void ApiLogin(HttpService* service)
 		}
 
 		GDb::Account accInfo;
-		accInfo.set_auth_name(username);
-		accInfo.set_auth_string(password);
+		accInfo.set_auth_name(authName);
+		accInfo.set_auth_string(authString);
 
 		pqxx::read_transaction query(*authServer->GetDbConnection());
 		DNDbObj<GDb::Account> accounts(reinterpret_cast<pqxx::transaction<>*>(&query));

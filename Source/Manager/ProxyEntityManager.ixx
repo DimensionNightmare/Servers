@@ -63,7 +63,7 @@ void ProxyEntityManager<TEntity>::EntityCloseTimer(uint64_t timerID)
 		TEntity* entity = &this->mEntityMap[entityId];
 		unique_lock<shared_mutex> ulock(this->oMapMutex);
 
-		DNPrint(-1, LoggerLevel::Debug, "destory entity\n");
+		DNPrint(-1, LoggerLevel::Debug, "destory proxy entity\n");
 		this->mEntityMap.erase(entityId);
 	}
 }

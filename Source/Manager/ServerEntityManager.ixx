@@ -78,7 +78,7 @@ void ServerEntityManager<TEntity>::EntityCloseTimer(uint64_t timerID)
 			owner->ClearFlag(ServerEntityFlag::Locked);
 		}
 		
-		DNPrint(-1, LoggerLevel::Debug, "EntityCloseTimer destory entity\n");
+		DNPrint(-1, LoggerLevel::Debug, "EntityCloseTimer server destory entity\n");
 		this->mEntityMap.erase(entityId);
 	}
 }

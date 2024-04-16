@@ -18,6 +18,7 @@ import GlobalServer;
 import AuthServer;
 import GateServer;
 import DatabaseServer;
+import LogicServer;
 import Utils.StrUtils;
 
 
@@ -81,7 +82,14 @@ struct HotReloadDll
 
 		if (isNormalFree && !sDllDirRand.empty())
 		{
-			filesystem::remove_all(sDllDirRand.c_str());
+			try
+			{
+				filesystem::remove_all(sDllDirRand.c_str());
+			}
+			catch(const std::exception& e)
+			{
+				DNPrint(-1, LoggerLevel::Error, "filesystem:%s", e.what());
+			}
 		}
 
 		sDllDirRand.clear();
@@ -335,6 +343,9 @@ bool DimensionNightmare::Init()
 		break;
 	case ServerType::DatabaseServer:
 		pServer = new DatabaseServer;
+		break;
+	case ServerType::LogicServer:
+		pServer = new LogicServer;
 		break;
 	default:
 		DNPrint(5, LoggerLevel::Error, nullptr);

@@ -14,7 +14,8 @@
 			// "args": ["svrType=2", "port=1213"],
 			// "args": ["svrType=3", "port=1212", "byCtl=1", "ctlIp=127.0.0.1", "ctlPort=1270"],
 			// "args": ["svrType=4", "byCtl=1", "ctlIp=127.0.0.1", "ctlPort=1213"],
-			"args": ["svrType=5", "byCtl=1", "ctlIp=127.0.0.1", "ctlPort=1213"],
+			// "args": ["svrType=5", "byCtl=1", "ctlIp=127.0.0.1", "ctlPort=1213"],
+			"args": ["svrType=6", "byCtl=1", "ctlIp=127.0.0.1", "ctlPort=1213"],
             "stopAtEntry": false,
             "cwd": "${command:cmake.getLaunchTargetDirectory}",
             "environment": [

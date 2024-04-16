@@ -75,7 +75,7 @@ export void Exe_ReqUserToken(const SocketChannelPtr &channel, unsigned int msgId
 
 
 	// server index 
-	ServerEntity* serverEntity = dnServer->GetEntityManager()->GetEntityByList(ServerType::DedicatedServer).front();
+	ServerEntity* serverEntity = dnServer->GetEntityManager()->GetEntityByList(ServerType::LogicServer).front();
 	ServerEntityHelper* serverEntityHelper = static_cast<ServerEntityHelper*>(serverEntity);
 	response.set_server_index(serverEntityHelper->GetChild()->ID());
 

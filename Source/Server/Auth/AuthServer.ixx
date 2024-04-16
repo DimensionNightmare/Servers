@@ -100,6 +100,8 @@ bool AuthServer::Init()
 	pSSock->setPort(port);
 	pSSock->setThreadNum(4);
 
+	DNPrint(1, LoggerLevel::Normal, nullptr, pSSock->port, 0);
+
 	//connet ControlServer
 	string* ctlPort = GetLuanchConfigParam("ctlPort");
 	string* ctlIp = GetLuanchConfigParam("ctlIp");

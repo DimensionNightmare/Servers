@@ -53,6 +53,7 @@ int HandleDatabaseServerInit(DNServer *server)
 						string origin = format("{}:{}", serverProxy->GetCtlIp(), serverProxy->GetCtlPort());
 						if(peeraddr != origin)
 						{
+							clientSock->stop();
 							serverProxy->ReClientEvent(serverProxy->GetCtlIp(), serverProxy->GetCtlPort());
 						}
 					}

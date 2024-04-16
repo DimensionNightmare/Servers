@@ -25,7 +25,7 @@ export void Msg_ReqRegistSrv(const SocketChannelPtr &channel, unsigned int msgId
 
 	ServerType regType = (ServerType)requset->server_type();
 	
-	if(regType < ServerType::AuthServer || regType > ServerType::DedicatedServer)
+	if(regType < ServerType::AuthServer || regType > ServerType::LogicServer)
 	{
 		response.set_success(false);
 	}

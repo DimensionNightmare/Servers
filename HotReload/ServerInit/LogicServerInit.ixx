@@ -4,54 +4,48 @@ module;
 #include "hv/Channel.h"
 
 #include <functional>
-export module GlobalServerInit;
+#include <format>
+export module LogicServerInit;
 
 import DNServer;
-import GlobalServer;
-import GlobalServerHelper;
+import LogicServer;
+import LogicServerHelper;
 import MessagePack;
-import GlobalMessage;
-import ServerEntityHelper;
+import LogicMessage;
 
 
 using namespace hv;
 using namespace std;
 using namespace google::protobuf;
 
-export int HandleGlobalServerInit(DNServer *server);
-export int HandleGlobalServerShutdown(DNServer *server);
+export int HandleLogicServerInit(DNServer *server);
+export int HandleLogicServerShutdown(DNServer *server);
 
 
 
-int HandleGlobalServerInit(DNServer *server)
+int HandleLogicServerInit(DNServer *server)
 {
-	SetGlobalServer(static_cast<GlobalServer*>(server));
+	SetLogicServer(static_cast<LogicServer*>(server));
 
-	GlobalMessageHandle::RegMsgHandle();
+	LogicMessageHandle::RegMsgHandle();
+	
+	LogicServerHelper* serverProxy = GetLogicServer();
 
-	GlobalServerHelper* serverProxy = GetGlobalServer();
-
-	if (DNServerProxyHelper* serverSock = serverProxy->GetSSock())
+	if (DNServerProxy* serverSock = serverProxy->GetSSock())
 	{
 		serverSock->onConnection = nullptr;
 		serverSock->onMessage = nullptr;
-		
-		auto onConnection = [serverProxy,serverSock](const SocketChannelPtr &channel)
+
+		auto onConnection = [serverProxy](const SocketChannelPtr &channel)
 		{
 			string peeraddr = channel->peeraddr();
 			if (channel->isConnected())
 			{
 				DNPrint(2, LoggerLevel::Debug, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
-				// if not regist
-				size_t timerId = serverSock->Timer()->setTimeout(5000, std::bind(&DNServerProxy::ChannelTimeoutTimer, serverSock, placeholders::_1));
-				serverSock->AddTimerRecord(timerId, channel->id());
-				// if not recive data
-				channel->setReadTimeout(15000);
 			}
 			else
 			{
 				DNPrint(3, LoggerLevel::Debug, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
-
 				if(ServerEntityHelper* entity = channel->getContext<ServerEntityHelper>())
 				{
 					ServerEntityManagerHelper<ServerEntity>*  entityMan = serverProxy->GetEntityManager();
@@ -60,36 +54,19 @@ int HandleGlobalServerInit(DNServer *server)
 			}
 		};
 
-		auto onMessage = [serverProxy](const SocketChannelPtr &channel, Buffer *buf) 
+		auto onMessage = [](const SocketChannelPtr &channel, Buffer *buf) 
 		{
 			MessagePacket packet;
 			memcpy(&packet, buf->data(), MessagePacket::PackLenth);
 			if(packet.dealType == MsgDeal::Req)
 			{
 				string msgData(buf->base + MessagePacket::PackLenth, packet.pkgLenth);
-				GlobalMessageHandle::MsgHandle(channel, packet.msgId, packet.msgHashId, msgData);
+				LogicMessageHandle::MsgHandle(channel, packet.msgId, packet.msgHashId, msgData);
 			}
 			else if(packet.dealType == MsgDeal::Ret)
 			{
 				string msgData(buf->base + MessagePacket::PackLenth, packet.pkgLenth);
-				GlobalMessageHandle::MsgRetHandle(channel, packet.msgId, packet.msgHashId, msgData);
-			}
-			else if(packet.dealType == MsgDeal::Res)
-			{
-				DNServerProxyHelper* servSock = serverProxy->GetSSock();
-
-				if(DNTask<Message>* task = servSock->GetMsg(packet.msgId)) //client sock request
-				{
-					servSock->DelMsg(packet.msgId);
-					task->Resume();
-					Message* message = task->GetResult();
-					message->ParseFromArray(buf->base + MessagePacket::PackLenth, packet.pkgLenth);
-					task->CallResume();
-				}
-				else
-				{
-					DNPrint(13, LoggerLevel::Error, nullptr);
-				}
+				LogicMessageHandle::MsgRetHandle(channel, packet.msgId, packet.msgHashId, msgData);
 			}
 			else
 			{
@@ -101,24 +78,43 @@ int HandleGlobalServerInit(DNServer *server)
 		serverSock->onMessage = onMessage;
 	}
 
+
 	if (DNClientProxyHelper* clientSock = serverProxy->GetCSock())
 	{
 		clientSock->onConnection = nullptr;
 		clientSock->onMessage = nullptr;
-
+		
 		auto onConnection = [serverProxy](const SocketChannelPtr &channel)
 		{
 			DNClientProxyHelper* clientSock = serverProxy->GetCSock();
 
 			string peeraddr = channel->peeraddr();
-			clientSock->UpdateClientState(channel->status);
+			
+			ProxyStatus state = clientSock->UpdateClientState(channel->status);
+			if(state != ProxyStatus::None)
+			{
+				switch(state)
+				{
+					case ProxyStatus::Close:
+					{
+						// not orgin
+						string origin = format("{}:{}", serverProxy->GetCtlIp(), serverProxy->GetCtlPort());
+						if(peeraddr != origin)
+						{
+							clientSock->stop();
+							serverProxy->ReClientEvent(serverProxy->GetCtlIp(), serverProxy->GetCtlPort());
+						}
+					}
+				}
+			}
 
 			if (channel->isConnected())
 			{
 				DNPrint(4, LoggerLevel::Debug, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
+				clientSock->SetRegistEvent(&Evt_ReqRegistSrv);
+				
 				channel->setHeartbeat(4000, std::bind(&DNClientProxyHelper::TickHeartbeat, clientSock));
 				channel->setWriteTimeout(12000);
-				clientSock->SetRegistEvent(&Evt_ReqRegistSrv);
 			}
 			else
 			{
@@ -135,7 +131,17 @@ int HandleGlobalServerInit(DNServer *server)
 		{
 			MessagePacket packet;
 			memcpy(&packet, buf->data(), MessagePacket::PackLenth);
-			if(packet.dealType == MsgDeal::Res)
+			if(packet.dealType == MsgDeal::Req)
+			{
+				string msgData(buf->base + MessagePacket::PackLenth, packet.pkgLenth);
+				LogicMessageHandle::MsgHandle(channel, packet.msgId, packet.msgHashId, msgData);
+			}
+			else if(packet.dealType == MsgDeal::Ret)
+			{
+				string msgData(buf->base + MessagePacket::PackLenth, packet.pkgLenth);
+				LogicMessageHandle::MsgRetHandle(channel, packet.msgId, packet.msgHashId, msgData);
+			}
+			else if(packet.dealType == MsgDeal::Res)
 			{
 				DNClientProxyHelper* clientSock = serverProxy->GetCSock();
 
@@ -152,11 +158,6 @@ int HandleGlobalServerInit(DNServer *server)
 					DNPrint(13, LoggerLevel::Error, nullptr);
 				}
 			}
-			else if(packet.dealType == MsgDeal::Req)
-			{
-				string msgData(buf->base + MessagePacket::PackLenth, packet.pkgLenth);
-				GlobalMessageHandle::MsgHandle(channel, packet.msgId, packet.msgHashId, msgData);
-			}
 			else
 			{
 				DNPrint(12, LoggerLevel::Error, nullptr);
@@ -168,14 +169,13 @@ int HandleGlobalServerInit(DNServer *server)
 	}
 
 	return true;
-
 }
 
-int HandleGlobalServerShutdown(DNServer *server)
+int HandleLogicServerShutdown(DNServer *server)
 {
-	GlobalServerHelper* serverProxy = GetGlobalServer();
+	LogicServerHelper* serverProxy = GetLogicServer();
 
-	if (DNServerProxyHelper* serverSock = serverProxy->GetSSock())
+	if (DNServerProxy* serverSock = serverProxy->GetSSock())
 	{
 		serverSock->onConnection = nullptr;
 		serverSock->onMessage = nullptr;

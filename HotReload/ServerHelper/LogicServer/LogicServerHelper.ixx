@@ -8,9 +8,9 @@ module;
 
 #include <assert.h>
 #include <format>
-export module DatabaseServerHelper;
+export module LogicServerHelper;
 
-import DatabaseServer;
+import LogicServer;
 import DNClientProxyHelper;
 import ServerEntityManagerHelper;
 import ServerEntity;
@@ -18,10 +18,10 @@ import ServerEntity;
 using namespace std;
 using namespace hv;
 
-export class DatabaseServerHelper : public DatabaseServer
+export class LogicServerHelper : public LogicServer
 {
 private:
-	DatabaseServerHelper(){};
+	LogicServerHelper(){};
 public:
 
 	DNClientProxyHelper* GetCSock(){ return nullptr;}
@@ -35,20 +35,20 @@ public:
 	void ReClientEvent(const string& ip, unsigned short port);
 };
 
-static DatabaseServerHelper* PDatabaseServerHelper = nullptr;
+static LogicServerHelper* PLogicServerHelper = nullptr;
 
-export void SetDatabaseServer(DatabaseServer* server)
+export void SetLogicServer(LogicServer* server)
 {
-	PDatabaseServerHelper = static_cast<DatabaseServerHelper*>(server);
-	assert(PDatabaseServerHelper != nullptr);
+	PLogicServerHelper = static_cast<LogicServerHelper*>(server);
+	assert(PLogicServerHelper != nullptr);
 }
 
-export DatabaseServerHelper* GetDatabaseServer()
+export LogicServerHelper* GetLogicServer()
 {
-	return PDatabaseServerHelper;
+	return PLogicServerHelper;
 }
 
-bool DatabaseServerHelper::InitDabase()
+bool LogicServerHelper::InitDabase()
 {
 	try
 	{
@@ -67,7 +67,7 @@ bool DatabaseServerHelper::InitDabase()
 	return true;
 }
 
-void DatabaseServerHelper::ReClientEvent(const string& ip, unsigned short port)
+void LogicServerHelper::ReClientEvent(const string& ip, unsigned short port)
 {
 
 	auto ReClient = [=, this]()

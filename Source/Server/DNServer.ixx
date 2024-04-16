@@ -16,6 +16,8 @@ export enum class ServerType : unsigned char
 
 	GateServer,
 	DatabaseServer,
+	LogicServer,
+
 	DedicatedServer,
 	
 	Max,

@@ -60,7 +60,7 @@ void GlobalServerHelper::UpdateServerGroup()
 	}
 
 	list<ServerEntity*>& dbs = entityMan->GetEntityByList(ServerType::DatabaseServer);
-	list<ServerEntity*>& logics = entityMan->GetEntityByList(ServerType::DedicatedServer);
+	list<ServerEntity*>& logics = entityMan->GetEntityByList(ServerType::LogicServer);
 
 	// alloc gate
 	COM_RetChangeCtlSrv retMsg;
@@ -98,7 +98,7 @@ void GlobalServerHelper::UpdateServerGroup()
 		}
 
 		list<ServerEntity*>& gatesDb = gate->GetMapLinkNode(ServerType::DatabaseServer);
-		list<ServerEntity*>& gatesLogic = gate->GetMapLinkNode(ServerType::DedicatedServer);
+		list<ServerEntity*>& gatesLogic = gate->GetMapLinkNode(ServerType::LogicServer);
 		if(!dbs.empty() && gatesDb.size() < 1)
 		{
 			ServerEntity* ele = dbs.front();

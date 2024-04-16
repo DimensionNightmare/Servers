@@ -3,7 +3,7 @@ module;
 #include "hv/Channel.h"
 
 #include <coroutine>
-export module GateMessage:GateDedicated;
+export module GateMessage:GateLogic;
 
 import GateServerHelper;
 import DNTask;
