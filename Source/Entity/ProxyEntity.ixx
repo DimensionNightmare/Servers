@@ -33,6 +33,8 @@ ProxyEntity::ProxyEntity():Entity()
 	oFlags.reset();
 	sToken.clear();
 	iExpireTime = 0;
+
+	emType = EntityType::Proxy;
 }
 
 ProxyEntity::~ProxyEntity()

@@ -1,4 +1,5 @@
 module;
+#include "StdAfx.h"
 #include "S_Global.pb.h"
 #include "C_Auth.pb.h"
 #include "hv/Channel.h"
@@ -75,13 +76,28 @@ export void Exe_ReqUserToken(const SocketChannelPtr &channel, unsigned int msgId
 
 
 	// server index 
-	ServerEntity* serverEntity = dnServer->GetEntityManager()->GetEntityByList(ServerType::LogicServer).front();
-	ServerEntityHelper* serverEntityHelper = static_cast<ServerEntityHelper*>(serverEntity);
-	response.set_server_index(serverEntityHelper->GetChild()->ID());
+	ServerEntityManagerHelper<ServerEntity>* serverEntityMan = dnServer->GetEntityManager();
+	list<ServerEntity*> serverEntityList = serverEntityMan->GetEntityByList(ServerType::LogicServer);
+	ServerEntity* serverEntity = nullptr;
+	if(!serverEntityList.empty())
+	{
+		serverEntity = serverEntityList.front();
+	}
 
-	binData.resize(response.ByteSizeLong());
-	response.SerializeToArray(binData.data(), (int)binData.size());
-	MessagePack(msgId, MsgDeal::Res, response.GetDescriptor()->full_name().c_str(), binData);
+	if(serverEntity)
+	{
+		ServerEntityHelper* serverEntityHelper = static_cast<ServerEntityHelper*>(serverEntity);
+		response.set_server_index(serverEntityHelper->GetChild()->ID());
 
-	channel->write(binData);
+		binData.resize(response.ByteSizeLong());
+		response.SerializeToArray(binData.data(), (int)binData.size());
+		MessagePack(msgId, MsgDeal::Res, response.GetDescriptor()->full_name().c_str(), binData);
+
+		channel->write(binData);
+	}
+	else
+	{
+		DNPrint(-1, LoggerLevel::Error, "Exe_ReqUserToken not LogicServer !!");
+	}
+	
 }

@@ -14,6 +14,8 @@ import LogicServer;
 import DNClientProxyHelper;
 import ServerEntityManagerHelper;
 import ServerEntity;
+import ClientEntityManagerHelper;
+import ClientEntity;
 
 using namespace std;
 using namespace hv;
@@ -26,6 +28,7 @@ public:
 
 	DNClientProxyHelper* GetCSock(){ return nullptr;}
 	ServerEntityManagerHelper<ServerEntity>* GetEntityManager(){ return nullptr;}
+	ClientEntityManagerHelper<ClientEntity>* GetClientEntityManager(){ return nullptr;}
 
 	bool InitDabase();
 

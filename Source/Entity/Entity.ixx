@@ -8,6 +8,8 @@ export enum class EntityType
 {
 	None,
 	Server,
+	Proxy,
+	Client,
 };
 
 using namespace hv;

@@ -48,12 +48,12 @@ void GateServerHelper::ServerEntityCloseEvent(Entity* entity)
 
 	// up to Global
 	string binData;
-	G2G_RetRegistSrv upLoad;
-	upLoad.set_server_index(castObj->GetChild()->ID());
-	upLoad.set_is_regist(false);
-	binData.resize(upLoad.ByteSizeLong());
-	upLoad.SerializeToArray(binData.data(), (int)binData.size());
-	MessagePack(0, MsgDeal::Ret, upLoad.GetDescriptor()->full_name().c_str(), binData);
+	G2G_RetRegistSrv retMsg;
+	retMsg.set_server_index(castObj->GetChild()->ID());
+	retMsg.set_is_regist(false);
+	binData.resize(retMsg.ByteSizeLong());
+	retMsg.SerializeToArray(binData.data(), (int)binData.size());
+	MessagePack(0, MsgDeal::Ret, retMsg.GetDescriptor()->full_name().c_str(), binData);
 
 	DNClientProxyHelper* client = GetCSock();
 	client->send(binData);

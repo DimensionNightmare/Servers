@@ -10,7 +10,7 @@ import DNServerProxy;
 import DNClientProxy;
 import MessagePack;
 import ServerEntityManager;
-import ProxyEntityManager;
+import ClientEntityManager;
 
 using namespace std;
 using namespace hv;
@@ -41,14 +41,14 @@ public: // dll override
 	virtual DNClientProxy* GetCSock(){return pCSock;}
 
 	virtual ServerEntityManager<ServerEntity>* GetEntityManager(){return pEntityMan;}
-	virtual ProxyEntityManager<ProxyEntity>* GetProxyEntityManager(){return pProxyEntityMan;}
+	virtual ClientEntityManager<ClientEntity>* GetClientEntityManager(){return pClientEntityMan;}
 
 protected: // dll proxy
 	DNServerProxy* pSSock;
 	DNClientProxy* pCSock;
 
 	ServerEntityManager<ServerEntity>* pEntityMan;
-	ProxyEntityManager<ProxyEntity>* pProxyEntityMan;
+	ClientEntityManager<ClientEntity>* pClientEntityMan;
 
 	// record orgin info
 	string sCtlIp;
@@ -64,7 +64,7 @@ LogicServer::LogicServer()
 	pCSock = nullptr;
 
 	pEntityMan = nullptr;
-	pProxyEntityMan = nullptr;
+	pClientEntityMan = nullptr;
 }
 
 LogicServer::~LogicServer()
@@ -167,8 +167,8 @@ bool LogicServer::Init()
 	
 	pEntityMan = new ServerEntityManager<ServerEntity>;
 	pEntityMan->Init();
-	pProxyEntityMan = new ProxyEntityManager<ProxyEntity>;
-	pProxyEntityMan->Init();
+	pClientEntityMan = new ClientEntityManager<ClientEntity>;
+	pClientEntityMan->Init();
 
 	return true;
 }

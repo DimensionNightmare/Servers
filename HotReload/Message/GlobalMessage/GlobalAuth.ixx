@@ -27,7 +27,7 @@ export DNTaskVoid Msg_ReqAuthAccount(const SocketChannelPtr &channel, unsigned i
 	G2A_ResAuthAccount response;
 
 	// if has db not need origin
-	list<ServerEntity*>& servList = GetGlobalServer()->GetEntityManager()->GetEntityByList(ServerType::GateServer);
+	list<ServerEntity*> servList = GetGlobalServer()->GetEntityManager()->GetEntityByList(ServerType::GateServer);
 
 	list<ServerEntityHelper*> tempList;
 	for(ServerEntity* it : servList)
@@ -42,12 +42,13 @@ export DNTaskVoid Msg_ReqAuthAccount(const SocketChannelPtr &channel, unsigned i
 	tempList.sort([](ServerEntityHelper* lhs, ServerEntityHelper* rhs){ return lhs->GetConnNum() < rhs->GetConnNum(); });
 
 
-	if(tempList.size())
+	if(!tempList.empty())
 	{
 		ServerEntityHelper* entity = tempList.front();
 		entity->GetConnNum()++;
 		response.set_state_code(0);
-		response.set_ip_addr( format("{}:{}", entity->ServerIp(), entity->ServerPort() ));
+		response.set_ip( entity->ServerIp());
+		response.set_port( entity->ServerPort());
 
 		G2G_ReqLoginToken tokenReq;
 		tokenReq.set_account_id(requset->account_id());

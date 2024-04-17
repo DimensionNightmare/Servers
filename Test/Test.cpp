@@ -20,6 +20,7 @@
 #include <thread>
 #include <chrono>
 #include "pqxx/pqxx"
+#include "hv/json.hpp"
 
 using namespace hv;
 
@@ -139,6 +140,27 @@ int main()
 
 	A* a = &maps[1];
 	maps.erase(1);
-	delete a;
+
+	string jsonstr = R"(
+	{
+		"aa": 1,
+		"bb":{
+			"aa" :2,
+			"cc":[{"dd":1},2,3]
+		}
+	}
+	)";
+
+	nlohmann::json j = nlohmann::json::parse(jsonstr);
+
+	if(j.contains("/bb/cc/2"_json_pointer))
+	{
+		printf("1");
+	}
+	else
+	{
+		printf("0");
+	}
+
 }
 #endif

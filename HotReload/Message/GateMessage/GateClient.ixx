@@ -1,7 +1,8 @@
 module;
 #include "StdAfx.h"
-#include "C_Auth.pb.h"
 #include "hv/Channel.h"
+#include "C_Auth.pb.h"
+#include "S_Logic.pb.h" 
 
 #include <coroutine>
 export module GateMessage:GateClient;
@@ -15,9 +16,10 @@ import Entity;
 import ProxyEntityHelper;
 
 using namespace std;
-using namespace GMsg::C_Auth;
 using namespace google::protobuf;
 using namespace hv;
+using namespace GMsg::C_Auth;
+using namespace GMsg::S_Logic;
 
 // client request
 export void Msg_ReqAuthToken(const SocketChannelPtr &channel, unsigned int msgId, Message *msg)
@@ -28,6 +30,7 @@ export void Msg_ReqAuthToken(const SocketChannelPtr &channel, unsigned int msgId
 	ProxyEntityManagerHelper<ProxyEntity>* entityMan = dnServer->GetProxyEntityManager();
 
 	C2S_ResAuthToken response;
+	string binData;
 
 	if(ProxyEntityHelper* entity = entityMan->GetEntity(requset->account_id()))
 	{
@@ -47,6 +50,34 @@ export void Msg_ReqAuthToken(const SocketChannelPtr &channel, unsigned int msgId
 
 				entity->CloseEvent() = std::bind(&GateServerHelper::ProxyEntityCloseEvent, dnServer, std::placeholders::_1);
 			}
+
+			G2L_RetClientLogin retMsg;
+			retMsg.set_account_id(entity->GetChild()->ID());
+			binData.resize(response.ByteSize());
+			response.SerializeToArray(binData.data(), binData.size());
+
+			MessagePack(0, MsgDeal::Ret, retMsg.GetDescriptor()->full_name().c_str(), binData);
+
+			ServerEntityManagerHelper<ServerEntity>* serverEntityMan = dnServer->GetEntityManager();
+			list<ServerEntity*> serverEntityList = serverEntityMan->GetEntityByList(ServerType::LogicServer);
+			ServerEntity* serverEntity = nullptr;
+			if(!serverEntityList.empty())
+			{
+				serverEntity = serverEntityList.front();
+			}
+
+			if(serverEntity)
+			{
+				ServerEntityHelper* serverEntityHelper = static_cast<ServerEntityHelper*>(serverEntity);
+				serverEntityHelper->GetChild()->GetSock()->write(binData);
+			}
+			else
+			{
+				DNPrint(-1, LoggerLevel::Error, "Msg_ReqAuthToken not LogicServer !!");
+			}
+			
+	
+			binData.clear();
 		}
 		else
 		{
@@ -59,7 +90,7 @@ export void Msg_ReqAuthToken(const SocketChannelPtr &channel, unsigned int msgId
 		DNPrint(-1, LoggerLevel::Debug, "noaccount !!\n");
 	}
 
-	string binData;
+	
 	binData.resize(response.ByteSize());
 	response.SerializeToArray(binData.data(), binData.size());
 
