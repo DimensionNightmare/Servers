@@ -25,7 +25,7 @@ export void Msg_ReqRegistSrv(const SocketChannelPtr &channel, unsigned int msgId
 
 	ServerType regType = (ServerType)requset->server_type();
 	
-	if(regType < ServerType::AuthServer || regType > ServerType::LogicServer)
+	if(regType < ServerType::GateServer || regType > ServerType::LogicServer)
 	{
 		response.set_success(false);
 	}
@@ -59,6 +59,8 @@ export void Msg_ReqRegistSrv(const SocketChannelPtr &channel, unsigned int msgId
 			{
 				entity->LinkNode() = nullptr;
 				child->SetSock(channel);
+				channel->setContext(entity);
+
 				response.set_success(true);
 
 				// Re-enroll

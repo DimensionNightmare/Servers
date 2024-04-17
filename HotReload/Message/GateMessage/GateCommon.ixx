@@ -117,35 +117,14 @@ export DNTaskVoid Evt_ReqRegistSrv()
 	co_return;
 }
 
-// send close to change socket
-void ServerEntityCloseEvent(Entity* entity)
-{
-	ServerEntityHelper* castObj = static_cast<ServerEntityHelper*>(entity);
-
-	// up to Global
-	string binData;
-	G2G_RetRegistSrv upLoad;
-	upLoad.set_server_index(castObj->GetChild()->ID());
-	upLoad.set_is_regist(false);
-	binData.resize(upLoad.ByteSizeLong());
-	upLoad.SerializeToArray(binData.data(), (int)binData.size());
-	MessagePack(0, MsgDeal::Ret, upLoad.GetDescriptor()->full_name().c_str(), binData);
-
-	GateServerHelper* dnServer = GetGateServer();
-	DNClientProxyHelper* client = dnServer->GetCSock();
-	client->send(binData);
-	
-	auto entityMan = dnServer->GetEntityManager();
-	entityMan->RemoveEntity(castObj->GetChild()->ID());
-}
-
 // client request
 export void Msg_ReqRegistSrv(const SocketChannelPtr &channel, unsigned int msgId, Message *msg)
 {
 	COM_ReqRegistSrv* requset = reinterpret_cast<COM_ReqRegistSrv*>(msg);
 	COM_ResRegistSrv response;
 
-	auto entityMan = GetGateServer()->GetEntityManager();
+	GateServerHelper* dnServer = GetGateServer();
+	auto entityMan = dnServer->GetEntityManager();
 
 	ServerType regType = (ServerType)requset->server_type();
 	
@@ -171,7 +150,7 @@ export void Msg_ReqRegistSrv(const SocketChannelPtr &channel, unsigned int msgId
 		response.set_success(true);
 		response.set_server_index(entity->GetChild()->ID());
 
-		entity->CloseEvent() = &ServerEntityCloseEvent;
+		entity->CloseEvent() = std::bind(&GateServerHelper::ServerEntityCloseEvent, dnServer, placeholders::_1);
 	}
 	
 	string binData;

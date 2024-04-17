@@ -91,7 +91,6 @@ int HandleGateServerInit(DNServer *server)
 			DNClientProxyHelper* clientSock = serverProxy->GetCSock();
 
 			string peeraddr = channel->peeraddr();
-			clientSock->UpdateClientState(channel->status);
 
 			if (channel->isConnected())
 			{
@@ -109,6 +108,8 @@ int HandleGateServerInit(DNServer *server)
 			{
 				
 			}
+
+			clientSock->UpdateClientState(channel->status);
 		};
 
 		auto onMessage = [serverProxy](const SocketChannelPtr &channel, Buffer *buf) 

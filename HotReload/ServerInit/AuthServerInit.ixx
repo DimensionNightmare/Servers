@@ -42,11 +42,9 @@ int HandleAuthServerInit(DNServer *server)
 
 		auto onConnection = [serverProxy](const SocketChannelPtr &channel)
 		{
-			string peeraddr = channel->peeraddr();
-
 			DNClientProxyHelper* clientSock = serverProxy->GetCSock();
 
-			clientSock->UpdateClientState(channel->status);
+			string peeraddr = channel->peeraddr();
 
 			if (channel->isConnected())
 			{
@@ -64,6 +62,8 @@ int HandleAuthServerInit(DNServer *server)
 			{
 				
 			}
+
+			clientSock->UpdateClientState(channel->status);
 		};
 
 		auto onMessage = [serverProxy](const SocketChannelPtr &channel, Buffer *buf) 

@@ -11,7 +11,7 @@ export module GateMessage;
 
 export import :GateCommon;
 import :GateGlobal;
-import :GateLogic;
+import :GateClient;
 
 
 using namespace std;

@@ -50,6 +50,7 @@ int HandleLogicServerInit(DNServer *server)
 				{
 					ServerEntityManagerHelper<ServerEntity>*  entityMan = serverProxy->GetEntityManager();
 					entityMan->RemoveEntity(entity->GetChild()->ID());
+					channel->setContext(nullptr);
 				}
 			}
 		};
@@ -89,24 +90,6 @@ int HandleLogicServerInit(DNServer *server)
 			DNClientProxyHelper* clientSock = serverProxy->GetCSock();
 
 			string peeraddr = channel->peeraddr();
-			
-			ProxyStatus state = clientSock->UpdateClientState(channel->status);
-			if(state != ProxyStatus::None)
-			{
-				switch(state)
-				{
-					case ProxyStatus::Close:
-					{
-						// not orgin
-						string origin = format("{}:{}", serverProxy->GetCtlIp(), serverProxy->GetCtlPort());
-						if(peeraddr != origin)
-						{
-							clientSock->stop();
-							serverProxy->ReClientEvent(serverProxy->GetCtlIp(), serverProxy->GetCtlPort());
-						}
-					}
-				}
-			}
 
 			if (channel->isConnected())
 			{
@@ -124,6 +107,23 @@ int HandleLogicServerInit(DNServer *server)
 			if(clientSock->isReconnect())
 			{
 				
+			}
+
+			ProxyStatus state = clientSock->UpdateClientState(channel->status);
+			if(state != ProxyStatus::None)
+			{
+				switch(state)
+				{
+					case ProxyStatus::Close:
+					{
+						// not orgin
+						string origin = format("{}:{}", serverProxy->GetCtlIp(), serverProxy->GetCtlPort());
+						if(peeraddr != origin)
+						{
+							serverProxy->ReClientEvent(serverProxy->GetCtlIp(), serverProxy->GetCtlPort());
+						}
+					}
+				}
 			}
 		};
 

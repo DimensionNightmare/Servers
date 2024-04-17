@@ -56,6 +56,7 @@ int HandleGlobalServerInit(DNServer *server)
 				{
 					ServerEntityManagerHelper<ServerEntity>*  entityMan = serverProxy->GetEntityManager();
 					entityMan->RemoveEntity(entity->GetChild()->ID());
+					channel->setContext(nullptr);
 				}
 			}
 		};
@@ -111,7 +112,6 @@ int HandleGlobalServerInit(DNServer *server)
 			DNClientProxyHelper* clientSock = serverProxy->GetCSock();
 
 			string peeraddr = channel->peeraddr();
-			clientSock->UpdateClientState(channel->status);
 
 			if (channel->isConnected())
 			{
@@ -129,6 +129,8 @@ int HandleGlobalServerInit(DNServer *server)
 			{
 				
 			}
+
+			clientSock->UpdateClientState(channel->status);
 		};
 
 		auto onMessage = [serverProxy](const SocketChannelPtr &channel, Buffer *buf) 

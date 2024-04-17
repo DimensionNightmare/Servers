@@ -55,6 +55,7 @@ int HandleControlServerInit(DNServer *server)
 				{
 					ServerEntityManagerHelper<ServerEntity>*  entityMan = serverProxy->GetEntityManager();
 					entityMan->RemoveEntity(entity->GetChild()->ID());
+					channel->setContext(nullptr);
 				}
 				
 			}

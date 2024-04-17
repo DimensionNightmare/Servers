@@ -72,7 +72,7 @@ void LogicServerHelper::ReClientEvent(const string& ip, unsigned short port)
 
 	auto ReClient = [=, this]()
 	{
-		// cout << "ThreadId:" << this_thread::get_id() << ", Handle:" << GetCurrentThread() << endl;
+		DNPrint(-1, LoggerLevel::Debug, "ThreadId:%d,Handle:%d", this_thread::get_id(), GetCurrentThread());
 
 		reconn_setting_t *reconn_setting = pCSock->reconn_setting;
 		unpack_setting_t *unpack_setting = pCSock->unpack_setting;
@@ -84,6 +84,7 @@ void LogicServerHelper::ReClientEvent(const string& ip, unsigned short port)
 		pCSock->reconn_setting = nullptr;
 		pCSock->unpack_setting = nullptr;
 
+		pCSock->stop();
 		delete pCSock;
 		pCSock = new DNClientProxy;
 		pCSock->pLoop = make_shared<EventLoopThread>();

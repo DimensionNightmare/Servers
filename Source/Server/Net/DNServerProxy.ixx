@@ -1,4 +1,5 @@
 module;
+#include "StdAfx.h"
 #include "hv/TcpServer.h"
 #include "google/protobuf/message.h"
 
@@ -97,6 +98,7 @@ void DNServerProxy::ChannelTimeoutTimer(uint64_t timerID)
 			if(!channel->context())
 			{
 				channel->close();
+				DNPrint(-1, LoggerLevel::Debug, "ChannelTimeoutTimer server destory entity\n");
 			}
 		}
 	}
