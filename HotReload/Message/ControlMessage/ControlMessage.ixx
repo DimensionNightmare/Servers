@@ -2,8 +2,8 @@ module;
 #include "StdAfx.h"
 #include "S_Common.pb.h"
 #include "S_Auth.pb.h"
-#include "hv/Channel.h"
 
+#include "hv/Channel.h"
 #include <map>
 #include <functional>
 export module ControlMessage;
@@ -15,7 +15,6 @@ import :ControlAuth;
 using namespace std;
 using namespace hv;
 using namespace google::protobuf;
-
 using namespace GMsg::S_Common;
 using namespace GMsg::S_Auth;
 

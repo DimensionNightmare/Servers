@@ -1,7 +1,7 @@
 module;
 #include "S_Common.pb.h"
-#include "hv/Channel.h"
 
+#include "hv/Channel.h"
 export module ControlMessage:ControlCommon;
 
 import DNTask;
@@ -9,7 +9,6 @@ import MessagePack;
 import ControlServerHelper;
 import ServerEntityHelper;
 import ServerEntityManagerHelper;
-import DNServer;
 
 using namespace google::protobuf;
 using namespace GMsg::S_Common;

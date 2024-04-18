@@ -1,25 +1,22 @@
 module;
-
-#include <bitset>
+#include <string>
 export module ProxyEntity;
 
-import Entity;
+import DNEntity;
 
 using namespace std;
 
-export class ProxyEntity : public Entity
+export class ProxyEntity : public DNEntity
 {
 public:
 	ProxyEntity();
 	virtual ~ProxyEntity();
 
 public: // dll override
-	virtual Entity* GetChild(){return this;}
+	virtual DNEntity* GetChild(){return this;}
 
 protected: // dll proxy
 	unsigned int iServerIndex;
-
-	bitset<1> oFlags;
 
 	string sToken;
 	unsigned int iExpireTime;
@@ -27,14 +24,13 @@ protected: // dll proxy
 
 
 
-ProxyEntity::ProxyEntity():Entity()
+ProxyEntity::ProxyEntity()
 {
+	eEntityType = EntityType::Proxy;
+
 	iServerIndex = 0;
-	oFlags.reset();
 	sToken.clear();
 	iExpireTime = 0;
-
-	emType = EntityType::Proxy;
 }
 
 ProxyEntity::~ProxyEntity()

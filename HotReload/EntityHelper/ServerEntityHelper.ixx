@@ -1,11 +1,9 @@
 module;
-
 #include <string>
 export module ServerEntityHelper;
 
-import DNServer;
 export import ServerEntity;
-import EntityHelper;
+import DNEntityHelper;
 
 using namespace std;
 
@@ -14,7 +12,7 @@ export class ServerEntityHelper : public ServerEntity
 private:
 	ServerEntityHelper(){}
 public:
-	EntityHelper* GetChild(){ return nullptr;}
+	DNEntityHelper* GetChild(){ return nullptr;}
 
 	ServerType& ServerEntityType(){ return emServerType;}
 

@@ -1,8 +1,8 @@
 module;
 #include "StdAfx.h"
 #include "S_Common.pb.h"
-#include "hv/Channel.h"
 
+#include "hv/Channel.h"
 #include <coroutine>
 export module DatabaseMessage:DatabaseCommon;
 
@@ -10,11 +10,10 @@ import DNTask;
 import MessagePack;
 import DatabaseServerHelper;
 
-
 using namespace std;
+using namespace hv;
 using namespace google::protobuf;
 using namespace GMsg::S_Common;
-using namespace hv;
 
 // client request
 export DNTaskVoid Evt_ReqRegistSrv()
@@ -65,17 +64,17 @@ export DNTaskVoid Evt_ReqRegistSrv()
 		}
 	}
 	
-	if(!response.success())
-	{
-		DNPrint(-1, LoggerLevel::Debug, "regist Server error! msg:%lu \n", msgId);
-		dnServer->IsRun() = false; //exit application
-		client->RegistState() = RegistState::None;
-	}
-	else
+	if(response.success())
 	{
 		DNPrint(-1, LoggerLevel::Debug, "regist Server success! \n");
 		client->RegistState() = RegistState::Registed;
 		dnServer->ServerIndex() = response.server_index();
+	}
+	else
+	{
+		DNPrint(-1, LoggerLevel::Debug, "regist Server error! msg:%lu \n", msgId);
+		dnServer->IsRun() = false; //exit application
+		client->RegistState() = RegistState::None;
 	}
 
 	dataChannel.Destroy();

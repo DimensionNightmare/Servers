@@ -8,7 +8,6 @@ import GateServer;
 import DNClientProxyHelper;
 import ServerEntityManagerHelper;
 import ProxyEntityManagerHelper;
-import Entity;
 import MessagePack;
 
 using namespace std;

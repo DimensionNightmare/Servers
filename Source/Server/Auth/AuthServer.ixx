@@ -1,17 +1,15 @@
 module;
 #include "StdAfx.h"
+
 #include "hv/EventLoop.h"
 #include "hv/hsocket.h"
 #include "pqxx/connection"
-
 export module AuthServer;
 
 import DNServer;
 import DNWebProxy;
 import DNClientProxy;
 import MessagePack;
-
-
 
 using namespace std;
 using namespace hv;
@@ -61,8 +59,6 @@ AuthServer::AuthServer()
 
 AuthServer::~AuthServer()
 {
-	Stop();
-
 	if(pSSock)
 	{
 		delete pSSock;

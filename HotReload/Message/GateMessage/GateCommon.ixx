@@ -2,8 +2,8 @@ module;
 #include "StdAfx.h"
 #include "S_Common.pb.h"
 #include "S_Global.pb.h"
-#include "hv/Channel.h"
 
+#include "hv/Channel.h"
 #include <coroutine>
 export module GateMessage:GateCommon;
 
@@ -100,17 +100,17 @@ export DNTaskVoid Evt_ReqRegistSrv()
 		}
 	}
 	
-	if(!response.success())
-	{
-		DNPrint(-1, LoggerLevel::Debug, "regist Server error! msg:%lu \n", msgId);
-		dnServer->IsRun() = false; //exit application
-		client->RegistState() = RegistState::None;
-	}
-	else
+	if(response.success())
 	{
 		DNPrint(-1, LoggerLevel::Debug, "regist Server success! \n");
 		client->RegistState() = RegistState::Registed;
 		dnServer->ServerIndex() = response.server_index();
+	}
+	else
+	{
+		DNPrint(-1, LoggerLevel::Debug, "regist Server error! msg:%lu \n", msgId);
+		dnServer->IsRun() = false; //exit application
+		client->RegistState() = RegistState::None;
 	}
 
 	dataChannel.Destroy();

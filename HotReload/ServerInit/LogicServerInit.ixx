@@ -1,8 +1,8 @@
 module;
 #include "StdAfx.h"
+
 #include "google/protobuf/message.h"
 #include "hv/Channel.h"
-
 #include <functional>
 #include <format>
 export module LogicServerInit;
@@ -13,15 +13,12 @@ import LogicServerHelper;
 import MessagePack;
 import LogicMessage;
 
-
 using namespace hv;
 using namespace std;
 using namespace google::protobuf;
 
 export int HandleLogicServerInit(DNServer *server);
 export int HandleLogicServerShutdown(DNServer *server);
-
-
 
 int HandleLogicServerInit(DNServer *server)
 {

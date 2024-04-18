@@ -1,7 +1,7 @@
 module;
 #include "S_Common.pb.h"
-#include "hv/Channel.h"
 
+#include "hv/Channel.h"
 #include <assert.h>
 export module GlobalServerHelper;
 
@@ -9,7 +9,6 @@ import GlobalServer;
 import DNClientProxyHelper;
 import DNServerProxyHelper;
 import ServerEntityManagerHelper;
-
 import ServerEntityHelper;
 import MessagePack;
 

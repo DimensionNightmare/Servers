@@ -1,9 +1,9 @@
 module;
 #include "StdAfx.h"
-#include "hv/Channel.h"
 #include "C_Auth.pb.h"
 #include "S_Logic.pb.h" 
 
+#include "hv/Channel.h"
 #include <coroutine>
 export module GateMessage:GateClient;
 
@@ -11,13 +11,11 @@ import GateServerHelper;
 import DNTask;
 import Utils.StrUtils;
 import MessagePack;
-
-import Entity;
 import ProxyEntityHelper;
 
 using namespace std;
-using namespace google::protobuf;
 using namespace hv;
+using namespace google::protobuf;
 using namespace GMsg::C_Auth;
 using namespace GMsg::S_Logic;
 

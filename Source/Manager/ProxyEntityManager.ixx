@@ -15,9 +15,9 @@ export template<class TEntity = ProxyEntity>
 class ProxyEntityManager : public EntityManager<TEntity>
 {
 public:
-    ProxyEntityManager();
+    ProxyEntityManager(){};
 
-	virtual ~ProxyEntityManager();
+	virtual ~ProxyEntityManager(){};
 
 	virtual bool Init() override;
 
@@ -28,18 +28,6 @@ protected: // dll proxy
 
 	
 };
-
-
-
-template <class TEntity>
-ProxyEntityManager<TEntity>::ProxyEntityManager()
-{
-}
-
-template <class TEntity>
-ProxyEntityManager<TEntity>::~ProxyEntityManager()
-{
-}
 
 template <class TEntity>
 bool ProxyEntityManager<TEntity>::Init()

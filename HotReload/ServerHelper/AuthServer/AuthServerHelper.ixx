@@ -1,9 +1,9 @@
 module;
 #include "StdAfx.h"
-#include "pqxx/connection"
-#include "pqxx/transaction"
 #include "GDef.pb.h"
 
+#include "pqxx/connection"
+#include "pqxx/transaction"
 #include <assert.h>
 export module AuthServerHelper;
 
@@ -22,7 +22,7 @@ private:
 public:
 	DNClientProxyHelper* GetCSock(){ return nullptr;}
 	DNWebProxyHelper* GetSSock(){ return nullptr;}
-	bool InitDabase();
+	bool InitDatabase();
 };
 
 static AuthServerHelper* PAuthServerHelper = nullptr;
@@ -38,7 +38,7 @@ export AuthServerHelper* GetAuthServer()
 	return PAuthServerHelper;
 }
 
-bool AuthServerHelper::InitDabase()
+bool AuthServerHelper::InitDatabase()
 {
 	try
 	{

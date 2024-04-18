@@ -1,6 +1,5 @@
 module;
 #include "hv/Channel.h"
-
 #include <map>
 export module EntityManagerHelper;
 
@@ -15,15 +14,13 @@ class EntityManagerHelper : public EntityManager<TEntity>
 private:
 	EntityManagerHelper(){}
 public:
-	template<class CastTEntity>
-    CastTEntity* AddEntity(const SocketChannelPtr& channel, int entityId);
+    TEntity* AddEntity(const SocketChannelPtr& channel, int entityId);
 
     void RemoveEntity(const SocketChannelPtr& channel);
 };
 
 template <class TEntity>
-template <class CastTEntity>
-CastTEntity* EntityManagerHelper<TEntity>::AddEntity(const SocketChannelPtr& channel, int entityId)
+TEntity* EntityManagerHelper<TEntity>::AddEntity(const SocketChannelPtr& channel, int entityId)
 {
 	TEntity* entity = nullptr;
 	if (this->mEntityMap.contains(entityId))
@@ -35,12 +32,11 @@ CastTEntity* EntityManagerHelper<TEntity>::AddEntity(const SocketChannelPtr& cha
 		entity = &this->mEntityMap[entityId];
 		channel->setContext(entity);
 
-		CastTEntity* castEntity = static_cast<CastTEntity*>(entity);
-		castEntity->ID() = entityId;
-		castEntity->Sock() = channel;
+		entity->ID() = entityId;
+		entity->Sock() = channel;
 	}
 
-	return static_cast<CastTEntity*>(entity);
+	return entity;
 }
 
 template <class TEntity>

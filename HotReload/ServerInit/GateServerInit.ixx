@@ -1,8 +1,8 @@
 module;
 #include "StdAfx.h"
+
 #include "google/protobuf/message.h"
 #include "hv/Channel.h"
-
 #include <functional>
 export module GateServerInit;
 
@@ -19,8 +19,6 @@ using namespace google::protobuf;
 
 export int HandleGateServerInit(DNServer *server);
 export int HandleGateServerShutdown(DNServer *server);
-
-
 
 int HandleGateServerInit(DNServer *server)
 {
@@ -49,9 +47,10 @@ int HandleGateServerInit(DNServer *server)
 				DNPrint(3, LoggerLevel::Debug, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
 				if(Entity* entity = channel->getContext<Entity>())
 				{
-					if(entity->CloseEvent())
+					DNEntity* dnEntity = static_cast<DNEntity*>(entity);
+					if(dnEntity->CloseEvent())
 					{
-						entity->CloseEvent()(entity);
+						dnEntity->CloseEvent()(entity);
 					}
 				}
 			}

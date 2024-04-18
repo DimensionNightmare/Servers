@@ -1,7 +1,7 @@
 module;
 #include "StdAfx.h"
-#include "hv/EventLoop.h"
 
+#include "hv/EventLoop.h"
 export module ControlServer;
 
 import DNServer;
@@ -35,12 +35,12 @@ public:
 
 public: // dll override
 	virtual DNServerProxy* GetSSock(){return pSSock;}
-	virtual ServerEntityManager<ServerEntity>* GetEntityManager(){return pEntityMan;}
+	virtual ServerEntityManager<ServerEntity>* GetEntityManager(){return pServerEntityMan;}
 
 protected: // dll proxy
 	DNServerProxy* pSSock;
 
-	ServerEntityManager<ServerEntity>* pEntityMan;
+	ServerEntityManager<ServerEntity>* pServerEntityMan;
 };
 
 
@@ -49,15 +49,13 @@ ControlServer::ControlServer()
 {
 	emServerType = ServerType::ControlServer;
 	pSSock = nullptr;
-	pEntityMan = nullptr;
+	pServerEntityMan = nullptr;
 }
 
 ControlServer::~ControlServer()
 {
-	Stop();
-	
-	delete pEntityMan;
-	pEntityMan = nullptr;
+	delete pServerEntityMan;
+	pServerEntityMan = nullptr;
 
 	if(pSSock)
 	{
@@ -99,8 +97,8 @@ bool ControlServer::Init()
 	pSSock->setUnpack(setting);
 	pSSock->setThreadNum(4);
 
-	pEntityMan = new ServerEntityManager<ServerEntity>;
-	pEntityMan->Init();
+	pServerEntityMan = new ServerEntityManager<ServerEntity>;
+	pServerEntityMan->Init();
 
 	return true;
 }

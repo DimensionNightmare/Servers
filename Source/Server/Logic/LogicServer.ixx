@@ -1,8 +1,8 @@
 module;
 #include "StdAfx.h"
+
 #include "hv/EventLoop.h"
 #include "hv/hsocket.h"
-
 export module LogicServer;
 
 import DNServer;
@@ -11,6 +11,7 @@ import DNClientProxy;
 import MessagePack;
 import ServerEntityManager;
 import ClientEntityManager;
+import RoomManager;
 
 using namespace std;
 using namespace hv;
@@ -40,15 +41,17 @@ public: // dll override
 	virtual DNServerProxy* GetSSock(){return pSSock;}
 	virtual DNClientProxy* GetCSock(){return pCSock;}
 
-	virtual ServerEntityManager<ServerEntity>* GetEntityManager(){return pEntityMan;}
+	virtual ServerEntityManager<ServerEntity>* GetEntityManager(){return pServerEntityMan;}
 	virtual ClientEntityManager<ClientEntity>* GetClientEntityManager(){return pClientEntityMan;}
+	
 
 protected: // dll proxy
 	DNServerProxy* pSSock;
 	DNClientProxy* pCSock;
 
-	ServerEntityManager<ServerEntity>* pEntityMan;
+	ServerEntityManager<ServerEntity>* pServerEntityMan;
 	ClientEntityManager<ClientEntity>* pClientEntityMan;
+	RoomManager<RoomEntity>* pRoomMan;
 
 	// record orgin info
 	string sCtlIp;
@@ -63,16 +66,15 @@ LogicServer::LogicServer()
 	pSSock = nullptr;
 	pCSock = nullptr;
 
-	pEntityMan = nullptr;
+	pServerEntityMan = nullptr;
 	pClientEntityMan = nullptr;
+	pRoomMan = nullptr;
 }
 
 LogicServer::~LogicServer()
 {
-	Stop();
-
-	delete pEntityMan;
-	pEntityMan = nullptr;
+	delete pServerEntityMan;
+	pServerEntityMan = nullptr;
 
 	if(pSSock)
 	{
@@ -165,8 +167,8 @@ bool LogicServer::Init()
 		iCtlPort = port;
 	}
 	
-	pEntityMan = new ServerEntityManager<ServerEntity>;
-	pEntityMan->Init();
+	pServerEntityMan = new ServerEntityManager<ServerEntity>;
+	pServerEntityMan->Init();
 	pClientEntityMan = new ClientEntityManager<ClientEntity>;
 	pClientEntityMan->Init();
 

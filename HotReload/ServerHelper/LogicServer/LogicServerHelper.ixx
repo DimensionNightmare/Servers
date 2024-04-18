@@ -1,11 +1,11 @@
 module;
 #include "StdAfx.h"
 #include "DbAfx.h"
+
 #include "pqxx/connection"
 #include "pqxx/transaction"
 #include "hv/EventLoop.h"
 #include "hv/hsocket.h"
-
 #include <assert.h>
 #include <format>
 export module LogicServerHelper;
@@ -13,9 +13,7 @@ export module LogicServerHelper;
 import LogicServer;
 import DNClientProxyHelper;
 import ServerEntityManagerHelper;
-import ServerEntity;
 import ClientEntityManagerHelper;
-import ClientEntity;
 
 using namespace std;
 using namespace hv;
@@ -30,7 +28,7 @@ public:
 	ServerEntityManagerHelper<ServerEntity>* GetEntityManager(){ return nullptr;}
 	ClientEntityManagerHelper<ClientEntity>* GetClientEntityManager(){ return nullptr;}
 
-	bool InitDabase();
+	bool InitDatabase();
 
 	string& GetCtlIp(){ return sCtlIp;}
 	unsigned short& GetCtlPort(){ return iCtlPort;}
@@ -51,22 +49,9 @@ export LogicServerHelper* GetLogicServer()
 	return PLogicServerHelper;
 }
 
-bool LogicServerHelper::InitDabase()
+bool LogicServerHelper::InitDatabase()
 {
-	try
-	{
-		//"postgresql://root@localhost"
-		string* value = GetLuanchConfigParam("connection");
-		pqxx::connection conn(*value);
-		pqxx::work txn(conn);
-		txn.commit();
-	}
-	catch(const exception& e)
-	{
-		DNPrint(-1, LoggerLevel::Error, "%s", e.what());
-		return false;
-	}
-
+	
 	return true;
 }
 

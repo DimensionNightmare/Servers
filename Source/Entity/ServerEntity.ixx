@@ -1,12 +1,11 @@
 module;
-
 #include <string>
 #include <list>
 #include <map>
 #include <bitset>
 export module ServerEntity;
 
-import Entity;
+import DNEntity;
 import DNServer;
 
 using namespace std;
@@ -16,14 +15,14 @@ export enum class ServerEntityFlag : int
 	Locked = 0,
 };
 
-export class ServerEntity : public Entity
+export class ServerEntity : public DNEntity
 {
 public:
 	ServerEntity();
 	virtual ~ServerEntity();
 
 public: // dll override
-	virtual Entity* GetChild(){return this;}
+	virtual DNEntity* GetChild(){return this;}
 
 	ServerType GetType(){return emServerType;}
 
@@ -47,12 +46,11 @@ protected: // dll proxy
 	bitset<1> oFlags;
 };
 
-
-
-ServerEntity::ServerEntity():Entity()
+ServerEntity::ServerEntity()
 {
+	eEntityType = EntityType::Server;
+
 	emServerType = ServerType::None;
-	emType = EntityType::Server;
 	sServIp.clear();
 	IConnNum = 0;
 	iServPort = 0;

@@ -1,14 +1,13 @@
 module;
 #include "StdAfx.h"
 #include "S_Common.pb.h"
-#include "hv/Channel.h"
 
+#include "hv/Channel.h"
 #include <map>
 #include <functional>
 export module DatabaseMessage;
 
 export import :DatabaseCommon;
-
 
 using namespace std;
 using namespace hv;

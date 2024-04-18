@@ -1,15 +1,14 @@
 module;
 #include "StdAfx.h"
 #include "S_Logic.pb.h"
-#include "hv/Channel.h"
 
+#include "hv/Channel.h"
 #include <coroutine>
 export module LogicMessage:LogicGate;
 
 import DNTask;
 import MessagePack;
 import LogicServerHelper;
-
 
 using namespace std;
 using namespace google::protobuf;
@@ -23,8 +22,18 @@ export void Exe_RetClientLogin(const SocketChannelPtr &channel, unsigned int msg
 
 	auto entityMan = GetLogicServer()->GetClientEntityManager();
 
-	if (ClientEntityHelper* entity = entityMan->AddEntity(requset->account_id()))
+	ClientEntityHelper* entity = nullptr;
+	if (entity = entityMan->AddEntity(requset->account_id()))
 	{
-		
+		DNPrint(-1, LoggerLevel::Debug, "AddEntity Client!");
+
 	}
+	else
+	{
+		DNPrint(-1, LoggerLevel::Debug, "AddEntity Exist Client!");
+		entity =  entityMan->GetEntity(requset->account_id());
+	}
+
+	L2G_RetClientLogin retMsg;
+
 }

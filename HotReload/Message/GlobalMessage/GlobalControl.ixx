@@ -9,7 +9,6 @@ import DNTask;
 import MessagePack;
 import GlobalServerHelper;
 
-
 using namespace std;
 using namespace google::protobuf;
 using namespace GMsg::S_Common;
@@ -71,17 +70,17 @@ export DNTaskVoid Evt_ReqRegistSrv()
 		}
 	}
 	
-	if(!response.success())
-	{
-		DNPrint(-1, LoggerLevel::Debug, "regist Server error! msg:%lu \n", msgId);
-		dnServer->IsRun() = false; //exit application
-		client->RegistState() = RegistState::None;
-	}
-	else
+	if(response.success())
 	{
 		DNPrint(-1, LoggerLevel::Debug, "regist Server success! \n");
 		client->RegistState() = RegistState::Registed;
 		dnServer->ServerIndex() = response.server_index();
+	}
+	else
+	{
+		DNPrint(-1, LoggerLevel::Debug, "regist Server error! msg:%lu \n", msgId);
+		dnServer->IsRun() = false; //exit application
+		client->RegistState() = RegistState::None;
 	}
 
 	dataChannel.Destroy();

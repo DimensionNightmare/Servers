@@ -16,9 +16,9 @@ export template<class TEntity = ClientEntity>
 class ClientEntityManager : public EntityManager<ClientEntity>
 {
 public:
-    ClientEntityManager();
+    ClientEntityManager(){};
 
-	virtual ~ClientEntityManager();
+	virtual ~ClientEntityManager(){};
 
 	virtual bool Init() override;
 
@@ -29,20 +29,6 @@ protected: // dll proxy
     
 
 };
-
-
-
-template <class TEntity>
-ClientEntityManager<TEntity>::ClientEntityManager()
-{
-	
-}
-
-template <class TEntity>
-ClientEntityManager<TEntity>::~ClientEntityManager()
-{
-	
-}
 
 template <class TEntity>
 bool ClientEntityManager<TEntity>::Init()

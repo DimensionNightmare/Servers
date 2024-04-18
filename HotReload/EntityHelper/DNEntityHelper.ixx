@@ -1,16 +1,15 @@
 module;
 #include "hv/Channel.h"
+export module DNEntityHelper;
 
-export module EntityHelper;
-
-export import Entity;
+export import DNEntity;
 
 using namespace hv;
 
-export class EntityHelper : public Entity
+export class DNEntityHelper : public DNEntity
 {
 private:
-	EntityHelper(){};
+	DNEntityHelper(){};
 
 public:
 	unsigned int& ID(){ return iId;}

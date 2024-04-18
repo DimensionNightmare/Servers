@@ -1,15 +1,14 @@
 
 module;
 #include "StdAfx.h"
-#include "google/protobuf/message.h"
 
+#include "google/protobuf/message.h"
 #include <functional>
 #include <string>
 
 #ifdef _WIN32
 	#include <Windows.h>
 #endif
-
 export module HOTRELOAD_MODULE;
 
 import DNServer;
@@ -19,7 +18,6 @@ import AuthServerInit;
 import GateServerInit;
 import DatabaseServerInit;
 import LogicServerInit;
-
 import DNClientProxyHelper;
 
 #ifdef HOTRELOAD_BUILD

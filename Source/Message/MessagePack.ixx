@@ -1,5 +1,4 @@
 module;
-
 #include <string>
 export module MessagePack;
 
@@ -35,17 +34,11 @@ export struct MessagePacket
 		memset(this, 0, sizeof *this);
 	}
 };
-
 #pragma pack()
 
 int MessagePacket::PackLenth = sizeof MessagePacket;
 
-export bool MessagePack(unsigned int msgId, MsgDeal deal, const char* pbName, string &data);
-
-// implement
-
-
-bool MessagePack(unsigned int msgId, MsgDeal deal,  const char* pbName, string &data)
+export bool MessagePack(unsigned int msgId, MsgDeal deal,  const char* pbName, string &data)
 {
 	MessagePacket packet;
 	packet.msgId = msgId;

@@ -1,18 +1,13 @@
 module;
 #include "StdAfx.h"
 #include "DbAfx.h"
-#include "google/protobuf/util/json_util.h"
 #include "GDef.pb.h"
 #include "S_Auth.pb.h"
-#include "hv/HThread.h"
-#include "hv/HttpMessage.h"
-#include "hv/HttpService.h"
-#include "hv/hurl.h"
-#include "pqxx/transaction"
 
+#include "google/protobuf/util/json_util.h"
+#include "hv/HttpService.h"
+#include "pqxx/transaction"
 #include <coroutine>
-#include <thread>
-#include <chrono>
 export module ApiManager:ApiLogin;
 
 import AuthServerHelper;

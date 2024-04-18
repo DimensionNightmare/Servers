@@ -2,8 +2,8 @@ module;
 #include "StdAfx.h"
 #include "S_Global.pb.h"
 #include "C_Auth.pb.h"
-#include "hv/Channel.h"
 
+#include "hv/Channel.h"
 #include <coroutine>
 #include <string>
 #include <chrono>

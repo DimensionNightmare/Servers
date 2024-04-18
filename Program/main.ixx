@@ -1,18 +1,16 @@
 module;
-
 #include "StdAfx.h"
-#include "hv/hlog.h"
 
+#include "hv/hlog.h"
 #include <map>
 #include <string>
 #include <iostream>
 #include <future>
 #ifdef _WIN32
-#include <Windows.h>
-#include <dbghelp.h>
-#pragma comment(lib, "dbghelp.lib")
+	#include <Windows.h>
+	#include <dbghelp.h>
+	#pragma comment(lib, "dbghelp.lib")
 #endif
-
 export module MODULE_MAIN;
 
 import DimensionNightmare;

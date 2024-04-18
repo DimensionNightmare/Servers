@@ -1,9 +1,9 @@
 module;
 #include "StdAfx.h"
+
 #include "google/protobuf/message.h"
 #include "hv/Channel.h"
 #include "hv/HttpService.h"
-
 #include <map>
 #include <functional>
 export module AuthMessage;

@@ -1,8 +1,8 @@
 module;
 #include "StdAfx.h"
+
 #include "google/protobuf/message.h"
 #include "hv/Channel.h"
-
 #include <functional>
 export module GlobalServerInit;
 
@@ -13,15 +13,12 @@ import MessagePack;
 import GlobalMessage;
 import ServerEntityHelper;
 
-
 using namespace hv;
 using namespace std;
 using namespace google::protobuf;
 
 export int HandleGlobalServerInit(DNServer *server);
 export int HandleGlobalServerShutdown(DNServer *server);
-
-
 
 int HandleGlobalServerInit(DNServer *server)
 {

@@ -1,7 +1,7 @@
 module;
 #include "S_Global.pb.h"
-#include "hv/Channel.h"
 
+#include "hv/Channel.h"
 #include <coroutine>
 export module GlobalMessage:GlobalGate;
 

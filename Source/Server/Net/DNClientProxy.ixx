@@ -1,9 +1,9 @@
 module;
 #include "StdAfx.h"
+
 #include "hv/TcpClient.h"
 #include "hv/EventLoopThread.h"
 #include "google/protobuf/message.h"
-
 #include <functional> 
 #include <shared_mutex>
 export module DNClientProxy;
@@ -25,7 +25,7 @@ export class DNClientProxy : public TcpClientTmpl<SocketChannel>
 {
 public:
 	DNClientProxy();
-	~DNClientProxy();
+	~DNClientProxy(){};
 
 public: // dll override
 	void TickRegistEvent(size_t timerID);
@@ -67,16 +67,6 @@ DNClientProxy::DNClientProxy()
 	eRegistState = RegistState::None;
 	pRegistEvent = nullptr;
 	eState = Channel::Status::CLOSED;
-}
-
-DNClientProxy::~DNClientProxy()
-{
-	for(auto& [k,v] : mMsgList)
-	{
-		v->CallResume();
-	}
-		
-	mMsgList.clear();
 }
 
 void DNClientProxy::TickRegistEvent(size_t timerID)

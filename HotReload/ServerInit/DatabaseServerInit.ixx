@@ -1,8 +1,8 @@
 module;
 #include "StdAfx.h"
+
 #include "google/protobuf/message.h"
 #include "hv/Channel.h"
-
 #include <functional>
 #include <format>
 export module DatabaseServerInit;
@@ -13,15 +13,12 @@ import DatabaseServerHelper;
 import MessagePack;
 import DatabaseMessage;
 
-
 using namespace hv;
 using namespace std;
 using namespace google::protobuf;
 
 export int HandleDatabaseServerInit(DNServer *server);
 export int HandleDatabaseServerShutdown(DNServer *server);
-
-
 
 int HandleDatabaseServerInit(DNServer *server)
 {
@@ -119,7 +116,7 @@ int HandleDatabaseServerInit(DNServer *server)
 		clientSock->onMessage = onMessage;
 	}
 
-	return serverProxy->InitDabase();
+	return serverProxy->InitDatabase();
 }
 
 int HandleDatabaseServerShutdown(DNServer *server)

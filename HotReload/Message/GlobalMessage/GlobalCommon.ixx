@@ -1,7 +1,7 @@
 module;
 #include "S_Common.pb.h"
-#include "hv/Channel.h"
 
+#include "hv/Channel.h"
 export module GlobalMessage:GlobalCommon;
 
 import DNTask;
@@ -9,10 +9,10 @@ import MessagePack;
 import GlobalServerHelper;
 import ServerEntityHelper;
 
-using namespace google::protobuf;
-using namespace GMsg::S_Common;
 using namespace hv;
 using namespace std;
+using namespace google::protobuf;
+using namespace GMsg::S_Common;
 
 // client request
 export void Msg_ReqRegistSrv(const SocketChannelPtr &channel, unsigned int msgId, Message *msg)
@@ -112,12 +112,11 @@ export void Msg_ReqRegistSrv(const SocketChannelPtr &channel, unsigned int msgId
 	MessagePack(msgId, MsgDeal::Res, nullptr, binData);
 	channel->write(binData);
 
-	if(!response.success())
+	if(response.success())
 	{
-		return;
+		dnServer->UpdateServerGroup();
 	}
 
-	dnServer->UpdateServerGroup();
 }
 
 export void Exe_RetHeartbeat(const SocketChannelPtr &channel, unsigned int msgId, Message *msg)

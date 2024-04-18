@@ -1,8 +1,8 @@
 module;
 #include "StdAfx.h"
+
 #include "hv/hbase.h"
 #include "hv/EventLoop.h"
-
 #include <filesystem>
 #include <locale>
 #include <iostream>
@@ -20,7 +20,6 @@ import GateServer;
 import DatabaseServer;
 import LogicServer;
 import Utils.StrUtils;
-
 
 using namespace std;
 
@@ -467,6 +466,11 @@ void DimensionNightmare::ExecCommand(string* cmd, stringstream* ss)
 
 void DimensionNightmare::ShutDown()
 {
+	if(pServer)
+	{
+		pServer->Stop();
+	}
+
 	delete this;
 }
 

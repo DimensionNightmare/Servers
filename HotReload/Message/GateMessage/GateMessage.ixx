@@ -3,8 +3,8 @@ module;
 #include "S_Common.pb.h"
 #include "S_Global.pb.h"
 #include "C_Auth.pb.h"
-#include "hv/Channel.h"
 
+#include "hv/Channel.h"
 #include <map>
 #include <functional>
 export module GateMessage;
@@ -12,7 +12,6 @@ export module GateMessage;
 export import :GateCommon;
 import :GateGlobal;
 import :GateClient;
-
 
 using namespace std;
 using namespace hv;

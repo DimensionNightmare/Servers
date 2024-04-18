@@ -1,8 +1,8 @@
 module;
 #include "StdAfx.h"
+
 #include "hv/EventLoop.h"
 #include "hv/hsocket.h"
-
 #include <Thread>
 #include <iostream>
 export module DatabaseServer;
@@ -55,8 +55,6 @@ DatabaseServer::DatabaseServer()
 
 DatabaseServer::~DatabaseServer()
 {
-	Stop();
-
 	if (pCSock)
 	{
 		pCSock->setReconnect(nullptr);

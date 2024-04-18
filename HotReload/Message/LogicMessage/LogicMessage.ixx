@@ -1,9 +1,9 @@
 module;
 #include "StdAfx.h"
-#include "hv/Channel.h"
 #include "S_Common.pb.h"
 #include "S_Logic.pb.h"
 
+#include "hv/Channel.h"
 #include <map>
 #include <functional>
 export module LogicMessage;

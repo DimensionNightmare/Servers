@@ -1,8 +1,8 @@
 module;
 #include "StdAfx.h"
+
 #include "hv/EventLoop.h"
 #include "hv/hsocket.h"
-
 export module GateServer;
 
 import DNServer;
@@ -40,14 +40,14 @@ public: // dll override
 	virtual DNServerProxy* GetSSock(){return pSSock;}
 	virtual DNClientProxy* GetCSock(){return pCSock;}
 
-	virtual ServerEntityManager<ServerEntity>* GetEntityManager(){return pEntityMan;}
+	virtual ServerEntityManager<ServerEntity>* GetEntityManager(){return pServerEntityMan;}
 	virtual ProxyEntityManager<ProxyEntity>* GetProxyEntityManager(){return pProxyEntityMan;}
 
 protected: // dll proxy
 	DNServerProxy* pSSock;
 	DNClientProxy* pCSock;
 
-	ServerEntityManager<ServerEntity>* pEntityMan;
+	ServerEntityManager<ServerEntity>* pServerEntityMan;
 	ProxyEntityManager<ProxyEntity>* pProxyEntityMan;
 };
 
@@ -59,16 +59,14 @@ GateServer::GateServer()
 	pSSock = nullptr;
 	pCSock = nullptr;
 
-	pEntityMan = nullptr;
+	pServerEntityMan = nullptr;
 	pProxyEntityMan = nullptr;
 }
 
 GateServer::~GateServer()
 {
-	Stop();
-
-	delete pEntityMan;
-	pEntityMan = nullptr;
+	delete pServerEntityMan;
+	pServerEntityMan = nullptr;
 
 	if(pSSock)
 	{
@@ -158,8 +156,8 @@ bool GateServer::Init()
 		pCSock->setUnpack(setting);
 	}
 	
-	pEntityMan = new ServerEntityManager<ServerEntity>;
-	pEntityMan->Init();
+	pServerEntityMan = new ServerEntityManager<ServerEntity>;
+	pServerEntityMan->Init();
 	pProxyEntityMan = new ProxyEntityManager<ProxyEntity>;
 	pProxyEntityMan->Init();
 

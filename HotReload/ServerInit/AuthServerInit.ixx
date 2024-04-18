@@ -1,8 +1,8 @@
 module;
 #include "StdAfx.h"
+
 #include "google/protobuf/message.h"
 #include "hv/Channel.h"
-
 export module AuthServerInit;
 
 import DNServer;
@@ -11,14 +11,12 @@ import AuthServerHelper;
 import MessagePack;
 import AuthMessage;
 
-
 using namespace hv;
 using namespace std;
 using namespace google::protobuf;
 
 export int HandleAuthServerInit(DNServer *server);
 export int HandleAuthServerShutdown(DNServer *server);
-
 
 int HandleAuthServerInit(DNServer *server)
 {
@@ -97,7 +95,7 @@ int HandleAuthServerInit(DNServer *server)
 		clientSock->onMessage = onMessage;
 	}
 
-	return serverProxy->InitDabase();
+	return serverProxy->InitDatabase();
 }
 
 int HandleAuthServerShutdown(DNServer *server)

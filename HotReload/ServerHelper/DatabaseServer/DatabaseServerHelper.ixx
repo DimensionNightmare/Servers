@@ -1,11 +1,11 @@
 module;
 #include "StdAfx.h"
 #include "DbAfx.h"
+
 #include "pqxx/connection"
 #include "pqxx/transaction"
 #include "hv/EventLoop.h"
 #include "hv/hsocket.h"
-
 #include <assert.h>
 #include <format>
 export module DatabaseServerHelper;
@@ -13,7 +13,6 @@ export module DatabaseServerHelper;
 import DatabaseServer;
 import DNClientProxyHelper;
 import ServerEntityManagerHelper;
-import ServerEntity;
 
 using namespace std;
 using namespace hv;
@@ -27,7 +26,7 @@ public:
 	DNClientProxyHelper* GetCSock(){ return nullptr;}
 	ServerEntityManagerHelper<ServerEntity>* GetEntityManager(){ return nullptr;}
 
-	bool InitDabase();
+	bool InitDatabase();
 
 	string& GetCtlIp(){ return sCtlIp;}
 	unsigned short& GetCtlPort(){ return iCtlPort;}
@@ -48,7 +47,7 @@ export DatabaseServerHelper* GetDatabaseServer()
 	return PDatabaseServerHelper;
 }
 
-bool DatabaseServerHelper::InitDabase()
+bool DatabaseServerHelper::InitDatabase()
 {
 	try
 	{
