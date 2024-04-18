@@ -35,12 +35,12 @@ export void Exe_ReqUserToken(const SocketChannelPtr &channel, unsigned int msgId
 		if(SocketChannelPtr online = entity->GetSock())
 		{
 			// send to other client
-			S2C_RetAccountReplace replace;
-			replace.set_ip(requset->ip());
+			S2C_RetAccountReplace retMsg;
+			retMsg.set_ip(requset->ip());
 
-			binData.resize(replace.ByteSizeLong());
-			replace.SerializeToArray(binData.data(), (int)binData.size());
-			MessagePack(0, MsgDeal::Ret, replace.GetDescriptor()->full_name().c_str(), binData);
+			binData.resize(retMsg.ByteSizeLong());
+			retMsg.SerializeToArray(binData.data(), (int)binData.size());
+			MessagePack(0, MsgDeal::Ret, retMsg.GetDescriptor()->full_name().c_str(), binData);
 
 			online->setContext(nullptr);
 			online->write(binData);

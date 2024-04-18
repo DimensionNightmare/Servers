@@ -6,6 +6,7 @@ export module GateServerHelper;
 
 import GateServer;
 import DNClientProxyHelper;
+import DNServerProxyHelper;
 import ServerEntityManagerHelper;
 import ProxyEntityManagerHelper;
 import MessagePack;
@@ -20,6 +21,7 @@ private:
 public:
 
 	DNClientProxyHelper* GetCSock(){ return nullptr;}
+	DNServerProxyHelper* GetSSock(){ return nullptr;}
 	ServerEntityManagerHelper<ServerEntity>* GetServerEntityManager(){ return nullptr;}
 	ProxyEntityManagerHelper<ProxyEntity>* GetProxyEntityManager(){ return nullptr;}
 

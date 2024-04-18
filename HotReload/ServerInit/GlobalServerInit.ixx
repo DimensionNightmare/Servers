@@ -58,7 +58,7 @@ int HandleGlobalServerInit(DNServer *server)
 			}
 		};
 
-		auto onMessage = [serverProxy](const SocketChannelPtr &channel, Buffer *buf) 
+		auto onMessage = [serverSock](const SocketChannelPtr &channel, Buffer *buf) 
 		{
 			MessagePacket packet;
 			memcpy(&packet, buf->data(), MessagePacket::PackLenth);
@@ -74,11 +74,9 @@ int HandleGlobalServerInit(DNServer *server)
 			}
 			else if(packet.dealType == MsgDeal::Res)
 			{
-				DNServerProxyHelper* servSock = serverProxy->GetSSock();
-
-				if(DNTask<Message>* task = servSock->GetMsg(packet.msgId)) //client sock request
+				if(DNTask<Message>* task = serverSock->GetMsg(packet.msgId)) //client sock request
 				{
-					servSock->DelMsg(packet.msgId);
+					serverSock->DelMsg(packet.msgId);
 					task->Resume();
 					Message* message = task->GetResult();
 					message->ParseFromArray(buf->base + MessagePacket::PackLenth, packet.pkgLenth);
@@ -104,10 +102,8 @@ int HandleGlobalServerInit(DNServer *server)
 		clientSock->onConnection = nullptr;
 		clientSock->onMessage = nullptr;
 
-		auto onConnection = [serverProxy](const SocketChannelPtr &channel)
+		auto onConnection = [clientSock](const SocketChannelPtr &channel)
 		{
-			DNClientProxyHelper* clientSock = serverProxy->GetCSock();
-
 			string peeraddr = channel->peeraddr();
 
 			if (channel->isConnected())
@@ -130,14 +126,18 @@ int HandleGlobalServerInit(DNServer *server)
 			clientSock->UpdateClientState(channel->status);
 		};
 
-		auto onMessage = [serverProxy](const SocketChannelPtr &channel, Buffer *buf) 
+		auto onMessage = [clientSock](const SocketChannelPtr &channel, Buffer *buf) 
 		{
 			MessagePacket packet;
 			memcpy(&packet, buf->data(), MessagePacket::PackLenth);
-			if(packet.dealType == MsgDeal::Res)
-			{
-				DNClientProxyHelper* clientSock = serverProxy->GetCSock();
 
+			if(packet.dealType == MsgDeal::Req)
+			{
+				string msgData(buf->base + MessagePacket::PackLenth, packet.pkgLenth);
+				GlobalMessageHandle::MsgHandle(channel, packet.msgId, packet.msgHashId, msgData);
+			}
+			else if(packet.dealType == MsgDeal::Res)
+			{
 				if(DNTask<Message>* task = clientSock->GetMsg(packet.msgId)) //client sock request
 				{
 					clientSock->DelMsg(packet.msgId);
@@ -150,11 +150,6 @@ int HandleGlobalServerInit(DNServer *server)
 				{
 					DNPrint(13, LoggerLevel::Error, nullptr);
 				}
-			}
-			else if(packet.dealType == MsgDeal::Req)
-			{
-				string msgData(buf->base + MessagePacket::PackLenth, packet.pkgLenth);
-				GlobalMessageHandle::MsgHandle(channel, packet.msgId, packet.msgHashId, msgData);
 			}
 			else
 			{

@@ -103,6 +103,6 @@ void LogicMessageHandle::RegMsgHandle()
 	msg = COM_RetHeartbeat::internal_default_instance();
 	MHandleRetMap.emplace( hashStr(msg->GetDescriptor()->full_name()), make_pair(msg, &Exe_RetHeartbeat));
 
-	msg = G2L_RetClientLogin::internal_default_instance();
-	MHandleRetMap.emplace( hashStr(msg->GetDescriptor()->full_name()), make_pair(msg, &Exe_RetClientLogin));
+	msg = G2L_ReqClientLogin::internal_default_instance();
+	MHandleMap.emplace( hashStr(msg->GetDescriptor()->full_name()), make_pair(msg, &Msg_ReqClientLogin));
 }

@@ -28,12 +28,12 @@ int HandleLogicServerInit(DNServer *server)
 	
 	LogicServerHelper* serverProxy = GetLogicServer();
 
-	if (DNServerProxy* serverSock = serverProxy->GetSSock())
+	if (DNServerProxyHelper* serverSock = serverProxy->GetSSock())
 	{
 		serverSock->onConnection = nullptr;
 		serverSock->onMessage = nullptr;
 
-		auto onConnection = [serverProxy](const SocketChannelPtr &channel)
+		auto onConnection = [&serverProxy](const SocketChannelPtr &channel)
 		{
 			string peeraddr = channel->peeraddr();
 			if (channel->isConnected())
@@ -82,10 +82,9 @@ int HandleLogicServerInit(DNServer *server)
 		clientSock->onConnection = nullptr;
 		clientSock->onMessage = nullptr;
 		
-		auto onConnection = [serverProxy](const SocketChannelPtr &channel)
+		//client will re_create please check
+		auto onConnection = [clientSock,serverProxy](const SocketChannelPtr &channel)
 		{
-			DNClientProxyHelper* clientSock = serverProxy->GetCSock();
-
 			string peeraddr = channel->peeraddr();
 
 			if (channel->isConnected())
@@ -124,7 +123,7 @@ int HandleLogicServerInit(DNServer *server)
 			}
 		};
 
-		auto onMessage = [serverProxy](const SocketChannelPtr &channel, Buffer *buf) 
+		auto onMessage = [clientSock](const SocketChannelPtr &channel, Buffer *buf) 
 		{
 			MessagePacket packet;
 			memcpy(&packet, buf->data(), MessagePacket::PackLenth);
@@ -140,8 +139,6 @@ int HandleLogicServerInit(DNServer *server)
 			}
 			else if(packet.dealType == MsgDeal::Res)
 			{
-				DNClientProxyHelper* clientSock = serverProxy->GetCSock();
-
 				if(DNTask<Message>* task = clientSock->GetMsg(packet.msgId)) //client sock request
 				{
 					clientSock->DelMsg(packet.msgId);

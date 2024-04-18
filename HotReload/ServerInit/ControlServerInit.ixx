@@ -33,7 +33,7 @@ int HandleControlServerInit(DNServer *server)
 		serverSock->onConnection = nullptr;
 		serverSock->onMessage = nullptr;
 
-		auto onConnection = [serverProxy,serverSock](const SocketChannelPtr &channel)
+		auto onConnection = [serverProxy, serverSock](const SocketChannelPtr &channel)
 		{
 			string peeraddr = channel->peeraddr();
 			if (channel->isConnected())
@@ -60,7 +60,7 @@ int HandleControlServerInit(DNServer *server)
 			}
 		};
 
-		auto onMessage = [serverProxy](const SocketChannelPtr &channel, Buffer *buf) 
+		auto onMessage = [serverSock](const SocketChannelPtr &channel, Buffer *buf) 
 		{
 			MessagePacket packet;
 			memcpy(&packet, buf->data(), MessagePacket::PackLenth);
@@ -76,11 +76,9 @@ int HandleControlServerInit(DNServer *server)
 			}
 			else if(packet.dealType == MsgDeal::Res)
 			{
-				DNServerProxyHelper* servSock = serverProxy->GetSSock();
-
-				if(DNTask<Message>* task = servSock->GetMsg(packet.msgId)) //client sock request
+				if(DNTask<Message>* task = serverSock->GetMsg(packet.msgId)) //client sock request
 				{
-					servSock->DelMsg(packet.msgId);
+					serverSock->DelMsg(packet.msgId);
 					task->Resume();
 					Message* message = task->GetResult();
 					message->ParseFromArray(buf->base + MessagePacket::PackLenth, packet.pkgLenth);

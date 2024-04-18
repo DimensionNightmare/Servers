@@ -165,12 +165,12 @@ export void Msg_ReqRegistSrv(const SocketChannelPtr &channel, unsigned int msgId
 		binData.clear();
 
 		// up to Global
-		G2G_RetRegistSrv upLoad;
-		upLoad.set_is_regist(true);
-		upLoad.set_server_index(requset->server_index());
-		binData.resize(upLoad.ByteSizeLong());
-		upLoad.SerializeToArray(binData.data(), (int)binData.size());
-		MessagePack(0, MsgDeal::Ret, upLoad.GetDescriptor()->full_name().c_str(), binData);
+		G2G_RetRegistSrv retMsg;
+		retMsg.set_is_regist(true);
+		retMsg.set_server_index(requset->server_index());
+		binData.resize(retMsg.ByteSizeLong());
+		retMsg.SerializeToArray(binData.data(), (int)binData.size());
+		MessagePack(0, MsgDeal::Ret, retMsg.GetDescriptor()->full_name().c_str(), binData);
 
 		GateServerHelper* dnServer = GetGateServer();
 		DNClientProxyHelper* client = dnServer->GetCSock();

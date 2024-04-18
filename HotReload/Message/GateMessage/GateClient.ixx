@@ -12,6 +12,7 @@ import DNTask;
 import Utils.StrUtils;
 import MessagePack;
 import ProxyEntityHelper;
+import DNServerProxyHelper;
 
 using namespace std;
 using namespace hv;
@@ -20,14 +21,14 @@ using namespace GMsg::C_Auth;
 using namespace GMsg::S_Logic;
 
 // client request
-export void Msg_ReqAuthToken(const SocketChannelPtr &channel, unsigned int msgId, Message *msg)
+export DNTaskVoid Msg_ReqAuthToken(const SocketChannelPtr &channel, unsigned int msgId, Message *msg)
 {
 	C2S_ReqAuthToken* requset = reinterpret_cast<C2S_ReqAuthToken*>(msg);
 
 	GateServerHelper* dnServer = GetGateServer();
 	ProxyEntityManagerHelper<ProxyEntity>* entityMan = dnServer->GetProxyEntityManager();
 
-	C2S_ResAuthToken response;
+	S2C_ResAuthToken response;
 	string binData;
 
 	if(ProxyEntityHelper* entity = entityMan->GetEntity(requset->account_id()))
@@ -49,12 +50,6 @@ export void Msg_ReqAuthToken(const SocketChannelPtr &channel, unsigned int msgId
 				entity->CloseEvent() = std::bind(&GateServerHelper::ProxyEntityCloseEvent, dnServer, std::placeholders::_1);
 			}
 
-			G2L_RetClientLogin retMsg;
-			retMsg.set_account_id(entity->ID());
-			binData.resize(response.ByteSize());
-			response.SerializeToArray(binData.data(), binData.size());
-
-			MessagePack(0, MsgDeal::Ret, retMsg.GetDescriptor()->full_name().c_str(), binData);
 
 			ServerEntityManagerHelper<ServerEntity>* serverEntityMan = dnServer->GetServerEntityManager();
 			list<ServerEntity*> serverEntityList = serverEntityMan->GetEntityByList(ServerType::LogicServer);
@@ -66,8 +61,35 @@ export void Msg_ReqAuthToken(const SocketChannelPtr &channel, unsigned int msgId
 
 			if(serverEntity)
 			{
+				G2L_ReqClientLogin requestChild;
+				requestChild.set_account_id(entity->ID());
+				binData.resize(requestChild.ByteSize());
+				requestChild.SerializeToArray(binData.data(), binData.size());
+
+				DNServerProxyHelper* server = dnServer->GetSSock();
+				unsigned int msgIdChild = server->GetMsgId();
+
+				MessagePack(msgIdChild, MsgDeal::Req, requestChild.GetDescriptor()->full_name().c_str(), binData);
+
+				L2G_ResClientLogin responseChild;
+
+				auto dataChannel = [&responseChild]()->DNTask<Message>
+				{
+					co_return responseChild;
+				}();
+
+				server->AddMsg(msgIdChild, &dataChannel);
+
 				ServerEntityHelper* serverEntityHelper = static_cast<ServerEntityHelper*>(serverEntity);
 				serverEntityHelper->GetSock()->write(binData);
+				binData.clear();
+
+				co_await dataChannel;
+
+				if(responseChild.has_ds_info())
+				{
+					response.mutable_ds_info()->MergeFrom(responseChild.ds_info());
+				}
 			}
 			else
 			{
@@ -75,7 +97,6 @@ export void Msg_ReqAuthToken(const SocketChannelPtr &channel, unsigned int msgId
 			}
 			
 	
-			binData.clear();
 		}
 		else
 		{
@@ -84,7 +105,6 @@ export void Msg_ReqAuthToken(const SocketChannelPtr &channel, unsigned int msgId
 	}
 	else
 	{
-		response.set_success(false);
 		DNPrint(-1, LoggerLevel::Debug, "noaccount !!\n");
 	}
 
@@ -95,4 +115,6 @@ export void Msg_ReqAuthToken(const SocketChannelPtr &channel, unsigned int msgId
 	MessagePack(msgId, MsgDeal::Res, nullptr, binData);
 	
 	channel->write(binData);
+
+	co_return;
 }

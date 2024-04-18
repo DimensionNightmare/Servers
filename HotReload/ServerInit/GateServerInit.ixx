@@ -28,7 +28,7 @@ int HandleGateServerInit(DNServer *server)
 
 	GateServerHelper* serverProxy = GetGateServer();
 
-	if (DNServerProxy* serverSock = serverProxy->GetSSock())
+	if (DNServerProxyHelper* serverSock = serverProxy->GetSSock())
 	{
 		serverSock->onConnection = nullptr;
 		serverSock->onMessage = nullptr;
@@ -56,7 +56,7 @@ int HandleGateServerInit(DNServer *server)
 			}
 		};
 
-		auto onMessage = [](const SocketChannelPtr &channel, Buffer *buf) 
+		auto onMessage = [serverSock](const SocketChannelPtr &channel, Buffer *buf) 
 		{
 			MessagePacket packet;
 			memcpy(&packet, buf->data(), MessagePacket::PackLenth);
@@ -69,6 +69,21 @@ int HandleGateServerInit(DNServer *server)
 			{
 				string msgData(buf->base + MessagePacket::PackLenth, packet.pkgLenth);
 				GateMessageHandle::MsgRetHandle(channel, packet.msgId, packet.msgHashId, msgData);
+			}
+			else if(packet.dealType == MsgDeal::Res)
+			{
+				if(DNTask<Message>* task = serverSock->GetMsg(packet.msgId)) //client sock request
+				{
+					serverSock->DelMsg(packet.msgId);
+					task->Resume();
+					Message* message = task->GetResult();
+					message->ParseFromArray(buf->base + MessagePacket::PackLenth, packet.pkgLenth);
+					task->CallResume();
+				}
+				else
+				{
+					DNPrint(13, LoggerLevel::Error, nullptr);
+				}
 			}
 			else
 			{
@@ -85,10 +100,8 @@ int HandleGateServerInit(DNServer *server)
 		clientSock->onConnection = nullptr;
 		clientSock->onMessage = nullptr;
 		
-		auto onConnection = [serverProxy](const SocketChannelPtr &channel)
+		auto onConnection = [clientSock](const SocketChannelPtr &channel)
 		{
-			DNClientProxyHelper* clientSock = serverProxy->GetCSock();
-
 			string peeraddr = channel->peeraddr();
 
 			if (channel->isConnected())
@@ -111,14 +124,17 @@ int HandleGateServerInit(DNServer *server)
 			clientSock->UpdateClientState(channel->status);
 		};
 
-		auto onMessage = [serverProxy](const SocketChannelPtr &channel, Buffer *buf) 
+		auto onMessage = [clientSock](const SocketChannelPtr &channel, Buffer *buf) 
 		{
 			MessagePacket packet;
 			memcpy(&packet, buf->data(), MessagePacket::PackLenth);
-			if(packet.dealType == MsgDeal::Res)
+			if(packet.dealType == MsgDeal::Req)
 			{
-				DNClientProxyHelper* clientSock = serverProxy->GetCSock();
-
+				string msgData(buf->base + MessagePacket::PackLenth, packet.pkgLenth);
+				GateMessageHandle::MsgHandle(channel, packet.msgId, packet.msgHashId, msgData);
+			}
+			else if(packet.dealType == MsgDeal::Res)
+			{
 				if(DNTask<Message>* task = clientSock->GetMsg(packet.msgId)) //client sock request
 				{
 					clientSock->DelMsg(packet.msgId);
@@ -131,11 +147,6 @@ int HandleGateServerInit(DNServer *server)
 				{
 					DNPrint(13, LoggerLevel::Error, nullptr);
 				}
-			}
-			else if(packet.dealType == MsgDeal::Req)
-			{
-				string msgData(buf->base + MessagePacket::PackLenth, packet.pkgLenth);
-				GateMessageHandle::MsgHandle(channel, packet.msgId, packet.msgHashId, msgData);
 			}
 			else
 			{

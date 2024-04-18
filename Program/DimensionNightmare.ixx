@@ -78,6 +78,7 @@ struct HotReloadDll
 		{
 #ifdef _WIN32
 			FreeLibrary(oLibHandle);
+			Sleep(100);
 #endif
 			oLibHandle = nullptr;
 		}

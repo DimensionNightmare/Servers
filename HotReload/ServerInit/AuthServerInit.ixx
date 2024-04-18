@@ -38,10 +38,8 @@ int HandleAuthServerInit(DNServer *server)
 		clientSock->onConnection = nullptr;
 		clientSock->onMessage = nullptr;
 
-		auto onConnection = [serverProxy](const SocketChannelPtr &channel)
+		auto onConnection = [clientSock](const SocketChannelPtr &channel)
 		{
-			DNClientProxyHelper* clientSock = serverProxy->GetCSock();
-
 			string peeraddr = channel->peeraddr();
 
 			if (channel->isConnected())
@@ -64,14 +62,12 @@ int HandleAuthServerInit(DNServer *server)
 			clientSock->UpdateClientState(channel->status);
 		};
 
-		auto onMessage = [serverProxy](const SocketChannelPtr &channel, Buffer *buf) 
+		auto onMessage = [clientSock](const SocketChannelPtr &channel, Buffer *buf) 
 		{
 			MessagePacket packet;
 			memcpy(&packet, buf->data(), MessagePacket::PackLenth);
 			if(packet.dealType == MsgDeal::Res)
 			{
-				DNClientProxyHelper* clientSock = serverProxy->GetCSock();
-
 				if(DNTask<Message>* task = clientSock->GetMsg(packet.msgId)) //client sock request
 				{
 					clientSock->DelMsg(packet.msgId);

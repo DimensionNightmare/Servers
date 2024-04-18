@@ -4,6 +4,7 @@ module;
 
 #include "StdAfx.h"
 #include "Server/S_Logic.pb.h"
+#include "Client/C_Auth.pb.h"
 export module LogicMessage:LogicGate;
 
 import DNTask;
@@ -14,11 +15,12 @@ using namespace std;
 using namespace google::protobuf;
 using namespace hv;
 using namespace GMsg::S_Logic;
+using namespace GMsg::C_Auth;
 
 // client request
-export void Exe_RetClientLogin(const SocketChannelPtr &channel, unsigned int msgId, Message *msg)
+export void Msg_ReqClientLogin(const SocketChannelPtr &channel, unsigned int msgId, Message *msg)
 {
-	G2L_RetClientLogin* requset = reinterpret_cast<G2L_RetClientLogin*>(msg);
+	G2L_ReqClientLogin* requset = reinterpret_cast<G2L_ReqClientLogin*>(msg);
 
 	auto entityMan = GetLogicServer()->GetClientEntityManager();
 
@@ -37,21 +39,26 @@ export void Exe_RetClientLogin(const SocketChannelPtr &channel, unsigned int msg
 
 	auto serverEntityMan = GetLogicServer()->GetServerEntityManager();
 	list<ServerEntity*> serverEntityList = serverEntityMan->GetEntityByList(ServerType::DedicatedServer);
-	ServerEntity* serverEntity = nullptr;
+	ServerEntityHelper* serverEntity = nullptr;
 	if(!serverEntityList.empty())
 	{
-		serverEntity = serverEntityList.front();
+		ServerEntityHelper* serverEntity = static_cast<ServerEntityHelper*>(serverEntityList.front());
 	}
+
+	L2G_ResClientLogin response;
 
 	if(serverEntity)
 	{
-		L2G_RetClientLogin retMsg;
-
-		// retMsg.set_account_id(entity->);
-		// retMsg.set_ip();
-		// retMsg.set_port();
-		// retMsg.set_token();
+		S2C_RetClientLogin* cliMsg = response.mutable_ds_info();
+		cliMsg->set_ip(serverEntity->ServerIp());
+		cliMsg->set_port(serverEntity->ServerPort());
 	}
 
+	// pack data
+	string binData;
+	binData.resize(response.ByteSizeLong());
+	response.SerializeToArray(binData.data(), (int)binData.size());
+	MessagePack(msgId, MsgDeal::Res, nullptr, binData);
 
+	channel->write(binData);
 }

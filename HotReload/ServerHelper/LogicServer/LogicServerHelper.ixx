@@ -12,6 +12,7 @@ export module LogicServerHelper;
 
 import LogicServer;
 import DNClientProxyHelper;
+import DNServerProxyHelper;
 import ServerEntityManagerHelper;
 import ClientEntityManagerHelper;
 
@@ -25,6 +26,7 @@ private:
 public:
 
 	DNClientProxyHelper* GetCSock(){ return nullptr;}
+	DNServerProxyHelper* GetSSock(){ return nullptr;}
 	ServerEntityManagerHelper<ServerEntity>* GetServerEntityManager(){ return nullptr;}
 	ClientEntityManagerHelper<ClientEntity>* GetClientEntityManager(){ return nullptr;}
 
