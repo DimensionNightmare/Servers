@@ -1,10 +1,10 @@
 module;
+#include <coroutine>
+#include "hv/Channel.h"
+
 #include "StdAfx.h"
 #include "S_Common.pb.h"
 #include "S_Global.pb.h"
-
-#include "hv/Channel.h"
-#include <coroutine>
 export module GateMessage:GateCommon;
 
 import DNTask;

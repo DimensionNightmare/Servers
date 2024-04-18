@@ -1,7 +1,7 @@
 module;
-#include "S_Global.pb.h"
-
 #include <assert.h>
+
+#include "S_Global.pb.h"
 export module GateServerHelper;
 
 import GateServer;

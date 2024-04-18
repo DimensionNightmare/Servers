@@ -1,15 +1,18 @@
 module;
-#include "StdAfx.h"
-
-#include "hv/hbase.h"
-#include "hv/EventLoop.h"
+#ifdef _WIN32
+	#include <windef.h>
+	#include <WinBase.h>
+	#include <consoleapi2.h>
+	#include <libloaderapi.h>
+#endif
 #include <filesystem>
 #include <locale>
 #include <iostream>
 #include <format>
-#ifdef _WIN32
-	#include <Windows.h>
-#endif
+#include "hv/hbase.h"
+#include "hv/EventLoop.h"
+
+#include "StdAfx.h"
 export module DimensionNightmare;
 
 import DNServer;
@@ -176,16 +179,7 @@ private:
 	DNl10n* pl10n;
 };
 
-export DimensionNightmare *GetDimensionNightmare()
-{
-	static DimensionNightmare *PInstance = nullptr;
-	if (!PInstance)
-	{
-		PInstance = new DimensionNightmare;
-	}
-
-	return PInstance;
-}
+export DimensionNightmare *PInstance = nullptr;
 
 DimensionNightmare::DimensionNightmare()
 {
@@ -377,9 +371,7 @@ bool DimensionNightmare::Init()
 		return false;
 	}
 	
-	pServer->IsRun() = true; 
-
-	return true;
+	return pServer->IsRun() = true;
 }
 
 void DimensionNightmare::InitCmdHandle()
@@ -471,7 +463,8 @@ void DimensionNightmare::ShutDown()
 		pServer->Stop();
 	}
 
-	delete this;
+	delete PInstance;
+	PInstance = nullptr;
 }
 
 bool DimensionNightmare::OnRegHotReload()

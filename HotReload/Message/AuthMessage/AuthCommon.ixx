@@ -1,8 +1,8 @@
 module;
+#include <coroutine>
+
 #include "StdAfx.h"
 #include "S_Common.pb.h"
-
-#include <coroutine>
 export module AuthMessage:AuthCommon;
 
 import DNTask;

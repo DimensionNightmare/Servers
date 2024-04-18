@@ -1,9 +1,9 @@
 module;
-#include "StdAfx.h"
-
+#include <functional>
 #include "google/protobuf/message.h"
 #include "hv/Channel.h"
-#include <functional>
+
+#include "StdAfx.h"
 export module GlobalServerInit;
 
 import DNServer;

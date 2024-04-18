@@ -1,8 +1,8 @@
 module;
-#include "S_Common.pb.h"
-
-#include "hv/Channel.h"
 #include <assert.h>
+#include "hv/Channel.h"
+
+#include "S_Common.pb.h"
 export module GlobalServerHelper;
 
 import GlobalServer;

@@ -6,7 +6,11 @@ cmake_minimum_required (VERSION 3.26 FATAL_ERROR)
 # Top project
 project (DimensionNightmareServer CXX)
 
-message("${CMAKE_VERSION} ${MSVC_VERSION} ${CMAKE_SYSTEM_VERSION} ${CMAKE_BUILD_TYPE}")
+message("${CMAKE_VERSION}
+${MSVC_VERSION}
+${CMAKE_SYSTEM_VERSION}
+${CMAKE_BUILD_TYPE}
+${CMAKE_SYSTEM_PROCESSOR}")
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
 
@@ -92,6 +96,9 @@ target_link_libraries(DimensionNightmareServer PUBLIC MainSource)
 
 set_property(TARGET DimensionNightmareServer PROPERTY CXX_STANDARD 23)
 
+target_compile_definitions(DimensionNightmareServer PUBLIC _${CMAKE_SYSTEM_PROCESSOR}_)
+
+
 ################################ HotReload ################################
 
 file(GLOB_RECURSE srcHotReloadModule CONFIGURE_DEPENDS 
@@ -105,7 +112,7 @@ target_sources(HotReload
 	${srcHotReloadModule}
 )
 
-target_compile_definitions(HotReload PUBLIC HOTRELOAD_BUILD)
+target_compile_definitions(HotReload PUBLIC HOTRELOAD_BUILD _${CMAKE_SYSTEM_PROCESSOR}_)
 
 set_target_properties(HotReload PROPERTIES RUNTIME_OUTPUT_DIRECTORY  ${CMAKE_BINARY_DIR}/Runtime)
 

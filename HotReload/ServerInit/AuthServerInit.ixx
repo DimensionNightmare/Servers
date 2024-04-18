@@ -1,8 +1,8 @@
 module;
-#include "StdAfx.h"
-
 #include "google/protobuf/message.h"
 #include "hv/Channel.h"
+
+#include "StdAfx.h"
 export module AuthServerInit;
 
 import DNServer;

@@ -1,10 +1,10 @@
 module;
-#include "StdAfx.h"
-#include "S_Common.pb.h"
-
-#include "hv/Channel.h"
 #include <map>
 #include <functional>
+#include "hv/Channel.h"
+
+#include "StdAfx.h"
+#include "S_Common.pb.h"
 export module DatabaseMessage;
 
 export import :DatabaseCommon;

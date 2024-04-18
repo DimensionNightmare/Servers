@@ -1,9 +1,9 @@
 module;
+#include <coroutine>
+#include "hv/Channel.h"
+
 #include "StdAfx.h"
 #include "S_Logic.pb.h"
-
-#include "hv/Channel.h"
-#include <coroutine>
 export module LogicMessage:LogicGate;
 
 import DNTask;

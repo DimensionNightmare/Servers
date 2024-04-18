@@ -1,10 +1,10 @@
 module;
-#include "StdAfx.h"
-
-#include "google/protobuf/message.h"
-#include "hv/Channel.h"
 #include <functional>
 #include <format>
+#include "google/protobuf/message.h"
+#include "hv/Channel.h"
+
+#include "StdAfx.h"
 export module DatabaseServerInit;
 
 import DNServer;

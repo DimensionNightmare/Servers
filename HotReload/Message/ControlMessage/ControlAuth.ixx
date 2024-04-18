@@ -1,8 +1,8 @@
 module;
-#include "S_Auth.pb.h"
-
-#include "hv/Channel.h"
 #include <coroutine>
+#include "hv/Channel.h"
+
+#include "S_Auth.pb.h"
 export module ControlMessage:ControlAuth;
 
 import DNTask;

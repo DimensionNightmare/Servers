@@ -1,9 +1,9 @@
 module;
-#include "Common.pb.h"
-
 #include <string>
 #include <cstdarg>
 #include <format>
+
+#include "Common.pb.h"
 export module Logger;
 
 import Utils.StrUtils;

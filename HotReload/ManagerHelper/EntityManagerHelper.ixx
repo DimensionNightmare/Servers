@@ -1,6 +1,6 @@
 module;
-#include "hv/Channel.h"
 #include <map>
+#include "hv/Channel.h"
 export module EntityManagerHelper;
 
 import EntityManager;

@@ -1,11 +1,11 @@
 module;
-#include "StdAfx.h"
-
+#include <map>
+#include <functional>
 #include "google/protobuf/message.h"
 #include "hv/Channel.h"
 #include "hv/HttpService.h"
-#include <map>
-#include <functional>
+
+#include "StdAfx.h"
 export module AuthMessage;
 
 export import :AuthCommon;

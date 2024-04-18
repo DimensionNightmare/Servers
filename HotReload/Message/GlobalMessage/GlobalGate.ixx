@@ -1,8 +1,8 @@
 module;
-#include "S_Global.pb.h"
-
-#include "hv/Channel.h"
 #include <coroutine>
+#include "hv/Channel.h"
+
+#include "S_Global.pb.h"
 export module GlobalMessage:GlobalGate;
 
 import DNTask;

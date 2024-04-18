@@ -1,16 +1,25 @@
 module;
-#include "StdAfx.h"
-
-#include "hv/hlog.h"
+#ifdef _WIN32
+	#include <windef.h>
+	#include <verrsrc.h>
+	#include <fileapi.h>
+	#include <timezoneapi.h>
+	#include <consoleapi.h>
+	#include <errhandlingapi.h>
+	#include <processthreadsapi.h>
+	#include <minidumpapiset.h>
+	#include <synchapi.h>
+	#include <handleapi.h>
+	#include <dbghelp.h>
+	#pragma comment(lib, "dbghelp.lib")
+#endif
 #include <map>
 #include <string>
 #include <iostream>
 #include <future>
-#ifdef _WIN32
-	#include <Windows.h>
-	#include <dbghelp.h>
-	#pragma comment(lib, "dbghelp.lib")
-#endif
+#include "hv/hlog.h"
+
+#include "StdAfx.h"
 export module MODULE_MAIN;
 
 import DimensionNightmare;
@@ -27,7 +36,6 @@ export int main(int argc, char **argv)
 {
 	hlog_disable();
 
-	cout << "ThreadId:" << this_thread::get_id() << endl;
 	// lunch param
 	map<string, string> lunchParam;
 	lunchParam.emplace("luanchPath", argv[0]);
@@ -47,16 +55,16 @@ export int main(int argc, char **argv)
 		lunchParam.emplace(split.substr(0, pos), split.substr(pos + 1));
 	}
 
-	DimensionNightmare *dn = GetDimensionNightmare();
-	if (!dn->InitConfig(lunchParam))
+	PInstance = new DimensionNightmare;
+	if (!PInstance->InitConfig(lunchParam))
 	{
-		dn->ShutDown();
+		PInstance->ShutDown();
 		return 0;
 	}
 
-	if (!dn->Init())
+	if (!PInstance->Init())
 	{
-		dn->ShutDown();
+		PInstance->ShutDown();
 		return 0;
 	}
 
@@ -71,7 +79,7 @@ export int main(int argc, char **argv)
 		case CTRL_CLOSE_EVENT:
 		case CTRL_SHUTDOWN_EVENT:
 		{
-			GetDimensionNightmare()->ServerIsRun() = false;
+			PInstance->ServerIsRun() = false;
 			return true;
 		}
 		}
@@ -82,6 +90,7 @@ export int main(int argc, char **argv)
 	if (!SetConsoleCtrlHandler(CtrlHandler, true))
 	{
 		DNPrint(10, LoggerLevel::Error, nullptr);
+		PInstance->ShutDown();
 		return 0;
 	}
 
@@ -119,47 +128,44 @@ export int main(int argc, char **argv)
 			CloseHandle(hDumpFile);
 		}
 
-		GetDimensionNightmare()->SetDllNotNormalFree();
-		GetDimensionNightmare()->ShutDown();
+		PInstance->SetDllNotNormalFree();
+		PInstance->ShutDown();
 
 		return EXCEPTION_CONTINUE_SEARCH; 
 	};
 
-	auto exceptionPtr = SetUnhandledExceptionFilter(UnhandledHandler);
-
-	if (!exceptionPtr)
+	if (!SetUnhandledExceptionFilter(UnhandledHandler))
 	{
 		DNPrint(11, LoggerLevel::Error, nullptr);
+		PInstance->ShutDown();
 		return 0;
 	}
 #endif
 
-	auto InputEvent = async(launch::async, [&dn]()
+	auto InputEvent = async(launch::async, []()
 	{
 		stringstream ss;
 		string str;
 
-		while (dn->ServerIsRun())
+		while (PInstance && PInstance->ServerIsRun())
 		{
 			getline(cin, str);
 			if (str.empty())
 			{
-				cout << "1";
-				continue;
+				cout << "<cmd null>\n";
+				goto InputFreeze;
 			}
 
 			ss.clear();
 			ss.str(str);
 			str.clear();
 			ss >> str;
-			if (str.empty())
-			{
-				continue;
-			}
+
+			cout << "<cmd " << str << ">\n";
 
 			if (str == "quit")
 			{
-				dn->ServerIsRun() = false;
+				PInstance->ServerIsRun() = false;
 				break;
 			}
 			else if (str == "abort")
@@ -170,18 +176,20 @@ export int main(int argc, char **argv)
 			}
 			else
 			{
-				dn->ExecCommand(&str, &ss);
+				PInstance->ExecCommand(&str, &ss);
 			}
+InputFreeze:
+			Sleep(500);
 		} 
 	});
 
-	while (dn->ServerIsRun())
+	while (PInstance->ServerIsRun())
 	{
-		dn->TickMainFrame();
+		PInstance->TickMainFrame();
 		Sleep(100);
 	}
 
-	dn->ShutDown();
-
+	PInstance->ShutDown();
+	
 	return 0;
 }

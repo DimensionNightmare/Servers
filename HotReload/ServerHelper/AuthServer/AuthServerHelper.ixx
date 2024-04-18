@@ -1,10 +1,10 @@
 module;
-#include "StdAfx.h"
-#include "GDef.pb.h"
-
+#include <assert.h>
 #include "pqxx/connection"
 #include "pqxx/transaction"
-#include <assert.h>
+
+#include "StdAfx.h"
+#include "GDef.pb.h"
 export module AuthServerHelper;
 
 import AuthServer;

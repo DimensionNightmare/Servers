@@ -1,11 +1,11 @@
 module;
+#include <map>
+#include <functional>
+#include "hv/Channel.h"
+
 #include "StdAfx.h"
 #include "S_Common.pb.h"
 #include "S_Logic.pb.h"
-
-#include "hv/Channel.h"
-#include <map>
-#include <functional>
 export module LogicMessage;
 
 export import :LogicCommon;

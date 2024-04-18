@@ -1,7 +1,7 @@
 module;
-#include "S_Common.pb.h"
-
 #include "hv/Channel.h"
+
+#include "S_Common.pb.h"
 export module ControlMessage:ControlCommon;
 
 import DNTask;

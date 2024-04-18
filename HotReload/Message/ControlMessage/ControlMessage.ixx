@@ -1,11 +1,11 @@
 module;
+#include <map>
+#include <functional>
+#include "hv/Channel.h"
+
 #include "StdAfx.h"
 #include "S_Common.pb.h"
 #include "S_Auth.pb.h"
-
-#include "hv/Channel.h"
-#include <map>
-#include <functional>
 export module ControlMessage;
 
 export import :ControlGlobal;

@@ -1,14 +1,13 @@
 
 module;
-#include "StdAfx.h"
-
-#include "google/protobuf/message.h"
+#ifdef _WIN32
+	#include <windef.h>
+#endif
 #include <functional>
 #include <string>
+#include "google/protobuf/message.h"
 
-#ifdef _WIN32
-	#include <Windows.h>
-#endif
+#include "StdAfx.h"
 export module HOTRELOAD_MODULE;
 
 import DNServer;

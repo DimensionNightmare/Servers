@@ -1,6 +1,6 @@
 module;
-#include "hv/Channel.h"
 #include <functional>
+#include "hv/Channel.h"
 export module DNEntity;
 
 import Entity;

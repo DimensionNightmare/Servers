@@ -1,9 +1,9 @@
 module;
-#include "StdAfx.h"
-
 #include "hv/EventLoop.h"
 #include "hv/hsocket.h"
 #include "pqxx/connection"
+
+#include "StdAfx.h"
 export module AuthServer;
 
 import DNServer;
