@@ -35,7 +35,7 @@ public:
 
 public: // dll override
 	virtual DNServerProxy* GetSSock(){return pSSock;}
-	virtual ServerEntityManager<ServerEntity>* GetEntityManager(){return pServerEntityMan;}
+	virtual ServerEntityManager<ServerEntity>* GetServerEntityManager(){return pServerEntityMan;}
 
 protected: // dll proxy
 	DNServerProxy* pSSock;

@@ -1,20 +1,28 @@
 module;
 #include <string>
+#include "hv/Channel.h"
 export module ProxyEntityHelper;
 
 export import ProxyEntity;
-import DNEntityHelper;
 
 using namespace std;
+using namespace hv;
 
 export class ProxyEntityHelper : public ProxyEntity
 {
 private:
 	ProxyEntityHelper(){}
 public:
-	DNEntityHelper* GetChild(){ return nullptr;}
-
 	string& Token(){ return sToken; }
+
 	unsigned int & ExpireTime(){ return iExpireTime; }
+
+	unsigned int& ID(){ return iId;}
+
+	void SetSock(const SocketChannelPtr& channel){ pSock = channel;}
+
+	const SocketChannelPtr& GetSock(){return pSock;}
+
+	uint64_t& TimerId(){return iCloseTimerId;}
 };
 

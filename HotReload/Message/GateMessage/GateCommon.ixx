@@ -53,12 +53,12 @@ export DNTaskVoid Evt_ReqRegistSrv()
 	requset.set_port(server->port);
 	requset.set_server_index(dnServer->ServerIndex());
 
-	auto entityMan = dnServer->GetEntityManager();
+	auto entityMan = dnServer->GetServerEntityManager();
 	auto AddChild = [&requset](ServerEntity* serv)
 	{
 		COM_ReqRegistSrv* child = requset.add_childs();
 		ServerEntityHelper* helper = static_cast<ServerEntityHelper*>(serv);
-		child->set_server_index(helper->GetChild()->ID());
+		child->set_server_index(helper->ID());
 		ServerType servType = helper->ServerEntityType();
 		child->set_server_type((uint32_t)servType);
 	};
@@ -124,7 +124,7 @@ export void Msg_ReqRegistSrv(const SocketChannelPtr &channel, unsigned int msgId
 	COM_ResRegistSrv response;
 
 	GateServerHelper* dnServer = GetGateServer();
-	auto entityMan = dnServer->GetEntityManager();
+	auto entityMan = dnServer->GetServerEntityManager();
 
 	ServerType regType = (ServerType)requset->server_type();
 	
@@ -143,12 +143,12 @@ export void Msg_ReqRegistSrv(const SocketChannelPtr &channel, unsigned int msgId
 	{
 		entity->ServerIp() = requset->ip();
 		entity->ServerPort() = requset->port();
-		entity->GetChild()->SetSock(channel);
+		entity->SetSock(channel);
 		
 		channel->setContext(entity);
 
 		response.set_success(true);
-		response.set_server_index(entity->GetChild()->ID());
+		response.set_server_index(entity->ID());
 
 		entity->CloseEvent() = std::bind(&GateServerHelper::ServerEntityCloseEvent, dnServer, placeholders::_1);
 	}

@@ -21,7 +21,7 @@ export void Msg_ReqRegistSrv(const SocketChannelPtr &channel, unsigned int msgId
 	COM_ResRegistSrv response;
 
 	GlobalServerHelper* dnServer = GetGlobalServer();
-	ServerEntityManagerHelper<ServerEntity>*  entityMan = dnServer->GetEntityManager();
+	ServerEntityManagerHelper<ServerEntity>*  entityMan = dnServer->GetServerEntityManager();
 
 	ServerType regType = (ServerType)requset->server_type();
 	
@@ -42,7 +42,7 @@ export void Msg_ReqRegistSrv(const SocketChannelPtr &channel, unsigned int msgId
 		ServerEntityHelper* entity = entityMan->GetEntity(requset->server_index());
 		if (entity)
 		{
-			auto child = entity->GetChild();
+			auto child = entity;
 			// wait destroy`s destroy
 			if (uint64_t timerId = child->TimerId())
 			{
@@ -73,7 +73,7 @@ export void Msg_ReqRegistSrv(const SocketChannelPtr &channel, unsigned int msgId
 			response.set_server_index(requset->server_index());
 
 			entity = entityMan->AddEntity(requset->server_index(), regType);
-			entity->GetChild()->SetSock(channel);
+			entity->SetSock(channel);
 
 			channel->setContext(entity);
 
@@ -97,12 +97,12 @@ export void Msg_ReqRegistSrv(const SocketChannelPtr &channel, unsigned int msgId
 	{
 		entity->ServerIp() = requset->ip();
 		entity->ServerPort() = requset->port();
-		entity->GetChild()->SetSock(channel);
+		entity->SetSock(channel);
 
 		channel->setContext(entity);
 
 		response.set_success(true);
-		response.set_server_index(entity->GetChild()->ID());
+		response.set_server_index(entity->ID());
 	}
 	
 	string binData;

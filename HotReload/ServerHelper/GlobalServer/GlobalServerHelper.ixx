@@ -26,7 +26,7 @@ public:
 
 	DNClientProxyHelper* GetCSock(){ return nullptr;}
 	DNServerProxyHelper* GetSSock(){ return nullptr;}
-	ServerEntityManagerHelper<ServerEntity>* GetEntityManager(){ return nullptr;}
+	ServerEntityManagerHelper<ServerEntity>* GetServerEntityManager(){ return nullptr;}
 
 	void UpdateServerGroup();
 
@@ -50,7 +50,7 @@ export GlobalServerHelper* GetGlobalServer()
 
 void GlobalServerHelper::UpdateServerGroup()
 {
-	ServerEntityManagerHelper<ServerEntity>*  entityMan = GetEntityManager();
+	ServerEntityManagerHelper<ServerEntity>*  entityMan = GetServerEntityManager();
 
 	list<ServerEntity*> gates = entityMan->GetEntityByList(ServerType::GateServer);
 	if(gates.size() <= 0)
@@ -67,9 +67,9 @@ void GlobalServerHelper::UpdateServerGroup()
 
 	auto registControl = [&](ServerEntityHelper* beEntity, ServerEntityHelper* entity)
 	{
-		SocketChannelPtr channel = entity->GetChild()->GetSock();
+		SocketChannelPtr channel = entity->GetSock();
 		entity->LinkNode() = beEntity;
-		entity->GetChild()->SetSock(nullptr);
+		entity->SetSock(nullptr);
 		channel->setContext(nullptr);
 		
 		// sendData
@@ -82,10 +82,10 @@ void GlobalServerHelper::UpdateServerGroup()
 		channel->write(binData);
 		
 		// timer destory
-		entity->GetChild()->TimerId() = entityMan->Timer()->setTimeout(10000,
+		entity->TimerId() = entityMan->Timer()->setTimeout(10000,
 			std::bind(&ServerEntityManager<ServerEntity>::EntityCloseTimer, entityMan, placeholders::_1));
 
-		entityMan->AddTimerRecord(entity->GetChild()->TimerId(), entity->GetChild()->ID());
+		entityMan->AddTimerRecord(entity->TimerId(), entity->ID());
 	};
 	
 	for(ServerEntity* it : gates)

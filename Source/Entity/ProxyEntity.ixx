@@ -2,18 +2,17 @@ module;
 #include <string>
 export module ProxyEntity;
 
-import DNEntity;
+import NetEntity;
 
 using namespace std;
 
-export class ProxyEntity : public DNEntity
+export class ProxyEntity : public NetEntity
 {
 public:
 	ProxyEntity();
 	virtual ~ProxyEntity();
 
 public: // dll override
-	virtual DNEntity* GetChild(){return this;}
 
 protected: // dll proxy
 	unsigned int iServerIndex;

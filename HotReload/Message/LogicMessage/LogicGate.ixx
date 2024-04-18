@@ -34,6 +34,24 @@ export void Exe_RetClientLogin(const SocketChannelPtr &channel, unsigned int msg
 		entity =  entityMan->GetEntity(requset->account_id());
 	}
 
-	L2G_RetClientLogin retMsg;
+
+	auto serverEntityMan = GetLogicServer()->GetServerEntityManager();
+	list<ServerEntity*> serverEntityList = serverEntityMan->GetEntityByList(ServerType::DedicatedServer);
+	ServerEntity* serverEntity = nullptr;
+	if(!serverEntityList.empty())
+	{
+		serverEntity = serverEntityList.front();
+	}
+
+	if(serverEntity)
+	{
+		L2G_RetClientLogin retMsg;
+
+		// retMsg.set_account_id(entity->);
+		// retMsg.set_ip();
+		// retMsg.set_port();
+		// retMsg.set_token();
+	}
+
 
 }

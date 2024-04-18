@@ -1,26 +1,23 @@
 module;
 #include <functional>
 #include "hv/Channel.h"
-export module DNEntity;
+export module NetEntity;
 
 import Entity;
 
 using namespace hv;
 using namespace std;
 
-export class DNEntity : public Entity
+export class NetEntity : public Entity
 {
 protected:
-	DNEntity();
+	NetEntity();
 
 public:
-	virtual ~DNEntity();
+	virtual ~NetEntity();
 
-	auto& CloseEvent(){return pOnClose;}
 public: // dll override
-
-public:
-
+	auto& CloseEvent(){return pOnClose;}
 
 protected: // dll proxy
 	function<void(Entity*)> pOnClose;
@@ -28,7 +25,7 @@ protected: // dll proxy
 	uint64_t iCloseTimerId;
 };
 
-DNEntity::DNEntity()
+NetEntity::NetEntity()
 {
 	eEntityType = EntityType::None;
 
@@ -37,6 +34,6 @@ DNEntity::DNEntity()
 	pOnClose = nullptr;
 }
 
-DNEntity::~DNEntity()
+NetEntity::~NetEntity()
 {
 }

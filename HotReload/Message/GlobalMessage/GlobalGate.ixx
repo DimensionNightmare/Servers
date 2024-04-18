@@ -20,14 +20,14 @@ export void Exe_RetRegistSrv(const SocketChannelPtr &channel, unsigned int msgId
 	G2G_RetRegistSrv* requset = reinterpret_cast<G2G_RetRegistSrv*>(msg);
 
 	GlobalServerHelper* dnServer = GetGlobalServer();
-	ServerEntityManagerHelper<ServerEntity>*  entityMan = dnServer->GetEntityManager();
+	ServerEntityManagerHelper<ServerEntity>*  entityMan = dnServer->GetServerEntityManager();
 	if(ServerEntityHelper* entity = entityMan->GetEntity(requset->server_index()))
 	{
 		if(requset->is_regist())
 		{
-			if(uint64_t timerId = entity->GetChild()->TimerId())
+			if(uint64_t timerId = entity->TimerId())
 			{
-				entity->GetChild()->TimerId() = 0;
+				entity->TimerId() = 0;
 				entityMan->Timer()->killTimer(timerId);
 			}
 		}

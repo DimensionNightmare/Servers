@@ -41,7 +41,7 @@ public: // dll override
 	virtual DNServerProxy* GetSSock(){return pSSock;}
 	virtual DNClientProxy* GetCSock(){return pCSock;}
 
-	virtual ServerEntityManager<ServerEntity>* GetEntityManager(){return pServerEntityMan;}
+	virtual ServerEntityManager<ServerEntity>* GetServerEntityManager(){return pServerEntityMan;}
 	virtual ClientEntityManager<ClientEntity>* GetClientEntityManager(){return pClientEntityMan;}
 	
 
@@ -76,18 +76,18 @@ LogicServer::~LogicServer()
 	delete pServerEntityMan;
 	pServerEntityMan = nullptr;
 
-	if(pSSock)
-	{
-		pSSock->setUnpack(nullptr);
-		delete pSSock;
-		pSSock = nullptr;
-	}
-
 	if(pCSock)
 	{
 		pCSock->setReconnect(nullptr);
 		delete pCSock;
 		pCSock = nullptr;
+	}
+
+	if(pSSock)
+	{
+		pSSock->setUnpack(nullptr);
+		delete pSSock;
+		pSSock = nullptr;
 	}
 }
 
@@ -201,18 +201,17 @@ bool LogicServer::Start()
 
 bool LogicServer::Stop()
 {
-	if(pSSock)
-	{
-		pSSock->pLoop->stop(true);
-		pSSock->stop();
-	}
-
 	if(pCSock) // client
 	{
 		pCSock->pLoop->stop(true);
 		pCSock->stop();
 	}
 
+	if(pSSock)
+	{
+		pSSock->pLoop->stop(true);
+		pSSock->stop();
+	}
 	return true;
 }
 

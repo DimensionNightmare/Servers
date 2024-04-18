@@ -6,7 +6,7 @@ export module Entity;
 export enum class EntityType
 {
 	None,
-	// DNServer, virtual
+	// NetEntity, virtual
 	Server,
 	Proxy,
 	Client,

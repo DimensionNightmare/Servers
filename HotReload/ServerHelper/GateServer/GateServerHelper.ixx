@@ -20,7 +20,7 @@ private:
 public:
 
 	DNClientProxyHelper* GetCSock(){ return nullptr;}
-	ServerEntityManagerHelper<ServerEntity>* GetEntityManager(){ return nullptr;}
+	ServerEntityManagerHelper<ServerEntity>* GetServerEntityManager(){ return nullptr;}
 	ProxyEntityManagerHelper<ProxyEntity>* GetProxyEntityManager(){ return nullptr;}
 
 	void ServerEntityCloseEvent(Entity *entity);
@@ -48,7 +48,7 @@ void GateServerHelper::ServerEntityCloseEvent(Entity* entity)
 	// up to Global
 	string binData;
 	G2G_RetRegistSrv retMsg;
-	retMsg.set_server_index(castObj->GetChild()->ID());
+	retMsg.set_server_index(castObj->ID());
 	retMsg.set_is_regist(false);
 	binData.resize(retMsg.ByteSizeLong());
 	retMsg.SerializeToArray(binData.data(), (int)binData.size());
@@ -57,7 +57,7 @@ void GateServerHelper::ServerEntityCloseEvent(Entity* entity)
 	DNClientProxyHelper* client = GetCSock();
 	client->send(binData);
 	
-	GetEntityManager()->RemoveEntity(castObj->GetChild()->ID());
+	GetServerEntityManager()->RemoveEntity(castObj->ID());
 }
 
 void GateServerHelper::ProxyEntityCloseEvent(Entity* entity)
@@ -65,5 +65,5 @@ void GateServerHelper::ProxyEntityCloseEvent(Entity* entity)
 	ProxyEntityHelper* castObj = static_cast<ProxyEntityHelper*>(entity);
 
 	auto entityMan = GetProxyEntityManager();
-	entityMan->RemoveEntity(castObj->GetChild()->ID());
+	entityMan->RemoveEntity(castObj->ID());
 }

@@ -25,6 +25,7 @@
                 }
             ],
             "console": "integratedTerminal",
+			// "console": "externalTerminal",
             "requireExactSource": false
         }
     ]

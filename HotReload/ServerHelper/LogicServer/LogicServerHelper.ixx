@@ -25,7 +25,7 @@ private:
 public:
 
 	DNClientProxyHelper* GetCSock(){ return nullptr;}
-	ServerEntityManagerHelper<ServerEntity>* GetEntityManager(){ return nullptr;}
+	ServerEntityManagerHelper<ServerEntity>* GetServerEntityManager(){ return nullptr;}
 	ClientEntityManagerHelper<ClientEntity>* GetClientEntityManager(){ return nullptr;}
 
 	bool InitDatabase();
@@ -60,8 +60,6 @@ void LogicServerHelper::ReClientEvent(const string& ip, unsigned short port)
 
 	auto ReClient = [=, this]()
 	{
-		DNPrint(-1, LoggerLevel::Debug, "ThreadId:%d,Handle:%d", this_thread::get_id(), GetCurrentThread());
-
 		reconn_setting_t *reconn_setting = pCSock->reconn_setting;
 		unpack_setting_t *unpack_setting = pCSock->unpack_setting;
 

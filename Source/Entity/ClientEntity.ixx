@@ -10,7 +10,6 @@ public:
 	virtual ~ClientEntity();
 
 public: // dll override
-	virtual Entity* GetChild(){return this;}
 
 protected: // dll proxy
 };

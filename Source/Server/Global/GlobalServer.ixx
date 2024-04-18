@@ -39,7 +39,7 @@ public: // dll override
 	virtual DNServerProxy* GetSSock(){return pSSock;}
 	virtual DNClientProxy* GetCSock(){return pCSock;}
 
-	virtual ServerEntityManager<ServerEntity>* GetEntityManager(){return pServerEntityMan;}
+	virtual ServerEntityManager<ServerEntity>* GetServerEntityManager(){return pServerEntityMan;}
 
 protected: // dll proxy
 	DNServerProxy* pSSock;
@@ -64,18 +64,18 @@ GlobalServer::~GlobalServer()
 	delete pServerEntityMan;
 	pServerEntityMan = nullptr;
 
-	if(pSSock)
-	{
-		pSSock->setUnpack(nullptr);
-		delete pSSock;
-		pSSock = nullptr;
-	}
-
 	if(pCSock)
 	{
 		pCSock->setReconnect(nullptr);
 		delete pCSock;
 		pCSock = nullptr;
+	}
+
+	if(pSSock)
+	{
+		pSSock->setUnpack(nullptr);
+		delete pSSock;
+		pSSock = nullptr;
 	}
 }
 
@@ -157,6 +157,12 @@ void GlobalServer::InitCmd(map<string, function<void(stringstream *)>> &cmdMap)
 
 bool GlobalServer::Start()
 {
+	if(pCSock) // client
+	{
+		pCSock->pLoop->start();
+		pCSock->start();
+	}
+
 	if(!pSSock)
 	{
 		DNPrint(6, LoggerLevel::Error, nullptr);
@@ -165,13 +171,6 @@ bool GlobalServer::Start()
 
 	pSSock->pLoop->start();
 	pSSock->start();
-
-	if(pCSock) // client
-	{
-		pCSock->pLoop->start();
-		pCSock->start();
-	}
-
 	return true;
 }
 

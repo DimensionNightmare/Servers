@@ -37,7 +37,7 @@ ProxyEntityHelper* ProxyEntityManagerHelper<TEntity>::AddEntity(unsigned int ent
 		TEntity* oriEntity = &this->mEntityMap[entityId];
 		
 		entity = static_cast<ProxyEntityHelper*>(oriEntity);
-		entity->GetChild()->ID() = entityId;
+		entity->ID() = entityId;
 	}
 
 	return entity;
@@ -62,7 +62,7 @@ void ProxyEntityManagerHelper<TEntity>::RemoveEntity(unsigned int entityId, bool
 		}
 		else
 		{
-			entity->GetChild()->SetSock(nullptr);
+			entity->SetSock(nullptr);
 		}
 	}
 	

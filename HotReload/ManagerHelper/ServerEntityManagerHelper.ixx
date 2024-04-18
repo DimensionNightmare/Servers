@@ -46,7 +46,7 @@ ServerEntityHelper* ServerEntityManagerHelper<TEntity>::AddEntity(unsigned int e
 		this->mEntityMapList[regType].emplace_back(oriEntity);
 		
 		entity = static_cast<ServerEntityHelper*>(oriEntity);
-		entity->GetChild()->ID() = entityId;
+		entity->ID() = entityId;
 		entity->ServerEntityType() = regType;
 	}
 
@@ -73,7 +73,7 @@ void ServerEntityManagerHelper<TEntity>::RemoveEntity(unsigned int entityId, boo
 		}
 		else
 		{
-			entity->GetChild()->SetSock(nullptr);
+			entity->SetSock(nullptr);
 		}
 	}
 	

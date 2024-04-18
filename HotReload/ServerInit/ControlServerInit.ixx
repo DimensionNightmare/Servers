@@ -52,8 +52,8 @@ int HandleControlServerInit(DNServer *server)
 				// not used
 				if(ServerEntityHelper* entity = channel->getContext<ServerEntityHelper>())
 				{
-					ServerEntityManagerHelper<ServerEntity>*  entityMan = serverProxy->GetEntityManager();
-					entityMan->RemoveEntity(entity->GetChild()->ID());
+					ServerEntityManagerHelper<ServerEntity>*  entityMan = serverProxy->GetServerEntityManager();
+					entityMan->RemoveEntity(entity->ID());
 					channel->setContext(nullptr);
 				}
 				

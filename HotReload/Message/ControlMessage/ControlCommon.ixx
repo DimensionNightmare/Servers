@@ -21,7 +21,7 @@ export void Msg_ReqRegistSrv(const SocketChannelPtr &channel, unsigned int msgId
 	COM_ReqRegistSrv* requset = reinterpret_cast<COM_ReqRegistSrv*>(msg);
 	COM_ResRegistSrv response;
 
-	ServerEntityManagerHelper<ServerEntity>*  entityMan = GetControlServer()->GetEntityManager();
+	ServerEntityManagerHelper<ServerEntity>*  entityMan = GetControlServer()->GetServerEntityManager();
 
 	ServerType regType = (ServerType)requset->server_type();
 	
@@ -40,12 +40,12 @@ export void Msg_ReqRegistSrv(const SocketChannelPtr &channel, unsigned int msgId
 	{
 		entity->ServerIp() = requset->ip();
 		entity->ServerPort() = requset->port();
-		entity->GetChild()->SetSock(channel);
+		entity->SetSock(channel);
 
 		channel->setContext(entity);
 
 		response.set_success(true);
-		response.set_server_index(entity->GetChild()->ID());
+		response.set_server_index(entity->ID());
 	}
 
 	string binData;

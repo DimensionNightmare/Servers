@@ -59,17 +59,17 @@ AuthServer::AuthServer()
 
 AuthServer::~AuthServer()
 {
-	if(pSSock)
-	{
-		delete pSSock;
-		pSSock = nullptr;
-	}
-
 	if(pCSock)
 	{
 		pCSock->setReconnect(nullptr);
 		delete pCSock;
 		pCSock = nullptr;
+	}
+
+	if(pSSock)
+	{
+		delete pSSock;
+		pSSock = nullptr;
 	}
 }
 
@@ -156,17 +156,18 @@ bool AuthServer::Start()
 
 bool AuthServer::Stop()
 {
+	if(pCSock)
+	{
+		pCSock->pLoop->stop(true);
+		pCSock->stop();
+	}
+
 	//webProxy
 	if(pSSock)
 	{
 		pSSock->stop();
 	}
 	
-	if(pCSock)
-	{
-		pCSock->pLoop->stop(true);
-		pCSock->stop();
-	}
 	return true;
 }
 

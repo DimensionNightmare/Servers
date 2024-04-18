@@ -27,7 +27,7 @@ export DNTaskVoid Msg_ReqAuthAccount(const SocketChannelPtr &channel, unsigned i
 	G2A_ResAuthAccount response;
 
 	// if has db not need origin
-	list<ServerEntity*> servList = GetGlobalServer()->GetEntityManager()->GetEntityByList(ServerType::GateServer);
+	list<ServerEntity*> servList = GetGlobalServer()->GetServerEntityManager()->GetEntityByList(ServerType::GateServer);
 
 	list<ServerEntityHelper*> tempList;
 	for(ServerEntity* it : servList)
@@ -73,7 +73,7 @@ export DNTaskVoid Msg_ReqAuthAccount(const SocketChannelPtr &channel, unsigned i
 
 		{
 			server->AddMsg(smsgId, &dataChannel);
-			entity->GetChild()->GetSock()->write(binData);
+			entity->GetSock()->write(binData);
 			co_await dataChannel;
 			if(dataChannel.HasFlag(DNTaskFlag::Timeout))
 			{

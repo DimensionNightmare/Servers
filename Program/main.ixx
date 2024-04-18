@@ -80,6 +80,10 @@ export int main(int argc, char **argv)
 		case CTRL_SHUTDOWN_EVENT:
 		{
 			PInstance->ServerIsRun() = false;
+			while(PInstance)
+			{
+				Sleep(20);
+			}
 			return true;
 		}
 		}
@@ -153,32 +157,33 @@ export int main(int argc, char **argv)
 			if (str.empty())
 			{
 				cout << "<cmd null>\n";
-				goto InputFreeze;
-			}
-
-			ss.clear();
-			ss.str(str);
-			str.clear();
-			ss >> str;
-
-			cout << "<cmd " << str << ">\n";
-
-			if (str == "quit")
-			{
-				PInstance->ServerIsRun() = false;
-				break;
-			}
-			else if (str == "abort")
-			{
-				int a = 100;
-				int b = 0;
-				int c = a / b;
 			}
 			else
 			{
-				PInstance->ExecCommand(&str, &ss);
+				ss.clear();
+				ss.str(str);
+				str.clear();
+				ss >> str;
+
+				cout << "<cmd " << str << ">\n";
+
+				if (str == "quit")
+				{
+					PInstance->ServerIsRun() = false;
+					break;
+				}
+				else if (str == "abort")
+				{
+					int a = 100;
+					int b = 0;
+					int c = a / b;
+				}
+				else
+				{
+					PInstance->ExecCommand(&str, &ss);
+				}
 			}
-InputFreeze:
+
 			Sleep(500);
 		} 
 	});

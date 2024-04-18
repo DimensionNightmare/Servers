@@ -20,12 +20,12 @@ export DNTaskVoid Msg_ReqAuthAccount(const SocketChannelPtr &channel, unsigned i
 	G2A_ResAuthAccount response;
 
 	ServerEntityHelper* entity = nullptr;
-	list<ServerEntity*>& servList = GetControlServer()->GetEntityManager()->GetEntityByList(ServerType::GlobalServer);
+	list<ServerEntity*>& servList = GetControlServer()->GetServerEntityManager()->GetEntityByList(ServerType::GlobalServer);
 	for(ServerEntity* it : servList)
 	{
 		ServerEntityHelper* castEntity = static_cast<ServerEntityHelper*>(it);
 
-		if(castEntity->GetChild()->TimerId())
+		if(castEntity->TimerId())
 		{
 			continue;
 		}
@@ -68,7 +68,7 @@ export DNTaskVoid Msg_ReqAuthAccount(const SocketChannelPtr &channel, unsigned i
 		{
 			// wait data parse
 			server->AddMsg(smsgId, &dataChannel);
-			entity->GetChild()->GetSock()->write(binData);
+			entity->GetSock()->write(binData);
 			co_await dataChannel;
 			if(dataChannel.HasFlag(DNTaskFlag::Timeout))
 			{

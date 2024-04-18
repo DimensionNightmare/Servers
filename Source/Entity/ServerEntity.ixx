@@ -5,7 +5,7 @@ module;
 #include <bitset>
 export module ServerEntity;
 
-import DNEntity;
+import NetEntity;
 import DNServer;
 
 using namespace std;
@@ -15,14 +15,13 @@ export enum class ServerEntityFlag : int
 	Locked = 0,
 };
 
-export class ServerEntity : public DNEntity
+export class ServerEntity : public NetEntity
 {
 public:
 	ServerEntity();
 	virtual ~ServerEntity();
 
 public: // dll override
-	virtual DNEntity* GetChild(){return this;}
 
 	ServerType GetType(){return emServerType;}
 

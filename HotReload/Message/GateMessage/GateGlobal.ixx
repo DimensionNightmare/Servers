@@ -32,7 +32,7 @@ export void Exe_ReqUserToken(const SocketChannelPtr &channel, unsigned int msgId
 	if(entity = entityMan->GetEntity(requset->account_id()))
 	{
 		//exit
-		if(SocketChannelPtr online = entity->GetChild()->GetSock())
+		if(SocketChannelPtr online = entity->GetSock())
 		{
 			// send to other client
 			S2C_RetAccountReplace replace;
@@ -66,17 +66,17 @@ export void Exe_ReqUserToken(const SocketChannelPtr &channel, unsigned int msgId
 	response.set_expired_timespan(entity->ExpireTime());
 
 	// entity or token expired
-	if(!entity->GetChild()->TimerId())
+	if(!entity->TimerId())
 	{
-		entity->GetChild()->TimerId() = entityMan->Timer()->setTimeout(30000, 
+		entity->TimerId() = entityMan->Timer()->setTimeout(30000, 
 			std::bind(&ProxyEntityManager<ProxyEntity>::EntityCloseTimer, entityMan, placeholders::_1));
 
-		entityMan->AddTimerRecord(entity->GetChild()->TimerId(), entity->GetChild()->ID());
+		entityMan->AddTimerRecord(entity->TimerId(), entity->ID());
 	}
 
 
 	// server index 
-	ServerEntityManagerHelper<ServerEntity>* serverEntityMan = dnServer->GetEntityManager();
+	ServerEntityManagerHelper<ServerEntity>* serverEntityMan = dnServer->GetServerEntityManager();
 	list<ServerEntity*> serverEntityList = serverEntityMan->GetEntityByList(ServerType::LogicServer);
 	ServerEntity* serverEntity = nullptr;
 	if(!serverEntityList.empty())
@@ -87,7 +87,7 @@ export void Exe_ReqUserToken(const SocketChannelPtr &channel, unsigned int msgId
 	if(serverEntity)
 	{
 		ServerEntityHelper* serverEntityHelper = static_cast<ServerEntityHelper*>(serverEntity);
-		response.set_server_index(serverEntityHelper->GetChild()->ID());
+		response.set_server_index(serverEntityHelper->ID());
 
 		binData.resize(response.ByteSizeLong());
 		response.SerializeToArray(binData.data(), (int)binData.size());

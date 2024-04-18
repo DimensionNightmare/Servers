@@ -11,7 +11,7 @@ import GateServer;
 import GateServerHelper;
 import MessagePack;
 import GateMessage;
-import Entity;
+import NetEntity;
 
 using namespace hv;
 using namespace std;
@@ -45,12 +45,12 @@ int HandleGateServerInit(DNServer *server)
 			else
 			{
 				DNPrint(3, LoggerLevel::Debug, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
-				if(Entity* entity = channel->getContext<Entity>())
+				if(NetEntity* entity = channel->getContext<NetEntity>())
 				{
-					DNEntity* dnEntity = static_cast<DNEntity*>(entity);
-					if(dnEntity->CloseEvent())
+					// NetEntity* NetEntity = static_cast<NetEntity*>(entity);
+					if(entity->CloseEvent())
 					{
-						dnEntity->CloseEvent()(entity);
+						entity->CloseEvent()(entity);
 					}
 				}
 			}

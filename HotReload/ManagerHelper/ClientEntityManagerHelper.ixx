@@ -37,7 +37,7 @@ ClientEntityHelper* ClientEntityManagerHelper<TEntity>::AddEntity(unsigned int e
 		TEntity* oriEntity = &this->mEntityMap[entityId];
 		
 		entity = static_cast<ClientEntityHelper*>(oriEntity);
-		entity->GetChild()->ID() = entityId;
+		entity->ID() = entityId;
 	}
 
 	return entity;
@@ -51,19 +51,11 @@ void ClientEntityManagerHelper<TEntity>::RemoveEntity(unsigned int entityId, boo
 	{
 		TEntity* oriEntity = &this->mEntityMap[entityId];
 		ClientEntityHelper* entity = static_cast<ClientEntityHelper*>(oriEntity);
-		if(isDel)
-		{
-			unique_lock<shared_mutex> ulock(this->oMapMutex);
+		
+		unique_lock<shared_mutex> ulock(this->oMapMutex);
 
-			// this->mIdleServerId.push_back(entityId);
-			
-			DNPrint(-1, LoggerLevel::Debug, "destory entity\n");
-			this->mEntityMap.erase(entityId);
-		}
-		else
-		{
-			entity->GetChild()->SetSock(nullptr);
-		}
+		DNPrint(-1, LoggerLevel::Debug, "destory client entity\n");
+		this->mEntityMap.erase(entityId);
 	}
 	
 }

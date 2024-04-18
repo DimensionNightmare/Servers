@@ -40,7 +40,7 @@ public: // dll override
 	virtual DNServerProxy* GetSSock(){return pSSock;}
 	virtual DNClientProxy* GetCSock(){return pCSock;}
 
-	virtual ServerEntityManager<ServerEntity>* GetEntityManager(){return pServerEntityMan;}
+	virtual ServerEntityManager<ServerEntity>* GetServerEntityManager(){return pServerEntityMan;}
 	virtual ProxyEntityManager<ProxyEntity>* GetProxyEntityManager(){return pProxyEntityMan;}
 
 protected: // dll proxy
@@ -68,18 +68,18 @@ GateServer::~GateServer()
 	delete pServerEntityMan;
 	pServerEntityMan = nullptr;
 
-	if(pSSock)
-	{
-		pSSock->setUnpack(nullptr);
-		delete pSSock;
-		pSSock = nullptr;
-	}
-
 	if(pCSock)
 	{
 		pCSock->setReconnect(nullptr);
 		delete pCSock;
 		pCSock = nullptr;
+	}
+
+	if(pSSock)
+	{
+		pSSock->setUnpack(nullptr);
+		delete pSSock;
+		pSSock = nullptr;
 	}
 }
 
@@ -170,6 +170,13 @@ void GateServer::InitCmd(map<string, function<void(stringstream *)>> &cmdMap)
 
 bool GateServer::Start()
 {
+
+	if(pCSock) // client
+	{
+		pCSock->pLoop->start();
+		pCSock->start();
+	}
+
 	if(!pSSock)
 	{
 		DNPrint(6, LoggerLevel::Error, nullptr);
@@ -178,13 +185,6 @@ bool GateServer::Start()
 
 	pSSock->pLoop->start();
 	pSSock->start();
-
-	if(pCSock) // client
-	{
-		pCSock->pLoop->start();
-		pCSock->start();
-	}
-
 	return true;
 }
 

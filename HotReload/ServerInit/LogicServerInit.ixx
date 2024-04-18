@@ -45,8 +45,8 @@ int HandleLogicServerInit(DNServer *server)
 				DNPrint(3, LoggerLevel::Debug, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
 				if(ServerEntityHelper* entity = channel->getContext<ServerEntityHelper>())
 				{
-					ServerEntityManagerHelper<ServerEntity>*  entityMan = serverProxy->GetEntityManager();
-					entityMan->RemoveEntity(entity->GetChild()->ID());
+					ServerEntityManagerHelper<ServerEntity>*  entityMan = serverProxy->GetServerEntityManager();
+					entityMan->RemoveEntity(entity->ID());
 					channel->setContext(nullptr);
 				}
 			}

@@ -14,7 +14,7 @@ private:
 	ControlServerHelper(){}
 public:
 	DNServerProxyHelper* GetSSock(){ return nullptr;}
-	ServerEntityManagerHelper<ServerEntity>* GetEntityManager(){ return nullptr;}
+	ServerEntityManagerHelper<ServerEntity>* GetServerEntityManager(){ return nullptr;}
 };
 
 static ControlServerHelper* PControlServerHelper = nullptr;

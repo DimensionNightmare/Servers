@@ -39,24 +39,24 @@ export void Msg_ReqAuthToken(const SocketChannelPtr &channel, unsigned int msgId
 		if(isMatch)
 		{
 			channel->setContext(entity);
-			entity->GetChild()->SetSock(channel);
+			entity->SetSock(channel);
 			DNPrint(-1, LoggerLevel::Debug, "match!!\n");
-			if(uint64_t timerId = entity->GetChild()->TimerId())
+			if(uint64_t timerId = entity->TimerId())
 			{
-				entity->GetChild()->TimerId() = 0;
+				entity->TimerId() = 0;
 				entityMan->Timer()->killTimer(timerId);
 
 				entity->CloseEvent() = std::bind(&GateServerHelper::ProxyEntityCloseEvent, dnServer, std::placeholders::_1);
 			}
 
 			G2L_RetClientLogin retMsg;
-			retMsg.set_account_id(entity->GetChild()->ID());
+			retMsg.set_account_id(entity->ID());
 			binData.resize(response.ByteSize());
 			response.SerializeToArray(binData.data(), binData.size());
 
 			MessagePack(0, MsgDeal::Ret, retMsg.GetDescriptor()->full_name().c_str(), binData);
 
-			ServerEntityManagerHelper<ServerEntity>* serverEntityMan = dnServer->GetEntityManager();
+			ServerEntityManagerHelper<ServerEntity>* serverEntityMan = dnServer->GetServerEntityManager();
 			list<ServerEntity*> serverEntityList = serverEntityMan->GetEntityByList(ServerType::LogicServer);
 			ServerEntity* serverEntity = nullptr;
 			if(!serverEntityList.empty())
@@ -67,7 +67,7 @@ export void Msg_ReqAuthToken(const SocketChannelPtr &channel, unsigned int msgId
 			if(serverEntity)
 			{
 				ServerEntityHelper* serverEntityHelper = static_cast<ServerEntityHelper*>(serverEntity);
-				serverEntityHelper->GetChild()->GetSock()->write(binData);
+				serverEntityHelper->GetSock()->write(binData);
 			}
 			else
 			{
