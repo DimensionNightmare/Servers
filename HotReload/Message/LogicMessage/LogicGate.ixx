@@ -3,7 +3,7 @@ module;
 #include "hv/Channel.h"
 
 #include "StdAfx.h"
-#include "S_Logic.pb.h"
+#include "Server/S_Logic.pb.h"
 export module LogicMessage:LogicGate;
 
 import DNTask;

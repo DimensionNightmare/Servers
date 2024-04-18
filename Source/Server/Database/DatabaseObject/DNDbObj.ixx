@@ -9,7 +9,7 @@ module;
 #include "pqxx/result"
 
 #include "StdAfx.h"
-#include "DbExtend.pb.h"
+#include "Common/DbExtend.pb.h"
 export module DNDbObj;
 
 import Utils.StrUtils;

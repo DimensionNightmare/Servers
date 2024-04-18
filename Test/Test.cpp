@@ -7,7 +7,7 @@
 #include <map>
 #include <unordered_map>
 #include <fstream>
-#include "GCfg.pb.h"
+#include "GCfg/GCfg.pb.h"
 // #include <Windows.h>
 #include <locale>
 #include <random>

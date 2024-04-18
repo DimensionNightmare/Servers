@@ -3,8 +3,8 @@ module;
 #include "hv/Channel.h"
 
 #include "StdAfx.h"
-#include "C_Auth.pb.h"
-#include "S_Logic.pb.h" 
+#include "Client/C_Auth.pb.h"
+#include "Server/S_Logic.pb.h" 
 export module GateMessage:GateClient;
 
 import GateServerHelper;

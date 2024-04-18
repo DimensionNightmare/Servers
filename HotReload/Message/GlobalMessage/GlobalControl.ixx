@@ -2,7 +2,7 @@ module;
 #include <coroutine>
 
 #include "StdAfx.h"
-#include "S_Common.pb.h"
+#include "Server/S_Common.pb.h"
 export module GlobalMessage:GlobalControl;
 
 import DNTask;

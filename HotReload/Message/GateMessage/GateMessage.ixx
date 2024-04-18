@@ -4,9 +4,9 @@ module;
 #include "hv/Channel.h"
 
 #include "StdAfx.h"
-#include "S_Common.pb.h"
-#include "S_Global.pb.h"
-#include "C_Auth.pb.h"
+#include "Server/S_Common.pb.h"
+#include "Server/S_Global.pb.h"
+#include "Client/C_Auth.pb.h"
 export module GateMessage;
 
 export import :GateCommon;

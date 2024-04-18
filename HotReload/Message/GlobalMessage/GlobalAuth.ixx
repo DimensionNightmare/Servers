@@ -4,8 +4,8 @@ module;
 #include <format>
 #include "hv/Channel.h"
 
-#include "S_Auth.pb.h"
-#include "S_Global.pb.h"
+#include "Server/S_Auth.pb.h"
+#include "Server/S_Global.pb.h"
 export module GlobalMessage:GlobalAuth;
 
 import DNTask;

@@ -4,7 +4,7 @@ module;
 #include "pqxx/transaction"
 
 #include "StdAfx.h"
-#include "GDef.pb.h"
+#include "GDef/GDef.pb.h"
 export module AuthServerHelper;
 
 import AuthServer;

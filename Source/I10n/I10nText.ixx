@@ -2,7 +2,7 @@ module;
 #include <fstream>
 #include <format>
 
-#include "l10n.pb.h"
+#include "l10n/l10n.pb.h"
 export module I10nText;
 
 import Config.Server;

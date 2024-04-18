@@ -4,7 +4,7 @@ module;
 #include "hv/Channel.h"
 
 #include "StdAfx.h"
-#include "S_Common.pb.h"
+#include "Server/S_Common.pb.h"
 export module DatabaseMessage;
 
 export import :DatabaseCommon;

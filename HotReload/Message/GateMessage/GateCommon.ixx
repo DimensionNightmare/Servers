@@ -3,8 +3,8 @@ module;
 #include "hv/Channel.h"
 
 #include "StdAfx.h"
-#include "S_Common.pb.h"
-#include "S_Global.pb.h"
+#include "Server/S_Common.pb.h"
+#include "Server/S_Global.pb.h"
 export module GateMessage:GateCommon;
 
 import DNTask;

@@ -6,8 +6,8 @@ module;
 
 #include "StdAfx.h"
 #include "DbAfx.h"
-#include "GDef.pb.h"
-#include "S_Auth.pb.h"
+#include "GDef/GDef.pb.h"
+#include "Server/S_Auth.pb.h"
 export module ApiManager:ApiLogin;
 
 import AuthServerHelper;

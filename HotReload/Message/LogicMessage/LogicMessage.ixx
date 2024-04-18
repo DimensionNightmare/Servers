@@ -4,8 +4,8 @@ module;
 #include "hv/Channel.h"
 
 #include "StdAfx.h"
-#include "S_Common.pb.h"
-#include "S_Logic.pb.h"
+#include "Server/S_Common.pb.h"
+#include "Server/S_Logic.pb.h"
 export module LogicMessage;
 
 export import :LogicCommon;
