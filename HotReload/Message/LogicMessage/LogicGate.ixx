@@ -42,7 +42,7 @@ export void Msg_ReqClientLogin(const SocketChannelPtr &channel, unsigned int msg
 	ServerEntityHelper* serverEntity = nullptr;
 	if(!serverEntityList.empty())
 	{
-		ServerEntityHelper* serverEntity = static_cast<ServerEntityHelper*>(serverEntityList.front());
+		serverEntity = static_cast<ServerEntityHelper*>(serverEntityList.front());
 	}
 
 	L2G_ResClientLogin response;
@@ -52,6 +52,8 @@ export void Msg_ReqClientLogin(const SocketChannelPtr &channel, unsigned int msg
 		S2C_RetClientLogin* cliMsg = response.mutable_ds_info();
 		cliMsg->set_ip(serverEntity->ServerIp());
 		cliMsg->set_port(serverEntity->ServerPort());
+		
+		DNPrint(0, LoggerLevel::Debug, "ds:%s", serverEntity->ServerIp().c_str());
 	}
 
 	// pack data

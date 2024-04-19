@@ -33,7 +33,7 @@ int HandleLogicServerInit(DNServer *server)
 		serverSock->onConnection = nullptr;
 		serverSock->onMessage = nullptr;
 
-		auto onConnection = [&serverProxy](const SocketChannelPtr &channel)
+		auto onConnection = [serverProxy](const SocketChannelPtr &channel)
 		{
 			string peeraddr = channel->peeraddr();
 			if (channel->isConnected())

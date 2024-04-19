@@ -74,25 +74,23 @@ void DatabaseServerHelper::ReClientEvent(const string& ip, unsigned short port)
 		reconn_setting_t *reconn_setting = pCSock->reconn_setting;
 		unpack_setting_t *unpack_setting = pCSock->unpack_setting;
 
-		pCSock->pLoop->stop();
-
 		auto onConnection = pCSock->onConnection;
 		auto onMessage = pCSock->onMessage;
 		pCSock->reconn_setting = nullptr;
 		pCSock->unpack_setting = nullptr;
+		shared_ptr<EventLoopThread> loopPtr = pCSock->pLoop;
 
 		pCSock->stop();
-		delete pCSock;
-		pCSock = new DNClientProxy;
-		pCSock->pLoop = make_shared<EventLoopThread>();
+		pCSock->~DNClientProxy();
+		pCSock->DNClientProxy::DNClientProxy();
 
 		pCSock->reconn_setting = reconn_setting;
 		pCSock->unpack_setting = unpack_setting;
 		pCSock->onConnection = onConnection;
 		pCSock->onMessage = onMessage;
+		pCSock->pLoop = loopPtr;
 
 		pCSock->createsocket(port, ip.c_str());
-		pCSock->pLoop->start();
 		pCSock->start();
 	};
 

@@ -89,6 +89,7 @@ export DNTaskVoid Msg_ReqAuthToken(const SocketChannelPtr &channel, unsigned int
 				if(responseChild.has_ds_info())
 				{
 					response.mutable_ds_info()->MergeFrom(responseChild.ds_info());
+					DNPrint(0, LoggerLevel::Debug, "has ds:%s", response.mutable_ds_info()->ip().c_str());
 				}
 			}
 			else
