@@ -1,4 +1,5 @@
 module;
+#include <compare>
 #include <assert.h>
 export module ControlServerHelper;
 

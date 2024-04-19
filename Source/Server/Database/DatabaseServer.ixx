@@ -109,6 +109,16 @@ bool DatabaseServer::Init()
 
 void DatabaseServer::InitCmd(map<string, function<void(stringstream *)>> &cmdMap)
 {
+	cmdMap.emplace("redirectClient", [this](stringstream* ss)
+	{
+		string ip;
+		unsigned short port;
+		*ss >> ip;
+		*ss >> port;
+
+		pCSock->createsocket(port, ip.c_str());
+		pCSock->start();
+	});
 }
 
 bool DatabaseServer::Start()

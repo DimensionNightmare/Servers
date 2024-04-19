@@ -23,6 +23,38 @@ export enum class ServerType : unsigned char
 	Max,
 };
 
+export struct MainPostMsg
+{
+	enum PostMsgType
+	{
+		None,
+		Function,
+		Command,
+	};
+
+	PostMsgType type;
+
+	function<void()> pFunc;
+	stringstream sCommand;
+
+	MainPostMsg(){}
+
+	MainPostMsg(const MainPostMsg& msg)
+	{
+		type = msg.type;
+		switch(type)
+		{
+			case Command:
+			sCommand << msg.sCommand.str();
+			break;
+			case Function:
+            pFunc = msg.pFunc; // 拷贝函数对象
+        	break;
+		}
+	}
+
+};
+
 export class DNServer
 {
 public:
@@ -33,7 +65,7 @@ public:
 
 	virtual bool Init();
 
-	virtual void InitCmd(map<string, function<void(stringstream*)>> &cmdMap) = 0;
+	virtual void InitCmd(map<string, function<void(stringstream*)>> &cmdMap){ pCmdMap = &cmdMap; }
 
 	virtual bool Start() = 0;
 
@@ -53,7 +85,7 @@ public:
 
 	void TickMainFrame();
 
-	void AddMsgTask(function<void()> func);
+	void AddMsgTask(const MainPostMsg& postMsg);
 
 public: // dll override
 	DNl10n* pDNl10nInstance;
@@ -63,10 +95,14 @@ protected:
     ServerType emServerType;
 
 	bool bInRun;
+
 	unsigned int iServerIndex;
 
-	list<function<void()>> mMessageTasks;
+	list<MainPostMsg> mMessageTasks;
+
     mutex oTaskMutex;
+
+	map<string, function<void(stringstream*)>>* pCmdMap;
 };
 
 DNServer::DNServer()
@@ -74,8 +110,8 @@ DNServer::DNServer()
 	emServerType = ServerType::None;
 	bInRun = false;
 	iServerIndex = 0;
-
 	mMessageTasks.clear();
+	pCmdMap = nullptr;
 }
 
 bool DNServer::Init()
@@ -96,9 +132,24 @@ void DNServer::TickMainFrame()
 		unique_lock<mutex> lock(oTaskMutex);
 		if(mMessageTasks.size())
 		{
-			for(function<void()>& func : mMessageTasks)
+			for(MainPostMsg& postMsg : mMessageTasks)
 			{
-				func();
+				switch(postMsg.type)
+				{
+					case MainPostMsg::Function:
+						postMsg.pFunc();
+					break;
+					case MainPostMsg::Command:
+					{
+						string token;
+						postMsg.sCommand >> token;
+						if(pCmdMap && pCmdMap->contains(token))
+						{
+							(*pCmdMap)[token](&postMsg.sCommand);
+						}
+					}
+					break;
+				}
 			}
 
 			mMessageTasks.clear();
@@ -107,8 +158,8 @@ void DNServer::TickMainFrame()
 	
 }
 
-void DNServer::AddMsgTask(function<void()> func)
+void DNServer::AddMsgTask(const MainPostMsg& postMsg)
 {
 	std::unique_lock<std::mutex> lock(oTaskMutex);
-	mMessageTasks.push_back(func);
+	mMessageTasks.push_back(postMsg);
 }

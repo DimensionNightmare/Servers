@@ -60,30 +60,38 @@ bool LogicServerHelper::InitDatabase()
 void LogicServerHelper::ReClientEvent(const string& ip, unsigned short port)
 {
 
-	auto ReClient = [=, this]()
-	{
-		reconn_setting_t *reconn_setting = pCSock->reconn_setting;
-		unpack_setting_t *unpack_setting = pCSock->unpack_setting;
+	// auto ReClient = [=, this]()
+	// {
+	// 	reconn_setting_t *reconn_setting = pCSock->reconn_setting;
+	// 	unpack_setting_t *unpack_setting = pCSock->unpack_setting;
 
-		auto onConnection = pCSock->onConnection;
-		auto onMessage = pCSock->onMessage;
-		pCSock->reconn_setting = nullptr;
-		pCSock->unpack_setting = nullptr;
-		shared_ptr<EventLoopThread> loopPtr = pCSock->pLoop;
+	// 	auto onConnection = pCSock->onConnection;
+	// 	auto onMessage = pCSock->onMessage;
+	// 	pCSock->reconn_setting = nullptr;
+	// 	pCSock->unpack_setting = nullptr;
+	// 	shared_ptr<EventLoopThread> loopPtr = pCSock->pLoop;
 
-		pCSock->stop();
-		pCSock->~DNClientProxy();
-		pCSock->DNClientProxy::DNClientProxy();
+	// 	pCSock->stop();
+	// 	pCSock->~DNClientProxy();
+	// 	pCSock->DNClientProxy::DNClientProxy();
 
-		pCSock->reconn_setting = reconn_setting;
-		pCSock->unpack_setting = unpack_setting;
-		pCSock->onConnection = onConnection;
-		pCSock->onMessage = onMessage;
-		pCSock->pLoop = loopPtr;
+	// 	pCSock->reconn_setting = reconn_setting;
+	// 	pCSock->unpack_setting = unpack_setting;
+	// 	pCSock->onConnection = onConnection;
+	// 	pCSock->onMessage = onMessage;
+	// 	pCSock->pLoop = loopPtr;
 
-		pCSock->createsocket(port, ip.c_str());
-		pCSock->start();
-	};
+	// 	pCSock->createsocket(port, ip.c_str());
+	// 	pCSock->start();
+	// };
 
-	AddMsgTask(ReClient);
+	// AddMsgTask(ReClient);
+
+	MainPostMsg msg;
+
+	msg.type = MainPostMsg::Command;
+	msg.sCommand << "redirectClient" << endl;
+	msg.sCommand << ip << endl << port;
+
+	AddMsgTask(msg);
 }

@@ -177,6 +177,23 @@ bool LogicServer::Init()
 
 void LogicServer::InitCmd(map<string, function<void(stringstream *)>> &cmdMap)
 {
+	DNServer::InitCmd(cmdMap);
+
+	/*** this cmd is import!
+		if dll change client will use dll's codespace. 
+		cant use main thread to exec lambda, it's unuseful.
+		hv epoll has static Obj epoll__handle_tree, It have a bad effect.(connected‘s timing func dont exec)
+	***/
+	cmdMap.emplace("redirectClient", [this](stringstream* ss)
+	{
+		string ip;
+		unsigned short port;
+		*ss >> ip;
+		*ss >> port;
+
+		pCSock->createsocket(port, ip.c_str());
+		pCSock->start();
+	});
 }
 
 bool LogicServer::Start()
