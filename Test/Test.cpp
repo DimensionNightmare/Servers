@@ -162,5 +162,11 @@ int main()
 		printf("0");
 	}
 
+	function<void(int)> pOnClose;
+
+	if(pOnClose)
+	{
+		printf("has func");
+	}
 }
 #endif

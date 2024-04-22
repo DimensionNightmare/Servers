@@ -17,10 +17,8 @@ public:
 	virtual ~NetEntity();
 
 public: // dll override
-	auto& CloseEvent(){return pOnClose;}
 
 protected: // dll proxy
-	function<void(Entity*)> pOnClose;
 	SocketChannelPtr pSock;
 	uint64_t iCloseTimerId;
 };
@@ -31,7 +29,6 @@ NetEntity::NetEntity()
 
 	pSock = nullptr;
 	iCloseTimerId = 0;
-	pOnClose = nullptr;
 }
 
 NetEntity::~NetEntity()

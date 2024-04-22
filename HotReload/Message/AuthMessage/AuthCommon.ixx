@@ -12,7 +12,7 @@ import DNWebProxyHelper;
 
 using namespace std;
 using namespace google::protobuf;
-using namespace GMsg::S_Common;
+using namespace GMsg;
 
 // client request
 export DNTaskVoid Evt_ReqRegistSrv()

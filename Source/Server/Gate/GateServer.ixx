@@ -51,8 +51,6 @@ protected: // dll proxy
 	ProxyEntityManager<ProxyEntity>* pProxyEntityMan;
 };
 
-
-
 GateServer::GateServer()
 {
 	emServerType = ServerType::GateServer;

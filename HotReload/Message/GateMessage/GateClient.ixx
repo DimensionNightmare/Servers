@@ -4,7 +4,7 @@ module;
 
 #include "StdAfx.h"
 #include "Client/C_Auth.pb.h"
-#include "Server/S_Logic.pb.h" 
+#include "Server/S_Gate_Logic.pb.h" 
 export module GateMessage:GateClient;
 
 import GateServerHelper;
@@ -17,8 +17,7 @@ import DNServerProxyHelper;
 using namespace std;
 using namespace hv;
 using namespace google::protobuf;
-using namespace GMsg::C_Auth;
-using namespace GMsg::S_Logic;
+using namespace GMsg;
 
 // client request
 export DNTaskVoid Msg_ReqAuthToken(const SocketChannelPtr &channel, uint32_t msgId, Message *msg)
@@ -35,8 +34,8 @@ export DNTaskVoid Msg_ReqAuthToken(const SocketChannelPtr &channel, uint32_t msg
 	{
 		string md5 = Md5Hash(entity->Token());
 		bool isMatch = md5 == requset->token();
-		response.set_success(isMatch);
-
+		
+		// if not match, timer will destory entity
 		if(isMatch)
 		{
 			channel->setContext(entity);
@@ -46,36 +45,43 @@ export DNTaskVoid Msg_ReqAuthToken(const SocketChannelPtr &channel, uint32_t msg
 			{
 				entity->TimerId() = 0;
 				entityMan->Timer()->killTimer(timerId);
-
-				entity->CloseEvent() = std::bind(&GateServerHelper::ProxyEntityCloseEvent, dnServer, std::placeholders::_1);
 			}
-
-
+			
 			ServerEntityManagerHelper<ServerEntity>* serverEntityMan = dnServer->GetServerEntityManager();
-			list<ServerEntity*> serverEntityList = serverEntityMan->GetEntityByList(ServerType::LogicServer);
-			ServerEntity* serverEntity = nullptr;
-			if(!serverEntityList.empty())
-			{
-				serverEntity = serverEntityList.front();
-			}
+			ServerEntityHelper* serverEntity = nullptr;
 
+			// <cache> server to load login data
+			if(uint32_t serverIndex = entity->ServerIndex())
+			{
+				serverEntity = static_cast<ServerEntityHelper*>(serverEntityMan->GetEntity(serverIndex));
+			}
+			else
+			{
+				list<ServerEntity*> serverEntityList = serverEntityMan->GetEntityByList(ServerType::LogicServer);
+				if(!serverEntityList.empty())
+				{
+					serverEntity = static_cast<ServerEntityHelper*>(serverEntityList.front());
+				}
+			}
+			
+			//req dedicatedServer Info to Login ds.
 			if(serverEntity)
 			{
-				G2L_ReqClientLogin requestChild;
-				requestChild.set_account_id(entity->ID());
-				binData.resize(requestChild.ByteSize());
-				requestChild.SerializeToArray(binData.data(), binData.size());
+
+				entity->ServerIndex() = serverEntity->ID();
+				
+				requset->clear_token();
+				binData.resize(requset->ByteSize());
+				requset->SerializeToArray(binData.data(), binData.size());
 
 				DNServerProxyHelper* server = dnServer->GetSSock();
 				uint32_t msgIdChild = server->GetMsgId();
 
-				MessagePack(msgIdChild, MsgDeal::Req, requestChild.GetDescriptor()->full_name().c_str(), binData);
+				MessagePack(msgIdChild, MsgDeal::Req, G2L_ReqClientLogin::GetDescriptor()->full_name().c_str(), binData);
 
-				L2G_ResClientLogin responseChild;
-
-				auto dataChannel = [&responseChild]()->DNTask<Message>
+				auto dataChannel = [&response]()->DNTask<Message>
 				{
-					co_return responseChild;
+					co_return response;
 				}();
 
 				server->AddMsg(msgIdChild, &dataChannel);
@@ -86,14 +92,15 @@ export DNTaskVoid Msg_ReqAuthToken(const SocketChannelPtr &channel, uint32_t msg
 
 				co_await dataChannel;
 
-				if(responseChild.has_ds_info())
+				if(!response.state_code())
 				{
-					response.mutable_ds_info()->MergeFrom(responseChild.ds_info());
-					DNPrint(0, LoggerLevel::Debug, "has ds:%s", response.mutable_ds_info()->ip().c_str());
+					DNPrint(0, LoggerLevel::Debug, "has ds:%s", response.ip().c_str());
 				}
+
 			}
 			else
 			{
+				response.set_state_code(3);
 				DNPrint(0, LoggerLevel::Debug, "Msg_ReqAuthToken not LogicServer !!");
 			}
 			
@@ -101,11 +108,13 @@ export DNTaskVoid Msg_ReqAuthToken(const SocketChannelPtr &channel, uint32_t msg
 		}
 		else
 		{
+			response.set_state_code(1);
 			DNPrint(0, LoggerLevel::Debug, "not match!!\n");
 		}
 	}
 	else
 	{
+		response.set_state_code(2);
 		DNPrint(0, LoggerLevel::Debug, "noaccount !!\n");
 	}
 

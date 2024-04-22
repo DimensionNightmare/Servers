@@ -1,7 +1,7 @@
 module;
 #include <assert.h>
 
-#include "Server/S_Global.pb.h"
+#include "Server/S_Global_Gate.pb.h"
 export module GateServerHelper;
 
 import GateServer;
@@ -12,7 +12,7 @@ import ProxyEntityManagerHelper;
 import MessagePack;
 
 using namespace std;
-using namespace GMsg::S_Global;
+using namespace GMsg;
 
 export class GateServerHelper : public GateServer
 {
@@ -49,7 +49,7 @@ void GateServerHelper::ServerEntityCloseEvent(Entity* entity)
 
 	// up to Global
 	string binData;
-	G2G_RetRegistSrv retMsg;
+	g2G_RetRegistSrv retMsg;
 	retMsg.set_server_index(castObj->ID());
 	retMsg.set_is_regist(false);
 	binData.resize(retMsg.ByteSizeLong());

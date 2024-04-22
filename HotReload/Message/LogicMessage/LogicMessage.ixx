@@ -5,7 +5,7 @@ module;
 
 #include "StdAfx.h"
 #include "Server/S_Common.pb.h"
-#include "Server/S_Logic.pb.h"
+#include "Server/S_Gate_Logic.pb.h"
 export module LogicMessage;
 
 export import :LogicCommon;
@@ -14,8 +14,8 @@ export import :LogicGate;
 using namespace std;
 using namespace hv;
 using namespace google::protobuf;
-using namespace GMsg::S_Common;
-using namespace GMsg::S_Logic;
+using namespace GMsg;
+using namespace GMsg;
 
 export class LogicMessageHandle
 {
@@ -93,7 +93,9 @@ void LogicMessageHandle::RegMsgHandle()
 {
 	std::hash<string> hashStr;
 
-	auto res = COM_RetChangeCtlSrv::GetDescriptor();
+	#define MSG_MAPPING(map, msg, func) \
+	map.emplace( hashStr(msg::GetDescriptor()->full_name()), \
+	make_pair(msg::internal_default_instance(), func))
 
 	MSG_MAPPING(MHandleRetMap, COM_RetChangeCtlSrv, &Exe_RetChangeCtlSrv);
 	MSG_MAPPING(MHandleMap, COM_ReqRegistSrv, &Msg_ReqRegistSrv);

@@ -16,7 +16,7 @@ private:
 public:
     TEntity* AddEntity(const SocketChannelPtr& channel, int entityId);
 
-    void RemoveEntity(const SocketChannelPtr& channel);
+    virtual bool RemoveEntity(const SocketChannelPtr& channel);
 };
 
 template <class TEntity>
@@ -40,13 +40,14 @@ TEntity* EntityManagerHelper<TEntity>::AddEntity(const SocketChannelPtr& channel
 }
 
 template <class TEntity>
-void EntityManagerHelper<TEntity>::RemoveEntity(const SocketChannelPtr& channel)
+bool EntityManagerHelper<TEntity>::RemoveEntity(const SocketChannelPtr& channel)
 {
 	if(TEntity* entity = channel->getContext<TEntity>())
 	{
 		channel->setContext(nullptr);
 		this->mEntityMap.erase(entity->iId);
-		delete entity;
+		return true;
 	}
 	
+	return false;
 }

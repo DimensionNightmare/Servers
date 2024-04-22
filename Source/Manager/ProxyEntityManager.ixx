@@ -24,6 +24,8 @@ public:
 public: // dll override
 	void EntityCloseTimer(uint64_t timerID);
 
+	virtual bool RemoveEntity(uint32_t entityId);
+
 protected: // dll proxy
 
 	
@@ -45,13 +47,24 @@ void ProxyEntityManager<TEntity>::EntityCloseTimer(uint64_t timerID)
 	}
 
 	uint32_t entityId = this->mMapTimer[timerID];
+	if(RemoveEntity(entityId))
+	{
+		DNPrint(0, LoggerLevel::Debug, "destory proxy Timer entity\n");
+	}
+	
+}
 
+template <class TEntity>
+bool ProxyEntityManager<TEntity>::RemoveEntity(uint32_t entityId)
+{
 	if(this->mEntityMap.contains(entityId))
 	{
 		TEntity* entity = &this->mEntityMap[entityId];
 		unique_lock<shared_mutex> ulock(this->oMapMutex);
 
-		DNPrint(0, LoggerLevel::Debug, "destory proxy entity\n");
 		this->mEntityMap.erase(entityId);
+		return true;
 	}
+
+	return false;
 }

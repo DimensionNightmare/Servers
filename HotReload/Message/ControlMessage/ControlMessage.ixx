@@ -5,7 +5,7 @@ module;
 
 #include "StdAfx.h"
 #include "Server/S_Common.pb.h"
-#include "Server/S_Auth.pb.h"
+#include "Server/S_Auth_Control.pb.h"
 export module ControlMessage;
 
 export import :ControlGlobal;
@@ -15,8 +15,7 @@ import :ControlAuth;
 using namespace std;
 using namespace hv;
 using namespace google::protobuf;
-using namespace GMsg::S_Common;
-using namespace GMsg::S_Auth;
+using namespace GMsg;
 
 export class ControlMessageHandle
 {
@@ -94,7 +93,11 @@ void ControlMessageHandle::RegMsgHandle()
 {
 	std::hash<string> hashStr;
 
+	#define MSG_MAPPING(map, msg, func) \
+	map.emplace( hashStr(msg::GetDescriptor()->full_name()), \
+	make_pair(msg::internal_default_instance(), func))
+
 	MSG_MAPPING(MHandleMap, COM_ReqRegistSrv, &Msg_ReqRegistSrv);
-	MSG_MAPPING(MHandleMap, A2G_ReqAuthAccount, &Msg_ReqAuthAccount);
+	MSG_MAPPING(MHandleMap, A2C_ReqAuthAccount, &Msg_ReqAuthAccount);
 	MSG_MAPPING(MHandleRetMap, COM_RetHeartbeat, &Exe_RetHeartbeat);
 }

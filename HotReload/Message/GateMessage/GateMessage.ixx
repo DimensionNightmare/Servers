@@ -5,7 +5,7 @@ module;
 
 #include "StdAfx.h"
 #include "Server/S_Common.pb.h"
-#include "Server/S_Global.pb.h"
+#include "Server/S_Global_Gate.pb.h"
 #include "Client/C_Auth.pb.h"
 export module GateMessage;
 
@@ -16,9 +16,9 @@ import :GateClient;
 using namespace std;
 using namespace hv;
 using namespace google::protobuf;
-using namespace GMsg::S_Common;
-using namespace GMsg::S_Global;
-using namespace GMsg::C_Auth;
+using namespace GMsg;
+using namespace GMsg;
+using namespace GMsg;
 
 export class GateMessageHandle
 {
@@ -97,8 +97,12 @@ void GateMessageHandle::RegMsgHandle()
 {
 	std::hash<string> hashStr;
 
+	#define MSG_MAPPING(map, msg, func) \
+	map.emplace( hashStr(msg::GetDescriptor()->full_name()), \
+	make_pair(msg::internal_default_instance(), func))
+
 	MSG_MAPPING(MHandleMap, COM_ReqRegistSrv, &Msg_ReqRegistSrv);
-	MSG_MAPPING(MHandleMap, G2G_ReqLoginToken, &Exe_ReqUserToken);
+	MSG_MAPPING(MHandleMap, G2g_ReqLoginToken, &Exe_ReqUserToken);
 	MSG_MAPPING(MHandleRetMap, COM_RetHeartbeat, &Exe_RetHeartbeat);
 	MSG_MAPPING(MHandleMap, C2S_ReqAuthToken, &Msg_ReqAuthToken);
 }

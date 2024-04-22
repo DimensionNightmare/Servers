@@ -2,7 +2,7 @@ module;
 #include <coroutine>
 #include "hv/Channel.h"
 
-#include "Server/S_Global.pb.h"
+#include "Server/S_Global_Gate.pb.h"
 export module GlobalMessage:GlobalGate;
 
 import DNTask;
@@ -13,11 +13,11 @@ import ServerEntityHelper;
 using namespace std;
 using namespace hv;
 using namespace google::protobuf;
-using namespace GMsg::S_Global;
+using namespace GMsg;
 
 export void Exe_RetRegistSrv(const SocketChannelPtr &channel, uint32_t msgId, Message *msg)
 {
-	G2G_RetRegistSrv* requset = reinterpret_cast<G2G_RetRegistSrv*>(msg);
+	g2G_RetRegistSrv* requset = reinterpret_cast<g2G_RetRegistSrv*>(msg);
 
 	GlobalServerHelper* dnServer = GetGlobalServer();
 	ServerEntityManagerHelper<ServerEntity>*  entityMan = dnServer->GetServerEntityManager();

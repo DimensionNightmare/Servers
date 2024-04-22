@@ -7,7 +7,7 @@ module;
 #include "StdAfx.h"
 #include "DbAfx.h"
 #include "GDef/GDef.pb.h"
-#include "Server/S_Auth.pb.h"
+#include "Server/S_Auth_Control.pb.h"
 export module ApiManager:ApiLogin;
 
 import AuthServerHelper;
@@ -17,7 +17,7 @@ import MessagePack;
 using namespace std;
 using namespace hv;
 using namespace google::protobuf;
-using namespace GMsg::S_Auth;
+using namespace GMsg;
 
 export void ApiLogin(HttpService* service)
 {
@@ -109,11 +109,11 @@ export void ApiLogin(HttpService* service)
 		[accInfo, writer]()-> DNTaskVoid
 		{
 			const HttpResponseWriterPtr& writerProxy = writer;	//sharedptr ref count ++
-			A2G_ReqAuthAccount requset;
+			A2C_ReqAuthAccount requset;
 			requset.set_account_id(accInfo.account_id());
 			requset.set_ip(writerProxy->peeraddr());
 
-			G2A_ResAuthAccount response;
+			C2A_ResAuthAccount response;
 			
 			AuthServerHelper* authServer = GetAuthServer();
 			DNClientProxyHelper* client = authServer->GetCSock();

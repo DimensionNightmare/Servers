@@ -13,6 +13,6 @@ private:
 public:
 	uint32_t& ID(){ return iId;}
 
-	
+	uint32_t& ServerIndex(){ return iServerIndex;}
 };
 

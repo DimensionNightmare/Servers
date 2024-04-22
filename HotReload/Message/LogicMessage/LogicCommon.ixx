@@ -12,7 +12,7 @@ import LogicServerHelper;
 
 using namespace std;
 using namespace google::protobuf;
-using namespace GMsg::S_Common;
+using namespace GMsg;
 using namespace hv;
 
 // client request

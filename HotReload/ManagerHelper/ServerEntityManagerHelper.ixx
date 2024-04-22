@@ -20,7 +20,7 @@ private:
 public:
     ServerEntityHelper* AddEntity(uint32_t entityId, ServerType type);
 
-    void RemoveEntity(uint32_t entityId, bool isDel = true);
+    virtual bool RemoveEntity(uint32_t entityId);
 
 	void MountEntity(ServerType type, TEntity* entity);
 
@@ -54,29 +54,23 @@ ServerEntityHelper* ServerEntityManagerHelper<TEntity>::AddEntity(uint32_t entit
 }
 
 template <class TEntity>
-void ServerEntityManagerHelper<TEntity>::RemoveEntity(uint32_t entityId, bool isDel)
+bool ServerEntityManagerHelper<TEntity>::RemoveEntity(uint32_t entityId)
 {
-	
 	if(this->mEntityMap.contains(entityId))
 	{
 		TEntity* oriEntity = &this->mEntityMap[entityId];
 		ServerEntityHelper* entity = static_cast<ServerEntityHelper*>(oriEntity);
-		if(isDel)
-		{
-			unique_lock<shared_mutex> ulock(this->oMapMutex);
+		
+		unique_lock<shared_mutex> ulock(this->oMapMutex);
 
-			// this->mIdleServerId.push_back(entityId);
-			this->mEntityMapList[entity->ServerEntityType()].remove(oriEntity);
-			
-			DNPrint(0, LoggerLevel::Debug, "offline destory entity\n");
-			this->mEntityMap.erase(entityId);
-		}
-		else
-		{
-			entity->SetSock(nullptr);
-		}
+		this->mEntityMapList[entity->ServerEntityType()].remove(oriEntity);
+		
+		DNPrint(0, LoggerLevel::Debug, "offline destory entity\n");
+		this->mEntityMap.erase(entityId);
+		return true;
 	}
 	
+	return false;
 }
 
 template <class TEntity>

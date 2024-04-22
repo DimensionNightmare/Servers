@@ -2,7 +2,8 @@ module;
 #include <coroutine>
 #include "hv/Channel.h"
 
-#include "Server/S_Auth.pb.h"
+#include "Server/S_Auth_Control.pb.h"
+#include "Server/S_Control_Global.pb.h"
 export module ControlMessage:ControlAuth;
 
 import DNTask;
@@ -13,11 +14,11 @@ import ServerEntityHelper;
 using namespace std;
 using namespace hv;
 using namespace google::protobuf;
-using namespace GMsg::S_Auth;
+using namespace GMsg;
 
 export DNTaskVoid Msg_ReqAuthAccount(const SocketChannelPtr &channel, uint32_t msgId, Message *msg)
 {
-	G2A_ResAuthAccount response;
+	C2A_ResAuthAccount response;
 
 	ServerEntityHelper* entity = nullptr;
 	list<ServerEntity*>& servList = GetControlServer()->GetServerEntityManager()->GetEntityByList(ServerType::GlobalServer);
@@ -50,8 +51,6 @@ export DNTaskVoid Msg_ReqAuthAccount(const SocketChannelPtr &channel, uint32_t m
 	}
 	else
 	{
-		// response.set_state_code(0);
-
 		// message change to global
 		auto dataChannel = [&response]()->DNTask<Message>
 		{
@@ -63,7 +62,7 @@ export DNTaskVoid Msg_ReqAuthAccount(const SocketChannelPtr &channel, uint32_t m
 
 		binData.resize(msg->ByteSize());
 		msg->SerializeToArray(binData.data(), binData.size());
-		MessagePack(smsgId, MsgDeal::Req, msg->GetDescriptor()->full_name().c_str(), binData);
+		MessagePack(smsgId, MsgDeal::Req, C2G_ReqAuthAccount::GetDescriptor()->full_name().c_str(), binData);
 		
 		{
 			// wait data parse

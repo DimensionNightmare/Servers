@@ -3,7 +3,7 @@ module;
 #include "hv/Channel.h"
 
 #include "StdAfx.h"
-#include "Server/S_Logic.pb.h"
+#include "Server/S_Gate_Logic.pb.h"
 #include "Client/C_Auth.pb.h"
 export module LogicMessage:LogicGate;
 
@@ -14,11 +14,11 @@ import LogicServerHelper;
 using namespace std;
 using namespace google::protobuf;
 using namespace hv;
-using namespace GMsg::S_Logic;
-using namespace GMsg::C_Auth;
+using namespace GMsg;
+using namespace GMsg;
 
 // client request
-export void Msg_ReqClientLogin(const SocketChannelPtr &channel, uint32_t msgId, Message *msg)
+export DNTaskVoid Msg_ReqClientLogin(const SocketChannelPtr &channel, uint32_t msgId, Message *msg)
 {
 	G2L_ReqClientLogin* requset = reinterpret_cast<G2L_ReqClientLogin*>(msg);
 
@@ -38,25 +38,35 @@ export void Msg_ReqClientLogin(const SocketChannelPtr &channel, uint32_t msgId, 
 
 
 	auto serverEntityMan = GetLogicServer()->GetServerEntityManager();
-	list<ServerEntity*> serverEntityList = serverEntityMan->GetEntityByList(ServerType::DedicatedServer);
 	ServerEntityHelper* serverEntity = nullptr;
-	if(!serverEntityList.empty())
+	
+	// cache
+	if(uint32_t serverIdx = entity->ServerIndex())
 	{
-		serverEntity = static_cast<ServerEntityHelper*>(serverEntityList.front());
+		serverEntity = serverEntityMan->GetEntity(serverIdx);
+	}
+	else
+	{
+		list<ServerEntity*> serverEntityList = serverEntityMan->GetEntityByList(ServerType::DedicatedServer);
+		if(!serverEntityList.empty())
+		{
+			serverEntity = static_cast<ServerEntityHelper*>(serverEntityList.front());
+		}
 	}
 
 	L2G_ResClientLogin response;
 
+	// req token
 	if(serverEntity)
 	{
-		S2C_RetClientLogin* cliMsg = response.mutable_ds_info();
-		cliMsg->set_ip(serverEntity->ServerIp());
-		cliMsg->set_port(serverEntity->ServerPort());
-		
+		response.set_ip(serverEntity->ServerIp());
+		response.set_port(serverEntity->ServerPort());
+
 		DNPrint(0, LoggerLevel::Debug, "ds:%s", serverEntity->ServerIp().c_str());
 	}
 	else
 	{
+		response.set_state_code(1);
 		DNPrint(0, LoggerLevel::Debug, "not ds connect");
 	}
 
@@ -67,4 +77,6 @@ export void Msg_ReqClientLogin(const SocketChannelPtr &channel, uint32_t msgId, 
 	MessagePack(msgId, MsgDeal::Res, nullptr, binData);
 
 	channel->write(binData);
+
+	co_return;
 }

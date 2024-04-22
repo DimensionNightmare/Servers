@@ -12,7 +12,7 @@ import ServerEntityHelper;
 using namespace hv;
 using namespace std;
 using namespace google::protobuf;
-using namespace GMsg::S_Common;
+using namespace GMsg;
 
 // client request
 export void Msg_ReqRegistSrv(const SocketChannelPtr &channel, uint32_t msgId, Message *msg)

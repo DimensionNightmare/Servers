@@ -20,7 +20,7 @@ private:
 public:
     ProxyEntityHelper* AddEntity(uint32_t entityId);
 
-    void RemoveEntity(uint32_t entityId, bool isDel = true);
+    virtual bool RemoveEntity(uint32_t entityId);
 
     ProxyEntityHelper* GetEntity(uint32_t id);
 };
@@ -44,28 +44,21 @@ ProxyEntityHelper* ProxyEntityManagerHelper<TEntity>::AddEntity(uint32_t entityI
 }
 
 template <class TEntity>
-void ProxyEntityManagerHelper<TEntity>::RemoveEntity(uint32_t entityId, bool isDel)
+bool ProxyEntityManagerHelper<TEntity>::RemoveEntity(uint32_t entityId)
 {
-	
 	if(this->mEntityMap.contains(entityId))
 	{
 		TEntity* oriEntity = &this->mEntityMap[entityId];
 		ProxyEntityHelper* entity = static_cast<ProxyEntityHelper*>(oriEntity);
-		if(isDel)
-		{
-			unique_lock<shared_mutex> ulock(this->oMapMutex);
-
-			// this->mIdleServerId.push_back(entityId);
-			
-			DNPrint(0, LoggerLevel::Debug, "destory entity\n");
-			this->mEntityMap.erase(entityId);
-		}
-		else
-		{
-			entity->SetSock(nullptr);
-		}
+		
+		unique_lock<shared_mutex> ulock(this->oMapMutex);
+		
+		DNPrint(0, LoggerLevel::Debug, "destory Proxy entity\n");
+		this->mEntityMap.erase(entityId);
+		return true;
 	}
 	
+	return false;
 }
 
 template <class TEntity>

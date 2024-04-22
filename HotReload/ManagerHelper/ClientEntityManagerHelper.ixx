@@ -20,7 +20,7 @@ private:
 public:
     ClientEntityHelper* AddEntity(uint32_t entityId);
 
-    void RemoveEntity(uint32_t entityId, bool isDel = true);
+    virtual bool RemoveEntity(uint32_t entityId);
 
     ClientEntityHelper* GetEntity(uint32_t id);
 };
@@ -44,7 +44,7 @@ ClientEntityHelper* ClientEntityManagerHelper<TEntity>::AddEntity(uint32_t entit
 }
 
 template <class TEntity>
-void ClientEntityManagerHelper<TEntity>::RemoveEntity(uint32_t entityId, bool isDel)
+bool ClientEntityManagerHelper<TEntity>::RemoveEntity(uint32_t entityId)
 {
 	
 	if(this->mEntityMap.contains(entityId))
@@ -56,8 +56,11 @@ void ClientEntityManagerHelper<TEntity>::RemoveEntity(uint32_t entityId, bool is
 
 		DNPrint(0, LoggerLevel::Debug, "destory client entity\n");
 		this->mEntityMap.erase(entityId);
+
+		return true;
 	}
 	
+	return false;
 }
 
 template <class TEntity>

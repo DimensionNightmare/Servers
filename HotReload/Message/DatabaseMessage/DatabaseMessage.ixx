@@ -12,7 +12,7 @@ export import :DatabaseCommon;
 using namespace std;
 using namespace hv;
 using namespace google::protobuf;
-using namespace GMsg::S_Common;
+using namespace GMsg;
 
 export class DatabaseMessageHandle
 {
@@ -89,6 +89,10 @@ void DatabaseMessageHandle::MsgRetHandle(const SocketChannelPtr &channel, uint32
 void DatabaseMessageHandle::RegMsgHandle()
 {
 	std::hash<string> hashStr;
+
+	#define MSG_MAPPING(map, msg, func) \
+	map.emplace( hashStr(msg::GetDescriptor()->full_name()), \
+	make_pair(msg::internal_default_instance(), func))
 
 	MSG_MAPPING(MHandleRetMap, COM_RetChangeCtlSrv, &Exe_RetChangeCtlSrv);
 }

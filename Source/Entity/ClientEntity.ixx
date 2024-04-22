@@ -12,11 +12,13 @@ public:
 public: // dll override
 
 protected: // dll proxy
+	uint32_t iServerIndex;
 };
 
 ClientEntity::ClientEntity()
 {
 	eEntityType = EntityType::Client;
+	iServerIndex = 0;
 }
 
 ClientEntity::~ClientEntity()

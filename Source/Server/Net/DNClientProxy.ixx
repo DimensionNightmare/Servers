@@ -15,7 +15,7 @@ import MessagePack;
 using namespace std;
 using namespace google::protobuf;
 using namespace hv;
-using namespace GMsg::S_Common;
+using namespace GMsg;
 
 export enum class RegistState
 {

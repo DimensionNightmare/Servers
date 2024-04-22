@@ -15,7 +15,7 @@ private:
 public:
 	string& Token(){ return sToken; }
 
-	uint32_t & ExpireTime(){ return iExpireTime; }
+	uint32_t& ExpireTime(){ return iExpireTime; }
 
 	uint32_t& ID(){ return iId;}
 
@@ -24,5 +24,7 @@ public:
 	const SocketChannelPtr& GetSock(){return pSock;}
 
 	uint64_t& TimerId(){return iCloseTimerId;}
+
+	uint32_t& ServerIndex(){ return iServerIndex; }
 };
 

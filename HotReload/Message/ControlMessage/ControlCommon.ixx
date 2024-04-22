@@ -11,7 +11,7 @@ import ServerEntityHelper;
 import ServerEntityManagerHelper;
 
 using namespace google::protobuf;
-using namespace GMsg::S_Common;
+using namespace GMsg;
 using namespace hv;
 using namespace std;
 

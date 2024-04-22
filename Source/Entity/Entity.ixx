@@ -23,10 +23,9 @@ public:
 	virtual ~Entity();
 public: // dll override
 
-public:
-
-
 protected: // dll proxy
+
+public:
 	EntityType eEntityType;
     uint32_t iId;
 };

@@ -5,7 +5,7 @@ module;
 #include "hv/Channel.h"
 
 #include "StdAfx.h"
-#include "Server/S_Global.pb.h"
+#include "Server/S_Global_Gate.pb.h"
 #include "Client/C_Auth.pb.h"
 export module GateMessage:GateGlobal;
 
@@ -16,13 +16,13 @@ import Utils.StrUtils;
 using namespace std;
 using namespace hv;
 using namespace google::protobuf;
-using namespace GMsg::S_Global;
-using namespace GMsg::C_Auth;
+using namespace GMsg;
+using namespace GMsg;
 
 export void Exe_ReqUserToken(const SocketChannelPtr &channel, uint32_t msgId, Message *msg)
 {
-	G2G_ReqLoginToken* requset = reinterpret_cast<G2G_ReqLoginToken*>(msg);
-	G2G_ResLoginToken response;
+	G2g_ReqLoginToken* requset = reinterpret_cast<G2g_ReqLoginToken*>(msg);
+	g2G_ResLoginToken response;
 
 	string binData;
 
@@ -42,10 +42,21 @@ export void Exe_ReqUserToken(const SocketChannelPtr &channel, uint32_t msgId, Me
 			retMsg.SerializeToArray(binData.data(), (int)binData.size());
 			MessagePack(0, MsgDeal::Ret, retMsg.GetDescriptor()->full_name().c_str(), binData);
 
-			online->setContext(nullptr);
+			//kick socket
 			online->write(binData);
+			online->setContext(nullptr);
 			online->close();
+
 			binData.clear();
+
+			//kick game
+			if(uint32_t serverIndex = entity->ServerIndex())
+			{
+				ServerEntityManagerHelper<ServerEntity>* serverEntityMan = dnServer->GetServerEntityManager();
+				ServerEntity* serverEntity = serverEntityMan->GetEntity(serverIndex);
+
+			}
+			
 		}
 
 	}
@@ -73,31 +84,10 @@ export void Exe_ReqUserToken(const SocketChannelPtr &channel, uint32_t msgId, Me
 
 		entityMan->AddTimerRecord(entity->TimerId(), entity->ID());
 	}
-
-
-	// server index 
-	ServerEntityManagerHelper<ServerEntity>* serverEntityMan = dnServer->GetServerEntityManager();
-	list<ServerEntity*> serverEntityList = serverEntityMan->GetEntityByList(ServerType::LogicServer);
-	ServerEntity* serverEntity = nullptr;
-	if(!serverEntityList.empty())
-	{
-		serverEntity = serverEntityList.front();
-	}
-
-	if(serverEntity)
-	{
-		ServerEntityHelper* serverEntityHelper = static_cast<ServerEntityHelper*>(serverEntity);
-		response.set_server_index(serverEntityHelper->ID());
-
-		binData.resize(response.ByteSizeLong());
-		response.SerializeToArray(binData.data(), (int)binData.size());
-		MessagePack(msgId, MsgDeal::Res, response.GetDescriptor()->full_name().c_str(), binData);
-
-		channel->write(binData);
-	}
-	else
-	{
-		DNPrint(0, LoggerLevel::Debug, "Exe_ReqUserToken not LogicServer !!");
-	}
 	
+	binData.resize(response.ByteSizeLong());
+	response.SerializeToArray(binData.data(), (int)binData.size());
+	MessagePack(msgId, MsgDeal::Res, response.GetDescriptor()->full_name().c_str(), binData);
+
+	channel->write(binData);
 }

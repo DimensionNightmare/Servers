@@ -14,7 +14,7 @@ import MessagePack;
 
 using namespace std;
 using namespace hv;
-using namespace GMsg::S_Common;
+using namespace GMsg;
 
 #define CastObj(entity) static_cast<ServerEntityHelper*>(entity)
 

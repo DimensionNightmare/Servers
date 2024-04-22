@@ -4,7 +4,7 @@ module;
 
 #include "StdAfx.h"
 #include "Server/S_Common.pb.h"
-#include "Server/S_Global.pb.h"
+#include "Server/S_Global_Gate.pb.h"
 export module GateMessage:GateCommon;
 
 import DNTask;
@@ -16,8 +16,8 @@ import DNServerProxyHelper;
 using namespace std;
 using namespace hv;
 using namespace google::protobuf;
-using namespace GMsg::S_Common;
-using namespace GMsg::S_Global;
+using namespace GMsg;
+using namespace GMsg;
 
 // self request
 export DNTaskVoid Evt_ReqRegistSrv()
@@ -149,8 +149,6 @@ export void Msg_ReqRegistSrv(const SocketChannelPtr &channel, uint32_t msgId, Me
 
 		response.set_success(true);
 		response.set_server_index(entity->ID());
-
-		entity->CloseEvent() = std::bind(&GateServerHelper::ServerEntityCloseEvent, dnServer, placeholders::_1);
 	}
 	
 	string binData;
@@ -165,7 +163,7 @@ export void Msg_ReqRegistSrv(const SocketChannelPtr &channel, uint32_t msgId, Me
 		binData.clear();
 
 		// up to Global
-		G2G_RetRegistSrv retMsg;
+		g2G_RetRegistSrv retMsg;
 		retMsg.set_is_regist(true);
 		retMsg.set_server_index(requset->server_index());
 		binData.resize(retMsg.ByteSizeLong());

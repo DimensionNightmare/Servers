@@ -33,7 +33,7 @@ int HandleGateServerInit(DNServer *server)
 		serverSock->onConnection = nullptr;
 		serverSock->onMessage = nullptr;
 
-		auto onConnection = [serverSock](const SocketChannelPtr &channel)
+		auto onConnection = [serverSock,serverProxy](const SocketChannelPtr &channel)
 		{
 			string peeraddr = channel->peeraddr();
 			if (channel->isConnected())
@@ -45,13 +45,19 @@ int HandleGateServerInit(DNServer *server)
 			else
 			{
 				DNPrint(TipCode_CliConnOff, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
-				if(NetEntity* entity = channel->getContext<NetEntity>())
+				if(Entity* entity = channel->getContext<Entity>())
 				{
-					// NetEntity* NetEntity = static_cast<NetEntity*>(entity);
-					if(entity->CloseEvent())
+					switch (entity->eEntityType)
 					{
-						entity->CloseEvent()(entity);
+					case EntityType::Server:
+						serverProxy->ServerEntityCloseEvent(entity);
+						break;
+					case EntityType::Proxy:
+						serverProxy->ProxyEntityCloseEvent(entity);
+						break;
+					
 					}
+					
 				}
 			}
 		};
