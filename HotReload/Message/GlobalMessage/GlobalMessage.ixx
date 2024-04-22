@@ -95,17 +95,9 @@ void GlobalMessageHandle::MsgRetHandle(const SocketChannelPtr &channel, uint32_t
 void GlobalMessageHandle::RegMsgHandle()
 {
 	std::hash<string> hashStr;
-	const Message* msg = nullptr;
-
-	msg = COM_ReqRegistSrv::internal_default_instance();
-	MHandleMap.emplace( hashStr(msg->GetDescriptor()->full_name()), make_pair(msg, &Msg_ReqRegistSrv));
-
-	msg = A2G_ReqAuthAccount::internal_default_instance();
-	MHandleMap.emplace( hashStr(msg->GetDescriptor()->full_name()), make_pair(msg, &Msg_ReqAuthAccount));
-
-	msg = G2G_RetRegistSrv::internal_default_instance();
-	MHandleRetMap.emplace( hashStr(msg->GetDescriptor()->full_name()), make_pair(msg, &Exe_RetRegistSrv));
-
-	msg = COM_RetHeartbeat::internal_default_instance();
-	MHandleRetMap.emplace( hashStr(msg->GetDescriptor()->full_name()), make_pair(msg, &Exe_RetHeartbeat));
+	
+	MSG_MAPPING(MHandleMap, COM_ReqRegistSrv, &Msg_ReqRegistSrv);
+	MSG_MAPPING(MHandleMap, A2G_ReqAuthAccount, &Msg_ReqAuthAccount);
+	MSG_MAPPING(MHandleRetMap, G2G_RetRegistSrv, &Exe_RetRegistSrv);
+	MSG_MAPPING(MHandleRetMap, COM_RetHeartbeat, &Exe_RetHeartbeat);
 }

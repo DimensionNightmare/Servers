@@ -96,18 +96,9 @@ void GateMessageHandle::MsgRetHandle(const SocketChannelPtr &channel, uint32_t m
 void GateMessageHandle::RegMsgHandle()
 {
 	std::hash<string> hashStr;
-	const Message* msg = nullptr;
 
-	msg = COM_ReqRegistSrv::internal_default_instance();
-	MHandleMap.emplace( hashStr(msg->GetDescriptor()->full_name()), make_pair(msg, &Msg_ReqRegistSrv));
-
-	msg = G2G_ReqLoginToken::internal_default_instance();
-	MHandleMap.emplace( hashStr(msg->GetDescriptor()->full_name()), make_pair(msg, &Exe_ReqUserToken));
-
-	msg = COM_RetHeartbeat::internal_default_instance();
-	MHandleRetMap.emplace( hashStr(msg->GetDescriptor()->full_name()), make_pair(msg, &Exe_RetHeartbeat));
-
-	msg = C2S_ReqAuthToken::internal_default_instance();
-	MHandleMap.emplace( hashStr(msg->GetDescriptor()->full_name()), make_pair(msg, &Msg_ReqAuthToken));
-
+	MSG_MAPPING(MHandleMap, COM_ReqRegistSrv, &Msg_ReqRegistSrv);
+	MSG_MAPPING(MHandleMap, G2G_ReqLoginToken, &Exe_ReqUserToken);
+	MSG_MAPPING(MHandleRetMap, COM_RetHeartbeat, &Exe_RetHeartbeat);
+	MSG_MAPPING(MHandleMap, C2S_ReqAuthToken, &Msg_ReqAuthToken);
 }

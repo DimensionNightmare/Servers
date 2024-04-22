@@ -89,8 +89,6 @@ void DatabaseMessageHandle::MsgRetHandle(const SocketChannelPtr &channel, uint32
 void DatabaseMessageHandle::RegMsgHandle()
 {
 	std::hash<string> hashStr;
-	const Message* msg = nullptr;
 
-	msg = COM_RetChangeCtlSrv::internal_default_instance();
-	MHandleRetMap.emplace( hashStr(msg->GetDescriptor()->full_name()), make_pair(msg, &Exe_RetChangeCtlSrv));
+	MSG_MAPPING(MHandleRetMap, COM_RetChangeCtlSrv, &Exe_RetChangeCtlSrv);
 }

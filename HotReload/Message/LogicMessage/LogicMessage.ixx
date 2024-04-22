@@ -92,17 +92,11 @@ void LogicMessageHandle::MsgRetHandle(const SocketChannelPtr &channel, uint32_t 
 void LogicMessageHandle::RegMsgHandle()
 {
 	std::hash<string> hashStr;
-	const Message* msg = nullptr;
 
-	msg = COM_RetChangeCtlSrv::internal_default_instance();
-	MHandleRetMap.emplace( hashStr(msg->GetDescriptor()->full_name()), make_pair(msg, &Exe_RetChangeCtlSrv));
+	auto res = COM_RetChangeCtlSrv::GetDescriptor();
 
-	msg = COM_ReqRegistSrv::internal_default_instance();
-	MHandleMap.emplace( hashStr(msg->GetDescriptor()->full_name()), make_pair(msg, &Msg_ReqRegistSrv));
-
-	msg = COM_RetHeartbeat::internal_default_instance();
-	MHandleRetMap.emplace( hashStr(msg->GetDescriptor()->full_name()), make_pair(msg, &Exe_RetHeartbeat));
-
-	msg = G2L_ReqClientLogin::internal_default_instance();
-	MHandleMap.emplace( hashStr(msg->GetDescriptor()->full_name()), make_pair(msg, &Msg_ReqClientLogin));
+	MSG_MAPPING(MHandleRetMap, COM_RetChangeCtlSrv, &Exe_RetChangeCtlSrv);
+	MSG_MAPPING(MHandleMap, COM_ReqRegistSrv, &Msg_ReqRegistSrv);
+	MSG_MAPPING(MHandleRetMap, COM_RetHeartbeat, &Exe_RetHeartbeat);
+	MSG_MAPPING(MHandleMap, G2L_ReqClientLogin, &Msg_ReqClientLogin);
 }
