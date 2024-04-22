@@ -18,15 +18,15 @@ class ClientEntityManagerHelper : public ClientEntityManager<TEntity>
 private:
 	ClientEntityManagerHelper(){}
 public:
-    ClientEntityHelper* AddEntity(unsigned int entityId);
+    ClientEntityHelper* AddEntity(uint32_t entityId);
 
-    void RemoveEntity(unsigned int entityId, bool isDel = true);
+    void RemoveEntity(uint32_t entityId, bool isDel = true);
 
-    ClientEntityHelper* GetEntity(unsigned int id);
+    ClientEntityHelper* GetEntity(uint32_t id);
 };
 
 template <class TEntity>
-ClientEntityHelper* ClientEntityManagerHelper<TEntity>::AddEntity(unsigned int entityId)
+ClientEntityHelper* ClientEntityManagerHelper<TEntity>::AddEntity(uint32_t entityId)
 {
 	ClientEntityHelper* entity = nullptr;
 
@@ -44,7 +44,7 @@ ClientEntityHelper* ClientEntityManagerHelper<TEntity>::AddEntity(unsigned int e
 }
 
 template <class TEntity>
-void ClientEntityManagerHelper<TEntity>::RemoveEntity(unsigned int entityId, bool isDel)
+void ClientEntityManagerHelper<TEntity>::RemoveEntity(uint32_t entityId, bool isDel)
 {
 	
 	if(this->mEntityMap.contains(entityId))
@@ -54,14 +54,14 @@ void ClientEntityManagerHelper<TEntity>::RemoveEntity(unsigned int entityId, boo
 		
 		unique_lock<shared_mutex> ulock(this->oMapMutex);
 
-		DNPrint(-1, LoggerLevel::Debug, "destory client entity\n");
+		DNPrint(0, LoggerLevel::Debug, "destory client entity\n");
 		this->mEntityMap.erase(entityId);
 	}
 	
 }
 
 template <class TEntity>
-ClientEntityHelper* ClientEntityManagerHelper<TEntity>::GetEntity(unsigned int entityId)
+ClientEntityHelper* ClientEntityManagerHelper<TEntity>::GetEntity(uint32_t entityId)
 {
 	shared_lock<shared_mutex> lock(this->oMapMutex);
 	ClientEntityHelper* entity = nullptr;

@@ -33,9 +33,9 @@ public:
 	bool InitDatabase();
 
 	string& GetCtlIp(){ return sCtlIp;}
-	unsigned short& GetCtlPort(){ return iCtlPort;}
+	uint16_t& GetCtlPort(){ return iCtlPort;}
 
-	void ReClientEvent(const string& ip, unsigned short port);
+	void ReClientEvent(const string& ip, uint16_t port);
 };
 
 static LogicServerHelper* PLogicServerHelper = nullptr;
@@ -57,7 +57,7 @@ bool LogicServerHelper::InitDatabase()
 	return true;
 }
 
-void LogicServerHelper::ReClientEvent(const string& ip, unsigned short port)
+void LogicServerHelper::ReClientEvent(const string& ip, uint16_t port)
 {
 
 	// auto ReClient = [=, this]()

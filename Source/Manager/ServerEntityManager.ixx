@@ -28,8 +28,8 @@ public: // dll override
 protected: // dll proxy
     map<ServerType, list<TEntity*> > mEntityMapList;
 	// server pull server
-	atomic<unsigned int> iServerId;
-	list<unsigned int> mIdleServerId;
+	atomic<uint32_t> iServerId;
+	list<uint32_t> mIdleServerId;
 
 };
 
@@ -64,7 +64,7 @@ void ServerEntityManager<TEntity>::EntityCloseTimer(uint64_t timerID)
 		return;
 	}
 
-	unsigned int entityId = mMapTimer[timerID];
+	uint32_t entityId = mMapTimer[timerID];
 
 	if(this->mEntityMap.contains(entityId))
 	{
@@ -78,7 +78,7 @@ void ServerEntityManager<TEntity>::EntityCloseTimer(uint64_t timerID)
 			owner->ClearFlag(ServerEntityFlag::Locked);
 		}
 		
-		DNPrint(-1, LoggerLevel::Debug, "EntityCloseTimer server destory entity\n");
+		DNPrint(0, LoggerLevel::Debug, "EntityCloseTimer server destory entity\n");
 		this->mEntityMap.erase(entityId);
 	}
 }

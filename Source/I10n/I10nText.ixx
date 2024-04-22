@@ -129,15 +129,15 @@ bool DNl10n::InitConfigData()
 	return true;
 }
 
-export const char* GetErrText(ErrCode type)
+export const char* GetErrText(int type)
 {
-	if(!PInstance || type < ErrCode_MIN || type > ErrCode_MAX)
+	if(!PInstance || !ErrCode_IsValid(type))
 	{
 		return nullptr;
 	}
 	
 	auto& dataMap = PInstance->pErrMsgData->data_map();
-	auto data = dataMap.find((int)type);
+	auto data = dataMap.find(type);
 	if(data == dataMap.end())
 	{
 		throw new exception(format("I10n Err Config not exist this type {}", ErrCode_Name(type)).c_str()); 
@@ -146,15 +146,15 @@ export const char* GetErrText(ErrCode type)
 	return (data->second.*(PInstance->pErrMsgFunc))().c_str();
 }
 
-export const char* GetTipText(TipCode type)
+export const char* GetTipText(int type)
 {
-	if(!PInstance || type < TipCode_MIN || type > TipCode_MAX)
+	if(!PInstance || !TipCode_IsValid(type))
 	{
 		return nullptr;
 	}
 	
 	auto& dataMap = PInstance->pTipMsgData->data_map();
-	auto data = dataMap.find((int)type);
+	auto data = dataMap.find(type);
 	if(data == dataMap.end())
 	{
 		throw new exception(format("I10n Tip Config not exist this type {}", TipCode_Name(type)).c_str()); 

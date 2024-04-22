@@ -18,15 +18,15 @@ class ProxyEntityManagerHelper : public ProxyEntityManager<TEntity>
 private:
 	ProxyEntityManagerHelper(){}
 public:
-    ProxyEntityHelper* AddEntity(unsigned int entityId);
+    ProxyEntityHelper* AddEntity(uint32_t entityId);
 
-    void RemoveEntity(unsigned int entityId, bool isDel = true);
+    void RemoveEntity(uint32_t entityId, bool isDel = true);
 
-    ProxyEntityHelper* GetEntity(unsigned int id);
+    ProxyEntityHelper* GetEntity(uint32_t id);
 };
 
 template <class TEntity>
-ProxyEntityHelper* ProxyEntityManagerHelper<TEntity>::AddEntity(unsigned int entityId)
+ProxyEntityHelper* ProxyEntityManagerHelper<TEntity>::AddEntity(uint32_t entityId)
 {
 	ProxyEntityHelper* entity = nullptr;
 
@@ -44,7 +44,7 @@ ProxyEntityHelper* ProxyEntityManagerHelper<TEntity>::AddEntity(unsigned int ent
 }
 
 template <class TEntity>
-void ProxyEntityManagerHelper<TEntity>::RemoveEntity(unsigned int entityId, bool isDel)
+void ProxyEntityManagerHelper<TEntity>::RemoveEntity(uint32_t entityId, bool isDel)
 {
 	
 	if(this->mEntityMap.contains(entityId))
@@ -57,7 +57,7 @@ void ProxyEntityManagerHelper<TEntity>::RemoveEntity(unsigned int entityId, bool
 
 			// this->mIdleServerId.push_back(entityId);
 			
-			DNPrint(-1, LoggerLevel::Debug, "destory entity\n");
+			DNPrint(0, LoggerLevel::Debug, "destory entity\n");
 			this->mEntityMap.erase(entityId);
 		}
 		else
@@ -69,7 +69,7 @@ void ProxyEntityManagerHelper<TEntity>::RemoveEntity(unsigned int entityId, bool
 }
 
 template <class TEntity>
-ProxyEntityHelper* ProxyEntityManagerHelper<TEntity>::GetEntity(unsigned int entityId)
+ProxyEntityHelper* ProxyEntityManagerHelper<TEntity>::GetEntity(uint32_t entityId)
 {
 	shared_lock<shared_mutex> lock(this->oMapMutex);
 	ProxyEntityHelper* entity = nullptr;

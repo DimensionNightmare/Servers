@@ -65,7 +65,7 @@ struct HotReloadDll
 #endif
 		if (!oLibHandle)
 		{
-			DNPrint(2, LoggerLevel::Error, nullptr, GetLastError());
+			DNPrint(ErrCode_DllLoad, LoggerLevel::Error, nullptr, GetLastError());
 			return false;
 		}
 
@@ -91,7 +91,7 @@ struct HotReloadDll
 			}
 			catch(const std::exception& e)
 			{
-				DNPrint(-1, LoggerLevel::Error, "filesystem:%s", e.what());
+				DNPrint(0, LoggerLevel::Debug, "filesystem:%s", e.what());
 			}
 		}
 
@@ -102,7 +102,7 @@ struct HotReloadDll
 	{
 		if(!filesystem::exists(SDllDir))
 		{
-			DNPrint(3, LoggerLevel::Error, nullptr);
+			DNPrint(ErrCode_DllMenuPath, LoggerLevel::Error, nullptr);
 			return false;
 		}
 
@@ -342,7 +342,7 @@ bool DimensionNightmare::Init()
 		pServer = new LogicServer;
 		break;
 	default:
-		DNPrint(5, LoggerLevel::Error, nullptr);
+		DNPrint(ErrCode_SrvTypeNotVaild, LoggerLevel::Error, nullptr);
 		return false;
 	}
 
@@ -463,9 +463,6 @@ void DimensionNightmare::ShutDown()
 	{
 		pServer->Stop();
 	}
-
-	delete PInstance;
-	PInstance = nullptr;
 }
 
 bool DimensionNightmare::OnRegHotReload()

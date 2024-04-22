@@ -15,7 +15,7 @@ using namespace hv;
 using namespace google::protobuf;
 using namespace GMsg::S_Global;
 
-export void Exe_RetRegistSrv(const SocketChannelPtr &channel, unsigned int msgId, Message *msg)
+export void Exe_RetRegistSrv(const SocketChannelPtr &channel, uint32_t msgId, Message *msg)
 {
 	G2G_RetRegistSrv* requset = reinterpret_cast<G2G_RetRegistSrv*>(msg);
 

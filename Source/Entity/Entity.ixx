@@ -28,7 +28,7 @@ public:
 
 protected: // dll proxy
 	EntityType eEntityType;
-    unsigned int iId;
+    uint32_t iId;
 };
 
 Entity::Entity()

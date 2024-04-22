@@ -15,9 +15,9 @@ private:
 public:
 	string& Token(){ return sToken; }
 
-	unsigned int & ExpireTime(){ return iExpireTime; }
+	uint32_t & ExpireTime(){ return iExpireTime; }
 
-	unsigned int& ID(){ return iId;}
+	uint32_t& ID(){ return iId;}
 
 	void SetSock(const SocketChannelPtr& channel){ pSock = channel;}
 

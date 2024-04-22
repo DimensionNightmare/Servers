@@ -19,8 +19,8 @@ using namespace google::protobuf;
 export class AuthMessageHandle
 {
 public:
-	static void MsgHandle(const SocketChannelPtr &channel, unsigned int msgId, size_t msgHashId, const string& msgData);
-	static void MsgRetHandle(const SocketChannelPtr &channel, unsigned int msgId, size_t msgHashId, const string& msgData);
+	static void MsgHandle(const SocketChannelPtr &channel, uint32_t msgId, size_t msgHashId, const string& msgData);
+	static void MsgRetHandle(const SocketChannelPtr &channel, uint32_t msgId, size_t msgHashId, const string& msgData);
 	static void RegMsgHandle();
 
 	static void RegApiHandle(HttpService* service);
@@ -29,7 +29,7 @@ public:
 		size_t, 
 		pair<
 			const Message*, 
-			function<void(const SocketChannelPtr &, unsigned int, Message *)> 
+			function<void(const SocketChannelPtr &, uint32_t, Message *)> 
 		> 
 	> MHandleMap;
 
@@ -37,14 +37,14 @@ public:
 		size_t, 
 		pair<
 			const Message*, 
-			function<void(const SocketChannelPtr &, unsigned int, Message *)> 
+			function<void(const SocketChannelPtr &, uint32_t, Message *)> 
 		> 
 	> MHandleRetMap;
 };
 
 
 
-void AuthMessageHandle::MsgHandle(const SocketChannelPtr &channel, unsigned int msgId, size_t msgHashId, const string& msgData)
+void AuthMessageHandle::MsgHandle(const SocketChannelPtr &channel, uint32_t msgId, size_t msgHashId, const string& msgData)
 {
 	if (MHandleMap.contains(msgHashId))
 	{
@@ -56,18 +56,18 @@ void AuthMessageHandle::MsgHandle(const SocketChannelPtr &channel, unsigned int 
 		}
 		else
 		{
-			DNPrint(14, LoggerLevel::Error, nullptr);
+			DNPrint(ErrCode_MsgParse, LoggerLevel::Error, nullptr);
 		}
 		
 		delete message;
 	}
 	else
 	{
-		DNPrint(15, LoggerLevel::Error, nullptr);
+		DNPrint(ErrCode_MsgHandleFind, LoggerLevel::Error, nullptr);
 	}
 }
 
-void AuthMessageHandle::MsgRetHandle(const SocketChannelPtr &channel, unsigned int msgId, size_t msgHashId, const string &msgData)
+void AuthMessageHandle::MsgRetHandle(const SocketChannelPtr &channel, uint32_t msgId, size_t msgHashId, const string &msgData)
 {
 	if (MHandleRetMap.contains(msgHashId))
 	{
@@ -79,14 +79,14 @@ void AuthMessageHandle::MsgRetHandle(const SocketChannelPtr &channel, unsigned i
 		}
 		else
 		{
-			DNPrint(14, LoggerLevel::Error, nullptr);
+			DNPrint(ErrCode_MsgParse, LoggerLevel::Error, nullptr);
 		}
 		
 		delete message;
 	}
 	else
 	{
-		DNPrint(15, LoggerLevel::Error, nullptr);
+		DNPrint(ErrCode_MsgHandleFind, LoggerLevel::Error, nullptr);
 	}
 }
 

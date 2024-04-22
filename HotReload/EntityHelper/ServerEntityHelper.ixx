@@ -17,9 +17,9 @@ public:
 
 	std::string& ServerIp(){ return sServIp;}
 
-	unsigned short& ServerPort(){ return iServPort;}
+	uint16_t& ServerPort(){ return iServPort;}
 
-	unsigned int& GetConnNum(){ return IConnNum;}
+	uint32_t& GetConnNum(){ return IConnNum;}
 	
 	void SetMapLinkNode(ServerType type, ServerEntity* node)
 	{
@@ -36,7 +36,7 @@ public:
 		return mMapLink[type];
 	}
 	
-	unsigned int& ID(){ return iId;}
+	uint32_t& ID(){ return iId;}
 
 	void SetSock(const SocketChannelPtr& channel){ pSock = channel;}
 	const SocketChannelPtr& GetSock(){return pSock;}

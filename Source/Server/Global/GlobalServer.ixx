@@ -83,7 +83,7 @@ bool GlobalServer::Init()
 {
 	DNServer::Init();
 	
-	unsigned short port = 0;
+	uint16_t port = 0;
 	
 	string* value = GetLuanchConfigParam("port");
 	if(value)
@@ -97,7 +97,7 @@ bool GlobalServer::Init()
 	int listenfd = pSSock->createsocket(port);
 	if (listenfd < 0)
 	{
-		DNPrint(8, LoggerLevel::Error, nullptr);
+		DNPrint(ErrCode_CreateSocket, LoggerLevel::Error, nullptr);
 		return false;
 	}
 
@@ -108,14 +108,14 @@ bool GlobalServer::Init()
 		socklen_t addrLen = sizeof(addr);
 		if (getsockname(listenfd, reinterpret_cast<struct sockaddr*>(&addr), &addrLen) < 0) 
 		{
-			DNPrint(9, LoggerLevel::Error, nullptr);
+			DNPrint(ErrCode_GetSocketName, LoggerLevel::Error, nullptr);
 			return false;
 		}
 
 		pSSock->port = ntohs(addr.sin_port);
 	}
 	
-	DNPrint(1, LoggerLevel::Normal, nullptr, pSSock->port, listenfd);
+	DNPrint(TipCode_SrvListenOn, LoggerLevel::Normal, nullptr, pSSock->port, listenfd);
 
 	unpack_setting_t* setting = new unpack_setting_t;
 	setting->mode = unpack_mode_e::UNPACK_BY_LENGTH_FIELD;
@@ -165,7 +165,7 @@ bool GlobalServer::Start()
 
 	if(!pSSock)
 	{
-		DNPrint(6, LoggerLevel::Error, nullptr);
+		DNPrint(ErrCode_SrvNotInit, LoggerLevel::Error, nullptr);
 		return false;
 	}
 

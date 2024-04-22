@@ -5,9 +5,11 @@ module;
 #include "StdAfx.h"
 export module DNServer;
 
+import I10nText;
+
 using namespace std;
 
-export enum class ServerType : unsigned char
+export enum class ServerType : uint8_t
 {
     None,
     ControlServer,
@@ -77,7 +79,7 @@ public:
 
     ServerType GetServerType(){return emServerType;}
 
-	unsigned int &ServerIndex(){ return iServerIndex;}
+	uint32_t &ServerIndex(){ return iServerIndex;}
 
 	virtual void LoopEvent(function<void(hv::EventLoopPtr)> func){}
 
@@ -96,7 +98,7 @@ protected:
 
 	bool bInRun;
 
-	unsigned int iServerIndex;
+	uint32_t iServerIndex;
 
 	list<MainPostMsg> mMessageTasks;
 

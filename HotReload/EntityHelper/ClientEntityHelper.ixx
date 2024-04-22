@@ -11,7 +11,7 @@ export class ClientEntityHelper : public ClientEntity
 private:
 	ClientEntityHelper(){}
 public:
-	unsigned int& ID(){ return iId;}
+	uint32_t& ID(){ return iId;}
 
 	
 };

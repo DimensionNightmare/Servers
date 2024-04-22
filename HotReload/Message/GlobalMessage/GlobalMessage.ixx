@@ -23,15 +23,15 @@ using namespace GMsg::S_Auth;
 export class GlobalMessageHandle
 {
 public:
-	static void MsgHandle(const SocketChannelPtr &channel, unsigned int msgId, size_t msgHashId, const string& msgData);
-	static void MsgRetHandle(const SocketChannelPtr &channel, unsigned int msgId, size_t msgHashId, const string& msgData);
+	static void MsgHandle(const SocketChannelPtr &channel, uint32_t msgId, size_t msgHashId, const string& msgData);
+	static void MsgRetHandle(const SocketChannelPtr &channel, uint32_t msgId, size_t msgHashId, const string& msgData);
 	static void RegMsgHandle();
 public:
 	inline static map<
 		size_t, 
 		pair<
 			const Message*, 
-			function<void(const SocketChannelPtr &, unsigned int, Message *)> 
+			function<void(const SocketChannelPtr &, uint32_t, Message *)> 
 		> 
 	> MHandleMap;
 
@@ -39,14 +39,14 @@ public:
 		size_t, 
 		pair<
 			const Message*, 
-			function<void(const SocketChannelPtr &, unsigned int, Message *)> 
+			function<void(const SocketChannelPtr &, uint32_t, Message *)> 
 		> 
 	> MHandleRetMap;
 };
 
 
 
-void GlobalMessageHandle::MsgHandle(const SocketChannelPtr &channel, unsigned int msgId, size_t msgHashId, const string& msgData)
+void GlobalMessageHandle::MsgHandle(const SocketChannelPtr &channel, uint32_t msgId, size_t msgHashId, const string& msgData)
 {
 	if (MHandleMap.contains(msgHashId))
 	{
@@ -58,18 +58,18 @@ void GlobalMessageHandle::MsgHandle(const SocketChannelPtr &channel, unsigned in
 		}
 		else
 		{
-			DNPrint(14, LoggerLevel::Error, nullptr);
+			DNPrint(ErrCode_MsgParse, LoggerLevel::Error, nullptr);
 		}
 		
 		delete message;
 	}
 	else
 	{
-		DNPrint(15, LoggerLevel::Error, nullptr);
+		DNPrint(ErrCode_MsgHandleFind, LoggerLevel::Error, nullptr);
 	}
 }
 
-void GlobalMessageHandle::MsgRetHandle(const SocketChannelPtr &channel, unsigned int msgId, size_t msgHashId, const string &msgData)
+void GlobalMessageHandle::MsgRetHandle(const SocketChannelPtr &channel, uint32_t msgId, size_t msgHashId, const string &msgData)
 {
 	if (MHandleRetMap.contains(msgHashId))
 	{
@@ -81,14 +81,14 @@ void GlobalMessageHandle::MsgRetHandle(const SocketChannelPtr &channel, unsigned
 		}
 		else
 		{
-			DNPrint(14, LoggerLevel::Error, nullptr);
+			DNPrint(ErrCode_MsgParse, LoggerLevel::Error, nullptr);
 		}
 		
 		delete message;
 	}
 	else
 	{
-		DNPrint(15, LoggerLevel::Error, nullptr);
+		DNPrint(ErrCode_MsgHandleFind, LoggerLevel::Error, nullptr);
 	}
 }
 

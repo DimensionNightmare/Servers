@@ -19,7 +19,7 @@ using namespace google::protobuf;
 using namespace GMsg::S_Global;
 using namespace GMsg::C_Auth;
 
-export void Exe_ReqUserToken(const SocketChannelPtr &channel, unsigned int msgId, Message *msg)
+export void Exe_ReqUserToken(const SocketChannelPtr &channel, uint32_t msgId, Message *msg)
 {
 	G2G_ReqLoginToken* requset = reinterpret_cast<G2G_ReqLoginToken*>(msg);
 	G2G_ResLoginToken response;
@@ -97,7 +97,7 @@ export void Exe_ReqUserToken(const SocketChannelPtr &channel, unsigned int msgId
 	}
 	else
 	{
-		DNPrint(-1, LoggerLevel::Error, "Exe_ReqUserToken not LogicServer !!");
+		DNPrint(0, LoggerLevel::Debug, "Exe_ReqUserToken not LogicServer !!");
 	}
 	
 }

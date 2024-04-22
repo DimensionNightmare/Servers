@@ -811,7 +811,7 @@ bool DNDbObj<TMessage>::Commit()
 		return false;
 	}
 
-	DNPrint(-1, LoggerLevel::Debug, "%s \n\n", sSqlStatement.c_str());
+	DNPrint(0, LoggerLevel::Debug, "%s \n\n", sSqlStatement.c_str());
 
 	pqxx::result result = pWork->exec(sSqlStatement);
 

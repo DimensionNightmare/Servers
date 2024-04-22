@@ -55,7 +55,7 @@ protected: // dll proxy
 
 	// record orgin info
 	string sCtlIp;
-	unsigned short iCtlPort;
+	uint16_t iCtlPort;
 };
 
 
@@ -96,13 +96,13 @@ bool LogicServer::Init()
 	string* value = GetLuanchConfigParam("byCtl");
 	if(!value || !stoi(*value))
 	{
-		DNPrint(1, LoggerLevel::Error, nullptr);
+		DNPrint(ErrCode_SrvByCtl, LoggerLevel::Error, nullptr);
 		return false;
 	}
 
 	DNServer::Init();
 
-	unsigned short port = 0;
+	uint16_t port = 0;
 	
 	value = GetLuanchConfigParam("port");
 	if(value)
@@ -116,7 +116,7 @@ bool LogicServer::Init()
 	int listenfd = pSSock->createsocket(port);
 	if (listenfd < 0)
 	{
-		DNPrint(8, LoggerLevel::Error, nullptr);
+		DNPrint(ErrCode_CreateSocket, LoggerLevel::Error, nullptr);
 		return false;
 	}
 
@@ -127,14 +127,14 @@ bool LogicServer::Init()
 		socklen_t addrLen = sizeof(addr);
 		if (getsockname(listenfd, reinterpret_cast<struct sockaddr*>(&addr), &addrLen) < 0) 
 		{
-			DNPrint(9, LoggerLevel::Error, nullptr);
+			DNPrint(ErrCode_GetSocketName, LoggerLevel::Error, nullptr);
 			return false;
 		}
 
 		pSSock->port = ntohs(addr.sin_port);
 	}
 	
-	DNPrint(1, LoggerLevel::Normal, nullptr, pSSock->port, listenfd);
+	DNPrint(TipCode_SrvListenOn, LoggerLevel::Normal, nullptr, pSSock->port, listenfd);
 
 	unpack_setting_t* setting = new unpack_setting_t;
 	setting->mode = unpack_mode_e::UNPACK_BY_LENGTH_FIELD;
@@ -187,7 +187,7 @@ void LogicServer::InitCmd(map<string, function<void(stringstream *)>> &cmdMap)
 	cmdMap.emplace("redirectClient", [this](stringstream* ss)
 	{
 		string ip;
-		unsigned short port;
+		uint16_t port;
 		*ss >> ip;
 		*ss >> port;
 
@@ -200,7 +200,7 @@ bool LogicServer::Start()
 {
 	if(!pSSock)
 	{
-		DNPrint(6, LoggerLevel::Error, nullptr);
+		DNPrint(ErrCode_SrvNotInit, LoggerLevel::Error, nullptr);
 		return false;
 	}
 

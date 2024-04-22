@@ -18,23 +18,23 @@ class ServerEntityManagerHelper : public ServerEntityManager<TEntity>
 private:
 	ServerEntityManagerHelper(){}
 public:
-    ServerEntityHelper* AddEntity(unsigned int entityId, ServerType type);
+    ServerEntityHelper* AddEntity(uint32_t entityId, ServerType type);
 
-    void RemoveEntity(unsigned int entityId, bool isDel = true);
+    void RemoveEntity(uint32_t entityId, bool isDel = true);
 
 	void MountEntity(ServerType type, TEntity* entity);
 
     void UnMountEntity(ServerType type, TEntity* entity);
 
-    ServerEntityHelper* GetEntity(unsigned int id);
+    ServerEntityHelper* GetEntity(uint32_t id);
 
 	list<TEntity*>& GetEntityByList(ServerType type);
 
-	[[nodiscard]] unsigned int ServerIndex();
+	[[nodiscard]] uint32_t ServerIndex();
 };
 
 template <class TEntity>
-ServerEntityHelper* ServerEntityManagerHelper<TEntity>::AddEntity(unsigned int entityId, ServerType regType)
+ServerEntityHelper* ServerEntityManagerHelper<TEntity>::AddEntity(uint32_t entityId, ServerType regType)
 {
 	ServerEntityHelper* entity = nullptr;
 
@@ -54,7 +54,7 @@ ServerEntityHelper* ServerEntityManagerHelper<TEntity>::AddEntity(unsigned int e
 }
 
 template <class TEntity>
-void ServerEntityManagerHelper<TEntity>::RemoveEntity(unsigned int entityId, bool isDel)
+void ServerEntityManagerHelper<TEntity>::RemoveEntity(uint32_t entityId, bool isDel)
 {
 	
 	if(this->mEntityMap.contains(entityId))
@@ -68,7 +68,7 @@ void ServerEntityManagerHelper<TEntity>::RemoveEntity(unsigned int entityId, boo
 			// this->mIdleServerId.push_back(entityId);
 			this->mEntityMapList[entity->ServerEntityType()].remove(oriEntity);
 			
-			DNPrint(-1, LoggerLevel::Debug, "offline destory entity\n");
+			DNPrint(0, LoggerLevel::Debug, "offline destory entity\n");
 			this->mEntityMap.erase(entityId);
 		}
 		else
@@ -96,7 +96,7 @@ void ServerEntityManagerHelper<TEntity>::UnMountEntity(ServerType type, TEntity 
 }
 
 template <class TEntity>
-ServerEntityHelper* ServerEntityManagerHelper<TEntity>::GetEntity(unsigned int entityId)
+ServerEntityHelper* ServerEntityManagerHelper<TEntity>::GetEntity(uint32_t entityId)
 {
 	shared_lock<shared_mutex> lock(this->oMapMutex);
 	ServerEntityHelper* entity = nullptr;
@@ -117,11 +117,11 @@ list<TEntity*>& ServerEntityManagerHelper<TEntity>::GetEntityByList(ServerType t
 }
 
 template <class TEntity>
-unsigned int ServerEntityManagerHelper<TEntity>::ServerIndex()
+uint32_t ServerEntityManagerHelper<TEntity>::ServerIndex()
 {
 	// if(this->mIdleServerId.size() > 0)
 	// {
-	// 	unsigned int index = this->mIdleServerId.front();
+	// 	uint32_t index = this->mIdleServerId.front();
 	// 	this->mIdleServerId.pop_front();
 	// 	return index;
 	// }

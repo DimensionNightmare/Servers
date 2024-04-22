@@ -20,17 +20,17 @@ export DNTaskVoid Evt_ReqRegistSrv()
 {
 	LogicServerHelper* dnServer = GetLogicServer();
 	DNClientProxyHelper* client = dnServer->GetCSock();
-	unsigned int msgId = client->GetMsgId();
+	uint32_t msgId = client->GetMsgId();
 	
 	// first Can send Msg?
 	if(client->GetMsg(msgId))
 	{
-		DNPrint(-1, LoggerLevel::Error, "+++++ %lu, \n", msgId);
+		DNPrint(0, LoggerLevel::Debug, "+++++ %lu, \n", msgId);
 		co_return;
 	}
 	else
 	{
-		DNPrint(-1, LoggerLevel::Debug, "Evt_ReqRegistSrv ----- %lu, \n", msgId);
+		DNPrint(0, LoggerLevel::Debug, "Evt_ReqRegistSrv ----- %lu, \n", msgId);
 	}
 
 	client->RegistState() = RegistState::Registing;
@@ -66,13 +66,13 @@ export DNTaskVoid Evt_ReqRegistSrv()
 	
 	if(response.success())
 	{
-		DNPrint(-1, LoggerLevel::Debug, "regist Server success! \n");
+		DNPrint(0, LoggerLevel::Debug, "regist Server success! \n");
 		client->RegistState() = RegistState::Registed;
 		dnServer->ServerIndex() = response.server_index();
 	}
 	else
 	{
-		DNPrint(-1, LoggerLevel::Debug, "regist Server error! msg:%lu \n", msgId);
+		DNPrint(0, LoggerLevel::Debug, "regist Server error! msg:%lu \n", msgId);
 		dnServer->IsRun() = false; //exit application
 		client->RegistState() = RegistState::None;
 	}
@@ -82,7 +82,7 @@ export DNTaskVoid Evt_ReqRegistSrv()
 }
 
 // client request
-export void Msg_ReqRegistSrv(const SocketChannelPtr &channel, unsigned int msgId, Message *msg)
+export void Msg_ReqRegistSrv(const SocketChannelPtr &channel, uint32_t msgId, Message *msg)
 {
 	COM_ReqRegistSrv* requset = reinterpret_cast<COM_ReqRegistSrv*>(msg);
 	COM_ResRegistSrv response;
@@ -106,6 +106,9 @@ export void Msg_ReqRegistSrv(const SocketChannelPtr &channel, unsigned int msgId
 	{
 		entity->ServerIp() = requset->ip();
 		entity->ServerPort() = requset->port();
+
+		DNPrint(0, LoggerLevel::Debug, "ds regist:%s:%d", entity->ServerIp().c_str(), entity->ServerPort());
+
 		entity->SetSock(channel);
 		
 		channel->setContext(entity);
@@ -122,7 +125,7 @@ export void Msg_ReqRegistSrv(const SocketChannelPtr &channel, unsigned int msgId
 	channel->write(binData);
 }
 
-export void Exe_RetChangeCtlSrv(const SocketChannelPtr &channel, unsigned int msgId, Message *msg)
+export void Exe_RetChangeCtlSrv(const SocketChannelPtr &channel, uint32_t msgId, Message *msg)
 {
 	COM_RetChangeCtlSrv* requset = reinterpret_cast<COM_RetChangeCtlSrv*>(msg);
 	LogicServerHelper* dnServer = GetLogicServer();
@@ -133,7 +136,7 @@ export void Exe_RetChangeCtlSrv(const SocketChannelPtr &channel, unsigned int ms
 	dnServer->ReClientEvent(requset->ip(), requset->port());
 }
 
-export void Exe_RetHeartbeat(const SocketChannelPtr &channel, unsigned int msgId, Message *msg)
+export void Exe_RetHeartbeat(const SocketChannelPtr &channel, uint32_t msgId, Message *msg)
 {
 	COM_RetHeartbeat* requset = reinterpret_cast<COM_RetHeartbeat*>(msg);
 }

@@ -44,7 +44,7 @@ protected: // dll proxy
 
 	// record orgin info
 	string sCtlIp;
-	unsigned short iCtlPort;
+	uint16_t iCtlPort;
 };
 
 DatabaseServer::DatabaseServer()
@@ -68,13 +68,13 @@ bool DatabaseServer::Init()
 	string *value = GetLuanchConfigParam("byCtl");
 	if (!value || !stoi(*value))
 	{
-		DNPrint(1, LoggerLevel::Error, nullptr);
+		DNPrint(ErrCode_SrvByCtl, LoggerLevel::Error, nullptr);
 		return false;
 	}
 
 	DNServer::Init();
 
-	unsigned short port = 0;
+	uint16_t port = 0;
 
 	unpack_setting_t *setting = new unpack_setting_t;
 	setting->mode = unpack_mode_e::UNPACK_BY_LENGTH_FIELD;
@@ -112,7 +112,7 @@ void DatabaseServer::InitCmd(map<string, function<void(stringstream *)>> &cmdMap
 	cmdMap.emplace("redirectClient", [this](stringstream* ss)
 	{
 		string ip;
-		unsigned short port;
+		uint16_t port;
 		*ss >> ip;
 		*ss >> port;
 

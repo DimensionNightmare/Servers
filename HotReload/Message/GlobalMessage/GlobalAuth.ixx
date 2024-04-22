@@ -21,7 +21,7 @@ using namespace GMsg::S_Global;
 
 #define CastObj(entity) static_cast<ServerEntityHelper*>(entity)
 
-export DNTaskVoid Msg_ReqAuthAccount(const SocketChannelPtr &channel, unsigned int msgId, Message *msg)
+export DNTaskVoid Msg_ReqAuthAccount(const SocketChannelPtr &channel, uint32_t msgId, Message *msg)
 {
 	A2G_ReqAuthAccount* requset = reinterpret_cast<A2G_ReqAuthAccount*>(msg);
 	G2A_ResAuthAccount response;
@@ -57,7 +57,7 @@ export DNTaskVoid Msg_ReqAuthAccount(const SocketChannelPtr &channel, unsigned i
 		G2G_ResLoginToken tokenRes;
 
 		DNServerProxyHelper* server = GetGlobalServer()->GetSSock();
-		unsigned int smsgId = server->GetMsgId();
+		uint32_t smsgId = server->GetMsgId();
 		
 		// pack data
 		string binData;

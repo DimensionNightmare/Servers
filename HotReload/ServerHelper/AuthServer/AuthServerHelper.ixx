@@ -60,7 +60,7 @@ bool AuthServerHelper::InitDatabase()
 	}
 	catch(const exception& e)
 	{
-		DNPrint(-1, LoggerLevel::Error, "%s", e.what());
+		DNPrint(0, LoggerLevel::Debug, "%s", e.what());
 		return false;
 	}
 

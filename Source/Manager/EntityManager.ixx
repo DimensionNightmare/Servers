@@ -21,13 +21,13 @@ public:
 
 public: // dll override
 	const EventLoopPtr& Timer(){return pLoop->loop();}
-	void AddTimerRecord(size_t timerId, unsigned int id);
+	void AddTimerRecord(size_t timerId, uint32_t id);
 
 protected: // dll proxy
-    map<unsigned int, TEntity> mEntityMap;
+    map<uint32_t, TEntity> mEntityMap;
 	shared_mutex oMapMutex;
 	//
-	map<uint64_t, unsigned int > mMapTimer;
+	map<uint64_t, uint32_t > mMapTimer;
 	shared_mutex oTimerMutex;
 
 	EventLoopThread* pLoop;
@@ -59,7 +59,7 @@ bool EntityManager<TEntity>::Init()
 }
 
 template <class TEntity>
-void EntityManager<TEntity>::AddTimerRecord(size_t timerId, unsigned int id)
+void EntityManager<TEntity>::AddTimerRecord(size_t timerId, uint32_t id)
 {
 	mMapTimer.emplace(timerId, id);
 }

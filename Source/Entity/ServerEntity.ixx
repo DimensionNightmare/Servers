@@ -34,8 +34,8 @@ public: // dll override
 protected: // dll proxy
     ServerType emServerType;
 	string sServIp;
-	unsigned short iServPort;
-	unsigned int IConnNum;
+	uint16_t iServPort;
+	uint32_t IConnNum;
 
 	// regist node need
 	ServerEntity* pLink;

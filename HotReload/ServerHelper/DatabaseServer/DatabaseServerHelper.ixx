@@ -29,9 +29,9 @@ public:
 	bool InitDatabase();
 
 	string& GetCtlIp(){ return sCtlIp;}
-	unsigned short& GetCtlPort(){ return iCtlPort;}
+	uint16_t& GetCtlPort(){ return iCtlPort;}
 
-	void ReClientEvent(const string& ip, unsigned short port);
+	void ReClientEvent(const string& ip, uint16_t port);
 };
 
 static DatabaseServerHelper* PDatabaseServerHelper = nullptr;
@@ -59,14 +59,14 @@ bool DatabaseServerHelper::InitDatabase()
 	}
 	catch(const exception& e)
 	{
-		DNPrint(-1, LoggerLevel::Error, "%s", e.what());
+		DNPrint(0, LoggerLevel::Debug, "%s", e.what());
 		return false;
 	}
 
 	return true;
 }
 
-void DatabaseServerHelper::ReClientEvent(const string& ip, unsigned short port)
+void DatabaseServerHelper::ReClientEvent(const string& ip, uint16_t port)
 {
 
 	// auto ReClient = [=, this]()

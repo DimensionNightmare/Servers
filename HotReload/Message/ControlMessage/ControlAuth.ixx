@@ -15,7 +15,7 @@ using namespace hv;
 using namespace google::protobuf;
 using namespace GMsg::S_Auth;
 
-export DNTaskVoid Msg_ReqAuthAccount(const SocketChannelPtr &channel, unsigned int msgId, Message *msg)
+export DNTaskVoid Msg_ReqAuthAccount(const SocketChannelPtr &channel, uint32_t msgId, Message *msg)
 {
 	G2A_ResAuthAccount response;
 
@@ -59,7 +59,7 @@ export DNTaskVoid Msg_ReqAuthAccount(const SocketChannelPtr &channel, unsigned i
 		}();
 
 		DNServerProxyHelper* server = GetControlServer()->GetSSock();
-		unsigned int smsgId = server->GetMsgId();
+		uint32_t smsgId = server->GetMsgId();
 
 		binData.resize(msg->ByteSize());
 		msg->SerializeToArray(binData.data(), binData.size());

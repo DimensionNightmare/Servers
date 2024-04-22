@@ -15,10 +15,10 @@ public:
 public: // dll override
 
 protected: // dll proxy
-	unsigned int iServerIndex;
+	uint32_t iServerIndex;
 
 	string sToken;
-	unsigned int iExpireTime;
+	uint32_t iExpireTime;
 };
 
 

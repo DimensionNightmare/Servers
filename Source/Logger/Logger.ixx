@@ -2,8 +2,7 @@ module;
 #include <string>
 #include <cstdarg>
 #include <format>
-
-#include "Common/Common.pb.h"
+#include <iostream>
 export module Logger;
 
 import Utils.StrUtils;
@@ -26,27 +25,26 @@ export void SetLoggerLevel(LoggerLevel level)
 	SLogLevel = level;
 }
 
-export void LoggerPrint(LoggerLevel level, size_t code, const char* funcName, const char* fmt,  ...)
+export void LoggerPrint(LoggerLevel level, int code, const char* funcName, const char* fmt,  ...)
 {
 	if(level < SLogLevel)
 	{
 		return;
 	}
 
-	va_list args;
-	va_start(args, fmt);
-
-	if(!fmt)
+	if(code > 0)
 	{
 		switch (level)
 		{
 		case LoggerLevel::Debug:
+			
+			break;
 		case LoggerLevel::Normal:
-			fmt = GetTipText((TipCode)code);
+			fmt = GetTipText(code);
 			break;
 		
 		case LoggerLevel::Error:
-			fmt = GetErrText((ErrCode)code);
+			fmt = GetErrText(code);
 			break;
 		}
 	}
@@ -55,14 +53,15 @@ export void LoggerPrint(LoggerLevel level, size_t code, const char* funcName, co
 	{
 		return;
 	}
-	
+
+	va_list args;
+	va_start(args, fmt);
 	size_t len = vsnprintf(0, 0, fmt, args);
 	string message;
 	message.resize(len + 1);  // need space for NUL
     vsnprintf(&message[0], len + 1,fmt, args);
     message.resize(len);
 	va_end(args);
-	
-	string fmtStr = format("[{}] {} -> \n{}", GetNowTimeStr(), funcName, message);
-	cout << fmtStr << endl;
+
+	cout << format("[{}] {} -> \n{}", GetNowTimeStr(), funcName, message) << endl;
 }

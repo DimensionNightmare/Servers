@@ -4,13 +4,13 @@ export module MessagePack;
 
 using namespace std;
 
-export enum class MsgDir : unsigned char
+export enum class MsgDir : uint8_t
 {
 	Outer = 1, 	// Client Msg
 	Inner, 		// Server Msg
 };
 
-export enum class MsgDeal : unsigned char
+export enum class MsgDeal : uint8_t
 {
 	Req = 1, 	// msg deal with
 	Res, 		//
@@ -21,12 +21,12 @@ export enum class MsgDeal : unsigned char
 export struct MessagePacket
 {
 	static int PackLenth; 
-	unsigned int pkgLenth;	 //Pin Top !
+	uint32_t pkgLenth;	 //Pin Top !
 
 	MsgDir opType;
 	MsgDeal dealType;
-	unsigned short serverId;
-	unsigned int msgId;
+	uint16_t serverId;
+	uint32_t msgId;
 	size_t msgHashId;
 
 	MessagePacket()
@@ -38,12 +38,12 @@ export struct MessagePacket
 
 int MessagePacket::PackLenth = sizeof MessagePacket;
 
-export bool MessagePack(unsigned int msgId, MsgDeal deal,  const char* pbName, string &data)
+export bool MessagePack(uint32_t msgId, MsgDeal deal,  const char* pbName, string &data)
 {
 	MessagePacket packet;
 	packet.msgId = msgId;
 	packet.dealType = deal;
-	packet.pkgLenth = unsigned int(data.size());
+	packet.pkgLenth = uint32_t(data.size());
 
 	if( pbName == nullptr) [[unlikely]]
 	{	

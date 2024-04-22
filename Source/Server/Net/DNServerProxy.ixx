@@ -24,7 +24,7 @@ public: // dll override
 	void ChannelTimeoutTimer(uint64_t timerID);
 
 	const EventLoopPtr& Timer(){return pLoop->loop();}
-	void AddTimerRecord(size_t timerId, unsigned int id);
+	void AddTimerRecord(size_t timerId, uint32_t id);
 
 public:
 	// cant init in tcpclient this class
@@ -32,11 +32,11 @@ public:
 
 protected:
 	// only oddnumber
-	atomic<unsigned int> iMsgId;
+	atomic<uint32_t> iMsgId;
 	// unordered_
-	map<unsigned int, DNTask<Message>* > mMsgList;
+	map<uint32_t, DNTask<Message>* > mMsgList;
 	//
-	map<uint64_t, unsigned int > mMapTimer;
+	map<uint64_t, uint32_t > mMapTimer;
 
 	shared_mutex oMsgMutex;
 	shared_mutex oTimerMutex;
@@ -53,7 +53,7 @@ DNServerProxy::DNServerProxy()
 
 void DNServerProxy::MessageTimeoutTimer(uint64_t timerID)
 {
-	unsigned int id = -1;
+	uint32_t id = -1;
 	{
 		if(!mMapTimer.contains(timerID))
 		{
@@ -80,7 +80,7 @@ void DNServerProxy::MessageTimeoutTimer(uint64_t timerID)
 
 void DNServerProxy::ChannelTimeoutTimer(uint64_t timerID)
 {
-	unsigned int id = -1;
+	uint32_t id = -1;
 	{
 		if(!mMapTimer.contains(timerID))
 		{
@@ -98,14 +98,14 @@ void DNServerProxy::ChannelTimeoutTimer(uint64_t timerID)
 			if(!channel->context())
 			{
 				channel->close();
-				DNPrint(-1, LoggerLevel::Debug, "ChannelTimeoutTimer server destory entity\n");
+				DNPrint(0, LoggerLevel::Debug, "ChannelTimeoutTimer server destory entity\n");
 			}
 		}
 	}
 
 }
 
-void DNServerProxy::AddTimerRecord(size_t timerId, unsigned int id)
+void DNServerProxy::AddTimerRecord(size_t timerId, uint32_t id)
 {
 	unique_lock<shared_mutex> ulock(oTimerMutex);
 	mMapTimer.emplace(timerId, id);

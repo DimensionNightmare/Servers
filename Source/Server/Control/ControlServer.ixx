@@ -70,7 +70,7 @@ bool ControlServer::Init()
 	string* port = GetLuanchConfigParam("port");
 	if(!ip || !port)
 	{
-		DNPrint(7, LoggerLevel::Error, nullptr);
+		DNPrint(ErrCode_SrvNeedIPPort, LoggerLevel::Error, nullptr);
 		return false;
 	}
 
@@ -82,11 +82,11 @@ bool ControlServer::Init()
 	int listenfd = pSSock->createsocket(stoi(*port));
 	if (listenfd < 0)
 	{
-		DNPrint(8, LoggerLevel::Error, nullptr);
+		DNPrint(ErrCode_CreateSocket, LoggerLevel::Error, nullptr);
 		return false;
 	}
 
-	DNPrint(1, LoggerLevel::Normal, nullptr, pSSock->port, listenfd);
+	DNPrint(TipCode_SrvListenOn, LoggerLevel::Normal, nullptr, pSSock->port, listenfd);
 
 	unpack_setting_t* setting = new unpack_setting_t;
 	setting->mode = unpack_mode_e::UNPACK_BY_LENGTH_FIELD;
@@ -112,7 +112,7 @@ bool ControlServer::Start()
 {
 	if(!pSSock)
 	{
-		DNPrint(6, LoggerLevel::Error, nullptr);
+		DNPrint(ErrCode_SrvNotInit, LoggerLevel::Error, nullptr);
 		return false;
 	}
 	

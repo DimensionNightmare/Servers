@@ -78,13 +78,13 @@ bool AuthServer::Init()
 	string* value = GetLuanchConfigParam("byCtl");
 	if(!value || !stoi(*value))
 	{
-		DNPrint(1, LoggerLevel::Error, nullptr);
+		DNPrint(ErrCode_SrvByCtl, LoggerLevel::Error, nullptr);
 		return false;
 	}
 
 	DNServer::Init();
 
-	unsigned short port = 0;
+	uint16_t port = 0;
 	
 	value = GetLuanchConfigParam("port");
 	if(value)
@@ -96,7 +96,7 @@ bool AuthServer::Init()
 	pSSock->setPort(port);
 	pSSock->setThreadNum(4);
 
-	DNPrint(1, LoggerLevel::Normal, nullptr, pSSock->port, 0);
+	DNPrint(TipCode_SrvListenOn, LoggerLevel::Normal, nullptr, pSSock->port, 0);
 
 	//connet ControlServer
 	string* ctlPort = GetLuanchConfigParam("ctlPort");
@@ -135,7 +135,7 @@ bool AuthServer::Start()
 {
 	if(!pSSock)
 	{
-		DNPrint(6, LoggerLevel::Error, nullptr);
+		DNPrint(ErrCode_SrvNotInit, LoggerLevel::Error, nullptr);
 		return false;
 	}
 	int code = pSSock->start();

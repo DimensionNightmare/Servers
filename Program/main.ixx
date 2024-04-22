@@ -72,7 +72,7 @@ export int main(int argc, char **argv)
 
 	auto CtrlHandler = [](DWORD signal) -> BOOL
 	{
-		DNPrint(6, LoggerLevel::Normal, nullptr);
+		DNPrint(TipCode_CmdOpBreak, LoggerLevel::Normal, nullptr);
 		switch (signal)
 		{
 		case CTRL_C_EVENT:
@@ -93,14 +93,14 @@ export int main(int argc, char **argv)
 
 	if (!SetConsoleCtrlHandler(CtrlHandler, true))
 	{
-		DNPrint(10, LoggerLevel::Error, nullptr);
+		DNPrint(ErrCode_CmdCtl, LoggerLevel::Error, nullptr);
 		PInstance->ShutDown();
 		return 0;
 	}
 
 	auto UnhandledHandler = [](EXCEPTION_POINTERS *ExceptionInfo) -> long
 	{
-		DNPrint(7, LoggerLevel::Normal, nullptr);
+		DNPrint(TipCode_UnhandledException, LoggerLevel::Normal, nullptr);
 		
 		HANDLE hDumpFile = CreateFileW(
 			L"MiniDump.dmp",
@@ -140,7 +140,7 @@ export int main(int argc, char **argv)
 
 	if (!SetUnhandledExceptionFilter(UnhandledHandler))
 	{
-		DNPrint(11, LoggerLevel::Error, nullptr);
+		DNPrint(ErrCode_UnhandledException, LoggerLevel::Error, nullptr);
 		PInstance->ShutDown();
 		return 0;
 	}
@@ -194,7 +194,11 @@ export int main(int argc, char **argv)
 		Sleep(100);
 	}
 
-	PInstance->ShutDown();
+	DimensionNightmare* temp = PInstance;
+	PInstance = nullptr;
+
+	temp->ShutDown();
+	delete temp;
 	
 	return 0;
 }

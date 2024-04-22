@@ -18,7 +18,7 @@ using namespace GMsg::S_Logic;
 using namespace GMsg::C_Auth;
 
 // client request
-export void Msg_ReqClientLogin(const SocketChannelPtr &channel, unsigned int msgId, Message *msg)
+export void Msg_ReqClientLogin(const SocketChannelPtr &channel, uint32_t msgId, Message *msg)
 {
 	G2L_ReqClientLogin* requset = reinterpret_cast<G2L_ReqClientLogin*>(msg);
 
@@ -27,12 +27,12 @@ export void Msg_ReqClientLogin(const SocketChannelPtr &channel, unsigned int msg
 	ClientEntityHelper* entity = nullptr;
 	if (entity = entityMan->AddEntity(requset->account_id()))
 	{
-		DNPrint(-1, LoggerLevel::Debug, "AddEntity Client!");
+		DNPrint(0, LoggerLevel::Debug, "AddEntity Client!");
 
 	}
 	else
 	{
-		DNPrint(-1, LoggerLevel::Debug, "AddEntity Exist Client!");
+		DNPrint(0, LoggerLevel::Debug, "AddEntity Exist Client!");
 		entity =  entityMan->GetEntity(requset->account_id());
 	}
 
@@ -54,6 +54,10 @@ export void Msg_ReqClientLogin(const SocketChannelPtr &channel, unsigned int msg
 		cliMsg->set_port(serverEntity->ServerPort());
 		
 		DNPrint(0, LoggerLevel::Debug, "ds:%s", serverEntity->ServerIp().c_str());
+	}
+	else
+	{
+		DNPrint(0, LoggerLevel::Debug, "not ds connect");
 	}
 
 	// pack data

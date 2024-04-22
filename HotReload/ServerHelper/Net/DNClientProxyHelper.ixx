@@ -14,7 +14,7 @@ using namespace std;
 using namespace hv;
 using namespace google::protobuf;
 
-export enum class ProxyStatus : char
+export enum class ProxyStatus : uint8_t
 {
 	None,
 	Open,
@@ -27,7 +27,7 @@ private:
 	DNClientProxyHelper();
 public:
 
-	unsigned int GetMsgId() { return ++iMsgId; }
+	uint32_t GetMsgId() { return ++iMsgId; }
 
 	// regist to controlserver
 	RegistState& RegistState(){return eRegistState;}
@@ -37,11 +37,9 @@ public:
 	ProxyStatus UpdateClientState(Channel::Status state);
 	void ServerDisconnect();
 	// task
-	DNTask<Message>* GetMsg(unsigned int msgId);
-	bool AddMsg(unsigned int msgId, DNTask<Message>* task, unsigned int breakTime = 10000);
-	void DelMsg(unsigned int msgId);
-	// heartbeat
-	void TickHeartbeat();
+	DNTask<Message>* GetMsg(uint32_t msgId);
+	bool AddMsg(uint32_t msgId, DNTask<Message>* task, uint32_t breakTime = 10000);
+	void DelMsg(uint32_t msgId);
 };
 
 void DNClientProxyHelper::SetRegistEvent(function<void()> event)
@@ -91,7 +89,7 @@ void DNClientProxyHelper::ServerDisconnect()
 	mMsgList.clear();
 }
 
-DNTask<Message> *DNClientProxyHelper::GetMsg(unsigned int msgId)
+DNTask<Message> *DNClientProxyHelper::GetMsg(uint32_t msgId)
 {
 	shared_lock<shared_mutex> lock(oMsgMutex);
 	if(mMsgList.contains(msgId))
@@ -101,20 +99,20 @@ DNTask<Message> *DNClientProxyHelper::GetMsg(unsigned int msgId)
 	return nullptr;
 }
 
-bool DNClientProxyHelper::AddMsg(unsigned int msgId, DNTask<Message> *task, unsigned int breakTime)
+bool DNClientProxyHelper::AddMsg(uint32_t msgId, DNTask<Message> *task, uint32_t breakTime)
 {
 	unique_lock<shared_mutex> ulock(oMsgMutex);
 	mMsgList.emplace(msgId, task);
 	// timeout
 	if(breakTime > 0)
 	{
-		task->TimerId() = Timer()->setTimeout(breakTime, std::bind(&DNClientProxy::MessageTimeoutTimer, reinterpret_cast<DNClientProxy*>(this), placeholders::_1));
+		task->TimerId() = Timer()->setTimeout(breakTime, std::bind(&DNClientProxy::MessageTimeoutTimer, this, placeholders::_1));
 		mMapTimer[task->TimerId()] = msgId;
 	}
 	return true;
 }
 
-void DNClientProxyHelper::DelMsg(unsigned int msgId)
+void DNClientProxyHelper::DelMsg(uint32_t msgId)
 {
 	unique_lock<shared_mutex> ulock(oMsgMutex);
 	if(mMsgList.contains(msgId))
@@ -129,21 +127,4 @@ void DNClientProxyHelper::DelMsg(unsigned int msgId)
 		}
 	}
 	mMsgList.erase(msgId);
-}
-
-void DNClientProxyHelper::TickHeartbeat()
-{
-	static GMsg::S_Common::COM_RetHeartbeat requset;
-	requset.Clear();
-	int timespan = chrono::duration_cast<chrono::seconds>(chrono::system_clock::now().time_since_epoch()).count();
-	requset.set_timespan(timespan);
-
-	static string binData;
-	binData.clear();
-	binData.resize(requset.ByteSize());
-	requset.SerializeToArray(binData.data(), binData.size());
-
-	MessagePack(0, MsgDeal::Ret, requset.GetDescriptor()->full_name().c_str(), binData);
-	
-	send(binData);
 }

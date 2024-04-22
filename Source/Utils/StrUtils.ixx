@@ -224,9 +224,9 @@ export string Md5Hash(const string &message)
 
 	ostringstream oss;
 	oss << hex << setfill('0');
-	for (unsigned char ch : result)
+	for (uint8_t ch : result)
 	{
-		oss << setw(2) << static_cast<unsigned int>(ch);
+		oss << setw(2) << static_cast<uint32_t>(ch);
 	}
 	return oss.str();
 }

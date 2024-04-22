@@ -38,11 +38,11 @@ int HandleLogicServerInit(DNServer *server)
 			string peeraddr = channel->peeraddr();
 			if (channel->isConnected())
 			{
-				DNPrint(2, LoggerLevel::Debug, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
+				DNPrint(TipCode_CliConnOn, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
 			}
 			else
 			{
-				DNPrint(3, LoggerLevel::Debug, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
+				DNPrint(TipCode_CliConnOff, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
 				if(ServerEntityHelper* entity = channel->getContext<ServerEntityHelper>())
 				{
 					ServerEntityManagerHelper<ServerEntity>*  entityMan = serverProxy->GetServerEntityManager();
@@ -68,7 +68,7 @@ int HandleLogicServerInit(DNServer *server)
 			}
 			else
 			{
-				DNPrint(12, LoggerLevel::Error, nullptr);
+				DNPrint(ErrCode_MsgDealType, LoggerLevel::Error, nullptr);
 			}
 		};
 
@@ -89,15 +89,15 @@ int HandleLogicServerInit(DNServer *server)
 
 			if (channel->isConnected())
 			{
-				DNPrint(4, LoggerLevel::Debug, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
+				DNPrint(TipCode_SrvConnOn, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
 				clientSock->SetRegistEvent(&Evt_ReqRegistSrv);
 				
-				channel->setHeartbeat(4000, std::bind(&DNClientProxyHelper::TickHeartbeat, clientSock));
+				channel->setHeartbeat(4000, std::bind(&DNClientProxy::TickHeartbeat, clientSock));
 				channel->setWriteTimeout(12000);
 			}
 			else
 			{
-				DNPrint(5, LoggerLevel::Debug, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
+				DNPrint(TipCode_SrvConnOff, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
 			}
 
 			if(clientSock->isReconnect())
@@ -149,12 +149,12 @@ int HandleLogicServerInit(DNServer *server)
 				}
 				else
 				{
-					DNPrint(13, LoggerLevel::Error, nullptr);
+					DNPrint(ErrCode_MsgFind, LoggerLevel::Error, nullptr);
 				}
 			}
 			else
 			{
-				DNPrint(12, LoggerLevel::Error, nullptr);
+				DNPrint(ErrCode_MsgDealType, LoggerLevel::Error, nullptr);
 			}
 		};
 

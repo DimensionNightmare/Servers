@@ -21,7 +21,7 @@ using namespace GMsg::C_Auth;
 using namespace GMsg::S_Logic;
 
 // client request
-export DNTaskVoid Msg_ReqAuthToken(const SocketChannelPtr &channel, unsigned int msgId, Message *msg)
+export DNTaskVoid Msg_ReqAuthToken(const SocketChannelPtr &channel, uint32_t msgId, Message *msg)
 {
 	C2S_ReqAuthToken* requset = reinterpret_cast<C2S_ReqAuthToken*>(msg);
 
@@ -41,7 +41,7 @@ export DNTaskVoid Msg_ReqAuthToken(const SocketChannelPtr &channel, unsigned int
 		{
 			channel->setContext(entity);
 			entity->SetSock(channel);
-			DNPrint(-1, LoggerLevel::Debug, "match!!\n");
+			DNPrint(0, LoggerLevel::Debug, "match!!\n");
 			if(uint64_t timerId = entity->TimerId())
 			{
 				entity->TimerId() = 0;
@@ -67,7 +67,7 @@ export DNTaskVoid Msg_ReqAuthToken(const SocketChannelPtr &channel, unsigned int
 				requestChild.SerializeToArray(binData.data(), binData.size());
 
 				DNServerProxyHelper* server = dnServer->GetSSock();
-				unsigned int msgIdChild = server->GetMsgId();
+				uint32_t msgIdChild = server->GetMsgId();
 
 				MessagePack(msgIdChild, MsgDeal::Req, requestChild.GetDescriptor()->full_name().c_str(), binData);
 
@@ -94,19 +94,19 @@ export DNTaskVoid Msg_ReqAuthToken(const SocketChannelPtr &channel, unsigned int
 			}
 			else
 			{
-				DNPrint(-1, LoggerLevel::Error, "Msg_ReqAuthToken not LogicServer !!");
+				DNPrint(0, LoggerLevel::Debug, "Msg_ReqAuthToken not LogicServer !!");
 			}
 			
 	
 		}
 		else
 		{
-			DNPrint(-1, LoggerLevel::Debug, "not match!!\n");
+			DNPrint(0, LoggerLevel::Debug, "not match!!\n");
 		}
 	}
 	else
 	{
-		DNPrint(-1, LoggerLevel::Debug, "noaccount !!\n");
+		DNPrint(0, LoggerLevel::Debug, "noaccount !!\n");
 	}
 
 	

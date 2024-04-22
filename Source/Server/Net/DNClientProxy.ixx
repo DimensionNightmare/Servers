@@ -6,13 +6,16 @@ module;
 #include "google/protobuf/message.h"
 
 #include "StdAfx.h"
+#include "Server/S_Common.pb.h"
 export module DNClientProxy;
 
 import DNTask;
+import MessagePack;
 
 using namespace std;
 using namespace google::protobuf;
 using namespace hv;
+using namespace GMsg::S_Common;
 
 export enum class RegistState
 {
@@ -34,7 +37,9 @@ public: // dll override
 
 	const EventLoopPtr& Timer(){return pLoop->loop();}
 
-	void AddTimerRecord(size_t timerId, unsigned int id);
+	void AddTimerRecord(size_t timerId, uint32_t id);
+
+	void TickHeartbeat();
 
 public:
 	// cant init in tcpclient this class
@@ -42,11 +47,11 @@ public:
 
 protected: // dll proxy
 	// only oddnumber
-	atomic<unsigned int> iMsgId;
+	atomic<uint32_t> iMsgId;
 	// unordered_
-	map<unsigned int, DNTask<Message>* > mMsgList;
+	map<uint32_t, DNTask<Message>* > mMsgList;
 	//
-	map<uint64_t, unsigned int > mMapTimer;
+	map<uint64_t, uint32_t > mMapTimer;
 	// status
 	RegistState eRegistState;
 
@@ -84,7 +89,7 @@ void DNClientProxy::TickRegistEvent(size_t timerID)
 		}
 		else
 		{
-			DNPrint(16, LoggerLevel::Error, nullptr);
+			DNPrint(ErrCode_NotCallbackEvent, LoggerLevel::Error, nullptr);
 		}
 	} 
 	else 
@@ -95,7 +100,7 @@ void DNClientProxy::TickRegistEvent(size_t timerID)
 
 void DNClientProxy::MessageTimeoutTimer(uint64_t timerID)
 {
-	unsigned int msgId = -1;
+	uint32_t msgId = -1;
 	{
 		if(!mMapTimer.contains(timerID))
 		{
@@ -119,8 +124,25 @@ void DNClientProxy::MessageTimeoutTimer(uint64_t timerID)
 	}
 }
 
-void DNClientProxy::AddTimerRecord(size_t timerId, unsigned int id)
+void DNClientProxy::AddTimerRecord(size_t timerId, uint32_t id)
 {
 	unique_lock<shared_mutex> ulock(oTimerMutex);
 	mMapTimer.emplace(timerId, id);
+}
+
+void DNClientProxy::TickHeartbeat()
+{
+	static COM_RetHeartbeat requset;
+	requset.Clear();
+	int timespan = chrono::duration_cast<chrono::seconds>(chrono::system_clock::now().time_since_epoch()).count();
+	requset.set_timespan(timespan);
+
+	static string binData;
+	binData.clear();
+	binData.resize(requset.ByteSize());
+	requset.SerializeToArray(binData.data(), binData.size());
+
+	MessagePack(0, MsgDeal::Ret, requset.GetDescriptor()->full_name().c_str(), binData);
+	
+	send(binData);
 }

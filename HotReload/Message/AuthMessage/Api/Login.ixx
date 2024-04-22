@@ -85,7 +85,7 @@ export void ApiLogin(HttpService* service)
 		}
 		catch(exception& e)
 		{
-			DNPrint(-1, LoggerLevel::Error, "%s", e.what());
+			DNPrint(0, LoggerLevel::Debug, "%s", e.what());
 			errData["code"] = HTTP_STATUS_BAD_REQUEST;
 			errData["message"] = "Server Error!!";
 			res->SetBody(errData.dump());
@@ -117,17 +117,17 @@ export void ApiLogin(HttpService* service)
 			
 			AuthServerHelper* authServer = GetAuthServer();
 			DNClientProxyHelper* client = authServer->GetCSock();
-			unsigned int msgId = client->GetMsgId();
+			uint32_t msgId = client->GetMsgId();
 			
 			// first Can send Msg?
 			if(client->GetMsg(msgId))
 			{
-				DNPrint(-1, LoggerLevel::Error, "+++++ %lu, \n", msgId);
+				DNPrint(0, LoggerLevel::Debug, "+++++ %lu, \n", msgId);
 				co_return;
 			}
 			// else
 			// {
-				DNPrint(-1, LoggerLevel::Debug, "----- %lu, \n", msgId);
+				DNPrint(0, LoggerLevel::Debug, "----- %lu, \n", msgId);
 			// }
 			
 			// pack data

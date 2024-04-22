@@ -20,12 +20,12 @@ export DNTaskVoid Evt_ReqRegistSrv()
 	AuthServerHelper* dnServer = GetAuthServer();
 	DNClientProxyHelper* client = dnServer->GetCSock();
 	DNWebProxyHelper* server = dnServer->GetSSock();
-	unsigned int msgId = client->GetMsgId();
+	uint32_t msgId = client->GetMsgId();
 	
 	// first Can send Msg?
 	if(client->GetMsg(msgId))
 	{
-		DNPrint(-1, LoggerLevel::Error, "+++++ %lu, \n", msgId);
+		DNPrint(0, LoggerLevel::Debug, "+++++ %lu, \n", msgId);
 		co_return;
 	}
 	else
@@ -73,13 +73,13 @@ export DNTaskVoid Evt_ReqRegistSrv()
 	
 	if(response.success())
 	{
-		DNPrint(-1, LoggerLevel::Debug, "regist Server success! \n");
+		DNPrint(0, LoggerLevel::Debug, "regist Server success! \n");
 		client->RegistState() = RegistState::Registed;
 		dnServer->ServerIndex() = response.server_index();
 	}
 	else
 	{
-		DNPrint(-1, LoggerLevel::Debug, "regist Server error! msg:%lu \n", msgId);
+		DNPrint(0, LoggerLevel::Debug, "regist Server error! msg:%lu \n", msgId);
 		dnServer->IsRun() = false; //exit application
 		client->RegistState() = RegistState::None;
 	}
