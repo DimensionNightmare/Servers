@@ -58,7 +58,7 @@ export DNTaskVoid Evt_ReqRegistSrv()
 	// pack data
 	string binData;
 	binData.resize(requset.ByteSizeLong());
-	requset.SerializeToArray(binData.data(), (int)binData.size());
+	requset.SerializeToArray(binData.data(), binData.size());
 	MessagePack(msgId, MsgDeal::Req, requset.GetDescriptor()->full_name().c_str(), binData);
 	
 	// data alloc
@@ -75,7 +75,7 @@ export DNTaskVoid Evt_ReqRegistSrv()
 		co_await dataChannel;
 		if(dataChannel.HasFlag(DNTaskFlag::Timeout))
 		{
-
+			DNPrint(0, LoggerLevel::Debug, "requst timeout! \n");
 		}
 	}
 	
@@ -131,7 +131,7 @@ export DNTaskVoid Msg_ReqAuthAccount(const SocketChannelPtr &channel, uint32_t m
 		// pack data
 		string binData;
 		binData.resize(msg->ByteSizeLong());
-		msg->SerializeToArray(binData.data(), (int)binData.size());
+		msg->SerializeToArray(binData.data(), binData.size());
 		MessagePack(smsgId, MsgDeal::Req, G2g_ReqLoginToken::GetDescriptor()->full_name().c_str(), binData);
 		
 		// data alloc
@@ -141,12 +141,12 @@ export DNTaskVoid Msg_ReqAuthAccount(const SocketChannelPtr &channel, uint32_t m
 		}();
 
 		{
-			server->AddMsg(smsgId, &dataChannel);
+			server->AddMsg(smsgId, &dataChannel, 8000);
 			entity->GetSock()->write(binData);
 			co_await dataChannel;
 			if(dataChannel.HasFlag(DNTaskFlag::Timeout))
 			{
-
+				DNPrint(0, LoggerLevel::Debug, "requst timeout! \n");
 			}
 		}
 

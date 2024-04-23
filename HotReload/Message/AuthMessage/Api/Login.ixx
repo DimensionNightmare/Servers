@@ -133,7 +133,7 @@ export void ApiLogin(HttpService* service)
 			// pack data
 			string binData;
 			binData.resize(requset.ByteSizeLong());
-			requset.SerializeToArray(binData.data(), (int)binData.size());
+			requset.SerializeToArray(binData.data(), binData.size());
 			MessagePack(msgId, MsgDeal::Req, requset.GetDescriptor()->full_name().c_str(), binData);
 			
 			// data alloc
@@ -154,7 +154,9 @@ export void ApiLogin(HttpService* service)
 				client->DelMsg(msgId);
 				dataChannel.CallResume();
 			};
-			
+
+			Json retData;
+
 			{
 				// wait data parse
 				client->AddMsg(msgId, &dataChannel);
@@ -162,15 +164,16 @@ export void ApiLogin(HttpService* service)
 				co_await dataChannel;
 				if(dataChannel.HasFlag(DNTaskFlag::Timeout))
 				{
-					
+					retData["code"] = HTTP_STATUS_OK;
+				}
+				else
+				{
+					retData["code"] = HTTP_STATUS_REQUEST_TIMEOUT;
 				}
 			}
 
 			writerProxy->onclose = nullptr;
 
-			Json retData;
-
-			retData["code"] = HTTP_STATUS_OK;
 			// response.set_ip_addr("asdasda");
 			// response.set_token("asdas");
 			// response.set_state_code(958);

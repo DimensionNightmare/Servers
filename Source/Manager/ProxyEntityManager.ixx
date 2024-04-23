@@ -11,8 +11,7 @@ import EntityManager;
 
 using namespace std;
 
-export template<class TEntity = ProxyEntity>
-class ProxyEntityManager : public EntityManager<TEntity>
+export class ProxyEntityManager : public EntityManager<ProxyEntity>
 {
 public:
     ProxyEntityManager(){};
@@ -31,22 +30,20 @@ protected: // dll proxy
 	
 };
 
-template <class TEntity>
-bool ProxyEntityManager<TEntity>::Init()
+bool ProxyEntityManager::Init()
 {
-	return EntityManager<TEntity>::Init();
+	return EntityManager::Init();
 }
 
-template <class TEntity>
-void ProxyEntityManager<TEntity>::EntityCloseTimer(uint64_t timerID)
+void ProxyEntityManager::EntityCloseTimer(uint64_t timerID)
 {
-	unique_lock<shared_mutex> ulock(this->oTimerMutex);
-	if(!this->mMapTimer.contains(timerID))
+	unique_lock<shared_mutex> ulock(oTimerMutex);
+	if(!mMapTimer.contains(timerID))
 	{
 		return;
 	}
 
-	uint32_t entityId = this->mMapTimer[timerID];
+	uint32_t entityId = mMapTimer[timerID];
 	if(RemoveEntity(entityId))
 	{
 		DNPrint(0, LoggerLevel::Debug, "destory proxy Timer entity\n");
@@ -54,15 +51,14 @@ void ProxyEntityManager<TEntity>::EntityCloseTimer(uint64_t timerID)
 	
 }
 
-template <class TEntity>
-bool ProxyEntityManager<TEntity>::RemoveEntity(uint32_t entityId)
+bool ProxyEntityManager::RemoveEntity(uint32_t entityId)
 {
-	if(this->mEntityMap.contains(entityId))
+	if(mEntityMap.contains(entityId))
 	{
-		TEntity* entity = &this->mEntityMap[entityId];
-		unique_lock<shared_mutex> ulock(this->oMapMutex);
+		ProxyEntity* entity = &mEntityMap[entityId];
+		unique_lock<shared_mutex> ulock(oMapMutex);
 
-		this->mEntityMap.erase(entityId);
+		mEntityMap.erase(entityId);
 		return true;
 	}
 

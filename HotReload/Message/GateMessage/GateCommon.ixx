@@ -78,7 +78,7 @@ export DNTaskVoid Evt_ReqRegistSrv()
 	// pack data
 	string binData;
 	binData.resize(requset.ByteSizeLong());
-	requset.SerializeToArray(binData.data(), (int)binData.size());
+	requset.SerializeToArray(binData.data(), binData.size());
 	MessagePack(msgId, MsgDeal::Req, requset.GetDescriptor()->full_name().c_str(), binData);
 	
 	// data alloc
@@ -96,7 +96,7 @@ export DNTaskVoid Evt_ReqRegistSrv()
 		co_await dataChannel;
 		if(dataChannel.HasFlag(DNTaskFlag::Timeout))
 		{
-
+			DNPrint(0, LoggerLevel::Debug, "requst timeout! \n");
 		}
 	}
 	
@@ -167,7 +167,7 @@ export void Msg_ReqRegistSrv(const SocketChannelPtr &channel, uint32_t msgId, Me
 		retMsg.set_is_regist(true);
 		retMsg.set_server_index(requset->server_index());
 		binData.resize(retMsg.ByteSizeLong());
-		retMsg.SerializeToArray(binData.data(), (int)binData.size());
+		retMsg.SerializeToArray(binData.data(), binData.size());
 		MessagePack(0, MsgDeal::Ret, retMsg.GetDescriptor()->full_name().c_str(), binData);
 
 		GateServerHelper* dnServer = GetGateServer();

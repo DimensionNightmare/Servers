@@ -51,7 +51,7 @@ int HandleGlobalServerInit(DNServer *server)
 
 				if(ServerEntityHelper* entity = channel->getContext<ServerEntityHelper>())
 				{
-					ServerEntityManagerHelper<ServerEntity>*  entityMan = serverProxy->GetServerEntityManager();
+					ServerEntityManagerHelper*  entityMan = serverProxy->GetServerEntityManager();
 					entityMan->RemoveEntity(entity->ID());
 					channel->setContext(nullptr);
 				}

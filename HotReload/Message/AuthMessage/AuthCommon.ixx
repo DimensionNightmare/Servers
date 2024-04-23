@@ -50,7 +50,7 @@ export DNTaskVoid Evt_ReqRegistSrv()
 	// pack data
 	string binData;
 	binData.resize(requset.ByteSizeLong());
-	requset.SerializeToArray(binData.data(), (int)binData.size());
+	requset.SerializeToArray(binData.data(), binData.size());
 	MessagePack(msgId, MsgDeal::Req, requset.GetDescriptor()->full_name().c_str(), binData);
 	
 	// data alloc
@@ -67,7 +67,7 @@ export DNTaskVoid Evt_ReqRegistSrv()
 		co_await dataChannel;
 		if(dataChannel.HasFlag(DNTaskFlag::Timeout))
 		{
-
+			DNPrint(0, LoggerLevel::Debug, "requst timeout! \n");
 		}
 	}
 	

@@ -27,8 +27,8 @@ public:
 
 	DNClientProxyHelper* GetCSock(){ return nullptr;}
 	DNServerProxyHelper* GetSSock(){ return nullptr;}
-	ServerEntityManagerHelper<ServerEntity>* GetServerEntityManager(){ return nullptr;}
-	ClientEntityManagerHelper<ClientEntity>* GetClientEntityManager(){ return nullptr;}
+	ServerEntityManagerHelper* GetServerEntityManager(){ return nullptr;}
+	ClientEntityManagerHelper* GetClientEntityManager(){ return nullptr;}
 
 	bool InitDatabase();
 

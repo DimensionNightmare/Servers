@@ -12,8 +12,7 @@ import EntityManager;
 
 using namespace std;
 
-export template<class TEntity = ServerEntity>
-class ServerEntityManager : public EntityManager<ServerEntity>
+export class ServerEntityManager : public EntityManager<ServerEntity>
 {
 public:
     ServerEntityManager();
@@ -28,37 +27,31 @@ public: // dll override
 	virtual bool RemoveEntity(uint32_t entityId);
 
 protected: // dll proxy
-    map<ServerType, list<TEntity*> > mEntityMapList;
+    map<ServerType, list<ServerEntity*> > mEntityMapList;
 	// server pull server
 	atomic<uint32_t> iServerId;
 	list<uint32_t> mIdleServerId;
 
 };
 
-
-
-template <class TEntity>
-ServerEntityManager<TEntity>::ServerEntityManager()
+ServerEntityManager::ServerEntityManager()
 {
 	mEntityMapList.clear();
 	iServerId = 0;
 	mIdleServerId.clear();
 }
 
-template <class TEntity>
-ServerEntityManager<TEntity>::~ServerEntityManager()
+ServerEntityManager::~ServerEntityManager()
 {
 	mEntityMapList.clear();
 }
 
-template <class TEntity>
-bool ServerEntityManager<TEntity>::Init()
+bool ServerEntityManager::Init()
 {
-	return EntityManager<TEntity>::Init();
+	return EntityManager::Init();
 }
 
-template <class TEntity>
-void ServerEntityManager<TEntity>::EntityCloseTimer(uint64_t timerID)
+void ServerEntityManager::EntityCloseTimer(uint64_t timerID)
 {
 	unique_lock<shared_mutex> ulock(oTimerMutex);
 	if(!mMapTimer.contains(timerID))
@@ -74,22 +67,21 @@ void ServerEntityManager<TEntity>::EntityCloseTimer(uint64_t timerID)
 	
 }
 
-template <class TEntity>
-bool ServerEntityManager<TEntity>::RemoveEntity(uint32_t entityId)
+bool ServerEntityManager::RemoveEntity(uint32_t entityId)
 {
-	if(this->mEntityMap.contains(entityId))
+	if(mEntityMap.contains(entityId))
 	{
-		TEntity* entity = &this->mEntityMap[entityId];
-		unique_lock<shared_mutex> ulock(this->oMapMutex);
+		ServerEntity* entity = &mEntityMap[entityId];
+		unique_lock<shared_mutex> ulock(oMapMutex);
 
-		this->mEntityMapList[entity->GetType()].remove(entity);
+		mEntityMapList[entity->GetType()].remove(entity);
 
-		if(TEntity* owner = entity->LinkNode())
+		if(ServerEntity* owner = entity->LinkNode())
 		{
 			owner->ClearFlag(ServerEntityFlag::Locked);
 		}
 		
-		this->mEntityMap.erase(entityId);
+		mEntityMap.erase(entityId);
 		return true;
 	}
 

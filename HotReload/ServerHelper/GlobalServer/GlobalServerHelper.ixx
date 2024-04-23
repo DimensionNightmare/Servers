@@ -26,7 +26,7 @@ public:
 
 	DNClientProxyHelper* GetCSock(){ return nullptr;}
 	DNServerProxyHelper* GetSSock(){ return nullptr;}
-	ServerEntityManagerHelper<ServerEntity>* GetServerEntityManager(){ return nullptr;}
+	ServerEntityManagerHelper* GetServerEntityManager(){ return nullptr;}
 
 	void UpdateServerGroup();
 
@@ -50,7 +50,7 @@ export GlobalServerHelper* GetGlobalServer()
 
 void GlobalServerHelper::UpdateServerGroup()
 {
-	ServerEntityManagerHelper<ServerEntity>*  entityMan = GetServerEntityManager();
+	ServerEntityManagerHelper*  entityMan = GetServerEntityManager();
 
 	list<ServerEntity*> gates = entityMan->GetEntityByList(ServerType::GateServer);
 	if(gates.size() <= 0)
@@ -83,7 +83,7 @@ void GlobalServerHelper::UpdateServerGroup()
 		
 		// timer destory
 		entity->TimerId() = entityMan->Timer()->setTimeout(10000,
-			std::bind(&ServerEntityManager<ServerEntity>::EntityCloseTimer, entityMan, placeholders::_1));
+			std::bind(&ServerEntityManager::EntityCloseTimer, entityMan, placeholders::_1));
 
 		entityMan->AddTimerRecord(entity->TimerId(), entity->ID());
 	};

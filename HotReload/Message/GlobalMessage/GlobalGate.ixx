@@ -20,7 +20,7 @@ export void Exe_RetRegistSrv(const SocketChannelPtr &channel, uint32_t msgId, Me
 	g2G_RetRegistSrv* requset = reinterpret_cast<g2G_RetRegistSrv*>(msg);
 
 	GlobalServerHelper* dnServer = GetGlobalServer();
-	ServerEntityManagerHelper<ServerEntity>*  entityMan = dnServer->GetServerEntityManager();
+	ServerEntityManagerHelper*  entityMan = dnServer->GetServerEntityManager();
 	if(ServerEntityHelper* entity = entityMan->GetEntity(requset->server_index()))
 	{
 		if(requset->is_regist())

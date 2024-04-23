@@ -12,8 +12,7 @@ import ClientEntityManager;
 using namespace std;
 using namespace hv;
 
-export template<class TEntity = ClientEntity>
-class ClientEntityManagerHelper : public ClientEntityManager<TEntity>
+export class ClientEntityManagerHelper : public ClientEntityManager
 {
 private:
 	ClientEntityManagerHelper(){}
@@ -25,16 +24,15 @@ public:
     ClientEntityHelper* GetEntity(uint32_t id);
 };
 
-template <class TEntity>
-ClientEntityHelper* ClientEntityManagerHelper<TEntity>::AddEntity(uint32_t entityId)
+ClientEntityHelper* ClientEntityManagerHelper::AddEntity(uint32_t entityId)
 {
 	ClientEntityHelper* entity = nullptr;
 
-	if (!this->mEntityMap.contains(entityId))
+	if (!mEntityMap.contains(entityId))
 	{
-		unique_lock<shared_mutex> ulock(this->oMapMutex);
+		unique_lock<shared_mutex> ulock(oMapMutex);
 
-		TEntity* oriEntity = &this->mEntityMap[entityId];
+		ClientEntity* oriEntity = &mEntityMap[entityId];
 		
 		entity = static_cast<ClientEntityHelper*>(oriEntity);
 		entity->ID() = entityId;
@@ -43,19 +41,18 @@ ClientEntityHelper* ClientEntityManagerHelper<TEntity>::AddEntity(uint32_t entit
 	return entity;
 }
 
-template <class TEntity>
-bool ClientEntityManagerHelper<TEntity>::RemoveEntity(uint32_t entityId)
+bool ClientEntityManagerHelper::RemoveEntity(uint32_t entityId)
 {
 	
-	if(this->mEntityMap.contains(entityId))
+	if(mEntityMap.contains(entityId))
 	{
-		TEntity* oriEntity = &this->mEntityMap[entityId];
+		ClientEntity* oriEntity = &mEntityMap[entityId];
 		ClientEntityHelper* entity = static_cast<ClientEntityHelper*>(oriEntity);
 		
-		unique_lock<shared_mutex> ulock(this->oMapMutex);
+		unique_lock<shared_mutex> ulock(oMapMutex);
 
 		DNPrint(0, LoggerLevel::Debug, "destory client entity\n");
-		this->mEntityMap.erase(entityId);
+		mEntityMap.erase(entityId);
 
 		return true;
 	}
@@ -63,14 +60,14 @@ bool ClientEntityManagerHelper<TEntity>::RemoveEntity(uint32_t entityId)
 	return false;
 }
 
-template <class TEntity>
-ClientEntityHelper* ClientEntityManagerHelper<TEntity>::GetEntity(uint32_t entityId)
+
+ClientEntityHelper* ClientEntityManagerHelper::GetEntity(uint32_t entityId)
 {
-	shared_lock<shared_mutex> lock(this->oMapMutex);
+	shared_lock<shared_mutex> lock(oMapMutex);
 	ClientEntityHelper* entity = nullptr;
-	if(this->mEntityMap.contains(entityId))
+	if(mEntityMap.contains(entityId))
 	{
-		TEntity* oriEntity = &this->mEntityMap[entityId];
+		ClientEntity* oriEntity = &mEntityMap[entityId];
 		return static_cast<ClientEntityHelper*>(oriEntity);
 	}
 	// allow return empty

@@ -2,6 +2,7 @@ module;
 #include <coroutine>
 #include "hv/Channel.h"
 
+#include "StdAfx.h"
 #include "Server/S_Auth_Control.pb.h"
 #include "Server/S_Control_Global.pb.h"
 export module ControlMessage:ControlAuth;
@@ -66,12 +67,12 @@ export DNTaskVoid Msg_ReqAuthAccount(const SocketChannelPtr &channel, uint32_t m
 		
 		{
 			// wait data parse
-			server->AddMsg(smsgId, &dataChannel);
+			server->AddMsg(smsgId, &dataChannel, 9000);
 			entity->GetSock()->write(binData);
 			co_await dataChannel;
 			if(dataChannel.HasFlag(DNTaskFlag::Timeout))
 			{
-
+				DNPrint(0, LoggerLevel::Debug, "requst timeout! \n");
 			}
 		}
 

@@ -25,7 +25,7 @@ export DNTaskVoid Msg_ReqAuthToken(const SocketChannelPtr &channel, uint32_t msg
 	C2S_ReqAuthToken* requset = reinterpret_cast<C2S_ReqAuthToken*>(msg);
 
 	GateServerHelper* dnServer = GetGateServer();
-	ProxyEntityManagerHelper<ProxyEntity>* entityMan = dnServer->GetProxyEntityManager();
+	ProxyEntityManagerHelper* entityMan = dnServer->GetProxyEntityManager();
 
 	S2C_ResAuthToken response;
 	string binData;
@@ -47,7 +47,7 @@ export DNTaskVoid Msg_ReqAuthToken(const SocketChannelPtr &channel, uint32_t msg
 				entityMan->Timer()->killTimer(timerId);
 			}
 			
-			ServerEntityManagerHelper<ServerEntity>* serverEntityMan = dnServer->GetServerEntityManager();
+			ServerEntityManagerHelper* serverEntityMan = dnServer->GetServerEntityManager();
 			ServerEntityHelper* serverEntity = nullptr;
 
 			// <cache> server to load login data
@@ -69,7 +69,8 @@ export DNTaskVoid Msg_ReqAuthToken(const SocketChannelPtr &channel, uint32_t msg
 			{
 
 				entity->ServerIndex() = serverEntity->ID();
-				
+			
+				//redirect G2L_ReqClientLogin dot pack string
 				requset->clear_token();
 				binData.resize(requset->ByteSize());
 				requset->SerializeToArray(binData.data(), binData.size());
@@ -84,13 +85,18 @@ export DNTaskVoid Msg_ReqAuthToken(const SocketChannelPtr &channel, uint32_t msg
 					co_return response;
 				}();
 
-				server->AddMsg(msgIdChild, &dataChannel);
+				{
+					ServerEntityHelper* serverEntityHelper = static_cast<ServerEntityHelper*>(serverEntity);
+					server->AddMsg(msgIdChild, &dataChannel);
+					serverEntityHelper->GetSock()->write(binData);
+					co_await dataChannel;
+					if(dataChannel.HasFlag(DNTaskFlag::Timeout))
+					{
+						DNPrint(0, LoggerLevel::Debug, "requst timeout! \n");
+					}
 
-				ServerEntityHelper* serverEntityHelper = static_cast<ServerEntityHelper*>(serverEntity);
-				serverEntityHelper->GetSock()->write(binData);
-				binData.clear();
-
-				co_await dataChannel;
+					binData.clear();
+				}
 
 				if(!response.state_code())
 				{

@@ -27,7 +27,7 @@ export void Exe_ReqUserToken(const SocketChannelPtr &channel, uint32_t msgId, Me
 	string binData;
 
 	GateServerHelper* dnServer = GetGateServer();
-	ProxyEntityManagerHelper<ProxyEntity>* entityMan = dnServer->GetProxyEntityManager();
+	ProxyEntityManagerHelper* entityMan = dnServer->GetProxyEntityManager();
 	ProxyEntityHelper* entity = nullptr;
 	if(entity = entityMan->GetEntity(requset->account_id()))
 	{
@@ -39,7 +39,7 @@ export void Exe_ReqUserToken(const SocketChannelPtr &channel, uint32_t msgId, Me
 			retMsg.set_ip(requset->ip());
 
 			binData.resize(retMsg.ByteSizeLong());
-			retMsg.SerializeToArray(binData.data(), (int)binData.size());
+			retMsg.SerializeToArray(binData.data(), binData.size());
 			MessagePack(0, MsgDeal::Ret, retMsg.GetDescriptor()->full_name().c_str(), binData);
 
 			//kick socket
@@ -52,7 +52,7 @@ export void Exe_ReqUserToken(const SocketChannelPtr &channel, uint32_t msgId, Me
 			//kick game
 			if(uint32_t serverIndex = entity->ServerIndex())
 			{
-				ServerEntityManagerHelper<ServerEntity>* serverEntityMan = dnServer->GetServerEntityManager();
+				ServerEntityManagerHelper* serverEntityMan = dnServer->GetServerEntityManager();
 				ServerEntity* serverEntity = serverEntityMan->GetEntity(serverIndex);
 
 			}
@@ -80,13 +80,13 @@ export void Exe_ReqUserToken(const SocketChannelPtr &channel, uint32_t msgId, Me
 	if(!entity->TimerId())
 	{
 		entity->TimerId() = entityMan->Timer()->setTimeout(30000, 
-			std::bind(&ProxyEntityManager<ProxyEntity>::EntityCloseTimer, entityMan, placeholders::_1));
+			std::bind(&ProxyEntityManager::EntityCloseTimer, entityMan, placeholders::_1));
 
 		entityMan->AddTimerRecord(entity->TimerId(), entity->ID());
 	}
 	
 	binData.resize(response.ByteSizeLong());
-	response.SerializeToArray(binData.data(), (int)binData.size());
+	response.SerializeToArray(binData.data(), binData.size());
 	MessagePack(msgId, MsgDeal::Res, response.GetDescriptor()->full_name().c_str(), binData);
 
 	channel->write(binData);

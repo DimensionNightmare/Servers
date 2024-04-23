@@ -12,8 +12,7 @@ import ProxyEntityManager;
 using namespace std;
 using namespace hv;
 
-export template<class TEntity = ProxyEntity>
-class ProxyEntityManagerHelper : public ProxyEntityManager<TEntity>
+export class ProxyEntityManagerHelper : public ProxyEntityManager
 {
 private:
 	ProxyEntityManagerHelper(){}
@@ -25,16 +24,15 @@ public:
     ProxyEntityHelper* GetEntity(uint32_t id);
 };
 
-template <class TEntity>
-ProxyEntityHelper* ProxyEntityManagerHelper<TEntity>::AddEntity(uint32_t entityId)
+ProxyEntityHelper* ProxyEntityManagerHelper::AddEntity(uint32_t entityId)
 {
 	ProxyEntityHelper* entity = nullptr;
 
-	if (!this->mEntityMap.contains(entityId))
+	if (!mEntityMap.contains(entityId))
 	{
-		unique_lock<shared_mutex> ulock(this->oMapMutex);
+		unique_lock<shared_mutex> ulock(oMapMutex);
 
-		TEntity* oriEntity = &this->mEntityMap[entityId];
+		ProxyEntity* oriEntity = &mEntityMap[entityId];
 		
 		entity = static_cast<ProxyEntityHelper*>(oriEntity);
 		entity->ID() = entityId;
@@ -43,32 +41,30 @@ ProxyEntityHelper* ProxyEntityManagerHelper<TEntity>::AddEntity(uint32_t entityI
 	return entity;
 }
 
-template <class TEntity>
-bool ProxyEntityManagerHelper<TEntity>::RemoveEntity(uint32_t entityId)
+bool ProxyEntityManagerHelper::RemoveEntity(uint32_t entityId)
 {
-	if(this->mEntityMap.contains(entityId))
+	if(mEntityMap.contains(entityId))
 	{
-		TEntity* oriEntity = &this->mEntityMap[entityId];
+		ProxyEntity* oriEntity = &mEntityMap[entityId];
 		ProxyEntityHelper* entity = static_cast<ProxyEntityHelper*>(oriEntity);
 		
-		unique_lock<shared_mutex> ulock(this->oMapMutex);
+		unique_lock<shared_mutex> ulock(oMapMutex);
 		
 		DNPrint(0, LoggerLevel::Debug, "destory Proxy entity\n");
-		this->mEntityMap.erase(entityId);
+		mEntityMap.erase(entityId);
 		return true;
 	}
 	
 	return false;
 }
 
-template <class TEntity>
-ProxyEntityHelper* ProxyEntityManagerHelper<TEntity>::GetEntity(uint32_t entityId)
+ProxyEntityHelper* ProxyEntityManagerHelper::GetEntity(uint32_t entityId)
 {
-	shared_lock<shared_mutex> lock(this->oMapMutex);
+	shared_lock<shared_mutex> lock(oMapMutex);
 	ProxyEntityHelper* entity = nullptr;
-	if(this->mEntityMap.contains(entityId))
+	if(mEntityMap.contains(entityId))
 	{
-		TEntity* oriEntity = &this->mEntityMap[entityId];
+		ProxyEntity* oriEntity = &mEntityMap[entityId];
 		return static_cast<ProxyEntityHelper*>(oriEntity);
 	}
 	// allow return empty

@@ -24,7 +24,7 @@ private:
 public:
 
 	DNClientProxyHelper* GetCSock(){ return nullptr;}
-	ServerEntityManagerHelper<ServerEntity>* GetServerEntityManager(){ return nullptr;}
+	ServerEntityManagerHelper* GetServerEntityManager(){ return nullptr;}
 
 	bool InitDatabase();
 

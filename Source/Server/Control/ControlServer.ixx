@@ -35,12 +35,12 @@ public:
 
 public: // dll override
 	virtual DNServerProxy* GetSSock(){return pSSock;}
-	virtual ServerEntityManager<ServerEntity>* GetServerEntityManager(){return pServerEntityMan;}
+	virtual ServerEntityManager* GetServerEntityManager(){return pServerEntityMan;}
 
 protected: // dll proxy
 	DNServerProxy* pSSock;
 
-	ServerEntityManager<ServerEntity>* pServerEntityMan;
+	ServerEntityManager* pServerEntityMan;
 };
 
 
@@ -97,7 +97,7 @@ bool ControlServer::Init()
 	pSSock->setUnpack(setting);
 	pSSock->setThreadNum(4);
 
-	pServerEntityMan = new ServerEntityManager<ServerEntity>;
+	pServerEntityMan = new ServerEntityManager;
 	pServerEntityMan->Init();
 
 	return true;

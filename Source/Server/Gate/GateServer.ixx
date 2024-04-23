@@ -40,15 +40,15 @@ public: // dll override
 	virtual DNServerProxy* GetSSock(){return pSSock;}
 	virtual DNClientProxy* GetCSock(){return pCSock;}
 
-	virtual ServerEntityManager<ServerEntity>* GetServerEntityManager(){return pServerEntityMan;}
-	virtual ProxyEntityManager<ProxyEntity>* GetProxyEntityManager(){return pProxyEntityMan;}
+	virtual ServerEntityManager* GetServerEntityManager(){return pServerEntityMan;}
+	virtual ProxyEntityManager* GetProxyEntityManager(){return pProxyEntityMan;}
 
 protected: // dll proxy
 	DNServerProxy* pSSock;
 	DNClientProxy* pCSock;
 
-	ServerEntityManager<ServerEntity>* pServerEntityMan;
-	ProxyEntityManager<ProxyEntity>* pProxyEntityMan;
+	ServerEntityManager* pServerEntityMan;
+	ProxyEntityManager* pProxyEntityMan;
 };
 
 GateServer::GateServer()
@@ -154,9 +154,9 @@ bool GateServer::Init()
 		pCSock->setUnpack(setting);
 	}
 	
-	pServerEntityMan = new ServerEntityManager<ServerEntity>;
+	pServerEntityMan = new ServerEntityManager;
 	pServerEntityMan->Init();
-	pProxyEntityMan = new ProxyEntityManager<ProxyEntity>;
+	pProxyEntityMan = new ProxyEntityManager;
 	pProxyEntityMan->Init();
 
 	return true;

@@ -12,8 +12,7 @@ import ServerEntityManager;
 using namespace std;
 using namespace hv;
 
-export template<class TEntity = ServerEntity>
-class ServerEntityManagerHelper : public ServerEntityManager<TEntity>
+export class ServerEntityManagerHelper : public ServerEntityManager
 {
 private:
 	ServerEntityManagerHelper(){}
@@ -22,28 +21,27 @@ public:
 
     virtual bool RemoveEntity(uint32_t entityId);
 
-	void MountEntity(ServerType type, TEntity* entity);
+	void MountEntity(ServerType type, ServerEntity* entity);
 
-    void UnMountEntity(ServerType type, TEntity* entity);
+    void UnMountEntity(ServerType type, ServerEntity* entity);
 
     ServerEntityHelper* GetEntity(uint32_t id);
 
-	list<TEntity*>& GetEntityByList(ServerType type);
+	list<ServerEntity*>& GetEntityByList(ServerType type);
 
 	[[nodiscard]] uint32_t ServerIndex();
 };
 
-template <class TEntity>
-ServerEntityHelper* ServerEntityManagerHelper<TEntity>::AddEntity(uint32_t entityId, ServerType regType)
+ServerEntityHelper* ServerEntityManagerHelper::AddEntity(uint32_t entityId, ServerType regType)
 {
 	ServerEntityHelper* entity = nullptr;
 
-	if (!this->mEntityMap.contains(entityId))
+	if (!mEntityMap.contains(entityId))
 	{
-		unique_lock<shared_mutex> ulock(this->oMapMutex);
+		unique_lock<shared_mutex> ulock(oMapMutex);
 
-		TEntity* oriEntity = &this->mEntityMap[entityId];
-		this->mEntityMapList[regType].emplace_back(oriEntity);
+		ServerEntity* oriEntity = &mEntityMap[entityId];
+		mEntityMapList[regType].emplace_back(oriEntity);
 		
 		entity = static_cast<ServerEntityHelper*>(oriEntity);
 		entity->ID() = entityId;
@@ -53,71 +51,65 @@ ServerEntityHelper* ServerEntityManagerHelper<TEntity>::AddEntity(uint32_t entit
 	return entity;
 }
 
-template <class TEntity>
-bool ServerEntityManagerHelper<TEntity>::RemoveEntity(uint32_t entityId)
+bool ServerEntityManagerHelper::RemoveEntity(uint32_t entityId)
 {
-	if(this->mEntityMap.contains(entityId))
+	if(mEntityMap.contains(entityId))
 	{
-		TEntity* oriEntity = &this->mEntityMap[entityId];
+		ServerEntity* oriEntity = &mEntityMap[entityId];
 		ServerEntityHelper* entity = static_cast<ServerEntityHelper*>(oriEntity);
 		
-		unique_lock<shared_mutex> ulock(this->oMapMutex);
+		unique_lock<shared_mutex> ulock(oMapMutex);
 
-		this->mEntityMapList[entity->ServerEntityType()].remove(oriEntity);
+		mEntityMapList[entity->ServerEntityType()].remove(oriEntity);
 		
 		DNPrint(0, LoggerLevel::Debug, "offline destory entity\n");
-		this->mEntityMap.erase(entityId);
+		mEntityMap.erase(entityId);
 		return true;
 	}
 	
 	return false;
 }
 
-template <class TEntity>
-void ServerEntityManagerHelper<TEntity>::MountEntity(ServerType type, TEntity *entity)
+void ServerEntityManagerHelper::MountEntity(ServerType type, ServerEntity *entity)
 {
-	unique_lock<shared_mutex> ulock(this->oMapMutex);
+	unique_lock<shared_mutex> ulock(oMapMutex);
 	// mEntityMap mEntityMapList
-	this->mEntityMapList[type].push_back(entity);
+	mEntityMapList[type].push_back(entity);
 }
 
-template <class TEntity>
-void ServerEntityManagerHelper<TEntity>::UnMountEntity(ServerType type, TEntity *entity)
+void ServerEntityManagerHelper::UnMountEntity(ServerType type, ServerEntity *entity)
 {
-	unique_lock<shared_mutex> ulock(this->oMapMutex);
+	unique_lock<shared_mutex> ulock(oMapMutex);
 	// mEntityMap mEntityMapList
-	this->mEntityMapList[type].remove(entity);
+	mEntityMapList[type].remove(entity);
 }
 
-template <class TEntity>
-ServerEntityHelper* ServerEntityManagerHelper<TEntity>::GetEntity(uint32_t entityId)
+ServerEntityHelper* ServerEntityManagerHelper::GetEntity(uint32_t entityId)
 {
-	shared_lock<shared_mutex> lock(this->oMapMutex);
+	shared_lock<shared_mutex> lock(oMapMutex);
 	ServerEntityHelper* entity = nullptr;
-	if(this->mEntityMap.contains(entityId))
+	if(mEntityMap.contains(entityId))
 	{
-		TEntity* oriEntity = &this->mEntityMap[entityId];
+		ServerEntity* oriEntity = &mEntityMap[entityId];
 		return static_cast<ServerEntityHelper*>(oriEntity);
 	}
 	// allow return empty
 	return entity;
 }
 
-template <class TEntity>
-list<TEntity*>& ServerEntityManagerHelper<TEntity>::GetEntityByList(ServerType type)
+list<ServerEntity*>& ServerEntityManagerHelper::GetEntityByList(ServerType type)
 {
-	shared_lock<shared_mutex> lock(this->oMapMutex);
-	return this->mEntityMapList[type];
+	shared_lock<shared_mutex> lock(oMapMutex);
+	return mEntityMapList[type];
 }
 
-template <class TEntity>
-uint32_t ServerEntityManagerHelper<TEntity>::ServerIndex()
+uint32_t ServerEntityManagerHelper::ServerIndex()
 {
-	// if(this->mIdleServerId.size() > 0)
+	// if(mIdleServerId.size() > 0)
 	// {
-	// 	uint32_t index = this->mIdleServerId.front();
-	// 	this->mIdleServerId.pop_front();
+	// 	uint32_t index = mIdleServerId.front();
+	// 	mIdleServerId.pop_front();
 	// 	return index;
 	// }
-	return ++this->iServerId;
+	return ++iServerId;
 }

@@ -39,13 +39,13 @@ public: // dll override
 	virtual DNServerProxy* GetSSock(){return pSSock;}
 	virtual DNClientProxy* GetCSock(){return pCSock;}
 
-	virtual ServerEntityManager<ServerEntity>* GetServerEntityManager(){return pServerEntityMan;}
+	virtual ServerEntityManager* GetServerEntityManager(){return pServerEntityMan;}
 
 protected: // dll proxy
 	DNServerProxy* pSSock;
 	DNClientProxy* pCSock;
 
-	ServerEntityManager<ServerEntity>* pServerEntityMan;
+	ServerEntityManager* pServerEntityMan;
 };
 
 
@@ -145,7 +145,7 @@ bool GlobalServer::Init()
 		pCSock->setUnpack(setting);
 	}
 	
-	pServerEntityMan = new ServerEntityManager<ServerEntity>;
+	pServerEntityMan = new ServerEntityManager;
 	pServerEntityMan->Init();
 
 	return true;

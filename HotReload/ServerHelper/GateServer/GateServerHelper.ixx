@@ -22,8 +22,8 @@ public:
 
 	DNClientProxyHelper* GetCSock(){ return nullptr;}
 	DNServerProxyHelper* GetSSock(){ return nullptr;}
-	ServerEntityManagerHelper<ServerEntity>* GetServerEntityManager(){ return nullptr;}
-	ProxyEntityManagerHelper<ProxyEntity>* GetProxyEntityManager(){ return nullptr;}
+	ServerEntityManagerHelper* GetServerEntityManager(){ return nullptr;}
+	ProxyEntityManagerHelper* GetProxyEntityManager(){ return nullptr;}
 
 	void ServerEntityCloseEvent(Entity *entity);
 	void ProxyEntityCloseEvent(Entity *entity);
@@ -53,7 +53,7 @@ void GateServerHelper::ServerEntityCloseEvent(Entity* entity)
 	retMsg.set_server_index(castObj->ID());
 	retMsg.set_is_regist(false);
 	binData.resize(retMsg.ByteSizeLong());
-	retMsg.SerializeToArray(binData.data(), (int)binData.size());
+	retMsg.SerializeToArray(binData.data(), binData.size());
 	MessagePack(0, MsgDeal::Ret, retMsg.GetDescriptor()->full_name().c_str(), binData);
 
 	DNClientProxyHelper* client = GetCSock();

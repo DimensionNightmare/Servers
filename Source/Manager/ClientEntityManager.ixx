@@ -12,8 +12,7 @@ import EntityManager;
 
 using namespace std;
 
-export template<class TEntity = ClientEntity>
-class ClientEntityManager : public EntityManager<ClientEntity>
+export class ClientEntityManager : public EntityManager<ClientEntity>
 {
 public:
     ClientEntityManager(){};
@@ -30,8 +29,7 @@ protected: // dll proxy
 
 };
 
-template <class TEntity>
-bool ClientEntityManager<TEntity>::Init()
+bool ClientEntityManager::Init()
 {
-	return EntityManager<TEntity>::Init();
+	return EntityManager::Init();
 }
