@@ -87,7 +87,7 @@ export DNTaskVoid Msg_ReqAuthToken(const SocketChannelPtr &channel, uint32_t msg
 
 				{
 					ServerEntityHelper* serverEntityHelper = static_cast<ServerEntityHelper*>(serverEntity);
-					server->AddMsg(msgIdChild, &dataChannel);
+					server->AddMsg(msgIdChild, &dataChannel, 9000);
 					serverEntityHelper->GetSock()->write(binData);
 					co_await dataChannel;
 					if(dataChannel.HasFlag(DNTaskFlag::Timeout))

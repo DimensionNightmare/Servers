@@ -87,7 +87,7 @@ export void Exe_ReqUserToken(const SocketChannelPtr &channel, uint32_t msgId, Me
 	
 	binData.resize(response.ByteSizeLong());
 	response.SerializeToArray(binData.data(), binData.size());
-	MessagePack(msgId, MsgDeal::Res, response.GetDescriptor()->full_name().c_str(), binData);
+	MessagePack(msgId, MsgDeal::Res, nullptr, binData);
 
 	channel->write(binData);
 }

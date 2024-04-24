@@ -44,10 +44,7 @@ ProxyEntityHelper* ProxyEntityManagerHelper::AddEntity(uint32_t entityId)
 bool ProxyEntityManagerHelper::RemoveEntity(uint32_t entityId)
 {
 	if(mEntityMap.contains(entityId))
-	{
-		ProxyEntity* oriEntity = &mEntityMap[entityId];
-		ProxyEntityHelper* entity = static_cast<ProxyEntityHelper*>(oriEntity);
-		
+	{		
 		unique_lock<shared_mutex> ulock(oMapMutex);
 		
 		DNPrint(0, LoggerLevel::Debug, "destory Proxy entity\n");

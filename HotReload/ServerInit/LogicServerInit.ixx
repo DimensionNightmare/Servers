@@ -52,7 +52,7 @@ int HandleLogicServerInit(DNServer *server)
 			}
 		};
 
-		auto onMessage = [](const SocketChannelPtr &channel, Buffer *buf) 
+		auto onMessage = [serverSock](const SocketChannelPtr &channel, Buffer *buf) 
 		{
 			MessagePacket packet;
 			memcpy(&packet, buf->data(), MessagePacket::PackLenth);
@@ -65,6 +65,21 @@ int HandleLogicServerInit(DNServer *server)
 			{
 				string msgData(buf->base + MessagePacket::PackLenth, packet.pkgLenth);
 				LogicMessageHandle::MsgRetHandle(channel, packet.msgId, packet.msgHashId, msgData);
+			}
+			else if(packet.dealType == MsgDeal::Res)
+			{
+				if(DNTask<Message>* task = serverSock->GetMsg(packet.msgId)) //client sock request
+				{
+					serverSock->DelMsg(packet.msgId);
+					task->Resume();
+					Message* message = task->GetResult();
+					message->ParseFromArray(buf->base + MessagePacket::PackLenth, packet.pkgLenth);
+					task->CallResume();
+				}
+				else
+				{
+					DNPrint(ErrCode_MsgFind, LoggerLevel::Error, nullptr);
+				}
 			}
 			else
 			{
@@ -90,10 +105,9 @@ int HandleLogicServerInit(DNServer *server)
 			if (channel->isConnected())
 			{
 				DNPrint(TipCode_SrvConnOn, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
-				clientSock->SetRegistEvent(&Evt_ReqRegistSrv);
-				
 				channel->setHeartbeat(4000, std::bind(&DNClientProxy::TickHeartbeat, clientSock));
 				channel->setWriteTimeout(12000);
+				clientSock->SetRegistEvent(&Evt_ReqRegistSrv);
 			}
 			else
 			{

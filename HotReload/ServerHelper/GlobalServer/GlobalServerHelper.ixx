@@ -29,9 +29,6 @@ public:
 	ServerEntityManagerHelper* GetServerEntityManager(){ return nullptr;}
 
 	void UpdateServerGroup();
-
-public:
-	static void TickHeartbeat(hio_t* io);
 };
 
 static GlobalServerHelper* PGlobalServerHelper = nullptr;
@@ -126,14 +123,3 @@ void GlobalServerHelper::UpdateServerGroup()
 		
 	}
 }
-
-void GlobalServerHelper::TickHeartbeat(hio_t* io)
-{
-	SocketChannel* channel = reinterpret_cast<SocketChannel*>(hio_context(io));
-	//Regist?
-	if(!channel->context())
-	{
-		channel->close(true);
-		return;
-	}
-};

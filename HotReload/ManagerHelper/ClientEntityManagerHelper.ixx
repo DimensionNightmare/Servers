@@ -45,10 +45,7 @@ bool ClientEntityManagerHelper::RemoveEntity(uint32_t entityId)
 {
 	
 	if(mEntityMap.contains(entityId))
-	{
-		ClientEntity* oriEntity = &mEntityMap[entityId];
-		ClientEntityHelper* entity = static_cast<ClientEntityHelper*>(oriEntity);
-		
+	{	
 		unique_lock<shared_mutex> ulock(oMapMutex);
 
 		DNPrint(0, LoggerLevel::Debug, "destory client entity\n");

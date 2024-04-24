@@ -40,10 +40,9 @@ int HandleDatabaseServerInit(DNServer *server)
 			if (channel->isConnected())
 			{
 				DNPrint(TipCode_SrvConnOn, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
-				clientSock->SetRegistEvent(&Evt_ReqRegistSrv);
-				
 				channel->setHeartbeat(4000, std::bind(&DNClientProxy::TickHeartbeat, clientSock));
 				channel->setWriteTimeout(12000);
+				clientSock->SetRegistEvent(&Evt_ReqRegistSrv);	
 			}
 			else
 			{

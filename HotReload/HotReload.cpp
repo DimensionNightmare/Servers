@@ -1,14 +1,15 @@
 
-module;
+// module;
 #ifdef _WIN32
 	#include <windef.h>
 #endif
 #include <functional>
 #include <string>
 #include "google/protobuf/message.h"
+#include "hv/hasync.h"
 
 #include "StdAfx.h"
-export module HOTRELOAD_MODULE;
+// export module HotReload;
 
 import DNServer;
 import GlobalServerInit;
@@ -26,13 +27,14 @@ import DNClientProxyHelper;
 #endif
 
 #ifdef _WIN32
-export BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
+BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
     // Perform actions based on the reason for calling.
     switch (fdwReason)
     {
     case DLL_PROCESS_DETACH:
 		google::protobuf::ShutdownProtobufLibrary();
+		hv::async::cleanup();
         if (lpvReserved != nullptr)
         {
             break;

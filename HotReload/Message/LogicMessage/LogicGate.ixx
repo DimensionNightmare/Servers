@@ -61,8 +61,6 @@ export DNTaskVoid Msg_ReqClientLogin(const SocketChannelPtr &channel, uint32_t m
 	// req token
 	if(serverEntity)
 	{
-		response.set_ip(serverEntity->ServerIp());
-		response.set_port(serverEntity->ServerPort());
 		
 		auto dataChannel = [&response]()->DNTask<Message>
 		{
@@ -79,7 +77,7 @@ export DNTaskVoid Msg_ReqClientLogin(const SocketChannelPtr &channel, uint32_t m
 		{
 
 			// wait data parse
-			server->AddMsg(smsgId, &dataChannel, 9000);
+			server->AddMsg(smsgId, &dataChannel, 8000);
 			serverEntity->GetSock()->write(binData);
 			co_await dataChannel;
 			if(dataChannel.HasFlag(DNTaskFlag::Timeout))
@@ -89,6 +87,9 @@ export DNTaskVoid Msg_ReqClientLogin(const SocketChannelPtr &channel, uint32_t m
 
 			binData.clear();
 		}
+
+		response.set_ip(serverEntity->ServerIp());
+		response.set_port(serverEntity->ServerPort());
 
 		DNPrint(0, LoggerLevel::Debug, "ds:%s", serverEntity->ServerIp().c_str());
 	}

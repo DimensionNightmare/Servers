@@ -105,7 +105,7 @@ file(GLOB_RECURSE srcHotReloadModule CONFIGURE_DEPENDS
 	"HotReload/*.ixx"
 )
 
-add_library( HotReload SHARED)
+add_library( HotReload SHARED "HotReload/HotReload.cpp")
 
 target_sources(HotReload 
 	PUBLIC FILE_SET CXX_MODULES TYPE CXX_MODULES FILES

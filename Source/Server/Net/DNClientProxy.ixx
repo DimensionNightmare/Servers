@@ -132,7 +132,7 @@ void DNClientProxy::AddTimerRecord(size_t timerId, uint32_t id)
 
 void DNClientProxy::TickHeartbeat()
 {
-	static COM_RetHeartbeat requset;
+	COM_RetHeartbeat requset;
 	requset.Clear();
 	int timespan = chrono::duration_cast<chrono::seconds>(chrono::system_clock::now().time_since_epoch()).count();
 	requset.set_timespan(timespan);

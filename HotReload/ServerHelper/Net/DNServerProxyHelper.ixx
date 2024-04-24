@@ -21,8 +21,6 @@ public:
 	bool AddMsg(uint32_t msgId, DNTask<Message>* task, uint32_t breakTime = 10000);
 	DNTask<Message>* GetMsg(uint32_t msgId);
 	void DelMsg(uint32_t msgId);
-
-	void TickHeartbeat(hio_t *io);
 };
 
 bool DNServerProxyHelper::AddMsg(uint32_t msgId, DNTask<Message> *task, uint32_t breakTime)
@@ -63,14 +61,3 @@ void DNServerProxyHelper::DelMsg(uint32_t msgId)
 	}
 	mMsgList.erase(msgId);
 }
-
-void DNServerProxyHelper::TickHeartbeat(hio_t* io)
-{
-	hv::SocketChannel* channel = reinterpret_cast<hv::SocketChannel*>(hio_context(io));
-	//Regist?
-	if(!channel->context())
-	{
-		channel->close(true);
-		return;
-	}
-};
