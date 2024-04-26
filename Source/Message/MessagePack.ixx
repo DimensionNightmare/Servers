@@ -51,7 +51,7 @@ export bool MessagePack(uint32_t msgId, MsgDeal deal,  const char* pbName, strin
 	}
 	else [[likely]]
 	{
-		packet.msgHashId = std::hash<string>::_Do_hash(pbName);
+		packet.msgHashId = hash<string>::_Do_hash(pbName);
 	}
 
 	data.resize(MessagePacket::PackLenth + packet.pkgLenth);

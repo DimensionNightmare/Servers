@@ -8,7 +8,6 @@ module;
 export module DNClientProxyHelper;
 
 import DNClientProxy;
-import MessagePack;
 
 using namespace std;
 using namespace hv;
@@ -61,7 +60,7 @@ ProxyStatus DNClientProxyHelper::UpdateClientState(Channel::Status state)
 	case Channel::Status::CONNECTED :
 		{
 			//maybe sometimes tick (wait fix)
-			Timer()->setInterval(1000, std::bind(&DNClientProxy::TickRegistEvent, reinterpret_cast<DNClientProxy*>(this), placeholders::_1));
+			Timer()->setInterval(1000, std::bind(&DNClientProxy::TickRegistEvent, static_cast<DNClientProxy*>(this), placeholders::_1));
 			return ProxyStatus::Open;
 		}
 
@@ -106,7 +105,7 @@ bool DNClientProxyHelper::AddMsg(uint32_t msgId, DNTask<Message> *task, uint32_t
 	// timeout
 	if(breakTime > 0)
 	{
-		task->TimerId() = Timer()->setTimeout(breakTime, std::bind(&DNClientProxy::MessageTimeoutTimer, this, placeholders::_1));
+		task->TimerId() = Timer()->setTimeout(breakTime, std::bind(&DNClientProxy::MessageTimeoutTimer, static_cast<DNClientProxy*>(this), placeholders::_1));
 		mMapTimer[task->TimerId()] = msgId;
 	}
 	return true;

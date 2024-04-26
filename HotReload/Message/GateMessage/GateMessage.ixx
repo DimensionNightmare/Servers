@@ -17,8 +17,6 @@ using namespace std;
 using namespace hv;
 using namespace google::protobuf;
 using namespace GMsg;
-using namespace GMsg;
-using namespace GMsg;
 
 export class GateMessageHandle
 {
@@ -95,10 +93,8 @@ void GateMessageHandle::MsgRetHandle(const SocketChannelPtr &channel, uint32_t m
 
 void GateMessageHandle::RegMsgHandle()
 {
-	std::hash<string> hashStr;
-
 	#define MSG_MAPPING(map, msg, func) \
-	map.emplace( hashStr(msg::GetDescriptor()->full_name()), \
+	map.emplace(std::hash<string>::_Do_hash(msg::GetDescriptor()->full_name()), \
 	make_pair(msg::internal_default_instance(), func))
 
 	MSG_MAPPING(MHandleMap, COM_ReqRegistSrv, &Msg_ReqRegistSrv);

@@ -143,6 +143,9 @@ bool GlobalServer::Init()
 		port = stoi(*ctlPort);
 		pCSock->createsocket(port, ctlIp->c_str());
 		pCSock->setUnpack(setting);
+
+		pCSock->channel->setHeartbeat(4000, std::bind(&DNClientProxy::TickHeartbeat, pCSock));
+		pCSock->channel->setWriteTimeout(12000);
 	}
 	
 	pServerEntityMan = new ServerEntityManager;

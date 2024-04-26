@@ -7,6 +7,7 @@ module;
 #include "StdAfx.h"
 #include "Server/S_Global_Gate.pb.h"
 #include "Client/C_Auth.pb.h"
+#include "Server/S_Gate_Logic.pb.h"
 export module GateMessage:GateGlobal;
 
 import MessagePack;
@@ -34,10 +35,11 @@ export void Exe_ReqUserToken(const SocketChannelPtr &channel, uint32_t msgId, Me
 		//exit
 		if(SocketChannelPtr online = entity->GetSock())
 		{
-			// send to other client
+			// kick channel
 			S2C_RetAccountReplace retMsg;
 			retMsg.set_ip(requset->ip());
 
+			binData.clear();
 			binData.resize(retMsg.ByteSizeLong());
 			retMsg.SerializeToArray(binData.data(), binData.size());
 			MessagePack(0, MsgDeal::Ret, retMsg.GetDescriptor()->full_name().c_str(), binData);
@@ -47,14 +49,22 @@ export void Exe_ReqUserToken(const SocketChannelPtr &channel, uint32_t msgId, Me
 			online->setContext(nullptr);
 			online->close();
 
-			binData.clear();
 
 			//kick game
 			if(uint32_t serverIndex = entity->ServerIndex())
 			{
 				ServerEntityManagerHelper* serverEntityMan = dnServer->GetServerEntityManager();
-				ServerEntity* serverEntity = serverEntityMan->GetEntity(serverIndex);
+				ServerEntityHelper* serverEntity = serverEntityMan->GetEntity(serverIndex);
 
+				G2L_RetAccountReplace retMsg;
+				retMsg.set_account_id(entity->ID());
+				retMsg.set_ip(requset->ip());
+
+				binData.clear();
+				binData.resize(retMsg.ByteSizeLong());
+				retMsg.SerializeToArray(binData.data(), binData.size());
+				MessagePack(0, MsgDeal::Ret, retMsg.GetDescriptor()->full_name().c_str(), binData);
+				serverEntity->GetSock()->write(binData);
 			}
 			
 		}
@@ -80,11 +90,12 @@ export void Exe_ReqUserToken(const SocketChannelPtr &channel, uint32_t msgId, Me
 	if(!entity->TimerId())
 	{
 		entity->TimerId() = entityMan->Timer()->setTimeout(30000, 
-			std::bind(&ProxyEntityManager::EntityCloseTimer, entityMan, placeholders::_1));
+			std::bind(&ProxyEntityManager::EntityCloseTimer, static_cast<ProxyEntityManager*>(entityMan), placeholders::_1));
 
 		entityMan->AddTimerRecord(entity->TimerId(), entity->ID());
 	}
 	
+	binData.clear();
 	binData.resize(response.ByteSizeLong());
 	response.SerializeToArray(binData.data(), binData.size());
 	MessagePack(msgId, MsgDeal::Res, nullptr, binData);

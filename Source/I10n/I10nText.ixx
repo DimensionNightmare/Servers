@@ -22,7 +22,7 @@ export class DNl10n
 	typedef const string& (TipText::*TipTextFunc)() const;
 public:
 	DNl10n();
-	bool InitConfigData();
+	int InitConfigData();
 public:
 	L10nErr* pErrMsgData;
 	L10nTip* pTipMsgData;
@@ -47,13 +47,13 @@ export void SetDNl10nInstance(DNl10n* point)
 	PInstance = point;
 }
 
-bool DNl10n::InitConfigData()
+int DNl10n::InitConfigData()
 {
 	string* value = GetLuanchConfigParam("l10nErrPath");
 	if (!value)
 	{
-		printf("Launch Param l10nErrPath Error !\n");
-		return false;
+		// DNPrint(0, LoggerLevel::Debug, "Launch Param l10nErrPath Error !\n");
+		return 1;
 	}
 
 	if(pErrMsgData)
@@ -69,16 +69,16 @@ bool DNl10n::InitConfigData()
 		ifstream input(*value, ios::in | ios::binary);
 		if(!input || !pErrMsgData->ParseFromIstream(&input))
 		{
-			printf("load I10n Err Config Error !\n");
-			return false;
+			// DNPrint(0, LoggerLevel::Debug, "load I10n Err Config Error !\n");
+			return 2;
 		}
 	}
 	
 	value = GetLuanchConfigParam("l10nTipPath");
 	if (!value)
 	{
-		printf("Launch Param l10nTipPath Error Error !\n");
-		return false;
+		// DNPrint(0, LoggerLevel::Debug, "Launch Param l10nTipPath Error Error !\n");
+		return 3;
 	}
 
 	if(pTipMsgData)
@@ -94,8 +94,8 @@ bool DNl10n::InitConfigData()
 		ifstream input(*value, ios::in | ios::binary);
 		if(!input || !pTipMsgData->ParseFromIstream(&input))
 		{
-			printf("load I10n Tip Config Error !\n");
-			return false;
+			// DNPrint(0, LoggerLevel::Debug, "load I10n Tip Config Error !\n");
+			return 4;
 		}
 	}
 	
@@ -120,13 +120,13 @@ bool DNl10n::InitConfigData()
 		break;
 	}
 	default:
-		printf("load I10n Lang Type Error !\n");
-		return false;
+		// DNPrint(0, LoggerLevel::Debug, "load I10n Lang Type Error !\n");
+		return 5;
 	}
 
 	SetDNl10nInstance(this);
 
-	return true;
+	return 0;
 }
 
 export const char* GetErrText(int type)

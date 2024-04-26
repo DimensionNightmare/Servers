@@ -43,7 +43,7 @@ accountInfo
 
 for(Account& msg : accountInfo.Result())
 {
-	printf("%s \n", msg.DebugString().c_str());
+	DNPrint(0, LoggerLevel::Debug, "%s \n", msg.DebugString().c_str());
 }
 
 auto now = std::chrono::system_clock::now();

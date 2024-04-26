@@ -29,7 +29,7 @@ bool DNServerProxyHelper::AddMsg(uint32_t msgId, DNTask<Message> *task, uint32_t
 	mMsgList.emplace(msgId, task);
 	if(breakTime > 0)
 	{
-		task->TimerId() = Timer()->setTimeout(breakTime, std::bind(&DNServerProxy::MessageTimeoutTimer, this, placeholders::_1));
+		task->TimerId() = Timer()->setTimeout(breakTime, std::bind(&DNServerProxy::MessageTimeoutTimer, static_cast<DNServerProxy*>(this), placeholders::_1));
 		mMapTimer[task->TimerId()] = msgId;
 	}
 	return true;

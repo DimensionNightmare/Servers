@@ -102,6 +102,9 @@ bool DatabaseServer::Init()
 
 		sCtlIp = *ctlIp;
 		iCtlPort = port;
+
+		pCSock->channel->setHeartbeat(4000, std::bind(&DNClientProxy::TickHeartbeat, pCSock));
+		pCSock->channel->setWriteTimeout(12000);
 	}
 
 	return true;

@@ -70,9 +70,10 @@ void GlobalServerHelper::UpdateServerGroup()
 		channel->setContext(nullptr);
 		
 		// sendData
-		binData.clear();
 		retMsg.set_ip(beEntity->ServerIp());
 		retMsg.set_port(beEntity->ServerPort());
+		
+		binData.clear();
 		binData.resize(retMsg.ByteSize());
 		retMsg.SerializeToArray(binData.data(), binData.size());
 		MessagePack(0, MsgDeal::Ret, retMsg.GetDescriptor()->full_name().c_str(), binData);
@@ -80,7 +81,7 @@ void GlobalServerHelper::UpdateServerGroup()
 		
 		// timer destory
 		entity->TimerId() = entityMan->Timer()->setTimeout(10000,
-			std::bind(&ServerEntityManager::EntityCloseTimer, entityMan, placeholders::_1));
+			std::bind(&ServerEntityManager::EntityCloseTimer, static_cast<ServerEntityManager*>(entityMan), placeholders::_1));
 
 		entityMan->AddTimerRecord(entity->TimerId(), entity->ID());
 	};

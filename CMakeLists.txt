@@ -78,6 +78,8 @@ target_sources(MainSource
 
 target_link_libraries(MainSource PUBLIC hv_static protobuf::libprotobuf protobufGen libpqxx::pqxx)
 
+target_compile_definitions(MainSource PUBLIC _${CMAKE_SYSTEM_PROCESSOR}_)
+
 set_property(TARGET MainSource PROPERTY CXX_STANDARD 23)
 
 ################################ DimensionNightmareServer ################################

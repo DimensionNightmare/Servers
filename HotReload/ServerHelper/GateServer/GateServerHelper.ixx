@@ -66,6 +66,6 @@ void GateServerHelper::ProxyEntityCloseEvent(Entity* entity)
 {
 	ProxyEntityHelper* castObj = static_cast<ProxyEntityHelper*>(entity);
 
-	auto entityMan = GetProxyEntityManager();
+	ProxyEntityManagerHelper* entityMan = GetProxyEntityManager();
 	entityMan->RemoveEntity(castObj->ID());
 }

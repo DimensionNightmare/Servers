@@ -48,7 +48,7 @@ export int main(int argc, char **argv)
 
 		if (pos == string::npos)
 		{
-			printf("program lunch param error! Pos:%d \n", i);
+			DNPrint(0, LoggerLevel::Debug, "program lunch param error! Pos:%d \n", i);
 			return 0;
 		}
 

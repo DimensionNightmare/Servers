@@ -22,10 +22,10 @@ export DNTaskVoid Msg_ReqClientLogin(const SocketChannelPtr &channel, uint32_t m
 	G2L_ReqClientLogin* requset = reinterpret_cast<G2L_ReqClientLogin*>(msg);
 
 	LogicServerHelper* dnServer = GetLogicServer();
-	auto entityMan = dnServer->GetClientEntityManager();
+	ClientEntityManagerHelper* entityMan = dnServer->GetClientEntityManager();
 
-	ClientEntityHelper* entity = nullptr;
-	if (entity = entityMan->AddEntity(requset->account_id()))
+	ClientEntityHelper* entity = entityMan->AddEntity(requset->account_id());
+	if (entity)
 	{
 		DNPrint(0, LoggerLevel::Debug, "AddEntity Client!");
 
@@ -37,7 +37,7 @@ export DNTaskVoid Msg_ReqClientLogin(const SocketChannelPtr &channel, uint32_t m
 	}
 
 
-	auto serverEntityMan = dnServer->GetServerEntityManager();
+	ServerEntityManagerHelper* serverEntityMan = dnServer->GetServerEntityManager();
 	ServerEntityHelper* serverEntity = nullptr;
 	
 	// cache
@@ -70,6 +70,7 @@ export DNTaskVoid Msg_ReqClientLogin(const SocketChannelPtr &channel, uint32_t m
 		DNServerProxyHelper* server = dnServer->GetSSock();
 		uint32_t smsgId = server->GetMsgId();
 
+		binData.clear();
 		binData.resize(msg->ByteSize());
 		msg->SerializeToArray(binData.data(), binData.size());
 		MessagePack(smsgId, MsgDeal::Req, L2D_ReqClientLogin::GetDescriptor()->full_name().c_str(), binData);
@@ -83,15 +84,18 @@ export DNTaskVoid Msg_ReqClientLogin(const SocketChannelPtr &channel, uint32_t m
 			if(dataChannel.HasFlag(DNTaskFlag::Timeout))
 			{
 				DNPrint(0, LoggerLevel::Debug, "requst timeout! \n");
+				response.set_state_code(2);
+			}
+			else
+			{
+				//combin D2L_ReqClientLogin
+				response.set_ip(serverEntity->ServerIp());
+				response.set_port(serverEntity->ServerPort());
 			}
 
-			binData.clear();
 		}
 
-		response.set_ip(serverEntity->ServerIp());
-		response.set_port(serverEntity->ServerPort());
-
-		DNPrint(0, LoggerLevel::Debug, "ds:%s", serverEntity->ServerIp().c_str());
+		DNPrint(0, LoggerLevel::Debug, "ds:%s", response.DebugString().c_str());
 	}
 	else
 	{
@@ -100,6 +104,7 @@ export DNTaskVoid Msg_ReqClientLogin(const SocketChannelPtr &channel, uint32_t m
 	}
 
 	// pack data
+	binData.clear();
 	binData.resize(response.ByteSizeLong());
 	response.SerializeToArray(binData.data(), binData.size());
 	MessagePack(msgId, MsgDeal::Res, nullptr, binData);
@@ -107,4 +112,40 @@ export DNTaskVoid Msg_ReqClientLogin(const SocketChannelPtr &channel, uint32_t m
 	channel->write(binData);
 
 	co_return;
+}
+
+export void Exe_RetAccountReplace(const SocketChannelPtr &channel, uint32_t msgId, Message *msg)
+{
+	G2L_RetAccountReplace* requset = reinterpret_cast<G2L_RetAccountReplace*>(msg);
+
+	LogicServerHelper* dnServer = GetLogicServer();
+	ClientEntityManagerHelper* entityMan = dnServer->GetClientEntityManager();
+
+	ClientEntityHelper* entity = entityMan->GetEntity(requset->account_id());
+	if (!entity)
+	{
+		DNPrint(0, LoggerLevel::Debug, "Client Entity Kick Not Exist !");
+		return;
+	}
+
+	ServerEntityManagerHelper* serverEntityMan = dnServer->GetServerEntityManager();
+	ServerEntityHelper* serverEntity = nullptr;
+	
+	// cache
+	if(serverEntity = serverEntityMan->GetEntity(entity->ServerIndex()))
+	{
+		string binData;
+		binData.resize(msg->ByteSize());
+		msg->SerializeToArray(binData.data(), binData.size());
+
+		MessagePack(0, MsgDeal::Ret, L2D_RetAccountReplace::GetDescriptor()->full_name().c_str(), binData);
+		serverEntity->GetSock()->write(binData);
+	}
+	else
+	{
+		DNPrint(0, LoggerLevel::Debug, "Client Entity Kick Server Not Exist !");
+	}
+
+	// close entity save data
+	entityMan->RemoveEntity(entity->ID());
 }

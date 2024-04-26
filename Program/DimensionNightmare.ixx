@@ -1,12 +1,9 @@
 module;
 #ifdef _WIN32
-	#include <windef.h>
-	#include <WinBase.h>
 	#include <consoleapi2.h>
 	#include <libloaderapi.h>
 #endif
 #include <filesystem>
-#include <locale>
 #include <iostream>
 #include <format>
 #include "hv/hbase.h"
@@ -223,14 +220,14 @@ bool DimensionNightmare::InitConfig(map<string, string> &param)
 {
 	if(!param.contains("svrType"))
 	{
-		printf("lunch param svrType is null! \n");
+		DNPrint(0, LoggerLevel::Debug, "lunch param svrType is null! \n");
 		return false;
 	}
 
 	ServerType serverType = (ServerType)stoi(param["svrType"]);
 	if(serverType <= ServerType::None || serverType >= ServerType::Max)
 	{
-		printf("serverType Not Invalid! \n");
+		DNPrint(0, LoggerLevel::Debug, "serverType Not Invalid! \n");
 		return false;
 	}
 
@@ -298,6 +295,9 @@ bool DimensionNightmare::InitConfig(map<string, string> &param)
 	// local output 
 	// *** if use locale::global, webProxy cant push file to webclient, dont kown why ***
     // locale::global(locale(param["locale"]));
+	// wcout.imbue(locale("zh_CN.UTF-8"));
+	// wcout.imbue(locale("zh_CN.UTF-8"));
+	// cout.imbue(locale("zh_CN.UTF-8"));
 	system("chcp 65001");
 
 	// set global Launch config  
@@ -308,8 +308,9 @@ bool DimensionNightmare::InitConfig(map<string, string> &param)
 
 	// I10n Config
 	pl10n = new DNl10n();
-	if(!pl10n->InitConfigData())
+	if(int code = pl10n->InitConfigData())
 	{
+		DNPrint(0, LoggerLevel::Debug, "Init I10n Not Invalid! %d \n", code);
 		return false;
 	}
 
@@ -440,7 +441,7 @@ void DimensionNightmare::InitCmdHandle()
 		pServer->InitCmd(mCmdHandle);
 	}
 
-	printf("cmds: ");
+	printf("\nCommand: ");
 	for(auto &[k,v] : mCmdHandle)
 	{
 		printf("%s,", k.c_str());

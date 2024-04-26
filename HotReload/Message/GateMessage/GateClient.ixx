@@ -53,7 +53,7 @@ export DNTaskVoid Msg_ReqAuthToken(const SocketChannelPtr &channel, uint32_t msg
 			// <cache> server to load login data
 			if(uint32_t serverIndex = entity->ServerIndex())
 			{
-				serverEntity = static_cast<ServerEntityHelper*>(serverEntityMan->GetEntity(serverIndex));
+				serverEntity = serverEntityMan->GetEntity(serverIndex);
 			}
 			else
 			{
@@ -72,6 +72,7 @@ export DNTaskVoid Msg_ReqAuthToken(const SocketChannelPtr &channel, uint32_t msg
 			
 				//redirect G2L_ReqClientLogin dot pack string
 				requset->clear_token();
+				binData.clear();
 				binData.resize(requset->ByteSize());
 				requset->SerializeToArray(binData.data(), binData.size());
 
@@ -95,7 +96,6 @@ export DNTaskVoid Msg_ReqAuthToken(const SocketChannelPtr &channel, uint32_t msg
 						DNPrint(0, LoggerLevel::Debug, "requst timeout! \n");
 					}
 
-					binData.clear();
 				}
 
 				if(!response.state_code())
@@ -124,7 +124,7 @@ export DNTaskVoid Msg_ReqAuthToken(const SocketChannelPtr &channel, uint32_t msg
 		DNPrint(0, LoggerLevel::Debug, "noaccount !!\n");
 	}
 
-	
+	binData.clear();
 	binData.resize(response.ByteSize());
 	response.SerializeToArray(binData.data(), binData.size());
 

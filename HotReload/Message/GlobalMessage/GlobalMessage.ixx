@@ -9,8 +9,8 @@ module;
 #include "Server/S_Global_Gate.pb.h"
 export module GlobalMessage;
 
-export import :GlobalControl;
-import :GlobalCommon;
+export import :GlobalCommon;
+import :GlobalControl;
 import :GlobalGate;
 
 using namespace std;
@@ -92,10 +92,8 @@ void GlobalMessageHandle::MsgRetHandle(const SocketChannelPtr &channel, uint32_t
 
 void GlobalMessageHandle::RegMsgHandle()
 {
-	std::hash<string> hashStr;
-
 	#define MSG_MAPPING(map, msg, func) \
-	map.emplace( hashStr(msg::GetDescriptor()->full_name()), \
+	map.emplace(std::hash<string>::_Do_hash(msg::GetDescriptor()->full_name()), \
 	make_pair(msg::internal_default_instance(), func))
 	
 	MSG_MAPPING(MHandleMap, COM_ReqRegistSrv, &Msg_ReqRegistSrv);

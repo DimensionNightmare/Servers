@@ -87,7 +87,7 @@ export void Msg_ReqRegistSrv(const SocketChannelPtr &channel, uint32_t msgId, Me
 	COM_ReqRegistSrv* requset = reinterpret_cast<COM_ReqRegistSrv*>(msg);
 	COM_ResRegistSrv response;
 
-	auto entityMan = GetLogicServer()->GetServerEntityManager();
+	ServerEntityManagerHelper* entityMan = GetLogicServer()->GetServerEntityManager();
 
 	ServerType regType = (ServerType)requset->server_type();
 	

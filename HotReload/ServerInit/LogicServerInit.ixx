@@ -28,6 +28,10 @@ int HandleLogicServerInit(DNServer *server)
 	
 	LogicServerHelper* serverProxy = GetLogicServer();
 
+	// ServerEntityManagerHelper* entityMan = serverProxy->GetServerEntityManager();
+	// DNPrint(0, LoggerLevel::Debug, "ServerEntityManager:%p, ServerEntityManagerHelper:%p", static_cast<ServerEntityManager*>(entityMan), entityMan);
+	// DNPrint(0, LoggerLevel::Debug, "ServerEntityManager Func:%p", &LogicServerHelper::GetServerEntityManager);
+
 	if (DNServerProxyHelper* serverSock = serverProxy->GetSSock())
 	{
 		serverSock->onConnection = nullptr;
@@ -105,8 +109,6 @@ int HandleLogicServerInit(DNServer *server)
 			if (channel->isConnected())
 			{
 				DNPrint(TipCode_SrvConnOn, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
-				channel->setHeartbeat(4000, std::bind(&DNClientProxy::TickHeartbeat, clientSock));
-				channel->setWriteTimeout(12000);
 				clientSock->SetRegistEvent(&Evt_ReqRegistSrv);
 			}
 			else

@@ -53,7 +53,7 @@ export DNTaskVoid Evt_ReqRegistSrv()
 	requset.set_port(server->port);
 	requset.set_server_index(dnServer->ServerIndex());
 
-	auto entityMan = dnServer->GetServerEntityManager();
+	ServerEntityManagerHelper* entityMan = dnServer->GetServerEntityManager();
 	auto AddChild = [&requset](ServerEntity* serv)
 	{
 		COM_ReqRegistSrv* child = requset.add_childs();
@@ -109,7 +109,7 @@ export DNTaskVoid Evt_ReqRegistSrv()
 	else
 	{
 		DNPrint(0, LoggerLevel::Debug, "regist Server error! msg:%lu \n", msgId);
-		dnServer->IsRun() = false; //exit application
+		// dnServer->IsRun() = false; //exit application
 		client->RegistState() = RegistState::None;
 	}
 
@@ -124,7 +124,7 @@ export void Msg_ReqRegistSrv(const SocketChannelPtr &channel, uint32_t msgId, Me
 	COM_ResRegistSrv response;
 
 	GateServerHelper* dnServer = GetGateServer();
-	auto entityMan = dnServer->GetServerEntityManager();
+	ServerEntityManagerHelper* entityMan = dnServer->GetServerEntityManager();
 
 	ServerType regType = (ServerType)requset->server_type();
 	
@@ -166,6 +166,8 @@ export void Msg_ReqRegistSrv(const SocketChannelPtr &channel, uint32_t msgId, Me
 		g2G_RetRegistSrv retMsg;
 		retMsg.set_is_regist(true);
 		retMsg.set_server_index(requset->server_index());
+		
+		binData.clear();
 		binData.resize(retMsg.ByteSizeLong());
 		retMsg.SerializeToArray(binData.data(), binData.size());
 		MessagePack(0, MsgDeal::Ret, retMsg.GetDescriptor()->full_name().c_str(), binData);

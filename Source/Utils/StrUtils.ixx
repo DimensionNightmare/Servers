@@ -4,6 +4,9 @@ module;
 #include <format>
 #include <chrono>
 #include <regex>
+#ifdef _WIN32
+	#include <timezoneapi.h>
+#endif
 export module Utils.StrUtils;
 
 using namespace std;
@@ -61,10 +64,28 @@ constexpr auto EnumName(T value)
 	return names[static_cast<size_t>(value)];
 }
 
+chrono::hours GetTimezoneOffset()
+{
+	int minutes = 0;
+
+#ifdef _WIN32
+	TIME_ZONE_INFORMATION timeZoneInfo;
+    DWORD result = GetTimeZoneInformation(&timeZoneInfo);
+
+	if (result != TIME_ZONE_ID_INVALID) 
+	{
+		minutes = -timeZoneInfo.Bias;
+    }
+#endif
+
+	return chrono::hours(minutes/60);
+}
+
 export string GetNowTimeStr()
 {
-	chrono::system_clock clock;
-	return format("{:%Y-%m-%d %H:%M:%S}", clock.now());
+	static chrono::hours offset = GetTimezoneOffset();
+	
+	return format("{:%Y-%m-%d %H:%M:%S}", chrono::system_clock::now() + offset);
 }
 
 export double StringToTimestamp(const string &datetimeStr)

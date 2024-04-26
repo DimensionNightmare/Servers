@@ -45,8 +45,6 @@ int HandleAuthServerInit(DNServer *server)
 			if (channel->isConnected())
 			{
 				DNPrint(TipCode_CliConnOn, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
-				channel->setHeartbeat(4000, std::bind(&DNClientProxy::TickHeartbeat, clientSock));
-				channel->setWriteTimeout(12000);
 				clientSock->SetRegistEvent(&Evt_ReqRegistSrv);
 			}
 			else

@@ -80,7 +80,7 @@ export DNTaskVoid Evt_ReqRegistSrv()
 	else
 	{
 		DNPrint(0, LoggerLevel::Debug, "regist Server error! msg:%lu \n", msgId);
-		dnServer->IsRun() = false; //exit application
+		// dnServer->IsRun() = false; //exit application
 		client->RegistState() = RegistState::None;
 	}
 

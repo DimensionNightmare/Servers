@@ -121,6 +121,9 @@ bool AuthServer::Init()
 		port = stoi(*ctlPort);
 		pCSock->createsocket(port, ctlIp->c_str());
 		pCSock->setUnpack(setting);
+
+		pCSock->channel->setHeartbeat(4000, std::bind(&DNClientProxy::TickHeartbeat, pCSock));
+		pCSock->channel->setWriteTimeout(12000);
 	}
 
 	return true;
@@ -141,7 +144,7 @@ bool AuthServer::Start()
 	int code = pSSock->start();
 	if(code < 0)
 	{
-		printf("start error %d", code);
+		DNPrint(0, LoggerLevel::Debug, "start error %d", code);
 		return false;
 	}
 

@@ -61,6 +61,7 @@ export DNTaskVoid Msg_ReqAuthAccount(const SocketChannelPtr &channel, uint32_t m
 		DNServerProxyHelper* server = GetControlServer()->GetSSock();
 		uint32_t smsgId = server->GetMsgId();
 
+		binData.clear();
 		binData.resize(msg->ByteSize());
 		msg->SerializeToArray(binData.data(), binData.size());
 		MessagePack(smsgId, MsgDeal::Req, C2G_ReqAuthAccount::GetDescriptor()->full_name().c_str(), binData);
@@ -79,7 +80,7 @@ export DNTaskVoid Msg_ReqAuthAccount(const SocketChannelPtr &channel, uint32_t m
 		dataChannel.Destroy();
 	}
 
-	
+	binData.clear();
 	binData.resize(response.ByteSize());
 	response.SerializeToArray(binData.data(), binData.size());
 
