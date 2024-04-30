@@ -2,17 +2,19 @@ module;
 #ifdef _WIN32
 	#include <consoleapi2.h>
 	#include <libloaderapi.h>
+#elif __unix__
+	#include <dlfcn.h>
 #endif
 #include <filesystem>
 #include <iostream>
 #include <format>
+#include <list>
 #include "hv/hbase.h"
 #include "hv/EventLoop.h"
 
 #include "StdAfx.h"
 export module DimensionNightmare;
 
-import DNServer;
 import ControlServer;
 import GlobalServer;
 import AuthServer;
@@ -20,8 +22,13 @@ import GateServer;
 import DatabaseServer;
 import LogicServer;
 import Utils.StrUtils;
+import I10nText;
 
 using namespace std;
+
+#ifdef __unix__
+	#define Sleep(ms) usleep(ms*1000)
+#endif
 
 struct HotReloadDll
 {
@@ -31,6 +38,8 @@ struct HotReloadDll
 	string sDllDirRand;
 #ifdef _WIN32
 	HMODULE oLibHandle;
+#elif __unix__
+	void* oLibHandle;
 #endif
 
 	bool isNormalFree;
@@ -59,12 +68,23 @@ struct HotReloadDll
 		constexpr size_t subLen = sizeof(SDllDir);
 		SetConsoleTitleA(sDllDirRand.substr(subLen).c_str());
 		oLibHandle = LoadLibraryA(SDllName);
-#endif
 		if (!oLibHandle)
 		{
 			DNPrint(ErrCode_DllLoad, LoggerLevel::Error, nullptr, GetLastError());
 			return false;
 		}
+		
+#elif __unix__
+		string fullPath = filesystem::current_path().append(sDllDirRand).string();
+		fullPath = format("{}/lib{}.so", fullPath, SDllName);
+		oLibHandle = dlopen(fullPath.c_str(), RTLD_LAZY);
+		if (!oLibHandle)
+		{
+			DNPrint(0, LoggerLevel::Debug, dlerror());
+			return false;
+		}
+#endif
+
 
 		return true;
 	};
@@ -75,8 +95,10 @@ struct HotReloadDll
 		{
 #ifdef _WIN32
 			FreeLibrary(oLibHandle);
-			Sleep(100);
+#elif __unix__
+			dlclose(oLibHandle);
 #endif
+			Sleep(100);
 			oLibHandle = nullptr;
 		}
 
@@ -86,7 +108,7 @@ struct HotReloadDll
 			{
 				filesystem::remove_all(sDllDirRand.c_str());
 			}
-			catch(const std::exception& e)
+			catch (const exception &e)
 			{
 				DNPrint(0, LoggerLevel::Debug, "filesystem:%s", e.what());
 			}
@@ -113,15 +135,16 @@ struct HotReloadDll
 
 		sDllDirRand = format("{}_{}_{}", SDllDir, EnumName(type), hv_rand(10000, 99999));
 		filesystem::create_directories(sDllDirRand.c_str());
-		filesystem::copy(SDllDir, sDllDirRand.c_str(), filesystem::copy_options::overwrite_existing);
+		filesystem::copy(SDllDir, sDllDirRand.c_str(), filesystem::copy_options::recursive);
 
 		return LoadHandle();
 	};
 
 	HotReloadDll()
 	{
-		memset(this, 0, sizeof *this);
+		// memset(this, 0, sizeof *this);
 		isNormalFree = true;
+		oLibHandle = NULL;
 	};
 
 	~HotReloadDll()
@@ -129,11 +152,14 @@ struct HotReloadDll
 		FreeHandle();
 	};
 
-	void* GetFuncPtr(string funcName)
+	void *GetFuncPtr(string funcName)
 	{
 #ifdef _WIN32
 		return GetProcAddress(oLibHandle, funcName.c_str());
+#elif __unix__
+		return dlsym(oLibHandle, funcName.c_str());
 #endif
+		return nullptr;
 	}
 };
 
@@ -232,29 +258,29 @@ bool DimensionNightmare::InitConfig(map<string, string> &param)
 	}
 
 	filesystem::path execPath = param["luanchPath"];
+
+#ifdef _WIN32
 	SetCurrentDirectoryA(execPath.parent_path().string().c_str());
+#elif __unix__
+	chdir(execPath.parent_path().string().c_str());
+#endif
 
 	{
 		#ifndef NDEBUG
-		LPCSTR iniFilePath = "../../../Config/ServerDebug.ini";
+		const char *iniFilePath = "../../../Config/ServerDebug.ini";
 		#else
-		LPCSTR iniFilePath = "./Config/Server.ini";
-		#endif
-
-		const int bufferSize = 512;
-		
-		char buffer[bufferSize] = {0};
-
-		vector<string> sectionNames;
-
-#ifdef _WIN32
-		GetPrivateProfileSectionNamesA(buffer, bufferSize, iniFilePath);
+		const char *iniFilePath = "./Config/Server.ini";
 #endif
 
 		// get ini Config
 		string_view serverName = EnumName(serverType);
 
-		char* current = buffer;
+		vector<string> sectionNames;
+
+#ifdef _WIN32
+		char buffer[512] = {0};
+		GetPrivateProfileSectionNamesA(buffer, sizeof(buffer), iniFilePath);
+		char *current = buffer;
 		while (*current) 
 		{
 			sectionNames.push_back(current);
@@ -265,16 +291,75 @@ bool DimensionNightmare::InitConfig(map<string, string> &param)
 				sectionNames.pop_back();
 			}
 		}
+#elif __unix__
+		map<string, list<string>> sectionVal;
 
-		for (const auto& sectionName : sectionNames) 
+		auto GetINISectionNames = [&](const char *iniFilePath)
 		{
-            GetPrivateProfileSectionA(sectionName.c_str(), buffer, bufferSize, iniFilePath);
+			ifstream file(iniFilePath);
+			if (!file.is_open())
+			{
+				cerr << "Failed to open INI file: " << iniFilePath << endl;
+				return;
+			}
 
-            CHAR* keyValuePair = buffer;
+			string line;
+			while (getline(file, line))
+			{
+				if (line.empty())
+				{
+					continue;
+				}
+
+				if (line[0] == '[')
+				{
+					size_t endPos = line.find_first_of("]");
+					if (endPos != string::npos)
+					{
+						string sectionName = line.substr(1, endPos - 1);
+						sectionNames.push_back(sectionName);
+					}
+				}
+				else if(line[0] != ';')
+				{
+					sectionVal[sectionNames.back()].emplace_back(line);
+				}
+			}
+
+			file.close();
+		};
+
+		GetINISectionNames(iniFilePath);
+
+		auto iter = sectionNames.begin();
+		while (iter != sectionNames.end())
+		{
+			if ((*iter).find("Server") != std::string::npos && *iter != serverName)
+			{
+				sectionVal.erase(*iter);
+				iter = sectionNames.erase(iter);
+			}
+			else
+			{
+				++iter;
+			}
+		}
+#endif
+
+		for (const string &sectionName : sectionNames)
+		{
+#ifdef _WIN32
+            GetPrivateProfileSectionA(sectionName.c_str(), buffer, bufferSize, iniFilePath);
+			char *keyValuePair = buffer;
             while (*keyValuePair) 
 			{
 				string split(keyValuePair);
 				keyValuePair += strlen(keyValuePair) + 1;
+#elif __unix__
+			for(const string& keyValuePair : sectionVal[sectionName])
+			{
+				string split(keyValuePair);
+#endif
 
 				size_t pos = split.find('=');
 				if (pos != string::npos) 
@@ -298,8 +383,9 @@ bool DimensionNightmare::InitConfig(map<string, string> &param)
 	// wcout.imbue(locale("zh_CN.UTF-8"));
 	// wcout.imbue(locale("zh_CN.UTF-8"));
 	// cout.imbue(locale("zh_CN.UTF-8"));
+#ifdef _WIN32
 	system("chcp 65001");
-
+#endif
 	// set global Launch config  
 	{
 		pLuanchParam = &param;
@@ -308,9 +394,9 @@ bool DimensionNightmare::InitConfig(map<string, string> &param)
 
 	// I10n Config
 	pl10n = new DNl10n();
-	if(int code = pl10n->InitConfigData())
+	if(const char* codeStr = pl10n->InitConfigData())
 	{
-		DNPrint(0, LoggerLevel::Debug, "Init I10n Not Invalid! %d \n", code);
+		DNPrint(0, LoggerLevel::Debug, codeStr);
 		return false;
 	}
 
@@ -419,6 +505,8 @@ void DimensionNightmare::InitCmdHandle()
 		startInfo.dwFlags = STARTF_USESHOWWINDOW;
 		if(CreateProcessA(NULL, allStr.data(),
 			NULL,NULL,FALSE,CREATE_NEW_CONSOLE,NULL,NULL, &startInfo, &pinfo))
+#elif __unix__
+		if (0)
 #endif
 		{
 			cout << "success" << endl;
@@ -463,6 +551,13 @@ void DimensionNightmare::ShutDown()
 	if(pServer)
 	{
 		pServer->Stop();
+	}
+
+	if (pHotDll)
+	{
+		OnUnregHotReload();
+		delete pHotDll;
+		pHotDll = nullptr;
 	}
 }
 

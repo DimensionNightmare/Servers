@@ -22,7 +22,7 @@ export class DNl10n
 	typedef const string& (TipText::*TipTextFunc)() const;
 public:
 	DNl10n();
-	int InitConfigData();
+	const char* InitConfigData();
 public:
 	L10nErr* pErrMsgData;
 	L10nTip* pTipMsgData;
@@ -47,13 +47,13 @@ export void SetDNl10nInstance(DNl10n* point)
 	PInstance = point;
 }
 
-int DNl10n::InitConfigData()
+const char* DNl10n::InitConfigData()
 {
 	string* value = GetLuanchConfigParam("l10nErrPath");
 	if (!value)
 	{
 		// DNPrint(0, LoggerLevel::Debug, "Launch Param l10nErrPath Error !\n");
-		return 1;
+		return "Launch Param l10nErrPath Error !\n";
 	}
 
 	if(pErrMsgData)
@@ -70,7 +70,7 @@ int DNl10n::InitConfigData()
 		if(!input || !pErrMsgData->ParseFromIstream(&input))
 		{
 			// DNPrint(0, LoggerLevel::Debug, "load I10n Err Config Error !\n");
-			return 2;
+			return "load I10n Err Config Error !\n";
 		}
 	}
 	
@@ -78,7 +78,7 @@ int DNl10n::InitConfigData()
 	if (!value)
 	{
 		// DNPrint(0, LoggerLevel::Debug, "Launch Param l10nTipPath Error Error !\n");
-		return 3;
+		return "Launch Param l10nTipPath Error Error !\n";
 	}
 
 	if(pTipMsgData)
@@ -95,7 +95,7 @@ int DNl10n::InitConfigData()
 		if(!input || !pTipMsgData->ParseFromIstream(&input))
 		{
 			// DNPrint(0, LoggerLevel::Debug, "load I10n Tip Config Error !\n");
-			return 4;
+			return "load I10n Tip Config Error !\n";
 		}
 	}
 	
@@ -121,12 +121,12 @@ int DNl10n::InitConfigData()
 	}
 	default:
 		// DNPrint(0, LoggerLevel::Debug, "load I10n Lang Type Error !\n");
-		return 5;
+		return "load I10n Lang Type Error !\n";
 	}
 
 	SetDNl10nInstance(this);
 
-	return 0;
+	return nullptr;
 }
 
 export const char* GetErrText(int type)
@@ -140,7 +140,7 @@ export const char* GetErrText(int type)
 	auto data = dataMap.find(type);
 	if(data == dataMap.end())
 	{
-		throw new exception(format("I10n Err Config not exist this type {}", ErrCode_Name(type)).c_str()); 
+		throw invalid_argument(format("I10n Err Config not exist this type {}", ErrCode_Name(type)).c_str()); 
 	}
 	
 	return (data->second.*(PInstance->pErrMsgFunc))().c_str();
@@ -157,7 +157,7 @@ export const char* GetTipText(int type)
 	auto data = dataMap.find(type);
 	if(data == dataMap.end())
 	{
-		throw new exception(format("I10n Tip Config not exist this type {}", TipCode_Name(type)).c_str()); 
+		throw invalid_argument(format("I10n Tip Config not exist this type {}", TipCode_Name(type)).c_str()); 
 	}
 	
 	return (data->second.*(PInstance->pTipMsgFunc))().c_str();

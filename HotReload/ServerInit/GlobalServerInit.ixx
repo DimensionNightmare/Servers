@@ -6,12 +6,10 @@ module;
 #include "StdAfx.h"
 export module GlobalServerInit;
 
-import DNServer;
-import GlobalServer;
 import GlobalServerHelper;
 import MessagePack;
 import GlobalMessage;
-import ServerEntityHelper;
+import DNTask;
 
 using namespace hv;
 using namespace std;

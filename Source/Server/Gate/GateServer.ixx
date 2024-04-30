@@ -1,11 +1,13 @@
 module;
+#include <cstdint>
 #include "hv/EventLoop.h"
 #include "hv/hsocket.h"
+#include "hv/EventLoopThread.h"
 
 #include "StdAfx.h"
 export module GateServer;
 
-import DNServer;
+export import DNServer;
 import DNServerProxy;
 import DNClientProxy;
 import MessagePack;

@@ -1,6 +1,7 @@
 module;
 #include <functional> 
 #include <shared_mutex>
+#include <cstdint>
 #include "hv/TcpClient.h"
 #include "hv/EventLoopThread.h"
 #include "google/protobuf/message.h"
@@ -67,7 +68,7 @@ protected: // dll proxy
 
 DNClientProxy::DNClientProxy()
 {
-	iMsgId = ATOMIC_VAR_INIT(0);
+	iMsgId = 0;
 	mMsgList.clear();
 	eRegistState = RegistState::None;
 	pRegistEvent = nullptr;
@@ -139,7 +140,7 @@ void DNClientProxy::TickHeartbeat()
 
 	static string binData;
 	binData.clear();
-	binData.resize(requset.ByteSize());
+	binData.resize(requset.ByteSizeLong());
 	requset.SerializeToArray(binData.data(), binData.size());
 
 	MessagePack(0, MsgDeal::Ret, requset.GetDescriptor()->full_name().c_str(), binData);

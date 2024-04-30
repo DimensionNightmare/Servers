@@ -4,12 +4,13 @@ module;
 #include "Server/S_Global_Gate.pb.h"
 export module GateServerHelper;
 
-import GateServer;
-import DNClientProxyHelper;
-import DNServerProxyHelper;
-import ServerEntityManagerHelper;
-import ProxyEntityManagerHelper;
+export import GateServer;
+export import DNClientProxyHelper;
+export import DNServerProxyHelper;
+export import ServerEntityManagerHelper;
+export import ProxyEntityManagerHelper;
 import MessagePack;
+import Entity;
 
 using namespace std;
 using namespace GMsg;

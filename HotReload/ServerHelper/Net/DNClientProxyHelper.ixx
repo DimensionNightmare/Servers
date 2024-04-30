@@ -1,13 +1,15 @@
 module;
 #include <functional>
 #include <shared_mutex>
+#include <cstdint>
 #include "hv/TcpClient.h"
 
 #include "StdAfx.h"
 #include "Server/S_Common.pb.h"
 export module DNClientProxyHelper;
 
-import DNClientProxy;
+export import DNClientProxy;
+import DNTask;
 
 using namespace std;
 using namespace hv;

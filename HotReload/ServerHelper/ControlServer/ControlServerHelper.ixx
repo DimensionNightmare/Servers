@@ -3,9 +3,9 @@ module;
 #include <assert.h>
 export module ControlServerHelper;
 
-import ControlServer;
-import DNServerProxyHelper;
-import ServerEntityManagerHelper;
+export import ControlServer;
+export import DNServerProxyHelper;
+export import ServerEntityManagerHelper;
 
 using namespace std;
 

@@ -6,12 +6,11 @@ module;
 #include "StdAfx.h"
 export module GateServerInit;
 
-import DNServer;
-import GateServer;
 import GateServerHelper;
 import MessagePack;
 import GateMessage;
 import NetEntity;
+import DNTask;
 
 using namespace hv;
 using namespace std;

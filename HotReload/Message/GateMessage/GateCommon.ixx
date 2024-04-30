@@ -1,5 +1,7 @@
 module;
 #include <coroutine>
+#include <cstdint>
+#include <list>
 #include "hv/Channel.h"
 
 #include "StdAfx.h"
@@ -10,13 +12,10 @@ export module GateMessage:GateCommon;
 import DNTask;
 import MessagePack;
 import GateServerHelper;
-import ServerEntityHelper;
-import DNServerProxyHelper;
 
 using namespace std;
 using namespace hv;
 using namespace google::protobuf;
-using namespace GMsg;
 using namespace GMsg;
 
 // self request
@@ -152,7 +151,7 @@ export void Msg_ReqRegistSrv(const SocketChannelPtr &channel, uint32_t msgId, Me
 	}
 	
 	string binData;
-	binData.resize(response.ByteSize());
+	binData.resize(response.ByteSizeLong());
 	response.SerializeToArray(binData.data(), binData.size());
 
 	MessagePack(msgId, MsgDeal::Res, nullptr, binData);

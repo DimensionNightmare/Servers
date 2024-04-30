@@ -7,11 +7,10 @@ module;
 #include "StdAfx.h"
 export module LogicServerInit;
 
-import DNServer;
-import LogicServer;
 import LogicServerHelper;
 import MessagePack;
 import LogicMessage;
+import DNTask;
 
 using namespace hv;
 using namespace std;

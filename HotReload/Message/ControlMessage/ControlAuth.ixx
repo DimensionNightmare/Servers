@@ -1,5 +1,7 @@
 module;
 #include <coroutine>
+#include <cstdint>
+#include <list>
 #include "hv/Channel.h"
 
 #include "StdAfx.h"
@@ -10,7 +12,6 @@ export module ControlMessage:ControlAuth;
 import DNTask;
 import MessagePack;
 import ControlServerHelper;
-import ServerEntityHelper;
 
 using namespace std;
 using namespace hv;
@@ -62,7 +63,7 @@ export DNTaskVoid Msg_ReqAuthAccount(const SocketChannelPtr &channel, uint32_t m
 		uint32_t smsgId = server->GetMsgId();
 
 		binData.clear();
-		binData.resize(msg->ByteSize());
+		binData.resize(msg->ByteSizeLong());
 		msg->SerializeToArray(binData.data(), binData.size());
 		MessagePack(smsgId, MsgDeal::Req, C2G_ReqAuthAccount::GetDescriptor()->full_name().c_str(), binData);
 		
@@ -81,7 +82,7 @@ export DNTaskVoid Msg_ReqAuthAccount(const SocketChannelPtr &channel, uint32_t m
 	}
 
 	binData.clear();
-	binData.resize(response.ByteSize());
+	binData.resize(response.ByteSizeLong());
 	response.SerializeToArray(binData.data(), binData.size());
 
 	MessagePack(msgId, MsgDeal::Res, nullptr, binData);

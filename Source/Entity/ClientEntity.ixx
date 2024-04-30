@@ -1,4 +1,5 @@
 module;
+#include <cstdint>
 export module ClientEntity;
 
 import Entity;

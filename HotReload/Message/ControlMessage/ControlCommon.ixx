@@ -1,4 +1,5 @@
 module;
+#include <cstdint>
 #include "hv/Channel.h"
 
 #include "Server/S_Common.pb.h"
@@ -7,8 +8,6 @@ export module ControlMessage:ControlCommon;
 import DNTask;
 import MessagePack;
 import ControlServerHelper;
-import ServerEntityHelper;
-import ServerEntityManagerHelper;
 
 using namespace google::protobuf;
 using namespace GMsg;
@@ -49,7 +48,7 @@ export void Msg_ReqRegistSrv(const SocketChannelPtr &channel, uint32_t msgId, Me
 	}
 
 	string binData;
-	binData.resize(response.ByteSize());
+	binData.resize(response.ByteSizeLong());
 	response.SerializeToArray(binData.data(), binData.size());
 
 	MessagePack(msgId, MsgDeal::Res, nullptr, binData);

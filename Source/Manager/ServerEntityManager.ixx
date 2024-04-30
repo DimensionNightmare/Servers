@@ -2,11 +2,11 @@ module;
 #include <map>
 #include <list>
 #include <shared_mutex>
+#include <cstdint>
 
 #include "StdAfx.h"
 export module ServerEntityManager;
 
-import DNServer;
 export import ServerEntity;
 import EntityManager;
 

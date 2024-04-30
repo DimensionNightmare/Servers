@@ -1,4 +1,5 @@
 module;
+#include <cstdint>
 #include <functional> 
 #include <shared_mutex>
 #include "hv/TcpServer.h"
@@ -46,7 +47,7 @@ protected:
 
 DNServerProxy::DNServerProxy()
 {
-	iMsgId = ATOMIC_VAR_INIT(0);
+	iMsgId = 0;
 	mMsgList.clear();
 	mMapTimer.clear();
 }

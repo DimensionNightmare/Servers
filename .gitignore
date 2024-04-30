@@ -1,4 +1,4 @@
 .vs*/*
 !/.vscode/launch.json
-/Out/*
+/[oO]ut/*
 /*.log

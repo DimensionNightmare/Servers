@@ -4,10 +4,10 @@
 cmake_minimum_required (VERSION 3.26 FATAL_ERROR)
 
 # Top project
-project (DimensionNightmareServer CXX)
+project (DimensionNightmareServer)
 
 message("${CMAKE_VERSION}
-${MSVC_VERSION}
+${CMAKE_SYSTEM_NAME}
 ${CMAKE_SYSTEM_VERSION}
 ${CMAKE_BUILD_TYPE}
 ${CMAKE_SYSTEM_PROCESSOR}")
@@ -48,6 +48,10 @@ endif()
 
 set(CMAKE_CXX_STANDARD 23)
 
+if(CMAKE_SYSTEM_NAME MATCHES "Linux")
+	set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+endif()
+
 set(CMAKE_PREFIX_PATH
 "../Environment/Install/libhv/${CMAKE_BUILD_TYPE}/lib/cmake;"
 "../Environment/Install/protobuf/${CMAKE_BUILD_TYPE}/cmake;"
@@ -78,7 +82,7 @@ target_sources(MainSource
 
 target_link_libraries(MainSource PUBLIC hv_static protobuf::libprotobuf protobufGen libpqxx::pqxx)
 
-target_compile_definitions(MainSource PUBLIC _${CMAKE_SYSTEM_PROCESSOR}_)
+target_compile_definitions(MainSource PRIVATE _${CMAKE_SYSTEM_PROCESSOR}_)
 
 set_property(TARGET MainSource PROPERTY CXX_STANDARD 23)
 
@@ -90,16 +94,15 @@ file(GLOB_RECURSE srcProgram CONFIGURE_DEPENDS
 )
 
 target_sources(DimensionNightmareServer 
-	PUBLIC FILE_SET CXX_MODULES TYPE CXX_MODULES FILES
+	PRIVATE FILE_SET CXX_MODULES TYPE CXX_MODULES FILES
 	${srcProgram}
 )
 
-target_link_libraries(DimensionNightmareServer PUBLIC MainSource)
+target_link_libraries(DimensionNightmareServer PRIVATE MainSource)
 
 set_property(TARGET DimensionNightmareServer PROPERTY CXX_STANDARD 23)
 
-target_compile_definitions(DimensionNightmareServer PUBLIC _${CMAKE_SYSTEM_PROCESSOR}_)
-
+target_compile_definitions(DimensionNightmareServer PRIVATE _${CMAKE_SYSTEM_PROCESSOR}_)
 
 ################################ HotReload ################################
 
@@ -107,18 +110,23 @@ file(GLOB_RECURSE srcHotReloadModule CONFIGURE_DEPENDS
 	"HotReload/*.ixx"
 )
 
-add_library( HotReload SHARED "HotReload/HotReload.cpp")
+add_library( HotReload SHARED)
+# add_library( HotReload SHARED "HotReload/HotReload.cpp")
 
 target_sources(HotReload 
-	PUBLIC FILE_SET CXX_MODULES TYPE CXX_MODULES FILES
+	PRIVATE FILE_SET CXX_MODULES TYPE CXX_MODULES FILES
 	${srcHotReloadModule}
 )
 
-target_compile_definitions(HotReload PUBLIC HOTRELOAD_BUILD _${CMAKE_SYSTEM_PROCESSOR}_)
+target_compile_definitions(HotReload PRIVATE HOTRELOAD_BUILD _${CMAKE_SYSTEM_PROCESSOR}_)
 
-set_target_properties(HotReload PROPERTIES RUNTIME_OUTPUT_DIRECTORY  ${CMAKE_BINARY_DIR}/Runtime)
+if(NOT CMAKE_SYSTEM_NAME MATCHES "Linux")
+	set_target_properties(HotReload PROPERTIES RUNTIME_OUTPUT_DIRECTORY  ${CMAKE_BINARY_DIR}/Runtime)
+else()
+	set_target_properties(HotReload PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/Runtime)
+endif()
 
-target_link_libraries(HotReload PUBLIC MainSource)
+target_link_libraries(HotReload PRIVATE MainSource)
 
 ################################ DNTest ################################
 
@@ -130,7 +138,7 @@ file(GLOB_RECURSE srcDNTest CONFIGURE_DEPENDS
 
 target_link_libraries(DNTest protobuf::libprotobuf protobufGen hv_static libpqxx::pqxx)
 
-target_sources(DNTest PUBLIC ${srcDNTest})
+target_sources(DNTest PRIVATE ${srcDNTest})
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET DNTest PROPERTY CXX_STANDARD 23)

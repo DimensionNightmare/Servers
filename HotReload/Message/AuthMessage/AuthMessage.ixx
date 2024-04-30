@@ -1,6 +1,7 @@
 module;
 #include <map>
 #include <functional>
+#include <cstdint>
 #include "google/protobuf/message.h"
 #include "hv/Channel.h"
 #include "hv/HttpService.h"

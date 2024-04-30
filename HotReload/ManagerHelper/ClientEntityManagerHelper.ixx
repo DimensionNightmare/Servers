@@ -1,13 +1,14 @@
 module;
 #include <map>
 #include <shared_mutex>
+#include <cstdint>
 #include "hv/Channel.h"
 
 #include "StdAfx.h"
 export module ClientEntityManagerHelper;
 
-import ClientEntityHelper;
-import ClientEntityManager;
+export import ClientEntityHelper;
+export import ClientEntityManager;
 
 using namespace std;
 using namespace hv;

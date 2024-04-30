@@ -2,6 +2,7 @@ module;
 #include <coroutine>
 #include <string>
 #include <chrono>
+#include <cstdint>
 #include "hv/Channel.h"
 
 #include "StdAfx.h"
@@ -18,7 +19,6 @@ using namespace std;
 using namespace hv;
 using namespace google::protobuf;
 using namespace GMsg;
-using namespace GMsg;
 
 export void Exe_ReqUserToken(const SocketChannelPtr &channel, uint32_t msgId, Message *msg)
 {
@@ -29,8 +29,8 @@ export void Exe_ReqUserToken(const SocketChannelPtr &channel, uint32_t msgId, Me
 
 	GateServerHelper* dnServer = GetGateServer();
 	ProxyEntityManagerHelper* entityMan = dnServer->GetProxyEntityManager();
-	ProxyEntityHelper* entity = nullptr;
-	if(entity = entityMan->GetEntity(requset->account_id()))
+	ProxyEntityHelper* entity = entityMan->GetEntity(requset->account_id());
+	if(entity)
 	{
 		//exit
 		if(SocketChannelPtr online = entity->GetSock())

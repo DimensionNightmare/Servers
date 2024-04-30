@@ -79,12 +79,12 @@ int main()
 }
 #endif
 
-#if 0
+#if 1
 int main()
 {
 	GCfg::CharacterPlayer Weapons;
 	{
-		std::ifstream input("C:\\Project\\DimensionNightmare\\Environment\\GameConfig\\Gen\\Data\\character_player.bytes", std::ios::in | std::ios::binary);
+		std::ifstream input("/home/DimensionNightmare/Environment/GameConfig/Gen/Data/character_player.bytes", std::ios::in | std::ios::binary);
 		if(input)
 		{
 			if(Weapons.ParseFromIstream(&input))
@@ -96,9 +96,13 @@ int main()
 				std::cout << "error" << std::endl;
 			}
 		}
+		else
+		{
+
+		}
 	}
 
-	auto item = Weapons.data_map().find(0);
+	auto item = Weapons.data_map().find(1);
 	if(item != Weapons.data_map().end())
 	{
 		const GCfg::PlayerInfo * info = &item->second;
@@ -113,7 +117,7 @@ int main()
 chrono::hours GetTimezoneOffset()
 {
 	int minutes = 0;
-
+#ifdef _win32
 	TIME_ZONE_INFORMATION timeZoneInfo;
     DWORD result = GetTimeZoneInformation(&timeZoneInfo);
 
@@ -125,6 +129,7 @@ chrono::hours GetTimezoneOffset()
     } else {
         std::cerr << "Failed to get time zone information." << std::endl;
     }
+#endif
 
 	return chrono::hours(minutes/60);
 }
@@ -138,14 +143,9 @@ void printTime()
 	cout << format("{:%Y-%m-%d %H:%M:%S}", chrono::system_clock::now() + offset) << endl;
 }
 
-#if 1
+#if 0
 int main()
 {
-	std::map<int, A> maps;
-
-	A* a = &maps[1];
-	maps.erase(1);
-
 	string jsonstr = R"(
 	{
 		"aa": 1,
@@ -178,12 +178,12 @@ int main()
 	// cout << format("{:%Y-%m-%d %H:%M:%S}", time_.now()) << endl;
 
 	//  time_;
-	TIMERSTART(for_loop);
+	// TIMERSTART(for_loop);
 	
 	printTime();
 
-	TIMEREND(for_loop);
-	DURATION_ms(for_loop);
+	// TIMEREND(for_loop);
+	// DURATION_ms(for_loop);
 
 	// TIMERSTART(for_loop);
 	

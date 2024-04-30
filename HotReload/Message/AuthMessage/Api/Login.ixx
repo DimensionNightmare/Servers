@@ -1,5 +1,6 @@
 module;
 #include <coroutine>
+#include <cstdint>
 #include "google/protobuf/util/json_util.h"
 #include "hv/HttpService.h"
 #include "pqxx/transaction"

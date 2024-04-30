@@ -2,6 +2,7 @@ module;
 #include <sstream>
 #include <format>
 #include <ctime>
+#include <cstdint>
 #include "google/protobuf/message.h"
 #include "google/protobuf/reflection.h"
 #include "google/protobuf/descriptor.pb.h"
@@ -78,7 +79,7 @@ const char* GetDbTypeByProtoType(FieldDescriptor::CppType pbType)
 		ONE(FieldDescriptor::CPPTYPE_ENUM, 			INTEGER	)
 #undef ONE
 		default:
-			throw new exception("Please Regist DbType");
+			throw invalid_argument("Please Regist DbType");
 			break;
 	}
 	
@@ -173,7 +174,7 @@ void InsertFieldByProtoType(const FieldDescriptor* field, const Reflection* refl
 			out = out + "'" + reflection->GetString(data, field) + "'";
 			break;
 		default:
-			throw new exception("Please Regist InsertField::Type");
+			throw invalid_argument("Please Regist InsertField::Type");
 			break;
 	}
 
@@ -194,7 +195,7 @@ void InsertFieldByProtoType(const FieldDescriptor* field, const Reflection* refl
 				if(out.size() > len)
 				{
 					out = format("field {} lenth > {} limit !!!", field->name(), len);
-					throw new exception(out.c_str());
+					throw invalid_argument(out.c_str());
 				}
 			}
 			break;
@@ -246,7 +247,7 @@ void SelectFieldByProtoType(const FieldDescriptor* field, const Reflection* refl
 			reflection->SetString(&data, field, value.as<string>());
 			break;
 		default:
-			throw new exception("Please Regist InsertField::Type");
+			throw invalid_argument("Please Regist InsertField::Type");
 			break;
 	}
 	
@@ -286,7 +287,7 @@ void SelectFieldCondByProtoType(const FieldDescriptor* field, const Reflection* 
 			out = format("'{}'", reflection->GetString(data, field));
 			break;
 		default:
-			throw new exception("Please Regist InsertField::Type");
+			throw invalid_argument("Please Regist InsertField::Type");
 			break;
 	}
 
@@ -307,7 +308,7 @@ void SelectFieldCondByProtoType(const FieldDescriptor* field, const Reflection* 
 				if(out.size() > len)
 				{
 					out = format("field {} lenth > {} limit !!!", field->name(), len);
-					throw new exception(out.c_str());
+					throw invalid_argument(out.c_str());
 				}
 			}
 			break;
@@ -350,7 +351,7 @@ bool UpdateFieldByProtoType(const FieldDescriptor* field, const Reflection* refl
 			out = format("'{}'", reflection->GetString(data, field));
 			break;
 		default:
-			throw new exception("Please Regist InsertField::Type");
+			throw invalid_argument("Please Regist InsertField::Type");
 			break;
 	}
 
@@ -371,7 +372,7 @@ bool UpdateFieldByProtoType(const FieldDescriptor* field, const Reflection* refl
 				if(out.size() > len)
 				{
 					out = format("field {} lenth > {} limit !!!", field->name(), len);
-					throw new exception(out.c_str());
+					throw invalid_argument(out.c_str());
 				}
 			}
 			break;
@@ -415,7 +416,7 @@ void UpdateFieldCondByProtoType(const FieldDescriptor* field, const Reflection* 
 			out = format("'{}'", reflection->GetString(data, field));
 			break;
 		default:
-			throw new exception("Please Regist InsertField::Type");
+			throw invalid_argument("Please Regist InsertField::Type");
 			break;
 	}
 
@@ -436,7 +437,7 @@ void UpdateFieldCondByProtoType(const FieldDescriptor* field, const Reflection* 
 				if(out.size() > len)
 				{
 					out = format("field {} lenth > {} limit !!!", field->name(), len);
-					throw new exception(out.c_str());
+					throw invalid_argument(out.c_str());
 				}
 			}
 			break;
@@ -539,7 +540,7 @@ bool DNDbObj<TMessage>::ChangeSqlType(SqlOpType type)
 {
 	if(eType != SqlOpType::None && eType != type)
 	{
-		throw new exception("Not Commit to Change OpType");
+		throw invalid_argument("Not Commit to Change OpType");
 		return false;
 	}
 
@@ -568,7 +569,7 @@ void DNDbObj<TMessage>::SetResult(int affectedRows)
 			break;
 		}
 		default:
-			throw new exception("Please Imp SetResult Case!");
+			throw invalid_argument("Please Imp SetResult Case!");
 	}
 	
 	iExecResultCount = 0;
@@ -727,7 +728,7 @@ void DNDbObj<TMessage>::BuildSqlStatement()
 			auto& updates = mEles[SUPDATE];
 			if(!updates.size())
 			{
-				throw new exception("NOT SET UPDATE PROPERTY !");
+				throw invalid_argument("NOT SET UPDATE PROPERTY !");
 			}
 
 			string selectElems;
@@ -795,7 +796,7 @@ void DNDbObj<TMessage>::BuildSqlStatement()
 			break;
 		}
 		default:
-			throw new exception("Please Imp BuildSqlStatement Case!");
+			throw invalid_argument("Please Imp BuildSqlStatement Case!");
 	}
 
 	sSqlStatement = ss.str();
@@ -851,7 +852,7 @@ DNDbObj<TMessage>& DNDbObj<TMessage>::InitTable()
 
 	if(mEles.contains(SPrimaryKey))
 	{
-		throw new exception("Not Allow Exist 'PRIMARY KEY' map key!");
+		throw invalid_argument("Not Allow Exist 'PRIMARY KEY' map key!");
 	}
 
 	if (primaryKey.size())
@@ -933,7 +934,7 @@ DNDbObj<TMessage> &DNDbObj<TMessage>::Select(const char* name, ...)
 
 	if(mEles.contains(SSELECTALL))
 	{
-		throw new exception("exist other select statement!!");
+		throw invalid_argument("exist other select statement!!");
 	}
 
 	if(const FieldDescriptor* field = descriptor->FindFieldByLowercaseName(name))
@@ -965,7 +966,7 @@ DNDbObj<TMessage> &DNDbObj<TMessage>::SelectAll(bool foreach)
 
 	if(mEles.size() > 1)
 	{
-		throw new exception("exist other select statement!!");
+		throw invalid_argument("exist other select statement!!");
 	}
 
 	return *this;

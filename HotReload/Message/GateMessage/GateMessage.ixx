@@ -1,6 +1,7 @@
 module;
 #include <map>
 #include <functional>
+#include <cstdint>
 #include "hv/Channel.h"
 
 #include "StdAfx.h"
@@ -93,9 +94,15 @@ void GateMessageHandle::MsgRetHandle(const SocketChannelPtr &channel, uint32_t m
 
 void GateMessageHandle::RegMsgHandle()
 {
+#ifdef _WIN32
 	#define MSG_MAPPING(map, msg, func) \
 	map.emplace(std::hash<string>::_Do_hash(msg::GetDescriptor()->full_name()), \
 	make_pair(msg::internal_default_instance(), func))
+#elif __unix__
+	#define MSG_MAPPING(map, msg, func) \
+	map.emplace(std::hash<string>{}(msg::GetDescriptor()->full_name()), \
+	make_pair(msg::internal_default_instance(), func))
+#endif
 
 	MSG_MAPPING(MHandleMap, COM_ReqRegistSrv, &Msg_ReqRegistSrv);
 	MSG_MAPPING(MHandleMap, G2g_ReqLoginToken, &Exe_ReqUserToken);

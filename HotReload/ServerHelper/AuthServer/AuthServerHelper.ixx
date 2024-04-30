@@ -7,9 +7,9 @@ module;
 #include "GDef/GDef.pb.h"
 export module AuthServerHelper;
 
-import AuthServer;
-import DNClientProxyHelper;
-import DNWebProxyHelper;
+export import AuthServer;
+export import DNClientProxyHelper;
+export import DNWebProxyHelper;
 import DNDbObj;
 
 using namespace std;

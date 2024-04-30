@@ -7,11 +7,10 @@ module;
 #include "StdAfx.h"
 export module DatabaseServerInit;
 
-import DNServer;
-import DatabaseServer;
 import DatabaseServerHelper;
 import MessagePack;
 import DatabaseMessage;
+import DNTask;
 
 using namespace hv;
 using namespace std;

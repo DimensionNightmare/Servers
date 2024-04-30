@@ -1,5 +1,6 @@
 module;
 #include <coroutine>
+#include <cstdint>
 #include "hv/Channel.h"
 
 #include "Server/S_Global_Gate.pb.h"
@@ -8,7 +9,6 @@ export module GlobalMessage:GlobalGate;
 import DNTask;
 import MessagePack;
 import GlobalServerHelper;
-import ServerEntityHelper;
 
 using namespace std;
 using namespace hv;

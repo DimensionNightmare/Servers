@@ -1,5 +1,6 @@
 module;
 #include <coroutine>
+#include <cstdint>
 #include "hv/Channel.h"
 
 #include "StdAfx.h"
@@ -118,7 +119,7 @@ export void Msg_ReqRegistSrv(const SocketChannelPtr &channel, uint32_t msgId, Me
 	}
 	
 	string binData;
-	binData.resize(response.ByteSize());
+	binData.resize(response.ByteSizeLong());
 	response.SerializeToArray(binData.data(), binData.size());
 
 	MessagePack(msgId, MsgDeal::Res, nullptr, binData);

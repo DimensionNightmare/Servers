@@ -1,15 +1,15 @@
 module;
 #include <assert.h>
+#include <list>
 #include "hv/Channel.h"
 
 #include "Server/S_Common.pb.h"
 export module GlobalServerHelper;
 
-import GlobalServer;
-import DNClientProxyHelper;
-import DNServerProxyHelper;
-import ServerEntityManagerHelper;
-import ServerEntityHelper;
+export import GlobalServer;
+export import DNClientProxyHelper;
+export import DNServerProxyHelper;
+export import ServerEntityManagerHelper;
 import MessagePack;
 
 using namespace std;
@@ -74,7 +74,7 @@ void GlobalServerHelper::UpdateServerGroup()
 		retMsg.set_port(beEntity->ServerPort());
 		
 		binData.clear();
-		binData.resize(retMsg.ByteSize());
+		binData.resize(retMsg.ByteSizeLong());
 		retMsg.SerializeToArray(binData.data(), binData.size());
 		MessagePack(0, MsgDeal::Ret, retMsg.GetDescriptor()->full_name().c_str(), binData);
 		channel->write(binData);

@@ -1,5 +1,7 @@
 module;
 #include <string>
+#include <cstdint>
+#include <string.h>
 export module MessagePack;
 
 using namespace std;
@@ -31,12 +33,12 @@ export struct MessagePacket
 
 	MessagePacket()
 	{
-		memset(this, 0, sizeof *this);
+		// memset(this, 0, sizeof *this);
 	}
 };
 #pragma pack()
 
-int MessagePacket::PackLenth = sizeof MessagePacket;
+int MessagePacket::PackLenth = sizeof(MessagePacket);
 
 export bool MessagePack(uint32_t msgId, MsgDeal deal,  const char* pbName, string &data)
 {
@@ -51,12 +53,16 @@ export bool MessagePack(uint32_t msgId, MsgDeal deal,  const char* pbName, strin
 	}
 	else [[likely]]
 	{
+#ifdef _WIN32
 		packet.msgHashId = hash<string>::_Do_hash(pbName);
+#elif __unix__
+		packet.msgHashId = hash<string>{}(pbName);
+#endif
 	}
 
 	data.resize(MessagePacket::PackLenth + packet.pkgLenth);
 	
-	memmove_s(data.data() + MessagePacket::PackLenth, packet.pkgLenth, data.data(), packet.pkgLenth);
+	memmove(data.data() + MessagePacket::PackLenth, data.data(), packet.pkgLenth);
 	memcpy(data.data(), &packet, MessagePacket::PackLenth);
 	return true;
 }

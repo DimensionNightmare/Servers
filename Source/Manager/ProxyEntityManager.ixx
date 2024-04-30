@@ -1,11 +1,11 @@
 module;
 #include <map>
 #include <shared_mutex>
+#include <cstdint>
 
 #include "StdAfx.h"
 export module ProxyEntityManager;
 
-import DNServer;
 export import ProxyEntity;
 import EntityManager;
 

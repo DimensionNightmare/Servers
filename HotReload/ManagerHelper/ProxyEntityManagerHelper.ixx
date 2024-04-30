@@ -1,13 +1,14 @@
 module;
 #include <map>
 #include <shared_mutex>
+#include <cstdint>
 #include "hv/Channel.h"
 
 #include "StdAfx.h"
 export module ProxyEntityManagerHelper;
 
-import ProxyEntityHelper;
-import ProxyEntityManager;
+export import ProxyEntityHelper;
+export import ProxyEntityManager;
 
 using namespace std;
 using namespace hv;

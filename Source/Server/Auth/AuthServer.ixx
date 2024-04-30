@@ -1,12 +1,14 @@
 module;
+#include <cstdint>
 #include "hv/EventLoop.h"
 #include "hv/hsocket.h"
 #include "pqxx/connection"
+#include "hv/EventLoopThread.h"
 
 #include "StdAfx.h"
 export module AuthServer;
 
-import DNServer;
+export import DNServer;
 import DNWebProxy;
 import DNClientProxy;
 import MessagePack;

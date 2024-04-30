@@ -1,5 +1,6 @@
 module;
 #include <coroutine>
+#include <cstdint>
 #include "hv/Channel.h"
 
 #include "StdAfx.h"

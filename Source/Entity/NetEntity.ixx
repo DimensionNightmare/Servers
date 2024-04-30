@@ -1,9 +1,10 @@
 module;
 #include <functional>
+#include <cstdint>
 #include "hv/Channel.h"
 export module NetEntity;
 
-import Entity;
+export import Entity;
 
 using namespace hv;
 using namespace std;

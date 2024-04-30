@@ -3,10 +3,11 @@ module;
 #include <list>
 #include <map>
 #include <bitset>
+#include <cstdint>
 export module ServerEntity;
 
 import NetEntity;
-import DNServer;
+export import DNServer;
 
 using namespace std;
 

@@ -1,5 +1,7 @@
 module;
 #include <coroutine>
+#include <cstdint>
+#include <list>
 #include "hv/Channel.h"
 
 #include "StdAfx.h"
@@ -11,8 +13,6 @@ import GateServerHelper;
 import DNTask;
 import Utils.StrUtils;
 import MessagePack;
-import ProxyEntityHelper;
-import DNServerProxyHelper;
 
 using namespace std;
 using namespace hv;
@@ -73,7 +73,7 @@ export DNTaskVoid Msg_ReqAuthToken(const SocketChannelPtr &channel, uint32_t msg
 				//redirect G2L_ReqClientLogin dot pack string
 				requset->clear_token();
 				binData.clear();
-				binData.resize(requset->ByteSize());
+				binData.resize(requset->ByteSizeLong());
 				requset->SerializeToArray(binData.data(), binData.size());
 
 				DNServerProxyHelper* server = dnServer->GetSSock();
@@ -125,7 +125,7 @@ export DNTaskVoid Msg_ReqAuthToken(const SocketChannelPtr &channel, uint32_t msg
 	}
 
 	binData.clear();
-	binData.resize(response.ByteSize());
+	binData.resize(response.ByteSizeLong());
 	response.SerializeToArray(binData.data(), binData.size());
 
 	MessagePack(msgId, MsgDeal::Res, nullptr, binData);

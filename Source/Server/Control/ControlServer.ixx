@@ -1,10 +1,11 @@
 module;
 #include "hv/EventLoop.h"
+#include "hv/EventLoopThread.h"
 
 #include "StdAfx.h"
 export module ControlServer;
 
-import DNServer;
+export import DNServer;
 import DNServerProxy;
 import MessagePack;
 import ServerEntityManager;

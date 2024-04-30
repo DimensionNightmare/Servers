@@ -12,6 +12,11 @@ module;
 	#include <handleapi.h>
 	#include <dbghelp.h>
 	#pragma comment(lib, "dbghelp.lib")
+#elif __unix__
+	#include <csignal>
+	#include <execinfo.h>
+	#include <fcntl.h>
+	#include <sys/stat.h>
 #endif
 #include <map>
 #include <string>
@@ -26,15 +31,34 @@ import DimensionNightmare;
 
 using namespace std;
 
+#ifdef __unix__
+	#define Sleep(ms) usleep(ms*1000)
+#endif
+
 enum class LunchType
 {
 	GLOBAL,
 	PULL,
 };
 
+#ifdef __unix__
+// void CtrlHandler(int signal)
+// {
+// 	DNPrint(TipCode_CmdOpBreak, LoggerLevel::Normal, nullptr);
+
+// 	PInstance->ServerIsRun() = false;
+// 	while(PInstance)
+// 	{
+// 		Sleep(20);
+// 	}
+// };
+#endif
+
 export int main(int argc, char **argv)
 {
 	hlog_disable();
+
+	SetLoggerLevel(LoggerLevel::Debug);
 
 	// lunch param
 	map<string, string> lunchParam;
@@ -144,6 +168,33 @@ export int main(int argc, char **argv)
 		PInstance->ShutDown();
 		return 0;
 	}
+#elif __unix__
+
+	auto CtrlHandler = [](int signal)
+	{
+		DNPrint(TipCode_CmdOpBreak, LoggerLevel::Normal, nullptr);
+
+		PInstance->ServerIsRun() = false;
+	};
+	signal(SIGINT, CtrlHandler);
+
+	auto UnhandledHandler = [](int signal, siginfo_t *info, void *context)
+	{
+		// int fd = open("MiniDump.dmp", O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
+		// if (fd != -1) 
+		// {
+		// 	void *buffer[1024];
+		// 	int size = backtrace(buffer, 1024);
+		// 	backtrace_symbols_fd(buffer, size, fd);
+		// 	close(fd);
+		// }
+	};
+
+	struct sigaction sa;
+    sa.sa_sigaction = UnhandledHandler;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = SA_SIGINFO;
+    sigaction(SIGSEGV, &sa, NULL);
 #endif
 
 	auto InputEvent = async(launch::async, []()
@@ -194,6 +245,7 @@ export int main(int argc, char **argv)
 		Sleep(100);
 	}
 
+	cout << "shutdown" <<endl;
 	DimensionNightmare* temp = PInstance;
 	PInstance = nullptr;
 

@@ -1,6 +1,7 @@
 module;
 #include <assert.h>
 #include <format>
+#include <cstdint>
 #include "pqxx/connection"
 #include "pqxx/transaction"
 #include "hv/EventLoop.h"
@@ -10,9 +11,9 @@ module;
 #include "DbAfx.h"
 export module DatabaseServerHelper;
 
-import DatabaseServer;
-import DNClientProxyHelper;
-import ServerEntityManagerHelper;
+export import DatabaseServer;
+export import DNClientProxyHelper;
+export import ServerEntityManagerHelper;
 
 using namespace std;
 using namespace hv;

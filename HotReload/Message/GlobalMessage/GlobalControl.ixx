@@ -2,6 +2,8 @@ module;
 #include <coroutine>
 #include <random>
 #include <format>
+#include <cstdint>
+#include <list>
 #include "hv/Channel.h"
 
 #include "StdAfx.h"
@@ -13,7 +15,6 @@ export module GlobalMessage:GlobalControl;
 import DNTask;
 import MessagePack;
 import GlobalServerHelper;
-import ServerEntityHelper;
 
 using namespace std;
 using namespace hv;
@@ -88,7 +89,7 @@ export DNTaskVoid Msg_ReqAuthAccount(const SocketChannelPtr &channel, uint32_t m
 	}
 
 	binData.clear();
-	binData.resize(response.ByteSize());
+	binData.resize(response.ByteSizeLong());
 	response.SerializeToArray(binData.data(), binData.size());
 
 	MessagePack(msgId, MsgDeal::Res, nullptr, binData);

@@ -1,5 +1,7 @@
 module;
 #include <functional> 
+#include <cstdint>
+#include <list>
 #include "hv/EventLoop.h"
 
 #include "StdAfx.h"

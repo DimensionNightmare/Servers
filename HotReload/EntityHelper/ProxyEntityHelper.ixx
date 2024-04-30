@@ -1,5 +1,6 @@
 module;
 #include <string>
+#include <cstdint>
 #include "hv/Channel.h"
 export module ProxyEntityHelper;
 

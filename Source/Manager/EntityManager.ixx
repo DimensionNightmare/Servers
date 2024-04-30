@@ -1,6 +1,7 @@
 module;
 #include <map>
 #include <shared_mutex>
+#include <cstdint>
 #include "hv/EventLoopThread.h"
 export module EntityManager;
 
@@ -30,7 +31,7 @@ protected: // dll proxy
 	map<uint64_t, uint32_t > mMapTimer;
 	shared_mutex oTimerMutex;
 
-	EventLoopThread* pLoop;
+	EventLoopThreadPtr pLoop;
 };
 
 
@@ -40,7 +41,7 @@ EntityManager<TEntity>::EntityManager()
 {
 	mEntityMap.clear();
 	mMapTimer.clear();
-	pLoop = new EventLoopThread;
+	pLoop = make_shared<EventLoopThread>();
 }
 
 template <class TEntity>

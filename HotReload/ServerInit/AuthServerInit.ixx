@@ -1,15 +1,15 @@
 module;
 #include "google/protobuf/message.h"
 #include "hv/Channel.h"
+#include "hv/HttpServer.h"
 
 #include "StdAfx.h"
 export module AuthServerInit;
 
-import DNServer;
-import AuthServer;
 import AuthServerHelper;
 import MessagePack;
 import AuthMessage;
+import DNTask;
 
 using namespace hv;
 using namespace std;

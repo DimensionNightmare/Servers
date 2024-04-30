@@ -1,5 +1,7 @@
 module;
 #include <string>
+#include <cstdint>
+#include <list>
 #include "hv/Channel.h"
 export module ServerEntityHelper;
 
