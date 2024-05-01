@@ -279,7 +279,8 @@ bool DimensionNightmare::InitConfig(map<string, string> &param)
 
 #ifdef _WIN32
 		char buffer[512] = {0};
-		GetPrivateProfileSectionNamesA(buffer, sizeof(buffer), iniFilePath);
+		size_t bufferSize = sizeof(buffer);
+		GetPrivateProfileSectionNamesA(buffer, bufferSize, iniFilePath);
 		char *current = buffer;
 		while (*current) 
 		{

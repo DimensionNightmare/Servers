@@ -41,19 +41,6 @@ enum class LunchType
 	PULL,
 };
 
-#ifdef __unix__
-// void CtrlHandler(int signal)
-// {
-// 	DNPrint(TipCode_CmdOpBreak, LoggerLevel::Normal, nullptr);
-
-// 	PInstance->ServerIsRun() = false;
-// 	while(PInstance)
-// 	{
-// 		Sleep(20);
-// 	}
-// };
-#endif
-
 export int main(int argc, char **argv)
 {
 	hlog_disable();
@@ -245,7 +232,7 @@ export int main(int argc, char **argv)
 		Sleep(100);
 	}
 
-	cout << "shutdown" <<endl;
+	DNPrint(0, LoggerLevel::Debug, "shutdown");
 	DimensionNightmare* temp = PInstance;
 	PInstance = nullptr;
 

@@ -7,6 +7,7 @@ module;
 #include <string>
 #include "google/protobuf/message.h"
 #include "hv/hasync.h"
+#include "hv/hlog.h"
 
 #include "StdAfx.h"
 export module HotReload;
@@ -42,8 +43,6 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
     switch (fdwReason)
     {
     case DLL_PROCESS_DETACH:
-		google::protobuf::ShutdownProtobufLibrary();
-		hv::async::cleanup();
         if (lpvReserved != nullptr)
         {
             break;
@@ -66,10 +65,12 @@ extern "C"
 {
 	HOTRELOAD int InitHotReload(DNServer* server)
 	{
-		SetLuanchConfig(server->pLuanchConfig);
-		SetDNl10nInstance(server->pDNl10nInstance);
+		hlog_disable();
 
 		SetLoggerLevel(LoggerLevel::Debug);
+
+		SetLuanchConfig(server->pLuanchConfig);
+		SetDNl10nInstance(server->pDNl10nInstance);
 		
 		ServerType servertype = server->GetServerType();
 		switch (servertype)
@@ -109,6 +110,9 @@ extern "C"
 		case ServerType::LogicServer:
 			return HandleLogicServerShutdown(server);
 		}
+
+		google::protobuf::ShutdownProtobufLibrary();
+		hv::async::cleanup();
 
 		return 0;
 	}
