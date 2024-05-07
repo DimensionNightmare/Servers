@@ -177,7 +177,7 @@ int HandleLogicServerInit(DNServer *server)
 		clientSock->onMessage = onMessage;
 	}
 
-	return true;
+	return serverProxy->InitDatabase();
 }
 
 int HandleLogicServerShutdown(DNServer *server)

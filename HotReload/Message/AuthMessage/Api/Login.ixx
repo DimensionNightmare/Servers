@@ -74,7 +74,7 @@ export void ApiLogin(HttpService* service)
 		accInfo.set_auth_name(authName);
 		accInfo.set_auth_string(authString);
 
-		pqxx::read_transaction query(*authServer->GetDbConnection());
+		pqxx::read_transaction query(*authServer->SqlProxy());
 		DNDbObj<GDb::Account> accounts(reinterpret_cast<pqxx::transaction<>*>(&query));
 		try
 		{
@@ -84,7 +84,7 @@ export void ApiLogin(HttpService* service)
 				DBSelectCond(accInfo, auth_string, "=", "AND")
 				.Commit();
 		}
-		catch(exception& e)
+		catch(const exception& e)
 		{
 			DNPrint(0, LoggerLevel::Debug, "%s", e.what());
 			errData["code"] = HTTP_STATUS_BAD_REQUEST;

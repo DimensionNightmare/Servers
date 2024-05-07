@@ -2,10 +2,9 @@ module;
 #include <assert.h>
 #include <format>
 #include <cstdint>
-#include "pqxx/connection"
-#include "pqxx/transaction"
 #include "hv/EventLoop.h"
 #include "hv/hsocket.h"
+#include "sw/redis++/redis++.h"
 
 #include "StdAfx.h"
 #include "DbAfx.h"
@@ -19,6 +18,7 @@ export import ClientEntityManagerHelper;
 
 using namespace std;
 using namespace hv;
+using namespace sw::redis;
 
 export class LogicServerHelper : public LogicServer
 {
@@ -54,7 +54,20 @@ export LogicServerHelper* GetLogicServer()
 
 bool LogicServerHelper::InitDatabase()
 {
-	
+	if(string* value = GetLuanchConfigParam("connection"))
+	{
+		try
+		{
+			pNoSqlProxy = new Redis(*value);
+			pNoSqlProxy->ping();
+		}
+		catch(const exception& e)
+		{
+			DNPrint(0, LoggerLevel::Debug, "%s", e.what());
+			return false;
+		}
+	}
+
 	return true;
 }
 

@@ -53,15 +53,18 @@ if(CMAKE_SYSTEM_NAME MATCHES "Linux")
 endif()
 
 set(CMAKE_PREFIX_PATH
-"../Environment/Install/libhv/${CMAKE_BUILD_TYPE}/lib/cmake;"
-"../Environment/Install/protobuf/${CMAKE_BUILD_TYPE}/cmake;"
-"../Environment/Install/protobuf/${CMAKE_BUILD_TYPE}/lib/cmake;"
-"../Environment/Install/libpqxx/${CMAKE_BUILD_TYPE}/lib/cmake;"
+"../Environment/Install/libhv/${CMAKE_BUILD_TYPE};"
+"../Environment/Install/protobuf/${CMAKE_BUILD_TYPE};"
+"../Environment/Install/libpqxx/${CMAKE_BUILD_TYPE};"
+"../Environment/Install/hiredis/${CMAKE_BUILD_TYPE};"
+"../Environment/Install/redis-plus-plus/${CMAKE_BUILD_TYPE};"
 )
 
 find_package(libhv CONFIG REQUIRED)
 find_package(Protobuf CONFIG REQUIRED)
 find_package(libpqxx CONFIG REQUIRED)
+find_package(hiredis CONFIG REQUIRED)
+find_package(redis++ CONFIG REQUIRED)
 
 include_directories("../Environment/Install/protobufGen/${CMAKE_BUILD_TYPE}/include")
 link_directories("../Environment/Install/protobufGen/${CMAKE_BUILD_TYPE}/lib")
@@ -80,7 +83,13 @@ target_sources(MainSource
 	${DNSourceModule}
 )
 
-target_link_libraries(MainSource PUBLIC hv_static protobuf::libprotobuf protobufGen libpqxx::pqxx)
+target_link_libraries(MainSource PUBLIC
+	hv_static
+	protobuf::libprotobuf
+	protobufGen
+	libpqxx::pqxx
+	redis++::redis++_static
+)
 
 target_compile_definitions(MainSource PRIVATE _${CMAKE_SYSTEM_PROCESSOR}_)
 
@@ -136,7 +145,13 @@ file(GLOB_RECURSE srcDNTest CONFIGURE_DEPENDS
 	"Test/*.cpp" 
 )
 
-target_link_libraries(DNTest protobuf::libprotobuf protobufGen hv_static libpqxx::pqxx)
+target_link_libraries(DNTest 
+protobuf::libprotobuf 
+protobufGen 
+hv_static 
+libpqxx::pqxx
+redis++::redis++_static
+)
 
 target_sources(DNTest PRIVATE ${srcDNTest})
 

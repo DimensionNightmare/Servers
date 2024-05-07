@@ -3,6 +3,7 @@ module;
 #include "hv/EventLoop.h"
 #include "hv/hsocket.h"
 #include "hv/EventLoopThread.h"
+#include "sw/redis++/redis++.h"
 
 #include "StdAfx.h"
 export module LogicServer;
@@ -17,6 +18,7 @@ import RoomEntityManager;
 
 using namespace std;
 using namespace hv;
+using namespace sw::redis;
 
 export class LogicServer : public DNServer
 {
@@ -58,6 +60,9 @@ protected: // dll proxy
 	// record orgin info
 	string sCtlIp;
 	uint16_t iCtlPort;
+
+	// localdb
+	Redis* pNoSqlProxy;
 };
 
 
@@ -71,6 +76,8 @@ LogicServer::LogicServer()
 	pServerEntityMan = nullptr;
 	pClientEntityMan = nullptr;
 	pRoomMan = nullptr;
+
+	pNoSqlProxy = nullptr;
 }
 
 LogicServer::~LogicServer()

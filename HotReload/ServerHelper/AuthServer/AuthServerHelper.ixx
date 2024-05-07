@@ -44,9 +44,9 @@ bool AuthServerHelper::InitDatabase()
 	{
 		//"postgresql://root@localhost"
 		string* value = GetLuanchConfigParam("connection");
-		pqxx::connection* conn = new pqxx::connection(*value);
-		conn->set_client_encoding("UTF8");
-		pqxx::work txn(*conn);
+		pSqlProxy = new pqxx::connection(*value);
+		pSqlProxy->set_client_encoding("UTF8");
+		pqxx::work txn(*pSqlProxy);
 
 		DNDbObj<Account> accountInfo(&txn);
 		if(!accountInfo.IsExist())
@@ -55,8 +55,6 @@ bool AuthServerHelper::InitDatabase()
 		}
 
 		txn.commit();
-
-		SetDbConnection(conn);
 	}
 	catch(const exception& e)
 	{

@@ -36,8 +36,8 @@ public:
 	virtual void Resume() override;
 
 	virtual void LoopEvent(function<void(EventLoopPtr)> func) override;
-	pqxx::connection* GetDbConnection(){return pConnection;}
-	void SetDbConnection(pqxx::connection* conn){pConnection = conn;}
+
+	pqxx::connection* SqlProxy(){return pSqlProxy;}
 
 public: // dll override
 	virtual DNWebProxy* GetSSock(){return pSSock;}
@@ -46,7 +46,7 @@ protected: // dll proxy
 	DNWebProxy* pSSock;
 	DNClientProxy* pCSock;
 
-	pqxx::connection* pConnection;
+	pqxx::connection* pSqlProxy;
 };
 
 
@@ -56,7 +56,7 @@ AuthServer::AuthServer()
 	emServerType = ServerType::AuthServer;
 	pSSock = nullptr;
 	pCSock = nullptr;
-	pConnection = nullptr;
+	pSqlProxy = nullptr;
 }
 
 AuthServer::~AuthServer()

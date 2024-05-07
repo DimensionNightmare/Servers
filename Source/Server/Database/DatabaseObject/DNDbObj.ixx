@@ -452,7 +452,7 @@ public:
 	DNDbObj(pqxx::transaction<>* work);
 	~DNDbObj(){};
 
-	const string& GetName(){return pMessage->GetDescriptor()->name();};
+	const string& GetName(){return pMessage->GetDescriptor()->name();}
 	
 	vector<TMessage>& Result(){ return mResult;}
 

@@ -232,7 +232,7 @@ export int main(int argc, char **argv)
 		Sleep(100);
 	}
 
-	DNPrint(0, LoggerLevel::Debug, "shutdown");
+	DNPrint(0, LoggerLevel::Debug, "bye~");
 	DimensionNightmare* temp = PInstance;
 	PInstance = nullptr;
 

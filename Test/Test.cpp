@@ -14,25 +14,27 @@
 #include "hv/requests.h"
 #include "hv/json.hpp"
 #include "pqxx/pqxx"
+#include "sw/redis++/redis++.h"
 
 #include "GCfg/GCfg.pb.h"
 
 using namespace hv;
 using namespace std;
+using namespace sw::redis;
 
-// #define TIMERSTART(tag) auto tag##_start = std::chrono::steady_clock::now(),tag##_end = tag##_start
-// #define TIMEREND(tag) tag##_end = std::chrono::steady_clock::now()
-// #define DURATION_s(tag) DNPrint(0, LoggerLevel::Debug, "%s costs %d s\n",#tag,std::chrono::duration_cast<std::chrono::seconds>(tag##_end - tag##_start).count())
-// #define DURATION_ms(tag) DNPrint(0, LoggerLevel::Debug, "%s costs %d ms\n",#tag,std::chrono::duration_cast<std::chrono::milliseconds>(tag##_end - tag##_start).count());
-// #define DURATION_us(tag) DNPrint(0, LoggerLevel::Debug, "%s costs %d us\n",#tag,std::chrono::duration_cast<std::chrono::microseconds>(tag##_end - tag##_start).count());
-// #define DURATION_ns(tag) DNPrint(0, LoggerLevel::Debug, "%s costs %d ns\n",#tag,std::chrono::duration_cast<std::chrono::nanoseconds>(tag##_end - tag##_start).count());
+// #define TIMERSTART(tag) auto tag##_start = chrono::steady_clock::now(),tag##_end = tag##_start
+// #define TIMEREND(tag) tag##_end = chrono::steady_clock::now()
+// #define DURATION_s(tag) DNPrint(0, LoggerLevel::Debug, "%s costs %d s\n",#tag,chrono::duration_cast<chrono::seconds>(tag##_end - tag##_start).count())
+// #define DURATION_ms(tag) DNPrint(0, LoggerLevel::Debug, "%s costs %d ms\n",#tag,chrono::duration_cast<chrono::milliseconds>(tag##_end - tag##_start).count());
+// #define DURATION_us(tag) DNPrint(0, LoggerLevel::Debug, "%s costs %d us\n",#tag,chrono::duration_cast<chrono::microseconds>(tag##_end - tag##_start).count());
+// #define DURATION_ns(tag) DNPrint(0, LoggerLevel::Debug, "%s costs %d ns\n",#tag,chrono::duration_cast<chrono::nanoseconds>(tag##_end - tag##_start).count());
 
 
 #if 0
 int main() 
 {
 	GCfg::CharacterPlayer Weapons;
-	std::ifstream input("C:\\Project\\DimensionNightmare\\Environment\\GameConfig\\Gen\\Data\\character_player.bytes", std::ios::in | std::ios::binary);
+	ifstream input("C:\\Project\\DimensionNightmare\\Environment\\GameConfig\\Gen\\Data\\character_player.bytes", ios::in | ios::binary);
 	if(input)
 	{
 		if(Weapons.ParseFromIstream(&input))
@@ -41,29 +43,29 @@ int main()
 			auto map = Weapons.data_map();
 			for(auto one:map)
 			{
-				std::cout << "key" << one.first << std::endl;
-				std::cout << "value"<< one.second.DebugString() << std::endl;
+				cout << "key" << one.first << endl;
+				cout << "value"<< one.second.DebugString() << endl;
 			}
 			auto find = map.find(55);
-			std::cout << "success" << std::endl;
+			cout << "success" << endl;
 		}
 		else
 		{
-			std::cout << "error" << std::endl;
+			cout << "error" << endl;
 		}
 
 	}
 	
-	std::random_device rd;
-    std::mt19937 gen(rd());
-	std::bernoulli_distribution  u;
+	random_device rd;
+    mt19937 gen(rd());
+	bernoulli_distribution  u;
 	for(int i = 0; i < 5; i++)
-	std::cout << u(gen) << std::endl;
+	cout << u(gen) << endl;
 
-	std::string msgName = GCfg::CharacterPlayer::GetDescriptor()->full_name();
-	std::cout << msgName.size() << " " << msgName.length() << " " <<  strlen(msgName.c_str()) << std::endl;
-	auto hashres = std::hash<string>::_Do_hash.operator()("");
-	std::cout << size_t(hashres) << " " <<  hashres << std::endl;
+	string msgName = GCfg::CharacterPlayer::GetDescriptor()->full_name();
+	cout << msgName.size() << " " << msgName.length() << " " <<  strlen(msgName.c_str()) << endl;
+	auto hashres = hash<string>::_Do_hash.operator()("");
+	cout << size_t(hashres) << " " <<  hashres << endl;
 
 	using namespace std;
 	A a;
@@ -79,21 +81,21 @@ int main()
 }
 #endif
 
-#if 1
+#if 0
 int main()
 {
 	GCfg::CharacterPlayer Weapons;
 	{
-		std::ifstream input("/home/DimensionNightmare/Environment/GameConfig/Gen/Data/character_player.bytes", std::ios::in | std::ios::binary);
+		ifstream input("/home/DimensionNightmare/Environment/GameConfig/Gen/Data/character_player.bytes", ios::in | ios::binary);
 		if(input)
 		{
 			if(Weapons.ParseFromIstream(&input))
 			{
-				std::cout << "success" << std::endl;
+				cout << "success" << endl;
 			}
 			else
 			{
-				std::cout << "error" << std::endl;
+				cout << "error" << endl;
 			}
 		}
 		else
@@ -107,7 +109,7 @@ int main()
 	{
 		const GCfg::PlayerInfo * info = &item->second;
 		// info->clear_type();
-		const std::string& name = info->name();
+		const string& name = info->name();
 		// name.empty();
 		// info->set_type(GCfg::NTypeCharacterPlayer_Normal);
 	}
@@ -123,11 +125,11 @@ chrono::hours GetTimezoneOffset()
 
 	if (result != TIME_ZONE_ID_INVALID) {
 		minutes = -timeZoneInfo.Bias;
-		std::wcout.imbue(locale("zh_CN.UTF-8"));
-        std::wcout << "Standard Name: " << timeZoneInfo.StandardName << std::endl;
-        std::wcout << "Daylight Name: " << timeZoneInfo.DaylightName << std::endl;
+		wcout.imbue(locale("zh_CN.UTF-8"));
+        wcout << "Standard Name: " << timeZoneInfo.StandardName << endl;
+        wcout << "Daylight Name: " << timeZoneInfo.DaylightName << endl;
     } else {
-        std::cerr << "Failed to get time zone information." << std::endl;
+        cerr << "Failed to get time zone information." << endl;
     }
 #endif
 
@@ -200,4 +202,35 @@ int main()
 }
 
 
+#endif
+
+#if 1 
+int main()
+{
+	ConnectionOptions connection_options;
+    connection_options.host = "127.0.0.1";  // Required.
+    connection_options.port = 6379; // Optional. The default port is 6379.
+    //connection_options.password = "auth";   // Optional. No password by default.
+ 
+    ConnectionPoolOptions pool_options;
+    pool_options.size = 3;  // Pool size, i.e. max number of connections.
+    pool_options.wait_timeout = chrono::milliseconds(100);
+
+	try
+	{
+		Redis* con = new Redis(connection_options, pool_options);
+		con->ping();
+		map<string, string> hashTerm;
+    	con->hgetall("*",inserter(hashTerm, hashTerm.end()));
+
+		for (const auto &[k, v] : hashTerm)
+		{
+    		cout << "m[" << k << "] = (" << v << ") " << endl;
+		}
+	}
+	catch(const exception& e)
+	{
+		cout << e.what() << endl;
+	}
+}
 #endif
