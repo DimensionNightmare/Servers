@@ -1,54 +1,59 @@
 {
-    "version": 3,
-    "configurePresets": [
-        {
-            "name": "windows-base",
-            "hidden": true,
-            "generator": "Ninja",
-            "binaryDir": "${sourceDir}/out/build/${presetName}",
-            "installDir": "${sourceDir}/out/install/${presetName}",
-            "cacheVariables": {
-                "CMAKE_C_COMPILER": "cl.exe",
-                "CMAKE_CXX_COMPILER": "cl.exe"
-            },
-            "condition": {
-                "type": "equals",
-                "lhs": "${hostSystemName}",
-                "rhs": "Windows"
-            }
-        },
-        {
-            "name": "Debug",
-            "displayName": "Debug",
-            "inherits": "windows-base",
-            "architecture": {
-                "value": "x64",
-                "strategy": "external"
-            },
-            "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Debug"
-            }
-        },
-        {
-            "name": "Release",
-            "displayName": "Release",
-            "inherits": "Debug",
-            "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Release"
-            }
-        },
-        {
-            "name": "LLVM",
-            "displayName": "LLVM",
-            "description": "Using compilers: C = /usr/local/bin/clang, CXX = /usr/local/bin/clang++",
-            "binaryDir": "${sourceDir}/out/build/${presetName}",
+	"version": 3,
+	"configurePresets": [
+		{
+			"name": "windows-base",
+			"hidden": true,
 			"generator": "Ninja",
-            "cacheVariables": {
-                "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
-                "CMAKE_C_COMPILER": "/usr/local/bin/clang",
-                "CMAKE_CXX_COMPILER": "/usr/local/bin/clang++",
-                "CMAKE_BUILD_TYPE": "Debug"
-            }
-        }
-    ]
+			"binaryDir": "${sourceDir}/out/build/${presetName}",
+			"installDir": "${sourceDir}/out/install/${presetName}",
+			"cacheVariables": {
+				"CMAKE_C_COMPILER": "cl.exe",
+				"CMAKE_CXX_COMPILER": "cl.exe"
+			},
+			"condition": {
+				"type": "equals",
+				"lhs": "${hostSystemName}",
+				"rhs": "Windows"
+			}
+		},
+		{
+			"name": "Debug",
+			"displayName": "Debug",
+			"inherits": "windows-base",
+			"architecture": {
+				"value": "x64",
+				"strategy": "external"
+			},
+			"cacheVariables": {
+				"CMAKE_BUILD_TYPE": "Debug"
+			}
+		},
+		{
+			"name": "Release",
+			"displayName": "Release",
+			"inherits": "Debug",
+			"cacheVariables": {
+				"CMAKE_BUILD_TYPE": "Release"
+			}
+		},
+		{
+			"name": "LLVM",
+			"displayName": "LLVM",
+			"description": "Using compilers: C = /usr/local/bin/clang, CXX = /usr/local/bin/clang++",
+			"binaryDir": "${sourceDir}/out/build/${presetName}",
+			"generator": "Ninja",
+			"cacheVariables": {
+				"CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
+				"CMAKE_C_COMPILER": "/usr/local/bin/clang",
+				"CMAKE_CXX_COMPILER": "/usr/local/bin/clang++",
+				"CMAKE_BUILD_TYPE": "Debug"
+			},
+			"condition": {
+				"type": "equals",
+				"lhs": "${hostSystemName}",
+				"rhs": "Linux"
+			}
+		}
+	]
 }
