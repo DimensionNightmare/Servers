@@ -19,118 +19,124 @@ using namespace hv;
 using namespace google::protobuf;
 using namespace GMsg;
 
-// client request
-export DNTaskVoid Msg_ReqAuthToken(const SocketChannelPtr &channel, uint32_t msgId, Message *msg)
+namespace GateMessage
 {
-	C2S_ReqAuthToken* requset = reinterpret_cast<C2S_ReqAuthToken*>(msg);
 
-	GateServerHelper* dnServer = GetGateServer();
-	ProxyEntityManagerHelper* entityMan = dnServer->GetProxyEntityManager();
-
-	S2C_ResAuthToken response;
-	string binData;
-
-	if(ProxyEntityHelper* entity = entityMan->GetEntity(requset->account_id()))
+	// client request
+	export DNTaskVoid Msg_ReqAuthToken(const SocketChannelPtr &channel, uint32_t msgId, Message *msg)
 	{
-		string md5 = Md5Hash(entity->Token());
-		bool isMatch = md5 == requset->token();
-		
-		// if not match, timer will destory entity
-		if(isMatch)
+		C2S_ReqAuthToken* requset = reinterpret_cast<C2S_ReqAuthToken*>(msg);
+
+		GateServerHelper* dnServer = GetGateServer();
+		ProxyEntityManagerHelper* entityMan = dnServer->GetProxyEntityManager();
+
+		S2C_ResAuthToken response;
+		string binData;
+
+		if(ProxyEntityHelper* entity = entityMan->GetEntity(requset->account_id()))
 		{
-			channel->setContext(entity);
-			entity->SetSock(channel);
-			DNPrint(0, LoggerLevel::Debug, "match!!\n");
-			if(uint64_t timerId = entity->TimerId())
-			{
-				entity->TimerId() = 0;
-				entityMan->Timer()->killTimer(timerId);
-			}
+			string md5 = Md5Hash(entity->Token());
+			bool isMatch = md5 == requset->token();
 			
-			ServerEntityManagerHelper* serverEntityMan = dnServer->GetServerEntityManager();
-			ServerEntityHelper* serverEntity = nullptr;
-
-			// <cache> server to load login data
-			if(uint32_t serverIndex = entity->ServerIndex())
+			// if not match, timer will destory entity
+			if(isMatch)
 			{
-				serverEntity = serverEntityMan->GetEntity(serverIndex);
-			}
-			else
-			{
-				list<ServerEntity*> serverEntityList = serverEntityMan->GetEntityByList(ServerType::LogicServer);
-				if(!serverEntityList.empty())
+				channel->setContext(entity);
+				entity->SetSock(channel);
+				DNPrint(0, LoggerLevel::Debug, "match!!\n");
+				if(uint64_t timerId = entity->TimerId())
 				{
-					serverEntity = static_cast<ServerEntityHelper*>(serverEntityList.front());
+					entity->TimerId() = 0;
+					entityMan->Timer()->killTimer(timerId);
 				}
-			}
-			
-			//req dedicatedServer Info to Login ds.
-			if(serverEntity)
-			{
+				
+				ServerEntityManagerHelper* serverEntityMan = dnServer->GetServerEntityManager();
+				ServerEntityHelper* serverEntity = nullptr;
 
-				entity->ServerIndex() = serverEntity->ID();
-			
-				//redirect G2L_ReqClientLogin dot pack string
-				requset->clear_token();
-				binData.clear();
-				binData.resize(requset->ByteSizeLong());
-				requset->SerializeToArray(binData.data(), binData.size());
-
-				DNServerProxyHelper* server = dnServer->GetSSock();
-				uint32_t msgIdChild = server->GetMsgId();
-
-				MessagePack(msgIdChild, MsgDeal::Req, G2L_ReqClientLogin::GetDescriptor()->full_name().c_str(), binData);
-
-				auto dataChannel = [&response]()->DNTask<Message>
+				// <cache> server to load login data
+				if(uint32_t serverIndex = entity->ServerIndex())
 				{
-					co_return response;
-				}();
-
+					serverEntity = serverEntityMan->GetEntity(serverIndex);
+				}
+				else
 				{
-					ServerEntityHelper* serverEntityHelper = static_cast<ServerEntityHelper*>(serverEntity);
-					server->AddMsg(msgIdChild, &dataChannel, 9000);
-					serverEntityHelper->GetSock()->write(binData);
-					co_await dataChannel;
-					if(dataChannel.HasFlag(DNTaskFlag::Timeout))
+					list<ServerEntity*> serverEntityList = serverEntityMan->GetEntityByList(ServerType::LogicServer);
+					if(!serverEntityList.empty())
 					{
-						DNPrint(0, LoggerLevel::Debug, "requst timeout! \n");
+						serverEntity = static_cast<ServerEntityHelper*>(serverEntityList.front());
+					}
+				}
+				
+				//req dedicatedServer Info to Login ds.
+				if(serverEntity)
+				{
+
+					entity->ServerIndex() = serverEntity->ID();
+				
+					//redirect G2L_ReqClientLogin dot pack string
+					requset->clear_token();
+					binData.clear();
+					binData.resize(requset->ByteSizeLong());
+					requset->SerializeToArray(binData.data(), binData.size());
+
+					DNServerProxyHelper* server = dnServer->GetSSock();
+					uint32_t msgIdChild = server->GetMsgId();
+
+					MessagePack(msgIdChild, MsgDeal::Req, G2L_ReqClientLogin::GetDescriptor()->full_name().c_str(), binData);
+
+					auto taskGen = [&response]() -> DNTask<Message>
+					{
+						co_return response;
+					};
+
+					auto dataChannel = taskGen();
+
+					{
+						ServerEntityHelper* serverEntityHelper = static_cast<ServerEntityHelper*>(serverEntity);
+						server->AddMsg(msgIdChild, &dataChannel, 9000);
+						serverEntityHelper->GetSock()->write(binData);
+						co_await dataChannel;
+						if(dataChannel.HasFlag(DNTaskFlag::Timeout))
+						{
+							DNPrint(0, LoggerLevel::Debug, "requst timeout! \n");
+						}
+
+					}
+
+					if(!response.state_code())
+					{
+						DNPrint(0, LoggerLevel::Debug, "has ds:%s", response.ip().c_str());
 					}
 
 				}
-
-				if(!response.state_code())
+				else
 				{
-					DNPrint(0, LoggerLevel::Debug, "has ds:%s", response.ip().c_str());
+					response.set_state_code(3);
+					DNPrint(0, LoggerLevel::Debug, "Msg_ReqAuthToken not LogicServer !!");
 				}
-
+				
+		
 			}
 			else
 			{
-				response.set_state_code(3);
-				DNPrint(0, LoggerLevel::Debug, "Msg_ReqAuthToken not LogicServer !!");
+				response.set_state_code(1);
+				DNPrint(0, LoggerLevel::Debug, "not match!!\n");
 			}
-			
-	
 		}
 		else
 		{
-			response.set_state_code(1);
-			DNPrint(0, LoggerLevel::Debug, "not match!!\n");
+			response.set_state_code(2);
+			DNPrint(0, LoggerLevel::Debug, "noaccount !!\n");
 		}
+
+		binData.clear();
+		binData.resize(response.ByteSizeLong());
+		response.SerializeToArray(binData.data(), binData.size());
+
+		MessagePack(msgId, MsgDeal::Res, nullptr, binData);
+		
+		channel->write(binData);
+
+		co_return;
 	}
-	else
-	{
-		response.set_state_code(2);
-		DNPrint(0, LoggerLevel::Debug, "noaccount !!\n");
-	}
-
-	binData.clear();
-	binData.resize(response.ByteSizeLong());
-	response.SerializeToArray(binData.data(), binData.size());
-
-	MessagePack(msgId, MsgDeal::Res, nullptr, binData);
-	
-	channel->write(binData);
-
-	co_return;
 }

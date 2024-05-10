@@ -13,6 +13,8 @@ ${CMAKE_BUILD_TYPE}
 ${CMAKE_SYSTEM_PROCESSOR}")
 
 set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 if(CMAKE_SYSTEM_NAME MATCHES "Linux")
 	set(CMAKE_POSITION_INDEPENDENT_CODE ON)
@@ -51,7 +53,7 @@ target_sources(MainSource
 target_link_libraries(MainSource PUBLIC
 	hv_static
 	protobuf::libprotobuf
-	protobufGen
+	pbgen
 	libpqxx::pqxx
 	redis++::redis++_static
 )
@@ -112,7 +114,7 @@ file(GLOB_RECURSE srcDNTest CONFIGURE_DEPENDS
 
 target_link_libraries(DNTest 
 protobuf::libprotobuf 
-protobufGen 
+	pbgen 
 hv_static 
 libpqxx::pqxx
 redis++::redis++_static

@@ -124,7 +124,6 @@ bool AuthServer::Init()
 		pCSock->createsocket(port, ctlIp->c_str());
 		pCSock->setUnpack(setting);
 
-		pCSock->channel->setHeartbeat(4000, std::bind(&DNClientProxy::TickHeartbeat, pCSock));
 		pCSock->channel->setWriteTimeout(12000);
 	}
 
@@ -143,7 +142,7 @@ bool AuthServer::Start()
 		DNPrint(ErrCode_SrvNotInit, LoggerLevel::Error, nullptr);
 		return false;
 	}
-	int code = pSSock->start();
+	int code = pSSock->Start();
 	if(code < 0)
 	{
 		DNPrint(0, LoggerLevel::Debug, "start error %d", code);
@@ -152,8 +151,7 @@ bool AuthServer::Start()
 
 	if(pCSock)
 	{
-		pCSock->pLoop->start();
-		pCSock->start();
+		pCSock->Start();
 	}
 	
 	return true;
@@ -163,14 +161,13 @@ bool AuthServer::Stop()
 {
 	if(pCSock)
 	{
-		pCSock->pLoop->stop(true);
-		pCSock->stop();
+		pCSock->End();
 	}
 
 	//webProxy
 	if(pSSock)
 	{
-		pSSock->stop();
+		pSSock->End();
 	}
 	
 	return true;
@@ -180,7 +177,7 @@ void AuthServer::Pause()
 {
 	pSSock->stop();
 
-	LoopEvent([](hv::EventLoopPtr loop)
+	LoopEvent([](EventLoopPtr loop)
 	{ 
 		loop->pause(); 
 	});
@@ -190,7 +187,7 @@ void AuthServer::Resume()
 {
 	pSSock->start();
 
-	LoopEvent([](hv::EventLoopPtr loop)
+	LoopEvent([](EventLoopPtr loop)
 	{ 
 		loop->resume(); 
 	});

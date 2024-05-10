@@ -107,7 +107,7 @@ export void ApiLogin(HttpService* service)
 		accInfo = accounts.Result()[0];
 
 
-		[accInfo, writer]()-> DNTaskVoid
+		auto taskGen = [accInfo, writer]()-> DNTaskVoid
 		{
 			const HttpResponseWriterPtr& writerProxy = writer;	//sharedptr ref count ++
 			A2C_ReqAuthAccount requset;
@@ -138,10 +138,12 @@ export void ApiLogin(HttpService* service)
 			MessagePack(msgId, MsgDeal::Req, requset.GetDescriptor()->full_name().c_str(), binData);
 			
 			// data alloc
-			auto dataChannel = [&response]()->DNTask<Message>
+			auto taskGen = [&response]()->DNTask<Message>
 			{
 				co_return response;
-			}();
+			};
+
+			auto dataChannel = taskGen();
 
 			// regist Close event to release memory
 			if(writerProxy->onclose)
@@ -165,11 +167,11 @@ export void ApiLogin(HttpService* service)
 				co_await dataChannel;
 				if(dataChannel.HasFlag(DNTaskFlag::Timeout))
 				{
-					retData["code"] = HTTP_STATUS_OK;
+					retData["code"] = HTTP_STATUS_REQUEST_TIMEOUT;
 				}
 				else
 				{
-					retData["code"] = HTTP_STATUS_REQUEST_TIMEOUT;
+					retData["code"] = HTTP_STATUS_OK;
 				}
 			}
 
@@ -200,7 +202,9 @@ export void ApiLogin(HttpService* service)
 			dataChannel.Destroy();
 
 			co_return;
-		}();
+		};
+
+		taskGen();
 
 	});
 

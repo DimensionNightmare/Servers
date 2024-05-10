@@ -18,7 +18,11 @@ export class DNServerProxy : public TcpServerTmpl<SocketChannel>
 {
 public:
 	DNServerProxy();
-	~DNServerProxy(){};
+	~DNServerProxy(){}
+
+	void Start();
+
+	void End();
 
 public: // dll override
 	void MessageTimeoutTimer(uint64_t timerID);
@@ -26,6 +30,9 @@ public: // dll override
 
 	const EventLoopPtr& Timer(){return pLoop->loop();}
 	void AddTimerRecord(size_t timerId, uint32_t id);
+
+	void CheckChannelByTimer(const SocketChannelPtr & channel);
+	uint32_t CheckMessageTimeoutTimer(uint32_t breakTime, uint32_t msgId);
 
 public:
 	// cant init in tcpclient this class
@@ -50,6 +57,18 @@ DNServerProxy::DNServerProxy()
 	iMsgId = 0;
 	mMsgList.clear();
 	mMapTimer.clear();
+}
+
+void DNServerProxy::Start()
+{
+	pLoop->start();
+	start();
+}
+
+void DNServerProxy::End()
+{
+	pLoop->stop(true);
+	stop();
 }
 
 void DNServerProxy::MessageTimeoutTimer(uint64_t timerID)
@@ -110,4 +129,17 @@ void DNServerProxy::AddTimerRecord(size_t timerId, uint32_t id)
 {
 	unique_lock<shared_mutex> ulock(oTimerMutex);
 	mMapTimer.emplace(timerId, id);
+}
+
+void DNServerProxy::CheckChannelByTimer(const SocketChannelPtr &channel)
+{
+	size_t timerId = Timer()->setTimeout(5000, std::bind(&DNServerProxy::ChannelTimeoutTimer, this, placeholders::_1));
+	AddTimerRecord(timerId, channel->id());
+}
+
+uint32_t DNServerProxy::CheckMessageTimeoutTimer(uint32_t breakTime, uint32_t msgId)
+{
+	uint32_t timerId = Timer()->setTimeout(breakTime, std::bind(&DNServerProxy::MessageTimeoutTimer, this, placeholders::_1));
+	mMapTimer[timerId] = msgId;
+	return timerId;
 }

@@ -96,15 +96,15 @@ void GlobalMessageHandle::RegMsgHandle()
 #ifdef _WIN32
 	#define MSG_MAPPING(map, msg, func) \
 	map.emplace(std::hash<string>::_Do_hash(msg::GetDescriptor()->full_name()), \
-	make_pair(msg::internal_default_instance(), func))
+	make_pair(msg::internal_default_instance(), &GlobalMessage::func))
 #elif __unix__
 	#define MSG_MAPPING(map, msg, func) \
 	map.emplace(std::hash<string>{}(msg::GetDescriptor()->full_name()), \
 	make_pair(msg::internal_default_instance(), func))
 #endif
 	
-	MSG_MAPPING(MHandleMap, COM_ReqRegistSrv, &Msg_ReqRegistSrv);
-	MSG_MAPPING(MHandleMap, C2G_ReqAuthAccount, &Msg_ReqAuthAccount);
-	MSG_MAPPING(MHandleRetMap, g2G_RetRegistSrv, &Exe_RetRegistSrv);
-	MSG_MAPPING(MHandleRetMap, COM_RetHeartbeat, &Exe_RetHeartbeat);
+	MSG_MAPPING(MHandleMap, COM_ReqRegistSrv, Msg_ReqRegistSrv);
+	MSG_MAPPING(MHandleMap, C2G_ReqAuthAccount, Msg_ReqAuthAccount);
+	MSG_MAPPING(MHandleRetMap, g2G_RetRegistSrv, Exe_RetRegistSrv);
+	MSG_MAPPING(MHandleRetMap, COM_RetHeartbeat, Exe_RetHeartbeat);
 }

@@ -3,6 +3,7 @@ module;
 #include <list>
 #include <shared_mutex>
 #include <cstdint>
+#include <functional>
 
 #include "StdAfx.h"
 export module ServerEntityManager;
@@ -23,7 +24,8 @@ public:
 
 public: // dll override
 	void EntityCloseTimer(uint64_t timerID);
-	
+	uint32_t CheckEntityCloseTimer(uint32_t entityId);
+
 	virtual bool RemoveEntity(uint32_t entityId);
 
 protected: // dll proxy
@@ -65,6 +67,15 @@ void ServerEntityManager::EntityCloseTimer(uint64_t timerID)
 		DNPrint(0, LoggerLevel::Debug, "EntityCloseTimer server destory entity\n");
 	}
 	
+}
+
+uint32_t ServerEntityManager::CheckEntityCloseTimer(uint32_t entityId)
+{
+	uint32_t timerId = Timer()->setTimeout(10000, std::bind(&ServerEntityManager::EntityCloseTimer, this, placeholders::_1));
+
+	AddTimerRecord(timerId, entityId);
+
+	return timerId;
 }
 
 bool ServerEntityManager::RemoveEntity(uint32_t entityId)

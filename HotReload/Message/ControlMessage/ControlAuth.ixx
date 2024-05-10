@@ -18,76 +18,81 @@ using namespace hv;
 using namespace google::protobuf;
 using namespace GMsg;
 
-export DNTaskVoid Msg_ReqAuthAccount(const SocketChannelPtr &channel, uint32_t msgId, Message *msg)
+namespace ControlMessage
 {
-	C2A_ResAuthAccount response;
-
-	ServerEntityHelper* entity = nullptr;
-	list<ServerEntity*>& servList = GetControlServer()->GetServerEntityManager()->GetEntityByList(ServerType::GlobalServer);
-	for(ServerEntity* it : servList)
+	export DNTaskVoid Msg_ReqAuthAccount(const SocketChannelPtr &channel, uint32_t msgId, Message *msg)
 	{
-		ServerEntityHelper* castEntity = static_cast<ServerEntityHelper*>(it);
+		C2A_ResAuthAccount response;
 
-		if(castEntity->TimerId())
+		ServerEntityHelper* entity = nullptr;
+		list<ServerEntity*>& servList = GetControlServer()->GetServerEntityManager()->GetEntityByList(ServerType::GlobalServer);
+		for(ServerEntity* it : servList)
 		{
-			continue;
-		}
+			ServerEntityHelper* castEntity = static_cast<ServerEntityHelper*>(it);
 
-		if(!entity)
-		{
-			entity = castEntity;
-			continue;
-		}
-
-		if(castEntity->GetConnNum() < entity->GetConnNum())
-		{
-			entity = castEntity;
-		}
-	}
-
-	string binData;
-
-	if(!entity)
-	{
-		response.set_state_code(1);
-	}
-	else
-	{
-		// message change to global
-		auto dataChannel = [&response]()->DNTask<Message>
-		{
-			co_return response;
-		}();
-
-		DNServerProxyHelper* server = GetControlServer()->GetSSock();
-		uint32_t smsgId = server->GetMsgId();
-
-		binData.clear();
-		binData.resize(msg->ByteSizeLong());
-		msg->SerializeToArray(binData.data(), binData.size());
-		MessagePack(smsgId, MsgDeal::Req, C2G_ReqAuthAccount::GetDescriptor()->full_name().c_str(), binData);
-		
-		{
-			// wait data parse
-			server->AddMsg(smsgId, &dataChannel, 9000);
-			entity->GetSock()->write(binData);
-			co_await dataChannel;
-			if(dataChannel.HasFlag(DNTaskFlag::Timeout))
+			if(castEntity->TimerId())
 			{
-				DNPrint(0, LoggerLevel::Debug, "requst timeout! \n");
+				continue;
+			}
+
+			if(!entity)
+			{
+				entity = castEntity;
+				continue;
+			}
+
+			if(castEntity->GetConnNum() < entity->GetConnNum())
+			{
+				entity = castEntity;
 			}
 		}
 
-		dataChannel.Destroy();
+		string binData;
+
+		if(!entity)
+		{
+			response.set_state_code(1);
+		}
+		else
+		{
+			// message change to global
+			auto taskGen = [&response]() -> DNTask<Message>
+			{
+				co_return response;
+			};
+
+			auto dataChannel = taskGen();
+
+			DNServerProxyHelper* server = GetControlServer()->GetSSock();
+			uint32_t smsgId = server->GetMsgId();
+
+			binData.clear();
+			binData.resize(msg->ByteSizeLong());
+			msg->SerializeToArray(binData.data(), binData.size());
+			MessagePack(smsgId, MsgDeal::Req, C2G_ReqAuthAccount::GetDescriptor()->full_name().c_str(), binData);
+			
+			{
+				// wait data parse
+				server->AddMsg(smsgId, &dataChannel, 9000);
+				entity->GetSock()->write(binData);
+				co_await dataChannel;
+				if(dataChannel.HasFlag(DNTaskFlag::Timeout))
+				{
+					DNPrint(0, LoggerLevel::Debug, "requst timeout! \n");
+				}
+			}
+
+			dataChannel.Destroy();
+		}
+
+		binData.clear();
+		binData.resize(response.ByteSizeLong());
+		response.SerializeToArray(binData.data(), binData.size());
+
+		MessagePack(msgId, MsgDeal::Res, nullptr, binData);
+		
+		channel->write(binData);
+
+		co_return;
 	}
-
-	binData.clear();
-	binData.resize(response.ByteSizeLong());
-	response.SerializeToArray(binData.data(), binData.size());
-
-	MessagePack(msgId, MsgDeal::Res, nullptr, binData);
-	
-	channel->write(binData);
-
-	co_return;
 }

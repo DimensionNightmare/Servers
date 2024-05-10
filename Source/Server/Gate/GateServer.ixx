@@ -155,7 +155,6 @@ bool GateServer::Init()
 		pCSock->createsocket(port, ctlIp->c_str());
 		pCSock->setUnpack(setting);
 
-		pCSock->channel->setHeartbeat(4000, std::bind(&DNClientProxy::TickHeartbeat, pCSock));
 		pCSock->channel->setWriteTimeout(12000);
 	}
 	
@@ -176,8 +175,7 @@ bool GateServer::Start()
 
 	if(pCSock) // client
 	{
-		pCSock->pLoop->start();
-		pCSock->start();
+		pCSock->Start();
 	}
 
 	if(!pSSock)
@@ -186,8 +184,7 @@ bool GateServer::Start()
 		return false;
 	}
 
-	pSSock->pLoop->start();
-	pSSock->start();
+	pSSock->Start();
 	return true;
 }
 
@@ -195,14 +192,12 @@ bool GateServer::Stop()
 {
 	if(pSSock)
 	{
-		pSSock->pLoop->stop(true);
-		pSSock->stop();
+		pSSock->End();
 	}
 
 	if(pCSock) // client
 	{
-		pCSock->pLoop->stop(true);
-		pCSock->stop();
+		pCSock->End();
 	}
 
 	return true;
@@ -210,7 +205,7 @@ bool GateServer::Stop()
 
 void GateServer::Pause()
 {
-	LoopEvent([](hv::EventLoopPtr loop)
+	LoopEvent([](EventLoopPtr loop)
 	{ 
 		loop->pause(); 
 	});
@@ -218,7 +213,7 @@ void GateServer::Pause()
 
 void GateServer::Resume()
 {
-	LoopEvent([](hv::EventLoopPtr loop)
+	LoopEvent([](EventLoopPtr loop)
 	{ 
 		loop->resume(); 
 	});

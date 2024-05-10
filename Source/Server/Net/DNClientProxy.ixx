@@ -29,18 +29,26 @@ export class DNClientProxy : public TcpClientTmpl<SocketChannel>
 {
 public:
 	DNClientProxy();
-	~DNClientProxy(){};
+	~DNClientProxy(){}
+
+	void Start();
+
+	void End();
 
 public: // dll override
 	void TickRegistEvent(size_t timerID);
+	void StartRegist();
 
 	void MessageTimeoutTimer(uint64_t timerID);
+	uint32_t CheckMessageTimeoutTimer(uint32_t breakTime, uint32_t msgId);
 
 	const EventLoopPtr& Timer(){return pLoop->loop();}
 
 	void AddTimerRecord(size_t timerId, uint32_t id);
 
 	void TickHeartbeat();
+
+	void RedirectClient(uint16_t port, const char* ip);
 
 public:
 	// cant init in tcpclient this class
@@ -75,6 +83,20 @@ DNClientProxy::DNClientProxy()
 	eState = Channel::Status::CLOSED;
 }
 
+void DNClientProxy::Start()
+{
+	channel->setHeartbeat(4000, std::bind(&DNClientProxy::TickHeartbeat, this));
+	
+	pLoop->start();
+	start();
+}
+
+void DNClientProxy::End()
+{
+	pLoop->stop(true);
+	stop();
+}
+
 void DNClientProxy::TickRegistEvent(size_t timerID)
 {
 	if(eRegistState == RegistState::Registing)
@@ -97,6 +119,11 @@ void DNClientProxy::TickRegistEvent(size_t timerID)
 	{
 		Timer()->killTimer(timerID);
 	}
+}
+
+void DNClientProxy::StartRegist()
+{
+	Timer()->setInterval(1000, std::bind(&DNClientProxy::TickRegistEvent, this, placeholders::_1));
 }
 
 void DNClientProxy::MessageTimeoutTimer(uint64_t timerID)
@@ -125,6 +152,13 @@ void DNClientProxy::MessageTimeoutTimer(uint64_t timerID)
 	}
 }
 
+uint32_t DNClientProxy::CheckMessageTimeoutTimer(uint32_t breakTime, uint32_t msgId)
+{
+	uint32_t timerId = Timer()->setTimeout(breakTime, std::bind(&DNClientProxy::MessageTimeoutTimer, this, placeholders::_1));
+	mMapTimer[timerId] = msgId;
+	return timerId;
+}
+
 void DNClientProxy::AddTimerRecord(size_t timerId, uint32_t id)
 {
 	unique_lock<shared_mutex> ulock(oTimerMutex);
@@ -138,7 +172,7 @@ void DNClientProxy::TickHeartbeat()
 	int timespan = chrono::duration_cast<chrono::seconds>(chrono::system_clock::now().time_since_epoch()).count();
 	requset.set_timespan(timespan);
 
-	static string binData;
+	string binData;
 	binData.clear();
 	binData.resize(requset.ByteSizeLong());
 	requset.SerializeToArray(binData.data(), binData.size());
@@ -146,4 +180,10 @@ void DNClientProxy::TickHeartbeat()
 	MessagePack(0, MsgDeal::Ret, requset.GetDescriptor()->full_name().c_str(), binData);
 	
 	send(binData);
+}
+
+void DNClientProxy::RedirectClient(uint16_t port, const char *ip)
+{
+	createsocket(port, ip);
+	start();
 }

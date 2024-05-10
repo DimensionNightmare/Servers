@@ -45,7 +45,7 @@ int HandleAuthServerInit(DNServer *server)
 			if (channel->isConnected())
 			{
 				DNPrint(TipCode_CliConnOn, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
-				clientSock->SetRegistEvent(&Evt_ReqRegistSrv);
+				clientSock->SetRegistEvent(&AuthMessage::Evt_ReqRegistSrv);
 			}
 			else
 			{

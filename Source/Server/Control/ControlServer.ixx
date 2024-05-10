@@ -117,8 +117,7 @@ bool ControlServer::Start()
 		return false;
 	}
 	
-	pSSock->pLoop->start();
-	pSSock->start();
+	pSSock->Start();
 	return true;
 }
 
@@ -126,15 +125,14 @@ bool ControlServer::Stop()
 {
 	if(pSSock)
 	{
-		pSSock->pLoop->stop(true);
-		pSSock->stop();
+		pSSock->End();
 	}
 	return true;
 }
 
 void ControlServer::Pause()
 {
-	LoopEvent([](hv::EventLoopPtr loop)
+	LoopEvent([](EventLoopPtr loop)
 	{ 
 		loop->pause(); 
 	});
@@ -142,7 +140,7 @@ void ControlServer::Pause()
 
 void ControlServer::Resume()
 {
-	LoopEvent([](hv::EventLoopPtr loop)
+	LoopEvent([](EventLoopPtr loop)
 	{ 
 		loop->resume(); 
 	});

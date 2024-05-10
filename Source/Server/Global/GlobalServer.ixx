@@ -146,7 +146,6 @@ bool GlobalServer::Init()
 		pCSock->createsocket(port, ctlIp->c_str());
 		pCSock->setUnpack(setting);
 
-		pCSock->channel->setHeartbeat(4000, std::bind(&DNClientProxy::TickHeartbeat, pCSock));
 		pCSock->channel->setWriteTimeout(12000);
 	}
 	
@@ -164,8 +163,7 @@ bool GlobalServer::Start()
 {
 	if(pCSock) // client
 	{
-		pCSock->pLoop->start();
-		pCSock->start();
+		pCSock->Start();
 	}
 
 	if(!pSSock)
@@ -174,8 +172,7 @@ bool GlobalServer::Start()
 		return false;
 	}
 
-	pSSock->pLoop->start();
-	pSSock->start();
+	pSSock->Start();
 	return true;
 }
 
@@ -183,14 +180,12 @@ bool GlobalServer::Stop()
 {
 	if(pSSock)
 	{
-		pSSock->pLoop->stop(true);
-		pSSock->stop();
+		pSSock->End();
 	}
 
 	if(pCSock) // client
 	{
-		pCSock->pLoop->stop(true);
-		pCSock->stop();
+		pCSock->End();
 	}
 
 	return true;
@@ -198,7 +193,7 @@ bool GlobalServer::Stop()
 
 void GlobalServer::Pause()
 {
-	LoopEvent([](hv::EventLoopPtr loop)
+	LoopEvent([](EventLoopPtr loop)
 	{ 
 		loop->pause(); 
 	});
@@ -206,7 +201,7 @@ void GlobalServer::Pause()
 
 void GlobalServer::Resume()
 {
-	LoopEvent([](hv::EventLoopPtr loop)
+	LoopEvent([](EventLoopPtr loop)
 	{ 
 		loop->resume(); 
 	});

@@ -20,85 +20,86 @@ using namespace hv;
 using namespace google::protobuf;
 using namespace GMsg;
 
-export void Exe_ReqUserToken(const SocketChannelPtr &channel, uint32_t msgId, Message *msg)
+namespace GateMessage
 {
-	G2g_ReqLoginToken* requset = reinterpret_cast<G2g_ReqLoginToken*>(msg);
-	g2G_ResLoginToken response;
 
-	string binData;
-
-	GateServerHelper* dnServer = GetGateServer();
-	ProxyEntityManagerHelper* entityMan = dnServer->GetProxyEntityManager();
-	ProxyEntityHelper* entity = entityMan->GetEntity(requset->account_id());
-	if(entity)
+	export void Exe_ReqUserToken(const SocketChannelPtr &channel, uint32_t msgId, Message *msg)
 	{
-		//exit
-		if(SocketChannelPtr online = entity->GetSock())
+		G2g_ReqLoginToken* requset = reinterpret_cast<G2g_ReqLoginToken*>(msg);
+		g2G_ResLoginToken response;
+
+		string binData;
+
+		GateServerHelper* dnServer = GetGateServer();
+		ProxyEntityManagerHelper* entityMan = dnServer->GetProxyEntityManager();
+		ProxyEntityHelper* entity = entityMan->GetEntity(requset->account_id());
+		if(entity)
 		{
-			// kick channel
-			S2C_RetAccountReplace retMsg;
-			retMsg.set_ip(requset->ip());
-
-			binData.clear();
-			binData.resize(retMsg.ByteSizeLong());
-			retMsg.SerializeToArray(binData.data(), binData.size());
-			MessagePack(0, MsgDeal::Ret, retMsg.GetDescriptor()->full_name().c_str(), binData);
-
-			//kick socket
-			online->write(binData);
-			online->setContext(nullptr);
-			online->close();
-
-
-			//kick game
-			if(uint32_t serverIndex = entity->ServerIndex())
+			//exit
+			if(SocketChannelPtr online = entity->GetSock())
 			{
-				ServerEntityManagerHelper* serverEntityMan = dnServer->GetServerEntityManager();
-				ServerEntityHelper* serverEntity = serverEntityMan->GetEntity(serverIndex);
-
-				G2L_RetAccountReplace retMsg;
-				retMsg.set_account_id(entity->ID());
+				// kick channel
+				S2C_RetAccountReplace retMsg;
 				retMsg.set_ip(requset->ip());
 
 				binData.clear();
 				binData.resize(retMsg.ByteSizeLong());
 				retMsg.SerializeToArray(binData.data(), binData.size());
 				MessagePack(0, MsgDeal::Ret, retMsg.GetDescriptor()->full_name().c_str(), binData);
-				serverEntity->GetSock()->write(binData);
+
+				//kick socket
+				online->write(binData);
+				online->setContext(nullptr);
+				online->close();
+
+
+				//kick game
+				if(uint32_t serverIndex = entity->ServerIndex())
+				{
+					ServerEntityManagerHelper* serverEntityMan = dnServer->GetServerEntityManager();
+					ServerEntityHelper* serverEntity = serverEntityMan->GetEntity(serverIndex);
+
+					G2L_RetAccountReplace retMsg;
+					retMsg.set_account_id(entity->ID());
+					retMsg.set_ip(requset->ip());
+
+					binData.clear();
+					binData.resize(retMsg.ByteSizeLong());
+					retMsg.SerializeToArray(binData.data(), binData.size());
+					MessagePack(0, MsgDeal::Ret, retMsg.GetDescriptor()->full_name().c_str(), binData);
+					serverEntity->GetSock()->write(binData);
+				}
+				
 			}
-			
+
 		}
+		else
+		{
+			entity = entityMan->AddEntity(requset->account_id());
 
+			string& token = entity->Token();
+			token = GetNowTimeStr();
+			token = Md5Hash(token);
+
+			entity->ExpireTime() = chrono::duration_cast<chrono::seconds>(chrono::system_clock::now().time_since_epoch()).count();
+			entity->ExpireTime() += 30;
+		}
+		
+		
+		response.set_token(entity->Token());
+		response.set_expired_timespan(entity->ExpireTime());
+
+		// entity or token expired
+		if(!entity->TimerId())
+		{
+			entity->TimerId() = entityMan->CheckEntityCloseTimer(entity->ID());
+		}
+		
+		binData.clear();
+		binData.resize(response.ByteSizeLong());
+		response.SerializeToArray(binData.data(), binData.size());
+		MessagePack(msgId, MsgDeal::Res, nullptr, binData);
+
+		channel->write(binData);
 	}
-	else
-	{
-		entity = entityMan->AddEntity(requset->account_id());
-
-		string& token = entity->Token();
-		token = GetNowTimeStr();
-		token = Md5Hash(token);
-
-		entity->ExpireTime() = chrono::duration_cast<chrono::seconds>(chrono::system_clock::now().time_since_epoch()).count();
-		entity->ExpireTime() += 30;
-	}
-	
-	
-	response.set_token(entity->Token());
-	response.set_expired_timespan(entity->ExpireTime());
-
-	// entity or token expired
-	if(!entity->TimerId())
-	{
-		entity->TimerId() = entityMan->Timer()->setTimeout(30000, 
-			std::bind(&ProxyEntityManager::EntityCloseTimer, static_cast<ProxyEntityManager*>(entityMan), placeholders::_1));
-
-		entityMan->AddTimerRecord(entity->TimerId(), entity->ID());
-	}
-	
-	binData.clear();
-	binData.resize(response.ByteSizeLong());
-	response.SerializeToArray(binData.data(), binData.size());
-	MessagePack(msgId, MsgDeal::Res, nullptr, binData);
-
-	channel->write(binData);
 }

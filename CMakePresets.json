@@ -38,21 +38,67 @@
 			}
 		},
 		{
-			"name": "LLVM",
-			"displayName": "LLVM",
-			"description": "Using compilers: C = /usr/local/bin/clang, CXX = /usr/local/bin/clang++",
-			"binaryDir": "${sourceDir}/out/build/${presetName}",
+			"name": "llvm-base",
+			"hidden": true,
 			"generator": "Ninja",
+			"binaryDir": "${sourceDir}/out/build/${presetName}",
+			"installDir": "${sourceDir}/out/install/${presetName}",
 			"cacheVariables": {
-				"CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
+				"CMAKE_C_COMPILER": "clang.exe",
+				"CMAKE_CXX_COMPILER": "clang++.exe"
+			},
+			"condition": {
+				"type": "equals",
+				"lhs": "${hostSystemName}",
+				"rhs": "Windows"
+			}
+		},
+		{
+			"name": "Debug_llvm",
+			"displayName": "Debug_llvm",
+			"inherits": "llvm-base",
+			"cacheVariables": {
+				"CMAKE_BUILD_TYPE": "Debug"
+			}
+		},
+		{
+			"name": "Release_llvm",
+			"displayName": "Release_llvm",
+			"inherits": "llvm-base",
+			"cacheVariables": {
+				"CMAKE_BUILD_TYPE": "Release"
+			}
+		},
+		{
+			"name": "llvm-linux-base",
+			"hidden": true,
+			"generator": "Ninja",
+			"binaryDir": "${sourceDir}/out/build/${presetName}",
+			"installDir": "${sourceDir}/out/install/${presetName}",
+			"cacheVariables": {
 				"CMAKE_C_COMPILER": "/usr/local/bin/clang",
 				"CMAKE_CXX_COMPILER": "/usr/local/bin/clang++",
-				"CMAKE_BUILD_TYPE": "Debug"
 			},
 			"condition": {
 				"type": "equals",
 				"lhs": "${hostSystemName}",
 				"rhs": "Linux"
+			}
+		},
+		{
+			"name": "Debug_llvm",
+			"displayName": "Debug_llvm",
+			"inherits": "llvm-linux-base",
+			"cacheVariables": {
+				"CMAKE_BUILD_TYPE": "Debug"
+			}
+		},
+		{
+			"name": "Release_llvm",
+			"displayName": "Release_llvm",
+			"inherits": "llvm-linux-base",
+			"cacheVariables": {
+				"CMAKE_BUILD_TYPE": "Release"
 			}
 		}
 	]

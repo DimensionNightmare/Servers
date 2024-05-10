@@ -38,8 +38,7 @@ int HandleControlServerInit(DNServer *server)
 			{
 				DNPrint(TipCode_CliConnOn, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
 				// if not regist
-				size_t timerId = serverSock->Timer()->setTimeout(5000, std::bind(&DNServerProxy::ChannelTimeoutTimer, static_cast<DNServerProxy*>(serverSock), placeholders::_1));
-				serverSock->AddTimerRecord(timerId, channel->id());
+				serverSock->CheckChannelByTimer(channel);
 				// if not recive data
 				channel->setReadTimeout(15000);
 			}

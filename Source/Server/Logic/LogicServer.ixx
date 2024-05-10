@@ -175,7 +175,6 @@ bool LogicServer::Init()
 		sCtlIp = *ctlIp;
 		iCtlPort = port;
 
-		pCSock->channel->setHeartbeat(4000, std::bind(&DNClientProxy::TickHeartbeat, pCSock));
 		pCSock->channel->setWriteTimeout(12000);
 	}
 	
@@ -205,8 +204,7 @@ void LogicServer::InitCmd(map<string, function<void(stringstream *)>> &cmdMap)
 		*ss >> ip;
 		*ss >> port;
 
-		pCSock->createsocket(port, ip.c_str());
-		pCSock->start();
+		pCSock->RedirectClient(port, ip.c_str());
 	});
 }
 
@@ -218,13 +216,11 @@ bool LogicServer::Start()
 		return false;
 	}
 
-	pSSock->pLoop->start();
-	pSSock->start();
+	pSSock->Start();
 
 	if(pCSock) // client
 	{
-		pCSock->pLoop->start();
-		pCSock->start();
+		pCSock->Start();
 	}
 
 	return true;
@@ -234,21 +230,19 @@ bool LogicServer::Stop()
 {
 	if(pCSock) // client
 	{
-		pCSock->pLoop->stop(true);
-		pCSock->stop();
+		pCSock->End();
 	}
 
 	if(pSSock)
 	{
-		pSSock->pLoop->stop(true);
-		pSSock->stop();
+		pSSock->End();
 	}
 	return true;
 }
 
 void LogicServer::Pause()
 {
-	LoopEvent([](hv::EventLoopPtr loop)
+	LoopEvent([](EventLoopPtr loop)
 	{ 
 		loop->pause(); 
 	});
@@ -256,7 +250,7 @@ void LogicServer::Pause()
 
 void LogicServer::Resume()
 {
-	LoopEvent([](hv::EventLoopPtr loop)
+	LoopEvent([](EventLoopPtr loop)
 	{ 
 		loop->resume(); 
 	});

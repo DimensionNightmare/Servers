@@ -105,7 +105,6 @@ bool DatabaseServer::Init()
 		sCtlIp = *ctlIp;
 		iCtlPort = port;
 
-		pCSock->channel->setHeartbeat(4000, std::bind(&DNClientProxy::TickHeartbeat, pCSock));
 		pCSock->channel->setWriteTimeout(12000);
 	}
 
@@ -121,8 +120,7 @@ void DatabaseServer::InitCmd(map<string, function<void(stringstream *)>> &cmdMap
 		*ss >> ip;
 		*ss >> port;
 
-		pCSock->createsocket(port, ip.c_str());
-		pCSock->start();
+		pCSock->RedirectClient(port, ip.c_str());
 	});
 }
 
@@ -130,8 +128,7 @@ bool DatabaseServer::Start()
 {
 	if (pCSock) // client
 	{
-		pCSock->pLoop->start();
-		pCSock->start();
+		pCSock->Start();
 	}
 
 	return true;
@@ -141,8 +138,7 @@ bool DatabaseServer::Stop()
 {
 	if (pCSock) // client
 	{
-		pCSock->pLoop->stop(true);
-		pCSock->stop();
+		pCSock->End();
 	}
 
 	return true;
@@ -150,14 +146,18 @@ bool DatabaseServer::Stop()
 
 void DatabaseServer::Pause()
 {
-	LoopEvent([](hv::EventLoopPtr loop)
-			  { loop->pause(); });
+	LoopEvent([](EventLoopPtr loop)
+	{ 
+		loop->pause();
+	});
 }
 
 void DatabaseServer::Resume()
 {
-	LoopEvent([](hv::EventLoopPtr loop)
-			  { loop->resume(); });
+	LoopEvent([](EventLoopPtr loop)
+	{ 
+		loop->resume(); 
+	});
 }
 
 void DatabaseServer::LoopEvent(function<void(EventLoopPtr)> func)

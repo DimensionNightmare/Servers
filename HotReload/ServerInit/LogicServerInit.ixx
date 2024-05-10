@@ -108,7 +108,7 @@ int HandleLogicServerInit(DNServer *server)
 			if (channel->isConnected())
 			{
 				DNPrint(TipCode_SrvConnOn, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
-				clientSock->SetRegistEvent(&Evt_ReqRegistSrv);
+				clientSock->SetRegistEvent(&LogicMessage::Evt_ReqRegistSrv);
 			}
 			else
 			{
