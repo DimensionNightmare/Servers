@@ -123,12 +123,12 @@ export void ApiLogin(HttpService* service)
 			// first Can send Msg?
 			if(client->GetMsg(msgId))
 			{
-				DNPrint(0, LoggerLevel::Debug, "+++++ %lu, \n", msgId);
+				DNPrint(0, LoggerLevel::Debug, "+++++ %lu, ", msgId);
 				co_return;
 			}
 			// else
 			// {
-				DNPrint(0, LoggerLevel::Debug, "----- %lu, \n", msgId);
+				DNPrint(0, LoggerLevel::Debug, "----- %lu, ", msgId);
 			// }
 			
 			// pack data

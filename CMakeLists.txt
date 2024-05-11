@@ -4,7 +4,7 @@
 cmake_minimum_required (VERSION 3.26 FATAL_ERROR)
 
 # Top project
-project (DimensionNightmareServer)
+project (DimensionNightmareServer CXX)
 
 message("${CMAKE_VERSION}
 ${CMAKE_SYSTEM_NAME}
@@ -133,7 +133,7 @@ set_target_properties(DNTest PROPERTIES EXCLUDE_FROM_ALL TRUE)
 add_custom_target(MainTarget)
 add_dependencies(MainTarget MainSource HotReload)
 
-if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
 	install(TARGETS DimensionNightmareServer DESTINATION ${CMAKE_INSTALL_PREFIX})
 	
 	install(TARGETS HotReload RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/Runtime)

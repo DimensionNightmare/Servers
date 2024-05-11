@@ -48,7 +48,7 @@ void ProxyEntityManager::EntityCloseTimer(uint64_t timerID)
 	uint32_t entityId = mMapTimer[timerID];
 	if(RemoveEntity(entityId))
 	{
-		DNPrint(0, LoggerLevel::Debug, "destory proxy Timer entity\n");
+		DNPrint(0, LoggerLevel::Debug, "destory proxy Timer entity");
 	}
 	
 }

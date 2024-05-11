@@ -28,12 +28,12 @@ namespace AuthMessage
 		// first Can send Msg?
 		if(client->GetMsg(msgId))
 		{
-			DNPrint(0, LoggerLevel::Debug, "+++++ %lu, \n", msgId);
+			DNPrint(0, LoggerLevel::Debug, "+++++ %lu, ", msgId);
 			co_return;
 		}
 		else
 		{
-			// prinfg("Evt_ReqRegistSrv ----- %lu, \n", msgId);
+			DNPrint(0, LoggerLevel::Debug, "Client:%s, port:%hu", client->remote_host.c_str(), client->remote_port);
 		}
 
 		client->RegistState() = RegistState::Registing;
@@ -72,19 +72,19 @@ namespace AuthMessage
 			co_await dataChannel;
 			if(dataChannel.HasFlag(DNTaskFlag::Timeout))
 			{
-				DNPrint(0, LoggerLevel::Debug, "requst timeout! \n");
+				DNPrint(0, LoggerLevel::Debug, "requst timeout! ");
 			}
 		}
 		
 		if(response.success())
 		{
-			DNPrint(0, LoggerLevel::Debug, "regist Server success! \n");
+			DNPrint(0, LoggerLevel::Debug, "regist Server success! ");
 			client->RegistState() = RegistState::Registed;
 			dnServer->ServerIndex() = response.server_index();
 		}
 		else
 		{
-			DNPrint(0, LoggerLevel::Debug, "regist Server error! msg:%lu \n", msgId);
+			DNPrint(0, LoggerLevel::Debug, "regist Server error! msg:%lu ", msgId);
 			// dnServer->IsRun() = false; //exit application
 			client->RegistState() = RegistState::None;
 		}

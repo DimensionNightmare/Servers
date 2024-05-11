@@ -79,7 +79,7 @@ namespace GlobalMessage
 				co_await dataChannel;
 				if(dataChannel.HasFlag(DNTaskFlag::Timeout))
 				{
-					DNPrint(0, LoggerLevel::Debug, "requst timeout! \n");
+					DNPrint(0, LoggerLevel::Debug, "requst timeout! ");
 				}
 			}
 

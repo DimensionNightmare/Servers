@@ -43,7 +43,7 @@ namespace GateMessage
 			{
 				channel->setContext(entity);
 				entity->SetSock(channel);
-				DNPrint(0, LoggerLevel::Debug, "match!!\n");
+				DNPrint(0, LoggerLevel::Debug, "match!!");
 				if(uint64_t timerId = entity->TimerId())
 				{
 					entity->TimerId() = 0;
@@ -98,7 +98,7 @@ namespace GateMessage
 						co_await dataChannel;
 						if(dataChannel.HasFlag(DNTaskFlag::Timeout))
 						{
-							DNPrint(0, LoggerLevel::Debug, "requst timeout! \n");
+							DNPrint(0, LoggerLevel::Debug, "requst timeout! ");
 						}
 
 					}
@@ -120,13 +120,13 @@ namespace GateMessage
 			else
 			{
 				response.set_state_code(1);
-				DNPrint(0, LoggerLevel::Debug, "not match!!\n");
+				DNPrint(0, LoggerLevel::Debug, "not match!!");
 			}
 		}
 		else
 		{
 			response.set_state_code(2);
-			DNPrint(0, LoggerLevel::Debug, "noaccount !!\n");
+			DNPrint(0, LoggerLevel::Debug, "noaccount !!");
 		}
 
 		binData.clear();

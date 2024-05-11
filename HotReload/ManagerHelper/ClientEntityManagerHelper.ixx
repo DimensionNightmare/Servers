@@ -49,7 +49,7 @@ bool ClientEntityManagerHelper::RemoveEntity(uint32_t entityId)
 	{	
 		unique_lock<shared_mutex> ulock(oMapMutex);
 
-		DNPrint(0, LoggerLevel::Debug, "destory client entity\n");
+		DNPrint(0, LoggerLevel::Debug, "destory client entity");
 		mEntityMap.erase(entityId);
 
 		return true;

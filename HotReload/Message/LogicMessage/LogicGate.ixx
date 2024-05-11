@@ -90,7 +90,7 @@ namespace LogicMessage
 				co_await dataChannel;
 				if(dataChannel.HasFlag(DNTaskFlag::Timeout))
 				{
-					DNPrint(0, LoggerLevel::Debug, "requst timeout! \n");
+					DNPrint(0, LoggerLevel::Debug, "requst timeout! ");
 					response.set_state_code(2);
 				}
 				else

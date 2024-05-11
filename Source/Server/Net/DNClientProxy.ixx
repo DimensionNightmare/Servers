@@ -123,6 +123,7 @@ void DNClientProxy::TickRegistEvent(size_t timerID)
 
 void DNClientProxy::StartRegist()
 {
+	DNPrint(0, LoggerLevel::Debug, "StartRegist tick");
 	Timer()->setInterval(1000, std::bind(&DNClientProxy::TickRegistEvent, this, placeholders::_1));
 }
 

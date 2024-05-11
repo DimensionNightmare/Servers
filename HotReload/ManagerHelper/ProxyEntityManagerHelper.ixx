@@ -48,7 +48,7 @@ bool ProxyEntityManagerHelper::RemoveEntity(uint32_t entityId)
 	{		
 		unique_lock<shared_mutex> ulock(oMapMutex);
 		
-		DNPrint(0, LoggerLevel::Debug, "destory Proxy entity\n");
+		DNPrint(0, LoggerLevel::Debug, "destory Proxy entity");
 		mEntityMap.erase(entityId);
 		return true;
 	}

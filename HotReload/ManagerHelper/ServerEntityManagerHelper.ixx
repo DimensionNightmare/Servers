@@ -64,7 +64,7 @@ bool ServerEntityManagerHelper::RemoveEntity(uint32_t entityId)
 
 		mEntityMapList[entity->ServerEntityType()].remove(oriEntity);
 		
-		DNPrint(0, LoggerLevel::Debug, "offline destory entity\n");
+		DNPrint(0, LoggerLevel::Debug, "offline destory entity");
 		mEntityMap.erase(entityId);
 		return true;
 	}

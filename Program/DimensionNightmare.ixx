@@ -60,7 +60,7 @@ struct HotReloadDll
 
 		// if(!ret)
 		// {
-		// 	("cant set dll path! error code=%d! \n", GetLastError());
+		// 	("cant set dll path! error code=%d! ", GetLastError());
 		// 	return false;
 		// }
 		// oLibHandle = LoadLibraryEx((SDllName).c_str(), NULL, LOAD_LIBRARY_SEARCH_USER_DIRS);
@@ -246,14 +246,14 @@ bool DimensionNightmare::InitConfig(map<string, string> &param)
 {
 	if(!param.contains("svrType"))
 	{
-		DNPrint(0, LoggerLevel::Debug, "lunch param svrType is null! \n");
+		DNPrint(0, LoggerLevel::Debug, "lunch param svrType is null! ");
 		return false;
 	}
 
 	ServerType serverType = (ServerType)stoi(param["svrType"]);
 	if(serverType <= ServerType::None || serverType >= ServerType::Max)
 	{
-		DNPrint(0, LoggerLevel::Debug, "serverType Not Invalid! \n");
+		DNPrint(0, LoggerLevel::Debug, "serverType Not Invalid! ");
 		return false;
 	}
 

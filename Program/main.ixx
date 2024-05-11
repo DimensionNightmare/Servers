@@ -59,7 +59,7 @@ export int main(int argc, char **argv)
 
 		if (pos == string::npos)
 		{
-			DNPrint(0, LoggerLevel::Debug, "program lunch param error! Pos:%d \n", i);
+			DNPrint(0, LoggerLevel::Debug, "program lunch param error! Pos:%d ", i);
 			return 0;
 		}
 
@@ -239,6 +239,7 @@ export int main(int argc, char **argv)
 	delete temp;
 	
 	DNPrint(0, LoggerLevel::Debug, "bye~");
+	getchar();
 	
 	return 0;
 }

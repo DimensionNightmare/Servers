@@ -64,7 +64,7 @@ void ServerEntityManager::EntityCloseTimer(uint64_t timerID)
 	uint32_t entityId = mMapTimer[timerID];
 	if(RemoveEntity(entityId))
 	{
-		DNPrint(0, LoggerLevel::Debug, "EntityCloseTimer server destory entity\n");
+		DNPrint(0, LoggerLevel::Debug, "EntityCloseTimer server destory entity");
 	}
 	
 }

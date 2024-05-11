@@ -63,7 +63,7 @@ export class DNServer
 {
 public:
 	DNServer();
-	virtual ~DNServer(){};
+	virtual ~DNServer();
 
 public:
 
@@ -116,6 +116,11 @@ DNServer::DNServer()
 	iServerIndex = 0;
 	mMessageTasks.clear();
 	pCmdMap = nullptr;
+}
+
+DNServer::~DNServer()
+{
+	mMessageTasks.clear();
 }
 
 bool DNServer::Init()
