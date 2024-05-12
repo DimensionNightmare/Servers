@@ -66,16 +66,16 @@ export int main(int argc, char **argv)
 		lunchParam.emplace(split.substr(0, pos), split.substr(pos + 1));
 	}
 
-	PInstance = new DimensionNightmare;
+	PInstance = new DimensionNightmare();
 	if (!PInstance->InitConfig(lunchParam))
 	{
-		PInstance->ShutDown();
+		delete PInstance;
 		return 0;
 	}
 
 	if (!PInstance->Init())
 	{
-		PInstance->ShutDown();
+		delete PInstance;
 		return 0;
 	}
 
@@ -89,6 +89,7 @@ export int main(int argc, char **argv)
 		case CTRL_C_EVENT:
 		case CTRL_CLOSE_EVENT:
 		case CTRL_SHUTDOWN_EVENT:
+		case CTRL_BREAK_EVENT:
 		{
 			PInstance->ServerIsRun() = false;
 			while(PInstance)
@@ -105,7 +106,7 @@ export int main(int argc, char **argv)
 	if (!SetConsoleCtrlHandler(CtrlHandler, true))
 	{
 		DNPrint(ErrCode_CmdCtl, LoggerLevel::Error, nullptr);
-		PInstance->ShutDown();
+		delete PInstance;
 		return 0;
 	}
 
@@ -144,7 +145,8 @@ export int main(int argc, char **argv)
 		}
 
 		PInstance->SetDllNotNormalFree();
-		PInstance->ShutDown();
+		delete PInstance;
+		PInstance = nullptr;
 
 		return EXCEPTION_CONTINUE_SEARCH; 
 	};
@@ -152,7 +154,7 @@ export int main(int argc, char **argv)
 	if (!SetUnhandledExceptionFilter(UnhandledHandler))
 	{
 		DNPrint(ErrCode_UnhandledException, LoggerLevel::Error, nullptr);
-		PInstance->ShutDown();
+		delete PInstance;
 		return 0;
 	}
 #elif __unix__
@@ -189,9 +191,15 @@ export int main(int argc, char **argv)
 		stringstream ss;
 		string str;
 
-		while (PInstance && PInstance->ServerIsRun())
+		while (true)
 		{
 			getline(cin, str);
+
+			if(!PInstance || !PInstance->ServerIsRun() )
+			{
+				break;
+			}
+
 			if (str.empty())
 			{
 				cout << "<cmd null>\n";
@@ -226,20 +234,16 @@ export int main(int argc, char **argv)
 		} 
 	});
 
-	while (PInstance->ServerIsRun())
+	while (PInstance && PInstance->ServerIsRun())
 	{
 		PInstance->TickMainFrame();
 		Sleep(100);
 	}
 
-	DimensionNightmare* temp = PInstance;
+	delete PInstance;
 	PInstance = nullptr;
-
-	temp->ShutDown();
-	delete temp;
 	
 	DNPrint(0, LoggerLevel::Debug, "bye~");
-	getchar();
 	
 	return 0;
 }

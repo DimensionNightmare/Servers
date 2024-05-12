@@ -33,7 +33,7 @@ int HandleControlServerInit(DNServer *server)
 
 		auto onConnection = [serverProxy, serverSock](const SocketChannelPtr &channel)
 		{
-			string peeraddr = channel->peeraddr();
+			const string& peeraddr = channel->peeraddr();
 			if (channel->isConnected())
 			{
 				DNPrint(TipCode_CliConnOn, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());

@@ -102,7 +102,7 @@ bool GateServer::Init()
 		port = stoi(*value);
 	}
 	
-	pSSock = new DNServerProxy;
+	pSSock = new DNServerProxy();
 	pSSock->pLoop = make_shared<EventLoopThread>();
 
 	int listenfd = pSSock->createsocket(port);
@@ -128,7 +128,7 @@ bool GateServer::Init()
 	
 	DNPrint(TipCode_SrvListenOn, LoggerLevel::Normal, nullptr, pSSock->port, listenfd);
 
-	unpack_setting_t* setting = new unpack_setting_t;
+	unpack_setting_t* setting = new unpack_setting_t();
 	setting->mode = unpack_mode_e::UNPACK_BY_LENGTH_FIELD;
 	setting->length_field_coding = unpack_coding_e::ENCODE_BY_BIG_ENDIAN;
 	setting->body_offset = MessagePacket::PackLenth;
@@ -143,10 +143,10 @@ bool GateServer::Init()
 	string* ctlIp = GetLuanchConfigParam("ctlIp");
 	if(ctlPort && ctlIp && is_ipaddr(ctlIp->c_str()))
 	{
-		pCSock = new DNClientProxy;
+		pCSock = new DNClientProxy();
 		pCSock->pLoop = make_shared<EventLoopThread>();
 
-		reconn_setting_t* reconn = new reconn_setting_t;
+		reconn_setting_t* reconn = new reconn_setting_t();
 		reconn->min_delay = 1000;
 		reconn->max_delay = 10000;
 		reconn->delay_policy = 2;
@@ -158,9 +158,9 @@ bool GateServer::Init()
 		pCSock->channel->setWriteTimeout(12000);
 	}
 	
-	pServerEntityMan = new ServerEntityManager;
+	pServerEntityMan = new ServerEntityManager();
 	pServerEntityMan->Init();
-	pProxyEntityMan = new ProxyEntityManager;
+	pProxyEntityMan = new ProxyEntityManager();
 	pProxyEntityMan->Init();
 
 	return true;

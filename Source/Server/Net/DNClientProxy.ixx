@@ -29,7 +29,7 @@ export class DNClientProxy : public TcpClientTmpl<SocketChannel>
 {
 public:
 	DNClientProxy();
-	~DNClientProxy(){}
+	~DNClientProxy();
 
 	void Start();
 
@@ -66,8 +66,6 @@ protected: // dll proxy
 
 	function<void()> pRegistEvent;
 
-	Channel::Status eState;
-
 	shared_mutex oMsgMutex;
 	shared_mutex oTimerMutex;
 };
@@ -80,19 +78,22 @@ DNClientProxy::DNClientProxy()
 	mMsgList.clear();
 	eRegistState = RegistState::None;
 	pRegistEvent = nullptr;
-	eState = Channel::Status::CLOSED;
+}
+
+DNClientProxy::~DNClientProxy()
+{
+	mMsgList.clear();
+	mMapTimer.clear();
 }
 
 void DNClientProxy::Start()
 {
-	channel->setHeartbeat(4000, std::bind(&DNClientProxy::TickHeartbeat, this));
-	
 	pLoop->start();
 	start();
 }
 
 void DNClientProxy::End()
-{
+{	
 	pLoop->stop(true);
 	stop();
 }
@@ -185,6 +186,8 @@ void DNClientProxy::TickHeartbeat()
 
 void DNClientProxy::RedirectClient(uint16_t port, const char *ip)
 {
+	eRegistState = RegistState::None;
+	
 	createsocket(port, ip);
 	start();
 }

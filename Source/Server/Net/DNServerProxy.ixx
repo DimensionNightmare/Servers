@@ -18,7 +18,7 @@ export class DNServerProxy : public TcpServerTmpl<SocketChannel>
 {
 public:
 	DNServerProxy();
-	~DNServerProxy(){}
+	~DNServerProxy();
 
 	void Start();
 
@@ -55,6 +55,12 @@ protected:
 DNServerProxy::DNServerProxy()
 {
 	iMsgId = 0;
+	mMsgList.clear();
+	mMapTimer.clear();
+}
+
+DNServerProxy::~DNServerProxy()
+{
 	mMsgList.clear();
 	mMapTimer.clear();
 }

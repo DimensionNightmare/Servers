@@ -34,12 +34,14 @@ int HandleGateServerInit(DNServer *server)
 
 		auto onConnection = [serverSock,serverProxy](const SocketChannelPtr &channel)
 		{
-			string peeraddr = channel->peeraddr();
+			const string& peeraddr = channel->peeraddr();
 			if (channel->isConnected())
 			{
 				DNPrint(TipCode_CliConnOn, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
 				// if not regist
 				serverSock->CheckChannelByTimer(channel);
+				// if not recive data
+				channel->setReadTimeout(15000);
 			}
 			else
 			{
@@ -53,6 +55,8 @@ int HandleGateServerInit(DNServer *server)
 						break;
 					case EntityType::Proxy:
 						serverProxy->ProxyEntityCloseEvent(entity);
+						break;
+					default:
 						break;
 					
 					}
@@ -107,12 +111,14 @@ int HandleGateServerInit(DNServer *server)
 		
 		auto onConnection = [clientSock](const SocketChannelPtr &channel)
 		{
-			string peeraddr = channel->peeraddr();
+			const string& peeraddr = channel->peeraddr();
 
 			if (channel->isConnected())
 			{
 				DNPrint(TipCode_SrvConnOn, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
+				channel->setHeartbeat(4000, std::bind(&DNClientProxy::TickHeartbeat, clientSock));
 				clientSock->SetRegistEvent(&GateMessage::Evt_ReqRegistSrv);
+				clientSock->StartRegist();
 			}
 			else
 			{
@@ -123,8 +129,6 @@ int HandleGateServerInit(DNServer *server)
 			{
 				
 			}
-
-			clientSock->UpdateClientState(channel->status);
 		};
 
 		auto onMessage = [clientSock](const SocketChannelPtr &channel, Buffer *buf) 

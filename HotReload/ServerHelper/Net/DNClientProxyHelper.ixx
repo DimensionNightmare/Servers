@@ -15,13 +15,6 @@ using namespace std;
 using namespace hv;
 using namespace google::protobuf;
 
-export enum class ProxyStatus : uint8_t
-{
-	None,
-	Open,
-	Close,
-};
-
 export class DNClientProxyHelper : public DNClientProxy
 {
 private:
@@ -35,7 +28,6 @@ public:
 
 	void SetRegistEvent(function<void()> event);
 	// client status
-	ProxyStatus UpdateClientState(Channel::Status state);
 	void ServerDisconnect();
 	// task
 	DNTask<Message>* GetMsg(uint32_t msgId);
@@ -46,36 +38,6 @@ public:
 void DNClientProxyHelper::SetRegistEvent(function<void()> event)
 {
 	pRegistEvent = event;
-}
-
-ProxyStatus DNClientProxyHelper::UpdateClientState(Channel::Status state)
-{
-	if(state == eState || (state == Channel::Status::CONNECTING && eState == Channel::Status::CLOSED))
-	{
-		return ProxyStatus::None;
-	}
-
-	eState = state;
-
-	switch (eState)
-	{
-	case Channel::Status::CONNECTED :
-		{
-			//maybe sometimes tick (wait fix)
-			StartRegist();
-			return ProxyStatus::Open;
-		}
-
-	case Channel::Status::CLOSED :
-	case Channel::Status::DISCONNECTED :
-		{
-			ServerDisconnect();
-			return ProxyStatus::Close;
-		}
-	}
-
-	return ProxyStatus::None;
-
 }
 
 void DNClientProxyHelper::ServerDisconnect()

@@ -135,9 +135,6 @@ namespace LogicMessage
 	{
 		COM_RetChangeCtlSrv* requset = reinterpret_cast<COM_RetChangeCtlSrv*>(msg);
 		LogicServerHelper* dnServer = GetLogicServer();
-		DNClientProxyHelper* client = dnServer->GetCSock();
-
-		client->UpdateClientState(Channel::Status::CLOSED);
 
 		dnServer->ReClientEvent(requset->ip(), requset->port());
 	}

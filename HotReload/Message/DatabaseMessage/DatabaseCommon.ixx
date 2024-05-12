@@ -91,9 +91,6 @@ namespace DatabaseMessage
 	{
 		COM_RetChangeCtlSrv* requset = reinterpret_cast<COM_RetChangeCtlSrv*>(msg);
 		DatabaseServerHelper* dnServer = GetDatabaseServer();
-		DNClientProxyHelper* client = dnServer->GetCSock();
-
-		client->UpdateClientState(Channel::Status::CLOSED);
 
 		dnServer->ReClientEvent(requset->ip(), requset->port());
 	}

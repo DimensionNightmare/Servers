@@ -1,4 +1,3 @@
-.vs*/*
-!/.vscode/launch.json
+/.vs
 /[oO]ut/*
 /*.log

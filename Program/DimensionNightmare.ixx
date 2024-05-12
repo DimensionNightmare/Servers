@@ -178,8 +178,6 @@ public:
 
 	void ExecCommand(string* cmd, stringstream* ss);
 
-	void ShutDown();
-
 	bool OnRegHotReload();
 
 	bool OnUnregHotReload();
@@ -218,13 +216,7 @@ DimensionNightmare::~DimensionNightmare()
 {
 	if(pServer)
 	{
-		pServer->LoopEvent([](hv::EventLoopPtr loop)
-		{ 
-			loop->pause(); 
-		});
-
-		OnUnregHotReload();
-		
+		pServer->Stop();
 		delete pServer;
 		pServer = nullptr;
 	}
@@ -412,22 +404,22 @@ bool DimensionNightmare::Init()
 	switch (serverType)
 	{
 	case ServerType::ControlServer:
-		pServer = new ControlServer;
+		pServer = new ControlServer();
 		break;
 	case ServerType::GlobalServer:
-		pServer = new GlobalServer;
+		pServer = new GlobalServer();
 		break;
 	case ServerType::AuthServer:
-		pServer = new AuthServer;
+		pServer = new AuthServer();
 		break;
 	case ServerType::GateServer:
-		pServer = new GateServer;
+		pServer = new GateServer();
 		break;
 	case ServerType::DatabaseServer:
-		pServer = new DatabaseServer;
+		pServer = new DatabaseServer();
 		break;
 	case ServerType::LogicServer:
-		pServer = new LogicServer;
+		pServer = new LogicServer();
 		break;
 	default:
 		DNPrint(ErrCode_SrvTypeNotVaild, LoggerLevel::Error, nullptr);
@@ -544,21 +536,6 @@ void DimensionNightmare::ExecCommand(string* cmd, stringstream* ss)
 	if (mCmdHandle.find(*cmd) != mCmdHandle.end())
 	{
 		mCmdHandle[*cmd](ss);
-	}
-}
-
-void DimensionNightmare::ShutDown()
-{
-	if(pServer)
-	{
-		pServer->Stop();
-	}
-
-	if (pHotDll)
-	{
-		OnUnregHotReload();
-		delete pHotDll;
-		pHotDll = nullptr;
 	}
 }
 

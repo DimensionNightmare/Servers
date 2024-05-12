@@ -232,5 +232,30 @@ int main()
 	{
 		cout << e.what() << endl;
 	}
+
+    // 设置输入流为非阻塞模式
+	std::ios_base::sync_with_stdio(false);
+    
+	std::cin.tie(nullptr);
+	std::cout.tie(nullptr);
+
+    // std::cin.sync_with_stdio(false);
+
+    while (true) {
+        // 检查是否有输入
+        if (std::cin.peek() != EOF) {
+            // 读取用户输入
+            string userInput;
+            std::cin >> userInput;
+            std::cout << "You entered: " << userInput << std::endl;
+
+            // 清除输入缓冲区
+            std::cin.ignore();
+        }
+
+        // 在这里可以做其他事情，不会被阻塞
+        // 这里简单地打印一条消息
+        std::cout << "Doing something else..." << std::endl;
+    }
 }
 #endif

@@ -73,47 +73,65 @@ extern "C"
 		SetDNl10nInstance(server->pDNl10nInstance);
 		
 		ServerType servertype = server->GetServerType();
+		bool isDeal = false;
 		switch (servertype)
 		{
 		case ServerType::ControlServer:
-			return HandleControlServerInit(server);
+			isDeal = HandleControlServerInit(server);
+			break;
 		case ServerType::GlobalServer:
-			return HandleGlobalServerInit(server);
+			isDeal = HandleGlobalServerInit(server);
+			break;
 		case ServerType::AuthServer:
-			return HandleAuthServerInit(server);
+			isDeal = HandleAuthServerInit(server);
+			break;
 		case ServerType::GateServer:
-			return HandleGateServerInit(server);
+			isDeal = HandleGateServerInit(server);
+			break;
 		case ServerType::DatabaseServer:
-			return HandleDatabaseServerInit(server);
+			isDeal = HandleDatabaseServerInit(server);
+			break;
 		case ServerType::LogicServer:
-			return HandleLogicServerInit(server);
+			isDeal = HandleLogicServerInit(server);
+			break;
+		default:
+			break;
 		}
 
-		return 0;
+		return isDeal;
 	}
 
 	HOTRELOAD int ShutdownHotReload(DNServer* server)
 	{
 		ServerType servertype = server->GetServerType();
+		bool isDeal = false;
 		switch (servertype)
 		{
 		case ServerType::ControlServer:
-			return HandleControlServerShutdown(server);
+			isDeal = HandleControlServerShutdown(server);
+			break;
 		case ServerType::GlobalServer:
-			return HandleGlobalServerShutdown(server);
+			isDeal = HandleGlobalServerShutdown(server);
+			break;
 		case ServerType::AuthServer:
-			return HandleAuthServerShutdown(server);
+			isDeal = HandleAuthServerShutdown(server);
+			break;
 		case ServerType::GateServer:
-			return HandleGateServerShutdown(server);
+			isDeal = HandleGateServerShutdown(server);
+			break;
 		case ServerType::DatabaseServer:
-			return HandleDatabaseServerShutdown(server);
+			isDeal = HandleDatabaseServerShutdown(server);
+			break;
 		case ServerType::LogicServer:
-			return HandleLogicServerShutdown(server);
+			isDeal = HandleLogicServerShutdown(server);
+			break;
+		default:
+			break;
 		}
 
 		google::protobuf::ShutdownProtobufLibrary();
 		hv::async::cleanup();
 
-		return 0;
+		return isDeal;
 	}
 }

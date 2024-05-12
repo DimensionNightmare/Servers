@@ -78,7 +78,7 @@ bool DatabaseServer::Init()
 
 	uint16_t port = 0;
 
-	unpack_setting_t *setting = new unpack_setting_t;
+	unpack_setting_t *setting = new unpack_setting_t();
 	setting->mode = unpack_mode_e::UNPACK_BY_LENGTH_FIELD;
 	setting->length_field_coding = unpack_coding_e::ENCODE_BY_BIG_ENDIAN;
 	setting->body_offset = MessagePacket::PackLenth;
@@ -90,10 +90,10 @@ bool DatabaseServer::Init()
 	string *ctlIp = GetLuanchConfigParam("ctlIp");
 	if (ctlPort && ctlIp && is_ipaddr(ctlIp->c_str()))
 	{
-		pCSock = new DNClientProxy;
+		pCSock = new DNClientProxy();
 		pCSock->pLoop = make_shared<EventLoopThread>();
 
-		reconn_setting_t *reconn = new reconn_setting_t;
+		reconn_setting_t *reconn = new reconn_setting_t();
 		reconn->min_delay = 1000;
 		reconn->max_delay = 10000;
 		reconn->delay_policy = 2;
@@ -113,6 +113,8 @@ bool DatabaseServer::Init()
 
 void DatabaseServer::InitCmd(map<string, function<void(stringstream *)>> &cmdMap)
 {
+	DNServer::InitCmd(cmdMap);
+	
 	cmdMap.emplace("redirectClient", [this](stringstream* ss)
 	{
 		string ip;

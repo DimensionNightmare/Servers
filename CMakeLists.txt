@@ -1,10 +1,7 @@
-# CMakeList.txt: DimensionNightmareServer 的 CMake 项目，在此处包括源代码并定义
-# 项目特定的逻辑。
-#
 cmake_minimum_required (VERSION 3.26 FATAL_ERROR)
 
 # Top project
-project (DimensionNightmareServer CXX)
+project (DimensionNightmareServer)
 
 message("${CMAKE_VERSION}
 ${CMAKE_SYSTEM_NAME}
@@ -15,6 +12,14 @@ ${CMAKE_SYSTEM_PROCESSOR}")
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+
+set(CMAKE_UNITY_BUILD ON)
+find_program(CCACHE_PROGRAM ccache)
+if(CCACHE_PROGRAM)
+  message(STATUS "Set up ccache ...")
+  set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
+  set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
+endif()
 
 if(CMAKE_SYSTEM_NAME MATCHES "Linux")
 	set(CMAKE_POSITION_INDEPENDENT_CODE ON)
@@ -131,7 +136,7 @@ set_target_properties(DNTest PROPERTIES EXCLUDE_FROM_ALL TRUE)
 # TODO: 如有需要，请添加测试并安装目标。
 
 add_custom_target(MainTarget)
-add_dependencies(MainTarget MainSource HotReload)
+add_dependencies(MainTarget DimensionNightmareServer HotReload)
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
 	install(TARGETS DimensionNightmareServer DESTINATION ${CMAKE_INSTALL_PREFIX})

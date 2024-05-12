@@ -77,7 +77,7 @@ bool ControlServer::Init()
 
 	DNServer::Init();
 
-	pSSock = new DNServerProxy;
+	pSSock = new DNServerProxy();
 	pSSock->pLoop = make_shared<EventLoopThread>();
 
 	int listenfd = pSSock->createsocket(stoi(*port));
@@ -89,7 +89,7 @@ bool ControlServer::Init()
 
 	DNPrint(TipCode_SrvListenOn, LoggerLevel::Normal, nullptr, pSSock->port, listenfd);
 
-	unpack_setting_t* setting = new unpack_setting_t;
+	unpack_setting_t* setting = new unpack_setting_t();
 	setting->mode = unpack_mode_e::UNPACK_BY_LENGTH_FIELD;
 	setting->length_field_coding = unpack_coding_e::ENCODE_BY_BIG_ENDIAN;
 	setting->body_offset = MessagePacket::PackLenth;
@@ -98,7 +98,7 @@ bool ControlServer::Init()
 	pSSock->setUnpack(setting);
 	pSSock->setThreadNum(4);
 
-	pServerEntityMan = new ServerEntityManager;
+	pServerEntityMan = new ServerEntityManager();
 	pServerEntityMan->Init();
 
 	return true;

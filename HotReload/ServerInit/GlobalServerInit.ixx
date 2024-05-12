@@ -33,7 +33,7 @@ int HandleGlobalServerInit(DNServer *server)
 		
 		auto onConnection = [serverProxy,serverSock](const SocketChannelPtr &channel)
 		{
-			string peeraddr = channel->peeraddr();
+			const string& peeraddr = channel->peeraddr();
 			if (channel->isConnected())
 			{
 				DNPrint(TipCode_CliConnOn, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
@@ -101,24 +101,25 @@ int HandleGlobalServerInit(DNServer *server)
 
 		auto onConnection = [clientSock](const SocketChannelPtr &channel)
 		{
-			string peeraddr = channel->peeraddr();
+			const string& peeraddr = channel->peeraddr();
 
 			if (channel->isConnected())
 			{
 				DNPrint(TipCode_SrvConnOn, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
+				channel->setHeartbeat(4000, std::bind(&DNClientProxy::TickHeartbeat, clientSock));
 				clientSock->SetRegistEvent(&GlobalMessage::Evt_ReqRegistSrv);
+				clientSock->StartRegist();
 			}
 			else
 			{
 				DNPrint(TipCode_SrvConnOff, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
+				
 			}
 
 			if(clientSock->isReconnect())
 			{
 				
 			}
-
-			clientSock->UpdateClientState(channel->status);
 		};
 
 		auto onMessage = [clientSock](const SocketChannelPtr &channel, Buffer *buf) 

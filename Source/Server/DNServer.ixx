@@ -43,18 +43,25 @@ export struct MainPostMsg
 
 	MainPostMsg(){}
 
-	MainPostMsg(const MainPostMsg& msg)
+	MainPostMsg(const MainPostMsg &rhs)
 	{
-		type = msg.type;
-		switch(type)
+		type = rhs.type;
+		switch (type)
 		{
-			case Command:
-			sCommand << msg.sCommand.str();
+		case Command:
+			sCommand.str(rhs.sCommand.str());
 			break;
-			case Function:
-            pFunc = msg.pFunc; // 拷贝函数对象
-        	break;
+		case Function:
+			pFunc = rhs.pFunc;
+			break;
+		default:
+			break;
 		}
+	}
+
+	~MainPostMsg()
+	{
+		sCommand.str("");
 	}
 
 };
@@ -143,20 +150,22 @@ void DNServer::TickMainFrame()
 		{
 			for(MainPostMsg& postMsg : mMessageTasks)
 			{
-				switch(postMsg.type)
+				switch (postMsg.type)
 				{
-					case MainPostMsg::Function:
-						postMsg.pFunc();
+				case MainPostMsg::Function:
+					postMsg.pFunc();
 					break;
-					case MainPostMsg::Command:
+				case MainPostMsg::Command:
+				{
+					string token;
+					postMsg.sCommand >> token;
+					if (pCmdMap && pCmdMap->contains(token))
 					{
-						string token;
-						postMsg.sCommand >> token;
-						if(pCmdMap && pCmdMap->contains(token))
-						{
-							(*pCmdMap)[token](&postMsg.sCommand);
-						}
+						(*pCmdMap)[token](&postMsg.sCommand);
 					}
+					break;
+				}
+				default:
 					break;
 				}
 			}

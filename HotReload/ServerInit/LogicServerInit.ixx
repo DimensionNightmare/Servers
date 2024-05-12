@@ -38,7 +38,7 @@ int HandleLogicServerInit(DNServer *server)
 
 		auto onConnection = [serverProxy](const SocketChannelPtr &channel)
 		{
-			string peeraddr = channel->peeraddr();
+			const string& peeraddr = channel->peeraddr();
 			if (channel->isConnected())
 			{
 				DNPrint(TipCode_CliConnOn, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
@@ -103,38 +103,33 @@ int HandleLogicServerInit(DNServer *server)
 		//client will re_create please check
 		auto onConnection = [clientSock,serverProxy](const SocketChannelPtr &channel)
 		{
-			string peeraddr = channel->peeraddr();
+			const string& peeraddr = channel->peeraddr();
 
 			if (channel->isConnected())
 			{
 				DNPrint(TipCode_SrvConnOn, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
 				clientSock->SetRegistEvent(&LogicMessage::Evt_ReqRegistSrv);
+				clientSock->StartRegist();
+				channel->setHeartbeat(4000, std::bind(&DNClientProxy::TickHeartbeat, clientSock));
 			}
 			else
 			{
 				DNPrint(TipCode_SrvConnOff, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
+				if(clientSock->RegistState() == RegistState::Registed)
+				{
+					clientSock->RegistState() = RegistState::None;
+					// not orgin
+					string origin = format("{}:{}", serverProxy->GetCtlIp(), serverProxy->GetCtlPort());
+					if (peeraddr != origin)
+					{
+						serverProxy->ReClientEvent(serverProxy->GetCtlIp(), serverProxy->GetCtlPort());
+					}
+				}
 			}
 
 			if(clientSock->isReconnect())
 			{
 				
-			}
-
-			ProxyStatus state = clientSock->UpdateClientState(channel->status);
-			if(state != ProxyStatus::None)
-			{
-				switch(state)
-				{
-					case ProxyStatus::Close:
-					{
-						// not orgin
-						string origin = format("{}:{}", serverProxy->GetCtlIp(), serverProxy->GetCtlPort());
-						if(peeraddr != origin)
-						{
-							serverProxy->ReClientEvent(serverProxy->GetCtlIp(), serverProxy->GetCtlPort());
-						}
-					}
-				}
 			}
 		};
 

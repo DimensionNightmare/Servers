@@ -26,7 +26,7 @@ int HandleAuthServerInit(DNServer *server)
 
 	if(DNWebProxyHelper* serverSock = serverProxy->GetSSock())
 	{
-		HttpService* service = new HttpService;
+		HttpService* service = new HttpService();
 		
 		AuthMessageHandle::RegApiHandle(service);
 
@@ -40,12 +40,14 @@ int HandleAuthServerInit(DNServer *server)
 
 		auto onConnection = [clientSock](const SocketChannelPtr &channel)
 		{
-			string peeraddr = channel->peeraddr();
+			const string& peeraddr = channel->peeraddr();
 
 			if (channel->isConnected())
 			{
 				DNPrint(TipCode_CliConnOn, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
+				channel->setHeartbeat(4000, std::bind(&DNClientProxy::TickHeartbeat, clientSock));
 				clientSock->SetRegistEvent(&AuthMessage::Evt_ReqRegistSrv);
+				clientSock->StartRegist();
 			}
 			else
 			{
@@ -56,8 +58,6 @@ int HandleAuthServerInit(DNServer *server)
 			{
 				
 			}
-
-			clientSock->UpdateClientState(channel->status);
 		};
 
 		auto onMessage = [clientSock](const SocketChannelPtr &channel, Buffer *buf) 
