@@ -74,15 +74,27 @@ export void ApiLogin(HttpService* service)
 		accInfo.set_auth_name(authName);
 		accInfo.set_auth_string(authString);
 
-		pqxx::read_transaction query(*authServer->SqlProxy());
-		DNDbObj<GDb::Account> accounts(reinterpret_cast<pqxx::transaction<>*>(&query));
 		try
 		{
+			pqxx::read_transaction query(*authServer->SqlProxy());
+			DNDbObj<GDb::Account> accounts(reinterpret_cast<pqxx::transaction<>*>(&query));
+
 			accounts
 				.SelectAll()
 				DBSelectCond(accInfo, auth_name, "=", "")
 				DBSelectCond(accInfo, auth_string, "=", "AND")
 				.Commit();
+
+			if(accounts.Result().size() != 1) 
+			{
+				errData["code"] = HTTP_STATUS_BAD_REQUEST;
+				errData["message"] = "not Account!";
+				res->SetBody(errData.dump());
+				writer->End();
+				return;
+			}
+
+			accInfo = accounts.Result()[0];
 		}
 		catch(const exception& e)
 		{
@@ -94,19 +106,6 @@ export void ApiLogin(HttpService* service)
 			return;
 		}
 		
-
-		if(accounts.Result().size() != 1) 
-		{
-			errData["code"] = HTTP_STATUS_BAD_REQUEST;
-			errData["message"] = "not Account!";
-			res->SetBody(errData.dump());
-			writer->End();
-			return;
-		}
-
-		accInfo = accounts.Result()[0];
-
-
 		auto taskGen = [accInfo, writer]()-> DNTaskVoid
 		{
 			const HttpResponseWriterPtr& writerProxy = writer;	//sharedptr ref count ++

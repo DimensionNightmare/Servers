@@ -452,7 +452,7 @@ public:
 	DNDbObj(pqxx::transaction<>* work);
 	~DNDbObj(){};
 
-	const string& GetName(){return pMessage->GetDescriptor()->name();}
+	const string& GetName(){return TMessage::GetDescriptor()->name();}
 	
 	vector<TMessage>& Result(){ return mResult;}
 
@@ -492,8 +492,6 @@ private:
 	void PaserQuery(pqxx::result& result);
 
 private:
-	TMessage* pMessage;
-
 	vector<TMessage> mResult;
 
 	SqlOpType eType;
@@ -513,7 +511,6 @@ private:
 template <class TMessage>
 DNDbObj<TMessage>::DNDbObj()
 {
-	pMessage = nullptr;
 	mResult.clear();
 	eType = SqlOpType::None;
 	mEles.clear();
@@ -831,7 +828,7 @@ DNDbObj<TMessage>& DNDbObj<TMessage>::InitTable()
 {
 	ChangeSqlType(SqlOpType::CreateTable);
 
-	const Descriptor* descriptor = this->pMessage->GetDescriptor();
+	const Descriptor* descriptor = TMessage::GetDescriptor();
 
 	list<string> primaryKey;
 
@@ -898,8 +895,8 @@ DNDbObj<TMessage>& DNDbObj<TMessage>::Insert(TMessage& inObj)
 {
 	ChangeSqlType(SqlOpType::Insert);
 
-	const Descriptor* descriptor = this->pMessage->GetDescriptor();
-	const Reflection* reflection = this->pMessage->GetReflection();
+	const Descriptor* descriptor = TMessage::GetDescriptor();
+	const Reflection* reflection = TMessage::GetReflection();
 
 	string params;
 
@@ -929,8 +926,8 @@ DNDbObj<TMessage> &DNDbObj<TMessage>::Select(const char* name, ...)
 {
 	ChangeSqlType(SqlOpType::Query);
 
-	const Descriptor* descriptor = this->pMessage->GetDescriptor();
-	const Reflection* reflection = this->pMessage->GetReflection();
+	const Descriptor* descriptor = TMessage::GetDescriptor();
+	const Reflection* reflection = TMessage::GetReflection();
 
 	if(mEles.contains(SSELECTALL))
 	{
@@ -954,7 +951,7 @@ DNDbObj<TMessage> &DNDbObj<TMessage>::SelectAll(bool foreach)
 
 	if(foreach)
 	{
-		const Descriptor* descriptor = this->pMessage->GetDescriptor();
+		const Descriptor* descriptor = TMessage::GetDescriptor();
 		for(int i = 0; i < descriptor->field_count(); i++)
 		{
 			Select(descriptor->field(i)->lowercase_name().c_str());
@@ -975,8 +972,8 @@ DNDbObj<TMessage> &DNDbObj<TMessage>::SelectAll(bool foreach)
 template <class TMessage>
 DNDbObj<TMessage> &DNDbObj<TMessage>::SelectCond(TMessage& selObj, const char* name, const char* cond, const char* splicing, ...)
 {
-	const Descriptor* descriptor = this->pMessage->GetDescriptor();
-	const Reflection* reflection = this->pMessage->GetReflection();
+	const Descriptor* descriptor = TMessage::GetDescriptor();
+	const Reflection* reflection = TMessage::GetReflection();
 
 	const FieldDescriptor* field = descriptor->FindFieldByLowercaseName(name);
 	if(!field)
@@ -1013,8 +1010,8 @@ void DNDbObj<TMessage>::PaserQuery(pqxx::result &result)
 		keys.push_back(result.column_name(col));
 	}
 
-	const Descriptor* descriptor = this->pMessage->GetDescriptor();
-	const Reflection* reflection = this->pMessage->GetReflection();
+	const Descriptor* descriptor = TMessage::GetDescriptor();
+	const Reflection* reflection = TMessage::GetReflection();
 
 	bool isQueryAll = mEles.contains(SSELECTALL);
 
@@ -1040,8 +1037,8 @@ DNDbObj<TMessage> &DNDbObj<TMessage>::Update(TMessage &upObj, const char *name, 
 {
 	ChangeSqlType(SqlOpType::Update);
 
-	const Descriptor* descriptor = this->pMessage->GetDescriptor();
-	const Reflection* reflection = this->pMessage->GetReflection();
+	const Descriptor* descriptor = TMessage::GetDescriptor();
+	const Reflection* reflection = TMessage::GetReflection();
 
 	const FieldDescriptor* field = descriptor->FindFieldByLowercaseName(name);
 	if(!field)
@@ -1062,8 +1059,8 @@ DNDbObj<TMessage> &DNDbObj<TMessage>::UpdateCond(TMessage& upObj, const char *na
 {
 	ChangeSqlType(SqlOpType::Update);
 
-	const Descriptor* descriptor = this->pMessage->GetDescriptor();
-	const Reflection* reflection = this->pMessage->GetReflection();
+	const Descriptor* descriptor = TMessage::GetDescriptor();
+	const Reflection* reflection = TMessage::GetReflection();
 
 	const FieldDescriptor* field = descriptor->FindFieldByLowercaseName(name);
 	if(!field)
@@ -1085,8 +1082,8 @@ DNDbObj<TMessage> &DNDbObj<TMessage>::DeleteCond(TMessage &outObj, const char *n
 {
 	ChangeSqlType(SqlOpType::Delete);
 
-	const Descriptor* descriptor = this->pMessage->GetDescriptor();
-	const Reflection* reflection = this->pMessage->GetReflection();
+	const Descriptor* descriptor = TMessage::GetDescriptor();
+	const Reflection* reflection = TMessage::GetReflection();
 
 	const FieldDescriptor* field = descriptor->FindFieldByLowercaseName(name);
 	if(!field)

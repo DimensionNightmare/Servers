@@ -113,7 +113,10 @@ int HandleGlobalServerInit(DNServer *server)
 			else
 			{
 				DNPrint(TipCode_SrvConnOff, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
-				
+				if(clientSock->RegistState() == RegistState::Registed)
+				{
+					clientSock->RegistState() = RegistState::None;
+				}
 			}
 
 			if(clientSock->isReconnect())
