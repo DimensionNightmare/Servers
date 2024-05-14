@@ -95,7 +95,7 @@ void DNClientProxy::Start()
 void DNClientProxy::End()
 {	
 	pLoop->stop(true);
-	stop();
+	stop(true);
 }
 
 void DNClientProxy::TickRegistEvent(size_t timerID)

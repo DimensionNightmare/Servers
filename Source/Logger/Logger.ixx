@@ -56,11 +56,13 @@ export void LoggerPrint(LoggerLevel level, int code, const char* funcName, const
 
 	va_list args;
 	va_start(args, fmt);
-	size_t len = vsnprintf(0, 0, fmt, args);
+	size_t len = vsnprintf(0, 0, fmt, args) + 1;
 	string message;
-	message.resize(len + 1);  // need space for NUL
-    vsnprintf(&message[0], len + 1,fmt, args);
-    message.resize(len);
+	message.resize(len); // need space for NUL
+	// va_end(args);
+
+	va_start(args, fmt);
+	vsnprintf(&message[0], len, fmt, args);
 	va_end(args);
 
 	cout << format("[{}] {} -> \n{}", GetNowTimeStr(), funcName, message) << endl;

@@ -75,7 +75,7 @@ struct HotReloadDll
 		}
 		
 #elif __unix__
-		string fullPath = filesystem::current_path().append(sDllDirRand).string();
+		string fullPath = filesystem::current_path().append(SDllDir).string();
 		fullPath = format("{}/lib{}.so", fullPath, SDllName);
 		oLibHandle = dlopen(fullPath.c_str(), RTLD_LAZY);
 		if (!oLibHandle)
@@ -132,11 +132,11 @@ struct HotReloadDll
 			DNPrint( 4, LoggerLevel::Error,nullptr);
 			return false;
 		}
-
+#ifdef _WIN32
 		sDllDirRand = format("{}_{}_{}", SDllDir, EnumName(type), hv_rand(10000, 99999));
 		filesystem::create_directories(sDllDirRand.c_str());
 		filesystem::copy(SDllDir, sDllDirRand.c_str(), filesystem::copy_options::recursive);
-
+#endif
 		return LoadHandle();
 	};
 

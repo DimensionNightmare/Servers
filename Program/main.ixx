@@ -167,23 +167,26 @@ export int main(int argc, char **argv)
 	};
 	signal(SIGINT, CtrlHandler);
 
-	auto UnhandledHandler = [](int signal, siginfo_t *info, void *context)
+	auto UnhandledHandler = [](int signum, siginfo_t *info, void *context)
 	{
-		// int fd = open("MiniDump.dmp", O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
-		// if (fd != -1) 
-		// {
-		// 	void *buffer[1024];
-		// 	int size = backtrace(buffer, 1024);
-		// 	backtrace_symbols_fd(buffer, size, fd);
-		// 	close(fd);
-		// }
+		DNPrint(TipCode_UnhandledException, LoggerLevel::Normal, nullptr);
+
+		delete PInstance;
+		PInstance = nullptr;
+		exit(signum);
 	};
 
 	struct sigaction sa;
+	memset(&sa, 0, sizeof(sa));
     sa.sa_sigaction = UnhandledHandler;
     sigemptyset(&sa.sa_mask);
     sa.sa_flags = SA_SIGINFO;
     sigaction(SIGSEGV, &sa, NULL);
+	sigaction(SIGABRT, &sa, NULL);
+	sigaction(SIGFPE, &sa, NULL);
+	sigaction(SIGILL, &sa, NULL);
+	sigaction(SIGBUS, &sa, NULL);
+
 #endif
 
 	auto InputEvent = async(launch::async, []()

@@ -99,7 +99,7 @@ void LogicMessageHandle::RegMsgHandle()
 #elif __unix__
 	#define MSG_MAPPING(map, msg, func) \
 	map.emplace(std::hash<string>{}(msg::GetDescriptor()->full_name()), \
-	make_pair(msg::internal_default_instance(), func))
+	make_pair(msg::internal_default_instance(), &LogicMessage::func))
 #endif
 
 	MSG_MAPPING(MHandleRetMap, COM_RetChangeCtlSrv, Exe_RetChangeCtlSrv);

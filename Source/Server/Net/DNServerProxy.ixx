@@ -74,7 +74,7 @@ void DNServerProxy::Start()
 void DNServerProxy::End()
 {
 	pLoop->stop(true);
-	stop();
+	stop(true);
 }
 
 void DNServerProxy::MessageTimeoutTimer(uint64_t timerID)

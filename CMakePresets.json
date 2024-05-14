@@ -77,7 +77,7 @@
 			"installDir": "${sourceDir}/out/install/${presetName}",
 			"cacheVariables": {
 				"CMAKE_C_COMPILER": "/usr/local/bin/clang",
-				"CMAKE_CXX_COMPILER": "/usr/local/bin/clang++",
+				"CMAKE_CXX_COMPILER": "/usr/local/bin/clang++"
 			},
 			"condition": {
 				"type": "equals",
@@ -86,16 +86,16 @@
 			}
 		},
 		{
-			"name": "Debug_llvm",
-			"displayName": "Debug_llvm",
+			"name": "Debug_linux_llvm",
+			"displayName": "Debug_linux_llvm",
 			"inherits": "llvm-linux-base",
 			"cacheVariables": {
 				"CMAKE_BUILD_TYPE": "Debug"
 			}
 		},
 		{
-			"name": "Release_llvm",
-			"displayName": "Release_llvm",
+			"name": "Release_linux_llvm",
+			"displayName": "Release_linux_llvm",
 			"inherits": "llvm-linux-base",
 			"cacheVariables": {
 				"CMAKE_BUILD_TYPE": "Release"

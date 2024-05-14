@@ -77,6 +77,15 @@ chrono::hours GetTimezoneOffset()
 	{
 		minutes = -timeZoneInfo.Bias;
     }
+#elif __unix__
+	time_t now = time(nullptr);
+    struct tm* localTime = localtime(&now);
+
+    if (localTime != nullptr)
+    {
+        // 获取本地时间的时区偏移
+        minutes = localTime->tm_gmtoff / 60;
+    }
 #endif
 
 	return chrono::hours(minutes/60);
