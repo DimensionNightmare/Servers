@@ -109,7 +109,7 @@ int HandleLogicServerInit(DNServer *server)
 			{
 				DNPrint(TipCode_SrvConnOn, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
 				clientSock->SetRegistEvent(&LogicMessage::Evt_ReqRegistSrv);
-				clientSock->StartRegist();
+				clientSock->DNClientProxy::StartRegist();
 				channel->setHeartbeat(4000, std::bind(&DNClientProxy::TickHeartbeat, clientSock));
 
 				channel->setWriteTimeout(12000);

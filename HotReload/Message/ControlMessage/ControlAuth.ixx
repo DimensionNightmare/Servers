@@ -51,7 +51,7 @@ namespace ControlMessage
 
 		if(!entity)
 		{
-			response.set_state_code(1);
+			response.set_state_code(2);
 		}
 		else
 		{
@@ -79,6 +79,7 @@ namespace ControlMessage
 				if(dataChannel.HasFlag(DNTaskFlag::Timeout))
 				{
 					DNPrint(0, LoggerLevel::Debug, "requst timeout! ");
+					response.set_state_code(3);
 				}
 			}
 

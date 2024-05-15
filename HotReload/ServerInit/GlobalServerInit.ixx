@@ -108,7 +108,7 @@ int HandleGlobalServerInit(DNServer *server)
 				DNPrint(TipCode_SrvConnOn, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
 				channel->setHeartbeat(4000, std::bind(&DNClientProxy::TickHeartbeat, clientSock));
 				clientSock->SetRegistEvent(&GlobalMessage::Evt_ReqRegistSrv);
-				clientSock->StartRegist();
+				clientSock->DNClientProxy::StartRegist();
 
 				channel->setWriteTimeout(12000);
 			}

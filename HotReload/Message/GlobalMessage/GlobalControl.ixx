@@ -49,7 +49,7 @@ namespace GlobalMessage
 		string binData;
 		if(tempList.empty())
 		{
-			response.set_state_code(1);
+			response.set_state_code(4);
 		}
 		else
 		{
@@ -80,7 +80,7 @@ namespace GlobalMessage
 				if(dataChannel.HasFlag(DNTaskFlag::Timeout))
 				{
 					DNPrint(0, LoggerLevel::Debug, "requst timeout! ");
-					response.set_state_code(2);
+					response.set_state_code(5);
 				}
 				else
 				{

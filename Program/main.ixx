@@ -202,12 +202,12 @@ export int main(int argc, char **argv)
 				break;
 			}
 
-			if (str.empty())
+			if (!str.empty())
 			{
-				cout << "<cmd null>\n";
-			}
-			else
-			{
+			// 	cout << "<cmd null>\n";
+			// }
+			// else
+			// {
 				ss.clear();
 				ss.str(str);
 				str.clear();
@@ -230,9 +230,10 @@ export int main(int argc, char **argv)
 				{
 					PInstance->ExecCommand(&str, &ss);
 				}
+
+				cout << "<cmd down>\n";
 			}
 
-			Sleep(500);
 		} 
 	});
 

@@ -167,6 +167,8 @@ export void ApiLogin(HttpService* service)
 				if(dataChannel.HasFlag(DNTaskFlag::Timeout))
 				{
 					retData["code"] = HTTP_STATUS_REQUEST_TIMEOUT;
+					
+					response.set_state_code(1);
 				}
 				else
 				{
