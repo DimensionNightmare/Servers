@@ -50,10 +50,17 @@ namespace LogicMessage
 		{
 			serverEntity = serverEntityMan->GetEntity(serverIdx);
 		}
-		else
+		
+		//pool
+		if(!serverEntity)
 		{
 			list<ServerEntity*> serverEntityList = serverEntityMan->GetEntityByList(ServerType::DedicatedServer);
-			if(!serverEntityList.empty())
+			if(serverEntityList.empty())
+			{
+				response.set_state_code(5);
+				DNPrint(0, LoggerLevel::Debug, "not ds connect");
+			}
+			else
 			{
 				serverEntity = static_cast<ServerEntityHelper*>(serverEntityList.front());
 			}
@@ -91,7 +98,7 @@ namespace LogicMessage
 				if(dataChannel.HasFlag(DNTaskFlag::Timeout))
 				{
 					DNPrint(0, LoggerLevel::Debug, "requst timeout! ");
-					response.set_state_code(2);
+					response.set_state_code(6);
 				}
 				else
 				{
@@ -103,11 +110,6 @@ namespace LogicMessage
 			}
 
 			DNPrint(0, LoggerLevel::Debug, "ds:%s", response.DebugString().c_str());
-		}
-		else
-		{
-			response.set_state_code(1);
-			DNPrint(0, LoggerLevel::Debug, "not ds connect");
 		}
 
 		// pack data

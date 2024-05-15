@@ -11,6 +11,9 @@ public:
 	virtual ~ClientEntity();
 
 public: // dll override
+	void Load();
+
+	void Save();
 
 protected: // dll proxy
 	uint32_t iServerIndex;
@@ -23,5 +26,15 @@ ClientEntity::ClientEntity()
 }
 
 ClientEntity::~ClientEntity()
+{
+	
+}
+
+void ClientEntity::Load()
+{
+	
+}
+
+void ClientEntity::Save()
 {
 }
