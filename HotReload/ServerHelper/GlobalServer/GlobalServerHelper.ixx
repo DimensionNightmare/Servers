@@ -80,7 +80,7 @@ void GlobalServerHelper::UpdateServerGroup()
 		channel->write(binData);
 		
 		// timer destory
-		entity->TimerId() = entityMan->CheckEntityCloseTimer(entity->ID());
+		entity->TimerId() = entityMan->ServerEntityManager::CheckEntityCloseTimer(entity->ID());
 	};
 	
 	for(ServerEntity* it : gates)

@@ -23,7 +23,7 @@ public:
 
 public: // dll override
 	void EntityCloseTimer(uint64_t timerID);
-	uint32_t CheckEntityCloseTimer(uint32_t entityId);
+	uint64_t CheckEntityCloseTimer(uint32_t entityId);
 
 	virtual bool RemoveEntity(uint32_t entityId);
 
@@ -53,9 +53,9 @@ void ProxyEntityManager::EntityCloseTimer(uint64_t timerID)
 	
 }
 
-uint32_t ProxyEntityManager::CheckEntityCloseTimer(uint32_t entityId)
+uint64_t ProxyEntityManager::CheckEntityCloseTimer(uint32_t entityId)
 {
-	uint32_t timerId = Timer()->setTimeout(10000, std::bind(&ProxyEntityManager::EntityCloseTimer, this, placeholders::_1));
+	uint64_t timerId = Timer()->setTimeout(10000, std::bind(&ProxyEntityManager::EntityCloseTimer, this, placeholders::_1));
 
 	AddTimerRecord(timerId, entityId);
 

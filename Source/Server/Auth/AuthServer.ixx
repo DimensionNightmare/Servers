@@ -11,7 +11,6 @@ export module AuthServer;
 export import DNServer;
 import DNWebProxy;
 import DNClientProxy;
-import MessagePack;
 
 using namespace std;
 using namespace hv;
@@ -105,26 +104,13 @@ bool AuthServer::Init()
 	string* ctlIp = GetLuanchConfigParam("ctlIp");
 	if(ctlPort && ctlIp && is_ipaddr(ctlIp->c_str()))
 	{
-		unpack_setting_t* setting = new unpack_setting_t();
-		setting->mode = unpack_mode_e::UNPACK_BY_LENGTH_FIELD;
-		setting->length_field_coding = unpack_coding_e::ENCODE_BY_BIG_ENDIAN;
-		setting->body_offset = MessagePacket::PackLenth;
-		setting->length_field_bytes = 1;
-		setting->length_field_offset = 0;
-		
 		pCSock = new DNClientProxy();
 		pCSock->pLoop = make_shared<EventLoopThread>();
 
-		reconn_setting_t* reconn = new reconn_setting_t();
-		reconn->min_delay = 1000;
-		reconn->max_delay = 10000;
-		reconn->delay_policy = 2;
-		pCSock->setReconnect(reconn);
+		pCSock->Init();
+
 		port = stoi(*ctlPort);
 		pCSock->createsocket(port, ctlIp->c_str());
-		pCSock->setUnpack(setting);
-
-		pCSock->channel->setWriteTimeout(12000);
 	}
 
 	return true;
@@ -195,17 +181,17 @@ void AuthServer::Resume()
 
 void AuthServer::LoopEvent(function<void(EventLoopPtr)> func)
 {
-    map<long,EventLoopPtr> looped;
+    map<long,bool> looped;
     if(pCSock)
 	{
 		looped.clear();
-		while(EventLoopPtr pLoop = pCSock->loop())
+		while(const EventLoopPtr& pLoop = pCSock->loop())
 		{
 			long id = pLoop->tid();
-			if(looped.find(id) == looped.end())
+			if(!looped.count(id))
 			{
 				func(pLoop);
-				looped[id] = pLoop;
+				looped[id];
 			}
 			else
 			{

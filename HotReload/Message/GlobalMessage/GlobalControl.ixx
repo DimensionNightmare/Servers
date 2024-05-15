@@ -47,14 +47,14 @@ namespace GlobalMessage
 
 
 		string binData;
-		if(!tempList.empty())
+		if(tempList.empty())
+		{
+			response.set_state_code(1);
+		}
+		else
 		{
 			ServerEntityHelper* entity = tempList.front();
 			entity->GetConnNum()++;
-			response.set_ip( entity->ServerIp());
-			response.set_port( entity->ServerPort());
-
-			g2G_ResLoginToken tokenRes;
 
 			DNServerProxyHelper* server = GetGlobalServer()->GetSSock();
 			uint32_t smsgId = server->GetMsgId();
@@ -80,17 +80,18 @@ namespace GlobalMessage
 				if(dataChannel.HasFlag(DNTaskFlag::Timeout))
 				{
 					DNPrint(0, LoggerLevel::Debug, "requst timeout! ");
+					response.set_state_code(2);
+				}
+				else
+				{
+					response.set_ip( entity->ServerIp());
+					response.set_port( entity->ServerPort());
 				}
 			}
 
-			response.set_token(tokenRes.token());
-			response.set_expired_timespan(tokenRes.expired_timespan());
+			// DNPrint(0, LoggerLevel::Debug, "%s", response.DebugString().c_str());
 
 			dataChannel.Destroy();
-		}
-		else
-		{
-			response.set_state_code(2);
 		}
 
 		binData.clear();

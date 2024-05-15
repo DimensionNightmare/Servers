@@ -148,16 +148,17 @@ void ControlServer::Resume()
 
 void ControlServer::LoopEvent(function<void(EventLoopPtr)> func)
 {
-    map<long,EventLoopPtr> looped;
+    map<long,bool> looped;
     if(pSSock)
 	{
-		while(EventLoopPtr pLoop = pSSock->loop())
+		looped.clear();
+		while(const EventLoopPtr& pLoop = pSSock->loop())
 		{
 			long id = pLoop->tid();
-			if(looped.find(id) == looped.end())
+			if(!looped.count(id))
 			{
 				func(pLoop);
-				looped[id] = pLoop;
+				looped[id];
 			}
 			else
 			{

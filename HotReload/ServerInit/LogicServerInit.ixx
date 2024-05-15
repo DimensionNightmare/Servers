@@ -111,6 +111,8 @@ int HandleLogicServerInit(DNServer *server)
 				clientSock->SetRegistEvent(&LogicMessage::Evt_ReqRegistSrv);
 				clientSock->StartRegist();
 				channel->setHeartbeat(4000, std::bind(&DNClientProxy::TickHeartbeat, clientSock));
+
+				channel->setWriteTimeout(12000);
 			}
 			else
 			{

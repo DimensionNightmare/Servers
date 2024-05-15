@@ -31,7 +31,7 @@ bool DNServerProxyHelper::AddMsg(uint32_t msgId, DNTask<Message> *task, uint32_t
 	mMsgList.emplace(msgId, task);
 	if(breakTime > 0)
 	{
-		task->TimerId() = CheckMessageTimeoutTimer(breakTime, msgId);
+		task->TimerId() = DNServerProxy::CheckMessageTimeoutTimer(breakTime, msgId);
 	}
 	return true;
 }

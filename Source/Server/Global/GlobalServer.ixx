@@ -10,7 +10,6 @@ export module GlobalServer;
 export import DNServer;
 import DNServerProxy;
 import DNClientProxy;
-import MessagePack;
 import ServerEntityManager;
 
 using namespace std;
@@ -119,15 +118,7 @@ bool GlobalServer::Init()
 	
 	DNPrint(TipCode_SrvListenOn, LoggerLevel::Normal, nullptr, pSSock->port, listenfd);
 
-	unpack_setting_t* setting = new unpack_setting_t();
-	setting->mode = unpack_mode_e::UNPACK_BY_LENGTH_FIELD;
-	setting->length_field_coding = unpack_coding_e::ENCODE_BY_BIG_ENDIAN;
-	setting->body_offset = MessagePacket::PackLenth;
-	setting->length_field_bytes = 1;
-	setting->length_field_offset = 0;
-	pSSock->setUnpack(setting);
-	pSSock->setThreadNum(4);
-
+	pSSock->Init();
 	
 	//connet ControlServer
 	string* ctlPort = GetLuanchConfigParam("ctlPort");
@@ -137,16 +128,10 @@ bool GlobalServer::Init()
 		pCSock = new DNClientProxy();
 		pCSock->pLoop = make_shared<EventLoopThread>();
 
-		reconn_setting_t* reconn = new reconn_setting_t();
-		reconn->min_delay = 1000;
-		reconn->max_delay = 10000;
-		reconn->delay_policy = 2;
-		pCSock->setReconnect(reconn);
+		pCSock->Init();
+
 		port = stoi(*ctlPort);
 		pCSock->createsocket(port, ctlIp->c_str());
-		pCSock->setUnpack(setting);
-
-		pCSock->channel->setWriteTimeout(12000);
 	}
 	
 	pServerEntityMan = new ServerEntityManager();
@@ -209,16 +194,17 @@ void GlobalServer::Resume()
 
 void GlobalServer::LoopEvent(function<void(EventLoopPtr)> func)
 {
-    map<long,EventLoopPtr> looped;
+    map<long,bool> looped;
     if(pSSock)
 	{
-		while(EventLoopPtr pLoop = pSSock->loop())
+		looped.clear();
+		while(const EventLoopPtr& pLoop = pSSock->loop())
 		{
 			long id = pLoop->tid();
-			if(looped.find(id) == looped.end())
+			if(!looped.count(id))
 			{
 				func(pLoop);
-				looped[id] = pLoop;
+				looped[id];
 			}
 			else
 			{
@@ -230,13 +216,13 @@ void GlobalServer::LoopEvent(function<void(EventLoopPtr)> func)
 	if(pCSock)
 	{
 		looped.clear();
-		while(EventLoopPtr pLoop = pCSock->loop())
+		while(const EventLoopPtr& pLoop = pCSock->loop())
 		{
 			long id = pLoop->tid();
-			if(looped.find(id) == looped.end())
+			if(!looped.count(id))
 			{
 				func(pLoop);
-				looped[id] = pLoop;
+				looped[id];
 			}
 			else
 			{

@@ -85,14 +85,13 @@ namespace GateMessage
 			entity->ExpireTime() += 30;
 		}
 		
-		
 		response.set_token(entity->Token());
 		response.set_expired_timespan(entity->ExpireTime());
 
 		// entity or token expired
 		if(!entity->TimerId())
 		{
-			entity->TimerId() = entityMan->CheckEntityCloseTimer(entity->ID());
+			entity->TimerId() = entityMan->ProxyEntityManager::CheckEntityCloseTimer(entity->ID());
 		}
 		
 		binData.clear();

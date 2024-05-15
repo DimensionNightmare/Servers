@@ -9,6 +9,7 @@ module;
 export module DNServerProxy;
 
 import DNTask;
+import MessagePack;
 
 using namespace std;
 using namespace google::protobuf;
@@ -19,6 +20,8 @@ export class DNServerProxy : public TcpServerTmpl<SocketChannel>
 public:
 	DNServerProxy();
 	~DNServerProxy();
+
+	void Init();
 
 	void Start();
 
@@ -32,7 +35,7 @@ public: // dll override
 	void AddTimerRecord(size_t timerId, uint32_t id);
 
 	void CheckChannelByTimer(const SocketChannelPtr & channel);
-	uint32_t CheckMessageTimeoutTimer(uint32_t breakTime, uint32_t msgId);
+	uint64_t CheckMessageTimeoutTimer(uint32_t breakTime, uint32_t msgId);
 
 public:
 	// cant init in tcpclient this class
@@ -63,6 +66,18 @@ DNServerProxy::~DNServerProxy()
 {
 	mMsgList.clear();
 	mMapTimer.clear();
+}
+
+void DNServerProxy::Init()
+{
+	unpack_setting_t* setting = new unpack_setting_t();
+	setting->mode = unpack_mode_e::UNPACK_BY_LENGTH_FIELD;
+	setting->length_field_coding = unpack_coding_e::ENCODE_BY_BIG_ENDIAN;
+	setting->body_offset = MessagePacket::PackLenth;
+	setting->length_field_bytes = 1;
+	setting->length_field_offset = 0;
+	setUnpack(setting);
+	setThreadNum(4);
 }
 
 void DNServerProxy::Start()
@@ -143,9 +158,9 @@ void DNServerProxy::CheckChannelByTimer(const SocketChannelPtr &channel)
 	AddTimerRecord(timerId, channel->id());
 }
 
-uint32_t DNServerProxy::CheckMessageTimeoutTimer(uint32_t breakTime, uint32_t msgId)
+uint64_t DNServerProxy::CheckMessageTimeoutTimer(uint32_t breakTime, uint32_t msgId)
 {
-	uint32_t timerId = Timer()->setTimeout(breakTime, std::bind(&DNServerProxy::MessageTimeoutTimer, this, placeholders::_1));
+	uint64_t timerId = Timer()->setTimeout(breakTime, std::bind(&DNServerProxy::MessageTimeoutTimer, this, placeholders::_1));
 	mMapTimer[timerId] = msgId;
 	return timerId;
 }

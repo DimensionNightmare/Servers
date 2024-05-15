@@ -31,6 +31,8 @@ public:
 	DNClientProxy();
 	~DNClientProxy();
 
+	void Init();
+
 	void Start();
 
 	void End();
@@ -40,7 +42,7 @@ public: // dll override
 	void StartRegist();
 
 	void MessageTimeoutTimer(uint64_t timerID);
-	uint32_t CheckMessageTimeoutTimer(uint32_t breakTime, uint32_t msgId);
+	uint64_t CheckMessageTimeoutTimer(uint32_t breakTime, uint32_t msgId);
 
 	const EventLoopPtr& Timer(){return pLoop->loop();}
 
@@ -84,6 +86,24 @@ DNClientProxy::~DNClientProxy()
 {
 	mMsgList.clear();
 	mMapTimer.clear();
+}
+
+void DNClientProxy::Init()
+{
+	reconn_setting_t* reconn = new reconn_setting_t();
+	reconn->min_delay = 1000;
+	reconn->max_delay = 10000;
+	reconn->delay_policy = 2;
+	setReconnect(reconn);
+
+	unpack_setting_t* setting = new unpack_setting_t();
+	setting->mode = unpack_mode_e::UNPACK_BY_LENGTH_FIELD;
+	setting->length_field_coding = unpack_coding_e::ENCODE_BY_BIG_ENDIAN;
+	setting->body_offset = MessagePacket::PackLenth;
+	setting->length_field_bytes = 1;
+	setting->length_field_offset = 0;
+	setUnpack(setting);
+	
 }
 
 void DNClientProxy::Start()
@@ -154,9 +174,9 @@ void DNClientProxy::MessageTimeoutTimer(uint64_t timerID)
 	}
 }
 
-uint32_t DNClientProxy::CheckMessageTimeoutTimer(uint32_t breakTime, uint32_t msgId)
+uint64_t DNClientProxy::CheckMessageTimeoutTimer(uint32_t breakTime, uint32_t msgId)
 {
-	uint32_t timerId = Timer()->setTimeout(breakTime, std::bind(&DNClientProxy::MessageTimeoutTimer, this, placeholders::_1));
+	uint64_t timerId = Timer()->setTimeout(breakTime, std::bind(&DNClientProxy::MessageTimeoutTimer, this, placeholders::_1));
 	mMapTimer[timerId] = msgId;
 	return timerId;
 }

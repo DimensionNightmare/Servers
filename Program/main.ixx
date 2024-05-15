@@ -145,8 +145,7 @@ export int main(int argc, char **argv)
 		}
 
 		PInstance->SetDllNotNormalFree();
-		delete PInstance;
-		PInstance = nullptr;
+		PInstance->ServerIsRun() = false;
 
 		return EXCEPTION_CONTINUE_SEARCH; 
 	};

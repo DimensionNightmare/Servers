@@ -38,7 +38,7 @@ int HandleGlobalServerInit(DNServer *server)
 			{
 				DNPrint(TipCode_CliConnOn, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
 				// if not regist
-				serverSock->CheckChannelByTimer(channel);
+				serverSock->DNServerProxy::CheckChannelByTimer(channel);
 				// if not recive data
 				channel->setReadTimeout(15000);
 			}
@@ -109,6 +109,8 @@ int HandleGlobalServerInit(DNServer *server)
 				channel->setHeartbeat(4000, std::bind(&DNClientProxy::TickHeartbeat, clientSock));
 				clientSock->SetRegistEvent(&GlobalMessage::Evt_ReqRegistSrv);
 				clientSock->StartRegist();
+
+				channel->setWriteTimeout(12000);
 			}
 			else
 			{

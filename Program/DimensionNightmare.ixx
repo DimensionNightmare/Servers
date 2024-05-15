@@ -470,7 +470,7 @@ void DimensionNightmare::InitCmdHandle()
 	auto reload = [&, pause, resume](stringstream *ss = nullptr)
 	{
 		pause();
-		// Sleep(500);
+		Sleep(200);
 		OnUnregHotReload();
 		pHotDll->ReloadHandle(pServer->GetServerType());
 		OnRegHotReload();

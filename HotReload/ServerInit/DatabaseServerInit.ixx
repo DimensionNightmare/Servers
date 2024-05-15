@@ -42,6 +42,8 @@ int HandleDatabaseServerInit(DNServer *server)
 				channel->setHeartbeat(4000, std::bind(&DNClientProxy::TickHeartbeat, clientSock));
 				clientSock->SetRegistEvent(&DatabaseMessage::Evt_ReqRegistSrv);	
 				clientSock->StartRegist();
+
+				channel->setWriteTimeout(12000);
 			}
 			else
 			{

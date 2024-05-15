@@ -69,7 +69,7 @@ bool DNClientProxyHelper::AddMsg(uint32_t msgId, DNTask<Message> *task, uint32_t
 	// timeout
 	if(breakTime > 0)
 	{
-		task->TimerId() = CheckMessageTimeoutTimer(breakTime, msgId);
+		task->TimerId() = DNClientProxy::CheckMessageTimeoutTimer(breakTime, msgId);
 	}
 	return true;
 }
