@@ -10,7 +10,7 @@ import I10nText;
 
 using namespace std;
 
-export enum class LoggerLevel
+export enum class LoggerLevel : uint8_t
 {
 	Debug,
 	Normal,

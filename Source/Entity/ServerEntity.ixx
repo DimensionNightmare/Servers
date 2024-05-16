@@ -11,10 +11,15 @@ export import DNServer;
 
 using namespace std;
 
-export enum class ServerEntityFlag : int
+export enum class ServerEntityFlag : uint16_t
 {
 	Locked = 0,
+	Max,
 };
+
+constexpr size_t ServerEntityFlagSize() {
+    return static_cast<size_t>(ServerEntityFlag::Max);
+}
 
 export class ServerEntity : public NetEntity
 {
@@ -43,7 +48,7 @@ protected: // dll proxy
 	// be regist node need
 	map<ServerType, list< ServerEntity*>> mMapLink;
 
-	bitset<1> oFlags;
+	bitset<ServerEntityFlagSize()> oFlags;
 };
 
 ServerEntity::ServerEntity()

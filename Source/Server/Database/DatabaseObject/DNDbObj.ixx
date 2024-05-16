@@ -37,7 +37,7 @@ using namespace google::protobuf;
 #define SUPDATE "UPDATE"
 #define SUPDATECOND "UPDATECOND"
 
-enum class SqlOpType : char
+enum class SqlOpType : uint8_t
 {
 	None,
 	CreateTable,

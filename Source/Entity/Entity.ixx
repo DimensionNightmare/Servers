@@ -4,7 +4,7 @@ module;
 #include "hv/Channel.h"
 export module Entity;
 
-export enum class EntityType
+export enum class EntityType : uint8_t
 {
 	None,
 	// NetEntity, virtual

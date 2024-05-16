@@ -5,10 +5,17 @@ export module DNTask;
 
 using namespace std;
 
-export enum class DNTaskFlag : int
+export enum class DNTaskFlag : uint16_t
 {
 	Timeout = 0,
+	PaserError,
+	Combine,
+	Max,
 };
+
+constexpr size_t DNTaskFlagSize() {
+    return static_cast<size_t>(DNTaskFlag::Max);
+}
 
 export template <typename T>
 struct DNTask
@@ -103,7 +110,7 @@ public:
 private:
 	HandleType tHandle;
 	coroutine_handle<> pCallPause;
-	bitset<1> oFlags;
+	bitset<DNTaskFlagSize()> oFlags;
 	size_t iTimerId;
 };
 

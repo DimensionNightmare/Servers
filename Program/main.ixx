@@ -35,7 +35,7 @@ using namespace std;
 	#define Sleep(ms) usleep(ms*1000)
 #endif
 
-enum class LunchType
+enum class LunchType : uint8_t
 {
 	GLOBAL,
 	PULL,

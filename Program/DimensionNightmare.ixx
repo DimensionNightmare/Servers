@@ -134,8 +134,15 @@ struct HotReloadDll
 		}
 #ifdef _WIN32
 		sDllDirRand = format("{}_{}_{}", SDllDir, EnumName(type), hv_rand(10000, 99999));
-		filesystem::create_directories(sDllDirRand.c_str());
-		filesystem::copy(SDllDir, sDllDirRand.c_str(), filesystem::copy_options::recursive);
+		try
+		{
+			filesystem::create_directories(sDllDirRand.c_str());
+			filesystem::copy(SDllDir, sDllDirRand.c_str(), filesystem::copy_options::recursive);
+		}
+		catch(const exception& e)
+		{
+			DNPrint(0, LoggerLevel::Debug, "%s", e.what());
+		}
 #endif
 		return LoadHandle();
 	};

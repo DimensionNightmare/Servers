@@ -91,7 +91,8 @@
 		"xmemory": "cpp",
 		"xtr1common": "cpp",
 		"xtree": "cpp",
-		"xutility": "cpp"
+		"xutility": "cpp",
+		"stack": "cpp"
 	},
     "cmake.configureOnOpen": false,
     "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools"

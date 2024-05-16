@@ -56,6 +56,10 @@ namespace GlobalMessage
 			ServerEntityHelper* entity = tempList.front();
 			entity->GetConnNum()++;
 
+			response.set_ip( entity->ServerIp());
+			response.set_port( entity->ServerPort());
+
+
 			DNServerProxyHelper* server = GetGlobalServer()->GetSSock();
 			uint32_t smsgId = server->GetMsgId();
 			
@@ -72,6 +76,7 @@ namespace GlobalMessage
 			};
 
 			auto dataChannel = taskGen();
+			dataChannel.SetFlag(DNTaskFlag::Combine);
 
 			{
 				server->AddMsg(smsgId, &dataChannel, 8000);
@@ -81,11 +86,6 @@ namespace GlobalMessage
 				{
 					DNPrint(0, LoggerLevel::Debug, "requst timeout! ");
 					response.set_state_code(5);
-				}
-				else
-				{
-					response.set_ip( entity->ServerIp());
-					response.set_port( entity->ServerPort());
 				}
 			}
 

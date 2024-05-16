@@ -18,7 +18,7 @@ using namespace google::protobuf;
 using namespace hv;
 using namespace GMsg;
 
-export enum class RegistState
+export enum class RegistState : uint8_t
 {
 	None,
 	Registing,

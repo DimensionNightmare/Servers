@@ -10,7 +10,7 @@ import Config.Server;
 using namespace std;
 using namespace l10n;
 
-enum class LangType
+enum class LangType : uint8_t
 {
 	zh_CN,
 	en_US,

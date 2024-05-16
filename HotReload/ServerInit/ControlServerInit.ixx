@@ -77,8 +77,33 @@ int HandleControlServerInit(DNServer *server)
 				{
 					serverSock->DelMsg(packet.msgId);
 					task->Resume();
-					Message* message = task->GetResult();
-					message->ParseFromArray(buf->base + MessagePacket::PackLenth, packet.pkgLenth);
+
+					if(Message* message = task->GetResult())
+					{
+						bool parserError = false;
+						//Support Combine
+						if(task->HasFlag(DNTaskFlag::Combine))
+						{
+							Message* merge = message->New();
+							if(merge->ParseFromArray(buf->base + MessagePacket::PackLenth, packet.pkgLenth))
+							{
+								message->MergeFrom(*merge);
+							}
+						
+							delete merge;
+						}
+						else
+						{
+							parserError = !message->ParseFromArray(buf->base + MessagePacket::PackLenth, packet.pkgLenth);
+						}
+
+						if(parserError)
+						{
+							task->SetFlag(DNTaskFlag::PaserError);
+						}
+						
+					}
+					
 					task->CallResume();
 				}
 				else

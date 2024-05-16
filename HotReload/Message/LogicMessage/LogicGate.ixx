@@ -25,6 +25,7 @@ namespace LogicMessage
 	export DNTaskVoid Msg_ReqClientLogin(const SocketChannelPtr &channel, uint32_t msgId, Message *msg)
 	{
 		G2L_ReqClientLogin* requset = reinterpret_cast<G2L_ReqClientLogin*>(msg);
+		L2G_ResClientLogin response;
 
 		LogicServerHelper* dnServer = GetLogicServer();
 		ClientEntityManagerHelper* entityMan = dnServer->GetClientEntityManager();
@@ -40,7 +41,6 @@ namespace LogicMessage
 			DNPrint(0, LoggerLevel::Debug, "AddEntity Exist Client!");
 			entity =  entityMan->GetEntity(requset->account_id());
 		}
-
 
 		ServerEntityManagerHelper* serverEntityMan = dnServer->GetServerEntityManager();
 		ServerEntityHelper* serverEntity = nullptr;
@@ -65,8 +65,6 @@ namespace LogicMessage
 				serverEntity = static_cast<ServerEntityHelper*>(serverEntityList.front());
 			}
 		}
-
-		L2G_ResClientLogin response;
 
 		string binData;
 
