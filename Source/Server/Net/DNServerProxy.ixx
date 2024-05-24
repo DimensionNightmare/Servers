@@ -34,7 +34,7 @@ public: // dll override
 	const EventLoopPtr& Timer(){return pLoop->loop();}
 	void AddTimerRecord(size_t timerId, uint32_t id);
 
-	void CheckChannelByTimer(const SocketChannelPtr & channel);
+	void CheckChannelByTimer(SocketChannelPtr channel);
 	uint64_t CheckMessageTimeoutTimer(uint32_t breakTime, uint32_t msgId);
 
 public:
@@ -152,7 +152,7 @@ void DNServerProxy::AddTimerRecord(size_t timerId, uint32_t id)
 	mMapTimer.emplace(timerId, id);
 }
 
-void DNServerProxy::CheckChannelByTimer(const SocketChannelPtr &channel)
+void DNServerProxy::CheckChannelByTimer(SocketChannelPtr channel)
 {
 	size_t timerId = Timer()->setTimeout(5000, std::bind(&DNServerProxy::ChannelTimeoutTimer, this, placeholders::_1));
 	AddTimerRecord(timerId, channel->id());

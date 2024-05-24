@@ -26,7 +26,7 @@ using namespace GMsg;
 namespace GlobalMessage
 {
 
-	export DNTaskVoid Msg_ReqAuthAccount(const SocketChannelPtr &channel, uint32_t msgId, Message *msg)
+	export DNTaskVoid Msg_ReqAuthAccount(SocketChannelPtr channel, uint32_t msgId, Message *msg)
 	{
 		G2C_ResAuthAccount response;
 

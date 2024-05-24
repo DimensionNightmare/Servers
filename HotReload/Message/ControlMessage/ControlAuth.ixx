@@ -20,7 +20,7 @@ using namespace GMsg;
 
 namespace ControlMessage
 {
-	export DNTaskVoid Msg_ReqAuthAccount(const SocketChannelPtr &channel, uint32_t msgId, Message *msg)
+	export DNTaskVoid Msg_ReqAuthAccount(SocketChannelPtr channel, uint32_t msgId, Message *msg)
 	{
 		C2A_ResAuthAccount response;
 

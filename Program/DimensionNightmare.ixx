@@ -189,7 +189,7 @@ public:
 
 	bool OnUnregHotReload();
 
-	void SetDllNotNormalFree(){ pHotDll->isNormalFree = false; }
+	HotReloadDll* Dll(){ return pHotDll; }
 
 	bool& ServerIsRun(){return pServer->IsRun();}
 

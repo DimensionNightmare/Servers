@@ -20,8 +20,8 @@ using namespace google::protobuf;
 export class AuthMessageHandle
 {
 public:
-	static void MsgHandle(const SocketChannelPtr &channel, uint32_t msgId, size_t msgHashId, const string& msgData);
-	static void MsgRetHandle(const SocketChannelPtr &channel, uint32_t msgId, size_t msgHashId, const string& msgData);
+	static void MsgHandle(SocketChannelPtr channel, uint32_t msgId, size_t msgHashId, const string& msgData);
+	static void MsgRetHandle(SocketChannelPtr channel, uint32_t msgId, size_t msgHashId, const string& msgData);
 	static void RegMsgHandle();
 
 	static void RegApiHandle(HttpService* service);
@@ -30,7 +30,7 @@ public:
 		size_t, 
 		pair<
 			const Message*, 
-			function<void(const SocketChannelPtr &, uint32_t, Message *)> 
+			function<void(SocketChannelPtr, uint32_t, Message *)> 
 		> 
 	> MHandleMap;
 
@@ -38,14 +38,14 @@ public:
 		size_t, 
 		pair<
 			const Message*, 
-			function<void(const SocketChannelPtr &, uint32_t, Message *)> 
+			function<void(SocketChannelPtr, uint32_t, Message *)> 
 		> 
 	> MHandleRetMap;
 };
 
 
 
-void AuthMessageHandle::MsgHandle(const SocketChannelPtr &channel, uint32_t msgId, size_t msgHashId, const string& msgData)
+void AuthMessageHandle::MsgHandle(SocketChannelPtr channel, uint32_t msgId, size_t msgHashId, const string& msgData)
 {
 	if (MHandleMap.contains(msgHashId))
 	{
@@ -68,7 +68,7 @@ void AuthMessageHandle::MsgHandle(const SocketChannelPtr &channel, uint32_t msgI
 	}
 }
 
-void AuthMessageHandle::MsgRetHandle(const SocketChannelPtr &channel, uint32_t msgId, size_t msgHashId, const string &msgData)
+void AuthMessageHandle::MsgRetHandle(SocketChannelPtr channel, uint32_t msgId, size_t msgHashId, const string &msgData)
 {
 	if (MHandleRetMap.contains(msgHashId))
 	{

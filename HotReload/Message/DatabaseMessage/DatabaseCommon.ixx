@@ -87,7 +87,7 @@ namespace DatabaseMessage
 		co_return;
 	}
 
-	export void Exe_RetChangeCtlSrv(const SocketChannelPtr &channel, uint32_t msgId, Message *msg)
+	export void Exe_RetChangeCtlSrv(SocketChannelPtr channel, uint32_t msgId, Message *msg)
 	{
 		COM_RetChangeCtlSrv* requset = reinterpret_cast<COM_RetChangeCtlSrv*>(msg);
 		DatabaseServerHelper* dnServer = GetDatabaseServer();

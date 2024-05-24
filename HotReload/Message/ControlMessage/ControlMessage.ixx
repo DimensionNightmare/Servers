@@ -21,15 +21,15 @@ using namespace GMsg;
 export class ControlMessageHandle
 {
 public:
-	static void MsgHandle(const SocketChannelPtr &channel, uint32_t msgId, size_t msgHashId, const string& msgData);
-	static void MsgRetHandle(const SocketChannelPtr &channel, uint32_t msgId, size_t msgHashId, const string& msgData);
+	static void MsgHandle(SocketChannelPtr channel, uint32_t msgId, size_t msgHashId, const string& msgData);
+	static void MsgRetHandle(SocketChannelPtr channel, uint32_t msgId, size_t msgHashId, const string& msgData);
 	static void RegMsgHandle();
 public:
 	inline static map<
 		size_t, 
 		pair<
 			const Message*, 
-			function<void(const SocketChannelPtr &, uint32_t, Message *)> 
+			function<void(SocketChannelPtr, uint32_t, Message *)> 
 		> 
 	> MHandleMap;
 
@@ -37,14 +37,14 @@ public:
 		size_t, 
 		pair<
 			const Message*, 
-			function<void(const SocketChannelPtr &, uint32_t, Message *)> 
+			function<void(SocketChannelPtr, uint32_t, Message *)> 
 		> 
 	> MHandleRetMap;
 };
 
 
 
-void ControlMessageHandle::MsgHandle(const SocketChannelPtr &channel, uint32_t msgId, size_t msgHashId, const string& msgData)
+void ControlMessageHandle::MsgHandle(SocketChannelPtr channel, uint32_t msgId, size_t msgHashId, const string& msgData)
 {
 	if (MHandleMap.contains(msgHashId))
 	{
@@ -67,7 +67,7 @@ void ControlMessageHandle::MsgHandle(const SocketChannelPtr &channel, uint32_t m
 	}
 }
 
-void ControlMessageHandle::MsgRetHandle(const SocketChannelPtr &channel, uint32_t msgId, size_t msgHashId, const string &msgData)
+void ControlMessageHandle::MsgRetHandle(SocketChannelPtr channel, uint32_t msgId, size_t msgHashId, const string &msgData)
 {
 	if (MHandleRetMap.contains(msgHashId))
 	{

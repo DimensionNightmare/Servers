@@ -115,7 +115,7 @@ namespace GateMessage
 	}
 
 	// client request
-	export void Msg_ReqRegistSrv(const SocketChannelPtr &channel, uint32_t msgId, Message *msg)
+	export void Msg_ReqRegistSrv(SocketChannelPtr channel, uint32_t msgId, Message *msg)
 	{
 		COM_ReqRegistSrv* requset = reinterpret_cast<COM_ReqRegistSrv*>(msg);
 		COM_ResRegistSrv response;
@@ -178,7 +178,7 @@ namespace GateMessage
 		}
 	}
 
-	export void Exe_RetHeartbeat(const SocketChannelPtr &channel, uint32_t msgId, Message *msg)
+	export void Exe_RetHeartbeat(SocketChannelPtr channel, uint32_t msgId, Message *msg)
 	{
 		COM_RetHeartbeat* requset = reinterpret_cast<COM_RetHeartbeat*>(msg);
 	}

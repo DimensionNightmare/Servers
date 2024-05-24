@@ -23,7 +23,7 @@ using namespace GMsg;
 namespace GateMessage
 {
 
-	export void Exe_ReqUserToken(const SocketChannelPtr &channel, uint32_t msgId, Message *msg)
+	export void Exe_ReqUserToken(SocketChannelPtr channel, uint32_t msgId, Message *msg)
 	{
 		G2g_ReqLoginToken* requset = reinterpret_cast<G2g_ReqLoginToken*>(msg);
 		g2G_ResLoginToken response;

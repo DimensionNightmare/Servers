@@ -18,7 +18,7 @@ using namespace GMsg;
 namespace GlobalMessage
 {
 
-	export void Exe_RetRegistSrv(const SocketChannelPtr &channel, uint32_t msgId, Message *msg)
+	export void Exe_RetRegistSrv(SocketChannelPtr channel, uint32_t msgId, Message *msg)
 	{
 		g2G_RetRegistSrv* requset = reinterpret_cast<g2G_RetRegistSrv*>(msg);
 

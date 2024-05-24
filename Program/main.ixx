@@ -22,6 +22,7 @@ module;
 #include <string>
 #include <iostream>
 #include <future>
+#include <format>
 #include "hv/hlog.h"
 
 #include "StdAfx.h"
@@ -114,8 +115,21 @@ export int main(int argc, char **argv)
 	{
 		DNPrint(TipCode_UnhandledException, LoggerLevel::Normal, nullptr);
 		
-		HANDLE hDumpFile = CreateFileW(
-			L"MiniDump.dmp",
+		string fileName = PInstance->Dll()->sDllDirRand;
+
+		if(fileName.empty())
+		{
+			fileName = "MiniDump.dmp";
+		}
+		else
+		{
+			fileName = format("{}/MiniDump.dmp", fileName);
+		}
+
+		cout << fileName <<endl;
+
+		HANDLE hDumpFile = CreateFile(
+			fileName.c_str(),
 			GENERIC_WRITE,
 			0,
 			nullptr,
@@ -143,8 +157,8 @@ export int main(int argc, char **argv)
 
 			CloseHandle(hDumpFile);
 		}
-
-		PInstance->SetDllNotNormalFree();
+	
+		PInstance->Dll()->isNormalFree = false;
 		PInstance->ServerIsRun() = false;
 
 		return EXCEPTION_CONTINUE_SEARCH; 
@@ -204,10 +218,6 @@ export int main(int argc, char **argv)
 
 			if (!str.empty())
 			{
-			// 	cout << "<cmd null>\n";
-			// }
-			// else
-			// {
 				ss.clear();
 				ss.str(str);
 				str.clear();

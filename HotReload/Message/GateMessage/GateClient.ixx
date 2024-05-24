@@ -23,7 +23,7 @@ namespace GateMessage
 {
 
 	// client request
-	export DNTaskVoid Msg_ReqAuthToken(const SocketChannelPtr &channel, uint32_t msgId, Message *msg)
+	export DNTaskVoid Msg_ReqAuthToken(SocketChannelPtr channel, uint32_t msgId, Message *msg)
 	{
 		C2S_ReqAuthToken* requset = reinterpret_cast<C2S_ReqAuthToken*>(msg);
 

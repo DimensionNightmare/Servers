@@ -22,7 +22,7 @@ namespace LogicMessage
 {
 
 	// client request
-	export DNTaskVoid Msg_ReqClientLogin(const SocketChannelPtr &channel, uint32_t msgId, Message *msg)
+	export DNTaskVoid Msg_ReqClientLogin(SocketChannelPtr channel, uint32_t msgId, Message *msg)
 	{
 		G2L_ReqClientLogin* requset = reinterpret_cast<G2L_ReqClientLogin*>(msg);
 		L2G_ResClientLogin response;
@@ -121,7 +121,7 @@ namespace LogicMessage
 		co_return;
 	}
 
-	export void Exe_RetAccountReplace(const SocketChannelPtr &channel, uint32_t msgId, Message *msg)
+	export void Exe_RetAccountReplace(SocketChannelPtr channel, uint32_t msgId, Message *msg)
 	{
 		G2L_RetAccountReplace* requset = reinterpret_cast<G2L_RetAccountReplace*>(msg);
 
