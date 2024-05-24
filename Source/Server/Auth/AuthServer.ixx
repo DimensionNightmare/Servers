@@ -94,6 +94,7 @@ bool AuthServer::Init()
 	}
 
 	pSSock = new DNWebProxy();
+	pSSock->setHost("0.0.0.0");
 	pSSock->setPort(port);
 	pSSock->setThreadNum(4);
 

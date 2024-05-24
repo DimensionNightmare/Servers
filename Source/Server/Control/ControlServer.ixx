@@ -67,9 +67,8 @@ ControlServer::~ControlServer()
 
 bool ControlServer::Init()
 {
-	string* ip = GetLuanchConfigParam("ip");
 	string* port = GetLuanchConfigParam("port");
-	if(!ip || !port)
+	if(!port)
 	{
 		DNPrint(ErrCode_SrvNeedIPPort, LoggerLevel::Error, nullptr);
 		return false;
@@ -80,7 +79,7 @@ bool ControlServer::Init()
 	pSSock = new DNServerProxy();
 	pSSock->pLoop = make_shared<EventLoopThread>();
 
-	int listenfd = pSSock->createsocket(stoi(*port));
+	int listenfd = pSSock->createsocket(stoi(*port), "0.0.0.0");
 	if (listenfd < 0)
 	{
 		DNPrint(ErrCode_CreateSocket, LoggerLevel::Error, nullptr);

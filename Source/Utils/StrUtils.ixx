@@ -83,7 +83,6 @@ chrono::hours GetTimezoneOffset()
 
     if (localTime != nullptr)
     {
-        // 获取本地时间的时区偏移
         minutes = localTime->tm_gmtoff / 60;
     }
 #endif

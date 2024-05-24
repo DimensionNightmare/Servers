@@ -42,14 +42,7 @@ namespace GlobalMessage
 
 		COM_ReqRegistSrv requset;
 		requset.set_server_type((int)dnServer->GetServerType());
-		if(server->host == "0.0.0.0")
-		{
-			requset.set_ip("127.0.0.1");
-		}
-		else
-		{
-			requset.set_ip(server->host);
-		}
+
 		requset.set_port(server->port);
 		
 		// pack data
@@ -105,8 +98,10 @@ namespace GlobalMessage
 		ServerEntityManagerHelper*  entityMan = dnServer->GetServerEntityManager();
 
 		ServerType regType = (ServerType)requset->server_type();
+
+		const string& ipPort = channel->localaddr();
 		
-		if(regType < ServerType::GateServer || regType > ServerType::LogicServer)
+		if(regType < ServerType::GateServer || regType > ServerType::LogicServer || ipPort.empty())
 		{
 			response.set_success(false);
 		}
@@ -156,7 +151,8 @@ namespace GlobalMessage
 
 				channel->setContext(entity);
 
-				entity->ServerIp() = requset->ip();
+				size_t pos = ipPort.find(":");
+				entity->ServerIp() = ipPort.substr(0, pos);
 				entity->ServerPort() = requset->port();
 				
 				for (int i = 0; i < requset->childs_size(); i++)
@@ -174,7 +170,8 @@ namespace GlobalMessage
 
 		else if (ServerEntityHelper* entity = entityMan->AddEntity(entityMan->ServerIndex(), regType))
 		{
-			entity->ServerIp() = requset->ip();
+			size_t pos = ipPort.find(":");
+			entity->ServerIp() = ipPort.substr(0, pos);
 			entity->ServerPort() = requset->port();
 			entity->SetSock(channel);
 

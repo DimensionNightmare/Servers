@@ -96,8 +96,9 @@ namespace LogicMessage
 		ServerEntityManagerHelper* entityMan = GetLogicServer()->GetServerEntityManager();
 
 		ServerType regType = (ServerType)requset->server_type();
+		const string& ipPort = channel->localaddr();
 		
-		if(regType != ServerType::DedicatedServer)
+		if(regType != ServerType::DedicatedServer || ipPort.empty())
 		{
 			response.set_success(false);
 		}
@@ -110,7 +111,8 @@ namespace LogicMessage
 
 		else if (ServerEntityHelper* entity = entityMan->AddEntity(requset->server_index(), regType))
 		{
-			entity->ServerIp() = requset->ip();
+			size_t pos = ipPort.find(":");
+			entity->ServerIp() = ipPort.substr(0, pos);
 			entity->ServerPort() = requset->port();
 
 			DNPrint(0, LoggerLevel::Debug, "ds regist:%s:%d", entity->ServerIp().c_str(), entity->ServerPort());

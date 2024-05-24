@@ -44,14 +44,7 @@ namespace GateMessage
 
 		COM_ReqRegistSrv requset;
 		requset.set_server_type((int)dnServer->GetServerType());
-		if(server->host == "0.0.0.0")
-		{
-			requset.set_ip("127.0.0.1");
-		}
-		else
-		{
-			requset.set_ip(server->host);
-		}
+
 		requset.set_port(server->port);
 		requset.set_server_index(dnServer->ServerIndex());
 
@@ -131,8 +124,10 @@ namespace GateMessage
 		ServerEntityManagerHelper* entityMan = dnServer->GetServerEntityManager();
 
 		ServerType regType = (ServerType)requset->server_type();
+
+		const string& ipPort = channel->localaddr();
 		
-		if(regType < ServerType::DatabaseServer || regType > ServerType::LogicServer)
+		if(regType < ServerType::DatabaseServer || regType > ServerType::LogicServer || ipPort.empty())
 		{
 			response.set_success(false);
 		}
@@ -145,7 +140,8 @@ namespace GateMessage
 
 		else if (ServerEntityHelper* entity = entityMan->AddEntity(requset->server_index(), regType))
 		{
-			entity->ServerIp() = requset->ip();
+			size_t pos = ipPort.find(":");
+			entity->ServerIp() = ipPort.substr(0, pos);
 			entity->ServerPort() = requset->port();
 			entity->SetSock(channel);
 			

@@ -48,6 +48,7 @@ int HandleDatabaseServerInit(DNServer *server)
 			else
 			{
 				DNPrint(TipCode_SrvConnOff, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
+				DNPrint(0, LoggerLevel::Debug, "Orgin:%s:%d", serverProxy->GetCtlIp().c_str(), serverProxy->GetCtlPort());
 				if(clientSock->RegistState() == RegistState::Registed)
 				{
 					clientSock->RegistState() = RegistState::None;

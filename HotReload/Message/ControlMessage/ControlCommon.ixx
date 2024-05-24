@@ -26,8 +26,10 @@ namespace ControlMessage
 		ServerEntityManagerHelper*  entityMan = GetControlServer()->GetServerEntityManager();
 
 		ServerType regType = (ServerType)requset->server_type();
+
+		const string& ipPort = channel->localaddr();
 		
-		if(regType < ServerType::GlobalServer || regType > ServerType::AuthServer)
+		if(regType < ServerType::GlobalServer || regType > ServerType::AuthServer || ipPort.empty())
 		{
 			response.set_success(false);
 		}
@@ -40,7 +42,8 @@ namespace ControlMessage
 
 		else if (ServerEntityHelper* entity = entityMan->AddEntity(entityMan->ServerIndex(), regType))
 		{
-			entity->ServerIp() = requset->ip();
+			size_t pos = ipPort.find(":");
+			entity->ServerIp() = ipPort.substr(0, pos);
 			entity->ServerPort() = requset->port();
 			entity->SetSock(channel);
 

@@ -40,14 +40,7 @@ namespace AuthMessage
 
 		COM_ReqRegistSrv requset;
 		requset.set_server_type((int)dnServer->GetServerType());
-		if(!strcmp(server->host, "0.0.0.0"))
-		{
-			requset.set_ip("127.0.0.1");
-		}
-		else
-		{
-			requset.set_ip(server->host);
-		}
+
 		requset.set_port(server->port);
 		
 		// pack data

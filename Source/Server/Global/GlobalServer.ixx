@@ -95,7 +95,7 @@ bool GlobalServer::Init()
 	pSSock = new DNServerProxy();
 	pSSock->pLoop = make_shared<EventLoopThread>();
 
-	int listenfd = pSSock->createsocket(port);
+	int listenfd = pSSock->createsocket(port, "0.0.0.0");
 	if (listenfd < 0)
 	{
 		DNPrint(ErrCode_CreateSocket, LoggerLevel::Error, nullptr);
