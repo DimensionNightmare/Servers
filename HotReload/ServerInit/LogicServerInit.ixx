@@ -145,12 +145,13 @@ int HandleLogicServerInit(DNServer *server)
 				if(clientSock->RegistState() == RegistState::Registed)
 				{
 					clientSock->RegistState() = RegistState::None;
-					// not orgin
-					string origin = format("{}:{}", serverProxy->GetCtlIp(), serverProxy->GetCtlPort());
-					if (peeraddr != origin)
-					{
-						serverProxy->ReClientEvent(serverProxy->GetCtlIp(), serverProxy->GetCtlPort());
-					}
+				}
+
+				// not orgin
+				string origin = format("{}:{}", serverProxy->GetCtlIp(), serverProxy->GetCtlPort());
+				if (peeraddr != origin)
+				{
+					serverProxy->ReClientEvent(serverProxy->GetCtlIp(), serverProxy->GetCtlPort());
 				}
 			}
 

@@ -79,7 +79,7 @@ namespace DatabaseMessage
 		else
 		{
 			DNPrint(0, LoggerLevel::Debug, "regist Server error! msg:%lu ", msgId);
-			dnServer->IsRun() = false; //exit application
+			// dnServer->IsRun() = false; //exit application
 			client->RegistState() = RegistState::None;
 		}
 
