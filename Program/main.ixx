@@ -145,11 +145,21 @@ export int main(int argc, char **argv)
 			info.ExceptionPointers = ExceptionInfo;
 			info.ClientPointers = FALSE;
 
+			MINIDUMP_TYPE dumpType = (MINIDUMP_TYPE)(
+				MiniDumpWithDataSegs |
+				MiniDumpWithFullMemory |
+				MiniDumpWithHandleData |
+				MiniDumpWithThreadInfo |
+				MiniDumpWithUnloadedModules |
+				MiniDumpWithFullMemoryInfo |
+				MiniDumpWithProcessThreadData
+			);
+
 			MiniDumpWriteDump(
 				GetCurrentProcess(),
 				GetCurrentProcessId(),
 				hDumpFile,
-				MiniDumpNormal,
+				dumpType, // MiniDumpNormal
 				&info,
 				nullptr,
 				nullptr

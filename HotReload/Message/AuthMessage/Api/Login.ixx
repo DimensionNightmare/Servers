@@ -108,7 +108,7 @@ export void ApiLogin(HttpService* service)
 		
 		auto taskGen = [accInfo, writer]()-> DNTaskVoid
 		{
-			const HttpResponseWriterPtr& writerProxy = writer;	//sharedptr ref count ++
+			HttpResponseWriterPtr writerProxy = writer;	//sharedptr ref count ++
 			A2C_ReqAuthAccount requset;
 			requset.set_account_id(accInfo.account_id());
 			requset.set_ip(writerProxy->peeraddr());

@@ -178,6 +178,10 @@ bool GlobalServer::Stop()
 
 void GlobalServer::Pause()
 {
+	pSSock->pLoop->loop()->pause();
+	pCSock->pLoop->loop()->pause();
+	pServerEntityMan->Timer()->pause();
+
 	LoopEvent([](EventLoopPtr loop)
 	{ 
 		loop->pause(); 
@@ -190,6 +194,10 @@ void GlobalServer::Resume()
 	{ 
 		loop->resume(); 
 	});
+
+	pSSock->pLoop->loop()->resume();
+	pCSock->pLoop->loop()->resume();
+	pServerEntityMan->Timer()->resume();
 }
 
 void GlobalServer::LoopEvent(function<void(EventLoopPtr)> func)

@@ -84,6 +84,12 @@ LogicServer::~LogicServer()
 	delete pServerEntityMan;
 	pServerEntityMan = nullptr;
 
+	delete pClientEntityMan;
+	pServerEntityMan = nullptr;
+
+	delete pRoomMan;
+	pRoomMan = nullptr;
+
 	if(pCSock)
 	{
 		pCSock->setReconnect(nullptr);
@@ -228,6 +234,12 @@ bool LogicServer::Stop()
 
 void LogicServer::Pause()
 {
+	pSSock->pLoop->loop()->pause();
+	pCSock->pLoop->loop()->pause();
+	pServerEntityMan->Timer()->pause();
+	pClientEntityMan->Timer()->pause();
+	pRoomMan->Timer()->pause();
+
 	LoopEvent([](EventLoopPtr loop)
 	{ 
 		loop->pause(); 
@@ -240,6 +252,13 @@ void LogicServer::Resume()
 	{ 
 		loop->resume(); 
 	});
+
+	pSSock->pLoop->loop()->resume();
+	pCSock->pLoop->loop()->resume();
+
+	pServerEntityMan->Timer()->resume();
+	pClientEntityMan->Timer()->resume();
+	pRoomMan->Timer()->resume();
 }
 
 void LogicServer::LoopEvent(function<void(EventLoopPtr)> func)

@@ -134,6 +134,8 @@ bool DatabaseServer::Stop()
 
 void DatabaseServer::Pause()
 {
+	pCSock->pLoop->loop()->pause();
+
 	LoopEvent([](EventLoopPtr loop)
 	{ 
 		loop->pause();
@@ -146,6 +148,8 @@ void DatabaseServer::Resume()
 	{ 
 		loop->resume(); 
 	});
+
+	pCSock->pLoop->loop()->resume();
 }
 
 void DatabaseServer::LoopEvent(function<void(EventLoopPtr)> func)

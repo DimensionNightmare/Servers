@@ -190,6 +190,10 @@ bool GateServer::Stop()
 
 void GateServer::Pause()
 {
+	pSSock->pLoop->loop()->pause();
+	pCSock->pLoop->loop()->pause();
+	pServerEntityMan->Timer()->pause();
+
 	LoopEvent([](EventLoopPtr loop)
 	{ 
 		loop->pause(); 
@@ -202,6 +206,10 @@ void GateServer::Resume()
 	{ 
 		loop->resume(); 
 	});
+
+	pSSock->pLoop->loop()->resume();
+	pCSock->pLoop->loop()->resume();
+	pServerEntityMan->Timer()->resume();
 }
 
 void GateServer::LoopEvent(function<void(EventLoopPtr)> func)

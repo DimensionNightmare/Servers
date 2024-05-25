@@ -131,6 +131,9 @@ bool ControlServer::Stop()
 
 void ControlServer::Pause()
 {
+	pSSock->pLoop->loop()->pause();
+	pServerEntityMan->Timer()->pause();
+
 	LoopEvent([](EventLoopPtr loop)
 	{ 
 		loop->pause(); 
@@ -143,6 +146,9 @@ void ControlServer::Resume()
 	{ 
 		loop->resume(); 
 	});
+
+	pSSock->pLoop->loop()->resume();
+	pServerEntityMan->Timer()->resume();
 }
 
 void ControlServer::LoopEvent(function<void(EventLoopPtr)> func)
