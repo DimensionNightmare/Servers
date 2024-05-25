@@ -40,7 +40,8 @@ public:
 	
 	uint32_t& ID(){ return iId;}
 
-	void SetSock(SocketChannelPtr channel){ pSock = channel;}
+	void SetSock(const SocketChannelPtr& channel){ pSock = channel;}
+	
 	SocketChannelPtr GetSock(){return pSock;}
 
 	uint64_t& TimerId(){return iCloseTimerId;}

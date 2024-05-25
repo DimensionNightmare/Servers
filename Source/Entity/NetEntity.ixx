@@ -34,4 +34,5 @@ NetEntity::NetEntity()
 
 NetEntity::~NetEntity()
 {
+	pSock = nullptr;
 }
