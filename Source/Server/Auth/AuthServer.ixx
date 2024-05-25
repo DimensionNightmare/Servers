@@ -162,6 +162,8 @@ bool AuthServer::Stop()
 
 void AuthServer::Pause()
 {
+	pCSock->Timer()->pause();
+
 	pSSock->stop();
 
 	LoopEvent([](EventLoopPtr loop)
@@ -178,6 +180,8 @@ void AuthServer::Resume()
 	{ 
 		loop->resume(); 
 	});
+
+	pCSock->Timer()->resume();
 }
 
 void AuthServer::LoopEvent(function<void(EventLoopPtr)> func)

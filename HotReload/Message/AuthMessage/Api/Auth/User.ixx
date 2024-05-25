@@ -9,7 +9,7 @@ module;
 #include "DbAfx.h"
 #include "GDef/GDef.pb.h"
 #include "Server/S_Auth_Control.pb.h"
-export module ApiManager:ApiLogin;
+export module ApiManager:ApiAuth;
 
 import AuthServerHelper;
 import DNTask;
@@ -20,43 +20,13 @@ using namespace hv;
 using namespace google::protobuf;
 using namespace GMsg;
 
-export void ApiLogin(HttpService* service)
+export void ApiAuth(HttpService* service)
 {
-	service->POST("/Auth/LoginToken", [](const HttpRequestPtr& req, const HttpResponseWriterPtr& writer) 
+	service->POST("/Auth/User/LoginToken", [](const HttpRequestPtr& req, const HttpResponseWriterPtr& writer) 
 	{
 		writer->Begin();
 		HttpResponsePtr res = writer->response;
 		hv::Json errData;
-		if(req->ContentType() == CONTENT_TYPE_NONE)
-		{
-			errData["code"] = HTTP_STATUS_BAD_REQUEST;
-			errData["message"] = "Req contentType err!";
-			res->content_type = APPLICATION_JSON;
-			res->SetBody(errData.dump());
-			writer->End();
-			return;
-		}
-
-		res->content_type = req->ContentType();
-		
-		AuthServerHelper* authServer = GetAuthServer();
-		if(!authServer)
-		{
-			errData["code"] = HTTP_STATUS_BAD_REQUEST;
-			errData["message"] = "Server NotInitail!";
-			res->SetBody(errData.dump());
-			writer->End();
-			return;
-		}
-		
-		if(authServer->GetCSock()->RegistState() != RegistState::Registed)
-		{
-			errData["code"] = HTTP_STATUS_BAD_REQUEST;
-			errData["message"] = "Server Disconnect!";
-			res->SetBody(errData.dump());
-			writer->End();
-			return;
-		}
 
 		string authName = req->GetString("authName");
     	string authString = req->GetString("authString");
@@ -76,6 +46,7 @@ export void ApiLogin(HttpService* service)
 
 		try
 		{
+			AuthServerHelper* authServer = GetAuthServer();
 			pqxx::read_transaction query(*authServer->SqlProxy());
 			DNDbObj<GDb::Account> accounts(reinterpret_cast<pqxx::transaction<>*>(&query));
 
@@ -106,12 +77,12 @@ export void ApiLogin(HttpService* service)
 			return;
 		}
 		
-		auto taskGen = [accInfo, writer]()-> DNTaskVoid
+		auto taskGen = [accInfo](HttpResponseWriterPtr writer)-> DNTaskVoid
 		{
-			HttpResponseWriterPtr writerProxy = writer;	//sharedptr ref count ++
+			// HttpResponseWriterPtr writer = writer;	//sharedptr ref count ++
 			A2C_ReqAuthAccount requset;
 			requset.set_account_id(accInfo.account_id());
-			requset.set_ip(writerProxy->peeraddr());
+			requset.set_ip(writer->peeraddr());
 
 			C2A_ResAuthAccount response;
 			
@@ -144,19 +115,6 @@ export void ApiLogin(HttpService* service)
 
 			auto dataChannel = taskGen();
 
-			// regist Close event to release memory
-			if(writerProxy->onclose)
-			{
-				writerProxy->onclose();
-				writerProxy->onclose = nullptr;
-			}
-
-			writerProxy->onclose = [&dataChannel, client, msgId]()
-			{
-				client->DelMsg(msgId);
-				dataChannel.CallResume();
-			};
-
 			Json retData;
 
 			{
@@ -176,38 +134,30 @@ export void ApiLogin(HttpService* service)
 				}
 			}
 
-			writerProxy->onclose = nullptr;
-
-			// response.set_ip_addr("asdasda");
-			// response.set_token("asdas");
-			// response.set_state_code(958);
-			// response.set_expired_timespan(65664);
 			binData.clear();
 			util::MessageToJsonString(response, &binData);
 			retData["data"] = Json::parse(binData);
 			retData["data"]["accountId"] = accInfo.account_id();
-			// {
-			// 	{"timespan"	, 50505005005	},
-			// 	{"token"	, 3.140225005	},
-			// 	{"servPort"	, 90			},
-			// 	{"userId"	, "hello"		},
-			// 	{"servIp"	, "127.0.0.1"	},
-			// 	{"roleList"	, {127,265}	},
-			// 	{"rolemap"	, { {"job", {1,1}},{"sex" ,{1,2}}}},
-			// };
 
-			writerProxy->response->SetBody(retData.dump());
-
-			writerProxy->End();
+			writer->response->SetBody(retData.dump());
+			writer->End();
 
 			dataChannel.Destroy();
 
 			co_return;
 		};
 
-		taskGen();
+		taskGen(writer);
 
 	});
 
+	service->POST("/Auth/User/RegistUser", [](const HttpRequestPtr& req, const HttpResponseWriterPtr& writer) 
+	{
+		string auth = req->GetString("value");
+		cout  << auth << endl;
+		writer->response->SetBody("ads");
+
+		writer->End();
+	});
 
 }
