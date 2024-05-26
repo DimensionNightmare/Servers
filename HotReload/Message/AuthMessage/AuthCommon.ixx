@@ -24,9 +24,9 @@ namespace AuthMessage
 		DNClientProxyHelper* client = dnServer->GetCSock();
 		DNWebProxyHelper* server = dnServer->GetSSock();
 		uint32_t msgId = client->GetMsgId();
-		
+
 		// first Can send Msg?
-		if(client->GetMsg(msgId))
+		if (client->GetMsg(msgId))
 		{
 			DNPrint(0, LoggerLevel::Debug, "+++++ %lu, ", msgId);
 			co_return;
@@ -42,34 +42,34 @@ namespace AuthMessage
 		requset.set_server_type((int)dnServer->GetServerType());
 
 		requset.set_port(server->port);
-		
+
 		// pack data
 		string binData;
 		binData.resize(requset.ByteSizeLong());
 		requset.SerializeToArray(binData.data(), binData.size());
 		MessagePack(msgId, MsgDeal::Req, requset.GetDescriptor()->full_name().c_str(), binData);
-		
+
 		// data alloc
 		COM_ResRegistSrv response;
-		auto taskGen = [&response]()->DNTask<Message>
-		{
-			co_return response;
-		};
-
-		auto dataChannel = taskGen();
 
 		{
+			auto taskGen = [](Message* msg) -> DNTask<Message*>
+				{
+					co_return msg;
+				};
+			auto dataChannel = taskGen(&response);
 			// wait data parse
 			client->AddMsg(msgId, &dataChannel);
 			client->send(binData);
 			co_await dataChannel;
-			if(dataChannel.HasFlag(DNTaskFlag::Timeout))
+			if (dataChannel.HasFlag(DNTaskFlag::Timeout))
 			{
 				DNPrint(0, LoggerLevel::Debug, "requst timeout! ");
 			}
+
 		}
-		
-		if(response.success())
+
+		if (response.success())
 		{
 			DNPrint(0, LoggerLevel::Debug, "regist Server success! ");
 			client->RegistState() = RegistState::Registed;
@@ -81,8 +81,6 @@ namespace AuthMessage
 			// dnServer->IsRun() = false; //exit application
 			client->RegistState() = RegistState::None;
 		}
-
-		dataChannel.Destroy();
 
 		co_return;
 	}

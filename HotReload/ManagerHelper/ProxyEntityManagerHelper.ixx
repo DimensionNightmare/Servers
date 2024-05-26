@@ -16,13 +16,13 @@ using namespace hv;
 export class ProxyEntityManagerHelper : public ProxyEntityManager
 {
 private:
-	ProxyEntityManagerHelper(){}
+	ProxyEntityManagerHelper() = delete;
 public:
-    ProxyEntityHelper* AddEntity(uint32_t entityId);
+	ProxyEntityHelper* AddEntity(uint32_t entityId);
 
-    virtual bool RemoveEntity(uint32_t entityId);
+	virtual bool RemoveEntity(uint32_t entityId);
 
-    ProxyEntityHelper* GetEntity(uint32_t id);
+	ProxyEntityHelper* GetEntity(uint32_t id);
 };
 
 ProxyEntityHelper* ProxyEntityManagerHelper::AddEntity(uint32_t entityId)
@@ -34,7 +34,7 @@ ProxyEntityHelper* ProxyEntityManagerHelper::AddEntity(uint32_t entityId)
 		unique_lock<shared_mutex> ulock(oMapMutex);
 
 		ProxyEntity* oriEntity = &mEntityMap[entityId];
-		
+
 		entity = static_cast<ProxyEntityHelper*>(oriEntity);
 		entity->ID() = entityId;
 	}
@@ -44,15 +44,15 @@ ProxyEntityHelper* ProxyEntityManagerHelper::AddEntity(uint32_t entityId)
 
 bool ProxyEntityManagerHelper::RemoveEntity(uint32_t entityId)
 {
-	if(mEntityMap.contains(entityId))
-	{		
+	if (mEntityMap.contains(entityId))
+	{
 		unique_lock<shared_mutex> ulock(oMapMutex);
-		
+
 		DNPrint(0, LoggerLevel::Debug, "destory Proxy entity");
 		mEntityMap.erase(entityId);
 		return true;
 	}
-	
+
 	return false;
 }
 
@@ -60,7 +60,7 @@ ProxyEntityHelper* ProxyEntityManagerHelper::GetEntity(uint32_t entityId)
 {
 	shared_lock<shared_mutex> lock(oMapMutex);
 	ProxyEntityHelper* entity = nullptr;
-	if(mEntityMap.contains(entityId))
+	if (mEntityMap.contains(entityId))
 	{
 		ProxyEntity* oriEntity = &mEntityMap[entityId];
 		return static_cast<ProxyEntityHelper*>(oriEntity);

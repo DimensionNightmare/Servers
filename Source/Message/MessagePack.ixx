@@ -16,13 +16,13 @@ export enum class MsgDeal : uint8_t
 {
 	Req = 1, 	// msg deal with
 	Res, 		//
-	Ret, 
+	Ret,
 };
 
 #pragma pack(1) // net struct need this
 export struct MessagePacket
 {
-	static int PackLenth; 
+	static int PackLenth;
 	uint32_t pkgLenth;	 //Pin Top !
 
 	MsgDir opType;
@@ -33,36 +33,41 @@ export struct MessagePacket
 
 	MessagePacket()
 	{
-		// memset(this, 0, sizeof *this);
+		pkgLenth = 0;
+		opType = MsgDir::Inner;
+		dealType = MsgDeal::Req;
+		serverId = 0;
+		msgId = 0;
+		msgHashId = 0;
 	}
 };
 #pragma pack()
 
 int MessagePacket::PackLenth = sizeof(MessagePacket);
 
-export bool MessagePack(uint32_t msgId, MsgDeal deal,  const char* pbName, string &data)
+export bool MessagePack(uint32_t msgId, MsgDeal deal, const char* pbName, string& data)
 {
 	MessagePacket packet;
 	packet.msgId = msgId;
 	packet.dealType = deal;
 	packet.pkgLenth = uint32_t(data.size());
 
-	if( pbName == nullptr) [[unlikely]]
-	{	
-		packet.msgHashId = 0;
-	}
+	if (pbName == nullptr) [[unlikely]]
+		{
+			packet.msgHashId = 0;
+		}
 	else [[likely]]
-	{
+		{
 #ifdef _WIN32
-		packet.msgHashId = hash<string>::_Do_hash(pbName);
+			packet.msgHashId = hash<string>::_Do_hash(pbName);
 #elif __unix__
-		packet.msgHashId = hash<string>{}(pbName);
+			packet.msgHashId = hash<string>{}(pbName);
 #endif
-	}
+		}
 
-	data.resize(MessagePacket::PackLenth + packet.pkgLenth);
-	
-	memmove(data.data() + MessagePacket::PackLenth, data.data(), packet.pkgLenth);
-	memcpy(data.data(), &packet, MessagePacket::PackLenth);
-	return true;
+		data.resize(MessagePacket::PackLenth + packet.pkgLenth);
+
+		memmove(data.data() + MessagePacket::PackLenth, data.data(), packet.pkgLenth);
+		memcpy(data.data(), &packet, MessagePacket::PackLenth);
+		return true;
 }

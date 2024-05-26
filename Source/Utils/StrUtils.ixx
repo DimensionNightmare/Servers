@@ -6,7 +6,7 @@ module;
 #include <chrono>
 #include <regex>
 #ifdef _WIN32
-	#include <timezoneapi.h>
+#include <timezoneapi.h>
 #endif
 export module Utils.StrUtils;
 
@@ -20,16 +20,16 @@ constexpr auto EnumName()
 	name = __PRETTY_FUNCTION__;
 	size_t start = name.find('=') + 2;
 	size_t end = name.size() - 1;
-	name = string_view{name.data() + start, end - start};
+	name = string_view{ name.data() + start, end - start };
 	start = name.rfind("::");
 #elif _MSC_VER
 	name = __FUNCSIG__;
 	size_t start = name.find('<') + 1;
 	size_t end = name.rfind(">(");
-	name = string_view{name.data() + start, end - start};
+	name = string_view{ name.data() + start, end - start };
 	start = name.rfind("::");
 #endif
-	return start == string_view::npos ? name : string_view{name.data() + start + 2, name.size() - start - 2};
+	return start == string_view::npos ? name : string_view{ name.data() + start + 2, name.size() - start - 2 };
 }
 
 template <typename T, size_t N = 0>
@@ -71,33 +71,33 @@ chrono::hours GetTimezoneOffset()
 
 #ifdef _WIN32
 	TIME_ZONE_INFORMATION timeZoneInfo;
-    DWORD result = GetTimeZoneInformation(&timeZoneInfo);
+	DWORD result = GetTimeZoneInformation(&timeZoneInfo);
 
-	if (result != TIME_ZONE_ID_INVALID) 
+	if (result != TIME_ZONE_ID_INVALID)
 	{
 		minutes = -timeZoneInfo.Bias;
-    }
+	}
 #elif __unix__
 	time_t now = time(nullptr);
-    struct tm* localTime = localtime(&now);
+	struct tm* localTime = localtime(&now);
 
-    if (localTime != nullptr)
-    {
-        minutes = localTime->tm_gmtoff / 60;
-    }
+	if (localTime != nullptr)
+	{
+		minutes = localTime->tm_gmtoff / 60;
+	}
 #endif
 
-	return chrono::hours(minutes/60);
+	return chrono::hours(minutes / 60);
 }
 
 export string GetNowTimeStr()
 {
 	static chrono::hours offset = GetTimezoneOffset();
-	
+
 	return format("{:%Y-%m-%d %H:%M:%S}", chrono::system_clock::now() + offset);
 }
 
-export double StringToTimestamp(const string &datetimeStr)
+export double StringToTimestamp(const string& datetimeStr)
 {
 
 	regex pattern(R"((\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\.?(\d{6})?(\+|-)(\d{2}))");
@@ -170,7 +170,7 @@ const uint32_t MD5_CONSTANTS[] =
 	0xf7537e82, 0xbd3af235, 0x2ad7d2bb, 0xeb86d391,
 };
 
-string PaddingMessage(const string &message)
+string PaddingMessage(const string& message)
 {
 	uint64_t messageLength = message.length() * 8;
 	uint64_t paddingLength = (messageLength % 512 < 448) ? (448 - messageLength % 512) : (960 - messageLength % 512);
@@ -188,7 +188,7 @@ string PaddingMessage(const string &message)
 	return paddedMessage;
 }
 
-export string Md5Hash(const string &message)
+export string Md5Hash(const string& message)
 {
 	uint32_t a = MD5_INIT_CONSTANTS[0];
 	uint32_t b = MD5_INIT_CONSTANTS[1];
@@ -196,7 +196,7 @@ export string Md5Hash(const string &message)
 	uint32_t d = MD5_INIT_CONSTANTS[3];
 
 	string paddedMessage = PaddingMessage(message);
-	const uint32_t *chunks = reinterpret_cast<const uint32_t *>(paddedMessage.c_str());
+	const uint32_t* chunks = reinterpret_cast<const uint32_t*>(paddedMessage.c_str());
 
 	for (size_t i = 0; i < paddedMessage.length() / 64; ++i)
 	{

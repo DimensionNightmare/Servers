@@ -12,20 +12,20 @@ using namespace hv;
 export class ProxyEntityHelper : public ProxyEntity
 {
 private:
-	ProxyEntityHelper(){}
+	ProxyEntityHelper() = delete;
 public:
-	string& Token(){ return sToken; }
+	string& Token() { return sToken; }
 
-	uint32_t& ExpireTime(){ return iExpireTime; }
+	uint32_t& ExpireTime() { return iExpireTime; }
 
-	uint32_t& ID(){ return iId;}
+	uint32_t& ID() { return iId; }
 
-	void SetSock(const SocketChannelPtr& channel){ pSock = channel;}
+	void SetSock(const SocketChannelPtr& channel) { pSock = channel; }
 
-	SocketChannelPtr GetSock(){return pSock;}
+	SocketChannelPtr GetSock() { return pSock; }
 
-	uint64_t& TimerId(){return iCloseTimerId;}
+	uint64_t& TimerId() { return iCloseTimerId; }
 
-	uint32_t& ServerIndex(){ return iServerIndex; }
+	uint32_t& ServerIndex() { return iServerIndex; }
 };
 

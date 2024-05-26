@@ -23,18 +23,18 @@ using namespace sw::redis;
 export class LogicServerHelper : public LogicServer
 {
 private:
-	LogicServerHelper(){};
+	LogicServerHelper() = delete;;
 public:
 
-	DNClientProxyHelper* GetCSock(){ return nullptr;}
-	DNServerProxyHelper* GetSSock(){ return nullptr;}
-	ServerEntityManagerHelper* GetServerEntityManager(){ return nullptr;}
-	ClientEntityManagerHelper* GetClientEntityManager(){ return nullptr;}
+	DNClientProxyHelper* GetCSock() { return nullptr; }
+	DNServerProxyHelper* GetSSock() { return nullptr; }
+	ServerEntityManagerHelper* GetServerEntityManager() { return nullptr; }
+	ClientEntityManagerHelper* GetClientEntityManager() { return nullptr; }
 
 	bool InitDatabase();
 
-	string& GetCtlIp(){ return sCtlIp;}
-	uint16_t& GetCtlPort(){ return iCtlPort;}
+	string& GetCtlIp() { return sCtlIp; }
+	uint16_t& GetCtlPort() { return iCtlPort; }
 
 	void ReClientEvent(const string& ip, uint16_t port);
 };
@@ -54,14 +54,14 @@ export LogicServerHelper* GetLogicServer()
 
 bool LogicServerHelper::InitDatabase()
 {
-	if(string* value = GetLuanchConfigParam("connection"))
+	if (string* value = GetLuanchConfigParam("connection"))
 	{
 		try
 		{
-			pNoSqlProxy = new Redis(*value);
+			pNoSqlProxy = make_unique<Redis>(*value);
 			pNoSqlProxy->ping();
 		}
-		catch(const exception& e)
+		catch (const exception& e)
 		{
 			DNPrint(0, LoggerLevel::Debug, "%s", e.what());
 			return false;

@@ -16,7 +16,7 @@ using namespace std;
 export class ServerEntityManager : public EntityManager<ServerEntity>
 {
 public:
-    ServerEntityManager();
+	ServerEntityManager();
 
 	virtual ~ServerEntityManager();
 
@@ -29,7 +29,7 @@ public: // dll override
 	virtual bool RemoveEntity(uint32_t entityId);
 
 protected: // dll proxy
-    map<ServerType, list<ServerEntity*> > mEntityMapList;
+	map<ServerType, list<ServerEntity*> > mEntityMapList;
 	// server pull server
 	atomic<uint32_t> iServerId;
 	list<uint32_t> mIdleServerId;
@@ -38,9 +38,6 @@ protected: // dll proxy
 
 ServerEntityManager::ServerEntityManager()
 {
-	mEntityMapList.clear();
-	iServerId = 0;
-	mIdleServerId.clear();
 }
 
 ServerEntityManager::~ServerEntityManager()
@@ -56,17 +53,17 @@ bool ServerEntityManager::Init()
 void ServerEntityManager::EntityCloseTimer(uint64_t timerID)
 {
 	unique_lock<shared_mutex> ulock(oTimerMutex);
-	if(!mMapTimer.contains(timerID))
+	if (!mMapTimer.contains(timerID))
 	{
 		return;
 	}
 
 	uint32_t entityId = mMapTimer[timerID];
-	if(RemoveEntity(entityId))
+	if (RemoveEntity(entityId))
 	{
 		DNPrint(0, LoggerLevel::Debug, "EntityCloseTimer server destory entity");
 	}
-	
+
 }
 
 uint64_t ServerEntityManager::CheckEntityCloseTimer(uint32_t entityId)
@@ -80,18 +77,18 @@ uint64_t ServerEntityManager::CheckEntityCloseTimer(uint32_t entityId)
 
 bool ServerEntityManager::RemoveEntity(uint32_t entityId)
 {
-	if(mEntityMap.contains(entityId))
+	if (mEntityMap.contains(entityId))
 	{
 		ServerEntity* entity = &mEntityMap[entityId];
 		unique_lock<shared_mutex> ulock(oMapMutex);
 
 		mEntityMapList[entity->GetType()].remove(entity);
 
-		if(ServerEntity* owner = entity->LinkNode())
+		if (ServerEntity* owner = entity->LinkNode())
 		{
 			owner->ClearFlag(ServerEntityFlag::Locked);
 		}
-		
+
 		mEntityMap.erase(entityId);
 		return true;
 	}

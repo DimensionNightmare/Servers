@@ -15,7 +15,41 @@ using namespace std;
 using namespace google::protobuf;
 using namespace hv;
 
-export class DNServerProxy : public TcpServerTmpl<SocketChannel>
+class TcpServerTmplTemp : public EventLoopThread, public TcpServerEventLoopTmpl<SocketChannel>
+{
+public:
+    TcpServerTmplTemp(EventLoopPtr loop = NULL)
+        : EventLoopThread(loop)
+        , TcpServerEventLoopTmpl<SocketChannel>(EventLoopThread::loop())
+        , is_loop_owner(loop == NULL)
+    {}
+    virtual ~TcpServerTmplTemp() {
+        stop(true);
+    }
+
+    EventLoopPtr loop(int idx = -1) {
+        return TcpServerEventLoopTmpl<SocketChannel>::loop(idx);
+    }
+
+    // start thread-safe
+    void start(bool wait_threads_started = true) {
+        TcpServerEventLoopTmpl<SocketChannel>::start(wait_threads_started);
+        EventLoopThread::start(wait_threads_started);
+    }
+
+    // stop thread-safe
+    void stop(bool wait_threads_stopped = true) {
+        if (is_loop_owner) {
+            EventLoopThread::stop(wait_threads_stopped);
+        }
+        TcpServerEventLoopTmpl<SocketChannel>::stop(wait_threads_stopped);
+    }
+
+private:
+    bool is_loop_owner;
+};
+
+export class DNServerProxy : public TcpServerTmplTemp
 {
 public:
 	DNServerProxy();
@@ -31,7 +65,7 @@ public: // dll override
 	void MessageTimeoutTimer(uint64_t timerID);
 	void ChannelTimeoutTimer(uint64_t timerID);
 
-	const EventLoopPtr& Timer(){return pLoop->loop();}
+	const EventLoopPtr& Timer() { return pLoop->loop(); }
 	void AddTimerRecord(size_t timerId, uint32_t id);
 
 	void CheckChannelByTimer(SocketChannelPtr channel);
@@ -45,7 +79,7 @@ protected:
 	// only oddnumber
 	atomic<uint32_t> iMsgId;
 	// unordered_
-	map<uint32_t, DNTask<Message>* > mMsgList;
+	map<uint32_t, DNTask<Message*>* > mMsgList;
 	//
 	map<uint64_t, uint32_t > mMapTimer;
 
@@ -57,13 +91,12 @@ protected:
 
 DNServerProxy::DNServerProxy()
 {
-	iMsgId = 0;
-	mMsgList.clear();
-	mMapTimer.clear();
+	pLoop = make_shared<EventLoopThread>();
 }
 
 DNServerProxy::~DNServerProxy()
 {
+	pLoop = nullptr;
 	mMsgList.clear();
 	mMapTimer.clear();
 }
@@ -96,7 +129,7 @@ void DNServerProxy::MessageTimeoutTimer(uint64_t timerID)
 {
 	uint32_t id = -1;
 	{
-		if(!mMapTimer.contains(timerID))
+		if (!mMapTimer.contains(timerID))
 		{
 			return;
 		}
@@ -107,23 +140,23 @@ void DNServerProxy::MessageTimeoutTimer(uint64_t timerID)
 	}
 
 	{
-		if(mMsgList.contains(id))
+		if (mMsgList.contains(id))
 		{
 			unique_lock<shared_mutex> ulock(oMsgMutex);
-			DNTask<Message>* task = mMsgList[id];
+			DNTask<Message*>* task = mMsgList[id];
 			mMsgList.erase(id);
 			task->SetFlag(DNTaskFlag::Timeout);
 			task->CallResume();
 		}
 	}
-		
+
 }
 
 void DNServerProxy::ChannelTimeoutTimer(uint64_t timerID)
 {
 	uint32_t id = -1;
 	{
-		if(!mMapTimer.contains(timerID))
+		if (!mMapTimer.contains(timerID))
 		{
 			return;
 		}
@@ -134,9 +167,9 @@ void DNServerProxy::ChannelTimeoutTimer(uint64_t timerID)
 	}
 
 	{
-		if(TSocketChannelPtr channel = getChannelById(id))
+		if (TSocketChannelPtr channel = getChannelById(id))
 		{
-			if(!channel->context())
+			if (!channel->context())
 			{
 				channel->close();
 				DNPrint(0, LoggerLevel::Debug, "ChannelTimeoutTimer server destory entity\n");

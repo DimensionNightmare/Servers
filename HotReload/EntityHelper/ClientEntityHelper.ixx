@@ -10,10 +10,9 @@ using namespace std;
 export class ClientEntityHelper : public ClientEntity
 {
 private:
-	ClientEntityHelper(){}
+	ClientEntityHelper() = delete;
 public:
-	uint32_t& ID(){ return iId;}
+	uint32_t& ID() { return iId; }
 
-	uint32_t& ServerIndex(){ return iServerIndex;}
+	uint32_t& ServerIndex() { return iServerIndex; }
 };
-

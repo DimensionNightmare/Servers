@@ -6,7 +6,7 @@ import DNWebProxy;
 export class DNWebProxyHelper : public DNWebProxy
 {
 private:
-	DNWebProxyHelper(){};
+	DNWebProxyHelper() = delete;
 
 public:
 };

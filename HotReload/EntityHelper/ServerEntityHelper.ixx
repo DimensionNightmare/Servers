@@ -13,19 +13,19 @@ using namespace hv;
 export class ServerEntityHelper : public ServerEntity
 {
 private:
-	ServerEntityHelper(){}
+	ServerEntityHelper() = delete;
 public:
-	ServerType& ServerEntityType(){ return emServerType;}
+	ServerType& ServerEntityType() { return emServerType; }
 
-	std::string& ServerIp(){ return sServIp;}
+	std::string& ServerIp() { return sServIp; }
 
-	uint16_t& ServerPort(){ return iServPort;}
+	uint16_t& ServerPort() { return iServPort; }
 
-	uint32_t& GetConnNum(){ return IConnNum;}
-	
+	uint32_t& GetConnNum() { return IConnNum; }
+
 	void SetMapLinkNode(ServerType type, ServerEntity* node)
 	{
-		if(type <= ServerType::None || type >= ServerType::Max)
+		if (type <= ServerType::None || type >= ServerType::Max)
 		{
 			return;
 		}
@@ -37,13 +37,13 @@ public:
 	{
 		return mMapLink[type];
 	}
-	
-	uint32_t& ID(){ return iId;}
 
-	void SetSock(const SocketChannelPtr& channel){ pSock = channel;}
-	
-	SocketChannelPtr GetSock(){return pSock;}
+	uint32_t& ID() { return iId; }
 
-	uint64_t& TimerId(){return iCloseTimerId;}
+	void SetSock(const SocketChannelPtr& channel) { pSock = channel; }
+
+	SocketChannelPtr GetSock() { return pSock; }
+
+	uint64_t& TimerId() { return iCloseTimerId; }
 };
 

@@ -27,8 +27,6 @@ protected: // dll proxy
 NetEntity::NetEntity()
 {
 	eEntityType = EntityType::None;
-
-	pSock = nullptr;
 	iCloseTimerId = 0;
 }
 

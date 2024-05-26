@@ -22,7 +22,7 @@ public:
 
 	virtual bool Init() override;
 
-	virtual void InitCmd(map<string, function<void(stringstream*)>> &cmdMap) override;
+	virtual void InitCmd(map<string, function<void(stringstream*)>>& cmdMap) override;
 
 	virtual bool Start() override;
 
@@ -35,13 +35,13 @@ public:
 	virtual void LoopEvent(function<void(EventLoopPtr)> func) override;
 
 public: // dll override
-	virtual DNServerProxy* GetSSock(){return pSSock;}
-	virtual ServerEntityManager* GetServerEntityManager(){return pServerEntityMan;}
+	virtual DNServerProxy* GetSSock() { return pSSock.get(); }
+	virtual ServerEntityManager* GetServerEntityManager() { return pServerEntityMan.get(); }
 
 protected: // dll proxy
-	DNServerProxy* pSSock;
+	unique_ptr<DNServerProxy> pSSock;
 
-	ServerEntityManager* pServerEntityMan;
+	unique_ptr<ServerEntityManager> pServerEntityMan;
 };
 
 
@@ -49,26 +49,18 @@ protected: // dll proxy
 ControlServer::ControlServer()
 {
 	emServerType = ServerType::ControlServer;
-	pSSock = nullptr;
-	pServerEntityMan = nullptr;
 }
 
 ControlServer::~ControlServer()
 {
-	delete pServerEntityMan;
+	pSSock = nullptr;
 	pServerEntityMan = nullptr;
-
-	if(pSSock)
-	{
-		delete pSSock;
-		pSSock = nullptr;
-	}
 }
 
 bool ControlServer::Init()
 {
 	string* port = GetLuanchConfigParam("port");
-	if(!port)
+	if (!port)
 	{
 		DNPrint(ErrCode_SrvNeedIPPort, LoggerLevel::Error, nullptr);
 		return false;
@@ -76,8 +68,7 @@ bool ControlServer::Init()
 
 	DNServer::Init();
 
-	pSSock = new DNServerProxy();
-	pSSock->pLoop = make_shared<EventLoopThread>();
+	pSSock = make_unique<DNServerProxy>();
 
 	int listenfd = pSSock->createsocket(stoi(*port), "0.0.0.0");
 	if (listenfd < 0)
@@ -88,29 +79,22 @@ bool ControlServer::Init()
 
 	DNPrint(TipCode_SrvListenOn, LoggerLevel::Normal, nullptr, pSSock->port, listenfd);
 
-	unpack_setting_t* setting = new unpack_setting_t();
-	setting->mode = unpack_mode_e::UNPACK_BY_LENGTH_FIELD;
-	setting->length_field_coding = unpack_coding_e::ENCODE_BY_BIG_ENDIAN;
-	setting->body_offset = MessagePacket::PackLenth;
-	setting->length_field_bytes = 1;
-	setting->length_field_offset = 0;
-	pSSock->setUnpack(setting);
-	pSSock->setThreadNum(4);
+	pSSock->Init();
 
-	pServerEntityMan = new ServerEntityManager();
+	pServerEntityMan = make_unique<ServerEntityManager>();
 	pServerEntityMan->Init();
 
 	return true;
 }
 
-void ControlServer::InitCmd(map<string, function<void(stringstream *)>> &cmdMap)
+void ControlServer::InitCmd(map<string, function<void(stringstream*)>>& cmdMap)
 {
 	
 }
 
 bool ControlServer::Start()
 {
-	if(!pSSock)
+	if (!pSSock)
 	{
 		DNPrint(ErrCode_SrvNotInit, LoggerLevel::Error, nullptr);
 		return false;
@@ -122,7 +106,7 @@ bool ControlServer::Start()
 
 bool ControlServer::Stop()
 {
-	if(pSSock)
+	if (pSSock)
 	{
 		pSSock->End();
 	}
@@ -153,14 +137,14 @@ void ControlServer::Resume()
 
 void ControlServer::LoopEvent(function<void(EventLoopPtr)> func)
 {
-    map<long,bool> looped;
-    if(pSSock)
+	map<long, bool> looped;
+	if (pSSock)
 	{
 		looped.clear();
-		while(const EventLoopPtr& pLoop = pSSock->loop())
+		while (const EventLoopPtr& pLoop = pSSock->loop())
 		{
 			long id = pLoop->tid();
-			if(!looped.count(id))
+			if (!looped.count(id))
 			{
 				func(pLoop);
 				looped[id];

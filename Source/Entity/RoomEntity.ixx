@@ -7,7 +7,7 @@ export class RoomEntity : public Entity
 {
 public:
 	RoomEntity();
-	virtual ~RoomEntity(){};
+	virtual ~RoomEntity() = default;
 
 public: // dll override
 

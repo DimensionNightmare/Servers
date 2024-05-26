@@ -21,16 +21,16 @@ using namespace hv;
 export class DatabaseServerHelper : public DatabaseServer
 {
 private:
-	DatabaseServerHelper(){};
+	DatabaseServerHelper() = delete;;
 public:
 
-	DNClientProxyHelper* GetCSock(){ return nullptr;}
-	ServerEntityManagerHelper* GetServerEntityManager(){ return nullptr;}
+	DNClientProxyHelper* GetCSock() { return nullptr; }
+	ServerEntityManagerHelper* GetServerEntityManager() { return nullptr; }
 
 	bool InitDatabase();
 
-	string& GetCtlIp(){ return sCtlIp;}
-	uint16_t& GetCtlPort(){ return iCtlPort;}
+	string& GetCtlIp() { return sCtlIp; }
+	uint16_t& GetCtlPort() { return iCtlPort; }
 
 	void ReClientEvent(const string& ip, uint16_t port);
 };
@@ -58,7 +58,7 @@ bool DatabaseServerHelper::InitDatabase()
 		pqxx::work txn(conn);
 		txn.commit();
 	}
-	catch(const exception& e)
+	catch (const exception& e)
 	{
 		DNPrint(0, LoggerLevel::Debug, "%s", e.what());
 		return false;

@@ -12,10 +12,10 @@ using namespace std;
 export class ControlServerHelper : public ControlServer
 {
 private:
-	ControlServerHelper(){}
+	ControlServerHelper() = delete;
 public:
-	DNServerProxyHelper* GetSSock(){ return nullptr;}
-	ServerEntityManagerHelper* GetServerEntityManager(){ return nullptr;}
+	DNServerProxyHelper* GetSSock() { return nullptr; }
+	ServerEntityManagerHelper* GetServerEntityManager() { return nullptr; }
 };
 
 static ControlServerHelper* PControlServerHelper = nullptr;

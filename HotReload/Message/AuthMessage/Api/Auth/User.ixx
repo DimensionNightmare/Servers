@@ -20,144 +20,228 @@ using namespace hv;
 using namespace google::protobuf;
 using namespace GMsg;
 
+using namespace std::chrono;
+
+#define MSGSET writer->response->SetBody
+
 export void ApiAuth(HttpService* service)
 {
-	service->POST("/Auth/User/LoginToken", [](const HttpRequestPtr& req, const HttpResponseWriterPtr& writer) 
-	{
-		writer->Begin();
-		HttpResponsePtr res = writer->response;
-		hv::Json errData;
-
-		string authName = req->GetString("authName");
-    	string authString = req->GetString("authString");
-
-		if(authName.empty() || authString.empty())
+	service->POST("/Auth/User/LoginToken", [](const HttpRequestPtr& req, const HttpResponseWriterPtr& writer)
 		{
-			errData["code"] = HTTP_STATUS_BAD_REQUEST;
-			errData["message"] = "param error!";
-			res->SetBody(errData.dump());
-			writer->End();
-			return;
-		}
+			writer->Begin();
+			hv::Json errData;
 
-		GDb::Account accInfo;
-		accInfo.set_auth_name(authName);
-		accInfo.set_auth_string(authString);
+			string authName = req->GetString("authName");
+			string authString = req->GetString("authString");
 
-		try
-		{
-			AuthServerHelper* authServer = GetAuthServer();
-			pqxx::read_transaction query(*authServer->SqlProxy());
-			DNDbObj<GDb::Account> accounts(reinterpret_cast<pqxx::transaction<>*>(&query));
-
-			accounts
-				.SelectAll()
-				DBSelectCond(accInfo, auth_name, "=", "")
-				DBSelectCond(accInfo, auth_string, "=", "AND")
-				.Commit();
-
-			if(accounts.Result().size() != 1) 
+			if (authName.empty() || authName.size() > 32 ||
+				authString.empty() || authString.size() > 64)
 			{
 				errData["code"] = HTTP_STATUS_BAD_REQUEST;
-				errData["message"] = "not Account!";
-				res->SetBody(errData.dump());
+				errData["message"] = "param error!";
+				MSGSET(errData.dump());
 				writer->End();
 				return;
 			}
 
-			accInfo = accounts.Result()[0];
-		}
-		catch(const exception& e)
-		{
-			DNPrint(0, LoggerLevel::Debug, "%s", e.what());
-			errData["code"] = HTTP_STATUS_BAD_REQUEST;
-			errData["message"] = "Server Error!!";
-			res->SetBody(errData.dump());
-			writer->End();
-			return;
-		}
-		
-		auto taskGen = [accInfo](HttpResponseWriterPtr writer)-> DNTaskVoid
-		{
-			// HttpResponseWriterPtr writer = writer;	//sharedptr ref count ++
-			A2C_ReqAuthAccount requset;
-			requset.set_account_id(accInfo.account_id());
-			requset.set_ip(writer->peeraddr());
+			GDb::Account accInfo;
+			accInfo.set_auth_name(authName);
+			accInfo.set_auth_string(authString);
 
-			C2A_ResAuthAccount response;
-			
-			AuthServerHelper* authServer = GetAuthServer();
-			DNClientProxyHelper* client = authServer->GetCSock();
-			uint32_t msgId = client->GetMsgId();
-			
-			// first Can send Msg?
-			if(client->GetMsg(msgId))
+			try
 			{
-				DNPrint(0, LoggerLevel::Debug, "+++++ %lu, ", msgId);
-				co_return;
-			}
-			// else
-			// {
-				DNPrint(0, LoggerLevel::Debug, "----- %lu, ", msgId);
-			// }
-			
-			// pack data
-			string binData;
-			binData.resize(requset.ByteSizeLong());
-			requset.SerializeToArray(binData.data(), binData.size());
-			MessagePack(msgId, MsgDeal::Req, requset.GetDescriptor()->full_name().c_str(), binData);
-			
-			// data alloc
-			auto taskGen = [&response]()->DNTask<Message>
-			{
-				co_return response;
-			};
+				AuthServerHelper* authServer = GetAuthServer();
+				pqxx::read_transaction query(*authServer->SqlProxy());
+				DNDbObj<GDb::Account> accounts(reinterpret_cast<pqxx::transaction<>*>(&query));
 
-			auto dataChannel = taskGen();
+				accounts
+					DBSelect(accInfo, account_id)
+					DBSelectCond(accInfo, auth_name, "=", "")
+					DBSelectCond(accInfo, auth_string, "=", " AND ")
+					.Limit(2)
+					.Commit();
 
-			Json retData;
-
-			{
-				// wait data parse
-				client->AddMsg(msgId, &dataChannel);
-				client->send(binData);
-				co_await dataChannel;
-				if(dataChannel.HasFlag(DNTaskFlag::Timeout))
+				if (accounts.Result().size() != 1)
 				{
-					retData["code"] = HTTP_STATUS_REQUEST_TIMEOUT;
-					
-					response.set_state_code(1);
+					errData["code"] = HTTP_STATUS_BAD_REQUEST;
+					errData["message"] = "not Account!";
+					MSGSET(errData.dump());
+					writer->End();
+					return;
+				}
+
+				accInfo = accounts.Result()[0];
+			}
+			catch (const exception& e)
+			{
+				DNPrint(0, LoggerLevel::Debug, "%s", e.what());
+				errData["code"] = HTTP_STATUS_BAD_REQUEST;
+				errData["message"] = "Server Error!!";
+				MSGSET(errData.dump());
+				writer->End();
+				return;
+			}
+
+			auto taskGen = [](GDb::Account accInfo, HttpResponseWriterPtr writer) -> DNTaskVoid
+				{
+					// HttpResponseWriterPtr writer = writer;	//sharedptr ref count ++
+					A2C_ReqAuthAccount requset;
+					requset.set_account_id(accInfo.account_id());
+					requset.set_ip(writer->peeraddr());
+
+					C2A_ResAuthAccount response;
+
+					AuthServerHelper* authServer = GetAuthServer();
+					DNClientProxyHelper* client = authServer->GetCSock();
+					uint32_t msgId = client->GetMsgId();
+
+					// first Can send Msg?
+					if (client->GetMsg(msgId))
+					{
+						DNPrint(0, LoggerLevel::Debug, "+++++ %lu, ", msgId);
+						co_return;
+					}
+					// else
+					// {
+					DNPrint(0, LoggerLevel::Debug, "----- %lu, ", msgId);
+					// }
+
+					// pack data
+					string binData;
+					binData.resize(requset.ByteSizeLong());
+					requset.SerializeToArray(binData.data(), binData.size());
+					MessagePack(msgId, MsgDeal::Req, requset.GetDescriptor()->full_name().c_str(), binData);
+
+					Json retData;
+
+					{
+						// data alloc
+						auto taskGen = [](Message* msg) -> DNTask<Message*>
+							{
+								co_return msg;
+							};
+						auto dataChannel = taskGen(&response);
+						// wait data parse
+						client->AddMsg(msgId, &dataChannel);
+						client->send(binData);
+						co_await dataChannel;
+						if (dataChannel.HasFlag(DNTaskFlag::Timeout))
+						{
+							retData["code"] = HTTP_STATUS_REQUEST_TIMEOUT;
+
+							response.set_state_code(1);
+						}
+						else
+						{
+							retData["code"] = HTTP_STATUS_OK;
+						}
+
+					}
+
+					binData.clear();
+					util::MessageToJsonString(response, &binData);
+					retData["data"] = Json::parse(binData);
+					retData["data"]["accountId"] = accInfo.account_id();
+
+					MSGSET(retData.dump());
+					writer->End();
+
+					co_return;
+				};
+
+			taskGen(accInfo, writer);
+		});
+
+	service->POST("/Auth/User/RegistUser", [](const HttpRequestPtr& req, const HttpResponseWriterPtr& writer)
+		{
+			hv::Json errData;
+
+			string authName = req->GetString("authName");
+			string authString = req->GetString("authString");
+
+			if (authName.empty() || authName.size() > 32 ||
+				authString.empty() || authString.size() > 64)
+			{
+				errData["code"] = HTTP_STATUS_BAD_REQUEST;
+				errData["message"] = "param error!";
+				MSGSET(errData.dump());
+				writer->End();
+				return;
+			}
+
+			AuthServerHelper* authServer = GetAuthServer();
+
+			GDb::Account accInfo;
+			accInfo.set_auth_name(authName);
+			accInfo.set_auth_string(authString);
+
+			try
+			{
+				pqxx::read_transaction query(*authServer->SqlProxy());
+				DNDbObj<GDb::Account> accounts(reinterpret_cast<pqxx::transaction<>*>(&query));
+
+				accounts
+					.SelectAll(false, true)
+					DBSelectCond(accInfo, auth_name, "=", "")
+					.Commit();
+
+				if (uint32_t count = accounts.ResultCount())
+				{
+					errData["code"] = HTTP_STATUS_BAD_REQUEST;
+					errData["message"] = "already exist authName!!";
+					MSGSET(errData.dump());
+					writer->End();
+					return;
+				}
+			}
+			catch (const exception& e)
+			{
+				DNPrint(0, LoggerLevel::Debug, "%s", e.what());
+				errData["code"] = HTTP_STATUS_BAD_REQUEST;
+				errData["message"] = "Regist Error!!";
+				MSGSET(errData.dump());
+				writer->End();
+				return;
+			}
+
+			double msTime = time_point_cast<microseconds>(system_clock::now()).time_since_epoch().count() / 1000000.0;
+
+			accInfo.set_create_time(msTime);
+			accInfo.set_update_time(msTime);
+			accInfo.set_last_logout_time(msTime);
+
+			try
+			{
+
+				pqxx::work query(*authServer->SqlProxy());
+				DNDbObj<GDb::Account> accounts(reinterpret_cast<pqxx::transaction<>*>(&query));
+
+				accounts.Insert(accInfo).Commit();
+
+				query.commit();
+
+				if (accounts.IsSuccess())
+				{
+					errData["code"] = HTTP_STATUS_OK;
+					errData["message"] = "Regist Success!!";
+					MSGSET(errData.dump());
 				}
 				else
 				{
-					retData["code"] = HTTP_STATUS_OK;
+					errData["code"] = HTTP_STATUS_OK;
+					errData["message"] = "Regist Error!!";
+					MSGSET(errData.dump());
 				}
 			}
+			catch (const exception& e)
+			{
+				DNPrint(0, LoggerLevel::Debug, "%s", e.what());
+				errData["code"] = HTTP_STATUS_BAD_REQUEST;
+				errData["message"] = "Regist Error!!";
+				MSGSET(errData.dump());
+			}
 
-			binData.clear();
-			util::MessageToJsonString(response, &binData);
-			retData["data"] = Json::parse(binData);
-			retData["data"]["accountId"] = accInfo.account_id();
-
-			writer->response->SetBody(retData.dump());
 			writer->End();
-
-			dataChannel.Destroy();
-
-			co_return;
-		};
-
-		taskGen(writer);
-
-	});
-
-	service->POST("/Auth/User/RegistUser", [](const HttpRequestPtr& req, const HttpResponseWriterPtr& writer) 
-	{
-		string auth = req->GetString("value");
-		cout  << auth << endl;
-		writer->response->SetBody("ads");
-
-		writer->End();
-	});
+		});
 
 }

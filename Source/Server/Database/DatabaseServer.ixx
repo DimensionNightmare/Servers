@@ -25,7 +25,7 @@ public:
 
 	virtual bool Init() override;
 
-	virtual void InitCmd(map<string, function<void(stringstream *)>> &cmdMap) override;
+	virtual void InitCmd(map<string, function<void(stringstream*)>>& cmdMap) override;
 
 	virtual bool Start() override;
 
@@ -38,10 +38,10 @@ public:
 	virtual void LoopEvent(function<void(EventLoopPtr)> func) override;
 
 public: // dll override
-	virtual DNClientProxy *GetCSock() { return pCSock; }
+	virtual DNClientProxy* GetCSock() { return pCSock.get(); }
 
 protected: // dll proxy
-	DNClientProxy *pCSock;
+	unique_ptr<DNClientProxy> pCSock;
 
 	// record orgin info
 	string sCtlIp;
@@ -51,22 +51,17 @@ protected: // dll proxy
 DatabaseServer::DatabaseServer()
 {
 	emServerType = ServerType::DatabaseServer;
-	pCSock = nullptr;
+	iCtlPort = 0;
 }
 
 DatabaseServer::~DatabaseServer()
 {
-	if (pCSock)
-	{
-		pCSock->setReconnect(nullptr);
-		delete pCSock;
-		pCSock = nullptr;
-	}
+	pCSock = nullptr;
 }
 
 bool DatabaseServer::Init()
 {
-	string *value = GetLuanchConfigParam("byCtl");
+	string* value = GetLuanchConfigParam("byCtl");
 	if (!value || !stoi(*value))
 	{
 		DNPrint(ErrCode_SrvByCtl, LoggerLevel::Error, nullptr);
@@ -78,12 +73,11 @@ bool DatabaseServer::Init()
 	uint16_t port = 0;
 
 	// connet ControlServer
-	string *ctlPort = GetLuanchConfigParam("ctlPort");
-	string *ctlIp = GetLuanchConfigParam("ctlIp");
+	string* ctlPort = GetLuanchConfigParam("ctlPort");
+	string* ctlIp = GetLuanchConfigParam("ctlIp");
 	if (ctlPort && ctlIp && is_ipaddr(ctlIp->c_str()))
 	{
-		pCSock = new DNClientProxy();
-		pCSock->pLoop = make_shared<EventLoopThread>();
+		pCSock = make_unique<DNClientProxy>();
 
 		pCSock->Init();
 
@@ -97,19 +91,19 @@ bool DatabaseServer::Init()
 	return true;
 }
 
-void DatabaseServer::InitCmd(map<string, function<void(stringstream *)>> &cmdMap)
+void DatabaseServer::InitCmd(map<string, function<void(stringstream*)>>& cmdMap)
 {
 	DNServer::InitCmd(cmdMap);
-	
-	cmdMap.emplace("redirectClient", [this](stringstream* ss)
-	{
-		string ip;
-		uint16_t port;
-		*ss >> ip;
-		*ss >> port;
 
-		pCSock->RedirectClient(port, ip.c_str());
-	});
+	cmdMap.emplace("redirectClient", [this](stringstream* ss)
+		{
+			string ip;
+			uint16_t port;
+			*ss >> ip;
+			*ss >> port;
+
+			pCSock->RedirectClient(port, ip.c_str());
+		});
 }
 
 bool DatabaseServer::Start()
@@ -137,17 +131,17 @@ void DatabaseServer::Pause()
 	pCSock->pLoop->loop()->pause();
 
 	LoopEvent([](EventLoopPtr loop)
-	{ 
-		loop->pause();
-	});
+		{
+			loop->pause();
+		});
 }
 
 void DatabaseServer::Resume()
 {
 	LoopEvent([](EventLoopPtr loop)
-	{ 
-		loop->resume(); 
-	});
+		{
+			loop->resume();
+		});
 
 	pCSock->pLoop->loop()->resume();
 }
@@ -159,10 +153,10 @@ void DatabaseServer::LoopEvent(function<void(EventLoopPtr)> func)
 	if (pCSock)
 	{
 		looped.clear();
-		while(const EventLoopPtr& pLoop = pCSock->loop())
+		while (const EventLoopPtr& pLoop = pCSock->loop())
 		{
 			long id = pLoop->tid();
-			if(!looped.count(id))
+			if (!looped.count(id))
 			{
 				func(pLoop);
 				looped[id];

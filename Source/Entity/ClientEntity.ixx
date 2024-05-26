@@ -27,12 +27,12 @@ ClientEntity::ClientEntity()
 
 ClientEntity::~ClientEntity()
 {
-	
+
 }
 
 void ClientEntity::Load()
 {
-	
+
 }
 
 void ClientEntity::Save()

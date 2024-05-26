@@ -41,27 +41,27 @@ public:
 	virtual void LoopEvent(function<void(EventLoopPtr)> func) override;
 
 public: // dll override
-	virtual DNServerProxy* GetSSock(){return pSSock;}
-	virtual DNClientProxy* GetCSock(){return pCSock;}
+	virtual DNServerProxy* GetSSock(){return pSSock.get();}
+	virtual DNClientProxy* GetCSock(){return pCSock.get();}
 
-	virtual ServerEntityManager* GetServerEntityManager(){return pServerEntityMan;}
-	virtual ClientEntityManager* GetClientEntityManager(){return pClientEntityMan;}
+	virtual ServerEntityManager* GetServerEntityManager(){return pServerEntityMan.get();}
+	virtual ClientEntityManager* GetClientEntityManager(){return pClientEntityMan.get();}
 	
 
 protected: // dll proxy
-	DNServerProxy* pSSock;
-	DNClientProxy* pCSock;
+	unique_ptr<DNServerProxy> pSSock;
+	unique_ptr<DNClientProxy> pCSock;
 
-	ServerEntityManager* pServerEntityMan;
-	ClientEntityManager* pClientEntityMan;
-	RoomEntityManager* pRoomMan;
+	unique_ptr<ServerEntityManager> pServerEntityMan;
+	unique_ptr<ClientEntityManager> pClientEntityMan;
+	unique_ptr<RoomEntityManager> pRoomMan;
 
 	// record orgin info
 	string sCtlIp;
 	uint16_t iCtlPort;
 
 	// localdb
-	Redis* pNoSqlProxy;
+	unique_ptr<Redis> pNoSqlProxy;
 };
 
 
@@ -69,40 +69,16 @@ protected: // dll proxy
 LogicServer::LogicServer()
 {
 	emServerType = ServerType::LogicServer;
-	pSSock = nullptr;
-	pCSock = nullptr;
-
-	pServerEntityMan = nullptr;
-	pClientEntityMan = nullptr;
-	pRoomMan = nullptr;
-
-	pNoSqlProxy = nullptr;
+	iCtlPort = 0;
 }
 
 LogicServer::~LogicServer()
 {
-	delete pServerEntityMan;
+	pSSock = nullptr;
+	pCSock = nullptr;
 	pServerEntityMan = nullptr;
-
-	delete pClientEntityMan;
-	pServerEntityMan = nullptr;
-
-	delete pRoomMan;
+	pClientEntityMan = nullptr;
 	pRoomMan = nullptr;
-
-	if(pCSock)
-	{
-		pCSock->setReconnect(nullptr);
-		delete pCSock;
-		pCSock = nullptr;
-	}
-
-	if(pSSock)
-	{
-		pSSock->setUnpack(nullptr);
-		delete pSSock;
-		pSSock = nullptr;
-	}
 }
 
 bool LogicServer::Init()
@@ -124,8 +100,7 @@ bool LogicServer::Init()
 		port = stoi(*value);
 	}
 	
-	pSSock = new DNServerProxy();
-	pSSock->pLoop = make_shared<EventLoopThread>();
+	pSSock = make_unique<DNServerProxy>();
 
 	int listenfd = pSSock->createsocket(port, "0.0.0.0");
 	if (listenfd < 0)
@@ -158,8 +133,7 @@ bool LogicServer::Init()
 	string* ctlIp = GetLuanchConfigParam("ctlIp");
 	if(ctlPort && ctlIp && is_ipaddr(ctlIp->c_str()))
 	{
-		pCSock = new DNClientProxy();
-		pCSock->pLoop = make_shared<EventLoopThread>();
+		pCSock = make_unique<DNClientProxy>();
 
 		pCSock->Init();
 
@@ -170,11 +144,11 @@ bool LogicServer::Init()
 		iCtlPort = port;
 	}
 	
-	pServerEntityMan = new ServerEntityManager();
+	pServerEntityMan = make_unique<ServerEntityManager>();
 	pServerEntityMan->Init();
-	pClientEntityMan = new ClientEntityManager();
+	pClientEntityMan = make_unique<ClientEntityManager>();
 	pClientEntityMan->Init();
-	pRoomMan = new RoomEntityManager();
+	pRoomMan = make_unique<RoomEntityManager>();
 	pRoomMan->Init();
 
 	return true;

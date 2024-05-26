@@ -24,7 +24,7 @@ public:
 
 	virtual bool Init() override;
 
-	virtual void InitCmd(map<string, function<void(stringstream*)>> &cmdMap) override;
+	virtual void InitCmd(map<string, function<void(stringstream*)>>& cmdMap) override;
 
 	virtual bool Start() override;
 
@@ -36,16 +36,15 @@ public:
 
 	virtual void LoopEvent(function<void(EventLoopPtr)> func) override;
 
-	pqxx::connection* SqlProxy(){return pSqlProxy;}
+	pqxx::connection* SqlProxy() { return pSqlProxy.get(); }
 
 public: // dll override
-	virtual DNWebProxy* GetSSock(){return pSSock;}
-	virtual DNClientProxy* GetCSock(){return pCSock;}
+	virtual DNWebProxy* GetSSock() { return pSSock.get(); }
+	virtual DNClientProxy* GetCSock() { return pCSock.get(); }
 protected: // dll proxy
-	DNWebProxy* pSSock;
-	DNClientProxy* pCSock;
-
-	pqxx::connection* pSqlProxy;
+	unique_ptr<DNWebProxy> pSSock;
+	unique_ptr<DNClientProxy> pCSock;
+	unique_ptr<pqxx::connection> pSqlProxy;
 };
 
 
@@ -53,31 +52,19 @@ protected: // dll proxy
 AuthServer::AuthServer()
 {
 	emServerType = ServerType::AuthServer;
+}
+
+AuthServer::~AuthServer()
+{
 	pSSock = nullptr;
 	pCSock = nullptr;
 	pSqlProxy = nullptr;
 }
 
-AuthServer::~AuthServer()
-{
-	if(pCSock)
-	{
-		pCSock->setReconnect(nullptr);
-		delete pCSock;
-		pCSock = nullptr;
-	}
-
-	if(pSSock)
-	{
-		delete pSSock;
-		pSSock = nullptr;
-	}
-}
-
 bool AuthServer::Init()
 {
 	string* value = GetLuanchConfigParam("byCtl");
-	if(!value || !stoi(*value))
+	if (!value || !stoi(*value))
 	{
 		DNPrint(ErrCode_SrvByCtl, LoggerLevel::Error, nullptr);
 		return false;
@@ -86,14 +73,14 @@ bool AuthServer::Init()
 	DNServer::Init();
 
 	uint16_t port = 0;
-	
+
 	value = GetLuanchConfigParam("port");
-	if(value)
+	if (value)
 	{
 		port = stoi(*value);
 	}
 
-	pSSock = new DNWebProxy();
+	pSSock = make_unique<DNWebProxy>();
 	pSSock->setHost("0.0.0.0");
 	pSSock->setPort(port);
 	pSSock->setThreadNum(4);
@@ -103,10 +90,9 @@ bool AuthServer::Init()
 	//connet ControlServer
 	string* ctlPort = GetLuanchConfigParam("ctlPort");
 	string* ctlIp = GetLuanchConfigParam("ctlIp");
-	if(ctlPort && ctlIp && is_ipaddr(ctlIp->c_str()))
+	if (ctlPort && ctlIp && is_ipaddr(ctlIp->c_str()))
 	{
-		pCSock = new DNClientProxy();
-		pCSock->pLoop = make_shared<EventLoopThread>();
+		pCSock = make_unique<DNClientProxy>();
 
 		pCSock->Init();
 
@@ -117,83 +103,87 @@ bool AuthServer::Init()
 	return true;
 }
 
-void AuthServer::InitCmd(map<string, function<void(stringstream *)>> &cmdMap)
+void AuthServer::InitCmd(map<string, function<void(stringstream*)>>& cmdMap)
 {
-	
+
 }
 
+// s->c
 bool AuthServer::Start()
 {
-	if(!pSSock)
+	if (!pSSock)
 	{
 		DNPrint(ErrCode_SrvNotInit, LoggerLevel::Error, nullptr);
 		return false;
 	}
 	int code = pSSock->Start();
-	if(code < 0)
+	if (code < 0)
 	{
 		DNPrint(0, LoggerLevel::Debug, "start error %d", code);
 		return false;
 	}
 
-	if(pCSock)
+	if (pCSock)
 	{
 		pCSock->Start();
 	}
-	
+
 	return true;
 }
 
+// c->s
 bool AuthServer::Stop()
 {
-	if(pCSock)
+	if (pCSock)
 	{
 		pCSock->End();
 	}
 
 	//webProxy
-	if(pSSock)
+	if (pSSock)
 	{
 		pSSock->End();
 	}
-	
+
 	return true;
 }
 
+// c->s
 void AuthServer::Pause()
 {
 	pCSock->Timer()->pause();
 
-	pSSock->stop();
-
 	LoopEvent([](EventLoopPtr loop)
-	{ 
-		loop->pause(); 
-	});
+		{
+			loop->pause();
+		});
+
+	pSSock->stop();
 }
 
+// s->c
 void AuthServer::Resume()
 {
 	pSSock->start();
 
 	LoopEvent([](EventLoopPtr loop)
-	{ 
-		loop->resume(); 
-	});
+		{
+			loop->resume();
+		});
 
 	pCSock->Timer()->resume();
 }
 
 void AuthServer::LoopEvent(function<void(EventLoopPtr)> func)
 {
-    map<long,bool> looped;
-    if(pCSock)
+	map<long, bool> looped;
+	if (pCSock)
 	{
 		looped.clear();
-		while(const EventLoopPtr& pLoop = pCSock->loop())
+		while (const EventLoopPtr& pLoop = pCSock->loop())
 		{
 			long id = pLoop->tid();
-			if(!looped.count(id))
+			if (!looped.count(id))
 			{
 				func(pLoop);
 				looped[id];

@@ -26,21 +26,8 @@ public:
 
 	static void RegApiHandle(HttpService* service);
 public:
-	inline static map<
-		size_t, 
-		pair<
-			const Message*, 
-			function<void(SocketChannelPtr, uint32_t, Message *)> 
-		> 
-	> MHandleMap;
-
-	inline static map<
-		size_t, 
-		pair<
-			const Message*, 
-			function<void(SocketChannelPtr, uint32_t, Message *)> 
-		> 
-	> MHandleRetMap;
+	inline static map<size_t, pair<const Message*, function<void(SocketChannelPtr, uint32_t, Message*)>>> MHandleMap;
+	inline static map<size_t, pair<const Message*, function<void(SocketChannelPtr, uint32_t, Message*)>>> MHandleRetMap;
 };
 
 
@@ -51,7 +38,7 @@ void AuthMessageHandle::MsgHandle(SocketChannelPtr channel, uint32_t msgId, size
 	{
 		auto& handle = MHandleMap[msgHashId];
 		Message* message = handle.first->New();
-		if(message->ParseFromArray(msgData.data(), msgData.length()))
+		if (message->ParseFromArray(msgData.data(), msgData.length()))
 		{
 			handle.second(channel, msgId, message);
 		}
@@ -59,7 +46,7 @@ void AuthMessageHandle::MsgHandle(SocketChannelPtr channel, uint32_t msgId, size
 		{
 			DNPrint(ErrCode_MsgParse, LoggerLevel::Error, nullptr);
 		}
-		
+
 		delete message;
 	}
 	else
@@ -68,13 +55,13 @@ void AuthMessageHandle::MsgHandle(SocketChannelPtr channel, uint32_t msgId, size
 	}
 }
 
-void AuthMessageHandle::MsgRetHandle(SocketChannelPtr channel, uint32_t msgId, size_t msgHashId, const string &msgData)
+void AuthMessageHandle::MsgRetHandle(SocketChannelPtr channel, uint32_t msgId, size_t msgHashId, const string& msgData)
 {
 	if (MHandleRetMap.contains(msgHashId))
 	{
 		auto& handle = MHandleRetMap[msgHashId];
 		Message* message = handle.first->New();
-		if(message->ParseFromArray(msgData.data(), msgData.length()))
+		if (message->ParseFromArray(msgData.data(), msgData.length()))
 		{
 			handle.second(channel, msgId, message);
 		}
@@ -82,7 +69,7 @@ void AuthMessageHandle::MsgRetHandle(SocketChannelPtr channel, uint32_t msgId, s
 		{
 			DNPrint(ErrCode_MsgParse, LoggerLevel::Error, nullptr);
 		}
-		
+
 		delete message;
 	}
 	else
@@ -99,6 +86,6 @@ void AuthMessageHandle::RegMsgHandle()
 void AuthMessageHandle::RegApiHandle(HttpService* service)
 {
 	service->Static("/", "./");
-	
+
 	ApiInit(service);
 }

@@ -27,9 +27,7 @@ protected: // dll proxy
 ProxyEntity::ProxyEntity()
 {
 	eEntityType = EntityType::Proxy;
-
 	iServerIndex = 0;
-	sToken.clear();
 	iExpireTime = 0;
 }
 

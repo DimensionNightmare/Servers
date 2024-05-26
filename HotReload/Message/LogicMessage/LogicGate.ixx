@@ -22,7 +22,7 @@ namespace LogicMessage
 {
 
 	// client request
-	export DNTaskVoid Msg_ReqClientLogin(SocketChannelPtr channel, uint32_t msgId, Message *msg)
+	export DNTaskVoid Msg_ReqClientLogin(SocketChannelPtr channel, uint32_t msgId, Message* msg)
 	{
 		G2L_ReqClientLogin* requset = reinterpret_cast<G2L_ReqClientLogin*>(msg);
 		L2G_ResClientLogin response;
@@ -39,23 +39,23 @@ namespace LogicMessage
 		else
 		{
 			DNPrint(0, LoggerLevel::Debug, "AddEntity Exist Client!");
-			entity =  entityMan->GetEntity(requset->account_id());
+			entity = entityMan->GetEntity(requset->account_id());
 		}
 
 		ServerEntityManagerHelper* serverEntityMan = dnServer->GetServerEntityManager();
 		ServerEntityHelper* serverEntity = nullptr;
-		
+
 		// cache
-		if(uint32_t serverIdx = entity->ServerIndex())
+		if (uint32_t serverIdx = entity->ServerIndex())
 		{
 			serverEntity = serverEntityMan->GetEntity(serverIdx);
 		}
-		
+
 		//pool
-		if(!serverEntity)
+		if (!serverEntity)
 		{
 			list<ServerEntity*> serverEntityList = serverEntityMan->GetEntityByList(ServerType::DedicatedServer);
-			if(serverEntityList.empty())
+			if (serverEntityList.empty())
 			{
 				response.set_state_code(5);
 				DNPrint(0, LoggerLevel::Debug, "not ds connect");
@@ -69,15 +69,8 @@ namespace LogicMessage
 		string binData;
 
 		// req token
-		if(serverEntity)
+		if (serverEntity)
 		{
-			
-			auto taskGen = [&response]() -> DNTask<Message>
-			{
-				co_return response;
-			};
-
-			auto dataChannel = taskGen();
 
 			DNServerProxyHelper* server = dnServer->GetSSock();
 			uint32_t smsgId = server->GetMsgId();
@@ -86,14 +79,18 @@ namespace LogicMessage
 			binData.resize(msg->ByteSizeLong());
 			msg->SerializeToArray(binData.data(), binData.size());
 			MessagePack(smsgId, MsgDeal::Req, L2D_ReqClientLogin::GetDescriptor()->full_name().c_str(), binData);
-			
-			{
 
+			{
+				auto taskGen = [](Message* msg) -> DNTask<Message*>
+					{
+						co_return msg;
+					};
+				auto dataChannel = taskGen(&response);
 				// wait data parse
 				server->AddMsg(smsgId, &dataChannel, 8000);
 				serverEntity->GetSock()->write(binData);
 				co_await dataChannel;
-				if(dataChannel.HasFlag(DNTaskFlag::Timeout))
+				if (dataChannel.HasFlag(DNTaskFlag::Timeout))
 				{
 					DNPrint(0, LoggerLevel::Debug, "requst timeout! ");
 					response.set_state_code(6);
@@ -121,7 +118,7 @@ namespace LogicMessage
 		co_return;
 	}
 
-	export void Exe_RetAccountReplace(SocketChannelPtr channel, uint32_t msgId, Message *msg)
+	export void Exe_RetAccountReplace(SocketChannelPtr channel, uint32_t msgId, Message* msg)
 	{
 		G2L_RetAccountReplace* requset = reinterpret_cast<G2L_RetAccountReplace*>(msg);
 
@@ -137,9 +134,9 @@ namespace LogicMessage
 
 		ServerEntityManagerHelper* serverEntityMan = dnServer->GetServerEntityManager();
 		ServerEntityHelper* serverEntity = serverEntityMan->GetEntity(entity->ServerIndex());
-		
+
 		// cache
-		if(serverEntity)
+		if (serverEntity)
 		{
 			string binData;
 			binData.resize(msg->ByteSizeLong());

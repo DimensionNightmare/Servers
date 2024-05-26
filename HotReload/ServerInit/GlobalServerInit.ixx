@@ -15,10 +15,10 @@ using namespace hv;
 using namespace std;
 using namespace google::protobuf;
 
-export int HandleGlobalServerInit(DNServer *server);
-export int HandleGlobalServerShutdown(DNServer *server);
+export int HandleGlobalServerInit(DNServer* server);
+export int HandleGlobalServerShutdown(DNServer* server);
 
-int HandleGlobalServerInit(DNServer *server)
+int HandleGlobalServerInit(DNServer* server)
 {
 	SetGlobalServer(static_cast<GlobalServer*>(server));
 
@@ -30,90 +30,90 @@ int HandleGlobalServerInit(DNServer *server)
 	{
 		serverSock->onConnection = nullptr;
 		serverSock->onMessage = nullptr;
-		
-		auto onConnection = [serverProxy,serverSock](const SocketChannelPtr &channel)
-		{
-			const string& peeraddr = channel->peeraddr();
-			if (channel->isConnected())
-			{
-				DNPrint(TipCode_CliConnOn, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
-				// if not regist
-				serverSock->DNServerProxy::CheckChannelByTimer(channel);
-				// if not recive data
-				channel->setReadTimeout(15000);
-			}
-			else
-			{
-				DNPrint(TipCode_CliConnOff, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
 
-				if(ServerEntityHelper* entity = channel->getContext<ServerEntityHelper>())
+		auto onConnection = [serverProxy, serverSock](const SocketChannelPtr& channel)
+			{
+				const string& peeraddr = channel->peeraddr();
+				if (channel->isConnected())
 				{
-					ServerEntityManagerHelper*  entityMan = serverProxy->GetServerEntityManager();
-					entityMan->RemoveEntity(entity->ID());
-					channel->setContext(nullptr);
-				}
-			}
-		};
-
-		auto onMessage = [serverSock](const SocketChannelPtr &channel, Buffer *buf) 
-		{
-			MessagePacket packet;
-			memcpy(&packet, buf->data(), MessagePacket::PackLenth);
-			if(packet.dealType == MsgDeal::Req)
-			{
-				string msgData(buf->base + MessagePacket::PackLenth, packet.pkgLenth);
-				GlobalMessageHandle::MsgHandle(channel, packet.msgId, packet.msgHashId, msgData);
-			}
-			else if(packet.dealType == MsgDeal::Ret)
-			{
-				string msgData(buf->base + MessagePacket::PackLenth, packet.pkgLenth);
-				GlobalMessageHandle::MsgRetHandle(channel, packet.msgId, packet.msgHashId, msgData);
-			}
-			else if(packet.dealType == MsgDeal::Res)
-			{
-				if(DNTask<Message>* task = serverSock->GetMsg(packet.msgId)) //client sock request
-				{
-					serverSock->DelMsg(packet.msgId);
-					task->Resume();
-
-					if(Message* message = task->GetResult())
-					{
-						bool parserError = false;
-						//Support Combine
-						if(task->HasFlag(DNTaskFlag::Combine))
-						{
-							Message* merge = message->New();
-							if(merge->ParseFromArray(buf->base + MessagePacket::PackLenth, packet.pkgLenth))
-							{
-								message->MergeFrom(*merge);
-							}
-						
-							delete merge;
-						}
-						else
-						{
-							parserError = !message->ParseFromArray(buf->base + MessagePacket::PackLenth, packet.pkgLenth);
-						}
-
-						if(parserError)
-						{
-							task->SetFlag(DNTaskFlag::PaserError);
-						}
-						
-					}
-					
-					task->CallResume();
+					DNPrint(TipCode_CliConnOn, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
+					// if not regist
+					serverSock->DNServerProxy::CheckChannelByTimer(channel);
+					// if not recive data
+					channel->setReadTimeout(15000);
 				}
 				else
 				{
-					DNPrint(ErrCode_MsgFind, LoggerLevel::Error, nullptr);
+					DNPrint(TipCode_CliConnOff, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
+
+					if (ServerEntityHelper* entity = channel->getContext<ServerEntityHelper>())
+					{
+						ServerEntityManagerHelper* entityMan = serverProxy->GetServerEntityManager();
+						entityMan->RemoveEntity(entity->ID());
+						channel->setContext(nullptr);
+					}
 				}
-			}
-			else
+			};
+
+		auto onMessage = [serverSock](const SocketChannelPtr& channel, Buffer* buf)
 			{
-				DNPrint(ErrCode_MsgDealType, LoggerLevel::Error, nullptr);
-			}
-		};
+				MessagePacket packet;
+				memcpy(&packet, buf->data(), MessagePacket::PackLenth);
+				if (packet.dealType == MsgDeal::Req)
+				{
+					string msgData(buf->base + MessagePacket::PackLenth, packet.pkgLenth);
+					GlobalMessageHandle::MsgHandle(channel, packet.msgId, packet.msgHashId, msgData);
+				}
+				else if (packet.dealType == MsgDeal::Ret)
+				{
+					string msgData(buf->base + MessagePacket::PackLenth, packet.pkgLenth);
+					GlobalMessageHandle::MsgRetHandle(channel, packet.msgId, packet.msgHashId, msgData);
+				}
+				else if (packet.dealType == MsgDeal::Res)
+				{
+					if (DNTask<Message*>* task = serverSock->GetMsg(packet.msgId)) //client sock request
+					{
+						serverSock->DelMsg(packet.msgId);
+						task->Resume();
+
+						if (Message* message = task->GetResult())
+						{
+							bool parserError = false;
+							//Support Combine
+							if (task->HasFlag(DNTaskFlag::Combine))
+							{
+								Message* merge = message->New();
+								if (merge->ParseFromArray(buf->base + MessagePacket::PackLenth, packet.pkgLenth))
+								{
+									message->MergeFrom(*merge);
+								}
+
+								delete merge;
+							}
+							else
+							{
+								parserError = !message->ParseFromArray(buf->base + MessagePacket::PackLenth, packet.pkgLenth);
+							}
+
+							if (parserError)
+							{
+								task->SetFlag(DNTaskFlag::PaserError);
+							}
+
+						}
+
+						task->CallResume();
+					}
+					else
+					{
+						DNPrint(ErrCode_MsgFind, LoggerLevel::Error, nullptr);
+					}
+				}
+				else
+				{
+					DNPrint(ErrCode_MsgDealType, LoggerLevel::Error, nullptr);
+				}
+			};
 
 		serverSock->onConnection = onConnection;
 		serverSock->onMessage = onMessage;
@@ -124,89 +124,89 @@ int HandleGlobalServerInit(DNServer *server)
 		clientSock->onConnection = nullptr;
 		clientSock->onMessage = nullptr;
 
-		auto onConnection = [clientSock](const SocketChannelPtr &channel)
-		{
-			const string& peeraddr = channel->peeraddr();
-
-			if (channel->isConnected())
+		auto onConnection = [clientSock](const SocketChannelPtr& channel)
 			{
-				DNPrint(TipCode_SrvConnOn, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
-				channel->setHeartbeat(4000, std::bind(&DNClientProxy::TickHeartbeat, clientSock));
-				clientSock->SetRegistEvent(&GlobalMessage::Evt_ReqRegistSrv);
-				clientSock->DNClientProxy::StartRegist();
+				const string& peeraddr = channel->peeraddr();
 
-				channel->setWriteTimeout(12000);
-			}
-			else
-			{
-				DNPrint(TipCode_SrvConnOff, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
-				if(clientSock->RegistState() == RegistState::Registed)
+				if (channel->isConnected())
 				{
-					clientSock->RegistState() = RegistState::None;
-				}
-			}
+					DNPrint(TipCode_SrvConnOn, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
+					channel->setHeartbeat(4000, std::bind(&DNClientProxy::TickHeartbeat, clientSock));
+					clientSock->SetRegistEvent(&GlobalMessage::Evt_ReqRegistSrv);
+					clientSock->DNClientProxy::StartRegist();
 
-			if(clientSock->isReconnect())
-			{
-				
-			}
-		};
-
-		auto onMessage = [clientSock](const SocketChannelPtr &channel, Buffer *buf) 
-		{
-			MessagePacket packet;
-			memcpy(&packet, buf->data(), MessagePacket::PackLenth);
-
-			if(packet.dealType == MsgDeal::Req)
-			{
-				string msgData(buf->base + MessagePacket::PackLenth, packet.pkgLenth);
-				GlobalMessageHandle::MsgHandle(channel, packet.msgId, packet.msgHashId, msgData);
-			}
-			else if(packet.dealType == MsgDeal::Res)
-			{
-				if(DNTask<Message>* task = clientSock->GetMsg(packet.msgId)) //client sock request
-				{
-					clientSock->DelMsg(packet.msgId);
-					task->Resume();
-
-					if(Message* message = task->GetResult())
-					{
-						bool parserError = false;
-						//Support Combine
-						if(task->HasFlag(DNTaskFlag::Combine))
-						{
-							Message* merge = message->New();
-							if(merge->ParseFromArray(buf->base + MessagePacket::PackLenth, packet.pkgLenth))
-							{
-								message->MergeFrom(*merge);
-							}
-						
-							delete merge;
-						}
-						else
-						{
-							parserError = !message->ParseFromArray(buf->base + MessagePacket::PackLenth, packet.pkgLenth);
-						}
-
-						if(parserError)
-						{
-							task->SetFlag(DNTaskFlag::PaserError);
-						}
-						
-					}
-					
-					task->CallResume();
+					channel->setWriteTimeout(12000);
 				}
 				else
 				{
-					DNPrint(ErrCode_MsgFind, LoggerLevel::Error, nullptr);
+					DNPrint(TipCode_SrvConnOff, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
+					if (clientSock->RegistState() == RegistState::Registed)
+					{
+						clientSock->RegistState() = RegistState::None;
+					}
 				}
-			}
-			else
+
+				if (clientSock->isReconnect())
+				{
+
+				}
+			};
+
+		auto onMessage = [clientSock](const SocketChannelPtr& channel, Buffer* buf)
 			{
-				DNPrint(ErrCode_MsgDealType, LoggerLevel::Error, nullptr);
-			}
-		};
+				MessagePacket packet;
+				memcpy(&packet, buf->data(), MessagePacket::PackLenth);
+
+				if (packet.dealType == MsgDeal::Req)
+				{
+					string msgData(buf->base + MessagePacket::PackLenth, packet.pkgLenth);
+					GlobalMessageHandle::MsgHandle(channel, packet.msgId, packet.msgHashId, msgData);
+				}
+				else if (packet.dealType == MsgDeal::Res)
+				{
+					if (DNTask<Message*>* task = clientSock->GetMsg(packet.msgId)) //client sock request
+					{
+						clientSock->DelMsg(packet.msgId);
+						task->Resume();
+
+						if (Message* message = task->GetResult())
+						{
+							bool parserError = false;
+							//Support Combine
+							if (task->HasFlag(DNTaskFlag::Combine))
+							{
+								Message* merge = message->New();
+								if (merge->ParseFromArray(buf->base + MessagePacket::PackLenth, packet.pkgLenth))
+								{
+									message->MergeFrom(*merge);
+								}
+
+								delete merge;
+							}
+							else
+							{
+								parserError = !message->ParseFromArray(buf->base + MessagePacket::PackLenth, packet.pkgLenth);
+							}
+
+							if (parserError)
+							{
+								task->SetFlag(DNTaskFlag::PaserError);
+							}
+
+						}
+
+						task->CallResume();
+					}
+					else
+					{
+						DNPrint(ErrCode_MsgFind, LoggerLevel::Error, nullptr);
+					}
+				}
+				else
+				{
+					DNPrint(ErrCode_MsgDealType, LoggerLevel::Error, nullptr);
+				}
+			};
 
 		clientSock->onConnection = onConnection;
 		clientSock->onMessage = onMessage;
@@ -216,7 +216,7 @@ int HandleGlobalServerInit(DNServer *server)
 
 }
 
-int HandleGlobalServerShutdown(DNServer *server)
+int HandleGlobalServerShutdown(DNServer* server)
 {
 	GlobalServerHelper* serverProxy = GetGlobalServer();
 
@@ -224,6 +224,8 @@ int HandleGlobalServerShutdown(DNServer *server)
 	{
 		serverSock->onConnection = nullptr;
 		serverSock->onMessage = nullptr;
+
+		serverSock->MsgMapClear();
 	}
 
 	if (DNClientProxyHelper* clientSock = serverProxy->GetCSock())
@@ -231,6 +233,8 @@ int HandleGlobalServerShutdown(DNServer *server)
 		clientSock->onConnection = nullptr;
 		clientSock->onMessage = nullptr;
 		clientSock->SetRegistEvent(nullptr);
+
+		clientSock->MsgMapClear();
 	}
 
 	return true;

@@ -13,9 +13,9 @@ using namespace std;
 
 export enum class ServerType : uint8_t
 {
-    None,
-    ControlServer,
-    GlobalServer,
+	None,
+	ControlServer,
+	GlobalServer,
 	AuthServer,
 
 	GateServer,
@@ -23,7 +23,7 @@ export enum class ServerType : uint8_t
 	LogicServer,
 
 	DedicatedServer,
-	
+
 	Max,
 };
 
@@ -41,21 +41,21 @@ export struct MainPostMsg
 	function<void()> pFunc;
 	stringstream sCommand;
 
-	MainPostMsg(){}
+	MainPostMsg() = default;
 
-	MainPostMsg(const MainPostMsg &rhs)
+	MainPostMsg(const MainPostMsg& rhs)
 	{
 		type = rhs.type;
 		switch (type)
 		{
-		case Command:
-			sCommand.str(rhs.sCommand.str());
-			break;
-		case Function:
-			pFunc = rhs.pFunc;
-			break;
-		default:
-			break;
+			case Command:
+				sCommand.str(rhs.sCommand.str());
+				break;
+			case Function:
+				pFunc = rhs.pFunc;
+				break;
+			default:
+				break;
 		}
 	}
 
@@ -76,7 +76,7 @@ public:
 
 	virtual bool Init();
 
-	virtual void InitCmd(map<string, function<void(stringstream*)>> &cmdMap){ pCmdMap = &cmdMap; }
+	virtual void InitCmd(map<string, function<void(stringstream*)>>& cmdMap) { pCmdMap = &cmdMap; }
 
 	virtual bool Start() = 0;
 
@@ -86,13 +86,13 @@ public:
 
 	virtual void Resume() = 0;
 
-    ServerType GetServerType(){return emServerType;}
+	ServerType GetServerType() { return emServerType; }
 
-	uint32_t &ServerIndex(){ return iServerIndex;}
+	uint32_t& ServerIndex() { return iServerIndex; }
 
-	virtual void LoopEvent(function<void(hv::EventLoopPtr)> func){}
+	virtual void LoopEvent(function<void(hv::EventLoopPtr)> func) {}
 
-	bool& IsRun(){ return bInRun;}
+	bool& IsRun() { return bInRun; }
 
 	void TickMainFrame();
 
@@ -103,7 +103,7 @@ public: // dll override
 	map<string, string>* pLuanchConfig;
 
 protected:
-    ServerType emServerType;
+	ServerType emServerType;
 
 	bool bInRun;
 
@@ -111,7 +111,7 @@ protected:
 
 	list<MainPostMsg> mMessageTasks;
 
-    mutex oTaskMutex;
+	mutex oTaskMutex;
 
 	map<string, function<void(stringstream*)>>* pCmdMap;
 };
@@ -119,9 +119,10 @@ protected:
 DNServer::DNServer()
 {
 	emServerType = ServerType::None;
+	pDNl10nInstance = nullptr;
+	pLuanchConfig = nullptr;
 	bInRun = false;
 	iServerIndex = 0;
-	mMessageTasks.clear();
 	pCmdMap = nullptr;
 }
 
@@ -133,7 +134,7 @@ DNServer::~DNServer()
 bool DNServer::Init()
 {
 	string* value = GetLuanchConfigParam("svrIndex");
-	if(value)
+	if (value)
 	{
 		iServerIndex = stoi(*value);
 	}
@@ -146,34 +147,34 @@ void DNServer::TickMainFrame()
 	// mMessageTasks
 	{
 		unique_lock<mutex> lock(oTaskMutex);
-		if(mMessageTasks.size())
+		if (mMessageTasks.size())
 		{
-			for(MainPostMsg& postMsg : mMessageTasks)
+			for (MainPostMsg& postMsg : mMessageTasks)
 			{
 				switch (postMsg.type)
 				{
-				case MainPostMsg::Function:
-					postMsg.pFunc();
-					break;
-				case MainPostMsg::Command:
-				{
-					string token;
-					postMsg.sCommand >> token;
-					if (pCmdMap && pCmdMap->contains(token))
+					case MainPostMsg::Function:
+						postMsg.pFunc();
+						break;
+					case MainPostMsg::Command:
 					{
-						(*pCmdMap)[token](&postMsg.sCommand);
+						string token;
+						postMsg.sCommand >> token;
+						if (pCmdMap && pCmdMap->contains(token))
+						{
+							(*pCmdMap)[token](&postMsg.sCommand);
+						}
+						break;
 					}
-					break;
-				}
-				default:
-					break;
+					default:
+						break;
 				}
 			}
 
 			mMessageTasks.clear();
 		}
 	}
-	
+
 }
 
 void DNServer::AddMsgTask(const MainPostMsg& postMsg)

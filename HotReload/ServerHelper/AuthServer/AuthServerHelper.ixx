@@ -18,10 +18,10 @@ using namespace GDb;
 export class AuthServerHelper : public AuthServer
 {
 private:
-	AuthServerHelper(){}
+	AuthServerHelper() = delete;
 public:
-	DNClientProxyHelper* GetCSock(){ return nullptr;}
-	DNWebProxyHelper* GetSSock(){ return nullptr;}
+	DNClientProxyHelper* GetCSock() { return nullptr; }
+	DNWebProxyHelper* GetSSock() { return nullptr; }
 	bool InitDatabase();
 };
 
@@ -44,19 +44,19 @@ bool AuthServerHelper::InitDatabase()
 	{
 		//"postgresql://root@localhost"
 		string* value = GetLuanchConfigParam("connection");
-		pSqlProxy = new pqxx::connection(*value);
+		pSqlProxy = make_unique<pqxx::connection>(*value);
 		pSqlProxy->set_client_encoding("UTF8");
 		pqxx::work txn(*pSqlProxy);
 
 		DNDbObj<Account> accountInfo(&txn);
-		if(!accountInfo.IsExist())
+		if (!accountInfo.IsExist())
 		{
 			accountInfo.InitTable().Commit();
 		}
 
 		txn.commit();
 	}
-	catch(const exception& e)
+	catch (const exception& e)
 	{
 		DNPrint(0, LoggerLevel::Debug, "%s", e.what());
 		return false;

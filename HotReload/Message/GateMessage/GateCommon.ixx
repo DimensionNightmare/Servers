@@ -28,9 +28,9 @@ namespace GateMessage
 		DNClientProxyHelper* client = dnServer->GetCSock();
 		DNServerProxy* server = dnServer->GetSSock();
 		uint32_t msgId = client->GetMsgId();
-		
+
 		// first Can send Msg?
-		if(client->GetMsg(msgId))
+		if (client->GetMsg(msgId))
 		{
 			DNPrint(0, LoggerLevel::Debug, "+++++ %lu, ", msgId);
 			co_return;
@@ -50,20 +50,20 @@ namespace GateMessage
 
 		ServerEntityManagerHelper* entityMan = dnServer->GetServerEntityManager();
 		auto AddChild = [&requset](ServerEntity* serv)
-		{
-			COM_ReqRegistSrv* child = requset.add_childs();
-			ServerEntityHelper* helper = static_cast<ServerEntityHelper*>(serv);
-			child->set_server_index(helper->ID());
-			ServerType servType = helper->ServerEntityType();
-			child->set_server_type((uint32_t)servType);
-		};
+			{
+				COM_ReqRegistSrv* child = requset.add_childs();
+				ServerEntityHelper* helper = static_cast<ServerEntityHelper*>(serv);
+				child->set_server_index(helper->ID());
+				ServerType servType = helper->ServerEntityType();
+				child->set_server_type((uint32_t)servType);
+			};
 
 		list<ServerEntity*>& dbs = entityMan->GetEntityByList(ServerType::DatabaseServer);
 		for (ServerEntity* serv : dbs)
 		{
 			AddChild(serv);
 		}
-		
+
 		list<ServerEntity*>& logics = entityMan->GetEntityByList(ServerType::LogicServer);
 		for (ServerEntity* serv : logics)
 		{
@@ -75,29 +75,28 @@ namespace GateMessage
 		binData.resize(requset.ByteSizeLong());
 		requset.SerializeToArray(binData.data(), binData.size());
 		MessagePack(msgId, MsgDeal::Req, requset.GetDescriptor()->full_name().c_str(), binData);
-		
+
 		// data alloc
 		COM_ResRegistSrv response;
-		auto taskGen = [&response]() -> DNTask<Message>
-		{
-			co_return response;
-		};
-
-		auto dataChannel = taskGen();
-
 
 		{
+			auto taskGen = [](Message* msg) -> DNTask<Message*>
+				{
+					co_return msg;
+				};
+			auto dataChannel = taskGen(&response);
 			// wait data parse
 			client->AddMsg(msgId, &dataChannel);
 			client->send(binData);
 			co_await dataChannel;
-			if(dataChannel.HasFlag(DNTaskFlag::Timeout))
+			if (dataChannel.HasFlag(DNTaskFlag::Timeout))
 			{
 				DNPrint(0, LoggerLevel::Debug, "requst timeout! ");
 			}
+
 		}
-		
-		if(response.success())
+
+		if (response.success())
 		{
 			DNPrint(0, LoggerLevel::Debug, "regist Server success! ");
 			client->RegistState() = RegistState::Registed;
@@ -110,12 +109,11 @@ namespace GateMessage
 			client->RegistState() = RegistState::None;
 		}
 
-		dataChannel.Destroy();
 		co_return;
 	}
 
 	// client request
-	export void Msg_ReqRegistSrv(SocketChannelPtr channel, uint32_t msgId, Message *msg)
+	export void Msg_ReqRegistSrv(SocketChannelPtr channel, uint32_t msgId, Message* msg)
 	{
 		COM_ReqRegistSrv* requset = reinterpret_cast<COM_ReqRegistSrv*>(msg);
 		COM_ResRegistSrv response;
@@ -126,8 +124,8 @@ namespace GateMessage
 		ServerType regType = (ServerType)requset->server_type();
 
 		const string& ipPort = channel->localaddr();
-		
-		if(regType < ServerType::DatabaseServer || regType > ServerType::LogicServer || ipPort.empty())
+
+		if (regType < ServerType::DatabaseServer || regType > ServerType::LogicServer || ipPort.empty())
 		{
 			response.set_success(false);
 		}
@@ -144,13 +142,13 @@ namespace GateMessage
 			entity->ServerIp() = ipPort.substr(0, pos);
 			entity->ServerPort() = requset->port();
 			entity->SetSock(channel);
-			
+
 			channel->setContext(entity);
 
 			response.set_success(true);
 			response.set_server_index(entity->ID());
 		}
-		
+
 		string binData;
 		binData.resize(response.ByteSizeLong());
 		response.SerializeToArray(binData.data(), binData.size());
@@ -158,7 +156,7 @@ namespace GateMessage
 		MessagePack(msgId, MsgDeal::Res, nullptr, binData);
 		channel->write(binData);
 
-		if(response.success())
+		if (response.success())
 		{
 			binData.clear();
 
@@ -166,7 +164,7 @@ namespace GateMessage
 			g2G_RetRegistSrv retMsg;
 			retMsg.set_is_regist(true);
 			retMsg.set_server_index(requset->server_index());
-			
+
 			binData.clear();
 			binData.resize(retMsg.ByteSizeLong());
 			retMsg.SerializeToArray(binData.data(), binData.size());
@@ -178,7 +176,7 @@ namespace GateMessage
 		}
 	}
 
-	export void Exe_RetHeartbeat(SocketChannelPtr channel, uint32_t msgId, Message *msg)
+	export void Exe_RetHeartbeat(SocketChannelPtr channel, uint32_t msgId, Message* msg)
 	{
 		COM_RetHeartbeat* requset = reinterpret_cast<COM_RetHeartbeat*>(msg);
 	}

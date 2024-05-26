@@ -23,7 +23,7 @@ namespace GateMessage
 {
 
 	// client request
-	export DNTaskVoid Msg_ReqAuthToken(SocketChannelPtr channel, uint32_t msgId, Message *msg)
+	export DNTaskVoid Msg_ReqAuthToken(SocketChannelPtr channel, uint32_t msgId, Message* msg)
 	{
 		C2S_ReqAuthToken* requset = reinterpret_cast<C2S_ReqAuthToken*>(msg);
 
@@ -34,13 +34,13 @@ namespace GateMessage
 		string binData;
 
 		ProxyEntityHelper* entity = entityMan->GetEntity(requset->account_id());
-		if(!entity)
+		if (!entity)
 		{
 			DNPrint(0, LoggerLevel::Debug, "noaccount !!");
 			response.set_state_code(1);
 		}
 		// if not match, timer will destory entity
-		else if(Md5Hash(entity->Token()) != requset->token())
+		else if (Md5Hash(entity->Token()) != requset->token())
 		{
 			DNPrint(0, LoggerLevel::Debug, "not match!!");
 			response.set_state_code(2);
@@ -51,28 +51,28 @@ namespace GateMessage
 
 			channel->setContext(entity);
 			entity->SetSock(channel);
-			
-			if(uint64_t timerId = entity->TimerId())
+
+			if (uint64_t timerId = entity->TimerId())
 			{
 				entity->TimerId() = 0;
 				entityMan->Timer()->killTimer(timerId);
 			}
-			
+
 			//DS Server
 			ServerEntityManagerHelper* serverEntityMan = dnServer->GetServerEntityManager();
 			ServerEntityHelper* serverEntity = nullptr;
 
 			// <cache> server to load login data
-			if(uint32_t serverIndex = entity->ServerIndex())
+			if (uint32_t serverIndex = entity->ServerIndex())
 			{
 				serverEntity = serverEntityMan->GetEntity(serverIndex);
 			}
-			
+
 			// pool
-			if(!serverEntity)
+			if (!serverEntity)
 			{
 				list<ServerEntity*> serverEntityList = serverEntityMan->GetEntityByList(ServerType::LogicServer);
-				if(serverEntityList.empty())
+				if (serverEntityList.empty())
 				{
 					DNPrint(0, LoggerLevel::Debug, "Msg_ReqAuthToken not LogicServer !!");
 					response.set_state_code(3);
@@ -82,12 +82,12 @@ namespace GateMessage
 					serverEntity = static_cast<ServerEntityHelper*>(serverEntityList.front());
 				}
 			}
-			
+
 			//req dedicatedServer Info to Login ds.
-			if(serverEntity)
+			if (serverEntity)
 			{
 				entity->ServerIndex() = serverEntity->ID();
-			
+
 				//redirect G2L_ReqClientLogin dot pack string
 				requset->clear_token();
 				binData.clear();
@@ -99,34 +99,34 @@ namespace GateMessage
 
 				MessagePack(msgIdChild, MsgDeal::Req, G2L_ReqClientLogin::GetDescriptor()->full_name().c_str(), binData);
 
-				auto taskGen = [&response]() -> DNTask<Message>
-				{
-					co_return response;
-				};
-
-				auto dataChannel = taskGen();
+				ServerEntityHelper* serverEntityHelper = static_cast<ServerEntityHelper*>(serverEntity);
 
 				{
-					ServerEntityHelper* serverEntityHelper = static_cast<ServerEntityHelper*>(serverEntity);
+					auto taskGen = [](Message* msg) -> DNTask<Message*>
+						{
+							co_return msg;
+						};
+					auto dataChannel = taskGen(&response);
 					server->AddMsg(msgIdChild, &dataChannel, 9000);
 					serverEntityHelper->GetSock()->write(binData);
 					co_await dataChannel;
-					if(dataChannel.HasFlag(DNTaskFlag::Timeout))
+					if (dataChannel.HasFlag(DNTaskFlag::Timeout))
 					{
 						response.set_state_code(4);
 						DNPrint(0, LoggerLevel::Debug, "requst timeout! ");
 					}
+
 				}
 			}
 		}
-		
+
 
 		binData.clear();
 		binData.resize(response.ByteSizeLong());
 		response.SerializeToArray(binData.data(), binData.size());
 
 		MessagePack(msgId, MsgDeal::Res, nullptr, binData);
-		
+
 		channel->write(binData);
 
 		co_return;

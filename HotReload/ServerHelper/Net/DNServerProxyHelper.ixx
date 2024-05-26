@@ -15,31 +15,33 @@ using namespace google::protobuf;
 export class DNServerProxyHelper : public DNServerProxy
 {
 private:
-	DNServerProxyHelper(){};
+	DNServerProxyHelper() = delete;;
 
 public:
 	uint32_t GetMsgId() { return ++iMsgId; }
 
-	bool AddMsg(uint32_t msgId, DNTask<Message>* task, uint32_t breakTime = 10000);
-	DNTask<Message>* GetMsg(uint32_t msgId);
+	bool AddMsg(uint32_t msgId, DNTask<Message*>* task, uint32_t breakTime = 10000);
+	DNTask<Message*>* GetMsg(uint32_t msgId);
 	void DelMsg(uint32_t msgId);
+
+	void MsgMapClear();
 };
 
-bool DNServerProxyHelper::AddMsg(uint32_t msgId, DNTask<Message> *task, uint32_t breakTime)
+bool DNServerProxyHelper::AddMsg(uint32_t msgId, DNTask<Message*>* task, uint32_t breakTime)
 {
 	unique_lock<shared_mutex> ulock(oMsgMutex);
 	mMsgList.emplace(msgId, task);
-	if(breakTime > 0)
+	if (breakTime > 0)
 	{
 		task->TimerId() = DNServerProxy::CheckMessageTimeoutTimer(breakTime, msgId);
 	}
 	return true;
 }
 
-DNTask<Message> *DNServerProxyHelper::GetMsg(uint32_t msgId)
+DNTask<Message*>* DNServerProxyHelper::GetMsg(uint32_t msgId)
 {
 	shared_lock<shared_mutex> lock(oMsgMutex);
-	if(mMsgList.contains(msgId))
+	if (mMsgList.contains(msgId))
 	{
 		return mMsgList[msgId];
 	}
@@ -49,9 +51,9 @@ DNTask<Message> *DNServerProxyHelper::GetMsg(uint32_t msgId)
 void DNServerProxyHelper::DelMsg(uint32_t msgId)
 {
 	unique_lock<shared_mutex> ulock(oMsgMutex);
-	if(mMsgList.contains(msgId))
+	if (mMsgList.contains(msgId))
 	{
-		if(DNTask<Message> *task = mMsgList[msgId])
+		if (DNTask<Message*>* task = mMsgList[msgId])
 		{
 			if (size_t timerId = task->TimerId())
 			{
@@ -61,4 +63,14 @@ void DNServerProxyHelper::DelMsg(uint32_t msgId)
 		}
 	}
 	mMsgList.erase(msgId);
+}
+
+void DNServerProxyHelper::MsgMapClear()
+{
+	unique_lock<shared_mutex> ulock(oMsgMutex);
+	for (auto& [k, v] : mMsgList)
+	{
+		v->CallResume();
+	}
+	mMsgList.clear();
 }

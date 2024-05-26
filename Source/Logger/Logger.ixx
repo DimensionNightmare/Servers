@@ -25,31 +25,31 @@ export void SetLoggerLevel(LoggerLevel level)
 	SLogLevel = level;
 }
 
-export void LoggerPrint(LoggerLevel level, int code, const char* funcName, const char* fmt,  ...)
+export void LoggerPrint(LoggerLevel level, int code, const char* funcName, const char* fmt, ...)
 {
-	if(level < SLogLevel)
+	if (level < SLogLevel)
 	{
 		return;
 	}
 
-	if(code > 0)
+	if (code)
 	{
 		switch (level)
 		{
-		case LoggerLevel::Debug:
-			
-			break;
-		case LoggerLevel::Normal:
-			fmt = GetTipText(code);
-			break;
-		
-		case LoggerLevel::Error:
-			fmt = GetErrText(code);
-			break;
+			case LoggerLevel::Debug:
+
+				break;
+			case LoggerLevel::Normal:
+				fmt = GetTipText(code);
+				break;
+
+			case LoggerLevel::Error:
+				fmt = GetErrText(code);
+				break;
 		}
 	}
 
-	if(!fmt)
+	if (!fmt)
 	{
 		return;
 	}

@@ -39,25 +39,25 @@ import DNClientProxyHelper;
 #ifdef _WIN32
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
-    // Perform actions based on the reason for calling.
-    switch (fdwReason)
-    {
-    case DLL_PROCESS_DETACH:
-        if (lpvReserved != nullptr)
-        {
-            break;
-        }
-        break;
-    case DLL_PROCESS_ATTACH:
-        break;
-    case DLL_THREAD_ATTACH:
-        break;
+	// Perform actions based on the reason for calling.
+	switch (fdwReason)
+	{
+		case DLL_PROCESS_DETACH:
+			if (lpvReserved != nullptr)
+			{
+				break;
+			}
+			break;
+		case DLL_PROCESS_ATTACH:
+			break;
+		case DLL_THREAD_ATTACH:
+			break;
 
-    case DLL_THREAD_DETACH:
+		case DLL_THREAD_DETACH:
 
-        break;
-    }
-    return TRUE;
+			break;
+	}
+	return TRUE;
 }
 #endif
 
@@ -71,31 +71,31 @@ extern "C"
 
 		SetLuanchConfig(server->pLuanchConfig);
 		SetDNl10nInstance(server->pDNl10nInstance);
-		
+
 		ServerType servertype = server->GetServerType();
 		bool isDeal = false;
 		switch (servertype)
 		{
-		case ServerType::ControlServer:
-			isDeal = HandleControlServerInit(server);
-			break;
-		case ServerType::GlobalServer:
-			isDeal = HandleGlobalServerInit(server);
-			break;
-		case ServerType::AuthServer:
-			isDeal = HandleAuthServerInit(server);
-			break;
-		case ServerType::GateServer:
-			isDeal = HandleGateServerInit(server);
-			break;
-		case ServerType::DatabaseServer:
-			isDeal = HandleDatabaseServerInit(server);
-			break;
-		case ServerType::LogicServer:
-			isDeal = HandleLogicServerInit(server);
-			break;
-		default:
-			break;
+			case ServerType::ControlServer:
+				isDeal = HandleControlServerInit(server);
+				break;
+			case ServerType::GlobalServer:
+				isDeal = HandleGlobalServerInit(server);
+				break;
+			case ServerType::AuthServer:
+				isDeal = HandleAuthServerInit(server);
+				break;
+			case ServerType::GateServer:
+				isDeal = HandleGateServerInit(server);
+				break;
+			case ServerType::DatabaseServer:
+				isDeal = HandleDatabaseServerInit(server);
+				break;
+			case ServerType::LogicServer:
+				isDeal = HandleLogicServerInit(server);
+				break;
+			default:
+				break;
 		}
 
 		return isDeal;
@@ -107,26 +107,26 @@ extern "C"
 		bool isDeal = false;
 		switch (servertype)
 		{
-		case ServerType::ControlServer:
-			isDeal = HandleControlServerShutdown(server);
-			break;
-		case ServerType::GlobalServer:
-			isDeal = HandleGlobalServerShutdown(server);
-			break;
-		case ServerType::AuthServer:
-			isDeal = HandleAuthServerShutdown(server);
-			break;
-		case ServerType::GateServer:
-			isDeal = HandleGateServerShutdown(server);
-			break;
-		case ServerType::DatabaseServer:
-			isDeal = HandleDatabaseServerShutdown(server);
-			break;
-		case ServerType::LogicServer:
-			isDeal = HandleLogicServerShutdown(server);
-			break;
-		default:
-			break;
+			case ServerType::ControlServer:
+				isDeal = HandleControlServerShutdown(server);
+				break;
+			case ServerType::GlobalServer:
+				isDeal = HandleGlobalServerShutdown(server);
+				break;
+			case ServerType::AuthServer:
+				isDeal = HandleAuthServerShutdown(server);
+				break;
+			case ServerType::GateServer:
+				isDeal = HandleGateServerShutdown(server);
+				break;
+			case ServerType::DatabaseServer:
+				isDeal = HandleDatabaseServerShutdown(server);
+				break;
+			case ServerType::LogicServer:
+				isDeal = HandleLogicServerShutdown(server);
+				break;
+			default:
+				break;
 		}
 
 		google::protobuf::ShutdownProtobufLibrary();

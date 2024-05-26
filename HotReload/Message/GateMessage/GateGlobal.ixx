@@ -23,7 +23,7 @@ using namespace GMsg;
 namespace GateMessage
 {
 
-	export void Exe_ReqUserToken(SocketChannelPtr channel, uint32_t msgId, Message *msg)
+	export void Exe_ReqUserToken(SocketChannelPtr channel, uint32_t msgId, Message* msg)
 	{
 		G2g_ReqLoginToken* requset = reinterpret_cast<G2g_ReqLoginToken*>(msg);
 		g2G_ResLoginToken response;
@@ -33,10 +33,10 @@ namespace GateMessage
 		GateServerHelper* dnServer = GetGateServer();
 		ProxyEntityManagerHelper* entityMan = dnServer->GetProxyEntityManager();
 		ProxyEntityHelper* entity = entityMan->GetEntity(requset->account_id());
-		if(entity)
+		if (entity)
 		{
 			//exit
-			if(SocketChannelPtr online = entity->GetSock())
+			if (SocketChannelPtr online = entity->GetSock())
 			{
 				// kick channel
 				S2C_RetAccountReplace retMsg;
@@ -54,7 +54,7 @@ namespace GateMessage
 
 
 				//kick game
-				if(uint32_t serverIndex = entity->ServerIndex())
+				if (uint32_t serverIndex = entity->ServerIndex())
 				{
 					ServerEntityManagerHelper* serverEntityMan = dnServer->GetServerEntityManager();
 					ServerEntityHelper* serverEntity = serverEntityMan->GetEntity(serverIndex);
@@ -69,7 +69,7 @@ namespace GateMessage
 					MessagePack(0, MsgDeal::Ret, retMsg.GetDescriptor()->full_name().c_str(), binData);
 					serverEntity->GetSock()->write(binData);
 				}
-				
+
 			}
 
 		}
@@ -84,16 +84,16 @@ namespace GateMessage
 			entity->ExpireTime() = chrono::duration_cast<chrono::seconds>(chrono::system_clock::now().time_since_epoch()).count();
 			entity->ExpireTime() += 30;
 		}
-		
+
 		response.set_token(entity->Token());
 		response.set_expired_timespan(entity->ExpireTime());
 
 		// entity or token expired
-		if(!entity->TimerId())
+		if (!entity->TimerId())
 		{
 			entity->TimerId() = entityMan->ProxyEntityManager::CheckEntityCloseTimer(entity->ID());
 		}
-		
+
 		binData.clear();
 		binData.resize(response.ByteSizeLong());
 		response.SerializeToArray(binData.data(), binData.size());

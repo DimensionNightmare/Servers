@@ -25,9 +25,9 @@ namespace LogicMessage
 		LogicServerHelper* dnServer = GetLogicServer();
 		DNClientProxyHelper* client = dnServer->GetCSock();
 		uint32_t msgId = client->GetMsgId();
-		
+
 		// first Can send Msg?
-		if(client->GetMsg(msgId))
+		if (client->GetMsg(msgId))
 		{
 			DNPrint(0, LoggerLevel::Debug, "+++++ %lu, ", msgId);
 			co_return;
@@ -42,35 +42,34 @@ namespace LogicMessage
 		COM_ReqRegistSrv requset;
 		requset.set_server_type((int)dnServer->GetServerType());
 		requset.set_server_index(dnServer->ServerIndex());
-		
+
 		// pack data
 		string binData;
 		binData.resize(requset.ByteSizeLong());
 		requset.SerializeToArray(binData.data(), binData.size());
 		MessagePack(msgId, MsgDeal::Req, requset.GetDescriptor()->full_name().c_str(), binData);
-		
+
 		// data alloc
 		COM_ResRegistSrv response;
-		auto taskGen = [&response]() -> DNTask<Message>
-		{
-			co_return response;
-		};
-
-		auto dataChannel = taskGen();
-
 
 		{
+			auto taskGen = [](Message* msg) -> DNTask<Message*>
+				{
+					co_return msg;
+				};
+			auto dataChannel = taskGen(&response);
 			// wait data parse
 			client->AddMsg(msgId, &dataChannel);
 			client->send(binData);
 			co_await dataChannel;
-			if(dataChannel.HasFlag(DNTaskFlag::Timeout))
+			if (dataChannel.HasFlag(DNTaskFlag::Timeout))
 			{
 				DNPrint(0, LoggerLevel::Debug, "requst timeout! ");
 			}
+
 		}
-		
-		if(response.success())
+
+		if (response.success())
 		{
 			DNPrint(0, LoggerLevel::Debug, "regist Server success! ");
 			client->RegistState() = RegistState::Registed;
@@ -83,12 +82,11 @@ namespace LogicMessage
 			client->RegistState() = RegistState::None;
 		}
 
-		dataChannel.Destroy();
 		co_return;
 	}
 
 	// client request
-	export void Msg_ReqRegistSrv(SocketChannelPtr channel, uint32_t msgId, Message *msg)
+	export void Msg_ReqRegistSrv(SocketChannelPtr channel, uint32_t msgId, Message* msg)
 	{
 		COM_ReqRegistSrv* requset = reinterpret_cast<COM_ReqRegistSrv*>(msg);
 		COM_ResRegistSrv response;
@@ -97,8 +95,8 @@ namespace LogicMessage
 
 		ServerType regType = (ServerType)requset->server_type();
 		const string& ipPort = channel->localaddr();
-		
-		if(regType != ServerType::DedicatedServer || ipPort.empty())
+
+		if (regType != ServerType::DedicatedServer || ipPort.empty())
 		{
 			response.set_success(false);
 		}
@@ -118,13 +116,13 @@ namespace LogicMessage
 			DNPrint(0, LoggerLevel::Debug, "ds regist:%s:%d", entity->ServerIp().c_str(), entity->ServerPort());
 
 			entity->SetSock(channel);
-			
+
 			channel->setContext(entity);
 
 			response.set_success(true);
 			response.set_server_index(entity->ID());
 		}
-		
+
 		string binData;
 		binData.resize(response.ByteSizeLong());
 		response.SerializeToArray(binData.data(), binData.size());
@@ -133,7 +131,7 @@ namespace LogicMessage
 		channel->write(binData);
 	}
 
-	export void Exe_RetChangeCtlSrv(SocketChannelPtr channel, uint32_t msgId, Message *msg)
+	export void Exe_RetChangeCtlSrv(SocketChannelPtr channel, uint32_t msgId, Message* msg)
 	{
 		COM_RetChangeCtlSrv* requset = reinterpret_cast<COM_RetChangeCtlSrv*>(msg);
 		LogicServerHelper* dnServer = GetLogicServer();
@@ -141,7 +139,7 @@ namespace LogicMessage
 		dnServer->ReClientEvent(requset->ip(), requset->port());
 	}
 
-	export void Exe_RetHeartbeat(SocketChannelPtr channel, uint32_t msgId, Message *msg)
+	export void Exe_RetHeartbeat(SocketChannelPtr channel, uint32_t msgId, Message* msg)
 	{
 		COM_RetHeartbeat* requset = reinterpret_cast<COM_RetHeartbeat*>(msg);
 	}

@@ -7,8 +7,8 @@ using namespace hv;
 export class DNWebProxy : public HttpServer
 {
 public:
-	DNWebProxy(){}
-	~DNWebProxy(){}
+	DNWebProxy() = default;
+	~DNWebProxy() = default;
 
 	int Start();
 

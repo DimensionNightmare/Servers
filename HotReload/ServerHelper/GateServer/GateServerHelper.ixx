@@ -18,16 +18,16 @@ using namespace GMsg;
 export class GateServerHelper : public GateServer
 {
 private:
-	GateServerHelper(){};
+	GateServerHelper() = delete;;
 public:
 
-	DNClientProxyHelper* GetCSock(){ return nullptr;}
-	DNServerProxyHelper* GetSSock(){ return nullptr;}
-	ServerEntityManagerHelper* GetServerEntityManager(){ return nullptr;}
-	ProxyEntityManagerHelper* GetProxyEntityManager(){ return nullptr;}
+	DNClientProxyHelper* GetCSock() { return nullptr; }
+	DNServerProxyHelper* GetSSock() { return nullptr; }
+	ServerEntityManagerHelper* GetServerEntityManager() { return nullptr; }
+	ProxyEntityManagerHelper* GetProxyEntityManager() { return nullptr; }
 
-	void ServerEntityCloseEvent(Entity *entity);
-	void ProxyEntityCloseEvent(Entity *entity);
+	void ServerEntityCloseEvent(Entity* entity);
+	void ProxyEntityCloseEvent(Entity* entity);
 };
 
 static GateServerHelper* PGateServerHelper = nullptr;
@@ -59,7 +59,7 @@ void GateServerHelper::ServerEntityCloseEvent(Entity* entity)
 
 	DNClientProxyHelper* client = GetCSock();
 	client->send(binData);
-	
+
 	GetServerEntityManager()->RemoveEntity(castObj->ID());
 }
 

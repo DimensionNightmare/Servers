@@ -25,7 +25,7 @@ public:
 
 	virtual bool Init() override;
 
-	virtual void InitCmd(map<string, function<void(stringstream*)>> &cmdMap) override;
+	virtual void InitCmd(map<string, function<void(stringstream*)>>& cmdMap) override;
 
 	virtual bool Start() override;
 
@@ -38,54 +38,37 @@ public:
 	virtual void LoopEvent(function<void(EventLoopPtr)> func) override;
 
 public: // dll override
-	virtual DNServerProxy* GetSSock(){return pSSock;}
-	virtual DNClientProxy* GetCSock(){return pCSock;}
+	virtual DNServerProxy* GetSSock() { return pSSock.get(); }
+	virtual DNClientProxy* GetCSock() { return pCSock.get(); }
 
-	virtual ServerEntityManager* GetServerEntityManager(){return pServerEntityMan;}
-	virtual ProxyEntityManager* GetProxyEntityManager(){return pProxyEntityMan;}
+	virtual ServerEntityManager* GetServerEntityManager() { return pServerEntityMan.get(); }
+	virtual ProxyEntityManager* GetProxyEntityManager() { return pProxyEntityMan.get(); }
 
 protected: // dll proxy
-	DNServerProxy* pSSock;
-	DNClientProxy* pCSock;
+	unique_ptr<DNServerProxy> pSSock;
+	unique_ptr<DNClientProxy> pCSock;
 
-	ServerEntityManager* pServerEntityMan;
-	ProxyEntityManager* pProxyEntityMan;
+	unique_ptr<ServerEntityManager> pServerEntityMan;
+	unique_ptr<ProxyEntityManager> pProxyEntityMan;
 };
 
 GateServer::GateServer()
 {
 	emServerType = ServerType::GateServer;
-	pSSock = nullptr;
-	pCSock = nullptr;
-
-	pServerEntityMan = nullptr;
-	pProxyEntityMan = nullptr;
 }
 
 GateServer::~GateServer()
 {
-	delete pServerEntityMan;
+	pSSock = nullptr;
+	pCSock = nullptr;
 	pServerEntityMan = nullptr;
-
-	if(pCSock)
-	{
-		pCSock->setReconnect(nullptr);
-		delete pCSock;
-		pCSock = nullptr;
-	}
-
-	if(pSSock)
-	{
-		pSSock->setUnpack(nullptr);
-		delete pSSock;
-		pSSock = nullptr;
-	}
+	pProxyEntityMan = nullptr;
 }
 
 bool GateServer::Init()
 {
 	string* value = GetLuanchConfigParam("byCtl");
-	if(!value || !stoi(*value))
+	if (!value || !stoi(*value))
 	{
 		DNPrint(ErrCode_SrvByCtl, LoggerLevel::Error, nullptr);
 		return false;
@@ -94,15 +77,14 @@ bool GateServer::Init()
 	DNServer::Init();
 
 	uint16_t port = 0;
-	
+
 	value = GetLuanchConfigParam("port");
-	if(value)
+	if (value)
 	{
 		port = stoi(*value);
 	}
-	
-	pSSock = new DNServerProxy();
-	pSSock->pLoop = make_shared<EventLoopThread>();
+
+	pSSock = make_unique<DNServerProxy>();
 
 	int listenfd = pSSock->createsocket(port, "0.0.0.0");
 	if (listenfd < 0)
@@ -112,11 +94,11 @@ bool GateServer::Init()
 	}
 
 	// if not set port mean need get port by self 
-	if(port == 0)
+	if (port == 0)
 	{
 		struct sockaddr_in addr;
 		socklen_t addrLen = sizeof(addr);
-		if (getsockname(listenfd, reinterpret_cast<struct sockaddr*>(&addr), &addrLen) < 0) 
+		if (getsockname(listenfd, reinterpret_cast<struct sockaddr*>(&addr), &addrLen) < 0)
 		{
 			DNPrint(ErrCode_GetSocketName, LoggerLevel::Error, nullptr);
 			return false;
@@ -124,46 +106,45 @@ bool GateServer::Init()
 
 		pSSock->port = ntohs(addr.sin_port);
 	}
-	
+
 	DNPrint(TipCode_SrvListenOn, LoggerLevel::Normal, nullptr, pSSock->port, listenfd);
 
 	pSSock->Init();
-	
+
 	//connet ControlServer
 	string* ctlPort = GetLuanchConfigParam("ctlPort");
 	string* ctlIp = GetLuanchConfigParam("ctlIp");
-	if(ctlPort && ctlIp && is_ipaddr(ctlIp->c_str()))
+	if (ctlPort && ctlIp && is_ipaddr(ctlIp->c_str()))
 	{
-		pCSock = new DNClientProxy();
-		pCSock->pLoop = make_shared<EventLoopThread>();
+		pCSock = make_unique<DNClientProxy>();
 
 		pCSock->Init();
 
 		port = stoi(*ctlPort);
 		pCSock->createsocket(port, ctlIp->c_str());
 	}
-	
-	pServerEntityMan = new ServerEntityManager();
+
+	pServerEntityMan = make_unique<ServerEntityManager>();
 	pServerEntityMan->Init();
-	pProxyEntityMan = new ProxyEntityManager();
+	pProxyEntityMan = make_unique<ProxyEntityManager>();
 	pProxyEntityMan->Init();
 
 	return true;
 }
 
-void GateServer::InitCmd(map<string, function<void(stringstream *)>> &cmdMap)
+void GateServer::InitCmd(map<string, function<void(stringstream*)>>& cmdMap)
 {
 }
 
 bool GateServer::Start()
 {
 
-	if(pCSock) // client
+	if (pCSock) // client
 	{
 		pCSock->Start();
 	}
 
-	if(!pSSock)
+	if (!pSSock)
 	{
 		DNPrint(ErrCode_SrvNotInit, LoggerLevel::Error, nullptr);
 		return false;
@@ -175,12 +156,12 @@ bool GateServer::Start()
 
 bool GateServer::Stop()
 {
-	if(pSSock)
+	if (pSSock)
 	{
 		pSSock->End();
 	}
 
-	if(pCSock) // client
+	if (pCSock) // client
 	{
 		pCSock->End();
 	}
@@ -195,17 +176,17 @@ void GateServer::Pause()
 	pServerEntityMan->Timer()->pause();
 
 	LoopEvent([](EventLoopPtr loop)
-	{ 
-		loop->pause(); 
-	});
+		{
+			loop->pause();
+		});
 }
 
 void GateServer::Resume()
 {
 	LoopEvent([](EventLoopPtr loop)
-	{ 
-		loop->resume(); 
-	});
+		{
+			loop->resume();
+		});
 
 	pSSock->pLoop->loop()->resume();
 	pCSock->pLoop->loop()->resume();
@@ -214,14 +195,14 @@ void GateServer::Resume()
 
 void GateServer::LoopEvent(function<void(EventLoopPtr)> func)
 {
-    map<long,bool> looped;
-    if(pSSock)
+	map<long, bool> looped;
+	if (pSSock)
 	{
 		looped.clear();
-		while(const EventLoopPtr& pLoop = pSSock->loop())
+		while (const EventLoopPtr& pLoop = pSSock->loop())
 		{
 			long id = pLoop->tid();
-			if(!looped.count(id))
+			if (!looped.count(id))
 			{
 				func(pLoop);
 				looped[id];
@@ -233,13 +214,13 @@ void GateServer::LoopEvent(function<void(EventLoopPtr)> func)
 		};
 	}
 
-	if(pCSock)
+	if (pCSock)
 	{
 		looped.clear();
-		while(const EventLoopPtr& pLoop = pCSock->loop())
+		while (const EventLoopPtr& pLoop = pCSock->loop())
 		{
 			long id = pLoop->tid();
-			if(!looped.count(id))
+			if (!looped.count(id))
 			{
 				func(pLoop);
 				looped[id];
@@ -250,6 +231,6 @@ void GateServer::LoopEvent(function<void(EventLoopPtr)> func)
 			}
 		};
 	}
-	
-    
+
+
 }

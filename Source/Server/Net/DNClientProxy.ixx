@@ -25,7 +25,57 @@ export enum class RegistState : uint8_t
 	Registed,
 };
 
-export class DNClientProxy : public TcpClientTmpl<SocketChannel>
+class TcpClientTmplTemp : public EventLoopThread, public TcpClientEventLoopTmpl<SocketChannel>
+{
+public:
+	TcpClientTmplTemp(EventLoopPtr loop = NULL)
+		: EventLoopThread(loop)
+		, TcpClientEventLoopTmpl<SocketChannel>(EventLoopThread::loop())
+		, is_loop_owner(loop == NULL)
+	{
+	}
+	virtual ~TcpClientTmplTemp()
+	{
+		stop(true);
+	}
+
+	const EventLoopPtr& loop()
+	{
+		return EventLoopThread::loop();
+	}
+
+	// start thread-safe
+	void start(bool wait_threads_started = true)
+	{
+		if (isRunning())
+		{
+			TcpClientEventLoopTmpl<SocketChannel>::start();
+		}
+		else
+		{
+			EventLoopThread::start(wait_threads_started, [this]()
+				{
+					TcpClientTmplTemp::startConnect();
+					return 0;
+				});
+		}
+	}
+
+	// stop thread-safe
+	void stop(bool wait_threads_stopped = true)
+	{
+		TcpClientEventLoopTmpl<SocketChannel>::closesocket();
+		if (is_loop_owner)
+		{
+			EventLoopThread::stop(wait_threads_stopped);
+		}
+	}
+
+private:
+	bool is_loop_owner;
+};
+
+export class DNClientProxy : public TcpClientTmplTemp
 {
 public:
 	DNClientProxy();
@@ -44,7 +94,7 @@ public: // dll override
 	void MessageTimeoutTimer(uint64_t timerID);
 	uint64_t CheckMessageTimeoutTimer(uint32_t breakTime, uint32_t msgId);
 
-	const EventLoopPtr& Timer(){return pLoop->loop();}
+	const EventLoopPtr& Timer() { return pLoop->loop(); }
 
 	void AddTimerRecord(size_t timerId, uint32_t id);
 
@@ -60,7 +110,7 @@ protected: // dll proxy
 	// only oddnumber
 	atomic<uint32_t> iMsgId;
 	// unordered_
-	map<uint32_t, DNTask<Message>* > mMsgList;
+	map<uint32_t, DNTask<Message*>* > mMsgList;
 	//
 	map<uint64_t, uint32_t > mMapTimer;
 	// status
@@ -76,14 +126,13 @@ protected: // dll proxy
 
 DNClientProxy::DNClientProxy()
 {
-	iMsgId = 0;
-	mMsgList.clear();
 	eRegistState = RegistState::None;
-	pRegistEvent = nullptr;
+	pLoop = make_shared<EventLoopThread>();
 }
 
 DNClientProxy::~DNClientProxy()
 {
+	pLoop = nullptr;
 	mMsgList.clear();
 	mMapTimer.clear();
 }
@@ -103,7 +152,7 @@ void DNClientProxy::Init()
 	setting->length_field_bytes = 1;
 	setting->length_field_offset = 0;
 	setUnpack(setting);
-	
+
 }
 
 void DNClientProxy::Start()
@@ -113,21 +162,21 @@ void DNClientProxy::Start()
 }
 
 void DNClientProxy::End()
-{	
+{
 	pLoop->stop(true);
 	stop(true);
 }
 
 void DNClientProxy::TickRegistEvent(size_t timerID)
 {
-	if(eRegistState == RegistState::Registing)
+	if (eRegistState == RegistState::Registing)
 	{
 		return;
 	}
-	
-	if (channel->isConnected() && eRegistState != RegistState::Registed) 
+
+	if (channel->isConnected() && eRegistState != RegistState::Registed)
 	{
-		if(pRegistEvent)
+		if (pRegistEvent)
 		{
 			pRegistEvent();
 		}
@@ -135,8 +184,8 @@ void DNClientProxy::TickRegistEvent(size_t timerID)
 		{
 			DNPrint(ErrCode_NotCallbackEvent, LoggerLevel::Error, nullptr);
 		}
-	} 
-	else 
+	}
+	else
 	{
 		Timer()->killTimer(timerID);
 	}
@@ -152,7 +201,7 @@ void DNClientProxy::MessageTimeoutTimer(uint64_t timerID)
 {
 	uint32_t msgId = -1;
 	{
-		if(!mMapTimer.contains(timerID))
+		if (!mMapTimer.contains(timerID))
 		{
 			return;
 		}
@@ -163,10 +212,10 @@ void DNClientProxy::MessageTimeoutTimer(uint64_t timerID)
 	}
 
 	{
-		if(mMsgList.contains(msgId))
+		if (mMsgList.contains(msgId))
 		{
 			unique_lock<shared_mutex> ulock(oMsgMutex);
-			DNTask<Message>* task = mMsgList[msgId];
+			DNTask<Message*>* task = mMsgList[msgId];
 			mMsgList.erase(msgId);
 			task->SetFlag(DNTaskFlag::Timeout);
 			task->CallResume();
@@ -200,14 +249,14 @@ void DNClientProxy::TickHeartbeat()
 	requset.SerializeToArray(binData.data(), binData.size());
 
 	MessagePack(0, MsgDeal::Ret, requset.GetDescriptor()->full_name().c_str(), binData);
-	
+
 	send(binData);
 }
 
-void DNClientProxy::RedirectClient(uint16_t port, const char *ip)
+void DNClientProxy::RedirectClient(uint16_t port, const char* ip)
 {
 	eRegistState = RegistState::None;
-	
+
 	createsocket(port, ip);
 	start();
 }

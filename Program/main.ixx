@@ -33,7 +33,7 @@ import DimensionNightmare;
 using namespace std;
 
 #ifdef __unix__
-	#define Sleep(ms) usleep(ms*1000)
+#define Sleep(ms) usleep(ms*1000)
 #endif
 
 enum class LunchType : uint8_t
@@ -42,7 +42,7 @@ enum class LunchType : uint8_t
 	PULL,
 };
 
-export int main(int argc, char **argv)
+export int main(int argc, char** argv)
 {
 	hlog_disable();
 
@@ -67,144 +67,142 @@ export int main(int argc, char **argv)
 		lunchParam.emplace(split.substr(0, pos), split.substr(pos + 1));
 	}
 
-	PInstance = new DimensionNightmare();
+	PInstance = make_unique<DimensionNightmare>();
 	if (!PInstance->InitConfig(lunchParam))
 	{
-		delete PInstance;
+		PInstance = nullptr;
 		return 0;
 	}
 
 	if (!PInstance->Init())
 	{
-		delete PInstance;
+		PInstance = nullptr;
 		return 0;
 	}
 
 #ifdef _WIN32
 
 	auto CtrlHandler = [](DWORD signal) -> BOOL
-	{
-		DNPrint(TipCode_CmdOpBreak, LoggerLevel::Normal, nullptr);
-		switch (signal)
 		{
-		case CTRL_C_EVENT:
-		case CTRL_CLOSE_EVENT:
-		case CTRL_SHUTDOWN_EVENT:
-		case CTRL_BREAK_EVENT:
-		{
-			PInstance->ServerIsRun() = false;
-			while(PInstance)
+			DNPrint(TipCode_CmdOpBreak, LoggerLevel::Normal, nullptr);
+			switch (signal)
 			{
-				Sleep(20);
+				case CTRL_C_EVENT:
+				case CTRL_CLOSE_EVENT:
+				case CTRL_SHUTDOWN_EVENT:
+				case CTRL_BREAK_EVENT:
+				{
+					PInstance->ServerIsRun() = false;
+					while (PInstance)
+					{
+						Sleep(20);
+					}
+					return true;
+				}
 			}
-			return true;
-		}
-		}
 
-		return false;
-	};
+			return false;
+		};
 
 	if (!SetConsoleCtrlHandler(CtrlHandler, true))
 	{
 		DNPrint(ErrCode_CmdCtl, LoggerLevel::Error, nullptr);
-		delete PInstance;
+		PInstance = nullptr;
 		return 0;
 	}
 
-	auto UnhandledHandler = [](EXCEPTION_POINTERS *ExceptionInfo) -> long
-	{
-		DNPrint(TipCode_UnhandledException, LoggerLevel::Normal, nullptr);
-		
-		string fileName = PInstance->Dll()->sDllDirRand;
-
-		if(fileName.empty())
+	auto UnhandledHandler = [](EXCEPTION_POINTERS* ExceptionInfo) -> long
 		{
-			fileName = "MiniDump.dmp";
-		}
-		else
-		{
-			fileName = format("{}/MiniDump.dmp", fileName);
-		}
+			DNPrint(TipCode_UnhandledException, LoggerLevel::Normal, nullptr);
 
-		cout << fileName <<endl;
+			string fileName = PInstance->Dll()->sDllDirRand;
 
-		HANDLE hDumpFile = CreateFile(
-			fileName.c_str(),
-			GENERIC_WRITE,
-			0,
-			nullptr,
-			CREATE_ALWAYS,
-			FILE_ATTRIBUTE_NORMAL,
-			nullptr
-		);
+			if (fileName.empty())
+			{
+				fileName = "MiniDump.dmp";
+			}
+			else
+			{
+				fileName = format("{}/MiniDump.dmp", fileName);
+			}
 
-		if (hDumpFile != INVALID_HANDLE_VALUE) 
-		{
-			MINIDUMP_EXCEPTION_INFORMATION info;
-			info.ThreadId = GetCurrentThreadId();
-			info.ExceptionPointers = ExceptionInfo;
-			info.ClientPointers = FALSE;
-
-			MINIDUMP_TYPE dumpType = (MINIDUMP_TYPE)(
-				MiniDumpWithDataSegs |
-				MiniDumpWithFullMemory |
-				MiniDumpWithHandleData |
-				MiniDumpWithThreadInfo |
-				MiniDumpWithUnloadedModules |
-				MiniDumpWithFullMemoryInfo |
-				MiniDumpWithProcessThreadData
-			);
-
-			MiniDumpWriteDump(
-				GetCurrentProcess(),
-				GetCurrentProcessId(),
-				hDumpFile,
-				dumpType, // MiniDumpNormal
-				&info,
+			HANDLE hDumpFile = CreateFile(
+				fileName.c_str(),
+				GENERIC_WRITE,
+				0,
 				nullptr,
+				CREATE_ALWAYS,
+				FILE_ATTRIBUTE_NORMAL,
 				nullptr
 			);
 
-			CloseHandle(hDumpFile);
-		}
-	
-		PInstance->Dll()->isNormalFree = false;
-		PInstance->ServerIsRun() = false;
+			if (hDumpFile != INVALID_HANDLE_VALUE)
+			{
+				MINIDUMP_EXCEPTION_INFORMATION info;
+				info.ThreadId = GetCurrentThreadId();
+				info.ExceptionPointers = ExceptionInfo;
+				info.ClientPointers = FALSE;
 
-		return EXCEPTION_CONTINUE_SEARCH; 
-	};
+				MINIDUMP_TYPE dumpType = (MINIDUMP_TYPE)(
+					MiniDumpWithDataSegs |
+					MiniDumpWithFullMemory |
+					MiniDumpWithHandleData |
+					MiniDumpWithThreadInfo |
+					MiniDumpWithUnloadedModules |
+					MiniDumpWithFullMemoryInfo |
+					MiniDumpWithProcessThreadData
+					);
+
+				MiniDumpWriteDump(
+					GetCurrentProcess(),
+					GetCurrentProcessId(),
+					hDumpFile,
+					dumpType, // MiniDumpNormal
+					&info,
+					nullptr,
+					nullptr
+				);
+
+				CloseHandle(hDumpFile);
+			}
+
+			PInstance->Dll()->isNormalFree = false;
+			PInstance->ServerIsRun() = false;
+
+			return EXCEPTION_CONTINUE_SEARCH;
+		};
 
 	if (!SetUnhandledExceptionFilter(UnhandledHandler))
 	{
 		DNPrint(ErrCode_UnhandledException, LoggerLevel::Error, nullptr);
-		delete PInstance;
+		PInstance = nullptr;
 		return 0;
 	}
 #elif __unix__
 
 	auto CtrlHandler = [](int signal)
-	{
-		DNPrint(TipCode_CmdOpBreak, LoggerLevel::Normal, nullptr);
+		{
+			DNPrint(TipCode_CmdOpBreak, LoggerLevel::Normal, nullptr);
 
-		PInstance->ServerIsRun() = false;
-	};
+			PInstance->ServerIsRun() = false;
+		};
 	signal(SIGINT, CtrlHandler);
 
-	auto UnhandledHandler = [](int signum, siginfo_t *info, void *context)
-	{
-		DNPrint(TipCode_UnhandledException, LoggerLevel::Normal, nullptr);
+	auto UnhandledHandler = [](int signum, siginfo_t* info, void* context)
+		{
+			DNPrint(TipCode_UnhandledException, LoggerLevel::Normal, nullptr);
 
-		delete PInstance;
-		PInstance = nullptr;
-		exit(signum);
-	};
+			delete PInstance;
+			PInstance = nullptr;
+			exit(signum);
+		};
 
 	struct sigaction sa;
 	memset(&sa, 0, sizeof(sa));
-    sa.sa_sigaction = UnhandledHandler;
-    sigemptyset(&sa.sa_mask);
-    sa.sa_flags = SA_SIGINFO;
-    sigaction(SIGSEGV, &sa, NULL);
+	sa.sa_sigaction = UnhandledHandler;
+	sigemptyset(&sa.sa_mask);
+	sa.sa_flags = SA_SIGINFO;
+	sigaction(SIGSEGV, &sa, NULL);
 	sigaction(SIGABRT, &sa, NULL);
 	sigaction(SIGFPE, &sa, NULL);
 	sigaction(SIGILL, &sa, NULL);
@@ -213,49 +211,49 @@ export int main(int argc, char **argv)
 #endif
 
 	auto InputEvent = async(launch::async, []()
-	{
-		stringstream ss;
-		string str;
-
-		while (true)
 		{
-			getline(cin, str);
+			stringstream ss;
+			string str;
 
-			if(!PInstance || !PInstance->ServerIsRun() )
+			while (true)
 			{
-				break;
-			}
+				getline(cin, str);
 
-			if (!str.empty())
-			{
-				ss.clear();
-				ss.str(str);
-				str.clear();
-				ss >> str;
-
-				cout << "<cmd " << str << ">\n";
-
-				if (str == "quit")
+				if (!PInstance || !PInstance->ServerIsRun())
 				{
-					PInstance->ServerIsRun() = false;
 					break;
 				}
-				else if (str == "abort")
+
+				if (!str.empty())
 				{
-					int a = 100;
-					int b = 0;
-					int c = a / b;
-				}
-				else
-				{
-					PInstance->ExecCommand(&str, &ss);
+					ss.clear();
+					ss.str(str);
+					str.clear();
+					ss >> str;
+
+					cout << "<cmd " << str << ">\n";
+
+					if (str == "quit")
+					{
+						PInstance->ServerIsRun() = false;
+						break;
+					}
+					else if (str == "abort")
+					{
+						int a = 100;
+						int b = 0;
+						int c = a / b;
+					}
+					else
+					{
+						PInstance->ExecCommand(&str, &ss);
+					}
+
+					cout << "<cmd down>\n";
 				}
 
-				cout << "<cmd down>\n";
 			}
-
-		} 
-	});
+		});
 
 	while (PInstance && PInstance->ServerIsRun())
 	{
@@ -263,10 +261,9 @@ export int main(int argc, char **argv)
 		Sleep(100);
 	}
 
-	delete PInstance;
 	PInstance = nullptr;
-	
+
 	DNPrint(0, LoggerLevel::Debug, "bye~");
-	
+
 	return 0;
 }

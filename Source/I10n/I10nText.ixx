@@ -18,14 +18,14 @@ enum class LangType : uint8_t
 
 export class DNl10n
 {
-	typedef const string& (ErrText::*ErrTextFunc)() const;
-	typedef const string& (TipText::*TipTextFunc)() const;
+	typedef const string& (ErrText::* ErrTextFunc)() const;
+	typedef const string& (TipText::* TipTextFunc)() const;
 public:
 	DNl10n();
 	const char* InitConfigData();
 public:
-	L10nErr* pErrMsgData;
-	L10nTip* pTipMsgData;
+	unique_ptr<L10nErr> pErrMsgData;
+	unique_ptr<L10nTip> pTipMsgData;
 
 	ErrTextFunc pErrMsgFunc;
 	TipTextFunc pTipMsgFunc;
@@ -35,8 +35,8 @@ public:
 
 DNl10n::DNl10n()
 {
-	pErrMsgData = nullptr;
-	pTipMsgData = nullptr;
+	pErrMsgFunc = nullptr;
+	pTipMsgFunc = nullptr;
 	eType = LangType::zh_CN;
 }
 
@@ -56,24 +56,24 @@ const char* DNl10n::InitConfigData()
 		return "Launch Param l10nErrPath Error !";
 	}
 
-	if(pErrMsgData)
+	if (pErrMsgData)
 	{
 		pErrMsgData->Clear();
 	}
 	else
 	{
-		pErrMsgData = new L10nErr();
+		pErrMsgData = make_unique<L10nErr>();
 	}
 
 	{
 		ifstream input(*value, ios::in | ios::binary);
-		if(!input || !pErrMsgData->ParseFromIstream(&input))
+		if (!input || !pErrMsgData->ParseFromIstream(&input))
 		{
 			// DNPrint(0, LoggerLevel::Debug, "load I10n Err Config Error !");
 			return "load I10n Err Config Error !";
 		}
 	}
-	
+
 	value = GetLuanchConfigParam("l10nTipPath");
 	if (!value)
 	{
@@ -81,24 +81,24 @@ const char* DNl10n::InitConfigData()
 		return "Launch Param l10nTipPath Error Error !";
 	}
 
-	if(pTipMsgData)
+	if (pTipMsgData)
 	{
 		pTipMsgData->Clear();
 	}
 	else
 	{
-		pTipMsgData = new L10nTip();
+		pTipMsgData = make_unique<L10nTip>();
 	}
 
 	{
 		ifstream input(*value, ios::in | ios::binary);
-		if(!input || !pTipMsgData->ParseFromIstream(&input))
+		if (!input || !pTipMsgData->ParseFromIstream(&input))
 		{
 			// DNPrint(0, LoggerLevel::Debug, "load I10n Tip Config Error !");
 			return "load I10n Tip Config Error !";
 		}
 	}
-	
+
 	value = GetLuanchConfigParam("l10nLang");
 	if (value)
 	{
@@ -107,21 +107,21 @@ const char* DNl10n::InitConfigData()
 
 	switch (eType)
 	{
-	case LangType::zh_CN :
-	{
-		pErrMsgFunc = &ErrText::zh;
-		pTipMsgFunc = &TipText::zh;
-		break;
-	}
-	case LangType::en_US :
-	{
-		pErrMsgFunc = &ErrText::en;
-		pTipMsgFunc = &TipText::en;
-		break;
-	}
-	default:
-		// DNPrint(0, LoggerLevel::Debug, "load I10n Lang Type Error !");
-		return "load I10n Lang Type Error !";
+		case LangType::zh_CN:
+		{
+			pErrMsgFunc = &ErrText::zh;
+			pTipMsgFunc = &TipText::zh;
+			break;
+		}
+		case LangType::en_US:
+		{
+			pErrMsgFunc = &ErrText::en;
+			pTipMsgFunc = &TipText::en;
+			break;
+		}
+		default:
+			// DNPrint(0, LoggerLevel::Debug, "load I10n Lang Type Error !");
+			return "load I10n Lang Type Error !";
 	}
 
 	SetDNl10nInstance(this);
@@ -131,34 +131,34 @@ const char* DNl10n::InitConfigData()
 
 export const char* GetErrText(int type)
 {
-	if(!PInstance || !ErrCode_IsValid(type))
+	if (!PInstance || !ErrCode_IsValid(type))
 	{
 		return nullptr;
 	}
-	
+
 	auto& dataMap = PInstance->pErrMsgData->data_map();
 	auto data = dataMap.find(type);
-	if(data == dataMap.end())
+	if (data == dataMap.end())
 	{
-		throw invalid_argument(format("I10n Err Config not exist this type {}", ErrCode_Name(type)).c_str()); 
+		throw invalid_argument(format("I10n Err Config not exist this type {}", ErrCode_Name(type)).c_str());
 	}
-	
+
 	return (data->second.*(PInstance->pErrMsgFunc))().c_str();
 }
 
 export const char* GetTipText(int type)
 {
-	if(!PInstance || !TipCode_IsValid(type))
+	if (!PInstance || !TipCode_IsValid(type))
 	{
 		return nullptr;
 	}
-	
+
 	auto& dataMap = PInstance->pTipMsgData->data_map();
 	auto data = dataMap.find(type);
-	if(data == dataMap.end())
+	if (data == dataMap.end())
 	{
-		throw invalid_argument(format("I10n Tip Config not exist this type {}", TipCode_Name(type)).c_str()); 
+		throw invalid_argument(format("I10n Tip Config not exist this type {}", TipCode_Name(type)).c_str());
 	}
-	
+
 	return (data->second.*(PInstance->pTipMsgFunc))().c_str();
 }

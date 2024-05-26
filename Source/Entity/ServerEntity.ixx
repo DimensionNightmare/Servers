@@ -17,8 +17,9 @@ export enum class ServerEntityFlag : uint16_t
 	Max,
 };
 
-constexpr size_t ServerEntityFlagSize() {
-    return static_cast<size_t>(ServerEntityFlag::Max);
+constexpr size_t ServerEntityFlagSize()
+{
+	return static_cast<size_t>(ServerEntityFlag::Max);
 }
 
 export class ServerEntity : public NetEntity
@@ -29,16 +30,16 @@ public:
 
 public: // dll override
 
-	ServerType GetType(){return emServerType;}
+	ServerType GetType() { return emServerType; }
 
-	ServerEntity* &LinkNode(){ return pLink;}
+	ServerEntity*& LinkNode() { return pLink; }
 
-	bool HasFlag(ServerEntityFlag flag){ return oFlags.test(int(flag));}
-	void SetFlag(ServerEntityFlag flag){ oFlags.set(int(flag));}
-	void ClearFlag(ServerEntityFlag flag){ oFlags.reset(int(flag));}
-	
+	bool HasFlag(ServerEntityFlag flag) { return oFlags.test(int(flag)); }
+	void SetFlag(ServerEntityFlag flag) { oFlags.set(int(flag)); }
+	void ClearFlag(ServerEntityFlag flag) { oFlags.reset(int(flag)); }
+
 protected: // dll proxy
-    ServerType emServerType;
+	ServerType emServerType;
 	string sServIp;
 	uint16_t iServPort;
 	uint32_t IConnNum;
@@ -56,14 +57,13 @@ ServerEntity::ServerEntity()
 	eEntityType = EntityType::Server;
 
 	emServerType = ServerType::None;
-	sServIp.clear();
 	IConnNum = 0;
 	iServPort = 0;
 	pLink = nullptr;
-	mMapLink.clear();
-	oFlags.reset();
 }
 
 ServerEntity::~ServerEntity()
 {
+	pLink = nullptr;
+	mMapLink.clear();
 }

@@ -22,21 +22,8 @@ public:
 	static void MsgRetHandle(const SocketChannelPtr& channel, uint32_t msgId, size_t msgHashId, const string& msgData);
 	static void RegMsgHandle();
 public:
-	inline static map<
-		size_t, 
-		pair<
-			const Message*, 
-			function<void(SocketChannelPtr, uint32_t, Message *)> 
-		> 
-	> MHandleMap;
-
-	inline static map<
-		size_t, 
-		pair<
-			const Message*, 
-			function<void(SocketChannelPtr, uint32_t, Message *)> 
-		> 
-	> MHandleRetMap;
+	inline static map<size_t, pair<const Message*, function<void(SocketChannelPtr, uint32_t, Message*)>>> MHandleMap;
+	inline static map<size_t, pair<const Message*, function<void(SocketChannelPtr, uint32_t, Message*)>>> MHandleRetMap;
 };
 
 
@@ -47,15 +34,15 @@ void DatabaseMessageHandle::MsgHandle(const SocketChannelPtr& channel, uint32_t 
 	{
 		auto& handle = MHandleMap[msgHashId];
 		Message* message = handle.first->New();
-		if(message->ParseFromArray(msgData.data(), msgData.length()))
-		{	
+		if (message->ParseFromArray(msgData.data(), msgData.length()))
+		{
 			handle.second(channel, msgId, message);
 		}
 		else
 		{
 			DNPrint(ErrCode_MsgParse, LoggerLevel::Error, nullptr);
 		}
-		
+
 		delete message;
 	}
 	else
@@ -64,13 +51,13 @@ void DatabaseMessageHandle::MsgHandle(const SocketChannelPtr& channel, uint32_t 
 	}
 }
 
-void DatabaseMessageHandle::MsgRetHandle(const SocketChannelPtr& channel, uint32_t msgId, size_t msgHashId, const string &msgData)
+void DatabaseMessageHandle::MsgRetHandle(const SocketChannelPtr& channel, uint32_t msgId, size_t msgHashId, const string& msgData)
 {
 	if (MHandleRetMap.contains(msgHashId))
 	{
 		auto& handle = MHandleRetMap[msgHashId];
 		Message* message = handle.first->New();
-		if(message->ParseFromArray(msgData.data(), msgData.length()))
+		if (message->ParseFromArray(msgData.data(), msgData.length()))
 		{
 			handle.second(channel, msgId, message);
 		}
@@ -78,7 +65,7 @@ void DatabaseMessageHandle::MsgRetHandle(const SocketChannelPtr& channel, uint32
 		{
 			DNPrint(ErrCode_MsgParse, LoggerLevel::Error, nullptr);
 		}
-		
+
 		delete message;
 	}
 	else
@@ -90,11 +77,11 @@ void DatabaseMessageHandle::MsgRetHandle(const SocketChannelPtr& channel, uint32
 void DatabaseMessageHandle::RegMsgHandle()
 {
 #ifdef _WIN32
-	#define MSG_MAPPING(map, msg, func) \
+#define MSG_MAPPING(map, msg, func) \
 	map.emplace(std::hash<string>::_Do_hash(msg::GetDescriptor()->full_name()), \
 	make_pair(msg::internal_default_instance(), &DatabaseMessage::func))
 #elif __unix__
-	#define MSG_MAPPING(map, msg, func) \
+#define MSG_MAPPING(map, msg, func) \
 	map.emplace(std::hash<string>{}(msg::GetDescriptor()->full_name()), \
 	make_pair(msg::internal_default_instance(), &DatabaseMessage::func))
 #endif

@@ -18,18 +18,18 @@ namespace ControlMessage
 {
 
 	// client request
-	export void Msg_ReqRegistSrv(SocketChannelPtr channel, uint32_t msgId, Message *msg)
+	export void Msg_ReqRegistSrv(SocketChannelPtr channel, uint32_t msgId, Message* msg)
 	{
 		COM_ReqRegistSrv* requset = reinterpret_cast<COM_ReqRegistSrv*>(msg);
 		COM_ResRegistSrv response;
 
-		ServerEntityManagerHelper*  entityMan = GetControlServer()->GetServerEntityManager();
+		ServerEntityManagerHelper* entityMan = GetControlServer()->GetServerEntityManager();
 
 		ServerType regType = (ServerType)requset->server_type();
 
 		const string& ipPort = channel->localaddr();
-		
-		if(regType < ServerType::GlobalServer || regType > ServerType::AuthServer || ipPort.empty())
+
+		if (regType < ServerType::GlobalServer || regType > ServerType::AuthServer || ipPort.empty())
 		{
 			response.set_success(false);
 		}
@@ -61,7 +61,7 @@ namespace ControlMessage
 		channel->write(binData);
 	}
 
-	export void Exe_RetHeartbeat(SocketChannelPtr channel, uint32_t msgId, Message *msg)
+	export void Exe_RetHeartbeat(SocketChannelPtr channel, uint32_t msgId, Message* msg)
 	{
 		COM_RetHeartbeat* requset = reinterpret_cast<COM_RetHeartbeat*>(msg);
 	}

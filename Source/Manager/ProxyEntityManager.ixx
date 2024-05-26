@@ -15,9 +15,9 @@ using namespace std;
 export class ProxyEntityManager : public EntityManager<ProxyEntity>
 {
 public:
-    ProxyEntityManager(){};
+	ProxyEntityManager() = default;
 
-	virtual ~ProxyEntityManager(){};
+	virtual ~ProxyEntityManager() = default;
 
 	virtual bool Init() override;
 
@@ -29,7 +29,7 @@ public: // dll override
 
 protected: // dll proxy
 
-	
+
 };
 
 bool ProxyEntityManager::Init()
@@ -40,17 +40,17 @@ bool ProxyEntityManager::Init()
 void ProxyEntityManager::EntityCloseTimer(uint64_t timerID)
 {
 	unique_lock<shared_mutex> ulock(oTimerMutex);
-	if(!mMapTimer.contains(timerID))
+	if (!mMapTimer.contains(timerID))
 	{
 		return;
 	}
 
 	uint32_t entityId = mMapTimer[timerID];
-	if(RemoveEntity(entityId))
+	if (RemoveEntity(entityId))
 	{
 		DNPrint(0, LoggerLevel::Debug, "destory proxy Timer entity");
 	}
-	
+
 }
 
 uint64_t ProxyEntityManager::CheckEntityCloseTimer(uint32_t entityId)
@@ -64,7 +64,7 @@ uint64_t ProxyEntityManager::CheckEntityCloseTimer(uint32_t entityId)
 
 bool ProxyEntityManager::RemoveEntity(uint32_t entityId)
 {
-	if(mEntityMap.contains(entityId))
+	if (mEntityMap.contains(entityId))
 	{
 		ProxyEntity* entity = &mEntityMap[entityId];
 		unique_lock<shared_mutex> ulock(oMapMutex);

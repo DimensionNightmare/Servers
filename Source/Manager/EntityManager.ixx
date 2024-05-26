@@ -14,18 +14,18 @@ export template<class TEntity = Entity>
 class EntityManager
 {
 public:
-    EntityManager();
+	EntityManager();
 
 	virtual ~EntityManager();
 
 	virtual bool Init();
 
 public: // dll override
-	const EventLoopPtr& Timer(){return pLoop->loop();}
+	const EventLoopPtr& Timer() { return pLoop->loop(); }
 	void AddTimerRecord(size_t timerId, uint32_t id);
 
 protected: // dll proxy
-    map<uint32_t, TEntity> mEntityMap;
+	map<uint32_t, TEntity> mEntityMap;
 	shared_mutex oMapMutex;
 	//
 	map<uint64_t, uint32_t > mMapTimer;
@@ -39,23 +39,21 @@ protected: // dll proxy
 template <class TEntity>
 EntityManager<TEntity>::EntityManager()
 {
-	mEntityMap.clear();
-	mMapTimer.clear();
 	pLoop = make_shared<EventLoopThread>();
 }
 
 template <class TEntity>
 EntityManager<TEntity>::~EntityManager()
 {
+	pLoop = nullptr;
 	mEntityMap.clear();
 	mMapTimer.clear();
-	pLoop->stop(true);
 }
 
 template <class TEntity>
 bool EntityManager<TEntity>::Init()
 {
-	pLoop->start(false);
+	pLoop->start();
 	return true;
 }
 

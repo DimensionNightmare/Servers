@@ -18,17 +18,17 @@ using namespace GMsg;
 namespace GlobalMessage
 {
 
-	export void Exe_RetRegistSrv(SocketChannelPtr channel, uint32_t msgId, Message *msg)
+	export void Exe_RetRegistSrv(SocketChannelPtr channel, uint32_t msgId, Message* msg)
 	{
 		g2G_RetRegistSrv* requset = reinterpret_cast<g2G_RetRegistSrv*>(msg);
 
 		GlobalServerHelper* dnServer = GetGlobalServer();
-		ServerEntityManagerHelper*  entityMan = dnServer->GetServerEntityManager();
-		if(ServerEntityHelper* entity = entityMan->GetEntity(requset->server_index()))
+		ServerEntityManagerHelper* entityMan = dnServer->GetServerEntityManager();
+		if (ServerEntityHelper* entity = entityMan->GetEntity(requset->server_index()))
 		{
-			if(requset->is_regist())
+			if (requset->is_regist())
 			{
-				if(uint64_t timerId = entity->TimerId())
+				if (uint64_t timerId = entity->TimerId())
 				{
 					entity->TimerId() = 0;
 					entityMan->Timer()->killTimer(timerId);

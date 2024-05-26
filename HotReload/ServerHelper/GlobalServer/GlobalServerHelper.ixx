@@ -21,12 +21,12 @@ using namespace GMsg;
 export class GlobalServerHelper : public GlobalServer
 {
 private:
-	GlobalServerHelper(){};
+	GlobalServerHelper() = delete;;
 public:
 
-	DNClientProxyHelper* GetCSock(){ return nullptr;}
-	DNServerProxyHelper* GetSSock(){ return nullptr;}
-	ServerEntityManagerHelper* GetServerEntityManager(){ return nullptr;}
+	DNClientProxyHelper* GetCSock() { return nullptr; }
+	DNServerProxyHelper* GetSSock() { return nullptr; }
+	ServerEntityManagerHelper* GetServerEntityManager() { return nullptr; }
 
 	void UpdateServerGroup();
 };
@@ -47,10 +47,10 @@ export GlobalServerHelper* GetGlobalServer()
 
 void GlobalServerHelper::UpdateServerGroup()
 {
-	ServerEntityManagerHelper*  entityMan = GetServerEntityManager();
+	ServerEntityManagerHelper* entityMan = GetServerEntityManager();
 
 	list<ServerEntity*> gates = entityMan->GetEntityByList(ServerType::GateServer);
-	if(gates.size() <= 0)
+	if (gates.size() <= 0)
 	{
 		return;
 	}
@@ -63,37 +63,37 @@ void GlobalServerHelper::UpdateServerGroup()
 	string binData;
 
 	auto registControl = [&](ServerEntityHelper* beEntity, ServerEntityHelper* entity)
-	{
-		SocketChannelPtr channel = entity->GetSock();
-		entity->LinkNode() = beEntity;
-		entity->SetSock(nullptr);
-		channel->setContext(nullptr);
-		
-		// sendData
-		retMsg.set_ip(beEntity->ServerIp());
-		retMsg.set_port(beEntity->ServerPort());
-		
-		binData.clear();
-		binData.resize(retMsg.ByteSizeLong());
-		retMsg.SerializeToArray(binData.data(), binData.size());
-		MessagePack(0, MsgDeal::Ret, retMsg.GetDescriptor()->full_name().c_str(), binData);
-		channel->write(binData);
-		
-		// timer destory
-		entity->TimerId() = entityMan->ServerEntityManager::CheckEntityCloseTimer(entity->ID());
-	};
-	
-	for(ServerEntity* it : gates)
+		{
+			SocketChannelPtr channel = entity->GetSock();
+			entity->LinkNode() = beEntity;
+			entity->SetSock(nullptr);
+			channel->setContext(nullptr);
+
+			// sendData
+			retMsg.set_ip(beEntity->ServerIp());
+			retMsg.set_port(beEntity->ServerPort());
+
+			binData.clear();
+			binData.resize(retMsg.ByteSizeLong());
+			retMsg.SerializeToArray(binData.data(), binData.size());
+			MessagePack(0, MsgDeal::Ret, retMsg.GetDescriptor()->full_name().c_str(), binData);
+			channel->write(binData);
+
+			// timer destory
+			entity->TimerId() = entityMan->ServerEntityManager::CheckEntityCloseTimer(entity->ID());
+		};
+
+	for (ServerEntity* it : gates)
 	{
 		ServerEntityHelper* gate = CastObj(it);
-		if(gate->HasFlag(ServerEntityFlag::Locked))
+		if (gate->HasFlag(ServerEntityFlag::Locked))
 		{
 			continue;
 		}
 
 		list<ServerEntity*>& gatesDb = gate->GetMapLinkNode(ServerType::DatabaseServer);
 		list<ServerEntity*>& gatesLogic = gate->GetMapLinkNode(ServerType::LogicServer);
-		if(!dbs.empty() && gatesDb.size() < 1)
+		if (!dbs.empty() && gatesDb.size() < 1)
 		{
 			ServerEntity* ele = dbs.front();
 			dbs.pop_front();
@@ -103,7 +103,7 @@ void GlobalServerHelper::UpdateServerGroup()
 			gatesDb.emplace_back(ele);
 		}
 
-		if(!logics.empty() && gatesLogic.size() < 1)
+		if (!logics.empty() && gatesLogic.size() < 1)
 		{
 			ServerEntity* ele = logics.front();
 			logics.pop_front();
@@ -118,6 +118,6 @@ void GlobalServerHelper::UpdateServerGroup()
 			// UnMountEntity(gate->GetServerType(), it);
 			gate->SetFlag(ServerEntityFlag::Locked);
 		}
-		
+
 	}
 }
