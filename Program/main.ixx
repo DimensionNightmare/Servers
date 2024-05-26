@@ -258,7 +258,7 @@ export int main(int argc, char** argv)
 	while (PInstance && PInstance->ServerIsRun())
 	{
 		PInstance->TickMainFrame();
-		Sleep(100);
+		Sleep(1);
 	}
 
 	PInstance = nullptr;

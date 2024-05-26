@@ -40,8 +40,13 @@ namespace DatabaseMessage
 		client->RegistState() = RegistState::Registing;
 
 		COM_ReqRegistSrv requset;
+		
 		requset.set_server_type((int)dnServer->GetServerType());
-		requset.set_server_index(dnServer->ServerIndex());
+
+		if (uint32_t serverIndex = dnServer->ServerIndex())
+		{
+			requset.set_server_index(serverIndex);
+		}
 
 		// pack data
 		string binData;
@@ -71,7 +76,7 @@ namespace DatabaseMessage
 
 		if (response.success())
 		{
-			DNPrint(0, LoggerLevel::Debug, "regist Server success! ");
+			DNPrint(0, LoggerLevel::Debug, "regist Server success! Rec index:%d", response.server_index());
 			client->RegistState() = RegistState::Registed;
 			dnServer->ServerIndex() = response.server_index();
 		}

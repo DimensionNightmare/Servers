@@ -63,7 +63,7 @@ target_link_libraries(MainSource PUBLIC
 	redis++::redis++_static
 )
 
-target_compile_definitions(MainSource PRIVATE _${CMAKE_SYSTEM_PROCESSOR}_)
+target_compile_definitions(MainSource PRIVATE _${CMAKE_SYSTEM_PROCESSOR}_ MAINLIB_BUILD)
 
 set_property(TARGET MainSource PROPERTY CXX_STANDARD 23)
 

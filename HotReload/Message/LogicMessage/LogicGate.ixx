@@ -58,7 +58,7 @@ namespace LogicMessage
 			if (serverEntityList.empty())
 			{
 				response.set_state_code(5);
-				DNPrint(0, LoggerLevel::Debug, "not ds connect");
+				DNPrint(0, LoggerLevel::Debug, "not ds Server");
 			}
 			else
 			{
@@ -97,6 +97,7 @@ namespace LogicMessage
 				}
 				else
 				{
+					entity->ServerIndex() = serverEntity->ID();
 					//combin D2L_ReqClientLogin
 					response.set_ip(serverEntity->ServerIp());
 					response.set_port(serverEntity->ServerPort());
@@ -104,8 +105,9 @@ namespace LogicMessage
 
 			}
 
-			DNPrint(0, LoggerLevel::Debug, "ds:%s", response.DebugString().c_str());
 		}
+		
+		DNPrint(0, LoggerLevel::Debug, "ds:%s", response.DebugString().c_str());
 
 		// pack data
 		binData.clear();

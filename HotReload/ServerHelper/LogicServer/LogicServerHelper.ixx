@@ -54,6 +54,11 @@ export LogicServerHelper* GetLogicServer()
 
 bool LogicServerHelper::InitDatabase()
 {
+	if (pNoSqlProxy)
+	{
+		return true;
+	}
+
 	if (string* value = GetLuanchConfigParam("connection"))
 	{
 		try

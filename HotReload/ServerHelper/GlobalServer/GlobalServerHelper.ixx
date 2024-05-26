@@ -64,9 +64,9 @@ void GlobalServerHelper::UpdateServerGroup()
 
 	auto registControl = [&](ServerEntityHelper* beEntity, ServerEntityHelper* entity)
 		{
-			SocketChannelPtr channel = entity->GetSock();
+			const SocketChannelPtr& channel = entity->GetSock();
 			entity->LinkNode() = beEntity;
-			entity->SetSock(nullptr);
+			
 			channel->setContext(nullptr);
 
 			// sendData
@@ -80,7 +80,9 @@ void GlobalServerHelper::UpdateServerGroup()
 			channel->write(binData);
 
 			// timer destory
-			entity->TimerId() = entityMan->ServerEntityManager::CheckEntityCloseTimer(entity->ID());
+			entity->TimerId() = entityMan->CheckEntityCloseTimer(entity->ID());
+			
+			entity->SetSock(nullptr);
 		};
 
 	for (ServerEntity* it : gates)

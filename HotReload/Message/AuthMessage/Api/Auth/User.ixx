@@ -244,4 +244,13 @@ export void ApiAuth(HttpService* service)
 			writer->End();
 		});
 
+	service->POST("/Auth/User/Test", [](const HttpRequestPtr& req, const HttpResponseWriterPtr& writer)
+		{
+			if (HMODULE hModule = GetModuleHandle(NULL))
+			{
+				
+			}
+
+			writer->End();
+		});
 }

@@ -50,10 +50,14 @@ namespace GlobalMessage
 		if (tempList.empty())
 		{
 			response.set_state_code(4);
+			DNPrint(0, LoggerLevel::Debug, "not exist GateServer");
 		}
 		else
 		{
+
 			ServerEntityHelper* entity = tempList.front();
+			DNPrint(0, LoggerLevel::Debug, "send to GateServer : %d", entity->ID());
+
 			entity->GetConnNum()++;
 
 			response.set_ip(entity->ServerIp());

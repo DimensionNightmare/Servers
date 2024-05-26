@@ -1,8 +1,7 @@
 module;
 #include <cstdint>
-#include "hv/EventLoop.h"
-#include "hv/hsocket.h"
 #include "pqxx/connection"
+#include "hv/hsocket.h"
 #include "hv/EventLoopThread.h"
 
 #include "StdAfx.h"

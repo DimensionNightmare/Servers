@@ -25,6 +25,21 @@ export enum class RegistState : uint8_t
 	Registed,
 };
 
+#ifdef _WIN32
+
+	#ifdef MAINLIB_BUILD
+		#define MAINLIB  __declspec(dllexport)
+	#else
+		#define MAINLIB __declspec(dllimport)
+	#endif
+#elif __unix__
+	#ifdef MAINLIB_BUILD
+		#define MAINLIB __attribute__((visibility("default")))
+	#else
+		#define MAINLIB
+	#endif
+#endif
+
 class TcpClientTmplTemp : public EventLoopThread, public TcpClientEventLoopTmpl<SocketChannel>
 {
 public:

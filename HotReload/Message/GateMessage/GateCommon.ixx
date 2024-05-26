@@ -43,10 +43,15 @@ namespace GateMessage
 		client->RegistState() = RegistState::Registing;
 
 		COM_ReqRegistSrv requset;
+
 		requset.set_server_type((int)dnServer->GetServerType());
 
+		if (uint32_t serverIndex = dnServer->ServerIndex())
+		{
+			requset.set_server_index(serverIndex);
+		}
+
 		requset.set_port(server->port);
-		requset.set_server_index(dnServer->ServerIndex());
 
 		ServerEntityManagerHelper* entityMan = dnServer->GetServerEntityManager();
 		auto AddChild = [&requset](ServerEntity* serv)
@@ -98,7 +103,7 @@ namespace GateMessage
 
 		if (response.success())
 		{
-			DNPrint(0, LoggerLevel::Debug, "regist Server success! ");
+			DNPrint(0, LoggerLevel::Debug, "regist Server success! Rec index:%d", response.server_index());
 			client->RegistState() = RegistState::Registed;
 			dnServer->ServerIndex() = response.server_index();
 		}

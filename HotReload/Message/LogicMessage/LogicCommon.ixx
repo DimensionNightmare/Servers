@@ -40,8 +40,13 @@ namespace LogicMessage
 		client->RegistState() = RegistState::Registing;
 
 		COM_ReqRegistSrv requset;
+
 		requset.set_server_type((int)dnServer->GetServerType());
-		requset.set_server_index(dnServer->ServerIndex());
+
+		if (uint32_t serverIndex = dnServer->ServerIndex())
+		{
+			requset.set_server_index(serverIndex);
+		}
 
 		// pack data
 		string binData;
@@ -71,7 +76,7 @@ namespace LogicMessage
 
 		if (response.success())
 		{
-			DNPrint(0, LoggerLevel::Debug, "regist Server success! ");
+			DNPrint(0, LoggerLevel::Debug, "regist Server success! Rec index:%d", response.server_index());
 			client->RegistState() = RegistState::Registed;
 			dnServer->ServerIndex() = response.server_index();
 		}
@@ -107,7 +112,51 @@ namespace LogicMessage
 			response.set_success(false);
 		}
 
-		else if (ServerEntityHelper* entity = entityMan->AddEntity(requset->server_index(), regType))
+		else if (int serverIndex = requset->server_index())
+		{
+			if (ServerEntityHelper* entity = entityMan->GetEntity(serverIndex))
+			{
+				// wait destroy`s destroy
+				if (uint64_t timerId = entity->TimerId())
+				{
+					entity->TimerId() = 0;
+					entityMan->Timer()->killTimer(timerId);
+				}
+
+				// already connect
+				if (const SocketChannelPtr& sock = entity->GetSock())
+				{
+					response.set_success(false);
+				}
+				else
+				{
+					entity->LinkNode() = nullptr;
+					entity->SetSock(channel);
+					channel->setContext(entity);
+
+					response.set_success(true);
+
+					// Re-enroll
+					entityMan->MountEntity(regType, entity);
+				}
+			}
+			else
+			{
+				response.set_success(true);
+				response.set_server_index(serverIndex);
+
+				entity = entityMan->AddEntity(serverIndex, regType);
+				entity->SetSock(channel);
+
+				channel->setContext(entity);
+
+				size_t pos = ipPort.find(":");
+				entity->ServerIp() = ipPort.substr(0, pos);
+				entity->ServerPort() = requset->port();
+			}
+		}
+
+		else if (ServerEntityHelper* entity = entityMan->AddEntity(entityMan->ServerIndex(), regType))
 		{
 			size_t pos = ipPort.find(":");
 			entity->ServerIp() = ipPort.substr(0, pos);

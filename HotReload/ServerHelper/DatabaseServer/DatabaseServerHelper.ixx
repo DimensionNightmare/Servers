@@ -50,6 +50,11 @@ export DatabaseServerHelper* GetDatabaseServer()
 
 bool DatabaseServerHelper::InitDatabase()
 {
+	if (pSqlProxy)
+	{
+		return true;
+	}
+	
 	try
 	{
 		//"postgresql://root@localhost"

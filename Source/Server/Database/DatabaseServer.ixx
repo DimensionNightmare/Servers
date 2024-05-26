@@ -2,7 +2,7 @@ module;
 #include <cstdint>
 #include <thread>
 #include <iostream>
-#include "hv/EventLoop.h"
+#include "pqxx/connection"
 #include "hv/hsocket.h"
 #include "hv/EventLoopThread.h"
 
@@ -42,6 +42,8 @@ public: // dll override
 
 protected: // dll proxy
 	unique_ptr<DNClientProxy> pCSock;
+
+	unique_ptr<pqxx::connection> pSqlProxy;
 
 	// record orgin info
 	string sCtlIp;

@@ -1,9 +1,9 @@
 module;
 #ifdef _WIN32
-#include <consoleapi2.h>
-#include <libloaderapi.h>
+	#include <consoleapi2.h>
+	#include <libloaderapi.h>
 #elif __unix__
-#include <dlfcn.h>
+	#include <dlfcn.h>
 #endif
 #include <filesystem>
 #include <iostream>
@@ -27,7 +27,7 @@ import I10nText;
 using namespace std;
 
 #ifdef __unix__
-#define Sleep(ms) usleep(ms*1000)
+	#define Sleep(ms) usleep(ms*1000)
 #endif
 
 struct HotReloadDll

@@ -88,6 +88,8 @@ namespace GateMessage
 			{
 				entity->ServerIndex() = serverEntity->ID();
 
+				DNPrint(0, LoggerLevel::Debug, "Send to Logic index->%d, %d", entity->ID(), entity->ServerIndex());
+
 				//redirect G2L_ReqClientLogin dot pack string
 				requset->clear_token();
 				binData.clear();
@@ -118,8 +120,8 @@ namespace GateMessage
 
 				}
 			}
+			
 		}
-
 
 		binData.clear();
 		binData.resize(response.ByteSizeLong());

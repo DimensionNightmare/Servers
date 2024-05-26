@@ -41,7 +41,13 @@ namespace GlobalMessage
 		client->RegistState() = RegistState::Registing;
 
 		COM_ReqRegistSrv requset;
+
 		requset.set_server_type((int)dnServer->GetServerType());
+
+		if (uint32_t serverIndex = dnServer->ServerIndex())
+		{
+			requset.set_server_index(serverIndex);
+		}
 
 		requset.set_port(server->port);
 
@@ -73,7 +79,7 @@ namespace GlobalMessage
 
 		if (response.success())
 		{
-			DNPrint(0, LoggerLevel::Debug, "regist Server success! ");
+			DNPrint(0, LoggerLevel::Debug, "regist Server success! Rec index:%d", response.server_index());
 			client->RegistState() = RegistState::Registed;
 			dnServer->ServerIndex() = response.server_index();
 		}
@@ -113,9 +119,9 @@ namespace GlobalMessage
 		}
 
 		// take task to regist !
-		else if (requset->server_index())
+		else if (int serverIndex = requset->server_index())
 		{
-			if (ServerEntityHelper* entity = entityMan->GetEntity(requset->server_index()))
+			if (ServerEntityHelper* entity = entityMan->GetEntity(serverIndex))
 			{
 				// wait destroy`s destroy
 				if (uint64_t timerId = entity->TimerId())
@@ -125,7 +131,7 @@ namespace GlobalMessage
 				}
 
 				// already connect
-				if (auto sock = entity->GetSock())
+				if (const SocketChannelPtr& sock = entity->GetSock())
 				{
 					response.set_success(false);
 				}
@@ -144,9 +150,9 @@ namespace GlobalMessage
 			else
 			{
 				response.set_success(true);
-				response.set_server_index(requset->server_index());
+				response.set_server_index(serverIndex);
 
-				entity = entityMan->AddEntity(requset->server_index(), regType);
+				entity = entityMan->AddEntity(serverIndex, regType);
 				entity->SetSock(channel);
 
 				channel->setContext(entity);

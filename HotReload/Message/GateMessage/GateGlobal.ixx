@@ -36,7 +36,7 @@ namespace GateMessage
 		if (entity)
 		{
 			//exit
-			if (SocketChannelPtr online = entity->GetSock())
+			if (const SocketChannelPtr& online = entity->GetSock())
 			{
 				// kick channel
 				S2C_RetAccountReplace retMsg;
@@ -56,6 +56,8 @@ namespace GateMessage
 				//kick game
 				if (uint32_t serverIndex = entity->ServerIndex())
 				{
+					DNPrint(0, LoggerLevel::Debug, "Send Logic tick User->%d, server:%d", entity->ID(), entity->ServerIndex());
+
 					ServerEntityManagerHelper* serverEntityMan = dnServer->GetServerEntityManager();
 					ServerEntityHelper* serverEntity = serverEntityMan->GetEntity(serverIndex);
 
@@ -91,7 +93,7 @@ namespace GateMessage
 		// entity or token expired
 		if (!entity->TimerId())
 		{
-			entity->TimerId() = entityMan->ProxyEntityManager::CheckEntityCloseTimer(entity->ID());
+			entity->TimerId() = entityMan->CheckEntityCloseTimer(entity->ID());
 		}
 
 		binData.clear();

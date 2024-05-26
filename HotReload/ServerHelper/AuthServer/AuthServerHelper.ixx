@@ -40,6 +40,11 @@ export AuthServerHelper* GetAuthServer()
 
 bool AuthServerHelper::InitDatabase()
 {
+	if (pSqlProxy)
+	{
+		return true;
+	}
+	
 	try
 	{
 		//"postgresql://root@localhost"
