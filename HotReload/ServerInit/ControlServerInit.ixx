@@ -2,13 +2,16 @@ module;
 #include "google/protobuf/message.h"
 #include "hv/Channel.h"
 
-#include "StdAfx.h"
+#include "StdMacro.h"
+#include "Common/Common.pb.h"
 export module ControlServerInit;
 
 import ControlServerHelper;
 import MessagePack;
 import ControlMessage;
 import DNTask;
+import Logger;
+import Macro;
 
 using namespace hv;
 using namespace std;
@@ -38,7 +41,7 @@ int HandleControlServerInit(DNServer* server)
 				{
 					DNPrint(TipCode_CliConnOn, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
 					// if not regist
-					serverSock->CheckChannelByTimer(channel);
+					TICK_MAINSPACE_SIGN_FUNCTION(DNServerProxy, CheckChannelByTimer, serverSock, channel);
 					// if not recive data
 					channel->setReadTimeout(15000);
 				}

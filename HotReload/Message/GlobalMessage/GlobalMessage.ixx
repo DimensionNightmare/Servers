@@ -4,7 +4,8 @@ module;
 #include <cstdint>
 #include "hv/Channel.h"
 
-#include "StdAfx.h"
+#include "StdMacro.h"
+#include "Common/Common.pb.h"
 #include "Server/S_Control_Global.pb.h"
 #include "Server/S_Common.pb.h"
 #include "Server/S_Global_Gate.pb.h"
@@ -13,6 +14,8 @@ export module GlobalMessage;
 export import :GlobalCommon;
 import :GlobalControl;
 import :GlobalGate;
+import Logger;
+import Config.Server;
 
 using namespace std;
 using namespace hv;

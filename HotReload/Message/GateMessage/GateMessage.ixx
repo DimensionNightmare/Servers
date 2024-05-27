@@ -4,7 +4,8 @@ module;
 #include <cstdint>
 #include "hv/Channel.h"
 
-#include "StdAfx.h"
+#include "StdMacro.h"
+#include "Common/Common.pb.h"
 #include "Server/S_Common.pb.h"
 #include "Server/S_Global_Gate.pb.h"
 #include "Client/C_Auth.pb.h"
@@ -13,6 +14,7 @@ export module GateMessage;
 export import :GateCommon;
 import :GateGlobal;
 import :GateClient;
+import Logger;
 
 using namespace std;
 using namespace hv;

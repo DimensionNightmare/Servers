@@ -5,7 +5,8 @@ module;
 #include "hv/EventLoopThread.h"
 #include "sw/redis++/redis++.h"
 
-#include "StdAfx.h"
+#include "StdMacro.h"
+#include "Common/Common.pb.h"
 export module LogicServer;
 
 export import DNServer;
@@ -14,6 +15,8 @@ import DNClientProxy;
 import ServerEntityManager;
 import ClientEntityManager;
 import RoomEntityManager;
+import Logger;
+import Config.Server;
 
 using namespace std;
 using namespace hv;
@@ -157,21 +160,7 @@ bool LogicServer::Init()
 void LogicServer::InitCmd(map<string, function<void(stringstream *)>> &cmdMap)
 {
 	DNServer::InitCmd(cmdMap);
-
-	/*** this cmd is import!
-		if dll change client will use dll's codespace. 
-		cant use main thread to exec lambda, it's unuseful.
-		hv epoll has static Obj epoll__handle_tree, It have a bad effect.(connected‘s timing func dont exec)
-	***/
-	cmdMap.emplace("redirectClient", [this](stringstream* ss)
-	{
-		string ip;
-		uint16_t port;
-		*ss >> ip;
-		*ss >> port;
-		
-		pCSock->RedirectClient(port, ip.c_str());
-	});
+	
 }
 
 bool LogicServer::Start()
@@ -208,11 +197,11 @@ bool LogicServer::Stop()
 
 void LogicServer::Pause()
 {
-	pSSock->pLoop->loop()->pause();
-	pCSock->pLoop->loop()->pause();
-	pServerEntityMan->Timer()->pause();
-	pClientEntityMan->Timer()->pause();
-	pRoomMan->Timer()->pause();
+	// pSSock->Timer()->pause();
+	// pCSock->Timer()->pause();
+	// pServerEntityMan->Timer()->pause();
+	// pClientEntityMan->Timer()->pause();
+	// pRoomMan->Timer()->pause();
 
 	LoopEvent([](EventLoopPtr loop)
 	{ 
@@ -227,12 +216,11 @@ void LogicServer::Resume()
 		loop->resume(); 
 	});
 
-	pSSock->pLoop->loop()->resume();
-	pCSock->pLoop->loop()->resume();
-
-	pServerEntityMan->Timer()->resume();
-	pClientEntityMan->Timer()->resume();
-	pRoomMan->Timer()->resume();
+	// pSSock->Timer()->resume();
+	// pCSock->Timer()->resume();
+	// pServerEntityMan->Timer()->resume();
+	// pClientEntityMan->Timer()->resume();
+	// pRoomMan->Timer()->resume();
 }
 
 void LogicServer::LoopEvent(function<void(EventLoopPtr)> func)

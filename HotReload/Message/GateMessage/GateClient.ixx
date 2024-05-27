@@ -4,7 +4,7 @@ module;
 #include <list>
 #include "hv/Channel.h"
 
-#include "StdAfx.h"
+#include "StdMacro.h"
 #include "Client/C_Auth.pb.h"
 #include "Server/S_Gate_Logic.pb.h" 
 export module GateMessage:GateClient;
@@ -13,6 +13,7 @@ import GateServerHelper;
 import DNTask;
 import Utils.StrUtils;
 import MessagePack;
+import Logger;
 
 using namespace std;
 using namespace hv;

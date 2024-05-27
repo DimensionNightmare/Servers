@@ -4,13 +4,16 @@ module;
 #include "google/protobuf/message.h"
 #include "hv/Channel.h"
 
-#include "StdAfx.h"
+#include "StdMacro.h"
+#include "Common/Common.pb.h"
 export module LogicServerInit;
 
 import LogicServerHelper;
 import MessagePack;
 import LogicMessage;
 import DNTask;
+import Logger;
+import Macro;
 
 using namespace hv;
 using namespace std;
@@ -26,10 +29,6 @@ int HandleLogicServerInit(DNServer* server)
 	LogicMessageHandle::RegMsgHandle();
 
 	LogicServerHelper* serverProxy = GetLogicServer();
-
-	// ServerEntityManagerHelper* entityMan = serverProxy->GetServerEntityManager();
-	// DNPrint(0, LoggerLevel::Debug, "ServerEntityManager:%p, ServerEntityManagerHelper:%p", static_cast<ServerEntityManager*>(entityMan), entityMan);
-	// DNPrint(0, LoggerLevel::Debug, "ServerEntityManager Func:%p", &LogicServerHelper::GetServerEntityManager);
 
 	if (DNServerProxyHelper* serverSock = serverProxy->GetSSock())
 	{
@@ -134,7 +133,7 @@ int HandleLogicServerInit(DNServer* server)
 				{
 					DNPrint(TipCode_SrvConnOn, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
 					clientSock->SetRegistEvent(&LogicMessage::Evt_ReqRegistSrv);
-					clientSock->DNClientProxy::StartRegist();
+					TICK_MAINSPACE_SIGN_FUNCTION(DNClientProxy, StartRegist, clientSock);
 					channel->setHeartbeat(4000, std::bind(&DNClientProxy::TickHeartbeat, clientSock));
 
 					channel->setWriteTimeout(12000);
@@ -142,24 +141,27 @@ int HandleLogicServerInit(DNServer* server)
 				else
 				{
 					DNPrint(TipCode_SrvConnOff, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
-					if (clientSock->RegistState() == RegistState::Registed)
-					{
-						clientSock->RegistState() = RegistState::None;
-					}
 
-					// not orgin
-					string origin = format("{}:{}", serverProxy->GetCtlIp(), serverProxy->GetCtlPort());
-					if (peeraddr != origin)
-					{
-						serverProxy->ReClientEvent(serverProxy->GetCtlIp(), serverProxy->GetCtlPort());
-					}
-				}
-
-				if (clientSock->isReconnect())
+				string origin = format("{}:{}", serverProxy->GetCtlIp(), serverProxy->GetCtlPort());
+				if (clientSock->RegistState() == RegistState::Registed && peeraddr != origin)
 				{
+					clientSock->RegistState() = RegistState::None;
 
+					if (clientSock->pLoop)
+					{
+						clientSock->Timer()->setTimeout(200, [=](uint64_t timerID)
+						{
+							DNPrint(0, LoggerLevel::Debug, "orgin not match peeraddr %s reclient ~", origin.c_str());
+							serverProxy->ReClientEvent(serverProxy->GetCtlIp(), serverProxy->GetCtlPort()); 
+						});
+					}
 				}
-			};
+			}
+
+			if (clientSock->isReconnect())
+			{
+			}
+		};
 
 		auto onMessage = [clientSock](const SocketChannelPtr& channel, Buffer* buf)
 			{

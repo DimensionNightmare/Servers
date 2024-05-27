@@ -11,6 +11,8 @@ export void ApiInit(HttpService* service)
 {
 	service->preprocessor = [](HttpRequest* req, HttpResponse* resp) -> int
 		{
+			return HTTP_STATUS_NEXT;
+			
 			AuthServerHelper* authServer = GetAuthServer();
 
 			Json errData;

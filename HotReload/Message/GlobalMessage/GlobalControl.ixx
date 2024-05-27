@@ -6,7 +6,7 @@ module;
 #include <list>
 #include "hv/Channel.h"
 
-#include "StdAfx.h"
+#include "StdMacro.h"
 #include "Server/S_Control_Global.pb.h"
 #include "Server/S_Global_Gate.pb.h"
 #include "Server/S_Common.pb.h"
@@ -15,6 +15,7 @@ export module GlobalMessage:GlobalControl;
 import DNTask;
 import MessagePack;
 import GlobalServerHelper;
+import Logger;
 
 using namespace std;
 using namespace hv;

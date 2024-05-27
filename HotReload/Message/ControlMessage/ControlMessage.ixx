@@ -4,7 +4,8 @@ module;
 #include <cstdint>
 #include "hv/Channel.h"
 
-#include "StdAfx.h"
+#include "StdMacro.h"
+#include "Common/Common.pb.h"
 #include "Server/S_Common.pb.h"
 #include "Server/S_Auth_Control.pb.h"
 export module ControlMessage;
@@ -12,6 +13,7 @@ export module ControlMessage;
 export import :ControlGlobal;
 import :ControlCommon;
 import :ControlAuth;
+import Logger;
 
 using namespace std;
 using namespace hv;

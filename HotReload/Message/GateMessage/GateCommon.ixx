@@ -4,7 +4,7 @@ module;
 #include <list>
 #include "hv/Channel.h"
 
-#include "StdAfx.h"
+#include "StdMacro.h"
 #include "Server/S_Common.pb.h"
 #include "Server/S_Global_Gate.pb.h"
 export module GateMessage:GateCommon;
@@ -12,6 +12,7 @@ export module GateMessage:GateCommon;
 import DNTask;
 import MessagePack;
 import GateServerHelper;
+import Logger;
 
 using namespace std;
 using namespace hv;

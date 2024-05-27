@@ -3,13 +3,16 @@ module;
 #include "google/protobuf/message.h"
 #include "hv/Channel.h"
 
-#include "StdAfx.h"
+#include "StdMacro.h"
+#include "Common/Common.pb.h"
 export module GlobalServerInit;
 
 import GlobalServerHelper;
 import MessagePack;
 import GlobalMessage;
 import DNTask;
+import Logger;
+import Macro;
 
 using namespace hv;
 using namespace std;
@@ -38,7 +41,7 @@ int HandleGlobalServerInit(DNServer* server)
 				{
 					DNPrint(TipCode_CliConnOn, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
 					// if not regist
-					serverSock->CheckChannelByTimer(channel);
+					TICK_MAINSPACE_SIGN_FUNCTION(DNServerProxy, CheckChannelByTimer, serverSock, channel);
 					// if not recive data
 					channel->setReadTimeout(15000);
 				}
@@ -133,7 +136,7 @@ int HandleGlobalServerInit(DNServer* server)
 					DNPrint(TipCode_SrvConnOn, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
 					channel->setHeartbeat(4000, std::bind(&DNClientProxy::TickHeartbeat, clientSock));
 					clientSock->SetRegistEvent(&GlobalMessage::Evt_ReqRegistSrv);
-					clientSock->DNClientProxy::StartRegist();
+					TICK_MAINSPACE_SIGN_FUNCTION(DNClientProxy, StartRegist, clientSock);
 
 					channel->setWriteTimeout(12000);
 				}

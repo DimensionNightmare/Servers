@@ -4,7 +4,7 @@ module;
 #include <list>
 #include "hv/Channel.h"
 
-#include "StdAfx.h"
+#include "StdMacro.h"
 #include "Server/S_Auth_Control.pb.h"
 #include "Server/S_Control_Global.pb.h"
 export module ControlMessage:ControlAuth;
@@ -12,6 +12,7 @@ export module ControlMessage:ControlAuth;
 import DNTask;
 import MessagePack;
 import ControlServerHelper;
+import Logger;
 
 using namespace std;
 using namespace hv;

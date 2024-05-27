@@ -4,7 +4,7 @@ module;
 #include <list>
 #include "hv/Channel.h"
 
-#include "StdAfx.h"
+#include "StdMacro.h"
 #include "Server/S_Gate_Logic.pb.h"
 #include "Server/S_Logic_Dedicated.pb.h"
 export module LogicMessage:LogicGate;
@@ -12,6 +12,7 @@ export module LogicMessage:LogicGate;
 import DNTask;
 import MessagePack;
 import LogicServerHelper;
+import Logger;
 
 using namespace std;
 using namespace google::protobuf;

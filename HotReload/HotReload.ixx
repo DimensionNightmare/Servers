@@ -9,7 +9,7 @@ module;
 #include "hv/hasync.h"
 #include "hv/hlog.h"
 
-#include "StdAfx.h"
+#include "StdMacro.h"
 export module HotReload;
 
 import DNServer;
@@ -20,6 +20,8 @@ import GateServerInit;
 import DatabaseServerInit;
 import LogicServerInit;
 import DNClientProxyHelper;
+import Logger;
+import Config.Server;
 
 #ifdef _WIN32
 

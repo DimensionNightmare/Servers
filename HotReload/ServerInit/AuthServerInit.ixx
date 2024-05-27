@@ -3,13 +3,16 @@ module;
 #include "hv/Channel.h"
 #include "hv/HttpServer.h"
 
-#include "StdAfx.h"
+#include "StdMacro.h"
+#include "Common/Common.pb.h"
 export module AuthServerInit;
 
 import AuthServerHelper;
 import MessagePack;
 import AuthMessage;
 import DNTask;
+import Logger;
+import Macro;
 
 using namespace hv;
 using namespace std;
@@ -47,7 +50,7 @@ int HandleAuthServerInit(DNServer* server)
 					DNPrint(TipCode_CliConnOn, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
 					channel->setHeartbeat(4000, std::bind(&DNClientProxy::TickHeartbeat, clientSock));
 					clientSock->SetRegistEvent(&AuthMessage::Evt_ReqRegistSrv);
-					clientSock->DNClientProxy::StartRegist();
+					TICK_MAINSPACE_SIGN_FUNCTION(DNClientProxy, StartRegist, clientSock);
 
 					channel->setWriteTimeout(12000);
 				}

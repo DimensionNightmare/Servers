@@ -6,12 +6,15 @@ module;
 #include "hv/EventLoopThread.h"
 #include "google/protobuf/message.h"
 
-#include "StdAfx.h"
+#include "StdMacro.h"
 #include "Server/S_Common.pb.h"
+#include "Common/Common.pb.h"
 export module DNClientProxy;
 
 import DNTask;
 import MessagePack;
+import Macro;
+import Logger;
 
 using namespace std;
 using namespace google::protobuf;
@@ -24,21 +27,6 @@ export enum class RegistState : uint8_t
 	Registing,
 	Registed,
 };
-
-#ifdef _WIN32
-
-	#ifdef MAINLIB_BUILD
-		#define MAINLIB  __declspec(dllexport)
-	#else
-		#define MAINLIB __declspec(dllimport)
-	#endif
-#elif __unix__
-	#ifdef MAINLIB_BUILD
-		#define MAINLIB __attribute__((visibility("default")))
-	#else
-		#define MAINLIB
-	#endif
-#endif
 
 class TcpClientTmplTemp : public EventLoopThread, public TcpClientEventLoopTmpl<SocketChannel>
 {
@@ -115,7 +103,7 @@ public: // dll override
 
 	void TickHeartbeat();
 
-	void RedirectClient(uint16_t port, const char* ip);
+	void RedirectClient(uint16_t port, string ip);
 
 public:
 	// cant init in tcpclient this class
@@ -137,7 +125,12 @@ protected: // dll proxy
 	shared_mutex oTimerMutex;
 };
 
-
+extern "C"
+{
+	REGIST_MAINSPACE_SIGN_FUNCTION(DNClientProxy, RedirectClient)
+	REGIST_MAINSPACE_SIGN_FUNCTION(DNClientProxy, StartRegist)
+	REGIST_MAINSPACE_SIGN_FUNCTION(DNClientProxy, CheckMessageTimeoutTimer)
+}
 
 DNClientProxy::DNClientProxy()
 {
@@ -268,10 +261,10 @@ void DNClientProxy::TickHeartbeat()
 	send(binData);
 }
 
-void DNClientProxy::RedirectClient(uint16_t port, const char* ip)
+void DNClientProxy::RedirectClient(uint16_t port, string ip)
 {
 	eRegistState = RegistState::None;
 
-	createsocket(port, ip);
-	start();
+	createsocket(port, ip.c_str());
+	// start();
 }

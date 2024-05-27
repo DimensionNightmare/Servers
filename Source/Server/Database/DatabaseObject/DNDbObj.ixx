@@ -9,11 +9,12 @@ module;
 #include "pqxx/transaction"
 #include "pqxx/result"
 
-#include "StdAfx.h"
+#include "StdMacro.h"
 #include "Common/DbExtend.pb.h"
 export module DNDbObj;
 
 import Utils.StrUtils;
+import Logger;
 
 using namespace std;
 using namespace google::protobuf;

@@ -12,7 +12,8 @@ module;
 #include <random>
 #include "hv/EventLoop.h"
 
-#include "StdAfx.h"
+#include "StdMacro.h"
+#include "Common/Common.pb.h"
 export module DimensionNightmare;
 
 import ControlServer;
@@ -23,6 +24,8 @@ import DatabaseServer;
 import LogicServer;
 import Utils.StrUtils;
 import I10nText;
+import Logger;
+import Config.Server;
 
 using namespace std;
 

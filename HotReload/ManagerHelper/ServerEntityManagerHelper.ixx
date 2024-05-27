@@ -5,11 +5,12 @@ module;
 #include <list>
 #include "hv/Channel.h"
 
-#include "StdAfx.h"
+#include "StdMacro.h"
 export module ServerEntityManagerHelper;
 
 export import ServerEntityManager;
 export import ServerEntityHelper;
+import Logger;
 
 using namespace std;
 using namespace hv;

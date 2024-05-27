@@ -5,11 +5,12 @@ module;
 #include "hv/TcpServer.h"
 #include "google/protobuf/message.h"
 
-#include "StdAfx.h"
+#include "StdMacro.h"
 export module DNServerProxy;
 
 import DNTask;
 import MessagePack;
+import Logger;
 
 using namespace std;
 using namespace google::protobuf;
@@ -87,7 +88,11 @@ protected:
 	shared_mutex oTimerMutex;
 };
 
-
+extern "C"
+{
+	REGIST_MAINSPACE_SIGN_FUNCTION(DNServerProxy, CheckChannelByTimer)
+	REGIST_MAINSPACE_SIGN_FUNCTION(DNServerProxy, CheckMessageTimeoutTimer)
+}
 
 DNServerProxy::DNServerProxy()
 {

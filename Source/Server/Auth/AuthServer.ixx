@@ -4,12 +4,15 @@ module;
 #include "hv/hsocket.h"
 #include "hv/EventLoopThread.h"
 
-#include "StdAfx.h"
+#include "StdMacro.h"
+#include "Common/Common.pb.h"
 export module AuthServer;
 
 export import DNServer;
 import DNWebProxy;
 import DNClientProxy;
+import Logger;
+import Config.Server;
 
 using namespace std;
 using namespace hv;
@@ -150,7 +153,7 @@ bool AuthServer::Stop()
 // c->s
 void AuthServer::Pause()
 {
-	pCSock->Timer()->pause();
+	// pCSock->Timer()->pause();
 
 	LoopEvent([](EventLoopPtr loop)
 		{
@@ -170,7 +173,7 @@ void AuthServer::Resume()
 			loop->resume();
 		});
 
-	pCSock->Timer()->resume();
+	// pCSock->Timer()->resume();
 }
 
 void AuthServer::LoopEvent(function<void(EventLoopPtr)> func)

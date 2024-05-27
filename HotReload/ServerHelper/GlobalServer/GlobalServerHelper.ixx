@@ -3,6 +3,7 @@ module;
 #include <list>
 #include "hv/Channel.h"
 
+#include "StdMacro.h"
 #include "Server/S_Common.pb.h"
 export module GlobalServerHelper;
 
@@ -11,6 +12,7 @@ export import DNClientProxyHelper;
 export import DNServerProxyHelper;
 export import ServerEntityManagerHelper;
 import MessagePack;
+import Macro;
 
 using namespace std;
 using namespace hv;
@@ -80,7 +82,7 @@ void GlobalServerHelper::UpdateServerGroup()
 			channel->write(binData);
 
 			// timer destory
-			entity->TimerId() = entityMan->CheckEntityCloseTimer(entity->ID());
+			entity->TimerId() = TICK_MAINSPACE_SIGN_FUNCTION(ServerEntityManager, CheckEntityCloseTimer, entityMan, entity->ID());
 			
 			entity->SetSock(nullptr);
 		};

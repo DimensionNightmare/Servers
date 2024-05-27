@@ -4,13 +4,16 @@ module;
 #include "hv/hsocket.h"
 #include "hv/EventLoopThread.h"
 
-#include "StdAfx.h"
+#include "StdMacro.h"
+#include "Common/Common.pb.h"
 export module GlobalServer;
 
 export import DNServer;
 import DNServerProxy;
 import DNClientProxy;
 import ServerEntityManager;
+import Logger;
+import Config.Server;
 
 using namespace std;
 using namespace hv;
@@ -159,9 +162,9 @@ bool GlobalServer::Stop()
 
 void GlobalServer::Pause()
 {
-	pSSock->pLoop->loop()->pause();
-	pCSock->pLoop->loop()->pause();
-	pServerEntityMan->Timer()->pause();
+	// pSSock->Timer()->pause();
+	// pCSock->Timer()->pause();
+	// pServerEntityMan->Timer()->pause();
 
 	LoopEvent([](EventLoopPtr loop)
 		{
@@ -176,9 +179,9 @@ void GlobalServer::Resume()
 			loop->resume();
 		});
 
-	pSSock->pLoop->loop()->resume();
-	pCSock->pLoop->loop()->resume();
-	pServerEntityMan->Timer()->resume();
+	// pSSock->Timer()->resume();
+	// pCSock->Timer()->resume();
+	// pServerEntityMan->Timer()->resume();
 }
 
 void GlobalServer::LoopEvent(function<void(EventLoopPtr)> func)

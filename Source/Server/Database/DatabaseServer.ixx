@@ -6,12 +6,15 @@ module;
 #include "hv/hsocket.h"
 #include "hv/EventLoopThread.h"
 
-#include "StdAfx.h"
+#include "StdMacro.h"
+#include "Common/Common.pb.h"
 export module DatabaseServer;
 
 export import DNServer;
 import DNServerProxy;
 import DNClientProxy;
+import Logger;
+import Config.Server;
 
 using namespace std;
 using namespace hv;
@@ -96,16 +99,6 @@ bool DatabaseServer::Init()
 void DatabaseServer::InitCmd(map<string, function<void(stringstream*)>>& cmdMap)
 {
 	DNServer::InitCmd(cmdMap);
-
-	cmdMap.emplace("redirectClient", [this](stringstream* ss)
-		{
-			string ip;
-			uint16_t port;
-			*ss >> ip;
-			*ss >> port;
-
-			pCSock->RedirectClient(port, ip.c_str());
-		});
 }
 
 bool DatabaseServer::Start()
@@ -130,7 +123,7 @@ bool DatabaseServer::Stop()
 
 void DatabaseServer::Pause()
 {
-	pCSock->pLoop->loop()->pause();
+	// pCSock->Timer()->pause();
 
 	LoopEvent([](EventLoopPtr loop)
 		{
@@ -145,7 +138,7 @@ void DatabaseServer::Resume()
 			loop->resume();
 		});
 
-	pCSock->pLoop->loop()->resume();
+	// pCSock->Timer()->resume();
 }
 
 void DatabaseServer::LoopEvent(function<void(EventLoopPtr)> func)

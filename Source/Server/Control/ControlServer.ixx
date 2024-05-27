@@ -2,13 +2,16 @@ module;
 #include "hv/EventLoop.h"
 #include "hv/EventLoopThread.h"
 
-#include "StdAfx.h"
+#include "StdMacro.h"
+#include "Common/Common.pb.h"
 export module ControlServer;
 
 export import DNServer;
 import DNServerProxy;
 import MessagePack;
 import ServerEntityManager;
+import Logger;
+import Config.Server;
 
 using namespace std;
 using namespace hv;
@@ -115,8 +118,8 @@ bool ControlServer::Stop()
 
 void ControlServer::Pause()
 {
-	pSSock->pLoop->loop()->pause();
-	pServerEntityMan->Timer()->pause();
+	// pSSock->Timer()->pause();
+	// pServerEntityMan->Timer()->pause();
 
 	LoopEvent([](EventLoopPtr loop)
 	{ 
@@ -131,8 +134,8 @@ void ControlServer::Resume()
 		loop->resume(); 
 	});
 
-	pSSock->pLoop->loop()->resume();
-	pServerEntityMan->Timer()->resume();
+	// pSSock->Timer()->resume();
+	// pServerEntityMan->Timer()->resume();
 }
 
 void ControlServer::LoopEvent(function<void(EventLoopPtr)> func)

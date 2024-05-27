@@ -4,11 +4,12 @@ module;
 #include <cstdint>
 #include "hv/Channel.h"
 
-#include "StdAfx.h"
+#include "StdMacro.h"
 export module ProxyEntityManagerHelper;
 
 export import ProxyEntityHelper;
 export import ProxyEntityManager;
+import Logger;
 
 using namespace std;
 using namespace hv;

@@ -4,18 +4,19 @@ module;
 #include <cstdint>
 #include "hv/Channel.h"
 
-#include "StdAfx.h"
+#include "StdMacro.h"
+#include "Common/Common.pb.h"
 #include "Server/S_Common.pb.h"
 #include "Server/S_Gate_Logic.pb.h"
 export module LogicMessage;
 
 export import :LogicCommon;
 import :LogicGate;
+import Logger;
 
 using namespace std;
 using namespace hv;
 using namespace google::protobuf;
-using namespace GMsg;
 using namespace GMsg;
 
 export class LogicMessageHandle

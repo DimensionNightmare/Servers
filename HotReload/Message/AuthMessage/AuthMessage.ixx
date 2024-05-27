@@ -6,7 +6,8 @@ module;
 #include "hv/Channel.h"
 #include "hv/HttpService.h"
 
-#include "StdAfx.h"
+#include "StdMacro.h"
+#include "Common/Common.pb.h"
 export module AuthMessage;
 
 export import :AuthCommon;

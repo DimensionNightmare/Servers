@@ -4,7 +4,7 @@ module;
 #include <shared_mutex>
 #include <cstdint>
 
-#include "StdAfx.h"
+#include "StdMacro.h"
 export module ClientEntityManager;
 
 export import ClientEntity;

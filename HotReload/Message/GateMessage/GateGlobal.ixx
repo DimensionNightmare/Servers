@@ -5,7 +5,7 @@ module;
 #include <cstdint>
 #include "hv/Channel.h"
 
-#include "StdAfx.h"
+#include "StdMacro.h"
 #include "Server/S_Global_Gate.pb.h"
 #include "Client/C_Auth.pb.h"
 #include "Server/S_Gate_Logic.pb.h"
@@ -14,6 +14,8 @@ export module GateMessage:GateGlobal;
 import MessagePack;
 import GateServerHelper;
 import Utils.StrUtils;
+import Logger;
+import Macro;
 
 using namespace std;
 using namespace hv;
@@ -93,7 +95,7 @@ namespace GateMessage
 		// entity or token expired
 		if (!entity->TimerId())
 		{
-			entity->TimerId() = entityMan->CheckEntityCloseTimer(entity->ID());
+			entity->TimerId() = TICK_MAINSPACE_SIGN_FUNCTION(ProxyEntityManager, CheckEntityCloseTimer, entityMan, entity->ID());
 		}
 
 		binData.clear();

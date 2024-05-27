@@ -4,10 +4,13 @@ module;
 #include <cstdint>
 #include "hv/Channel.h"
 #include "google/protobuf/message.h"
+
+#include "StdMacro.h"
 export module DNServerProxyHelper;
 
 export import DNServerProxy;
 import DNTask;
+import Macro;
 
 using namespace std;
 using namespace google::protobuf;
@@ -33,7 +36,7 @@ bool DNServerProxyHelper::AddMsg(uint32_t msgId, DNTask<Message*>* task, uint32_
 	mMsgList.emplace(msgId, task);
 	if (breakTime > 0)
 	{
-		task->TimerId() = DNServerProxy::CheckMessageTimeoutTimer(breakTime, msgId);
+		task->TimerId() = TICK_MAINSPACE_SIGN_FUNCTION(DNServerProxy, CheckMessageTimeoutTimer, this, breakTime, msgId);
 	}
 	return true;
 }

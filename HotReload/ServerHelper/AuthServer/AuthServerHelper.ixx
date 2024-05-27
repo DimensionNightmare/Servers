@@ -3,7 +3,7 @@ module;
 #include "pqxx/connection"
 #include "pqxx/transaction"
 
-#include "StdAfx.h"
+#include "StdMacro.h"
 #include "GDef/GDef.pb.h"
 export module AuthServerHelper;
 
@@ -11,6 +11,8 @@ export import AuthServer;
 export import DNClientProxyHelper;
 export import DNWebProxyHelper;
 import DNDbObj;
+import Logger;
+import Config.Server;
 
 using namespace std;
 using namespace GDb;

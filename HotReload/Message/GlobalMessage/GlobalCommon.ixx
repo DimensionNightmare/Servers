@@ -3,13 +3,14 @@ module;
 #include <cstdint>
 #include "hv/Channel.h"
 
-#include "StdAfx.h"
+#include "StdMacro.h"
 #include "Server/S_Common.pb.h"
 export module GlobalMessage:GlobalCommon;
 
 import DNTask;
 import MessagePack;
 import GlobalServerHelper;
+import Logger;
 
 using namespace hv;
 using namespace std;

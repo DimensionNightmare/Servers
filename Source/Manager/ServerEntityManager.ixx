@@ -5,11 +5,13 @@ module;
 #include <cstdint>
 #include <functional>
 
-#include "StdAfx.h"
+#include "StdMacro.h"
 export module ServerEntityManager;
 
 export import ServerEntity;
 import EntityManager;
+import Logger;
+import Macro;
 
 using namespace std;
 
@@ -35,6 +37,11 @@ protected: // dll proxy
 	list<uint32_t> mIdleServerId;
 
 };
+
+extern "C"
+{
+	REGIST_MAINSPACE_SIGN_FUNCTION(ServerEntityManager, CheckEntityCloseTimer)
+}
 
 ServerEntityManager::ServerEntityManager()
 {

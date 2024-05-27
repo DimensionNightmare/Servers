@@ -4,11 +4,13 @@ module;
 #include <cstdint>
 #include "hv/Channel.h"
 
-#include "StdAfx.h"
+#include "StdMacro.h"
+#include "Common/Common.pb.h"
 #include "Server/S_Common.pb.h"
 export module DatabaseMessage;
 
 export import :DatabaseCommon;
+import Logger;
 
 using namespace std;
 using namespace hv;

@@ -4,11 +4,13 @@ module;
 #include <cstdint>
 #include <functional>
 
-#include "StdAfx.h"
+#include "StdMacro.h"
 export module ProxyEntityManager;
 
 export import ProxyEntity;
 import EntityManager;
+import Logger;
+import Macro;
 
 using namespace std;
 
@@ -31,6 +33,11 @@ protected: // dll proxy
 
 
 };
+
+extern "C"
+{
+	REGIST_MAINSPACE_SIGN_FUNCTION(ProxyEntityManager, CheckEntityCloseTimer)
+}
 
 bool ProxyEntityManager::Init()
 {

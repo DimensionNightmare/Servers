@@ -3,13 +3,14 @@ module;
 #include <cstdint>
 #include "hv/Channel.h"
 
-#include "StdAfx.h"
+#include "StdMacro.h"
 #include "Server/S_Common.pb.h"
 export module DatabaseMessage:DatabaseCommon;
 
 import DNTask;
 import MessagePack;
 import DatabaseServerHelper;
+import Logger;
 
 using namespace std;
 using namespace hv;

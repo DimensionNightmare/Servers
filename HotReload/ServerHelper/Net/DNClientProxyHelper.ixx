@@ -4,12 +4,13 @@ module;
 #include <cstdint>
 #include "hv/TcpClient.h"
 
-#include "StdAfx.h"
+#include "StdMacro.h"
 #include "Server/S_Common.pb.h"
 export module DNClientProxyHelper;
 
 export import DNClientProxy;
 import DNTask;
+import Macro;
 
 using namespace std;
 using namespace hv;
@@ -57,7 +58,7 @@ bool DNClientProxyHelper::AddMsg(uint32_t msgId, DNTask<Message*>* task, uint32_
 	// timeout
 	if (breakTime > 0)
 	{
-		task->TimerId() = DNClientProxy::CheckMessageTimeoutTimer(breakTime, msgId);
+		task->TimerId() = TICK_MAINSPACE_SIGN_FUNCTION(DNClientProxy, CheckMessageTimeoutTimer, this, breakTime, msgId);
 	}
 	return true;
 }

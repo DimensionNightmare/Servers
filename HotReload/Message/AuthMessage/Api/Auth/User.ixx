@@ -5,8 +5,7 @@ module;
 #include "hv/HttpService.h"
 #include "pqxx/transaction"
 
-#include "StdAfx.h"
-#include "DbAfx.h"
+#include "StdMacro.h"
 #include "GDef/GDef.pb.h"
 #include "Server/S_Auth_Control.pb.h"
 export module ApiManager:ApiAuth;
@@ -14,6 +13,9 @@ export module ApiManager:ApiAuth;
 import AuthServerHelper;
 import DNTask;
 import MessagePack;
+import Macro;
+import DNDbObj;
+import Logger;
 
 using namespace std;
 using namespace hv;
@@ -244,12 +246,14 @@ export void ApiAuth(HttpService* service)
 			writer->End();
 		});
 
+		
 	service->POST("/Auth/User/Test", [](const HttpRequestPtr& req, const HttpResponseWriterPtr& writer)
 		{
-			if (HMODULE hModule = GetModuleHandle(NULL))
-			{
-				
-			}
+			AuthServerHelper* authServer = GetAuthServer();
+			DNClientProxyHelper* client = authServer->GetCSock();
+
+
+			TICK_MAINSPACE_SIGN_FUNCTION(DNClientProxy, RedirectClient, client, 1271, "127.0.0.1");
 
 			writer->End();
 		});

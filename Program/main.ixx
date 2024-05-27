@@ -25,10 +25,12 @@ module;
 #include <format>
 #include "hv/hlog.h"
 
-#include "StdAfx.h"
+#include "StdMacro.h"
+#include "Common/Common.pb.h"
 export module MODULE_MAIN;
 
 import DimensionNightmare;
+import Logger;
 
 using namespace std;
 

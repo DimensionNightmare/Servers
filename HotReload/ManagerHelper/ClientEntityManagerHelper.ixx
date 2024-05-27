@@ -4,11 +4,12 @@ module;
 #include <cstdint>
 #include "hv/Channel.h"
 
-#include "StdAfx.h"
+#include "StdMacro.h"
 export module ClientEntityManagerHelper;
 
 export import ClientEntityHelper;
 export import ClientEntityManager;
+import Logger;
 
 using namespace std;
 using namespace hv;
