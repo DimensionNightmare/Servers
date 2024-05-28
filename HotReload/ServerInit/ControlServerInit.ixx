@@ -40,10 +40,7 @@ int HandleControlServerInit(DNServer* server)
 				if (channel->isConnected())
 				{
 					DNPrint(TipCode_CliConnOn, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
-					// if not regist
-					TICK_MAINSPACE_SIGN_FUNCTION(DNServerProxy, CheckChannelByTimer, serverSock, channel);
-					// if not recive data
-					channel->setReadTimeout(15000);
+					TICK_MAINSPACE_SIGN_FUNCTION(DNServerProxy, InitConnectedChannel, serverSock, channel);
 				}
 				else
 				{

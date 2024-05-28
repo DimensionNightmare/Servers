@@ -92,7 +92,6 @@ public:
 
 public: // dll override
 	void TickRegistEvent(size_t timerID);
-	void StartRegist();
 
 	void MessageTimeoutTimer(uint64_t timerID);
 	uint64_t CheckMessageTimeoutTimer(uint32_t breakTime, uint32_t msgId);
@@ -102,6 +101,8 @@ public: // dll override
 	void AddTimerRecord(size_t timerId, uint32_t id);
 
 	void TickHeartbeat();
+
+	void InitConnectedChannel(const SocketChannelPtr& chanhel);
 
 	void RedirectClient(uint16_t port, string ip);
 
@@ -127,9 +128,9 @@ protected: // dll proxy
 
 extern "C"
 {
-	REGIST_MAINSPACE_SIGN_FUNCTION(DNClientProxy, RedirectClient)
-	REGIST_MAINSPACE_SIGN_FUNCTION(DNClientProxy, StartRegist)
+	REGIST_MAINSPACE_SIGN_FUNCTION(DNClientProxy, InitConnectedChannel)
 	REGIST_MAINSPACE_SIGN_FUNCTION(DNClientProxy, CheckMessageTimeoutTimer)
+	REGIST_MAINSPACE_SIGN_FUNCTION(DNClientProxy, RedirectClient)
 }
 
 DNClientProxy::DNClientProxy()
@@ -199,12 +200,6 @@ void DNClientProxy::TickRegistEvent(size_t timerID)
 	}
 }
 
-void DNClientProxy::StartRegist()
-{
-	DNPrint(0, LoggerLevel::Debug, "StartRegist tick");
-	Timer()->setInterval(1000, std::bind(&DNClientProxy::TickRegistEvent, this, placeholders::_1));
-}
-
 void DNClientProxy::MessageTimeoutTimer(uint64_t timerID)
 {
 	uint32_t msgId = -1;
@@ -259,6 +254,16 @@ void DNClientProxy::TickHeartbeat()
 	MessagePack(0, MsgDeal::Ret, requset.GetDescriptor()->full_name().c_str(), binData);
 
 	send(binData);
+}
+
+void DNClientProxy::InitConnectedChannel(const SocketChannelPtr& chanhel)
+{
+	chanhel->setHeartbeat(4000, std::bind(&DNClientProxy::TickHeartbeat, this));
+	channel->setWriteTimeout(12000);
+	if(eRegistState == RegistState::None)
+	{
+		Timer()->setInterval(1000, std::bind(&DNClientProxy::TickRegistEvent, this, placeholders::_1));
+	}
 }
 
 void DNClientProxy::RedirectClient(uint16_t port, string ip)

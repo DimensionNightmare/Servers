@@ -18,6 +18,8 @@ if "%server%"=="" (
 
 call :%server%
 
+exit /b
+
 :control
 start "" .\out\Build\Debug\DimensionNightmareServer.exe svrType=1 port=1270
 goto :eof

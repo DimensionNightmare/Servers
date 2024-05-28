@@ -63,6 +63,8 @@ public:
 	void End();
 
 public: // dll override
+	void InitConnectedChannel(const SocketChannelPtr& channel);
+
 	void MessageTimeoutTimer(uint64_t timerID);
 	void ChannelTimeoutTimer(uint64_t timerID);
 
@@ -90,7 +92,7 @@ protected:
 
 extern "C"
 {
-	REGIST_MAINSPACE_SIGN_FUNCTION(DNServerProxy, CheckChannelByTimer)
+	REGIST_MAINSPACE_SIGN_FUNCTION(DNServerProxy, InitConnectedChannel)
 	REGIST_MAINSPACE_SIGN_FUNCTION(DNServerProxy, CheckMessageTimeoutTimer)
 }
 
@@ -128,6 +130,14 @@ void DNServerProxy::End()
 {
 	pLoop->stop(true);
 	stop(true);
+}
+
+void DNServerProxy::InitConnectedChannel(const SocketChannelPtr& channel)
+{
+	// if not regist
+	CheckChannelByTimer(channel);
+	// if not recive data
+	channel->setReadTimeout(15000);
 }
 
 void DNServerProxy::MessageTimeoutTimer(uint64_t timerID)
