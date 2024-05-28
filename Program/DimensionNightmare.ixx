@@ -35,49 +35,36 @@ using namespace std;
 
 struct HotReloadDll
 {
-	bool LoadHandle()
+	void* LoadHandle(string_view dllPath)
 	{
 #ifdef _WIN32
-		// int ret = SetDefaultDllDirectories(LOAD_LIBRARY_SEARCH_USER_DIRS);
-		// ret = SetDllDirectory(sDllDirRand.c_str());
-		string fullPath = filesystem::current_path().append(sDllDirRand).string();
-		// wstring wstr(fullPath.begin(), fullPath.end());
-		// AddDllDirectory(wstr.c_str());
-		SetDllDirectoryA(fullPath.c_str());
-
-#ifdef NDEBUG
+		string fullPath = filesystem::current_path().append(dllPath).append(SDllName).string() + ".dll";
+	#ifdef NDEBUG
 		SetEnvironmentVariable("PATH", "./Bin;%PATH%");
-#endif
+	#endif
 
-		// if(!ret)
-		// {
-		// 	("cant set dll path! error code=%d! ", GetLastError());
-		// 	return false;
-		// }
-		// oLibHandle = LoadLibraryEx((SDllName).c_str(), NULL, LOAD_LIBRARY_SEARCH_USER_DIRS);
-		// oLibHandle = LoadLibraryEx(SDllName.c_str(), NULL, DONT_RESOLVE_DLL_REFERENCES | LOAD_LIBRARY_SEARCH_DEFAULT_DIRS); //DONT_RESOLVE_DLL_REFERENCES |
 		constexpr size_t subLen = sizeof(SDllDir);
-		SetConsoleTitleA(sDllDirRand.substr(subLen).c_str());
-		oLibHandle = LoadLibraryA(SDllName);
-		if (!oLibHandle)
+		SetConsoleTitleA(dllPath.substr(subLen).data());
+		void* hModule = LoadLibraryA(fullPath.c_str());
+		if (!hModule)
 		{
 			DNPrint(ErrCode_DllLoad, LoggerLevel::Error, nullptr, GetLastError());
-			return false;
+			return nullptr;
 		}
 
 #elif __unix__
 		string fullPath = filesystem::current_path().append(SDllDir).string();
 		fullPath = format("{}/lib{}.so", fullPath, SDllName);
-		oLibHandle = dlopen(fullPath.c_str(), RTLD_LAZY);
-		if (!oLibHandle)
+		void* hModule = dlopen(fullPath.c_str(), RTLD_LAZY);
+		if (!hModule)
 		{
 			DNPrint(0, LoggerLevel::Debug, dlerror());
-			return false;
+			return nullptr;
 		}
 #endif
 
 
-		return true;
+		return hModule;
 	};
 
 	void FreeHandle()
@@ -85,7 +72,7 @@ struct HotReloadDll
 		if (oLibHandle)
 		{
 #ifdef _WIN32
-			FreeLibrary(oLibHandle);
+			FreeLibrary((HMODULE)oLibHandle);
 #elif __unix__
 			dlclose(oLibHandle);
 #endif
@@ -115,8 +102,6 @@ struct HotReloadDll
 			return false;
 		}
 
-		FreeHandle();
-
 		if (!SDllName)
 		{
 			DNPrint(4, LoggerLevel::Error, nullptr);
@@ -128,18 +113,28 @@ struct HotReloadDll
 		mt19937 gen(rd());
 		uniform_int_distribution<int>  u(10000, 99999);
 
-		sDllDirRand = format("{}_{}_{}", SDllDir, EnumName(type), u(gen));
+		string newDllDirRand = format("{}_{}_{}", SDllDir, EnumName(type), u(gen));
 		try
 		{
-			filesystem::create_directories(sDllDirRand.c_str());
-			filesystem::copy(SDllDir, sDllDirRand.c_str(), filesystem::copy_options::recursive);
+			filesystem::create_directories(newDllDirRand.c_str());
+			filesystem::copy(SDllDir, newDllDirRand.c_str(), filesystem::copy_options::recursive);
 		}
 		catch (const exception& e)
 		{
 			DNPrint(0, LoggerLevel::Debug, "%s", e.what());
+			return false;
 		}
 #endif
-		return LoadHandle();
+		void* hModule = LoadHandle(newDllDirRand);
+		if(hModule)
+		{
+			FreeHandle();
+			oLibHandle = hModule;
+			sDllDirRand = newDllDirRand;
+			return true;
+		}
+
+		return false;
 	};
 
 	HotReloadDll()
@@ -156,7 +151,7 @@ struct HotReloadDll
 	void* GetFuncPtr(const char* funcName)
 	{
 #ifdef _WIN32
-		return (void*)GetProcAddress(oLibHandle, funcName);
+		return (void*)GetProcAddress((HMODULE)oLibHandle, funcName);
 #elif __unix__
 		return dlsym(oLibHandle, funcName);
 #endif
@@ -167,11 +162,8 @@ public:
 	inline static const char* SDllName = "HotReload";
 
 	string sDllDirRand;
-#ifdef _WIN32
-	HMODULE oLibHandle;
-#elif __unix__
+
 	void* oLibHandle;
-#endif
 
 	bool isNormalFree;
 };

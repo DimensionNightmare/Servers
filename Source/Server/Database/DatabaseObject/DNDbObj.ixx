@@ -124,10 +124,10 @@ void InitFieldByProtoType(const FieldDescriptor* field, list<string>& out, list<
 		}
 		case FieldDescriptor::CPPTYPE_DOUBLE:
 		{
-			if (field->options().GetExtension(ext_datetime))
-			{
-				out.back().assign("TIMESTAMP WITH TIME ZONE");
-			}
+			// if (field->options().GetExtension(ext_datetime))
+			// {
+			// 	out.back().assign("TIMESTAMP WITH TIME ZONE");
+			// }
 		}
 		default:
 			break;
@@ -197,10 +197,10 @@ void InsertFieldByProtoType(const FieldDescriptor* field, const Reflection* refl
 	{
 		case FieldDescriptor::CPPTYPE_DOUBLE:
 		{
-			if (field->options().GetExtension(ext_datetime))
-			{
-				out = format("TO_TIMESTAMP({})", out);
-			}
+			// if (field->options().GetExtension(ext_datetime))
+			// {
+			// 	out = format("TO_TIMESTAMP({})", out);
+			// }
 			break;
 		}
 		case FieldDescriptor::CPPTYPE_STRING: // len_limit
@@ -222,10 +222,10 @@ void InsertFieldByProtoType(const FieldDescriptor* field, const Reflection* refl
 
 void SelectFieldNameByProtoType(const FieldDescriptor* field, string& out)
 {
-	if (field->options().GetExtension(ext_datetime))
-	{
-		out = format("EXTRACT(EPOCH FROM {} at time zone 'UTC') as {}", out, out);
-	}
+	// if (field->options().GetExtension(ext_datetime))
+	// {
+	// 	out = format("EXTRACT(EPOCH FROM {} at time zone 'UTC') as {}", out, out);
+	// }
 }
 
 void SelectFieldByProtoType(const FieldDescriptor* field, const Reflection* reflection, Message& data, pqxx::row::reference value, bool isQueryAll)
@@ -246,13 +246,13 @@ void SelectFieldByProtoType(const FieldDescriptor* field, const Reflection* refl
 			break;
 		case FieldDescriptor::CPPTYPE_DOUBLE:
 		{
-			if (isQueryAll && field->options().GetExtension(ext_datetime))
-			{
-				double timestamp = StringToTimestamp(value.as<string>());
+			// if (isQueryAll && field->options().GetExtension(ext_datetime))
+			// {
+			// 	double timestamp = StringToTimestamp(value.as<string>());
 
-				reflection->SetDouble(&data, field, timestamp);
-				break;
-			}
+			// 	reflection->SetDouble(&data, field, timestamp);
+			// 	break;
+			// }
 			reflection->SetDouble(&data, field, value.as<double>());
 			break;
 		}
@@ -310,10 +310,10 @@ void SelectFieldCondByProtoType(const FieldDescriptor* field, const Reflection* 
 	{
 		case FieldDescriptor::CPPTYPE_DOUBLE:
 		{
-			if (field->options().GetExtension(ext_datetime))
-			{
-				out = format("TO_TIMESTAMP({})", out);
-			}
+			// if (field->options().GetExtension(ext_datetime))
+			// {
+			// 	out = format("TO_TIMESTAMP({})", out);
+			// }
 			break;
 		}
 		case FieldDescriptor::CPPTYPE_STRING: // len_limit
@@ -375,10 +375,10 @@ bool UpdateFieldByProtoType(const FieldDescriptor* field, const Reflection* refl
 	{
 		case FieldDescriptor::CPPTYPE_DOUBLE:
 		{
-			if (field->options().GetExtension(ext_datetime))
-			{
-				out = format("TO_TIMESTAMP({})", out);
-			}
+			// if (field->options().GetExtension(ext_datetime))
+			// {
+			// 	out = format("TO_TIMESTAMP({})", out);
+			// }
 			break;
 		}
 		case FieldDescriptor::CPPTYPE_STRING: // len_limit
@@ -442,10 +442,10 @@ void UpdateFieldCondByProtoType(const FieldDescriptor* field, const Reflection* 
 	{
 		case FieldDescriptor::CPPTYPE_DOUBLE:
 		{
-			if (field->options().GetExtension(ext_datetime))
-			{
-				out = format("TO_TIMESTAMP({})", out);
-			}
+			// if (field->options().GetExtension(ext_datetime))
+			// {
+			// 	out = format("TO_TIMESTAMP({})", out);
+			// }
 			break;
 		}
 		case FieldDescriptor::CPPTYPE_STRING: // len_limit

@@ -11,6 +11,7 @@ module;
 export module Utils.StrUtils;
 
 using namespace std;
+using namespace std::chrono;
 
 export template <auto value>
 constexpr auto EnumName()
@@ -65,36 +66,9 @@ constexpr auto EnumName(T value)
 	return names[static_cast<size_t>(value)];
 }
 
-chrono::hours GetTimezoneOffset()
-{
-	int minutes = 0;
-
-#ifdef _WIN32
-	TIME_ZONE_INFORMATION timeZoneInfo;
-	DWORD result = GetTimeZoneInformation(&timeZoneInfo);
-
-	if (result != TIME_ZONE_ID_INVALID)
-	{
-		minutes = -timeZoneInfo.Bias;
-	}
-#elif __unix__
-	time_t now = time(nullptr);
-	struct tm* localTime = localtime(&now);
-
-	if (localTime != nullptr)
-	{
-		minutes = localTime->tm_gmtoff / 60;
-	}
-#endif
-
-	return chrono::hours(minutes / 60);
-}
-
 export string GetNowTimeStr()
 {
-	static chrono::hours offset = GetTimezoneOffset();
-
-	return format("{:%Y-%m-%d %H:%M:%S}", chrono::system_clock::now() + offset);
+	return format("{:%Y-%m-%d %H:%M:%S}", zoned_time(current_zone(), system_clock::now()));
 }
 
 export double StringToTimestamp(const string& datetimeStr)

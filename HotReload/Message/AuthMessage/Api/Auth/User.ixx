@@ -1,6 +1,8 @@
 module;
 #include <coroutine>
 #include <cstdint>
+#include <format>
+#include <chrono>
 #include "google/protobuf/util/json_util.h"
 #include "hv/HttpService.h"
 #include "pqxx/transaction"
@@ -206,7 +208,7 @@ export void ApiAuth(HttpService* service)
 				return;
 			}
 
-			double msTime = time_point_cast<microseconds>(system_clock::now()).time_since_epoch().count() / 1000000.0;
+			int64_t msTime = time_point_cast<nanoseconds>(system_clock::now()).time_since_epoch().count();
 
 			accInfo.set_create_time(msTime);
 			accInfo.set_update_time(msTime);
@@ -263,6 +265,23 @@ export void ApiAuth(HttpService* service)
 
 			TICK_MAINSPACE_SIGN_FUNCTION(DNClientProxy, RedirectClient, client, port, ip);
 
+			writer->End();
+		});
+
+	service->POST("/Auth/Utils/ChangeIp1", [](const HttpRequestPtr& req, const HttpResponseWriterPtr& writer)
+		{
+			system_clock::time_point now = system_clock::now();
+			string strTIme = format("{:%Y-%m-%d %H:%M:%S}", now);
+			string strTIme1 = format("{:%Y-%m-%d %H:%M:%S}", zoned_time(current_zone(), now));
+			hv::Json errData = {
+				{ "milliseconds" , time_point_cast<milliseconds>(now).time_since_epoch().count()},
+				{ "microseconds" , time_point_cast<microseconds>(now).time_since_epoch().count()},
+				{ "nanoseconds" , time_point_cast<nanoseconds>(now).time_since_epoch().count()},
+				{ "string" ,  strTIme},
+				{"zone", strTIme1},
+			};
+			
+			MSGSET(errData.dump());
 			writer->End();
 		});
 }
