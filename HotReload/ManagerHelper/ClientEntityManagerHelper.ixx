@@ -1,8 +1,6 @@
 module;
-#include <map>
 #include <shared_mutex>
 #include <cstdint>
-#include "hv/Channel.h"
 
 #include "StdMacro.h"
 export module ClientEntityManagerHelper;
@@ -12,7 +10,6 @@ export import ClientEntityManager;
 import Logger;
 
 using namespace std;
-using namespace hv;
 
 export class ClientEntityManagerHelper : public ClientEntityManager
 {

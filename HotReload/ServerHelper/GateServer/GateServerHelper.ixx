@@ -1,6 +1,4 @@
 module;
-#include <assert.h>
-
 #include "Server/S_Global_Gate.pb.h"
 export module GateServerHelper;
 
@@ -35,7 +33,6 @@ static GateServerHelper* PGateServerHelper = nullptr;
 export void SetGateServer(GateServer* server)
 {
 	PGateServerHelper = static_cast<GateServerHelper*>(server);
-	assert(PGateServerHelper != nullptr);
 }
 
 export GateServerHelper* GetGateServer()

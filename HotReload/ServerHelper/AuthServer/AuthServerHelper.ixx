@@ -1,5 +1,4 @@
 module;
-#include <assert.h>
 #include "pqxx/connection"
 #include "pqxx/transaction"
 #include "pqxx/nontransaction"
@@ -33,7 +32,6 @@ static AuthServerHelper* PAuthServerHelper = nullptr;
 export void SetAuthServer(AuthServer* server)
 {
 	PAuthServerHelper = static_cast<AuthServerHelper*>(server);
-	assert(PAuthServerHelper != nullptr);
 }
 
 export AuthServerHelper* GetAuthServer()

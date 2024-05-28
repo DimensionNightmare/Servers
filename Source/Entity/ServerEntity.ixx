@@ -1,7 +1,7 @@
 module;
 #include <string>
 #include <list>
-#include <map>
+#include <unordered_map>
 #include <bitset>
 #include <cstdint>
 export module ServerEntity;
@@ -47,7 +47,7 @@ protected: // dll proxy
 	// regist node need
 	ServerEntity* pLink;
 	// be regist node need
-	map<ServerType, list< ServerEntity*>> mMapLink;
+	unordered_map<ServerType, list< ServerEntity*>> mMapLink;
 
 	bitset<ServerEntityFlagSize()> oFlags;
 };

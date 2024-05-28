@@ -2,7 +2,6 @@ module;
 #include <functional>
 #include <shared_mutex>
 #include <cstdint>
-#include "hv/Channel.h"
 #include "google/protobuf/message.h"
 
 #include "StdMacro.h"

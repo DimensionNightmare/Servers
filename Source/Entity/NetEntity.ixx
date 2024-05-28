@@ -1,5 +1,4 @@
 module;
-#include <functional>
 #include <cstdint>
 #include "hv/Channel.h"
 export module NetEntity;

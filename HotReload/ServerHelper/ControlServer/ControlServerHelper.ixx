@@ -1,6 +1,4 @@
 module;
-#include <compare>
-#include <assert.h>
 export module ControlServerHelper;
 
 export import ControlServer;
@@ -23,7 +21,6 @@ static ControlServerHelper* PControlServerHelper = nullptr;
 export void SetControlServer(ControlServer* server)
 {
 	PControlServerHelper = static_cast<ControlServerHelper*>(server);
-	assert(PControlServerHelper != nullptr);
 }
 
 export ControlServerHelper* GetControlServer()

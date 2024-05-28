@@ -21,7 +21,6 @@ using namespace std;
 using namespace hv;
 using namespace google::protobuf;
 using namespace GMsg;
-
 using namespace std::chrono;
 
 #define MSGSET writer->response->SetBody
@@ -57,7 +56,8 @@ export void ApiAuth(HttpService* service)
 				DNDbObj<GDb::Account> accounts(&query);
 
 				accounts
-					DBSelect(accInfo, account_id)
+					// DBSelect(accInfo, account_id)
+					.SelectAll()
 					DBSelectCond(accInfo, auth_name, "=", "")
 					DBSelectCond(accInfo, auth_string, "=", " AND ")
 					.Limit(2)

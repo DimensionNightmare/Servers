@@ -1,7 +1,5 @@
 module;
-#include <functional>
 #include <cstdint>
-#include "hv/Channel.h"
 export module Entity;
 
 export enum class EntityType : uint8_t
@@ -14,7 +12,6 @@ export enum class EntityType : uint8_t
 	Room,
 };
 
-using namespace hv;
 using namespace std;
 
 export class Entity

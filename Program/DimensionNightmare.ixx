@@ -184,7 +184,7 @@ public:
 
 	~DimensionNightmare();
 
-	bool InitConfig(map<string, string>& param);
+	bool InitConfig(unordered_map<string, string>& param);
 
 	bool Init();
 
@@ -209,10 +209,10 @@ private:
 
 	unique_ptr<DNl10n> pl10n;
 
-	map<string, function<void(stringstream*)>> mCmdHandle;
+	unordered_map<string, function<void(stringstream*)>> mCmdHandle;
 
 	// mount param
-	map<string, string>* pLuanchParam;
+	unordered_map<string, string>* pLuanchParam;
 };
 
 export unique_ptr<DimensionNightmare> PInstance;
@@ -229,7 +229,7 @@ DimensionNightmare::~DimensionNightmare()
 	pl10n = nullptr;
 }
 
-bool DimensionNightmare::InitConfig(map<string, string>& param)
+bool DimensionNightmare::InitConfig(unordered_map<string, string>& param)
 {
 	if (!param.contains("svrType"))
 	{
@@ -280,7 +280,7 @@ bool DimensionNightmare::InitConfig(map<string, string>& param)
 			}
 		}
 #elif __unix__
-		map<string, list<string>> sectionVal;
+		unordered_map<string, list<string>> sectionVal;
 
 		auto GetINISectionNames = [&](const char* iniFilePath)
 			{

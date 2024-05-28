@@ -26,7 +26,7 @@ public:
 
 	virtual bool Init() override;
 
-	virtual void InitCmd(map<string, function<void(stringstream*)>>& cmdMap) override;
+	virtual void InitCmd(unordered_map<string, function<void(stringstream*)>>& cmdMap) override;
 
 	virtual bool Start() override;
 
@@ -105,7 +105,7 @@ bool AuthServer::Init()
 	return true;
 }
 
-void AuthServer::InitCmd(map<string, function<void(stringstream*)>>& cmdMap)
+void AuthServer::InitCmd(unordered_map<string, function<void(stringstream*)>>& cmdMap)
 {
 
 }
@@ -178,7 +178,7 @@ void AuthServer::Resume()
 
 void AuthServer::LoopEvent(function<void(EventLoopPtr)> func)
 {
-	map<long, bool> looped;
+	unordered_map<long, bool> looped;
 	if (pCSock)
 	{
 		looped.clear();

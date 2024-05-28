@@ -519,7 +519,7 @@ private:
 
 	SqlOpType eType;
 	// create table, instert
-	map<string, list<string>> mEles;
+	unordered_map<string, list<string>> mEles;
 
 	pqxx::dbtransaction* pWork;
 

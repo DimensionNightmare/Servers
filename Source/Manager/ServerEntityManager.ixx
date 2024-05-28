@@ -1,5 +1,5 @@
 module;
-#include <map>
+#include <unordered_map>
 #include <list>
 #include <shared_mutex>
 #include <cstdint>
@@ -31,7 +31,7 @@ public: // dll override
 	virtual bool RemoveEntity(uint32_t entityId);
 
 protected: // dll proxy
-	map<ServerType, list<ServerEntity*> > mEntityMapList;
+	unordered_map<ServerType, list<ServerEntity*> > mEntityMapList;
 	// server pull server
 	atomic<uint32_t> iServerId;
 	list<uint32_t> mIdleServerId;

@@ -1,9 +1,7 @@
 module;
-#include <map>
 #include <shared_mutex>
 #include <cstdint>
 #include <list>
-#include "hv/Channel.h"
 
 #include "StdMacro.h"
 export module ServerEntityManagerHelper;
@@ -13,7 +11,6 @@ export import ServerEntityHelper;
 import Logger;
 
 using namespace std;
-using namespace hv;
 
 export class ServerEntityManagerHelper : public ServerEntityManager
 {

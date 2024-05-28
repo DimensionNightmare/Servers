@@ -18,7 +18,6 @@ module;
 	#include <fcntl.h>
 	#include <sys/stat.h>
 #endif
-#include <map>
 #include <string>
 #include <iostream>
 #include <future>
@@ -51,7 +50,7 @@ export int main(int argc, char** argv)
 	SetLoggerLevel(LoggerLevel::Debug);
 
 	// lunch param
-	map<string, string> lunchParam;
+	unordered_map<string, string> lunchParam;
 	lunchParam.emplace("luanchPath", argv[0]);
 
 	for (int i = 1; i < argc; i++)

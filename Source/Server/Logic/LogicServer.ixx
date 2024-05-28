@@ -31,7 +31,7 @@ public:
 
 	virtual bool Init() override;
 
-	virtual void InitCmd(map<string, function<void(stringstream*)>> &cmdMap) override;
+	virtual void InitCmd(unordered_map<string, function<void(stringstream*)>> &cmdMap) override;
 
 	virtual bool Start() override;
 
@@ -157,7 +157,7 @@ bool LogicServer::Init()
 	return true;
 }
 
-void LogicServer::InitCmd(map<string, function<void(stringstream *)>> &cmdMap)
+void LogicServer::InitCmd(unordered_map<string, function<void(stringstream *)>> &cmdMap)
 {
 	DNServer::InitCmd(cmdMap);
 	
@@ -225,7 +225,7 @@ void LogicServer::Resume()
 
 void LogicServer::LoopEvent(function<void(EventLoopPtr)> func)
 {
-    map<long,bool> looped;
+    unordered_map<long,bool> looped;
     if(pSSock)
 	{
 		while(const EventLoopPtr& pLoop = pSSock->loop())

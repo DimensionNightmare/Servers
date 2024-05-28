@@ -1,6 +1,5 @@
 #include <iostream>
 #include <coroutine>
-#include <map>
 #include <unordered_map>
 #include <fstream>
 #include <random>
@@ -220,7 +219,7 @@ int main()
 	{
 		Redis* con = new Redis(connection_options, pool_options);
 		con->ping();
-		map<string, string> hashTerm;
+		unordered_map<string, string> hashTerm;
     	con->hgetall("*",inserter(hashTerm, hashTerm.end()));
 
 		for (const auto &[k, v] : hashTerm)

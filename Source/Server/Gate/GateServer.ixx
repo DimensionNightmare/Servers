@@ -28,7 +28,7 @@ public:
 
 	virtual bool Init() override;
 
-	virtual void InitCmd(map<string, function<void(stringstream*)>>& cmdMap) override;
+	virtual void InitCmd(unordered_map<string, function<void(stringstream*)>>& cmdMap) override;
 
 	virtual bool Start() override;
 
@@ -135,7 +135,7 @@ bool GateServer::Init()
 	return true;
 }
 
-void GateServer::InitCmd(map<string, function<void(stringstream*)>>& cmdMap)
+void GateServer::InitCmd(unordered_map<string, function<void(stringstream*)>>& cmdMap)
 {
 }
 
@@ -198,7 +198,7 @@ void GateServer::Resume()
 
 void GateServer::LoopEvent(function<void(EventLoopPtr)> func)
 {
-	map<long, bool> looped;
+	unordered_map<long, bool> looped;
 	if (pSSock)
 	{
 		looped.clear();

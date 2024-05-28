@@ -17,7 +17,7 @@ private:
 public:
 	ServerType& ServerEntityType() { return emServerType; }
 
-	std::string& ServerIp() { return sServIp; }
+	string& ServerIp() { return sServIp; }
 
 	uint16_t& ServerPort() { return iServPort; }
 

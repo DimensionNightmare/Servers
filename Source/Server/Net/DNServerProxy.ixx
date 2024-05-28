@@ -80,9 +80,9 @@ protected:
 	// only oddnumber
 	atomic<uint32_t> iMsgId;
 	// unordered_
-	map<uint32_t, DNTask<Message*>* > mMsgList;
+	unordered_map<uint32_t, DNTask<Message*>* > mMsgList;
 	//
-	map<uint64_t, uint32_t > mMapTimer;
+	unordered_map<uint64_t, uint32_t > mMapTimer;
 
 	shared_mutex oMsgMutex;
 	shared_mutex oTimerMutex;

@@ -1,13 +1,13 @@
 module;
-#include <map>
+#include <unordered_map>
 #include <string>
 export module Config.Server;
 
 using namespace std;
 
-map<string, string>* LuanchConfig = nullptr;
+unordered_map<string, string>* LuanchConfig = nullptr;
 
-export void SetLuanchConfig(map<string, string>* param)
+export void SetLuanchConfig(unordered_map<string, string>* param)
 {
 	LuanchConfig = param;
 }

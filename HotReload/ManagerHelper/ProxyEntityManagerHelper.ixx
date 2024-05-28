@@ -1,8 +1,6 @@
 module;
-#include <map>
 #include <shared_mutex>
 #include <cstdint>
-#include "hv/Channel.h"
 
 #include "StdMacro.h"
 export module ProxyEntityManagerHelper;
@@ -12,7 +10,6 @@ export import ProxyEntityManager;
 import Logger;
 
 using namespace std;
-using namespace hv;
 
 export class ProxyEntityManagerHelper : public ProxyEntityManager
 {

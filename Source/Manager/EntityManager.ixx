@@ -1,5 +1,5 @@
 module;
-#include <map>
+#include <unordered_map>
 #include <shared_mutex>
 #include <cstdint>
 #include "hv/EventLoopThread.h"
@@ -25,10 +25,10 @@ public: // dll override
 	void AddTimerRecord(size_t timerId, uint32_t id);
 
 protected: // dll proxy
-	map<uint32_t, TEntity> mEntityMap;
+	unordered_map<uint32_t, TEntity> mEntityMap;
 	shared_mutex oMapMutex;
 	//
-	map<uint64_t, uint32_t > mMapTimer;
+	unordered_map<uint64_t, uint32_t > mMapTimer;
 	shared_mutex oTimerMutex;
 
 	EventLoopThreadPtr pLoop;

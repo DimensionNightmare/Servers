@@ -38,7 +38,7 @@ public:
 
 	virtual bool Init();
 
-	virtual void InitCmd(map<string, function<void(stringstream*)>>& cmdMap) { pCmdMap = &cmdMap; }
+	virtual void InitCmd(unordered_map<string, function<void(stringstream*)>>& cmdMap) { pCmdMap = &cmdMap; }
 
 	virtual bool Start() = 0;
 
@@ -60,7 +60,7 @@ public:
 
 public: // dll override
 	DNl10n* pDNl10nInstance;
-	map<string, string>* pLuanchConfig;
+	unordered_map<string, string>* pLuanchConfig;
 
 protected:
 	ServerType emServerType;
@@ -71,7 +71,7 @@ protected:
 
 	mutex oTaskMutex;
 
-	map<string, function<void(stringstream*)>>* pCmdMap;
+	unordered_map<string, function<void(stringstream*)>>* pCmdMap;
 };
 
 DNServer::DNServer()

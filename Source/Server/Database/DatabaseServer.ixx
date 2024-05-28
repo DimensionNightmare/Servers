@@ -28,7 +28,7 @@ public:
 
 	virtual bool Init() override;
 
-	virtual void InitCmd(map<string, function<void(stringstream*)>>& cmdMap) override;
+	virtual void InitCmd(unordered_map<string, function<void(stringstream*)>>& cmdMap) override;
 
 	virtual bool Start() override;
 
@@ -96,7 +96,7 @@ bool DatabaseServer::Init()
 	return true;
 }
 
-void DatabaseServer::InitCmd(map<string, function<void(stringstream*)>>& cmdMap)
+void DatabaseServer::InitCmd(unordered_map<string, function<void(stringstream*)>>& cmdMap)
 {
 	DNServer::InitCmd(cmdMap);
 }
@@ -143,7 +143,7 @@ void DatabaseServer::Resume()
 
 void DatabaseServer::LoopEvent(function<void(EventLoopPtr)> func)
 {
-	map<long, bool> looped;
+	unordered_map<long, bool> looped;
 
 	if (pCSock)
 	{

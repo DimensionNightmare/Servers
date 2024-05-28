@@ -1,5 +1,4 @@
 module;
-#include <assert.h>
 #include <list>
 #include "hv/Channel.h"
 
@@ -38,7 +37,6 @@ static GlobalServerHelper* PGlobalServerHelper = nullptr;
 export void SetGlobalServer(GlobalServer* server)
 {
 	PGlobalServerHelper = static_cast<GlobalServerHelper*>(server);
-	assert(PGlobalServerHelper != nullptr);
 }
 
 export GlobalServerHelper* GetGlobalServer()
