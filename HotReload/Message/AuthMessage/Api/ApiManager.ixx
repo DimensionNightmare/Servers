@@ -11,8 +11,6 @@ export void ApiInit(HttpService* service)
 {
 	service->preprocessor = [](HttpRequest* req, HttpResponse* resp) -> int
 		{
-			return HTTP_STATUS_NEXT;
-			
 			AuthServerHelper* authServer = GetAuthServer();
 
 			Json errData;
@@ -23,6 +21,11 @@ export void ApiInit(HttpService* service)
 				errData["message"] = "Server NotInitail!";
 				resp->SetBody(errData.dump());
 				return !HTTP_STATUS_NEXT;
+			}
+
+			if(!req->path.contains("/Auth/User"))
+			{
+				return HTTP_STATUS_NEXT;
 			}
 
 			if (authServer->GetCSock()->RegistState() != RegistState::Registed)

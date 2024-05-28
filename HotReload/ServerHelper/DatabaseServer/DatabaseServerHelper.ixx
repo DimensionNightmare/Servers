@@ -4,6 +4,7 @@ module;
 #include <cstdint>
 #include "pqxx/connection"
 #include "pqxx/transaction"
+#include "pqxx/nontransaction"
 #include "hv/EventLoop.h"
 #include "hv/hsocket.h"
 
@@ -61,9 +62,26 @@ bool DatabaseServerHelper::InitDatabase()
 	{
 		//"postgresql://root@localhost"
 		string* value = GetLuanchConfigParam("connection");
-		pqxx::connection conn(*value);
-		pqxx::work txn(conn);
-		txn.commit();
+		pqxx::connection check(*value);
+		pqxx::nontransaction checkTxn(check);
+
+		string dbName;
+		if(string* value = GetLuanchConfigParam("dbname"))
+		{
+			dbName = *value;
+		}
+		else
+		{
+			return false;
+		}
+
+		if (!checkTxn.query_value<bool>(format("SELECT EXISTS (SELECT 1 FROM pg_database WHERE datname = '{}');", dbName)))
+		{
+			checkTxn.exec(format("CREATE DATABASE \"{}\";", dbName));
+		}
+		
+		// check over connect other
+		pSqlProxy = make_unique<pqxx::connection>(format("{} dbname = {}", *value, dbName));
 	}
 	catch (const exception& e)
 	{

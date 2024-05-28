@@ -266,5 +266,5 @@ void DNClientProxy::RedirectClient(uint16_t port, string ip)
 	eRegistState = RegistState::None;
 
 	createsocket(port, ip.c_str());
-	// start();
+	start();
 }

@@ -471,6 +471,11 @@ void DimensionNightmare::InitCmdHandle()
 			resume();
 		};
 
+	auto reloadConfig = [this](stringstream* ss = nullptr)
+		{
+			InitConfig(*pLuanchParam);
+		};
+
 	auto open = [](stringstream* ss)
 		{
 			string str;
@@ -509,6 +514,7 @@ void DimensionNightmare::InitCmdHandle()
 		{"resume", resume},
 		{"reload", reload},
 		{"open", open},
+		{"reloadConfig", reloadConfig},
 	};
 
 	if (pServer)

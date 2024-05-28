@@ -469,12 +469,12 @@ export template <class TMessage = Message>
 class DNDbObj
 {
 public:
-	DNDbObj(pqxx::transaction<>* work);
+	DNDbObj(pqxx::dbtransaction* work);
 	~DNDbObj() = default;
 
 	const string& GetName() { return TMessage::GetDescriptor()->name(); }
 
-	vector<TMessage>& Result() { return mResult; }
+	const vector<TMessage>& Result() { return mResult; }
 
 	uint32_t ResultCount() { return iQueryCount; }
 
@@ -521,7 +521,7 @@ private:
 	// create table, instert
 	map<string, list<string>> mEles;
 
-	pqxx::transaction<>* pWork;
+	pqxx::dbtransaction* pWork;
 
 	string sSqlStatement;
 
@@ -549,7 +549,7 @@ DNDbObj<TMessage>::DNDbObj()
 }
 
 template <class TMessage>
-DNDbObj<TMessage>::DNDbObj(pqxx::transaction<>* work) : DNDbObj()
+DNDbObj<TMessage>::DNDbObj(pqxx::dbtransaction* work) : DNDbObj()
 {
 	pWork = work;
 }
@@ -557,7 +557,7 @@ DNDbObj<TMessage>::DNDbObj(pqxx::transaction<>* work) : DNDbObj()
 template <class TMessage>
 bool DNDbObj<TMessage>::IsExist()
 {
-	return pWork->query_value<bool>(format("SELECT EXISTS ( SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = lower('{}'));", GetName()));
+	return pWork->query_value<bool>(format("SELECT EXISTS ( SELECT 1 FROM pg_catalog.pg_tables WHERE schemaname = 'public' AND tablename = '{}');", GetName()));
 }
 
 template <class TMessage>
@@ -636,7 +636,7 @@ void DNDbObj<TMessage>::BuildSqlStatement()
 	{
 		case SqlOpType::CreateTable:
 		{
-			ss << GetOpTypeBySqlOpType(eType) << GetName();
+			ss << GetOpTypeBySqlOpType(eType) << "\"" << GetName() << "\"";
 
 			if (!mEles.size())
 			{

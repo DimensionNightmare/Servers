@@ -2,6 +2,7 @@ module;
 #include <assert.h>
 #include "pqxx/connection"
 #include "pqxx/transaction"
+#include "pqxx/nontransaction"
 
 #include "StdMacro.h"
 #include "GDef/GDef.pb.h"
@@ -51,8 +52,26 @@ bool AuthServerHelper::InitDatabase()
 	{
 		//"postgresql://root@localhost"
 		string* value = GetLuanchConfigParam("connection");
-		pSqlProxy = make_unique<pqxx::connection>(*value);
-		pSqlProxy->set_client_encoding("UTF8");
+		pqxx::connection check(*value);
+		pqxx::nontransaction checkTxn(check);
+
+		string dbName;
+		if(string* value = GetLuanchConfigParam("dbname"))
+		{
+			dbName = *value;
+		}
+		else
+		{
+			return false;
+		}
+
+		if (!checkTxn.query_value<bool>(format("SELECT EXISTS (SELECT 1 FROM pg_database WHERE datname = '{}');", dbName)))
+		{
+			checkTxn.exec(format("CREATE DATABASE \"{}\";", dbName));
+		}
+		
+		// check over connect other
+		pSqlProxy = make_unique<pqxx::connection>(format("{} dbname = {}", *value, dbName));
 		pqxx::work txn(*pSqlProxy);
 
 		DNDbObj<Account> accountInfo(&txn);

@@ -54,7 +54,7 @@ export void ApiAuth(HttpService* service)
 			{
 				AuthServerHelper* authServer = GetAuthServer();
 				pqxx::read_transaction query(*authServer->SqlProxy());
-				DNDbObj<GDb::Account> accounts(reinterpret_cast<pqxx::transaction<>*>(&query));
+				DNDbObj<GDb::Account> accounts(&query);
 
 				accounts
 					DBSelect(accInfo, account_id)
@@ -180,7 +180,7 @@ export void ApiAuth(HttpService* service)
 			try
 			{
 				pqxx::read_transaction query(*authServer->SqlProxy());
-				DNDbObj<GDb::Account> accounts(reinterpret_cast<pqxx::transaction<>*>(&query));
+				DNDbObj<GDb::Account> accounts(&query);
 
 				accounts
 					.SelectAll(false, true)
@@ -216,7 +216,7 @@ export void ApiAuth(HttpService* service)
 			{
 
 				pqxx::work query(*authServer->SqlProxy());
-				DNDbObj<GDb::Account> accounts(reinterpret_cast<pqxx::transaction<>*>(&query));
+				DNDbObj<GDb::Account> accounts(&query);
 
 				accounts.Insert(accInfo).Commit();
 
@@ -247,13 +247,21 @@ export void ApiAuth(HttpService* service)
 		});
 
 		
-	service->POST("/Auth/User/Test", [](const HttpRequestPtr& req, const HttpResponseWriterPtr& writer)
+	service->POST("/Auth/Utils/ChangeIp", [](const HttpRequestPtr& req, const HttpResponseWriterPtr& writer)
 		{
+			string ip = req->GetString("ip");
+			int port = req->Get<int>("port", 0);
+
+			if(ip.empty() || !port)
+			{
+				writer->End();
+				return;
+			}
+
 			AuthServerHelper* authServer = GetAuthServer();
 			DNClientProxyHelper* client = authServer->GetCSock();
 
-
-			TICK_MAINSPACE_SIGN_FUNCTION(DNClientProxy, RedirectClient, client, 1271, "127.0.0.1");
+			TICK_MAINSPACE_SIGN_FUNCTION(DNClientProxy, RedirectClient, client, port, ip);
 
 			writer->End();
 		});
