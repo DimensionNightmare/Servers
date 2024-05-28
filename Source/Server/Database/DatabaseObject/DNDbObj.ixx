@@ -671,7 +671,7 @@ void DNDbObj<TMessage>::BuildSqlStatement()
 		}
 		case SqlOpType::Insert:
 		{
-			ss << GetOpTypeBySqlOpType(eType) << GetName();
+			ss << GetOpTypeBySqlOpType(eType) << "\"" << GetName() << "\"";
 
 			if (!mEles.size())
 			{
@@ -755,7 +755,7 @@ void DNDbObj<TMessage>::BuildSqlStatement()
 				}
 			}
 
-			ss << GetOpTypeBySqlOpType(eType) << selectElems << " FROM " << GetName();
+			ss << GetOpTypeBySqlOpType(eType) << selectElems << " FROM " << "\"" << GetName() << "\"";
 
 			bool hasCondition = false;
 
@@ -799,7 +799,7 @@ void DNDbObj<TMessage>::BuildSqlStatement()
 				}
 			}
 
-			ss << GetOpTypeBySqlOpType(eType) << GetName() << " SET " << selectElems;
+			ss << GetOpTypeBySqlOpType(eType) << "\"" << GetName() << "\"" << " SET " << selectElems;
 
 			auto& updateConds = mEles[SUPDATECOND];
 
@@ -823,7 +823,7 @@ void DNDbObj<TMessage>::BuildSqlStatement()
 		}
 		case SqlOpType::Delete:
 		{
-			ss << GetOpTypeBySqlOpType(eType) << GetName();
+			ss << GetOpTypeBySqlOpType(eType) << "\"" << GetName() << "\"";
 
 			bool hasCondition = false;
 
