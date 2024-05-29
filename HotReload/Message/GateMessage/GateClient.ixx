@@ -37,7 +37,7 @@ namespace GateMessage
 		ProxyEntityHelper* entity = entityMan->GetEntity(requset->account_id());
 		if (!entity)
 		{
-			DNPrint(0, LoggerLevel::Debug, "noaccount !!");
+			DNPrint(0, LoggerLevel::Debug, "noaccount %d!!", requset->account_id());
 			response.set_state_code(1);
 		}
 		// if not match, timer will destory entity

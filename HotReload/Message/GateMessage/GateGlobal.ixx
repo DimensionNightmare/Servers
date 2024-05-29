@@ -98,6 +98,8 @@ namespace GateMessage
 			entity->TimerId() = TICK_MAINSPACE_SIGN_FUNCTION(ProxyEntityManager, CheckEntityCloseTimer, entityMan, entity->ID());
 		}
 
+		DNPrint(0, LoggerLevel::Debug, "ReqUserToken User: %d!!", requset->account_id());
+
 		binData.clear();
 		binData.resize(response.ByteSizeLong());
 		response.SerializeToArray(binData.data(), binData.size());
