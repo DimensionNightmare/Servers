@@ -13,7 +13,6 @@ export import DNClientProxyHelper;
 export import ServerEntityManagerHelper;
 import Logger;
 import Config.Server;
-import Macro;
 
 using namespace std;
 
@@ -30,8 +29,6 @@ public:
 
 	string& GetCtlIp() { return sCtlIp; }
 	uint16_t& GetCtlPort() { return iCtlPort; }
-
-	void ReClientEvent(const string& ip, uint16_t port);
 };
 
 static DatabaseServerHelper* PDatabaseServerHelper = nullptr;
@@ -86,10 +83,4 @@ bool DatabaseServerHelper::InitDatabase()
 	}
 
 	return true;
-}
-
-void DatabaseServerHelper::ReClientEvent(const string& ip, uint16_t port)
-{
-	DNClientProxy* client = GetCSock();
-	TICK_MAINSPACE_SIGN_FUNCTION(DNClientProxy, RedirectClient, client, port, ip);
 }

@@ -11,6 +11,7 @@ import DNTask;
 import MessagePack;
 import LogicServerHelper;
 import Logger;
+import Macro;
 
 using namespace std;
 using namespace google::protobuf;
@@ -185,8 +186,9 @@ namespace LogicMessage
 	{
 		COM_RetChangeCtlSrv* requset = reinterpret_cast<COM_RetChangeCtlSrv*>(msg);
 		LogicServerHelper* dnServer = GetLogicServer();
+		DNClientProxyHelper* client = dnServer->GetCSock();
 
-		dnServer->ReClientEvent(requset->ip(), requset->port());
+		TICK_MAINSPACE_SIGN_FUNCTION(DNClientProxy, RedirectClient, client, requset->port(), requset->ip());
 	}
 
 	export void Exe_RetHeartbeat(SocketChannelPtr channel, uint32_t msgId, Message* msg)

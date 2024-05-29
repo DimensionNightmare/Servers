@@ -14,7 +14,6 @@ export import ServerEntityManagerHelper;
 export import ClientEntityManagerHelper;
 import Logger;
 import Config.Server;
-import Macro;
 
 using namespace std;
 using namespace sw::redis;
@@ -34,8 +33,6 @@ public:
 
 	string& GetCtlIp() { return sCtlIp; }
 	uint16_t& GetCtlPort() { return iCtlPort; }
-
-	void ReClientEvent(const string& ip, uint16_t port);
 };
 
 static LogicServerHelper* PLogicServerHelper = nullptr;
@@ -73,10 +70,4 @@ bool LogicServerHelper::InitDatabase()
 	}
 
 	return true;
-}
-
-void LogicServerHelper::ReClientEvent(const string& ip, uint16_t port)
-{
-	DNClientProxy* client = GetCSock();
-	TICK_MAINSPACE_SIGN_FUNCTION(DNClientProxy, RedirectClient, client, port, ip);
 }

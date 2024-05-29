@@ -149,7 +149,8 @@ int HandleLogicServerInit(DNServer* server)
 						clientSock->Timer()->setTimeout(200, [=](uint64_t timerID)
 						{
 							DNPrint(0, LoggerLevel::Debug, "orgin not match peeraddr %s reclient ~", origin.c_str());
-							serverProxy->ReClientEvent(serverProxy->GetCtlIp(), serverProxy->GetCtlPort()); 
+							TICK_MAINSPACE_SIGN_FUNCTION(DNClientProxy, RedirectClient, clientSock, serverProxy->GetCtlPort(), serverProxy->GetCtlIp());
+
 						});
 					}
 				}

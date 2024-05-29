@@ -11,7 +11,6 @@ module;
 export module Utils.StrUtils;
 
 using namespace std;
-using namespace std::chrono;
 
 export template <auto value>
 constexpr auto EnumName()
@@ -68,6 +67,7 @@ constexpr auto EnumName(T value)
 
 export string GetNowTimeStr()
 {
+	using namespace std::chrono;
 	return format("{:%Y-%m-%d %H:%M:%S}", zoned_time(current_zone(), system_clock::now()));
 }
 

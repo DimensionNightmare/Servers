@@ -11,6 +11,7 @@ import DNTask;
 import MessagePack;
 import DatabaseServerHelper;
 import Logger;
+import Macro;
 
 using namespace std;
 using namespace hv;
@@ -95,7 +96,8 @@ namespace DatabaseMessage
 	{
 		COM_RetChangeCtlSrv* requset = reinterpret_cast<COM_RetChangeCtlSrv*>(msg);
 		DatabaseServerHelper* dnServer = GetDatabaseServer();
-
-		dnServer->ReClientEvent(requset->ip(), requset->port());
+		DNClientProxyHelper* client = dnServer->GetCSock();
+		
+		TICK_MAINSPACE_SIGN_FUNCTION(DNClientProxy, RedirectClient, client, requset->port(), requset->ip());
 	}
 }
