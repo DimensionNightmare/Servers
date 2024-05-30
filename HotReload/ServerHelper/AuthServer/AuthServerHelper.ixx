@@ -5,18 +5,16 @@ module;
 #include "pqxx/nontransaction"
 
 #include "StdMacro.h"
-#include "GDef/GDef.pb.h"
 export module AuthServerHelper;
 
 export import AuthServer;
 export import DNClientProxyHelper;
 export import DNWebProxyHelper;
-import DNDbObj;
+import DbUtils;
 import Logger;
 import Config.Server;
 
 using namespace std;
-using namespace GDb;
 
 export class AuthServerHelper : public AuthServer
 {
@@ -51,35 +49,11 @@ bool AuthServerHelper::InitDatabase()
 	{
 		//"postgresql://root@localhost"
 		string* value = GetLuanchConfigParam("connection");
-		pqxx::connection check(*value);
-		pqxx::nontransaction checkTxn(check);
 
-		string dbName;
-		if(string* value = GetLuanchConfigParam("dbname"))
-		{
-			dbName = *value;
-		}
-		else
-		{
-			return false;
-		}
-
-		if (!checkTxn.query_value<bool>(format("SELECT EXISTS (SELECT 1 FROM pg_database WHERE datname = '{}');", dbName)))
-		{
-			checkTxn.exec(format("CREATE DATABASE \"{}\";", dbName));
-		}
+		string* dbName= GetLuanchConfigParam("dbname");
+	
+		pSqlProxy = make_unique<pqxx::connection>(format("{} dbname = {}", *value, *dbName));
 		
-		// check over connect other
-		pSqlProxy = make_unique<pqxx::connection>(format("{} dbname = {}", *value, dbName));
-		pqxx::work txn(*pSqlProxy);
-
-		DNDbObj<Account> accountInfo(&txn);
-		if (!accountInfo.IsExist())
-		{
-			accountInfo.InitTable().Commit();
-		}
-
-		txn.commit();
 	}
 	catch (const exception& e)
 	{

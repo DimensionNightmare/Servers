@@ -11,9 +11,9 @@ module;
 
 #include "StdMacro.h"
 #include "Common/DbExtend.pb.h"
-export module DNDbObj;
+export module DbUtils;
 
-import Utils.StrUtils;
+import StrUtils;
 import Logger;
 
 using namespace std;
@@ -466,11 +466,11 @@ void UpdateFieldCondByProtoType(const FieldDescriptor* field, const Reflection* 
 }
 
 export template <class TMessage = Message>
-class DNDbObj
+class DbSqlHelper
 {
 public:
-	DNDbObj(pqxx::dbtransaction* work);
-	~DNDbObj() = default;
+	DbSqlHelper(pqxx::dbtransaction* work);
+	~DbSqlHelper() = default;
 
 	const string& GetName() { return TMessage::GetDescriptor()->name(); }
 
@@ -480,31 +480,31 @@ public:
 
 	bool Commit();
 	// create table
-	DNDbObj<TMessage>& InitTable();
+	DbSqlHelper<TMessage>& InitTable();
 	// insert
-	DNDbObj<TMessage>& Insert(TMessage& inObj);
+	DbSqlHelper<TMessage>& Insert(TMessage& inObj);
 
 	// query
-	DNDbObj<TMessage>& Select(const char* name, ...);
+	DbSqlHelper<TMessage>& Select(const char* name, ...);
 
-	DNDbObj<TMessage>& SelectAll(bool foreach = false, bool quertCount = false);
+	DbSqlHelper<TMessage>& SelectAll(bool foreach = false, bool quertCount = false);
 
-	DNDbObj<TMessage>& SelectCond(TMessage& selObj, const char* name, const char* cond, const char* splicing, ...);
+	DbSqlHelper<TMessage>& SelectCond(TMessage& selObj, const char* name, const char* cond, const char* splicing, ...);
 
-	DNDbObj<TMessage>& Update(TMessage& upObj, const char* name, ...);
+	DbSqlHelper<TMessage>& Update(TMessage& upObj, const char* name, ...);
 
-	DNDbObj<TMessage>& UpdateCond(TMessage& upObj, const char* name, const char* cond, const char* splicing, ...);
+	DbSqlHelper<TMessage>& UpdateCond(TMessage& upObj, const char* name, const char* cond, const char* splicing, ...);
 
-	DNDbObj<TMessage>& DeleteCond(TMessage& outObj, const char* name, const char* cond, const char* splicing, ...);
+	DbSqlHelper<TMessage>& DeleteCond(TMessage& outObj, const char* name, const char* cond, const char* splicing, ...);
 
 	bool IsSuccess() { return bExecResult; }
 
 	bool IsExist();
 
-	DNDbObj<TMessage>& Limit(uint32_t limit);
+	DbSqlHelper<TMessage>& Limit(uint32_t limit);
 
 private:
-	DNDbObj();
+	DbSqlHelper();
 
 	bool ChangeSqlType(SqlOpType type);
 
@@ -535,7 +535,7 @@ private:
 };
 
 template <class TMessage>
-DNDbObj<TMessage>::DNDbObj()
+DbSqlHelper<TMessage>::DbSqlHelper()
 {
 	mResult.clear();
 	eType = SqlOpType::None;
@@ -549,19 +549,19 @@ DNDbObj<TMessage>::DNDbObj()
 }
 
 template <class TMessage>
-DNDbObj<TMessage>::DNDbObj(pqxx::dbtransaction* work) : DNDbObj()
+DbSqlHelper<TMessage>::DbSqlHelper(pqxx::dbtransaction* work) : DbSqlHelper()
 {
 	pWork = work;
 }
 
 template <class TMessage>
-bool DNDbObj<TMessage>::IsExist()
+bool DbSqlHelper<TMessage>::IsExist()
 {
 	return pWork->query_value<bool>(format("SELECT EXISTS ( SELECT 1 FROM pg_catalog.pg_tables WHERE schemaname = 'public' AND tablename = '{}');", GetName()));
 }
 
 template <class TMessage>
-DNDbObj<TMessage>& DNDbObj<TMessage>::Limit(uint32_t limit)
+DbSqlHelper<TMessage>& DbSqlHelper<TMessage>::Limit(uint32_t limit)
 {
 	if (iQueryCount)
 	{
@@ -574,7 +574,7 @@ DNDbObj<TMessage>& DNDbObj<TMessage>::Limit(uint32_t limit)
 }
 
 template <class TMessage>
-bool DNDbObj<TMessage>::ChangeSqlType(SqlOpType type)
+bool DbSqlHelper<TMessage>::ChangeSqlType(SqlOpType type)
 {
 	if (eType != SqlOpType::None && eType != type)
 	{
@@ -589,7 +589,7 @@ bool DNDbObj<TMessage>::ChangeSqlType(SqlOpType type)
 }
 
 template <class TMessage>
-void DNDbObj<TMessage>::SetResult(int affectedRows)
+void DbSqlHelper<TMessage>::SetResult(int affectedRows)
 {
 	switch (eType)
 	{
@@ -616,7 +616,7 @@ void DNDbObj<TMessage>::SetResult(int affectedRows)
 }
 
 template <class TMessage>
-void DNDbObj<TMessage>::BuildSqlStatement()
+void DbSqlHelper<TMessage>::BuildSqlStatement()
 {
 	if (eType == SqlOpType::None)
 	{
@@ -860,7 +860,7 @@ void DNDbObj<TMessage>::BuildSqlStatement()
 }
 
 template <class TMessage>
-bool DNDbObj<TMessage>::Commit()
+bool DbSqlHelper<TMessage>::Commit()
 {
 	BuildSqlStatement();
 
@@ -891,7 +891,7 @@ bool DNDbObj<TMessage>::Commit()
 }
 
 template <class TMessage>
-DNDbObj<TMessage>& DNDbObj<TMessage>::InitTable()
+DbSqlHelper<TMessage>& DbSqlHelper<TMessage>::InitTable()
 {
 	ChangeSqlType(SqlOpType::CreateTable);
 
@@ -944,7 +944,7 @@ DNDbObj<TMessage>& DNDbObj<TMessage>::InitTable()
 }
 
 template <class TMessage>
-DNDbObj<TMessage>& DNDbObj<TMessage>::Insert(TMessage& inObj)
+DbSqlHelper<TMessage>& DbSqlHelper<TMessage>::Insert(TMessage& inObj)
 {
 	ChangeSqlType(SqlOpType::Insert);
 
@@ -975,7 +975,7 @@ DNDbObj<TMessage>& DNDbObj<TMessage>::Insert(TMessage& inObj)
 }
 
 template <class TMessage>
-DNDbObj<TMessage>& DNDbObj<TMessage>::Select(const char* name, ...)
+DbSqlHelper<TMessage>& DbSqlHelper<TMessage>::Select(const char* name, ...)
 {
 	ChangeSqlType(SqlOpType::Query);
 
@@ -998,7 +998,7 @@ DNDbObj<TMessage>& DNDbObj<TMessage>::Select(const char* name, ...)
 }
 
 template <class TMessage>
-DNDbObj<TMessage>& DNDbObj<TMessage>::SelectAll(bool foreach, bool quertCount)
+DbSqlHelper<TMessage>& DbSqlHelper<TMessage>::SelectAll(bool foreach, bool quertCount)
 {
 	ChangeSqlType(SqlOpType::Query);
 
@@ -1027,7 +1027,7 @@ DNDbObj<TMessage>& DNDbObj<TMessage>::SelectAll(bool foreach, bool quertCount)
 }
 
 template <class TMessage>
-DNDbObj<TMessage>& DNDbObj<TMessage>::SelectCond(TMessage& selObj, const char* name, const char* cond, const char* splicing, ...)
+DbSqlHelper<TMessage>& DbSqlHelper<TMessage>::SelectCond(TMessage& selObj, const char* name, const char* cond, const char* splicing, ...)
 {
 	const Descriptor* descriptor = TMessage::GetDescriptor();
 	const Reflection* reflection = TMessage::GetReflection();
@@ -1056,7 +1056,7 @@ DNDbObj<TMessage>& DNDbObj<TMessage>::SelectCond(TMessage& selObj, const char* n
 }
 
 template <class TMessage>
-void DNDbObj<TMessage>::PaserQuery(pqxx::result& result)
+void DbSqlHelper<TMessage>::PaserQuery(pqxx::result& result)
 {
 	mResult.clear();
 
@@ -1089,7 +1089,7 @@ void DNDbObj<TMessage>::PaserQuery(pqxx::result& result)
 }
 
 template <class TMessage>
-DNDbObj<TMessage>& DNDbObj<TMessage>::Update(TMessage& upObj, const char* name, ...)
+DbSqlHelper<TMessage>& DbSqlHelper<TMessage>::Update(TMessage& upObj, const char* name, ...)
 {
 	ChangeSqlType(SqlOpType::Update);
 
@@ -1111,7 +1111,7 @@ DNDbObj<TMessage>& DNDbObj<TMessage>::Update(TMessage& upObj, const char* name, 
 }
 
 template <class TMessage>
-DNDbObj<TMessage>& DNDbObj<TMessage>::UpdateCond(TMessage& upObj, const char* name, const char* cond, const char* splicing, ...)
+DbSqlHelper<TMessage>& DbSqlHelper<TMessage>::UpdateCond(TMessage& upObj, const char* name, const char* cond, const char* splicing, ...)
 {
 	ChangeSqlType(SqlOpType::Update);
 
@@ -1134,7 +1134,7 @@ DNDbObj<TMessage>& DNDbObj<TMessage>::UpdateCond(TMessage& upObj, const char* na
 }
 
 template <class TMessage>
-DNDbObj<TMessage>& DNDbObj<TMessage>::DeleteCond(TMessage& outObj, const char* name, const char* cond, const char* splicing, ...)
+DbSqlHelper<TMessage>& DbSqlHelper<TMessage>::DeleteCond(TMessage& outObj, const char* name, const char* cond, const char* splicing, ...)
 {
 	ChangeSqlType(SqlOpType::Delete);
 

@@ -2,6 +2,7 @@ module;
 #include <cstdint>
 #include <thread>
 #include <iostream>
+#include <unordered_map>
 #include "pqxx/connection"
 #include "hv/hsocket.h"
 #include "hv/EventLoopThread.h"
@@ -46,7 +47,7 @@ public: // dll override
 protected: // dll proxy
 	unique_ptr<DNClientProxy> pCSock;
 
-	unique_ptr<pqxx::connection> pSqlProxy;
+	unordered_map<uint16_t, unique_ptr<pqxx::connection>> pSqlProxys;
 
 	// record orgin info
 	string sCtlIp;

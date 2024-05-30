@@ -11,7 +11,7 @@ export module GateMessage:GateClient;
 
 import GateServerHelper;
 import DNTask;
-import Utils.StrUtils;
+import StrUtils;
 import MessagePack;
 import Logger;
 

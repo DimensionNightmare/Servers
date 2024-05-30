@@ -13,7 +13,7 @@ export module GateMessage:GateGlobal;
 
 import MessagePack;
 import GateServerHelper;
-import Utils.StrUtils;
+import StrUtils;
 import Logger;
 import Macro;
 

@@ -22,7 +22,7 @@ import AuthServer;
 import GateServer;
 import DatabaseServer;
 import LogicServer;
-import Utils.StrUtils;
+import StrUtils;
 import I10nText;
 import Logger;
 import Config.Server;

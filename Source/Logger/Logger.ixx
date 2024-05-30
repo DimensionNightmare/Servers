@@ -5,7 +5,7 @@ module;
 #include <iostream>
 export module Logger;
 
-import Utils.StrUtils;
+import StrUtils;
 import I10nText;
 
 using namespace std;

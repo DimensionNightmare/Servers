@@ -8,7 +8,7 @@ module;
 #ifdef _WIN32
 #include <timezoneapi.h>
 #endif
-export module Utils.StrUtils;
+export module StrUtils;
 
 using namespace std;
 
@@ -63,6 +63,26 @@ constexpr auto EnumName(T value)
 		};
 	}(make_index_sequence<num>{});
 	return names[static_cast<size_t>(value)];
+}
+
+export template <typename T>
+	requires is_enum_v<T>
+constexpr auto EnumName(string_view value)
+{
+	constexpr auto num = EnumMax<T>();
+	constexpr auto names = []<size_t... Is>(index_sequence<Is...>)
+	{
+		return array<string_view, num>
+		{
+			EnumName<static_cast<T>(Is)>()...
+		};
+	}(make_index_sequence<num>{});
+
+	auto it = find(names.begin(), names.end(), value);
+    if (it != names.end()) {
+        return static_cast<T>(distance(names.begin(), it));
+    }
+    throw invalid_argument("Unknown enum name");
 }
 
 export string GetNowTimeStr()

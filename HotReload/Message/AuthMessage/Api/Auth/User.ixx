@@ -16,7 +16,7 @@ import AuthServerHelper;
 import DNTask;
 import MessagePack;
 import Macro;
-import DNDbObj;
+import DbUtils;
 import Logger;
 
 using namespace std;
@@ -55,7 +55,7 @@ export void ApiAuth(HttpService* service)
 			{
 				AuthServerHelper* authServer = GetAuthServer();
 				pqxx::read_transaction query(*authServer->SqlProxy());
-				DNDbObj<GDb::Account> accounts(&query);
+				DbSqlHelper<GDb::Account> accounts(&query);
 
 				accounts
 					// DBSelect(accInfo, account_id)
@@ -182,7 +182,7 @@ export void ApiAuth(HttpService* service)
 			try
 			{
 				pqxx::read_transaction query(*authServer->SqlProxy());
-				DNDbObj<GDb::Account> accounts(&query);
+				DbSqlHelper<GDb::Account> accounts(&query);
 
 				accounts
 					.SelectAll(false, true)
@@ -218,7 +218,7 @@ export void ApiAuth(HttpService* service)
 			{
 
 				pqxx::work query(*authServer->SqlProxy());
-				DNDbObj<GDb::Account> accounts(&query);
+				DbSqlHelper<GDb::Account> accounts(&query);
 
 				accounts.Insert(accInfo).Commit();
 
