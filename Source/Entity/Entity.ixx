@@ -14,13 +14,17 @@ export enum class EntityType : uint8_t
 
 using namespace std;
 
+// normal data normal get/set
+// if class function has logic. please imp to helper.
+
 export class Entity
 {
 public:
 	Entity();
+	Entity(uint32_t id);
 	virtual ~Entity();
 public: // dll override
-
+	uint32_t ID(){ return iId; }
 protected: // dll proxy
 
 public:
@@ -32,6 +36,11 @@ Entity::Entity()
 {
 	eEntityType = EntityType::None;
 	iId = 0;
+}
+
+Entity::Entity(uint32_t id) :Entity()
+{
+	iId = id;
 }
 
 Entity::~Entity()

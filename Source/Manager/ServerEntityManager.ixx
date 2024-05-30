@@ -26,15 +26,15 @@ public:
 
 public: // dll override
 	void EntityCloseTimer(uint64_t timerID);
+	
 	uint64_t CheckEntityCloseTimer(uint32_t entityId);
 
-	virtual bool RemoveEntity(uint32_t entityId);
+	bool RemoveEntity(uint32_t entityId);
 
 protected: // dll proxy
 	unordered_map<ServerType, list<ServerEntity*> > mEntityMapList;
 	// server pull server
 	atomic<uint32_t> iServerId;
-	list<uint32_t> mIdleServerId;
 
 };
 
@@ -89,7 +89,7 @@ bool ServerEntityManager::RemoveEntity(uint32_t entityId)
 		ServerEntity* entity = &mEntityMap[entityId];
 		unique_lock<shared_mutex> ulock(oMapMutex);
 
-		mEntityMapList[entity->GetType()].remove(entity);
+		mEntityMapList[entity->GetServerType()].remove(entity);
 
 		if (ServerEntity* owner = entity->LinkNode())
 		{

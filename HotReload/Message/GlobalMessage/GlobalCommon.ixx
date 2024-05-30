@@ -114,7 +114,7 @@ namespace GlobalMessage
 		}
 
 		//exist?
-		else if (ServerEntityHelper* entity = channel->getContext<ServerEntityHelper>())
+		else if (ServerEntity* entity = channel->getContext<ServerEntity>())
 		{
 			response.set_success(false);
 		}
@@ -122,7 +122,7 @@ namespace GlobalMessage
 		// take task to regist !
 		else if (int serverIndex = requset->server_index())
 		{
-			if (ServerEntityHelper* entity = entityMan->GetEntity(serverIndex))
+			if (ServerEntity* entity = entityMan->GetEntity(serverIndex))
 			{
 				// wait destroy`s destroy
 				if (uint64_t timerId = entity->TimerId())
@@ -166,7 +166,7 @@ namespace GlobalMessage
 				{
 					const COM_ReqRegistSrv& child = requset->childs(i);
 					ServerType childType = (ServerType)child.server_type();
-					ServerEntityHelper* servChild = entityMan->AddEntity(child.server_index(), childType);
+					ServerEntity* servChild = entityMan->AddEntity(child.server_index(), childType);
 					entity->SetMapLinkNode(childType, servChild);
 				}
 
@@ -175,7 +175,7 @@ namespace GlobalMessage
 
 		}
 
-		else if (ServerEntityHelper* entity = entityMan->AddEntity(entityMan->ServerIndex(), regType))
+		else if (ServerEntity* entity = entityMan->AddEntity(entityMan->ServerIndex(), regType))
 		{
 			size_t pos = ipPort.find(":");
 			entity->ServerIp() = ipPort.substr(0, pos);

@@ -136,7 +136,7 @@ set_target_properties(DNTest PROPERTIES EXCLUDE_FROM_ALL TRUE)
 # TODO: 如有需要，请添加测试并安装目标。
 
 add_custom_target(MainTarget)
-add_dependencies(MainTarget DimensionNightmareServer HotReload)
+add_dependencies(MainTarget MainSource HotReload)
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
 	install(TARGETS DimensionNightmareServer DESTINATION ${CMAKE_INSTALL_PREFIX})

@@ -21,8 +21,6 @@ using namespace hv;
 using namespace google::protobuf;
 using namespace GMsg;
 
-#define CastObj(entity) static_cast<ServerEntityHelper*>(entity)
-
 namespace GlobalMessage
 {
 
@@ -31,19 +29,18 @@ namespace GlobalMessage
 		G2C_ResAuthAccount response;
 
 		// if has db not need origin
-		list<ServerEntity*> servList = GetGlobalServer()->GetServerEntityManager()->GetEntityByList(ServerType::GateServer);
+		list<ServerEntity*> serverList = GetGlobalServer()->GetServerEntityManager()->GetEntityByList(ServerType::GateServer);
 
-		list<ServerEntityHelper*> tempList;
-		for (ServerEntity* it : servList)
+		list<ServerEntity*> tempList;
+		for (ServerEntity* server : serverList)
 		{
-			ServerEntityHelper* gate = CastObj(it);
-			if (gate->HasFlag(ServerEntityFlag::Locked))
+			if (server->HasFlag(ServerEntityFlag::Locked))
 			{
-				tempList.emplace_back(gate);
+				tempList.emplace_back(server);
 			}
 		}
 
-		tempList.sort([](ServerEntityHelper* lhs, ServerEntityHelper* rhs) { return lhs->GetConnNum() < rhs->GetConnNum(); });
+		tempList.sort([](ServerEntity* lhs, ServerEntity* rhs) { return lhs->ConnNum() < rhs->ConnNum(); });
 
 
 		string binData;
@@ -55,10 +52,10 @@ namespace GlobalMessage
 		else
 		{
 
-			ServerEntityHelper* entity = tempList.front();
+			ServerEntity* entity = tempList.front();
 			DNPrint(0, LoggerLevel::Debug, "send to GateServer : %d", entity->ID());
 
-			entity->GetConnNum()++;
+			entity->ConnNum()++;
 
 			response.set_ip(entity->ServerIp());
 			response.set_port(entity->ServerPort());

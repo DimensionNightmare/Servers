@@ -26,7 +26,7 @@ public: // dll override
 	void EntityCloseTimer(uint64_t timerID);
 	uint64_t CheckEntityCloseTimer(uint32_t entityId);
 
-	virtual bool RemoveEntity(uint32_t entityId);
+	bool RemoveEntity(uint32_t entityId);
 
 protected: // dll proxy
 
@@ -72,7 +72,6 @@ bool ProxyEntityManager::RemoveEntity(uint32_t entityId)
 {
 	if (mEntityMap.contains(entityId))
 	{
-		ProxyEntity* entity = &mEntityMap[entityId];
 		unique_lock<shared_mutex> ulock(oMapMutex);
 
 		mEntityMap.erase(entityId);

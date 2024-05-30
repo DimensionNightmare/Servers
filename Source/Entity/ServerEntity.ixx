@@ -26,17 +26,28 @@ export class ServerEntity : public NetEntity
 {
 public:
 	ServerEntity();
+	ServerEntity(uint32_t id, ServerType serverType);
 	virtual ~ServerEntity();
 
 public: // dll override
 
-	ServerType GetType() { return emServerType; }
+	ServerType GetServerType() { return emServerType; }
 
 	ServerEntity*& LinkNode() { return pLink; }
 
 	bool HasFlag(ServerEntityFlag flag) { return oFlags.test(int(flag)); }
 	void SetFlag(ServerEntityFlag flag) { oFlags.set(int(flag)); }
 	void ClearFlag(ServerEntityFlag flag) { oFlags.reset(int(flag)); }
+
+	string& ServerIp() { return sServIp; }
+
+	uint16_t& ServerPort() { return iServPort; }
+
+	uint32_t& ConnNum() { return IConnNum; }
+
+	void SetMapLinkNode(ServerType type, ServerEntity* node);
+
+	list<ServerEntity*>& GetMapLinkNode(ServerType type) { return mMapLink[type]; }
 
 protected: // dll proxy
 	ServerType emServerType;
@@ -47,16 +58,26 @@ protected: // dll proxy
 	// regist node need
 	ServerEntity* pLink;
 	// be regist node need
-	unordered_map<ServerType, list< ServerEntity*>> mMapLink;
+	unordered_map<ServerType, list<ServerEntity*>> mMapLink;
 
 	bitset<ServerEntityFlagSize()> oFlags;
 };
 
+export using ServerEntityPtr = ServerEntity*;
+
 ServerEntity::ServerEntity()
 {
 	eEntityType = EntityType::Server;
-
 	emServerType = ServerType::None;
+	IConnNum = 0;
+	iServPort = 0;
+	pLink = nullptr;
+}
+
+ServerEntity::ServerEntity(uint32_t id, ServerType serverType) :NetEntity(id)
+{
+	emServerType = serverType;
+	eEntityType = EntityType::Server;
 	IConnNum = 0;
 	iServPort = 0;
 	pLink = nullptr;
@@ -66,4 +87,14 @@ ServerEntity::~ServerEntity()
 {
 	pLink = nullptr;
 	mMapLink.clear();
+}
+
+void ServerEntity::SetMapLinkNode(ServerType type, ServerEntity* node)
+{
+	if (type <= ServerType::None || type >= ServerType::Max)
+	{
+		return;
+	}
+
+	mMapLink[type].emplace_back(node);
 }

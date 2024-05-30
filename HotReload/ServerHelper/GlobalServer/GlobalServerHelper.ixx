@@ -17,8 +17,6 @@ using namespace std;
 using namespace hv;
 using namespace GMsg;
 
-#define CastObj(entity) static_cast<ServerEntityHelper*>(entity)
-
 export class GlobalServerHelper : public GlobalServer
 {
 private:
@@ -62,7 +60,7 @@ void GlobalServerHelper::UpdateServerGroup()
 	COM_RetChangeCtlSrv retMsg;
 	string binData;
 
-	auto registControl = [&](ServerEntityHelper* beEntity, ServerEntityHelper* entity)
+	auto registControl = [&](ServerEntity* beEntity, ServerEntity* entity)
 		{
 			const SocketChannelPtr& channel = entity->GetSock();
 			entity->LinkNode() = beEntity;
@@ -85,9 +83,8 @@ void GlobalServerHelper::UpdateServerGroup()
 			entity->SetSock(nullptr);
 		};
 
-	for (ServerEntity* it : gates)
+	for (ServerEntity* gate : gates)
 	{
-		ServerEntityHelper* gate = CastObj(it);
 		if (gate->HasFlag(ServerEntityFlag::Locked))
 		{
 			continue;
@@ -99,9 +96,8 @@ void GlobalServerHelper::UpdateServerGroup()
 		{
 			ServerEntity* ele = dbs.front();
 			dbs.pop_front();
-			ServerEntityHelper* entity = CastObj(ele);
-			registControl(gate, entity);
-			entityMan->UnMountEntity(entity->ServerEntityType(), ele);
+			registControl(gate, ele);
+			entityMan->UnMountEntity(ele->GetServerType(), ele);
 			gatesDb.emplace_back(ele);
 		}
 
@@ -109,9 +105,8 @@ void GlobalServerHelper::UpdateServerGroup()
 		{
 			ServerEntity* ele = logics.front();
 			logics.pop_front();
-			ServerEntityHelper* entity = CastObj(ele);
-			registControl(gate, entity);
-			entityMan->UnMountEntity(entity->ServerEntityType(), ele);
+			registControl(gate, ele);
+			entityMan->UnMountEntity(ele->GetServerType(), ele);
 			gatesLogic.emplace_back(ele);
 		}
 

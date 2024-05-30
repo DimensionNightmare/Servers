@@ -22,7 +22,7 @@ public:
 	virtual bool Init() override;
 
 public: // dll override
-	virtual bool RemoveEntity(uint32_t entityId);
+	bool RemoveEntity(uint32_t entityId);
 
 protected: // dll proxy
 
@@ -38,7 +38,6 @@ bool ClientEntityManager::RemoveEntity(uint32_t entityId)
 {
 	if (mEntityMap.contains(entityId))
 	{
-		ClientEntity* entity = &mEntityMap[entityId];
 		unique_lock<shared_mutex> ulock(oMapMutex);
 
 		mEntityMap.erase(entityId);

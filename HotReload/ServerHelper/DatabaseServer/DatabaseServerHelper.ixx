@@ -64,17 +64,24 @@ bool DatabaseServerHelper::InitDatabase()
 		pqxx::nontransaction checkTxn(check);
 
 		list<string> dbNames;
-		if(string* value = GetLuanchConfigParam("dbnames"))
+		if(string* names = GetLuanchConfigParam("dbnames"))
 		{
 			size_t start = 0;
-			size_t end = value->find(",");
-
+			size_t end = names->find(",");
+			string name;
 			while (end != string::npos)
 			{
-				dbNames.push_back(value->substr(start, end - start));
-				start = end;
-				end = value->find(",", start);
+				name = names->substr(start, end - start);
+				EnumName<SqlDbNameEnum>(name);
+
+				dbNames.push_back(name);
+				start = end + 1;
+				end = names->find(",", start);
 			}
+
+			name = names->substr(start);
+			EnumName<SqlDbNameEnum>(name);
+			dbNames.push_back(name);
 			
 			for(string& dbName : dbNames)
 			{
@@ -85,7 +92,8 @@ bool DatabaseServerHelper::InitDatabase()
 				}
 
 				uint16_t key = (uint16_t)EnumName<SqlDbNameEnum>(dbName);
-				pSqlProxys[key] = make_unique<pqxx::connection>(format("{} dbname = {}", *value, dbName));
+				string connectStr = format("{} dbname = {}", *value, dbName);
+				pSqlProxys[key] = make_unique<pqxx::connection>(connectStr);
 			}
 		}
 		else

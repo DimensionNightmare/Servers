@@ -46,10 +46,10 @@ int HandleGlobalServerInit(DNServer* server)
 				{
 					DNPrint(TipCode_CliConnOff, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
 
-					if (ServerEntityHelper* entity = channel->getContext<ServerEntityHelper>())
+					if (ServerEntity* entity = channel->getContext<ServerEntity>())
 					{
 						ServerEntityManagerHelper* entityMan = serverProxy->GetServerEntityManager();
-						entityMan->RemoveEntity(entity->ID());
+						entityMan->ServerEntityManagerHelper::RemoveEntity(entity->ID());
 						channel->setContext(nullptr);
 					}
 				}

@@ -47,7 +47,7 @@ int HandleControlServerInit(DNServer* server)
 					DNPrint(TipCode_CliConnOff, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
 
 					// not used
-					if (ServerEntityHelper* entity = channel->getContext<ServerEntityHelper>())
+					if (ServerEntity* entity = channel->getContext<ServerEntity>())
 					{
 						ServerEntityManagerHelper* entityMan = serverProxy->GetServerEntityManager();
 						entityMan->RemoveEntity(entity->ID());

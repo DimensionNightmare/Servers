@@ -35,12 +35,12 @@ namespace ControlMessage
 		}
 
 		//exist?
-		else if (ServerEntityHelper* entity = channel->getContext<ServerEntityHelper>())
+		else if (ServerEntity* entity = channel->getContext<ServerEntity>())
 		{
 			response.set_success(false);
 		}
 
-		else if (ServerEntityHelper* entity = entityMan->AddEntity(entityMan->ServerIndex(), regType))
+		else if (ServerEntity* entity = entityMan->AddEntity(entityMan->ServerIndex(), regType))
 		{
 			size_t pos = ipPort.find(":");
 			entity->ServerIp() = ipPort.substr(0, pos);

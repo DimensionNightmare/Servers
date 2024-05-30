@@ -141,8 +141,9 @@ int HandleAuthServerShutdown(DNServer* server)
 	{
 		if (serverSock->service != nullptr)
 		{
-			delete serverSock->service;
+			HttpService* temp = serverSock->service;
 			serverSock->service = nullptr;
+			delete temp;
 		}
 	}
 

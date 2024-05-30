@@ -25,26 +25,24 @@ namespace ControlMessage
 	{
 		C2A_ResAuthAccount response;
 
-		ServerEntityHelper* entity = nullptr;
-		list<ServerEntity*>& servList = GetControlServer()->GetServerEntityManager()->GetEntityByList(ServerType::GlobalServer);
-		for (ServerEntity* it : servList)
+		ServerEntity* entity = nullptr;
+		list<ServerEntity*>& serverList = GetControlServer()->GetServerEntityManager()->GetEntityByList(ServerType::GlobalServer);
+		for (ServerEntity* server : serverList)
 		{
-			ServerEntityHelper* castEntity = static_cast<ServerEntityHelper*>(it);
-
-			if (castEntity->TimerId())
+			if (server->TimerId())
 			{
 				continue;
 			}
 
 			if (!entity)
 			{
-				entity = castEntity;
+				entity = server;
 				continue;
 			}
 
-			if (castEntity->GetConnNum() < entity->GetConnNum())
+			if (server->ConnNum() < entity->ConnNum())
 			{
-				entity = castEntity;
+				entity = server;
 			}
 		}
 

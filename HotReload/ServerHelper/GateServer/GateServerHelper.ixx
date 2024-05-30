@@ -43,12 +43,12 @@ export GateServerHelper* GetGateServer()
 // send close to change socket
 void GateServerHelper::ServerEntityCloseEvent(Entity* entity)
 {
-	ServerEntityHelper* castObj = static_cast<ServerEntityHelper*>(entity);
+	ServerEntity* cEntity = static_cast<ServerEntity*>(entity);
 
 	// up to Global
 	string binData;
 	g2G_RetRegistSrv retMsg;
-	retMsg.set_server_index(castObj->ID());
+	retMsg.set_server_index(cEntity->ID());
 	retMsg.set_is_regist(false);
 	binData.resize(retMsg.ByteSizeLong());
 	retMsg.SerializeToArray(binData.data(), binData.size());
@@ -57,13 +57,13 @@ void GateServerHelper::ServerEntityCloseEvent(Entity* entity)
 	DNClientProxyHelper* client = GetCSock();
 	client->send(binData);
 
-	GetServerEntityManager()->RemoveEntity(castObj->ID());
+	GetServerEntityManager()->ServerEntityManagerHelper::RemoveEntity(cEntity->ID());
 }
 
 void GateServerHelper::ProxyEntityCloseEvent(Entity* entity)
 {
-	ProxyEntityHelper* castObj = static_cast<ProxyEntityHelper*>(entity);
+	ProxyEntity* cEntity = static_cast<ProxyEntity*>(entity);
 
 	ProxyEntityManagerHelper* entityMan = GetProxyEntityManager();
-	entityMan->RemoveEntity(castObj->ID());
+	entityMan->ProxyEntityManagerHelper::RemoveEntity(cEntity->ID());
 }

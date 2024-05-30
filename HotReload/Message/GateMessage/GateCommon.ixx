@@ -58,10 +58,8 @@ namespace GateMessage
 		auto AddChild = [&requset](ServerEntity* serv)
 			{
 				COM_ReqRegistSrv* child = requset.add_childs();
-				ServerEntityHelper* helper = static_cast<ServerEntityHelper*>(serv);
-				child->set_server_index(helper->ID());
-				ServerType servType = helper->ServerEntityType();
-				child->set_server_type((uint32_t)servType);
+				child->set_server_index(serv->ID());
+				child->set_server_type((uint32_t)serv->GetServerType());
 			};
 
 		list<ServerEntity*>& dbs = entityMan->GetEntityByList(ServerType::DatabaseServer);
@@ -137,12 +135,12 @@ namespace GateMessage
 		}
 
 		//exist?
-		if (ServerEntityHelper* entity = channel->getContext<ServerEntityHelper>())
+		if (ServerEntity* entity = channel->getContext<ServerEntity>())
 		{
 			response.set_success(false);
 		}
 
-		else if (ServerEntityHelper* entity = entityMan->AddEntity(requset->server_index(), regType))
+		else if (ServerEntity* entity = entityMan->AddEntity(requset->server_index(), regType))
 		{
 			size_t pos = ipPort.find(":");
 			entity->ServerIp() = ipPort.substr(0, pos);

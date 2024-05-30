@@ -34,7 +34,7 @@ namespace GateMessage
 
 		GateServerHelper* dnServer = GetGateServer();
 		ProxyEntityManagerHelper* entityMan = dnServer->GetProxyEntityManager();
-		ProxyEntityHelper* entity = entityMan->GetEntity(requset->account_id());
+		ProxyEntity* entity = entityMan->GetEntity(requset->account_id());
 		if (entity)
 		{
 			//exit
@@ -61,7 +61,7 @@ namespace GateMessage
 					DNPrint(0, LoggerLevel::Debug, "Send Logic tick User->%d, server:%d", entity->ID(), entity->ServerIndex());
 
 					ServerEntityManagerHelper* serverEntityMan = dnServer->GetServerEntityManager();
-					ServerEntityHelper* serverEntity = serverEntityMan->GetEntity(serverIndex);
+					ServerEntity* serverEntity = serverEntityMan->GetEntity(serverIndex);
 
 					G2L_RetAccountReplace retMsg;
 					retMsg.set_account_id(entity->ID());

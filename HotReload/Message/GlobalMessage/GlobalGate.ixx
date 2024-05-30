@@ -24,7 +24,7 @@ namespace GlobalMessage
 
 		GlobalServerHelper* dnServer = GetGlobalServer();
 		ServerEntityManagerHelper* entityMan = dnServer->GetServerEntityManager();
-		if (ServerEntityHelper* entity = entityMan->GetEntity(requset->server_index()))
+		if (ServerEntity* entity = entityMan->GetEntity(requset->server_index()))
 		{
 			if (requset->is_regist())
 			{
@@ -36,12 +36,12 @@ namespace GlobalMessage
 			}
 			else
 			{
-				ServerEntityHelper* owner = channel->getContext<ServerEntityHelper>();
+				ServerEntity* owner = channel->getContext<ServerEntity>();
 				// remove and unlock
-				owner->GetMapLinkNode(entity->ServerEntityType()).remove(entity);
+				owner->GetMapLinkNode(entity->GetServerType()).remove(entity);
 				owner->ClearFlag(ServerEntityFlag::Locked);
 
-				entityMan->RemoveEntity(requset->server_index());
+				entityMan->ServerEntityManagerHelper::RemoveEntity(requset->server_index());
 				dnServer->UpdateServerGroup();
 			}
 		}

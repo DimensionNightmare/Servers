@@ -31,7 +31,7 @@ namespace LogicMessage
 		LogicServerHelper* dnServer = GetLogicServer();
 		ClientEntityManagerHelper* entityMan = dnServer->GetClientEntityManager();
 
-		ClientEntityHelper* entity = entityMan->AddEntity(requset->account_id());
+		ClientEntity* entity = entityMan->AddEntity(requset->account_id());
 		if (entity)
 		{
 			DNPrint(0, LoggerLevel::Debug, "AddEntity Client!");
@@ -44,7 +44,7 @@ namespace LogicMessage
 		}
 
 		ServerEntityManagerHelper* serverEntityMan = dnServer->GetServerEntityManager();
-		ServerEntityHelper* serverEntity = nullptr;
+		ServerEntity* serverEntity = nullptr;
 
 		// cache
 		if (uint32_t serverIdx = entity->ServerIndex())
@@ -63,7 +63,7 @@ namespace LogicMessage
 			}
 			else
 			{
-				serverEntity = static_cast<ServerEntityHelper*>(serverEntityList.front());
+				serverEntity = serverEntityList.front();
 			}
 		}
 
@@ -128,7 +128,7 @@ namespace LogicMessage
 		LogicServerHelper* dnServer = GetLogicServer();
 		ClientEntityManagerHelper* entityMan = dnServer->GetClientEntityManager();
 
-		ClientEntityHelper* entity = entityMan->GetEntity(requset->account_id());
+		ClientEntity* entity = entityMan->GetEntity(requset->account_id());
 		if (!entity)
 		{
 			DNPrint(0, LoggerLevel::Debug, "Client Entity Kick Not Exist !");
@@ -136,7 +136,7 @@ namespace LogicMessage
 		}
 
 		ServerEntityManagerHelper* serverEntityMan = dnServer->GetServerEntityManager();
-		ServerEntityHelper* serverEntity = serverEntityMan->GetEntity(entity->ServerIndex());
+		ServerEntity* serverEntity = serverEntityMan->GetEntity(entity->ServerIndex());
 
 		// cache
 		if (serverEntity)
@@ -154,6 +154,6 @@ namespace LogicMessage
 		}
 
 		// close entity save data
-		entityMan->RemoveEntity(entity->ID());
+		entityMan->ClientEntityManagerHelper::RemoveEntity(entity->ID());
 	}
 }

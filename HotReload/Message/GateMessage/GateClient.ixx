@@ -34,7 +34,7 @@ namespace GateMessage
 		S2C_ResAuthToken response;
 		string binData;
 
-		ProxyEntityHelper* entity = entityMan->GetEntity(requset->account_id());
+		ProxyEntity* entity = entityMan->GetEntity(requset->account_id());
 		if (!entity)
 		{
 			DNPrint(0, LoggerLevel::Debug, "noaccount %d!!", requset->account_id());
@@ -61,7 +61,7 @@ namespace GateMessage
 
 			//DS Server
 			ServerEntityManagerHelper* serverEntityMan = dnServer->GetServerEntityManager();
-			ServerEntityHelper* serverEntity = nullptr;
+			ServerEntity* serverEntity  = nullptr;
 
 			// <cache> server to load login data
 			if (uint32_t serverIndex = entity->ServerIndex())
@@ -80,7 +80,7 @@ namespace GateMessage
 				}
 				else
 				{
-					serverEntity = static_cast<ServerEntityHelper*>(serverEntityList.front());
+					serverEntity = serverEntityList.front();
 				}
 			}
 
@@ -102,8 +102,6 @@ namespace GateMessage
 
 				MessagePack(msgIdChild, MsgDeal::Req, G2L_ReqClientLogin::GetDescriptor()->full_name().c_str(), binData);
 
-				ServerEntityHelper* serverEntityHelper = static_cast<ServerEntityHelper*>(serverEntity);
-
 				{
 					auto taskGen = [](Message* msg) -> DNTask<Message*>
 						{
@@ -111,7 +109,7 @@ namespace GateMessage
 						};
 					auto dataChannel = taskGen(&response);
 					server->AddMsg(msgIdChild, &dataChannel, 9000);
-					serverEntityHelper->GetSock()->write(binData);
+					serverEntity->GetSock()->write(binData);
 					co_await dataChannel;
 					if (dataChannel.HasFlag(DNTaskFlag::Timeout))
 					{
