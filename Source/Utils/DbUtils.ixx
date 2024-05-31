@@ -85,6 +85,7 @@ const char* GetDbTypeByProtoType(FieldDescriptor::CppType pbType)
 		ONE(FieldDescriptor::CPPTYPE_UINT64, BIGINT)
 		ONE(FieldDescriptor::CPPTYPE_STRING, TEXT)
 		ONE(FieldDescriptor::CPPTYPE_ENUM, INTEGER)
+		ONE(FieldDescriptor::CPPTYPE_BOOL, BOOL)
 #undef ONE
 		default:
 			throw invalid_argument("Please Check CppType");
@@ -128,9 +129,15 @@ void InitFieldByProtoType(const FieldDescriptor* field, list<string>& out, list<
 			// {
 			// 	out.back().assign("TIMESTAMP WITH TIME ZONE");
 			// }
+			out.back().assign("double precision");
 		}
 		default:
 			break;
+	}
+
+	if(field->is_repeated())
+	{
+		out.back() += "[]";
 	}
 
 	if (!field->has_optional_keyword())
@@ -165,28 +172,130 @@ void InsertFieldByProtoType(const FieldDescriptor* field, const Reflection* refl
 {
 	out.clear();
 
+	bool isRepeat = field->is_repeated();
+
 	switch (field->cpp_type())
 	{
 		case FieldDescriptor::CPPTYPE_INT32:
-			out = to_string(reflection->GetInt32(data, field));
+			if(isRepeat)
+			{
+				for (int i = 0; i < reflection->FieldSize(data, field); i++)
+				{
+					out += to_string(reflection->GetRepeatedInt32(data, field, i)) + ",";
+				}
+				out.pop_back();
+				out = format("'{{ {} }}'", out);
+			}
+			else
+			{
+				out = to_string(reflection->GetInt32(data, field));
+			}
 			break;
 		case FieldDescriptor::CPPTYPE_UINT32:
-			out = to_string(reflection->GetUInt32(data, field));
+			if(isRepeat)
+			{
+				for (int i = 0; i < reflection->FieldSize(data, field); i++)
+				{
+					out += to_string(reflection->GetRepeatedUInt32(data, field, i)) + ",";
+				}
+				out.pop_back();
+				out = format("'{{ {} }}'", out);
+			}
+			else
+			{
+				out = to_string(reflection->GetUInt32(data, field));
+			}
+			
 			break;
 		case FieldDescriptor::CPPTYPE_INT64:
-			out = to_string(reflection->GetInt64(data, field));
+			if(isRepeat)
+			{
+				for (int i = 0; i < reflection->FieldSize(data, field); i++)
+				{
+					out += to_string(reflection->GetRepeatedInt64(data, field, i)) + ",";
+				}
+				out.pop_back();
+				out = format("'{{ {} }}'", out);
+			}
+			else
+			{
+				out = to_string(reflection->GetInt64(data, field));
+			}
 			break;
 		case FieldDescriptor::CPPTYPE_UINT64:
-			out = to_string(reflection->GetUInt64(data, field));
+			if(isRepeat)
+			{
+				for (int i = 0; i < reflection->FieldSize(data, field); i++)
+				{
+					out += to_string(reflection->GetRepeatedUInt64(data, field, i)) + ",";
+				}
+				out.pop_back();
+				out = format("'{{ {} }}'", out);
+			}
+			else
+			{
+				out = to_string(reflection->GetUInt64(data, field));
+			}
 			break;
 		case FieldDescriptor::CPPTYPE_DOUBLE:
-			out = to_string(reflection->GetDouble(data, field));
+			if(isRepeat)
+			{
+				for (int i = 0; i < reflection->FieldSize(data, field); i++)
+				{
+					out += to_string(reflection->GetRepeatedDouble(data, field, i)) + ",";
+				}
+				out.pop_back();
+				out = format("'{{ {} }}'", out);
+			}
+			else
+			{
+				out = to_string(reflection->GetDouble(data, field));
+			}
 			break;
 		case FieldDescriptor::CPPTYPE_FLOAT:
-			out = to_string(reflection->GetFloat(data, field));
+			if(isRepeat)
+			{
+				for (int i = 0; i < reflection->FieldSize(data, field); i++)
+				{
+					out += to_string(reflection->GetRepeatedFloat(data, field, i)) + ",";
+				}
+				out.pop_back();
+				out = format("'{{ {} }}'", out);
+			}
+			else
+			{
+				out = to_string(reflection->GetFloat(data, field));
+			}
 			break;
 		case FieldDescriptor::CPPTYPE_STRING:
-			out = out + "'" + reflection->GetString(data, field) + "'";
+			if(isRepeat)
+			{
+				for (int i = 0; i < reflection->FieldSize(data, field); i++)
+				{
+					out = out + "'" + reflection->GetRepeatedString(data, field, i) + "'" + ",";
+				}
+				out.pop_back();
+				out = format("'{{ {} }}'", out);
+			}
+			else
+			{
+				out = out + "'" + reflection->GetString(data, field) + "'";
+			}
+			break;
+		case FieldDescriptor::CPPTYPE_BOOL:
+			if(isRepeat)
+			{
+				for (int i = 0; i < reflection->FieldSize(data, field); i++)
+				{
+					out += to_string(reflection->GetRepeatedBool(data, field, i)) + ",";
+				}
+				out.pop_back();
+				out = format("'{{ {} }}'", out);
+			}
+			else
+			{
+				out = to_string(reflection->GetBool(data, field));
+			}
 			break;
 		default:
 			throw invalid_argument("Please Regist InsertField::CppType");
@@ -261,6 +370,31 @@ void SelectFieldByProtoType(const FieldDescriptor* field, const Reflection* refl
 			break;
 		case FieldDescriptor::CPPTYPE_STRING:
 			reflection->SetString(&data, field, value.as<string>());
+			break;
+		case FieldDescriptor::CPPTYPE_BOOL:
+			if(field->is_repeated())
+			{
+				pqxx::array_parser arr = value.as_array();
+				pair<pqxx::array_parser::juncture, string> elem;
+				int index = 0;
+
+				do
+				{
+					elem = arr.get_next();
+					if (elem.first == pqxx::array_parser::juncture::string_value)
+					{
+						reflection->AddBool(&data, field, false);
+						reflection->SetRepeatedBool(&data, field, index, elem.second == "t");
+						index++;
+					}
+				}
+				while (elem.first != pqxx::array_parser::juncture::done);
+
+			}
+			else
+			{
+				reflection->SetBool(&data, field, value.as<bool>());
+			}
 			break;
 		default:
 			throw invalid_argument("Please Regist InsertField::Type");
@@ -957,7 +1091,12 @@ DbSqlHelper<TMessage>& DbSqlHelper<TMessage>::Insert(TMessage& inObj)
 	{
 		const FieldDescriptor* field = descriptor->field(i);
 
-		if (!reflection->HasField(inObj, field))
+		if(field->is_repeated() && reflection->FieldSize(inObj, field))
+		{
+			
+		}
+
+		else if (!reflection->HasField(inObj, field))
 		{
 			continue;
 		}

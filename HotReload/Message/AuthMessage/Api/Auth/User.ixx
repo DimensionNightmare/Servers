@@ -213,6 +213,11 @@ export void ApiAuth(HttpService* service)
 			accInfo.set_create_time(msTime);
 			accInfo.set_update_time(msTime);
 			accInfo.set_last_logout_time(msTime);
+			accInfo.set_last_logout_time(msTime);
+			accInfo.add_account_status(0);
+			accInfo.add_account_status(1);
+			accInfo.add_account_status(0);
+			accInfo.add_account_status(1);
 
 			try
 			{
@@ -249,7 +254,7 @@ export void ApiAuth(HttpService* service)
 		});
 
 		
-	service->POST("/Auth/Utils/ChangeIp", [](const HttpRequestPtr& req, const HttpResponseWriterPtr& writer)
+	service->POST("/Auth/Test/MainSpace", [](const HttpRequestPtr& req, const HttpResponseWriterPtr& writer)
 		{
 			string ip = req->GetString("ip");
 			int port = req->Get<int>("port", 0);
@@ -268,7 +273,7 @@ export void ApiAuth(HttpService* service)
 			writer->End();
 		});
 
-	service->POST("/Auth/Utils/ChangeIp1", [](const HttpRequestPtr& req, const HttpResponseWriterPtr& writer)
+	service->POST("/Auth/Test/Chrono", [](const HttpRequestPtr& req, const HttpResponseWriterPtr& writer)
 		{
 			system_clock::time_point now = system_clock::now();
 			string strTIme = format("{:%Y-%m-%d %H:%M:%S}", now);
@@ -282,6 +287,88 @@ export void ApiAuth(HttpService* service)
 			};
 			
 			MSGSET(errData.dump());
+			writer->End();
+		});
+
+
+	service->POST("/Auth/Test/DB", [](const HttpRequestPtr& req, const HttpResponseWriterPtr& writer)
+		{
+			hv::Json errData;
+
+			string authName = req->GetString("authName");
+			string authString = req->GetString("authString");
+
+			if (authName.empty() || authName.size() > 32 ||
+				authString.empty() || authString.size() > 64)
+			{
+				errData["code"] = HTTP_STATUS_BAD_REQUEST;
+				errData["message"] = "param error!";
+				MSGSET(errData.dump());
+				writer->End();
+				return;
+			}
+
+
+			GDb::Account accInfo;
+			accInfo.set_auth_name(authName);
+			accInfo.set_auth_string(authString);
+
+			// int64_t msTime = time_point_cast<nanoseconds>(system_clock::now()).time_since_epoch().count();
+
+			// accInfo.set_create_time(msTime);
+			// accInfo.set_update_time(msTime);
+			// accInfo.set_last_logout_time(msTime);
+			// accInfo.set_last_logout_time(msTime);
+			// accInfo.add_account_status(true);
+			// accInfo.add_account_status(false);
+			// accInfo.add_account_status(false);
+			// accInfo.add_account_status(true);
+
+			try
+			{
+				AuthServerHelper* authServer = GetAuthServer();
+				pqxx::work query(*authServer->SqlProxy());
+				DbSqlHelper<GDb::Account> accounts(&query);
+
+				// accounts.Insert(accInfo).Commit();
+
+				// query.commit();
+
+				// if (accounts.IsSuccess())
+				// {
+				// 	errData["code"] = HTTP_STATUS_OK;
+				// 	errData["message"] = "Regist Success!!";
+				// 	MSGSET(errData.dump());
+				// }
+				// else
+				// {
+				// 	errData["code"] = HTTP_STATUS_OK;
+				// 	errData["message"] = "Regist Error!!";
+				// 	MSGSET(errData.dump());
+				// }
+
+				accounts
+					.SelectAll()
+					DBSelectCond(accInfo, auth_name, "=", "")
+					.Commit();
+
+				for (const GDb::Account& one : accounts.Result())
+				{
+					errData["code"] = HTTP_STATUS_OK;
+					errData["message"] = one.DebugString();
+					MSGSET(errData.dump());
+					writer->End();
+					return;
+				}
+			}
+			catch (const exception& e)
+			{
+				DNPrint(0, LoggerLevel::Debug, "%s", e.what());
+				errData["code"] = HTTP_STATUS_BAD_REQUEST;
+				errData["message"] = "Regist Error!!";
+				MSGSET(errData.dump());
+			}
+
 			writer->End();
 		});
 }

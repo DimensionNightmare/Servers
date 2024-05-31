@@ -1,15 +1,20 @@
 module;
 #include <coroutine>
 #include <bitset>
+#include <chrono>
+#include <format>
+#include <iostream>
 export module DNTask;
 
 using namespace std;
+using namespace std::chrono;
 
 export enum class DNTaskFlag : uint16_t
 {
 	Timeout = 0,
 	PaserError,
 	Combine,
+	TimeCost,
 	Max,
 };
 
@@ -60,6 +65,10 @@ struct DNTask
 	void await_suspend(coroutine_handle<> caller)
 	{
 		pCallPause = caller;
+		if(HasFlag(DNTaskFlag::TimeCost))
+		{
+			oTimePoint = steady_clock::now();
+		}
 	}
 
 	void await_resume() noexcept
@@ -72,6 +81,7 @@ struct DNTask
 		tHandle = handle;
 		pCallPause = nullptr;
 		iTimerId = 0;
+		// SetFlag(DNTaskFlag::TimeCost);
 	}
 
 	~DNTask()
@@ -106,6 +116,12 @@ struct DNTask
 
 	void Destroy()
 	{
+		if(HasFlag(DNTaskFlag::TimeCost))
+		{
+			steady_clock::time_point now = steady_clock::now();
+			cout << format("tasktimeid:{}, cost:{}ms", iTimerId, duration_cast<microseconds>(now - oTimePoint).count() / 1000.0) << endl;
+		}
+
 		if (tHandle)
 		{
 			tHandle.destroy();
@@ -124,6 +140,8 @@ private:
 	coroutine_handle<> pCallPause;
 	bitset<DNTaskFlagSize()> oFlags;
 	size_t iTimerId;
+
+	steady_clock::time_point oTimePoint;
 };
 
 export struct DNTaskVoid

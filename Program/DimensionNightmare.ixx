@@ -117,7 +117,8 @@ struct HotReloadDll
 		try
 		{
 			filesystem::create_directories(newDllDirRand.c_str());
-			filesystem::copy(SDllDir, newDllDirRand.c_str(), filesystem::copy_options::recursive);
+			static string dllPath = format("{}/{}.dll", SDllDir, SDllName);
+			filesystem::copy(dllPath.c_str(), newDllDirRand.c_str(), filesystem::copy_options::recursive);
 		}
 		catch (const exception& e)
 		{
