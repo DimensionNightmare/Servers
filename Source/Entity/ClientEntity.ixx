@@ -19,31 +19,24 @@ public: // dll override
 	uint32_t& ServerIndex() { return iServerIndex; }
 
 protected: // dll proxy
-	uint32_t iServerIndex;
+	uint32_t iServerIndex = 0;
 };
 
-ClientEntity::ClientEntity()
+ClientEntity::ClientEntity() : Entity(0)
 {
 	eEntityType = EntityType::Client;
-	iServerIndex = 0;
 }
 
-ClientEntity::ClientEntity(uint32_t id) :Entity(id)
+ClientEntity::ClientEntity(uint32_t id) : Entity(id)
 {
 	eEntityType = EntityType::Client;
-	iServerIndex = 0;
 }
 
 ClientEntity::~ClientEntity()
-{
-
-}
+{}
 
 void ClientEntity::Load()
-{
-
-}
+{}
 
 void ClientEntity::Save()
-{
-}
+{}

@@ -59,34 +59,27 @@ public:
 	void TickMainFrame();
 
 public: // dll override
-	DNl10n* pDNl10nInstance;
-	unordered_map<string, string>* pLuanchConfig;
+	DNl10n* pDNl10nInstance = nullptr;
+
+	unordered_map<string, string>* pLuanchConfig = nullptr;
 
 protected:
-	ServerType emServerType;
+	ServerType emServerType = ServerType::None;
 
-	bool bInRun;
+	bool bInRun = false;
 
-	uint32_t iServerIndex;
+	uint32_t iServerIndex = 0;
 
 	mutex oTaskMutex;
 
-	unordered_map<string, function<void(stringstream*)>>* pCmdMap;
+	unordered_map<string, function<void(stringstream*)>>* pCmdMap = nullptr;
 };
 
 DNServer::DNServer()
-{
-	emServerType = ServerType::None;
-	pDNl10nInstance = nullptr;
-	pLuanchConfig = nullptr;
-	bInRun = false;
-	iServerIndex = 0;
-	pCmdMap = nullptr;
-}
+{}
 
 DNServer::~DNServer()
-{
-}
+{}
 
 bool DNServer::Init()
 {
@@ -101,5 +94,5 @@ bool DNServer::Init()
 
 void DNServer::TickMainFrame()
 {
-	
+
 }

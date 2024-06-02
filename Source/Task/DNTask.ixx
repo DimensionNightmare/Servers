@@ -65,15 +65,14 @@ struct DNTask
 	void await_suspend(coroutine_handle<> caller)
 	{
 		pCallPause = caller;
-		if(HasFlag(DNTaskFlag::TimeCost))
+		if (HasFlag(DNTaskFlag::TimeCost))
 		{
 			oTimePoint = steady_clock::now();
 		}
 	}
 
 	void await_resume() noexcept
-	{
-	}
+	{}
 	// Awaitable
 
 	DNTask(HandleType handle)
@@ -116,7 +115,7 @@ struct DNTask
 
 	void Destroy()
 	{
-		if(HasFlag(DNTaskFlag::TimeCost))
+		if (HasFlag(DNTaskFlag::TimeCost))
 		{
 			steady_clock::time_point now = steady_clock::now();
 			cout << format("tasktimeid:{}, cost:{}ms", iTimerId, duration_cast<microseconds>(now - oTimePoint).count() / 1000.0) << endl;
@@ -173,12 +172,10 @@ export struct DNTaskVoid
 	}
 
 	void await_suspend(coroutine_handle<> caller)
-	{
-	}
+	{}
 
 	void await_resume() noexcept
-	{
-	}
+	{}
 	// Awaitable End
 
 	DNTaskVoid(HandleType handle)

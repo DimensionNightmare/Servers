@@ -125,8 +125,7 @@ bool GlobalServer::Init()
 }
 
 void GlobalServer::InitCmd(unordered_map<string, function<void(stringstream*)>>& cmdMap)
-{
-}
+{}
 
 bool GlobalServer::Start()
 {

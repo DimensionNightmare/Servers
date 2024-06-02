@@ -15,7 +15,7 @@ public: // dll override
 protected: // dll proxy
 };
 
-RoomEntity::RoomEntity()
+RoomEntity::RoomEntity() : Entity(0)
 {
 	eEntityType = EntityType::Room;
 }

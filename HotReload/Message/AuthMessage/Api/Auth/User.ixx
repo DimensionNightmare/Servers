@@ -253,13 +253,13 @@ export void ApiAuth(HttpService* service)
 			writer->End();
 		});
 
-		
+
 	service->POST("/Auth/Test/MainSpace", [](const HttpRequestPtr& req, const HttpResponseWriterPtr& writer)
 		{
 			string ip = req->GetString("ip");
 			int port = req->Get<int>("port", 0);
 
-			if(ip.empty() || !port)
+			if (ip.empty() || !port)
 			{
 				writer->End();
 				return;
@@ -285,7 +285,7 @@ export void ApiAuth(HttpService* service)
 				{ "string" ,  strTIme},
 				{"zone", strTIme1},
 			};
-			
+
 			MSGSET(errData.dump());
 			writer->End();
 		});

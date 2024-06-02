@@ -27,18 +27,14 @@ public:
 	unique_ptr<L10nErr> pErrMsgData;
 	unique_ptr<L10nTip> pTipMsgData;
 
-	ErrTextFunc pErrMsgFunc;
-	TipTextFunc pTipMsgFunc;
+	ErrTextFunc pErrMsgFunc = nullptr;
+	TipTextFunc pTipMsgFunc = nullptr;
 
-	LangType eType;
+	LangType eType = LangType::zh_CN;
 };
 
 DNl10n::DNl10n()
-{
-	pErrMsgFunc = nullptr;
-	pTipMsgFunc = nullptr;
-	eType = LangType::zh_CN;
-}
+{}
 
 DNl10n* PInstance = nullptr;
 

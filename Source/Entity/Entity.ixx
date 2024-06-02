@@ -20,29 +20,22 @@ using namespace std;
 export class Entity
 {
 public:
-	Entity();
 	Entity(uint32_t id);
 	virtual ~Entity();
 public: // dll override
-	uint32_t ID(){ return iId; }
+	uint32_t ID() { return iId; }
+	EntityType GetEntityType() { return eEntityType; }
 protected: // dll proxy
 
-public:
-	EntityType eEntityType;
-	uint32_t iId;
+protected:
+	EntityType eEntityType = EntityType::None;
+	uint32_t iId = 0;
 };
 
-Entity::Entity()
-{
-	eEntityType = EntityType::None;
-	iId = 0;
-}
-
-Entity::Entity(uint32_t id) :Entity()
+Entity::Entity(uint32_t id)
 {
 	iId = id;
 }
 
 Entity::~Entity()
-{
-}
+{}

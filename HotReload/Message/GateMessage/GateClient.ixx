@@ -61,7 +61,7 @@ namespace GateMessage
 
 			//DS Server
 			ServerEntityManagerHelper* serverEntityMan = dnServer->GetServerEntityManager();
-			ServerEntity* serverEntity  = nullptr;
+			ServerEntity* serverEntity = nullptr;
 
 			// <cache> server to load login data
 			if (uint32_t serverIndex = entity->ServerIndex())
@@ -119,7 +119,7 @@ namespace GateMessage
 
 				}
 			}
-			
+
 		}
 
 		binData.clear();

@@ -31,7 +31,7 @@ public:
 
 	virtual bool Init() override;
 
-	virtual void InitCmd(unordered_map<string, function<void(stringstream*)>> &cmdMap) override;
+	virtual void InitCmd(unordered_map<string, function<void(stringstream*)>>& cmdMap) override;
 
 	virtual bool Start() override;
 
@@ -44,12 +44,12 @@ public:
 	virtual void LoopEvent(function<void(EventLoopPtr)> func) override;
 
 public: // dll override
-	virtual DNServerProxy* GetSSock(){return pSSock.get();}
-	virtual DNClientProxy* GetCSock(){return pCSock.get();}
+	virtual DNServerProxy* GetSSock() { return pSSock.get(); }
+	virtual DNClientProxy* GetCSock() { return pCSock.get(); }
 
-	virtual ServerEntityManager* GetServerEntityManager(){return pServerEntityMan.get();}
-	virtual ClientEntityManager* GetClientEntityManager(){return pClientEntityMan.get();}
-	
+	virtual ServerEntityManager* GetServerEntityManager() { return pServerEntityMan.get(); }
+	virtual ClientEntityManager* GetClientEntityManager() { return pClientEntityMan.get(); }
+
 
 protected: // dll proxy
 	unique_ptr<DNServerProxy> pSSock;
@@ -61,7 +61,7 @@ protected: // dll proxy
 
 	// record orgin info
 	string sCtlIp;
-	uint16_t iCtlPort;
+	uint16_t iCtlPort = 0;
 
 	// localdb
 	unique_ptr<Redis> pNoSqlProxy;
@@ -72,7 +72,6 @@ protected: // dll proxy
 LogicServer::LogicServer()
 {
 	emServerType = ServerType::LogicServer;
-	iCtlPort = 0;
 }
 
 LogicServer::~LogicServer()
@@ -82,12 +81,13 @@ LogicServer::~LogicServer()
 	pServerEntityMan = nullptr;
 	pClientEntityMan = nullptr;
 	pRoomMan = nullptr;
+	pNoSqlProxy = nullptr;
 }
 
 bool LogicServer::Init()
 {
 	string* value = GetLuanchConfigParam("byCtl");
-	if(!value || !stoi(*value))
+	if (!value || !stoi(*value))
 	{
 		DNPrint(ErrCode_SrvByCtl, LoggerLevel::Error, nullptr);
 		return false;
@@ -96,13 +96,13 @@ bool LogicServer::Init()
 	DNServer::Init();
 
 	uint16_t port = 0;
-	
+
 	value = GetLuanchConfigParam("port");
-	if(value)
+	if (value)
 	{
 		port = stoi(*value);
 	}
-	
+
 	pSSock = make_unique<DNServerProxy>();
 
 	int listenfd = pSSock->createsocket(port, "0.0.0.0");
@@ -113,11 +113,11 @@ bool LogicServer::Init()
 	}
 
 	// if not set port mean need get port by self 
-	if(port == 0)
+	if (port == 0)
 	{
 		struct sockaddr_in addr;
 		socklen_t addrLen = sizeof(addr);
-		if (getsockname(listenfd, reinterpret_cast<struct sockaddr*>(&addr), &addrLen) < 0) 
+		if (getsockname(listenfd, reinterpret_cast<struct sockaddr*>(&addr), &addrLen) < 0)
 		{
 			DNPrint(ErrCode_GetSocketName, LoggerLevel::Error, nullptr);
 			return false;
@@ -125,16 +125,16 @@ bool LogicServer::Init()
 
 		pSSock->port = ntohs(addr.sin_port);
 	}
-	
+
 	DNPrint(TipCode_SrvListenOn, LoggerLevel::Normal, nullptr, pSSock->port, listenfd);
 
-	
+
 	pSSock->Init();
-	
+
 	//connet ControlServer
 	string* ctlPort = GetLuanchConfigParam("ctlPort");
 	string* ctlIp = GetLuanchConfigParam("ctlIp");
-	if(ctlPort && ctlIp && is_ipaddr(ctlIp->c_str()))
+	if (ctlPort && ctlIp && is_ipaddr(ctlIp->c_str()))
 	{
 		pCSock = make_unique<DNClientProxy>();
 
@@ -146,7 +146,7 @@ bool LogicServer::Init()
 		sCtlIp = *ctlIp;
 		iCtlPort = port;
 	}
-	
+
 	pServerEntityMan = make_unique<ServerEntityManager>();
 	pServerEntityMan->Init();
 	pClientEntityMan = make_unique<ClientEntityManager>();
@@ -157,15 +157,15 @@ bool LogicServer::Init()
 	return true;
 }
 
-void LogicServer::InitCmd(unordered_map<string, function<void(stringstream *)>> &cmdMap)
+void LogicServer::InitCmd(unordered_map<string, function<void(stringstream*)>>& cmdMap)
 {
 	DNServer::InitCmd(cmdMap);
-	
+
 }
 
 bool LogicServer::Start()
 {
-	if(!pSSock)
+	if (!pSSock)
 	{
 		DNPrint(ErrCode_SrvNotInit, LoggerLevel::Error, nullptr);
 		return false;
@@ -173,7 +173,7 @@ bool LogicServer::Start()
 
 	pSSock->Start();
 
-	if(pCSock) // client
+	if (pCSock) // client
 	{
 		pCSock->Start();
 	}
@@ -183,12 +183,12 @@ bool LogicServer::Start()
 
 bool LogicServer::Stop()
 {
-	if(pCSock) // client
+	if (pCSock) // client
 	{
 		pCSock->End();
 	}
 
-	if(pSSock)
+	if (pSSock)
 	{
 		pSSock->End();
 	}
@@ -204,17 +204,17 @@ void LogicServer::Pause()
 	// pRoomMan->Timer()->pause();
 
 	LoopEvent([](EventLoopPtr loop)
-	{ 
-		loop->pause(); 
-	});
+		{
+			loop->pause();
+		});
 }
 
 void LogicServer::Resume()
 {
 	LoopEvent([](EventLoopPtr loop)
-	{ 
-		loop->resume(); 
-	});
+		{
+			loop->resume();
+		});
 
 	// pSSock->Timer()->resume();
 	// pCSock->Timer()->resume();
@@ -225,13 +225,13 @@ void LogicServer::Resume()
 
 void LogicServer::LoopEvent(function<void(EventLoopPtr)> func)
 {
-    unordered_map<long,bool> looped;
-    if(pSSock)
+	unordered_map<long, bool> looped;
+	if (pSSock)
 	{
-		while(const EventLoopPtr& pLoop = pSSock->loop())
+		while (const EventLoopPtr& pLoop = pSSock->loop())
 		{
 			long id = pLoop->tid();
-			if(!looped.count(id))
+			if (!looped.count(id))
 			{
 				func(pLoop);
 				looped[id];
@@ -243,13 +243,13 @@ void LogicServer::LoopEvent(function<void(EventLoopPtr)> func)
 		};
 	}
 
-	if(pCSock)
+	if (pCSock)
 	{
 		looped.clear();
-		while(const EventLoopPtr& pLoop = pCSock->loop())
+		while (const EventLoopPtr& pLoop = pCSock->loop())
 		{
 			long id = pLoop->tid();
-			if(!looped.count(id))
+			if (!looped.count(id))
 			{
 				func(pLoop);
 				looped[id];
@@ -260,6 +260,6 @@ void LogicServer::LoopEvent(function<void(EventLoopPtr)> func)
 			}
 		};
 	}
-	
-    
+
+
 }

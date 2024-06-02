@@ -81,13 +81,13 @@ void LogicMessageHandle::MsgRetHandle(const SocketChannelPtr& channel, uint32_t 
 void LogicMessageHandle::RegMsgHandle()
 {
 #ifdef _WIN32
-#define MSG_MAPPING(map, msg, func) \
-	map.emplace(std::hash<string>::_Do_hash(msg::GetDescriptor()->full_name()), \
-	make_pair(msg::internal_default_instance(), &LogicMessage::func))
+	#define MSG_MAPPING(map, msg, func) \
+		map.emplace(std::hash<string>::_Do_hash(msg::GetDescriptor()->full_name()), \
+		make_pair(msg::internal_default_instance(), &LogicMessage::func))
 #elif __unix__
-#define MSG_MAPPING(map, msg, func) \
-	map.emplace(std::hash<string>{}(msg::GetDescriptor()->full_name()), \
-	make_pair(msg::internal_default_instance(), &LogicMessage::func))
+	#define MSG_MAPPING(map, msg, func) \
+		map.emplace(std::hash<string>{}(msg::GetDescriptor()->full_name()), \
+		make_pair(msg::internal_default_instance(), &LogicMessage::func))
 #endif
 
 	MSG_MAPPING(MHandleRetMap, COM_RetChangeCtlSrv, Exe_RetChangeCtlSrv);

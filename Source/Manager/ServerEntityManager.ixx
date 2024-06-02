@@ -18,15 +18,15 @@ using namespace std;
 export class ServerEntityManager : public EntityManager<ServerEntity>
 {
 public:
-	ServerEntityManager();
+	ServerEntityManager() = default;
 
-	virtual ~ServerEntityManager();
+	virtual ~ServerEntityManager() = default;
 
 	virtual bool Init() override;
 
 public: // dll override
 	void EntityCloseTimer(uint64_t timerID);
-	
+
 	uint64_t CheckEntityCloseTimer(uint32_t entityId);
 
 	bool RemoveEntity(uint32_t entityId);
@@ -40,16 +40,7 @@ protected: // dll proxy
 
 extern "C"
 {
-	REGIST_MAINSPACE_SIGN_FUNCTION(ServerEntityManager, CheckEntityCloseTimer)
-}
-
-ServerEntityManager::ServerEntityManager()
-{
-}
-
-ServerEntityManager::~ServerEntityManager()
-{
-	mEntityMapList.clear();
+	REGIST_MAINSPACE_SIGN_FUNCTION(ServerEntityManager, CheckEntityCloseTimer);
 }
 
 bool ServerEntityManager::Init()

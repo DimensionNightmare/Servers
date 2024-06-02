@@ -44,16 +44,16 @@ bool AuthServerHelper::InitDatabase()
 	{
 		return true;
 	}
-	
+
 	try
 	{
 		//"postgresql://root@localhost"
 		string* value = GetLuanchConfigParam("connection");
 
-		string* dbName= GetLuanchConfigParam("dbname");
-	
+		string* dbName = GetLuanchConfigParam("dbname");
+
 		pSqlProxy = make_unique<pqxx::connection>(format("{} dbname = {}", *value, *dbName));
-		
+
 	}
 	catch (const exception& e)
 	{

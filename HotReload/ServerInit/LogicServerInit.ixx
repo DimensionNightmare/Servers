@@ -48,7 +48,7 @@ int HandleLogicServerInit(DNServer* server)
 					if (ServerEntity* entity = channel->getContext<ServerEntity>())
 					{
 						ServerEntityManagerHelper* entityMan = serverProxy->GetServerEntityManager();
-						entityMan->ServerEntityManagerHelper::RemoveEntity(entity->ID());
+						entityMan->RemoveEntity(entity->ID());
 						channel->setContext(nullptr);
 					}
 				}
@@ -139,27 +139,27 @@ int HandleLogicServerInit(DNServer* server)
 				{
 					DNPrint(TipCode_SrvConnOff, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
 
-				string origin = format("{}:{}", serverProxy->GetCtlIp(), serverProxy->GetCtlPort());
-				if (clientSock->RegistState() == RegistState::Registed && peeraddr != origin)
-				{
-					clientSock->RegistState() = RegistState::None;
-
-					if (clientSock->pLoop)
+					string origin = format("{}:{}", serverProxy->GetCtlIp(), serverProxy->GetCtlPort());
+					if (clientSock->RegistState() == RegistState::Registed && peeraddr != origin)
 					{
-						clientSock->Timer()->setTimeout(200, [=](uint64_t timerID)
-						{
-							DNPrint(0, LoggerLevel::Debug, "orgin not match peeraddr %s reclient ~", origin.c_str());
-							TICK_MAINSPACE_SIGN_FUNCTION(DNClientProxy, RedirectClient, clientSock, serverProxy->GetCtlPort(), serverProxy->GetCtlIp());
+						clientSock->RegistState() = RegistState::None;
 
-						});
+						if (clientSock->hloop())
+						{
+							clientSock->Timer()->setTimeout(200, [=](uint64_t timerID)
+								{
+									DNPrint(0, LoggerLevel::Debug, "orgin not match peeraddr %s reclient ~", origin.c_str());
+									TICK_MAINSPACE_SIGN_FUNCTION(DNClientProxy, RedirectClient, clientSock, serverProxy->GetCtlPort(), serverProxy->GetCtlIp());
+
+								});
+						}
 					}
 				}
-			}
 
-			if (clientSock->isReconnect())
-			{
-			}
-		};
+				if (clientSock->isReconnect())
+				{
+				}
+			};
 
 		auto onMessage = [clientSock](const SocketChannelPtr& channel, Buffer* buf)
 			{

@@ -23,29 +23,24 @@ public: // dll override
 	uint32_t& ServerIndex() { return iServerIndex; }
 
 protected: // dll proxy
-	uint32_t iServerIndex;
+	uint32_t iServerIndex = 0;
 
 	string sToken;
 
-	uint32_t iExpireTime;
+	uint32_t iExpireTime = 0;
 };
 
 
 
-ProxyEntity::ProxyEntity()
+ProxyEntity::ProxyEntity() : NetEntity(0)
 {
 	eEntityType = EntityType::Proxy;
-	iServerIndex = 0;
-	iExpireTime = 0;
 }
 
-ProxyEntity::ProxyEntity(uint32_t id) :NetEntity(id)
+ProxyEntity::ProxyEntity(uint32_t id) : NetEntity(id)
 {
 	eEntityType = EntityType::Proxy;
-	iServerIndex = 0;
-	iExpireTime = 0;
 }
 
 ProxyEntity::~ProxyEntity()
-{
-}
+{}

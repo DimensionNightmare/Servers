@@ -42,7 +42,7 @@ namespace DatabaseMessage
 		client->RegistState() = RegistState::Registing;
 
 		COM_ReqRegistSrv requset;
-		
+
 		requset.set_server_type((int)dnServer->GetServerType());
 
 		if (uint32_t serverIndex = dnServer->ServerIndex())
@@ -97,7 +97,7 @@ namespace DatabaseMessage
 		COM_RetChangeCtlSrv* requset = reinterpret_cast<COM_RetChangeCtlSrv*>(msg);
 		DatabaseServerHelper* dnServer = GetDatabaseServer();
 		DNClientProxyHelper* client = dnServer->GetCSock();
-		
+
 		TICK_MAINSPACE_SIGN_FUNCTION(DNClientProxy, RedirectClient, client, requset->port(), requset->ip());
 	}
 }

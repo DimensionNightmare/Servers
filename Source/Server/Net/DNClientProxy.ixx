@@ -106,11 +106,8 @@ public: // dll override
 
 	void RedirectClient(uint16_t port, string ip);
 
-public:
-	// cant init in tcpclient this class
-	EventLoopThreadPtr pLoop;
-
 protected: // dll proxy
+	EventLoopThreadPtr pLoop;
 	// only oddnumber
 	atomic<uint32_t> iMsgId;
 	// unordered_
@@ -118,7 +115,7 @@ protected: // dll proxy
 	//
 	unordered_map<uint64_t, uint32_t > mMapTimer;
 	// status
-	RegistState eRegistState;
+	RegistState eRegistState = RegistState::None;
 
 	function<void()> pRegistEvent;
 
@@ -128,14 +125,13 @@ protected: // dll proxy
 
 extern "C"
 {
-	REGIST_MAINSPACE_SIGN_FUNCTION(DNClientProxy, InitConnectedChannel)
-	REGIST_MAINSPACE_SIGN_FUNCTION(DNClientProxy, CheckMessageTimeoutTimer)
-	REGIST_MAINSPACE_SIGN_FUNCTION(DNClientProxy, RedirectClient)
+	REGIST_MAINSPACE_SIGN_FUNCTION(DNClientProxy, InitConnectedChannel);
+	REGIST_MAINSPACE_SIGN_FUNCTION(DNClientProxy, CheckMessageTimeoutTimer);
+	REGIST_MAINSPACE_SIGN_FUNCTION(DNClientProxy, RedirectClient);
 }
 
 DNClientProxy::DNClientProxy()
 {
-	eRegistState = RegistState::None;
 	pLoop = make_shared<EventLoopThread>();
 }
 
@@ -229,6 +225,7 @@ void DNClientProxy::MessageTimeoutTimer(uint64_t timerID)
 uint64_t DNClientProxy::CheckMessageTimeoutTimer(uint32_t breakTime, uint32_t msgId)
 {
 	uint64_t timerId = Timer()->setTimeout(breakTime, std::bind(&DNClientProxy::MessageTimeoutTimer, this, placeholders::_1));
+	unique_lock<shared_mutex> ulock(oTimerMutex);
 	mMapTimer[timerId] = msgId;
 	return timerId;
 }

@@ -26,7 +26,11 @@ namespace ControlMessage
 		C2A_ResAuthAccount response;
 
 		ServerEntity* entity = nullptr;
-		list<ServerEntity*>& serverList = GetControlServer()->GetServerEntityManager()->GetEntityByList(ServerType::GlobalServer);
+		const list<ServerEntity*>& serverList = GetControlServer()->GetServerEntityManager()->GetEntityByList(ServerType::GlobalServer);
+
+		// std::erase_if(serverList, [](ServerEntity* itor){return itor ? itor->TimerId() : true; });
+		// serverList.sort([](ServerEntity* lhs, ServerEntity* rhs){return lhs->ConnNum() < rhs->ConnNum(); });
+
 		for (ServerEntity* server : serverList)
 		{
 			if (server->TimerId())

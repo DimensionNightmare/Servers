@@ -13,7 +13,7 @@ template <typename Method>
 struct MemberFunctionArgs;
 
 template <typename R, typename Class, typename... Args>
-struct MemberFunctionArgs<R (Class::*)(Args...)>
+struct MemberFunctionArgs<R(Class::*)(Args...)>
 {
 	using Arguments = tuple<Args...>;
 };
@@ -23,26 +23,26 @@ struct MemberFunctionReturnType;
 
 template<typename Class, typename ReturnType, typename... Args>
 struct MemberFunctionReturnType<ReturnType(Class::*)(Args...)> {
-    using RetType = ReturnType;
+	using RetType = ReturnType;
 };
 
 template<typename T>
 struct DefaultReturnValue {
-    static T get() { return T(); }
+	static T get() { return T(); }
 };
 
 template<>
 struct DefaultReturnValue<void> {
-    static void get() {}
+	static void get() {}
 };
 
 export template <typename Class, typename Method, typename... Args>
-auto TickMainSpaceDll(Class *obj, const char *methodName, Method method, Args... args)
+auto TickMainSpaceDll(Class* obj, const char* methodName, Method method, Args... args)
 {
 	using FuncSignature = decltype(method);
 	using ArgsTuple = typename MemberFunctionArgs<FuncSignature>::Arguments;
 	using RetType = typename MemberFunctionReturnType<Method>::RetType;
-	typedef RetType (*MethodSign)(Class *, ArgsTuple);
+	typedef RetType(*MethodSign)(Class*, ArgsTuple);
 
 	string className = typeid(Class).name();
 	size_t pos = className.find(" ");
@@ -51,9 +51,9 @@ auto TickMainSpaceDll(Class *obj, const char *methodName, Method method, Args...
 		className = className.substr(pos + 1);
 	}
 
-	string fullFuncName = string("TickMainSpace_") + className + "_" + methodName;
+	string fullFuncName = className + "_" + methodName;
 
-	static unordered_map<string, void *> cache;
+	static unordered_map<string, void*> cache;
 
 	auto it = cache.find(fullFuncName);
 	if (it != cache.end())
@@ -64,7 +64,7 @@ auto TickMainSpaceDll(Class *obj, const char *methodName, Method method, Args...
 
 	if (HMODULE hModule = GetModuleHandle(NULL))
 	{
-		if (void *pFunc = GetProcAddress(hModule, fullFuncName.c_str()))
+		if (void* pFunc = GetProcAddress(hModule, fullFuncName.c_str()))
 		{
 			cache[fullFuncName] = pFunc;
 			MethodSign pFuncTyped = reinterpret_cast<MethodSign>(pFunc);

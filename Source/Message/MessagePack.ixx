@@ -23,23 +23,13 @@ export enum class MsgDeal : uint8_t
 export struct MessagePacket
 {
 	static int PackLenth;
-	uint32_t pkgLenth;	 //Pin Top !
+	uint32_t pkgLenth = 0;	 //Pin Top !
 
-	MsgDir opType;
-	MsgDeal dealType;
-	uint16_t serverId;
-	uint32_t msgId;
-	size_t msgHashId;
-
-	MessagePacket()
-	{
-		pkgLenth = 0;
-		opType = MsgDir::Inner;
-		dealType = MsgDeal::Req;
-		serverId = 0;
-		msgId = 0;
-		msgHashId = 0;
-	}
+	MsgDir opType = MsgDir::Inner;
+	MsgDeal dealType = MsgDeal::Req;
+	uint16_t serverId = 0;
+	uint32_t msgId = 0;
+	size_t msgHashId = 0;
 };
 #pragma pack()
 

@@ -11,22 +11,14 @@ export void ApiInit(HttpService* service)
 {
 	service->preprocessor = [](HttpRequest* req, HttpResponse* resp) -> int
 		{
-			AuthServerHelper* authServer = GetAuthServer();
-
-			Json errData;
-
-			if (!authServer)
-			{
-				errData["code"] = HTTP_STATUS_BAD_REQUEST;
-				errData["message"] = "Server NotInitail!";
-				resp->SetBody(errData.dump());
-				return !HTTP_STATUS_NEXT;
-			}
-
-			if(!req->path.contains("/Auth/User"))
+			if (req->path.contains("/Test/"))
 			{
 				return HTTP_STATUS_NEXT;
 			}
+
+			AuthServerHelper* authServer = GetAuthServer();
+
+			Json errData;
 
 			if (authServer->GetCSock()->RegistState() != RegistState::Registed)
 			{

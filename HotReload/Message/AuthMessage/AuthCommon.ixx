@@ -42,7 +42,7 @@ namespace AuthMessage
 		COM_ReqRegistSrv requset;
 		requset.set_server_type((int)dnServer->GetServerType());
 
-		if ( uint32_t serverIndex = dnServer->ServerIndex())
+		if (uint32_t serverIndex = dnServer->ServerIndex())
 		{
 			requset.set_server_index(serverIndex);
 		}

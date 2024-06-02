@@ -50,13 +50,14 @@ public: // dll override
 	list<ServerEntity*>& GetMapLinkNode(ServerType type) { return mMapLink[type]; }
 
 protected: // dll proxy
-	ServerType emServerType;
+	ServerType emServerType = ServerType::None;
+
 	string sServIp;
-	uint16_t iServPort;
-	uint32_t IConnNum;
+	uint16_t iServPort = 0;
+	uint32_t IConnNum = 0;
 
 	// regist node need
-	ServerEntity* pLink;
+	ServerEntity* pLink = nullptr;
 	// be regist node need
 	unordered_map<ServerType, list<ServerEntity*>> mMapLink;
 
@@ -65,22 +66,15 @@ protected: // dll proxy
 
 export using ServerEntityPtr = ServerEntity*;
 
-ServerEntity::ServerEntity()
+ServerEntity::ServerEntity() :NetEntity(0)
 {
 	eEntityType = EntityType::Server;
-	emServerType = ServerType::None;
-	IConnNum = 0;
-	iServPort = 0;
-	pLink = nullptr;
 }
 
 ServerEntity::ServerEntity(uint32_t id, ServerType serverType) :NetEntity(id)
 {
-	emServerType = serverType;
 	eEntityType = EntityType::Server;
-	IConnNum = 0;
-	iServPort = 0;
-	pLink = nullptr;
+	emServerType = serverType;
 }
 
 ServerEntity::~ServerEntity()

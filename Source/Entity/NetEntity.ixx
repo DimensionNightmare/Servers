@@ -11,7 +11,6 @@ using namespace std;
 export class NetEntity : public Entity
 {
 protected:
-	NetEntity();
 	NetEntity(uint32_t id);
 
 public:
@@ -26,20 +25,11 @@ public: // dll override
 protected: // dll proxy
 	SocketChannelPtr pSock;
 
-	uint64_t iCloseTimerId;
+	uint64_t iCloseTimerId = 0;
 };
 
-NetEntity::NetEntity()
-{
-	eEntityType = EntityType::None;
-	iCloseTimerId = 0;
-}
-
 NetEntity::NetEntity(uint32_t id) : Entity(id)
-{
-	eEntityType = EntityType::None;
-	iCloseTimerId = 0;
-}
+{}
 
 NetEntity::~NetEntity()
 {

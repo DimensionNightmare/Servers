@@ -41,7 +41,7 @@ namespace GlobalMessage
 				owner->GetMapLinkNode(entity->GetServerType()).remove(entity);
 				owner->ClearFlag(ServerEntityFlag::Locked);
 
-				entityMan->ServerEntityManagerHelper::RemoveEntity(requset->server_index());
+				entityMan->RemoveEntity(requset->server_index());
 				dnServer->UpdateServerGroup();
 			}
 		}

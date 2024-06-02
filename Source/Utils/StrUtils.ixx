@@ -79,10 +79,11 @@ constexpr auto EnumName(string_view value)
 	}(make_index_sequence<num>{});
 
 	auto it = find(names.begin(), names.end(), value);
-    if (it != names.end()) {
-        return static_cast<T>(distance(names.begin(), it));
-    }
-    throw invalid_argument("Unknown enum name");
+	if (it != names.end())
+	{
+		return static_cast<T>(distance(names.begin(), it));
+	}
+	throw invalid_argument("Unknown enum name");
 }
 
 export string GetNowTimeStr()

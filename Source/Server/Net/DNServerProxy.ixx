@@ -19,35 +19,41 @@ using namespace hv;
 class TcpServerTmplTemp : public EventLoopThread, public TcpServerEventLoopTmpl<SocketChannel>
 {
 public:
-    TcpServerTmplTemp(EventLoopPtr loop = NULL)
-        : EventLoopThread(loop)
-        , TcpServerEventLoopTmpl<SocketChannel>(EventLoopThread::loop())
-        , is_loop_owner(loop == NULL)
-    {}
-    virtual ~TcpServerTmplTemp() {
-        stop(true);
-    }
+	TcpServerTmplTemp(EventLoopPtr loop = NULL)
+		: EventLoopThread(loop)
+		, TcpServerEventLoopTmpl<SocketChannel>(EventLoopThread::loop())
+		, is_loop_owner(loop == NULL)
+	{}
 
-    EventLoopPtr loop(int idx = -1) {
-        return TcpServerEventLoopTmpl<SocketChannel>::loop(idx);
-    }
+	virtual ~TcpServerTmplTemp()
+	{
+		stop(true);
+	}
 
-    // start thread-safe
-    void start(bool wait_threads_started = true) {
-        TcpServerEventLoopTmpl<SocketChannel>::start(wait_threads_started);
-        EventLoopThread::start(wait_threads_started);
-    }
+	EventLoopPtr loop(int idx = -1)
+	{
+		return TcpServerEventLoopTmpl<SocketChannel>::loop(idx);
+	}
 
-    // stop thread-safe
-    void stop(bool wait_threads_stopped = true) {
-        if (is_loop_owner) {
-            EventLoopThread::stop(wait_threads_stopped);
-        }
-        TcpServerEventLoopTmpl<SocketChannel>::stop(wait_threads_stopped);
-    }
+	// start thread-safe
+	void start(bool wait_threads_started = true)
+	{
+		TcpServerEventLoopTmpl<SocketChannel>::start(wait_threads_started);
+		EventLoopThread::start(wait_threads_started);
+	}
+
+	// stop thread-safe
+	void stop(bool wait_threads_stopped = true)
+	{
+		if (is_loop_owner)
+		{
+			EventLoopThread::stop(wait_threads_stopped);
+		}
+		TcpServerEventLoopTmpl<SocketChannel>::stop(wait_threads_stopped);
+	}
 
 private:
-    bool is_loop_owner;
+	bool is_loop_owner;
 };
 
 export class DNServerProxy : public TcpServerTmplTemp
@@ -92,8 +98,8 @@ protected:
 
 extern "C"
 {
-	REGIST_MAINSPACE_SIGN_FUNCTION(DNServerProxy, InitConnectedChannel)
-	REGIST_MAINSPACE_SIGN_FUNCTION(DNServerProxy, CheckMessageTimeoutTimer)
+	REGIST_MAINSPACE_SIGN_FUNCTION(DNServerProxy, InitConnectedChannel);
+	REGIST_MAINSPACE_SIGN_FUNCTION(DNServerProxy, CheckMessageTimeoutTimer);
 }
 
 DNServerProxy::DNServerProxy()
@@ -209,6 +215,7 @@ void DNServerProxy::CheckChannelByTimer(SocketChannelPtr channel)
 uint64_t DNServerProxy::CheckMessageTimeoutTimer(uint32_t breakTime, uint32_t msgId)
 {
 	uint64_t timerId = Timer()->setTimeout(breakTime, std::bind(&DNServerProxy::MessageTimeoutTimer, this, placeholders::_1));
+	unique_lock<shared_mutex> ulock(oTimerMutex);
 	mMapTimer[timerId] = msgId;
 	return timerId;
 }

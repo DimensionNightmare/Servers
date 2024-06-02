@@ -15,7 +15,7 @@ using namespace std;
 export class ServerEntityManagerHelper : public ServerEntityManager
 {
 private:
-	ServerEntityManagerHelper(){}
+	ServerEntityManagerHelper() {}
 public:
 	ServerEntity* AddEntity(uint32_t entityId, ServerType type);
 
@@ -27,7 +27,7 @@ public:
 
 	ServerEntity* GetEntity(uint32_t id);
 
-	list<ServerEntity*>& GetEntityByList(ServerType type);
+	const list<ServerEntity*>& GetEntityByList(ServerType type);
 
 	[[nodiscard]] uint32_t ServerIndex();
 };
@@ -39,8 +39,8 @@ ServerEntity* ServerEntityManagerHelper::AddEntity(uint32_t entityId, ServerType
 		unique_lock<shared_mutex> ulock(oMapMutex);
 
 		mEntityMap.emplace(std::piecewise_construct,
-                           std::forward_as_tuple(entityId),
-                           std::forward_as_tuple(entityId, regType));
+			std::forward_as_tuple(entityId),
+			std::forward_as_tuple(entityId, regType));
 		ServerEntity* entity = &mEntityMap[entityId];
 		mEntityMapList[regType].emplace_back(entity);
 		return entity;
@@ -70,7 +70,7 @@ bool ServerEntityManagerHelper::RemoveEntity(uint32_t entityId)
 void ServerEntityManagerHelper::MountEntity(ServerType type, ServerEntity* entity)
 {
 	unique_lock<shared_mutex> ulock(oMapMutex);
-	if(mEntityMap.count(entity->ID()))
+	if (mEntityMap.count(entity->ID()))
 	{
 		mEntityMapList[type].push_back(entity);
 	}
@@ -93,7 +93,7 @@ ServerEntity* ServerEntityManagerHelper::GetEntity(uint32_t entityId)
 	return nullptr;
 }
 
-list<ServerEntity*>& ServerEntityManagerHelper::GetEntityByList(ServerType type)
+const list<ServerEntity*>& ServerEntityManagerHelper::GetEntityByList(ServerType type)
 {
 	shared_lock<shared_mutex> lock(oMapMutex);
 	return mEntityMapList[type];

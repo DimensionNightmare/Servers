@@ -24,7 +24,6 @@ import Logger;
 import Config.Server;
 
 #ifdef _WIN32
-
 	#ifdef HOTRELOAD_BUILD
 		#define HOTRELOAD __declspec(dllexport)
 	#else

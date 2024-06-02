@@ -62,13 +62,13 @@ namespace GateMessage
 				child->set_server_type((uint32_t)serv->GetServerType());
 			};
 
-		list<ServerEntity*>& dbs = entityMan->GetEntityByList(ServerType::DatabaseServer);
+		const list<ServerEntity*>& dbs = entityMan->GetEntityByList(ServerType::DatabaseServer);
 		for (ServerEntity* serv : dbs)
 		{
 			AddChild(serv);
 		}
 
-		list<ServerEntity*>& logics = entityMan->GetEntityByList(ServerType::LogicServer);
+		const list<ServerEntity*>& logics = entityMan->GetEntityByList(ServerType::LogicServer);
 		for (ServerEntity* serv : logics)
 		{
 			AddChild(serv);

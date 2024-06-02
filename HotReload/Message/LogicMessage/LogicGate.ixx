@@ -107,7 +107,7 @@ namespace LogicMessage
 			}
 
 		}
-		
+
 		DNPrint(0, LoggerLevel::Debug, "ds:%s", response.DebugString().c_str());
 
 		// pack data
@@ -154,6 +154,6 @@ namespace LogicMessage
 		}
 
 		// close entity save data
-		entityMan->ClientEntityManagerHelper::RemoveEntity(entity->ID());
+		entityMan->RemoveEntity(entity->ID());
 	}
 }

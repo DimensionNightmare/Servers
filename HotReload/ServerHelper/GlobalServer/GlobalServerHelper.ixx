@@ -12,6 +12,7 @@ export import DNServerProxyHelper;
 export import ServerEntityManagerHelper;
 import MessagePack;
 import Macro;
+import Logger;
 
 using namespace std;
 using namespace hv;
@@ -47,14 +48,14 @@ void GlobalServerHelper::UpdateServerGroup()
 {
 	ServerEntityManagerHelper* entityMan = GetServerEntityManager();
 
-	list<ServerEntity*> gates = entityMan->GetEntityByList(ServerType::GateServer);
+	const list<ServerEntity*>& gates = entityMan->GetEntityByList(ServerType::GateServer);
 	if (gates.size() <= 0)
 	{
 		return;
 	}
 
-	list<ServerEntity*>& dbs = entityMan->GetEntityByList(ServerType::DatabaseServer);
-	list<ServerEntity*>& logics = entityMan->GetEntityByList(ServerType::LogicServer);
+	const list<ServerEntity*>& dbs = entityMan->GetEntityByList(ServerType::DatabaseServer);
+	const list<ServerEntity*>& logics = entityMan->GetEntityByList(ServerType::LogicServer);
 
 	// alloc gate
 	COM_RetChangeCtlSrv retMsg;
@@ -64,7 +65,7 @@ void GlobalServerHelper::UpdateServerGroup()
 		{
 			const SocketChannelPtr& channel = entity->GetSock();
 			entity->LinkNode() = beEntity;
-			
+
 			channel->setContext(nullptr);
 
 			// sendData
@@ -79,7 +80,7 @@ void GlobalServerHelper::UpdateServerGroup()
 
 			// timer destory
 			entity->TimerId() = TICK_MAINSPACE_SIGN_FUNCTION(ServerEntityManager, CheckEntityCloseTimer, entityMan, entity->ID());
-			
+
 			entity->SetSock(nullptr);
 		};
 
@@ -95,7 +96,7 @@ void GlobalServerHelper::UpdateServerGroup()
 		if (!dbs.empty() && gatesDb.size() < 1)
 		{
 			ServerEntity* ele = dbs.front();
-			dbs.pop_front();
+			// dbs.pop_front();
 			registControl(gate, ele);
 			entityMan->UnMountEntity(ele->GetServerType(), ele);
 			gatesDb.emplace_back(ele);
@@ -104,7 +105,7 @@ void GlobalServerHelper::UpdateServerGroup()
 		if (!logics.empty() && gatesLogic.size() < 1)
 		{
 			ServerEntity* ele = logics.front();
-			logics.pop_front();
+			// logics.pop_front();
 			registControl(gate, ele);
 			entityMan->UnMountEntity(ele->GetServerType(), ele);
 			gatesLogic.emplace_back(ele);
@@ -114,6 +115,7 @@ void GlobalServerHelper::UpdateServerGroup()
 		{
 			// UnMountEntity(gate->GetServerType(), it);
 			gate->SetFlag(ServerEntityFlag::Locked);
+			DNPrint(0, LoggerLevel::Debug, "Gate:%u locked!", gate->ID());
 		}
 
 	}

@@ -83,13 +83,13 @@ void GateMessageHandle::MsgRetHandle(const SocketChannelPtr& channel, uint32_t m
 void GateMessageHandle::RegMsgHandle()
 {
 #ifdef _WIN32
-#define MSG_MAPPING(map, msg, func) \
-	map.emplace(std::hash<string>::_Do_hash(msg::GetDescriptor()->full_name()), \
-	make_pair(msg::internal_default_instance(), &GateMessage::func))
+	#define MSG_MAPPING(map, msg, func) \
+		map.emplace(std::hash<string>::_Do_hash(msg::GetDescriptor()->full_name()), \
+		make_pair(msg::internal_default_instance(), &GateMessage::func))
 #elif __unix__
-#define MSG_MAPPING(map, msg, func) \
-	map.emplace(std::hash<string>{}(msg::GetDescriptor()->full_name()), \
-	make_pair(msg::internal_default_instance(), &GateMessage::func))
+	#define MSG_MAPPING(map, msg, func) \
+		map.emplace(std::hash<string>{}(msg::GetDescriptor()->full_name()), \
+		make_pair(msg::internal_default_instance(), &GateMessage::func))
 #endif
 
 	MSG_MAPPING(MHandleMap, COM_ReqRegistSrv, Msg_ReqRegistSrv);

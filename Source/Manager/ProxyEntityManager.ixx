@@ -35,7 +35,7 @@ protected: // dll proxy
 
 extern "C"
 {
-	REGIST_MAINSPACE_SIGN_FUNCTION(ProxyEntityManager, CheckEntityCloseTimer)
+	REGIST_MAINSPACE_SIGN_FUNCTION(ProxyEntityManager, CheckEntityCloseTimer);
 }
 
 bool ProxyEntityManager::Init()

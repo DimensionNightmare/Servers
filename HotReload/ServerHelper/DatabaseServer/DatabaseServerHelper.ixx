@@ -64,7 +64,7 @@ bool DatabaseServerHelper::InitDatabase()
 		pqxx::nontransaction checkTxn(check);
 
 		list<string> dbNames;
-		if(string* names = GetLuanchConfigParam("dbnames"))
+		if (string* names = GetLuanchConfigParam("dbnames"))
 		{
 			size_t start = 0;
 			size_t end = names->find(",");
@@ -82,8 +82,8 @@ bool DatabaseServerHelper::InitDatabase()
 			name = names->substr(start);
 			EnumName<SqlDbNameEnum>(name);
 			dbNames.push_back(name);
-			
-			for(string& dbName : dbNames)
+
+			for (string& dbName : dbNames)
 			{
 				if (!checkTxn.query_value<bool>(format("SELECT EXISTS (SELECT 1 FROM pg_database WHERE datname = '{}');", dbName)))
 				{
@@ -103,7 +103,7 @@ bool DatabaseServerHelper::InitDatabase()
 
 		// check over connect other
 		uint16_t dbNameKey = (uint16_t)SqlDbNameEnum::Account;
-		if(pSqlProxys.count(dbNameKey))
+		if (pSqlProxys.count(dbNameKey))
 		{
 			pqxx::work txn(*pSqlProxys[dbNameKey]);
 
@@ -115,7 +115,7 @@ bool DatabaseServerHelper::InitDatabase()
 			}
 			txn.commit();
 		}
-		
+
 	}
 	catch (const exception& e)
 	{

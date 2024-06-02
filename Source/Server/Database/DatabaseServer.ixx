@@ -51,18 +51,18 @@ protected: // dll proxy
 
 	// record orgin info
 	string sCtlIp;
-	uint16_t iCtlPort;
+	uint16_t iCtlPort = 0;
 };
 
 DatabaseServer::DatabaseServer()
 {
 	emServerType = ServerType::DatabaseServer;
-	iCtlPort = 0;
 }
 
 DatabaseServer::~DatabaseServer()
 {
 	pCSock = nullptr;
+	pSqlProxys.clear();
 }
 
 bool DatabaseServer::Init()

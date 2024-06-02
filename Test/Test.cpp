@@ -30,20 +30,20 @@ using namespace sw::redis;
 
 
 #if 0
-int main() 
+int main()
 {
 	GCfg::CharacterPlayer Weapons;
 	ifstream input("C:\\Project\\DimensionNightmare\\Environment\\GameConfig\\Gen\\Data\\character_player.bytes", ios::in | ios::binary);
-	if(input)
+	if (input)
 	{
-		if(Weapons.ParseFromIstream(&input))
+		if (Weapons.ParseFromIstream(&input))
 		{
 			// Weapons.Clear();
 			auto map = Weapons.data_map();
-			for(auto one:map)
+			for (auto one : map)
 			{
 				cout << "key" << one.first << endl;
-				cout << "value"<< one.second.DebugString() << endl;
+				cout << "value" << one.second.DebugString() << endl;
 			}
 			auto find = map.find(55);
 			cout << "success" << endl;
@@ -54,17 +54,17 @@ int main()
 		}
 
 	}
-	
+
 	random_device rd;
-    mt19937 gen(rd());
+	mt19937 gen(rd());
 	bernoulli_distribution  u;
-	for(int i = 0; i < 5; i++)
-	cout << u(gen) << endl;
+	for (int i = 0; i < 5; i++)
+		cout << u(gen) << endl;
 
 	string msgName = GCfg::CharacterPlayer::GetDescriptor()->full_name();
-	cout << msgName.size() << " " << msgName.length() << " " <<  strlen(msgName.c_str()) << endl;
+	cout << msgName.size() << " " << msgName.length() << " " << strlen(msgName.c_str()) << endl;
 	auto hashres = hash<string>::_Do_hash.operator()("");
-	cout << size_t(hashres) << " " <<  hashres << endl;
+	cout << size_t(hashres) << " " << hashres << endl;
 
 	using namespace std;
 	A a;
@@ -76,7 +76,7 @@ int main()
 	d->msg();
 	cout << sizeof(a) << endl;
 
-    return 0;
+	return 0;
 }
 #endif
 
@@ -86,9 +86,9 @@ int main()
 	GCfg::CharacterPlayer Weapons;
 	{
 		ifstream input("/home/DimensionNightmare/Environment/GameConfig/Gen/Data/character_player.bytes", ios::in | ios::binary);
-		if(input)
+		if (input)
 		{
-			if(Weapons.ParseFromIstream(&input))
+			if (Weapons.ParseFromIstream(&input))
 			{
 				cout << "success" << endl;
 			}
@@ -104,9 +104,9 @@ int main()
 	}
 
 	auto item = Weapons.data_map().find(1);
-	if(item != Weapons.data_map().end())
+	if (item != Weapons.data_map().end())
 	{
-		const GCfg::PlayerInfo * info = &item->second;
+		const GCfg::PlayerInfo* info = &item->second;
 		// info->clear_type();
 		const string& name = info->name();
 		// name.empty();
@@ -120,19 +120,22 @@ chrono::hours GetTimezoneOffset()
 	int minutes = 0;
 #ifdef _win32
 	TIME_ZONE_INFORMATION timeZoneInfo;
-    DWORD result = GetTimeZoneInformation(&timeZoneInfo);
+	DWORD result = GetTimeZoneInformation(&timeZoneInfo);
 
-	if (result != TIME_ZONE_ID_INVALID) {
+	if (result != TIME_ZONE_ID_INVALID)
+	{
 		minutes = -timeZoneInfo.Bias;
 		wcout.imbue(locale("zh_CN.UTF-8"));
-        wcout << "Standard Name: " << timeZoneInfo.StandardName << endl;
-        wcout << "Daylight Name: " << timeZoneInfo.DaylightName << endl;
-    } else {
-        cerr << "Failed to get time zone information." << endl;
-    }
+		wcout << "Standard Name: " << timeZoneInfo.StandardName << endl;
+		wcout << "Daylight Name: " << timeZoneInfo.DaylightName << endl;
+	}
+	else
+	{
+		cerr << "Failed to get time zone information." << endl;
+	}
 #endif
 
-	return chrono::hours(minutes/60);
+	return chrono::hours(minutes / 60);
 }
 
 void printTime()
@@ -140,7 +143,7 @@ void printTime()
 	cout << format("{:%Y-%m-%d %H:%M:%S}", chrono::system_clock::now()) << endl;
 
 	static chrono::hours offset = GetTimezoneOffset();
-	
+
 	cout << format("{:%Y-%m-%d %H:%M:%S}", chrono::system_clock::now() + offset) << endl;
 }
 
@@ -159,7 +162,7 @@ int main()
 
 	nlohmann::json j = nlohmann::json::parse(jsonstr);
 
-	if(j.contains("/bb/cc/2"_json_pointer))
+	if (j.contains("/bb/cc/2"_json_pointer))
 	{
 		printf("1");
 	}
@@ -170,8 +173,8 @@ int main()
 
 	time_t timep;
 
-    time(&timep);
-    printf("%s\n", ctime(&timep));
+	time(&timep);
+	printf("%s\n", ctime(&timep));
 
 	// chrono::system_clock clock;
 
@@ -180,14 +183,14 @@ int main()
 
 	//  time_;
 	// TIMERSTART(for_loop);
-	
+
 	printTime();
 
 	// TIMEREND(for_loop);
 	// DURATION_ms(for_loop);
 
 	// TIMERSTART(for_loop);
-	
+
 	// printTime();
 
 	// TIMEREND(for_loop);
@@ -196,8 +199,8 @@ int main()
 	// wstring msg((wchar_t*)format("[{}] {} -> \n{}", "哈哈", "asdasd", "zc").c_str());
 	// wcout <<  msg << endl;
 
-    
-    return 0;
+
+	return 0;
 }
 
 
@@ -207,54 +210,50 @@ int main()
 int main()
 {
 	ConnectionOptions connection_options;
-    connection_options.host = "127.0.0.1";  // Required.
-    connection_options.port = 6379; // Optional. The default port is 6379.
-    //connection_options.password = "auth";   // Optional. No password by default.
- 
-    ConnectionPoolOptions pool_options;
-    pool_options.size = 3;  // Pool size, i.e. max number of connections.
-    pool_options.wait_timeout = chrono::milliseconds(100);
+	connection_options.host = "127.0.0.1";  // Required.
+	connection_options.port = 6379; // Optional. The default port is 6379.
+	//connection_options.password = "auth";   // Optional. No password by default.
+
+	ConnectionPoolOptions pool_options;
+	pool_options.size = 3;  // Pool size, i.e. max number of connections.
+	pool_options.wait_timeout = chrono::milliseconds(100);
 
 	try
 	{
 		Redis* con = new Redis(connection_options, pool_options);
 		con->ping();
 		unordered_map<string, string> hashTerm;
-    	con->hgetall("*",inserter(hashTerm, hashTerm.end()));
+		con->hgetall("*", inserter(hashTerm, hashTerm.end()));
 
-		for (const auto &[k, v] : hashTerm)
+		for (const auto& [k, v] : hashTerm)
 		{
-    		cout << "m[" << k << "] = (" << v << ") " << endl;
+			cout << "m[" << k << "] = (" << v << ") " << endl;
 		}
 	}
-	catch(const exception& e)
+	catch (const exception& e)
 	{
 		cout << e.what() << endl;
 	}
 
-    // 设置输入流为非阻塞模式
 	std::ios_base::sync_with_stdio(false);
-    
+
 	std::cin.tie(nullptr);
 	std::cout.tie(nullptr);
 
-    // std::cin.sync_with_stdio(false);
+	// std::cin.sync_with_stdio(false);
 
-    while (true) {
-        // 检查是否有输入
-        if (std::cin.peek() != EOF) {
-            // 读取用户输入
-            string userInput;
-            std::cin >> userInput;
-            std::cout << "You entered: " << userInput << std::endl;
+	while (true)
+	{
+		if (std::cin.peek() != EOF)
+		{
+			string userInput;
+			std::cin >> userInput;
+			std::cout << "You entered: " << userInput << std::endl;
 
-            // 清除输入缓冲区
-            std::cin.ignore();
-        }
+			std::cin.ignore();
+		}
 
-        // 在这里可以做其他事情，不会被阻塞
-        // 这里简单地打印一条消息
-        std::cout << "Doing something else..." << std::endl;
-    }
+		std::cout << "Doing something else..." << std::endl;
+	}
 }
 #endif

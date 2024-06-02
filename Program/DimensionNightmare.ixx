@@ -30,7 +30,7 @@ import Config.Server;
 using namespace std;
 
 #ifdef __unix__
-	#define Sleep(ms) usleep(ms*1000)
+#define Sleep(ms) usleep(ms*1000)
 #endif
 
 struct HotReloadDll
@@ -127,7 +127,7 @@ struct HotReloadDll
 		}
 #endif
 		void* hModule = LoadHandle(newDllDirRand);
-		if(hModule)
+		if (hModule)
 		{
 			FreeHandle();
 			oLibHandle = hModule;
@@ -432,11 +432,13 @@ bool DimensionNightmare::Init()
 
 	if (!OnRegHotReload())
 	{
+		DNPrint(0, LoggerLevel::Debug, "program lunch OnRegHotReload error!");
 		return false;
 	}
 
 	if (!pServer->Start())
 	{
+		DNPrint(0, LoggerLevel::Debug, "program lunch Server Start error!");
 		return false;
 	}
 

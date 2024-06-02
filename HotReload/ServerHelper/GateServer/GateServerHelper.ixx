@@ -57,7 +57,7 @@ void GateServerHelper::ServerEntityCloseEvent(Entity* entity)
 	DNClientProxyHelper* client = GetCSock();
 	client->send(binData);
 
-	GetServerEntityManager()->ServerEntityManagerHelper::RemoveEntity(cEntity->ID());
+	GetServerEntityManager()->RemoveEntity(cEntity->ID());
 }
 
 void GateServerHelper::ProxyEntityCloseEvent(Entity* entity)
@@ -65,5 +65,5 @@ void GateServerHelper::ProxyEntityCloseEvent(Entity* entity)
 	ProxyEntity* cEntity = static_cast<ProxyEntity*>(entity);
 
 	ProxyEntityManagerHelper* entityMan = GetProxyEntityManager();
-	entityMan->ProxyEntityManagerHelper::RemoveEntity(cEntity->ID());
+	entityMan->RemoveEntity(cEntity->ID());
 }

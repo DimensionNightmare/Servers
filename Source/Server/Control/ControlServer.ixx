@@ -91,9 +91,7 @@ bool ControlServer::Init()
 }
 
 void ControlServer::InitCmd(unordered_map<string, function<void(stringstream*)>>& cmdMap)
-{
-	
-}
+{}
 
 bool ControlServer::Start()
 {
@@ -102,7 +100,7 @@ bool ControlServer::Start()
 		DNPrint(ErrCode_SrvNotInit, LoggerLevel::Error, nullptr);
 		return false;
 	}
-	
+
 	pSSock->Start();
 	return true;
 }
@@ -122,17 +120,17 @@ void ControlServer::Pause()
 	// pServerEntityMan->Timer()->pause();
 
 	LoopEvent([](EventLoopPtr loop)
-	{ 
-		loop->pause(); 
-	});
+		{
+			loop->pause();
+		});
 }
 
 void ControlServer::Resume()
 {
 	LoopEvent([](EventLoopPtr loop)
-	{ 
-		loop->resume(); 
-	});
+		{
+			loop->resume();
+		});
 
 	// pSSock->Timer()->resume();
 	// pServerEntityMan->Timer()->resume();

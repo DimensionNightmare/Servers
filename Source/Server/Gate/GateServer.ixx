@@ -136,8 +136,7 @@ bool GateServer::Init()
 }
 
 void GateServer::InitCmd(unordered_map<string, function<void(stringstream*)>>& cmdMap)
-{
-}
+{}
 
 bool GateServer::Start()
 {

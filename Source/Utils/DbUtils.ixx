@@ -55,15 +55,15 @@ const char* GetOpTypeBySqlOpType(SqlOpType eType)
 #define ONE(type, name) \
 		case type: \
 			return name;
-		ONE(SqlOpType::CreateTable, "CREATE TABLE ")
-		ONE(SqlOpType::Insert, "INSERT INTO ")
-		ONE(SqlOpType::Query, "SELECT ")
-		ONE(SqlOpType::Update, "UPDATE ")
-		ONE(SqlOpType::Delete, "DELETE FROM ")
+		ONE(SqlOpType::CreateTable, "CREATE TABLE ");
+		ONE(SqlOpType::Insert, "INSERT INTO ");
+		ONE(SqlOpType::Query, "SELECT ");
+		ONE(SqlOpType::Update, "UPDATE ");
+		ONE(SqlOpType::Delete, "DELETE FROM ");
 #undef ONE
 		default:
 			throw invalid_argument("Please Check SqlOpType");
-		break;
+			break;
 	}
 
 	return "";
@@ -77,15 +77,15 @@ const char* GetDbTypeByProtoType(FieldDescriptor::CppType pbType)
 #define ONE(type, name) \
 		case type:          \
 			return #name;
-		ONE(FieldDescriptor::CPPTYPE_DOUBLE, DOUBLE)
-		ONE(FieldDescriptor::CPPTYPE_FLOAT, FLOAT)
-		ONE(FieldDescriptor::CPPTYPE_INT32, INTEGER)
-		ONE(FieldDescriptor::CPPTYPE_UINT32, INTEGER)
-		ONE(FieldDescriptor::CPPTYPE_INT64, BIGINT)
-		ONE(FieldDescriptor::CPPTYPE_UINT64, BIGINT)
-		ONE(FieldDescriptor::CPPTYPE_STRING, TEXT)
-		ONE(FieldDescriptor::CPPTYPE_ENUM, INTEGER)
-		ONE(FieldDescriptor::CPPTYPE_BOOL, BOOL)
+		ONE(FieldDescriptor::CPPTYPE_DOUBLE, DOUBLE);
+		ONE(FieldDescriptor::CPPTYPE_FLOAT, FLOAT);
+		ONE(FieldDescriptor::CPPTYPE_INT32, INTEGER);
+		ONE(FieldDescriptor::CPPTYPE_UINT32, INTEGER);
+		ONE(FieldDescriptor::CPPTYPE_INT64, BIGINT);
+		ONE(FieldDescriptor::CPPTYPE_UINT64, BIGINT);
+		ONE(FieldDescriptor::CPPTYPE_STRING, TEXT);
+		ONE(FieldDescriptor::CPPTYPE_ENUM, INTEGER);
+		ONE(FieldDescriptor::CPPTYPE_BOOL, BOOL);
 #undef ONE
 		default:
 			throw invalid_argument("Please Check CppType");
@@ -135,7 +135,7 @@ void InitFieldByProtoType(const FieldDescriptor* field, list<string>& out, list<
 			break;
 	}
 
-	if(field->is_repeated())
+	if (field->is_repeated())
 	{
 		out.back() += "[]";
 	}
@@ -177,7 +177,7 @@ void InsertFieldByProtoType(const FieldDescriptor* field, const Reflection* refl
 	switch (field->cpp_type())
 	{
 		case FieldDescriptor::CPPTYPE_INT32:
-			if(isRepeat)
+			if (isRepeat)
 			{
 				for (int i = 0; i < reflection->FieldSize(data, field); i++)
 				{
@@ -192,7 +192,7 @@ void InsertFieldByProtoType(const FieldDescriptor* field, const Reflection* refl
 			}
 			break;
 		case FieldDescriptor::CPPTYPE_UINT32:
-			if(isRepeat)
+			if (isRepeat)
 			{
 				for (int i = 0; i < reflection->FieldSize(data, field); i++)
 				{
@@ -205,10 +205,10 @@ void InsertFieldByProtoType(const FieldDescriptor* field, const Reflection* refl
 			{
 				out = to_string(reflection->GetUInt32(data, field));
 			}
-			
+
 			break;
 		case FieldDescriptor::CPPTYPE_INT64:
-			if(isRepeat)
+			if (isRepeat)
 			{
 				for (int i = 0; i < reflection->FieldSize(data, field); i++)
 				{
@@ -223,7 +223,7 @@ void InsertFieldByProtoType(const FieldDescriptor* field, const Reflection* refl
 			}
 			break;
 		case FieldDescriptor::CPPTYPE_UINT64:
-			if(isRepeat)
+			if (isRepeat)
 			{
 				for (int i = 0; i < reflection->FieldSize(data, field); i++)
 				{
@@ -238,7 +238,7 @@ void InsertFieldByProtoType(const FieldDescriptor* field, const Reflection* refl
 			}
 			break;
 		case FieldDescriptor::CPPTYPE_DOUBLE:
-			if(isRepeat)
+			if (isRepeat)
 			{
 				for (int i = 0; i < reflection->FieldSize(data, field); i++)
 				{
@@ -253,7 +253,7 @@ void InsertFieldByProtoType(const FieldDescriptor* field, const Reflection* refl
 			}
 			break;
 		case FieldDescriptor::CPPTYPE_FLOAT:
-			if(isRepeat)
+			if (isRepeat)
 			{
 				for (int i = 0; i < reflection->FieldSize(data, field); i++)
 				{
@@ -268,7 +268,7 @@ void InsertFieldByProtoType(const FieldDescriptor* field, const Reflection* refl
 			}
 			break;
 		case FieldDescriptor::CPPTYPE_STRING:
-			if(isRepeat)
+			if (isRepeat)
 			{
 				for (int i = 0; i < reflection->FieldSize(data, field); i++)
 				{
@@ -283,7 +283,7 @@ void InsertFieldByProtoType(const FieldDescriptor* field, const Reflection* refl
 			}
 			break;
 		case FieldDescriptor::CPPTYPE_BOOL:
-			if(isRepeat)
+			if (isRepeat)
 			{
 				for (int i = 0; i < reflection->FieldSize(data, field); i++)
 				{
@@ -372,7 +372,7 @@ void SelectFieldByProtoType(const FieldDescriptor* field, const Reflection* refl
 			reflection->SetString(&data, field, value.as<string>());
 			break;
 		case FieldDescriptor::CPPTYPE_BOOL:
-			if(field->is_repeated())
+			if (field->is_repeated())
 			{
 				pqxx::array_parser arr = value.as_array();
 				pair<pqxx::array_parser::juncture, string> elem;
@@ -387,8 +387,7 @@ void SelectFieldByProtoType(const FieldDescriptor* field, const Reflection* refl
 						reflection->SetRepeatedBool(&data, field, index, elem.second == "t");
 						index++;
 					}
-				}
-				while (elem.first != pqxx::array_parser::juncture::done);
+				} while (elem.first != pqxx::array_parser::juncture::done);
 
 			}
 			else
@@ -1091,9 +1090,9 @@ DbSqlHelper<TMessage>& DbSqlHelper<TMessage>::Insert(TMessage& inObj)
 	{
 		const FieldDescriptor* field = descriptor->field(i);
 
-		if(field->is_repeated() && reflection->FieldSize(inObj, field))
+		if (field->is_repeated() && reflection->FieldSize(inObj, field))
 		{
-			
+
 		}
 
 		else if (!reflection->HasField(inObj, field))

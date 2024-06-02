@@ -47,7 +47,6 @@ EntityManager<TEntity>::~EntityManager()
 {
 	pLoop = nullptr;
 	mEntityMap.clear();
-	mMapTimer.clear();
 }
 
 template <class TEntity>
@@ -60,5 +59,6 @@ bool EntityManager<TEntity>::Init()
 template <class TEntity>
 void EntityManager<TEntity>::AddTimerRecord(size_t timerId, uint32_t id)
 {
+	unique_lock<shared_mutex> ulock(oTimerMutex);
 	mMapTimer.emplace(timerId, id);
 }

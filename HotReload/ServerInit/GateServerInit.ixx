@@ -48,7 +48,7 @@ int HandleGateServerInit(DNServer* server)
 					DNPrint(TipCode_CliConnOff, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
 					if (Entity* entity = channel->getContext<Entity>())
 					{
-						switch (entity->eEntityType)
+						switch (entity->GetEntityType())
 						{
 							case EntityType::Server:
 								serverProxy->ServerEntityCloseEvent(entity);

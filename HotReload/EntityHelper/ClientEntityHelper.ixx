@@ -12,5 +12,5 @@ private:
 	ClientEntityHelper() = delete;
 public:
 
-			
+
 };
