@@ -257,3 +257,24 @@ export string Md5Hash(const string& message)
 }
 
 #pragma endregion
+
+export void BytesToHexString(string& bytes)
+{
+	std::ostringstream oss;
+	oss << std::hex << std::setfill('0');
+	for (unsigned char byte : bytes)
+	{
+		oss << std::setw(2) << static_cast<int>(byte);
+	}
+	bytes = oss.str();
+}
+
+export void HexStringToBytes(string& hexString)
+{
+	string byteString = hexString;
+	hexString.clear();
+	for (size_t i = 0; i < byteString.length(); i += 2)
+	{
+		hexString += static_cast<unsigned char>(std::stoi(byteString.substr(i, 2), nullptr, 16));
+	}
+}

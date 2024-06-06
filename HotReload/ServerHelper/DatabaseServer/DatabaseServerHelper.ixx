@@ -128,24 +128,6 @@ bool DatabaseServerHelper::InitDatabase()
 				playerInfo.InitTable().Commit();
 			}
 
-			// Player player;
-			// player.set_account_id(11);
-			// PropertyEntity* propertyEntity = player.mutable_property_entity();
-			// propertyEntity->set_hp_max(1);
-			// propertyEntity->set_mp_max(1);
-			// propertyEntity->set_attack(1);
-			// propertyEntity->set_defense(1);
-			// playerInfo.Insert(player).Commit();
-
-			playerInfo.SelectAll().Limit(1).Commit();
-
-			Player player = playerInfo.Result()[0];
-			player.mutable_property_entity()->set_hp_max(2000);
-			playerInfo
-				DBUpdate(player, property_entity)
-				DBUpdateCond(player, account_id, "=", "")
-				.Commit();
-
 			txn.commit();
 		}
 

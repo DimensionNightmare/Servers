@@ -16,10 +16,12 @@
 #include "sw/redis++/redis++.h"
 
 #include "GCfg/GCfg.pb.h"
+#include "GDef/GDef.pb.h"
 
 using namespace hv;
 using namespace std;
 using namespace sw::redis;
+using namespace GDb;
 
 // #define TIMERSTART(tag) auto tag##_start = chrono::steady_clock::now(),tag##_end = tag##_start
 // #define TIMEREND(tag) tag##_end = chrono::steady_clock::now()
@@ -66,7 +68,6 @@ int main()
 	auto hashres = hash<string>::_Do_hash.operator()("");
 	cout << size_t(hashres) << " " << hashres << endl;
 
-	using namespace std;
 	A a;
 	B* b = (B*)&a;
 	b->msg();
@@ -206,7 +207,7 @@ int main()
 
 #endif
 
-#if 1 
+#if 0 
 int main()
 {
 	ConnectionOptions connection_options;
@@ -255,5 +256,50 @@ int main()
 
 		std::cout << "Doing something else..." << std::endl;
 	}
+}
+#endif
+
+void BytesToHexString(string& bytes)
+{
+	std::ostringstream oss;
+	oss << std::hex << std::setfill('0');
+	for (unsigned char byte : bytes)
+	{
+		oss << std::setw(2) << static_cast<int>(byte);
+	}
+	bytes = oss.str();
+}
+
+void HexStringToBytes(string& hexString)
+{
+	string byteString = hexString;
+	hexString.clear();
+	for (size_t i = 0; i < byteString.length(); i += 2)
+	{
+		hexString += static_cast<unsigned char>(std::stoi(byteString.substr(i, 2), nullptr, 16));
+	}
+}
+
+#if 1
+
+int main()
+{
+	Player player;
+	player.set_account_id(11);
+	PropertyEntity* propertyEntity = player.mutable_property_entity();
+	propertyEntity->set_hp_max(1);
+	propertyEntity->set_mp_max(1);
+	propertyEntity->set_attack(1);
+	propertyEntity->set_defense(1);
+	string msgData;
+	player.SerializeToString(&msgData);
+
+	BytesToHexString(msgData);
+
+	std::cout << "Hex string: " << msgData << std::endl;
+
+	HexStringToBytes(msgData);
+
+	std::cout << "Bytes: " << msgData << std::endl;
 }
 #endif

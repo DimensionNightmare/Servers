@@ -304,7 +304,8 @@ void InsertFieldByProtoType(const FieldDescriptor* field, const Reflection* refl
 			{
 				const Message& msg = reflection->GetMessage(data, field);
 				msg.SerializeToString(&out);
-				out = format("'{}'", out);
+				BytesToHexString(out);
+				out = format("E'\\\\x{}'", out);
 			}
 			break;
 		default:
@@ -414,8 +415,10 @@ void SelectFieldByProtoType(const FieldDescriptor* field, const Reflection* refl
 				else
 				{
 					Message* msg = reflection->MutableMessage(&data, field);
-					const pqxx::binarystring& msgData = value.as<pqxx::binarystring>();
-					msg->ParsePartialFromArray(msgData.data(), msgData.size());
+					string msgData = value.as<string>();
+					msgData = msgData.substr(2);
+					HexStringToBytes(msgData);
+					msg->ParseFromString(msgData);
 				}
 			}
 			break;
@@ -534,7 +537,8 @@ bool UpdateFieldByProtoType(const FieldDescriptor* field, const Reflection* refl
 			{
 				const Message& msg = reflection->GetMessage(data, field);
 				msg.SerializeToString(&out);
-				out = format("'{}'", out);
+				BytesToHexString(out);
+				out = format("E'\\\\x{}'", out);
 			}
 			break;
 		default:
