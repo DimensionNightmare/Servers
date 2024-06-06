@@ -18,10 +18,7 @@ export enum class DNTaskFlag : uint16_t
 	Max,
 };
 
-constexpr size_t DNTaskFlagSize()
-{
-	return static_cast<size_t>(DNTaskFlag::Max);
-}
+constexpr uint16_t DNTaskFlagSize() { return static_cast<uint16_t>(DNTaskFlag::Max); }
 
 export template <typename T>
 struct DNTask
@@ -128,9 +125,9 @@ struct DNTask
 		}
 	}
 public:
-	bool HasFlag(DNTaskFlag flag) { return oFlags.test(int(flag)); }
-	void SetFlag(DNTaskFlag flag) { oFlags.set(int(flag)); }
-	void ClearFlag(DNTaskFlag flag) { oFlags.reset(int(flag)); }
+	bool HasFlag(DNTaskFlag flag) { return oFlags.test(uint16_t(flag)); }
+	void SetFlag(DNTaskFlag flag) { oFlags.set(uint16_t(flag)); }
+	void ClearFlag(DNTaskFlag flag) { oFlags.reset(uint16_t(flag)); }
 
 	size_t& TimerId() { return iTimerId; }
 

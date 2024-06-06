@@ -86,6 +86,7 @@ const char* GetDbTypeByProtoType(FieldDescriptor::CppType pbType)
 		ONE(FieldDescriptor::CPPTYPE_STRING, TEXT);
 		ONE(FieldDescriptor::CPPTYPE_ENUM, INTEGER);
 		ONE(FieldDescriptor::CPPTYPE_BOOL, BOOL);
+		ONE(FieldDescriptor::CPPTYPE_MESSAGE, BYTEA);
 #undef ONE
 		default:
 			throw invalid_argument("Please Check CppType");
@@ -125,11 +126,8 @@ void InitFieldByProtoType(const FieldDescriptor* field, list<string>& out, list<
 		}
 		case FieldDescriptor::CPPTYPE_DOUBLE:
 		{
-			// if (field->options().GetExtension(ext_datetime))
-			// {
-			// 	out.back().assign("TIMESTAMP WITH TIME ZONE");
-			// }
 			out.back().assign("double precision");
+			break;
 		}
 		default:
 			break;
@@ -297,6 +295,18 @@ void InsertFieldByProtoType(const FieldDescriptor* field, const Reflection* refl
 				out = to_string(reflection->GetBool(data, field));
 			}
 			break;
+		case FieldDescriptor::CPPTYPE_MESSAGE:
+			if (isRepeat)
+			{
+				throw invalid_argument("Please Regist InsertField::CppType");
+			}
+			else
+			{
+				const Message& msg = reflection->GetMessage(data, field);
+				msg.SerializeToString(&out);
+				out = format("'{}'", out);
+			}
+			break;
 		default:
 			throw invalid_argument("Please Regist InsertField::CppType");
 			break;
@@ -395,8 +405,22 @@ void SelectFieldByProtoType(const FieldDescriptor* field, const Reflection* refl
 				reflection->SetBool(&data, field, value.as<bool>());
 			}
 			break;
+		case FieldDescriptor::CPPTYPE_MESSAGE:
+			{
+				if(field->is_repeated())
+				{
+					throw invalid_argument("Please Regist SelectField::Type");
+				}
+				else
+				{
+					Message* msg = reflection->MutableMessage(&data, field);
+					const pqxx::binarystring& msgData = value.as<pqxx::binarystring>();
+					msg->ParsePartialFromArray(msgData.data(), msgData.size());
+				}
+			}
+			break;
 		default:
-			throw invalid_argument("Please Regist InsertField::Type");
+			throw invalid_argument("Please Regist SelectField::Type");
 			break;
 	}
 }
@@ -435,7 +459,7 @@ void SelectFieldCondByProtoType(const FieldDescriptor* field, const Reflection* 
 			out = format("'{}'", reflection->GetString(data, field));
 			break;
 		default:
-			throw invalid_argument("Please Regist InsertField::Type");
+			throw invalid_argument("Please Regist SelectFieldCond::Type");
 			break;
 	}
 
@@ -476,6 +500,8 @@ bool UpdateFieldByProtoType(const FieldDescriptor* field, const Reflection* refl
 		return true;
 	}
 
+	bool isRepeat = field->is_repeated();
+
 	switch (field->cpp_type())
 	{
 		case FieldDescriptor::CPPTYPE_INT32:
@@ -499,8 +525,20 @@ bool UpdateFieldByProtoType(const FieldDescriptor* field, const Reflection* refl
 		case FieldDescriptor::CPPTYPE_STRING:
 			out = format("'{}'", reflection->GetString(data, field));
 			break;
+		case FieldDescriptor::CPPTYPE_MESSAGE:
+			if (isRepeat)
+			{
+				throw invalid_argument("Please Regist UpdateField::CppType");
+			}
+			else
+			{
+				const Message& msg = reflection->GetMessage(data, field);
+				msg.SerializeToString(&out);
+				out = format("'{}'", out);
+			}
+			break;
 		default:
-			throw invalid_argument("Please Regist InsertField::Type");
+			throw invalid_argument("Please Regist UpdateField::Type");
 			break;
 	}
 
@@ -567,7 +605,7 @@ void UpdateFieldCondByProtoType(const FieldDescriptor* field, const Reflection* 
 			out = format("'{}'", reflection->GetString(data, field));
 			break;
 		default:
-			throw invalid_argument("Please Regist InsertField::Type");
+			throw invalid_argument("Please Regist UpdateFieldCond::Type");
 			break;
 	}
 
@@ -1016,6 +1054,8 @@ bool DbSqlHelper<TMessage>::Commit()
 		{
 			iQueryCount = result[0][0].as<uint32_t>();
 		}
+		
+		iLimitCount = 0;
 	}
 
 	SetResult(result.affected_rows());
@@ -1035,6 +1075,13 @@ DbSqlHelper<TMessage>& DbSqlHelper<TMessage>::InitTable()
 	for (int i = 0; i < descriptor->field_count(); i++)
 	{
 		const FieldDescriptor* field = descriptor->field(i);
+
+		// should init table
+		if (field->is_repeated() && field->cpp_type() == FieldDescriptor::CPPTYPE_MESSAGE)
+		{
+			throw runtime_error("Not imp!!!");
+		}
+
 		list<string> params;
 		InitFieldByProtoType(field, params, primaryKey);
 

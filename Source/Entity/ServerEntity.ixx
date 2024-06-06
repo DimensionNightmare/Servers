@@ -17,10 +17,7 @@ export enum class ServerEntityFlag : uint16_t
 	Max,
 };
 
-constexpr size_t ServerEntityFlagSize()
-{
-	return static_cast<size_t>(ServerEntityFlag::Max);
-}
+constexpr uint16_t ServerEntityFlagSize() { return static_cast<uint16_t>(ServerEntityFlag::Max); }
 
 export class ServerEntity : public NetEntity
 {
@@ -35,9 +32,9 @@ public: // dll override
 
 	ServerEntity*& LinkNode() { return pLink; }
 
-	bool HasFlag(ServerEntityFlag flag) { return oFlags.test(int(flag)); }
-	void SetFlag(ServerEntityFlag flag) { oFlags.set(int(flag)); }
-	void ClearFlag(ServerEntityFlag flag) { oFlags.reset(int(flag)); }
+	bool HasFlag(ServerEntityFlag flag) { return oFlags.test(uint16_t(flag)); }
+	void SetFlag(ServerEntityFlag flag) { oFlags.set(uint16_t(flag)); }
+	void ClearFlag(ServerEntityFlag flag) { oFlags.reset(uint16_t(flag)); }
 
 	string& ServerIp() { return sServIp; }
 

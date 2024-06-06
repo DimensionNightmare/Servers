@@ -214,10 +214,6 @@ export void ApiAuth(HttpService* service)
 			accInfo.set_update_time(msTime);
 			accInfo.set_last_logout_time(msTime);
 			accInfo.set_last_logout_time(msTime);
-			accInfo.add_account_status(0);
-			accInfo.add_account_status(1);
-			accInfo.add_account_status(0);
-			accInfo.add_account_status(1);
 
 			try
 			{
@@ -312,17 +308,6 @@ export void ApiAuth(HttpService* service)
 			GDb::Account accInfo;
 			accInfo.set_auth_name(authName);
 			accInfo.set_auth_string(authString);
-
-			// int64_t msTime = time_point_cast<nanoseconds>(system_clock::now()).time_since_epoch().count();
-
-			// accInfo.set_create_time(msTime);
-			// accInfo.set_update_time(msTime);
-			// accInfo.set_last_logout_time(msTime);
-			// accInfo.set_last_logout_time(msTime);
-			// accInfo.add_account_status(true);
-			// accInfo.add_account_status(false);
-			// accInfo.add_account_status(false);
-			// accInfo.add_account_status(true);
 
 			try
 			{
