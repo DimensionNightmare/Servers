@@ -70,6 +70,8 @@ int HandleAuthServerInit(DNServer* server)
 			{
 				MessagePacket packet;
 				memcpy(&packet, buf->data(), MessagePacket::PackLenth);
+				string msgData(buf->base + MessagePacket::PackLenth, packet.pkgLenth);
+
 				if (packet.dealType == MsgDeal::Res)
 				{
 					if (DNTask<Message*>* task = clientSock->GetMsg(packet.msgId)) //client sock request
@@ -79,28 +81,10 @@ int HandleAuthServerInit(DNServer* server)
 
 						if (Message* message = task->GetResult())
 						{
-							bool parserError = false;
-							//Support Combine
-							if (task->HasFlag(DNTaskFlag::Combine))
-							{
-								Message* merge = message->New();
-								if (merge->ParseFromArray(buf->base + MessagePacket::PackLenth, packet.pkgLenth))
-								{
-									message->MergeFrom(*merge);
-								}
-
-								delete merge;
-							}
-							else
-							{
-								parserError = !message->ParseFromArray(buf->base + MessagePacket::PackLenth, packet.pkgLenth);
-							}
-
-							if (parserError)
+							if (!message->ParseFromString(msgData))
 							{
 								task->SetFlag(DNTaskFlag::PaserError);
 							}
-
 						}
 
 						task->CallResume();

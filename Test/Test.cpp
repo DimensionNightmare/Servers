@@ -14,6 +14,7 @@
 #include "hv/json.hpp"
 #include "pqxx/pqxx"
 #include "sw/redis++/redis++.h"
+#include "google/protobuf/util/json_util.h"
 
 #include "GCfg/GCfg.pb.h"
 #include "GDef/GDef.pb.h"
@@ -22,6 +23,7 @@ using namespace hv;
 using namespace std;
 using namespace sw::redis;
 using namespace GDb;
+using namespace google::protobuf;
 
 // #define TIMERSTART(tag) auto tag##_start = chrono::steady_clock::now(),tag##_end = tag##_start
 // #define TIMEREND(tag) tag##_end = chrono::steady_clock::now()
@@ -292,6 +294,7 @@ int main()
 	propertyEntity->set_attack(1);
 	propertyEntity->set_defense(1);
 	string msgData;
+	msgData = "asdasda";
 	player.SerializeToString(&msgData);
 
 	BytesToHexString(msgData);
@@ -301,5 +304,16 @@ int main()
 	HexStringToBytes(msgData);
 
 	std::cout << "Bytes: " << msgData << std::endl;
+	player.Clear();
+	player.ParseFromString(msgData);
+	string msgData1;
+	util::MessageToJsonString(player, &msgData1);
+
+	std::cout << "Serlize: " << msgData1 << std::endl;
+
+	player.Clear();
+	util::JsonStringToMessage(msgData1, &player);
+
+	std::cout << "id: " << player.account_id() << std::endl;
 }
 #endif

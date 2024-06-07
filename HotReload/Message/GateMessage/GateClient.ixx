@@ -6,7 +6,7 @@ module;
 
 #include "StdMacro.h"
 #include "Client/C_Auth.pb.h"
-#include "Server/S_Gate_Logic.pb.h" 
+#include "Server/S_Gate.pb.h" 
 export module GateMessage:GateClient;
 
 import GateServerHelper;
@@ -91,16 +91,12 @@ namespace GateMessage
 
 				DNPrint(0, LoggerLevel::Debug, "Send to Logic index->%d, %d", entity->ID(), entity->ServerIndex());
 
-				//redirect G2L_ReqClientLogin dot pack string
-				requset->clear_token();
-				binData.clear();
-				binData.resize(requset->ByteSizeLong());
-				requset->SerializeToArray(binData.data(), binData.size());
+				requset->SerializeToString(&binData);
 
 				DNServerProxyHelper* server = dnServer->GetSSock();
 				uint32_t msgIdChild = server->GetMsgId();
 
-				MessagePack(msgIdChild, MsgDeal::Req, G2L_ReqClientLogin::GetDescriptor()->full_name().c_str(), binData);
+				MessagePack(msgIdChild, MsgDeal::Redir, requset->GetDescriptor()->full_name().c_str(), binData);
 
 				{
 					auto taskGen = [](Message* msg) -> DNTask<Message*>
@@ -122,9 +118,7 @@ namespace GateMessage
 
 		}
 
-		binData.clear();
-		binData.resize(response.ByteSizeLong());
-		response.SerializeToArray(binData.data(), binData.size());
+		response.SerializeToString(&binData);
 
 		MessagePack(msgId, MsgDeal::Res, nullptr, binData);
 

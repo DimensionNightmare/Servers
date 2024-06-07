@@ -13,7 +13,6 @@ export enum class DNTaskFlag : uint16_t
 {
 	Timeout = 0,
 	PaserError,
-	Combine,
 	TimeCost,
 	Max,
 };

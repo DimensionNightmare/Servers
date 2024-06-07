@@ -3,7 +3,7 @@ module;
 #include <cstdint>
 #include "hv/Channel.h"
 
-#include "Server/S_Global_Gate.pb.h"
+#include "Server/S_Global.pb.h"
 export module GlobalMessage:GlobalGate;
 
 import DNTask;
@@ -18,7 +18,7 @@ using namespace GMsg;
 namespace GlobalMessage
 {
 
-	export void Exe_RetRegistSrv(SocketChannelPtr channel, uint32_t msgId, Message* msg)
+	export void Exe_RetRegistSrv(SocketChannelPtr channel, Message* msg)
 	{
 		g2G_RetRegistSrv* requset = reinterpret_cast<g2G_RetRegistSrv*>(msg);
 

@@ -20,11 +20,11 @@ export class DatabaseMessageHandle
 {
 public:
 	static void MsgHandle(const SocketChannelPtr& channel, uint32_t msgId, size_t msgHashId, const string& msgData);
-	static void MsgRetHandle(const SocketChannelPtr& channel, uint32_t msgId, size_t msgHashId, const string& msgData);
+	static void MsgRetHandle(const SocketChannelPtr& channel, size_t msgHashId, const string& msgData);
 	static void RegMsgHandle();
 public:
 	inline static unordered_map<size_t, pair<const Message*, function<void(SocketChannelPtr, uint32_t, Message*)>>> MHandleMap;
-	inline static unordered_map<size_t, pair<const Message*, function<void(SocketChannelPtr, uint32_t, Message*)>>> MHandleRetMap;
+	inline static unordered_map<size_t, pair<const Message*, function<void(SocketChannelPtr, Message*)>>> MHandleRetMap;
 };
 
 
@@ -35,7 +35,7 @@ void DatabaseMessageHandle::MsgHandle(const SocketChannelPtr& channel, uint32_t 
 	{
 		auto& handle = MHandleMap[msgHashId];
 		Message* message = handle.first->New();
-		if (message->ParseFromArray(msgData.data(), msgData.length()))
+		if (message->ParseFromString(msgData))
 		{
 			handle.second(channel, msgId, message);
 		}
@@ -52,15 +52,15 @@ void DatabaseMessageHandle::MsgHandle(const SocketChannelPtr& channel, uint32_t 
 	}
 }
 
-void DatabaseMessageHandle::MsgRetHandle(const SocketChannelPtr& channel, uint32_t msgId, size_t msgHashId, const string& msgData)
+void DatabaseMessageHandle::MsgRetHandle(const SocketChannelPtr& channel, size_t msgHashId, const string& msgData)
 {
 	if (MHandleRetMap.contains(msgHashId))
 	{
 		auto& handle = MHandleRetMap[msgHashId];
 		Message* message = handle.first->New();
-		if (message->ParseFromArray(msgData.data(), msgData.length()))
+		if (message->ParseFromString(msgData))
 		{
-			handle.second(channel, msgId, message);
+			handle.second(channel, message);
 		}
 		else
 		{

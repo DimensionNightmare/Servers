@@ -72,9 +72,7 @@ void GlobalServerHelper::UpdateServerGroup()
 			retMsg.set_ip(beEntity->ServerIp());
 			retMsg.set_port(beEntity->ServerPort());
 
-			binData.clear();
-			binData.resize(retMsg.ByteSizeLong());
-			retMsg.SerializeToArray(binData.data(), binData.size());
+			retMsg.SerializeToString(&binData);
 			MessagePack(0, MsgDeal::Ret, retMsg.GetDescriptor()->full_name().c_str(), binData);
 			channel->write(binData);
 

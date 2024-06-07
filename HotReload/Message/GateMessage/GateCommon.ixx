@@ -6,7 +6,7 @@ module;
 
 #include "StdMacro.h"
 #include "Server/S_Common.pb.h"
-#include "Server/S_Global_Gate.pb.h"
+#include "Server/S_Global.pb.h"
 export module GateMessage:GateCommon;
 
 import DNTask;
@@ -76,8 +76,7 @@ namespace GateMessage
 
 		// pack data
 		string binData;
-		binData.resize(requset.ByteSizeLong());
-		requset.SerializeToArray(binData.data(), binData.size());
+		requset.SerializeToString(&binData);
 		MessagePack(msgId, MsgDeal::Req, requset.GetDescriptor()->full_name().c_str(), binData);
 
 		// data alloc
@@ -154,24 +153,19 @@ namespace GateMessage
 		}
 
 		string binData;
-		binData.resize(response.ByteSizeLong());
-		response.SerializeToArray(binData.data(), binData.size());
+		response.SerializeToString(&binData);
 
 		MessagePack(msgId, MsgDeal::Res, nullptr, binData);
 		channel->write(binData);
 
 		if (response.success())
 		{
-			binData.clear();
-
 			// up to Global
 			g2G_RetRegistSrv retMsg;
 			retMsg.set_is_regist(true);
 			retMsg.set_server_index(requset->server_index());
 
-			binData.clear();
-			binData.resize(retMsg.ByteSizeLong());
-			retMsg.SerializeToArray(binData.data(), binData.size());
+			retMsg.SerializeToString(&binData);
 			MessagePack(0, MsgDeal::Ret, retMsg.GetDescriptor()->full_name().c_str(), binData);
 
 			GateServerHelper* dnServer = GetGateServer();
@@ -180,7 +174,7 @@ namespace GateMessage
 		}
 	}
 
-	export void Exe_RetHeartbeat(SocketChannelPtr channel, uint32_t msgId, Message* msg)
+	export void Exe_RetHeartbeat(SocketChannelPtr channel, Message* msg)
 	{
 		COM_RetHeartbeat* requset = reinterpret_cast<COM_RetHeartbeat*>(msg);
 	}

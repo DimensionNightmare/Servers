@@ -17,32 +17,56 @@ export class ClientEntityManager : public EntityManager<ClientEntity>
 public:
 	ClientEntityManager() = default;
 
-	virtual ~ClientEntityManager() = default;
+	virtual ~ClientEntityManager();
 
 	virtual bool Init() override;
+	
+	virtual void TickMainFrame() override;
 
 public: // dll override
-	bool RemoveEntity(uint32_t entityId);
+
+	bool SaveEntity(ClientEntity& entity);
+
+	void CheckSaveEntity();
 
 protected: // dll proxy
 
 
 };
 
+ClientEntityManager::~ClientEntityManager()
+{
+	CheckSaveEntity();
+}
+
 bool ClientEntityManager::Init()
 {
 	return EntityManager::Init();
 }
 
-bool ClientEntityManager::RemoveEntity(uint32_t entityId)
+bool ClientEntityManager::SaveEntity(ClientEntity& entity)
 {
-	if (mEntityMap.contains(entityId))
-	{
-		unique_lock<shared_mutex> ulock(oMapMutex);
+	// nosql
 
-		mEntityMap.erase(entityId);
-		return true;
-	}
+	// sql
 
 	return false;
+}
+
+void ClientEntityManager::CheckSaveEntity()
+{
+	for (auto& [ID, entity] : mEntityMap)
+	{
+		if(entity.HasFlag(ClientEntityFlag::DBModify))
+		{
+			entity.ClearFlag(ClientEntityFlag::DBModify);
+			
+			SaveEntity(entity);
+		}
+	}
+}
+
+void ClientEntityManager::TickMainFrame()
+{
+	CheckSaveEntity();
 }

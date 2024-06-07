@@ -58,15 +58,19 @@ int HandleLogicServerInit(DNServer* server)
 			{
 				MessagePacket packet;
 				memcpy(&packet, buf->data(), MessagePacket::PackLenth);
+				string msgData(buf->base + MessagePacket::PackLenth, packet.pkgLenth);
+
 				if (packet.dealType == MsgDeal::Req)
 				{
-					string msgData(buf->base + MessagePacket::PackLenth, packet.pkgLenth);
 					LogicMessageHandle::MsgHandle(channel, packet.msgId, packet.msgHashId, msgData);
 				}
 				else if (packet.dealType == MsgDeal::Ret)
 				{
-					string msgData(buf->base + MessagePacket::PackLenth, packet.pkgLenth);
-					LogicMessageHandle::MsgRetHandle(channel, packet.msgId, packet.msgHashId, msgData);
+					LogicMessageHandle::MsgRetHandle(channel, packet.msgHashId, msgData);
+				}
+				else if (packet.dealType == MsgDeal::Redir)
+				{
+					LogicMessageHandle::MsgRedirectHandle(channel, packet.msgId, packet.msgHashId, msgData);
 				}
 				else if (packet.dealType == MsgDeal::Res)
 				{
@@ -77,24 +81,7 @@ int HandleLogicServerInit(DNServer* server)
 
 						if (Message* message = task->GetResult())
 						{
-							bool parserError = false;
-							//Support Combine
-							if (task->HasFlag(DNTaskFlag::Combine))
-							{
-								Message* merge = message->New();
-								if (merge->ParseFromArray(buf->base + MessagePacket::PackLenth, packet.pkgLenth))
-								{
-									message->MergeFrom(*merge);
-								}
-
-								delete merge;
-							}
-							else
-							{
-								parserError = !message->ParseFromArray(buf->base + MessagePacket::PackLenth, packet.pkgLenth);
-							}
-
-							if (parserError)
+							if (!message->ParseFromString(msgData))
 							{
 								task->SetFlag(DNTaskFlag::PaserError);
 							}
@@ -165,15 +152,19 @@ int HandleLogicServerInit(DNServer* server)
 			{
 				MessagePacket packet;
 				memcpy(&packet, buf->data(), MessagePacket::PackLenth);
+				string msgData(buf->base + MessagePacket::PackLenth, packet.pkgLenth);
+
 				if (packet.dealType == MsgDeal::Req)
 				{
-					string msgData(buf->base + MessagePacket::PackLenth, packet.pkgLenth);
 					LogicMessageHandle::MsgHandle(channel, packet.msgId, packet.msgHashId, msgData);
 				}
 				else if (packet.dealType == MsgDeal::Ret)
 				{
-					string msgData(buf->base + MessagePacket::PackLenth, packet.pkgLenth);
-					LogicMessageHandle::MsgRetHandle(channel, packet.msgId, packet.msgHashId, msgData);
+					LogicMessageHandle::MsgRetHandle(channel, packet.msgHashId, msgData);
+				}
+				else if (packet.dealType == MsgDeal::Redir)
+				{
+					LogicMessageHandle::MsgRedirectHandle(channel, packet.msgId, packet.msgHashId, msgData);
 				}
 				else if (packet.dealType == MsgDeal::Res)
 				{
@@ -184,24 +175,7 @@ int HandleLogicServerInit(DNServer* server)
 
 						if (Message* message = task->GetResult())
 						{
-							bool parserError = false;
-							//Support Combine
-							if (task->HasFlag(DNTaskFlag::Combine))
-							{
-								Message* merge = message->New();
-								if (merge->ParseFromArray(buf->base + MessagePacket::PackLenth, packet.pkgLenth))
-								{
-									message->MergeFrom(*merge);
-								}
-
-								delete merge;
-							}
-							else
-							{
-								parserError = !message->ParseFromArray(buf->base + MessagePacket::PackLenth, packet.pkgLenth);
-							}
-
-							if (parserError)
+							if (!message->ParseFromString(msgData))
 							{
 								task->SetFlag(DNTaskFlag::PaserError);
 							}

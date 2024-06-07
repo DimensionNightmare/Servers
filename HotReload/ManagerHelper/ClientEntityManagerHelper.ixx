@@ -1,6 +1,7 @@
 module;
 #include <shared_mutex>
 #include <cstdint>
+#include <coroutine>
 
 #include "StdMacro.h"
 export module ClientEntityManagerHelper;
@@ -8,6 +9,7 @@ export module ClientEntityManagerHelper;
 export import ClientEntityHelper;
 export import ClientEntityManager;
 import Logger;
+import DNTask;
 
 using namespace std;
 
@@ -21,6 +23,8 @@ public:
 	bool RemoveEntity(uint32_t entityId);
 
 	ClientEntity* GetEntity(uint32_t id);
+
+	DNTaskVoid LoadEntityData();
 };
 
 ClientEntity* ClientEntityManagerHelper::AddEntity(uint32_t entityId)
@@ -61,4 +65,9 @@ ClientEntity* ClientEntityManagerHelper::GetEntity(uint32_t entityId)
 	}
 	// allow return empty
 	return nullptr;
+}
+
+DNTaskVoid ClientEntityManagerHelper::LoadEntityData()
+{
+	co_return;
 }

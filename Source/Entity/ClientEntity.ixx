@@ -1,6 +1,7 @@
 module;
 #include <cstdint>
 #include <bitset>
+#include "pqxx/transaction"
 
 #include "GDef/GDef.pb.h"
 export module ClientEntity;
@@ -14,24 +15,23 @@ export enum class ClientEntityFlag : uint16_t
 {
 	DBInited = 0,
 	DBIniting,
+	DBModify,
 	Max,
 };
 
 constexpr uint16_t ClientEntityFlagSize() { return static_cast<uint16_t>(ClientEntityFlag::Max); }
 
+class ClientEntityManager;
+
 export class ClientEntity : public Entity
 {
+	friend class ClientEntityManager;
 public:
 	ClientEntity();
 	ClientEntity(uint32_t id);
 	virtual ~ClientEntity();
 
 public: // dll override
-	void Load();
-	void Load(const string& dbData);
-
-	void Save();
-
 	uint32_t& ServerIndex() { return iServerIndex; }
 
 	bool HasFlag(ClientEntityFlag flag) { return oFlags.test(uint16_t(flag)); }
@@ -43,7 +43,7 @@ protected: // dll proxy
 
 	bitset<ClientEntityFlagSize()> oFlags;
 
-	unique_ptr<PropertyEntity> pPropertyEntity;
+	unique_ptr<Player> pDbPlayer;
 };
 
 ClientEntity::ClientEntity() : Entity(0)
@@ -58,30 +58,5 @@ ClientEntity::ClientEntity(uint32_t id) : Entity(id)
 
 ClientEntity::~ClientEntity()
 {
-	Save();
-
-	pPropertyEntity = nullptr;
-}
-
-void ClientEntity::Load(const string& dbData)
-{
-	string bitString;
-	if (bitString.length() != ClientEntityFlagSize())
-	{
-		if (bitString.length() < ClientEntityFlagSize())
-		{
-
-			bitString.insert(bitString.begin(), ClientEntityFlagSize() - bitString.length(), '0');
-		}
-		else
-		{
-			bitString = bitString.substr(bitString.length() - ClientEntityFlagSize());
-		}
-	}
-
-	oFlags = bitset<ClientEntityFlagSize()>(bitString);
-}
-
-void ClientEntity::Save()
-{
+	pDbPlayer = nullptr;
 }

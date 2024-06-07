@@ -5,14 +5,22 @@ setlocal enabledelayedexpansion
 
 set "server=%1"
 
-if "%server%"=="" (
+set "menu=.\out\Build\Debug"
+
+set "menuType=%2"
+
+if "%menuType%"=="R" (
+	set "menu=.\out\Build\Release"
+)
+
+if "%server%"=="_" (
 	@REM taskkill /f /im DimensionNightmareServer.exe
-	call :control
-	call :global
-	call :auth
-	call :gate
-	call :database
-	call :logic
+	call :_control
+	call :_global
+	call :_auth
+	call :_gate
+	call :_database
+	call :_logic
 	exit /b
 )
 
@@ -20,26 +28,26 @@ call :%server%
 
 exit /b
 
-:control
-start "" .\out\Build\Debug\DimensionNightmareServer.exe svrType=1 port=1270
+:_control
+start "" %menu%\DimensionNightmareServer.exe svrType=1 port=1270
 goto :eof
 
-:global
-start "" .\out\Build\Debug\DimensionNightmareServer.exe svrType=2 port=1213 byCtl=1 ctlIp=127.0.0.1 ctlPort=1270
+:_global
+start "" %menu%\DimensionNightmareServer.exe svrType=2 port=1213 byCtl=1 ctlIp=127.0.0.1 ctlPort=1270
 goto :eof
 
-:auth
-start "" .\out\Build\Debug\DimensionNightmareServer.exe svrType=3 port=1212 byCtl=1 ctlIp=127.0.0.1 ctlPort=1270
+:_auth
+start "" %menu%\DimensionNightmareServer.exe svrType=3 port=1212 byCtl=1 ctlIp=127.0.0.1 ctlPort=1270
 goto :eof
 
-:gate
-start "" .\out\Build\Debug\DimensionNightmareServer.exe svrType=4 byCtl=1 ctlIp=127.0.0.1 ctlPort=1213
+:_gate
+start "" %menu%\DimensionNightmareServer.exe svrType=4 byCtl=1 ctlIp=127.0.0.1 ctlPort=1213
 goto :eof
 
-:database
-start "" .\out\Build\Debug\DimensionNightmareServer.exe svrType=5 byCtl=1 ctlIp=127.0.0.1 ctlPort=1213
+:_database
+start "" %menu%\DimensionNightmareServer.exe svrType=5 byCtl=1 ctlIp=127.0.0.1 ctlPort=1213
 goto :eof
 
-:logic
-start "" .\out\Build\Debug\DimensionNightmareServer.exe svrType=6 byCtl=1 ctlIp=127.0.0.1 ctlPort=1213
+:_logic
+start "" %menu%\DimensionNightmareServer.exe svrType=6 byCtl=1 ctlIp=127.0.0.1 ctlPort=1213
 goto :eof

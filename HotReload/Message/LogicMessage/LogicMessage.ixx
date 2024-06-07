@@ -6,11 +6,13 @@ module;
 #include "StdMacro.h"
 #include "Common/Common.pb.h"
 #include "Server/S_Common.pb.h"
-#include "Server/S_Gate_Logic.pb.h"
+#include "Server/S_Gate.pb.h"
+#include "Client/C_Auth.pb.h"
 export module LogicMessage;
 
 export import :LogicCommon;
 import :LogicGate;
+import :LogicRedirect;
 import Logger;
 
 using namespace std;
@@ -22,11 +24,13 @@ export class LogicMessageHandle
 {
 public:
 	static void MsgHandle(const SocketChannelPtr& channel, uint32_t msgId, size_t msgHashId, const string& msgData);
-	static void MsgRetHandle(const SocketChannelPtr& channel, uint32_t msgId, size_t msgHashId, const string& msgData);
+	static void MsgRetHandle(const SocketChannelPtr& channel, size_t msgHashId, const string& msgData);
+	static void MsgRedirectHandle(const SocketChannelPtr& channel, uint32_t msgId, size_t msgHashId, const string& msgData);
 	static void RegMsgHandle();
 public:
 	inline static unordered_map<size_t, pair<const Message*, function<void(SocketChannelPtr, uint32_t, Message*)>>> MHandleMap;
-	inline static unordered_map<size_t, pair<const Message*, function<void(SocketChannelPtr, uint32_t, Message*)>>> MHandleRetMap;
+	inline static unordered_map<size_t, pair<const Message*, function<void(SocketChannelPtr, Message*)>>> MHandleRetMap;
+	inline static unordered_map<size_t, pair<const Message*, function<void(SocketChannelPtr, uint32_t, Message*)>>> MHandleRedirectMap;
 
 };
 
@@ -38,7 +42,7 @@ void LogicMessageHandle::MsgHandle(const SocketChannelPtr& channel, uint32_t msg
 	{
 		auto& handle = MHandleMap[msgHashId];
 		Message* message = handle.first->New();
-		if (message->ParseFromArray(msgData.data(), msgData.length()))
+		if (message->ParseFromString(msgData))
 		{
 			handle.second(channel, msgId, message);
 		}
@@ -55,13 +59,36 @@ void LogicMessageHandle::MsgHandle(const SocketChannelPtr& channel, uint32_t msg
 	}
 }
 
-void LogicMessageHandle::MsgRetHandle(const SocketChannelPtr& channel, uint32_t msgId, size_t msgHashId, const string& msgData)
+void LogicMessageHandle::MsgRetHandle(const SocketChannelPtr& channel, size_t msgHashId, const string& msgData)
 {
 	if (MHandleRetMap.contains(msgHashId))
 	{
 		auto& handle = MHandleRetMap[msgHashId];
 		Message* message = handle.first->New();
-		if (message->ParseFromArray(msgData.data(), msgData.length()))
+		if (message->ParseFromString(msgData))
+		{
+			handle.second(channel, message);
+		}
+		else
+		{
+			DNPrint(ErrCode_MsgParse, LoggerLevel::Error, nullptr);
+		}
+
+		delete message;
+	}
+	else
+	{
+		DNPrint(ErrCode_MsgHandleFind, LoggerLevel::Error, nullptr);
+	}
+}
+
+void LogicMessageHandle::MsgRedirectHandle(const SocketChannelPtr& channel, uint32_t msgId, size_t msgHashId, const string& msgData)
+{
+	if (MHandleRedirectMap.contains(msgHashId))
+	{
+		auto& handle = MHandleRedirectMap[msgHashId];
+		Message* message = handle.first->New();
+		if (message->ParseFromString(msgData))
 		{
 			handle.second(channel, msgId, message);
 		}
@@ -90,9 +117,11 @@ void LogicMessageHandle::RegMsgHandle()
 		make_pair(msg::internal_default_instance(), &LogicMessage::func))
 #endif
 
-	MSG_MAPPING(MHandleRetMap, COM_RetChangeCtlSrv, Exe_RetChangeCtlSrv);
 	MSG_MAPPING(MHandleMap, COM_ReqRegistSrv, Msg_ReqRegistSrv);
+
+	MSG_MAPPING(MHandleRetMap, COM_RetChangeCtlSrv, Exe_RetChangeCtlSrv);
 	MSG_MAPPING(MHandleRetMap, COM_RetHeartbeat, Exe_RetHeartbeat);
-	MSG_MAPPING(MHandleMap, G2L_ReqClientLogin, Msg_ReqClientLogin);
-	MSG_MAPPING(MHandleRetMap, G2L_RetAccountReplace, Exe_RetAccountReplace);
+
+	MSG_MAPPING(MHandleRedirectMap, S2C_RetAccountReplace, Exe_RetAccountReplace);
+	MSG_MAPPING(MHandleRedirectMap, C2S_ReqAuthToken, Msg_ReqClientLogin);
 }

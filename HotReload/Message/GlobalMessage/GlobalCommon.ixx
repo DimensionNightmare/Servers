@@ -54,8 +54,7 @@ namespace GlobalMessage
 
 		// pack data
 		string binData;
-		binData.resize(requset.ByteSizeLong());
-		requset.SerializeToArray(binData.data(), binData.size());
+		requset.SerializeToString(&binData);
 		MessagePack(msgId, MsgDeal::Req, requset.GetDescriptor()->full_name().c_str(), binData);
 
 		// data alloc
@@ -189,8 +188,7 @@ namespace GlobalMessage
 		}
 
 		string binData;
-		binData.resize(response.ByteSizeLong());
-		response.SerializeToArray(binData.data(), binData.size());
+		response.SerializeToString(&binData);
 
 		MessagePack(msgId, MsgDeal::Res, nullptr, binData);
 		channel->write(binData);
@@ -202,7 +200,7 @@ namespace GlobalMessage
 
 	}
 
-	export void Exe_RetHeartbeat(SocketChannelPtr channel, uint32_t msgId, Message* msg)
+	export void Exe_RetHeartbeat(SocketChannelPtr channel, Message* msg)
 	{
 		COM_RetHeartbeat* requset = reinterpret_cast<COM_RetHeartbeat*>(msg);
 	}

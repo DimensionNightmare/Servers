@@ -54,14 +54,13 @@ namespace ControlMessage
 		}
 
 		string binData;
-		binData.resize(response.ByteSizeLong());
-		response.SerializeToArray(binData.data(), binData.size());
+		response.SerializeToString(&binData);
 
 		MessagePack(msgId, MsgDeal::Res, nullptr, binData);
 		channel->write(binData);
 	}
 
-	export void Exe_RetHeartbeat(SocketChannelPtr channel, uint32_t msgId, Message* msg)
+	export void Exe_RetHeartbeat(SocketChannelPtr channel, Message* msg)
 	{
 		COM_RetHeartbeat* requset = reinterpret_cast<COM_RetHeartbeat*>(msg);
 	}

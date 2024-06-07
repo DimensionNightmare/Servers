@@ -52,8 +52,7 @@ namespace DatabaseMessage
 
 		// pack data
 		string binData;
-		binData.resize(requset.ByteSizeLong());
-		requset.SerializeToArray(binData.data(), binData.size());
+		requset.SerializeToString(&binData);
 		MessagePack(msgId, MsgDeal::Req, requset.GetDescriptor()->full_name().c_str(), binData);
 
 		// data alloc
@@ -92,7 +91,7 @@ namespace DatabaseMessage
 		co_return;
 	}
 
-	export void Exe_RetChangeCtlSrv(SocketChannelPtr channel, uint32_t msgId, Message* msg)
+	export void Exe_RetChangeCtlSrv(SocketChannelPtr channel, Message* msg)
 	{
 		COM_RetChangeCtlSrv* requset = reinterpret_cast<COM_RetChangeCtlSrv*>(msg);
 		DatabaseServerHelper* dnServer = GetDatabaseServer();

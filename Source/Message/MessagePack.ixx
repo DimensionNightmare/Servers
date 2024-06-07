@@ -15,8 +15,9 @@ export enum class MsgDir : uint8_t
 export enum class MsgDeal : uint8_t
 {
 	Req = 1, 	// msg deal with
-	Res, 		//
-	Ret,
+	Res, 		// req result
+	Ret,		// notify
+	Redir,	// Redirect
 };
 
 #pragma pack(1) // net struct need this

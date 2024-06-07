@@ -1271,7 +1271,11 @@ void DbSqlHelper<TMessage>::PaserQuery(pqxx::result& result)
 			{
 				continue;
 			}
-			SelectFieldByProtoType(descriptor->FindFieldByLowercaseName(keys[col]), reflection, gen, rowInfo[col], isQueryAll);
+			
+			if(const FieldDescriptor* field = descriptor->FindFieldByLowercaseName(keys[col]))
+			{
+				SelectFieldByProtoType(field, reflection, gen, rowInfo[col], isQueryAll);
+			}
 		}
 		mResult.push_back(gen);
 	}

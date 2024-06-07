@@ -18,7 +18,9 @@ public:
 
 	virtual ~EntityManager();
 
-	virtual bool Init();
+	virtual bool Init() = 0;
+
+	virtual void TickMainFrame() = 0;
 
 public: // dll override
 	const EventLoopPtr& Timer() { return pLoop->loop(); }

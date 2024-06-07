@@ -51,8 +51,7 @@ namespace AuthMessage
 
 		// pack data
 		string binData;
-		binData.resize(requset.ByteSizeLong());
-		requset.SerializeToArray(binData.data(), binData.size());
+		requset.SerializeToString(&binData);
 		MessagePack(msgId, MsgDeal::Req, requset.GetDescriptor()->full_name().c_str(), binData);
 
 		// data alloc

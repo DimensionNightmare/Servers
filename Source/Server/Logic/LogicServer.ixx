@@ -43,6 +43,8 @@ public:
 
 	virtual void LoopEvent(function<void(EventLoopPtr)> func) override;
 
+	virtual void TickMainFrame() override;
+
 public: // dll override
 	virtual DNServerProxy* GetSSock() { return pSSock.get(); }
 	virtual DNClientProxy* GetCSock() { return pCSock.get(); }
@@ -262,4 +264,9 @@ void LogicServer::LoopEvent(function<void(EventLoopPtr)> func)
 	}
 
 
+}
+
+void LogicServer::TickMainFrame()
+{
+	pClientEntityMan->TickMainFrame();
 }

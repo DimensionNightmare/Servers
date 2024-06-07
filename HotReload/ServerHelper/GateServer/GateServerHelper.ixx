@@ -1,5 +1,5 @@
 module;
-#include "Server/S_Global_Gate.pb.h"
+#include "Server/S_Global.pb.h"
 export module GateServerHelper;
 
 export import GateServer;
@@ -50,8 +50,7 @@ void GateServerHelper::ServerEntityCloseEvent(Entity* entity)
 	g2G_RetRegistSrv retMsg;
 	retMsg.set_server_index(cEntity->ID());
 	retMsg.set_is_regist(false);
-	binData.resize(retMsg.ByteSizeLong());
-	retMsg.SerializeToArray(binData.data(), binData.size());
+	retMsg.SerializeToString(&binData);
 	MessagePack(0, MsgDeal::Ret, retMsg.GetDescriptor()->full_name().c_str(), binData);
 
 	DNClientProxyHelper* client = GetCSock();

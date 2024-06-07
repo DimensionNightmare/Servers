@@ -244,9 +244,7 @@ void DNClientProxy::TickHeartbeat()
 	requset.set_timespan(timespan);
 
 	string binData;
-	binData.clear();
-	binData.resize(requset.ByteSizeLong());
-	requset.SerializeToArray(binData.data(), binData.size());
+	requset.SerializeToString(&binData);
 
 	MessagePack(0, MsgDeal::Ret, requset.GetDescriptor()->full_name().c_str(), binData);
 

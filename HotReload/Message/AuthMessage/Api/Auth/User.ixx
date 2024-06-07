@@ -9,7 +9,7 @@ module;
 
 #include "StdMacro.h"
 #include "GDef/GDef.pb.h"
-#include "Server/S_Auth_Control.pb.h"
+#include "Server/S_Auth.pb.h"
 export module ApiManager:ApiAuth;
 
 import AuthServerHelper;
@@ -89,11 +89,11 @@ export void ApiAuth(HttpService* service)
 			auto taskGen = [](GDb::Account accInfo, HttpResponseWriterPtr writer) -> DNTaskVoid
 				{
 					// HttpResponseWriterPtr writer = writer;	//sharedptr ref count ++
-					A2C_ReqAuthAccount requset;
+					A2g_ReqAuthAccount requset;
 					requset.set_account_id(accInfo.account_id());
 					requset.set_ip(writer->peeraddr());
 
-					C2A_ResAuthAccount response;
+					g2A_ResAuthAccount response;
 
 					AuthServerHelper* authServer = GetAuthServer();
 					DNClientProxyHelper* client = authServer->GetCSock();
@@ -112,9 +112,8 @@ export void ApiAuth(HttpService* service)
 
 					// pack data
 					string binData;
-					binData.resize(requset.ByteSizeLong());
-					requset.SerializeToArray(binData.data(), binData.size());
-					MessagePack(msgId, MsgDeal::Req, requset.GetDescriptor()->full_name().c_str(), binData);
+					requset.SerializeToString(&binData);
+					MessagePack(msgId, MsgDeal::Redir, requset.GetDescriptor()->full_name().c_str(), binData);
 
 					Json retData;
 

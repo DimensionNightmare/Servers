@@ -12,6 +12,8 @@ public:
 
 	virtual bool Init() override;
 
+	virtual void TickMainFrame() override;
+
 public:
 
 };
@@ -19,4 +21,8 @@ public:
 bool RoomEntityManager::Init()
 {
 	return EntityManager::Init();
+}
+
+void RoomEntityManager::TickMainFrame()
+{
 }

@@ -22,6 +22,8 @@ public:
 
 	virtual bool Init() override;
 
+	virtual void TickMainFrame() override;
+
 public: // dll override
 	void EntityCloseTimer(uint64_t timerID);
 	uint64_t CheckEntityCloseTimer(uint32_t entityId);
@@ -41,6 +43,10 @@ extern "C"
 bool ProxyEntityManager::Init()
 {
 	return EntityManager::Init();
+}
+
+void ProxyEntityManager::TickMainFrame()
+{
 }
 
 void ProxyEntityManager::EntityCloseTimer(uint64_t timerID)

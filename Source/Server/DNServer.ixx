@@ -52,11 +52,11 @@ public:
 
 	uint32_t& ServerIndex() { return iServerIndex; }
 
-	virtual void LoopEvent(function<void(hv::EventLoopPtr)> func) {}
+	virtual void LoopEvent(function<void(hv::EventLoopPtr)> func) = 0;
 
 	bool& IsRun() { return bInRun; }
 
-	void TickMainFrame();
+	virtual void TickMainFrame();
 
 public: // dll override
 	DNl10n* pDNl10nInstance = nullptr;
