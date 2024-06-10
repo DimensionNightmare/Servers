@@ -5,7 +5,6 @@ module;
 #include "hv/Channel.h"
 
 #include "StdMacro.h"
-#include "Server/S_Logic.pb.h"
 #include "Client/C_Auth.pb.h"
 export module LogicMessage:LogicRedirect;
 
@@ -75,11 +74,6 @@ namespace LogicMessage
 		{
 			DNPrint(0, LoggerLevel::Debug, "AddEntity Exist Client!");
 			entity = entityMan->GetEntity(request->account_id());
-		}
-
-		if (!entity->HasFlag(ClientEntityFlag::DBInited) && !entity->HasFlag(ClientEntityFlag::DBIniting))
-		{
-			entityMan->LoadEntityData(entity, true);
 		}
 
 		ServerEntityManagerHelper* serverEntityMan = dnServer->GetServerEntityManager();

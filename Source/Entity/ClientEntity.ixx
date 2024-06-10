@@ -40,6 +40,8 @@ public: // dll override
 	void SetFlag(ClientEntityFlag flag) { oFlags.set(uint16_t(flag)); }
 	void ClearFlag(ClientEntityFlag flag) { oFlags.reset(uint16_t(flag)); }
 
+	Player* GetDbEntity(){ return &*pDbEntity;}
+
 protected: // dll proxy
 	uint32_t iServerIndex = 0;
 

@@ -9,7 +9,7 @@ module;
 #include "Server/S_Global.pb.h"
 #include "Client/C_Auth.pb.h"
 #include "Server/S_Auth.pb.h"
-#include "Server/S_Logic.pb.h"
+#include "Server/S_Dedicated.pb.h"
 export module GateMessage;
 
 export import :GateCommon;
@@ -147,8 +147,8 @@ void GateMessageHandle::RegMsgHandle()
 
 	MSG_MAPPING(MHandleRetMap, COM_RetHeartbeat, Exe_RetHeartbeat);
 
-	MSG_MAPPING(MHandleRedirectMap, L2D_ReqLoadData, Exe_ReqLoadData);
-	MSG_MAPPING(MHandleRedirectMap, L2D_ReqSaveData, Exe_ReqSaveData);
+	MSG_MAPPING(MHandleRedirectMap, d2D_ReqLoadData, Exe_ReqLoadData);
+	MSG_MAPPING(MHandleRedirectMap, d2D_ReqSaveData, Exe_ReqSaveData);
 	
 	
 }

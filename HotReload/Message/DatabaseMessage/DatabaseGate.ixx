@@ -7,7 +7,7 @@ module;
 #include "pqxx/transaction"
 
 #include "StdMacro.h"
-#include "Server/S_Logic.pb.h"
+#include "Server/S_Dedicated.pb.h"
 export module DatabaseMessage:DatabaseGate;
 
 import MessagePack;
@@ -26,8 +26,8 @@ namespace DatabaseMessage
 
 	export void Exe_ReqLoadData(SocketChannelPtr channel, uint32_t msgId, Message* msg)
 	{
-		L2D_ReqLoadData* request = reinterpret_cast<L2D_ReqLoadData*>(msg);
-		D2L_ResLoadData response;
+		d2D_ReqLoadData* request = reinterpret_cast<d2D_ReqLoadData*>(msg);
+		D2d_ResLoadData response;
 
 		DatabaseServerHelper* dnServer = GetDatabaseServer();
 
@@ -119,8 +119,8 @@ namespace DatabaseMessage
 
 	export void Exe_ReqSaveData(SocketChannelPtr channel, uint32_t msgId, Message* msg)
 	{
-		L2D_ReqSaveData* request = reinterpret_cast<L2D_ReqSaveData*>(msg);
-		D2L_ResSaveData response;
+		d2D_ReqSaveData* request = reinterpret_cast<d2D_ReqSaveData*>(msg);
+		D2d_ResSaveData response;
 
 		DatabaseServerHelper* dnServer = GetDatabaseServer();
 

@@ -185,6 +185,7 @@ export void ApiAuth(HttpService* service)
 				DbSqlHelper<GDb::Account> accounts(&query);
 
 				accounts
+					.InitEntity(accInfo)
 					.SelectAll(false, true)
 					DBSelectCond(accInfo, auth_name, "=", "")
 					.Commit();

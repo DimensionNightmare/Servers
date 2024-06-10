@@ -8,7 +8,7 @@ module;
 
 #include "StdMacro.h"
 #include "GDef/GDef.pb.h"
-#include "Server/S_Logic.pb.h"
+#include "Server/S_Dedicated.pb.h"
 export module ClientEntityManager;
 
 export import ClientEntity;
@@ -19,6 +19,7 @@ import DbUtils;
 import DNClientProxy;
 import DNTask;
 import MessagePack;
+import StrUtils;
 
 using namespace std;
 using namespace sw::redis;
@@ -78,26 +79,19 @@ DNTaskVoid ClientEntityManager::SaveEntity(ClientEntity& entity)
 {
 	uint32_t entityId = entity.ID();
 
-	if(!entity.pDbEntity)
-	{
-		DNPrint(0, LoggerLevel::Debug, "SaveEntity not pb Data:%u", entityId);
-		co_return;
-	}
-
-	
 	auto& dbEntity =  *entity.pDbEntity;
 
 	string entity_data;
 	dbEntity.SerializeToString(&entity_data);
 
 	// sql
-	L2D_ReqSaveData request;
+	d2D_ReqSaveData request;
 	string table_name = dbEntity.GetDescriptor()->full_name();
 	request.set_table_name(table_name);
 	request.set_key_name(ClientEntity::SKeyName);
 	request.set_entity_data(entity_data);
 
-	D2L_ResSaveData response;
+	D2d_ResSaveData response;
 
 	uint32_t msgId = pSqlClient->GetMsgId();
 
@@ -123,7 +117,8 @@ DNTaskVoid ClientEntityManager::SaveEntity(ClientEntity& entity)
 
 	if(int code = response.state_code())
 	{
-		mDbFailure[entityId] = binData;
+		BytesToHexString(entity_data);
+		mDbFailure[entityId] = entity_data;
 		DNPrint(0, LoggerLevel::Debug, "Save Db Entity Error id = %u, state_code = %d! ", entityId, code);
 		co_return;
 	}
@@ -154,6 +149,8 @@ void ClientEntityManager::CheckSaveEntity()
 				}
 
 				entity.pDbEntity->SerializeToString(&binData);
+
+				BytesToHexString(binData);
 				mDbFailure[entityId] = binData;
 			};
 	}
@@ -164,6 +161,12 @@ void ClientEntityManager::CheckSaveEntity()
 
 	for (auto& [ID, entity] : mEntityMap)
 	{
+		if(!entity.pDbEntity)
+		{
+			DNPrint(0, LoggerLevel::Debug, "SaveEntity not pb Data:%u", ID);
+			continue;
+		}
+
 		if (entity.HasFlag(ClientEntityFlag::DBModify))
 		{
 			entity.ClearFlag(ClientEntityFlag::DBModify);

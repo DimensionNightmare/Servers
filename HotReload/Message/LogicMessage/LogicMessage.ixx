@@ -8,11 +8,13 @@ module;
 #include "Server/S_Common.pb.h"
 #include "Client/C_Auth.pb.h"
 #include "Server/S_Gate.pb.h"
+#include "Server/S_Dedicated.pb.h"
 export module LogicMessage;
 
 export import :LogicCommon;
 import :LogicGate;
 import :LogicRedirect;
+import :LogicDedicated;
 import Logger;
 
 using namespace std;
@@ -139,10 +141,12 @@ void LogicMessageHandle::RegMsgHandle()
 #endif
 
 	MSG_MAPPING(MHandleMap, COM_ReqRegistSrv, Msg_ReqRegistSrv);
+	MSG_MAPPING(MHandleMap, d2D_ReqLoadData, Msg_ReqLoadData);
 
 	MSG_MAPPING(MHandleRetMap, COM_RetChangeCtlSrv, Exe_RetChangeCtlSrv);
 	MSG_MAPPING(MHandleRetMap, COM_RetHeartbeat, Exe_RetHeartbeat);
 	MSG_MAPPING(MHandleRetMap, g2L_RetProxyOffline, Exe_RetProxyOffline);
+	MSG_MAPPING(MHandleRetMap, d2D_ReqSaveData, Msg_ReqSaveData);
 	
 
 	MSG_MAPPING(MHandleRedirectMap, S2C_RetAccountReplace, Exe_RetAccountReplace);

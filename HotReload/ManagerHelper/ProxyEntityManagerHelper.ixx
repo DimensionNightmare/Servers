@@ -28,7 +28,10 @@ ProxyEntity* ProxyEntityManagerHelper::AddEntity(uint32_t entityId)
 	if (!mEntityMap.contains(entityId))
 	{
 		unique_lock<shared_mutex> ulock(oMapMutex);
-		mEntityMap.emplace(entityId, entityId);
+		mEntityMap.emplace(std::piecewise_construct,
+			std::forward_as_tuple(entityId),
+			std::forward_as_tuple(entityId));
+			
 		return &mEntityMap[entityId];
 	}
 

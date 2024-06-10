@@ -6,7 +6,7 @@ module;
 #include "StdMacro.h"
 #include "Common/Common.pb.h"
 #include "Server/S_Common.pb.h"
-#include "Server/S_Logic.pb.h"
+#include "Server/S_Dedicated.pb.h"
 export module DatabaseMessage;
 
 export import :DatabaseCommon;
@@ -103,8 +103,8 @@ void DatabaseMessageHandle::RegMsgHandle()
 		make_pair(msg::internal_default_instance(), &DatabaseMessage::func))
 #endif
 
-	MSG_MAPPING(MHandleMap, L2D_ReqLoadData, Exe_ReqLoadData);
-	MSG_MAPPING(MHandleMap, L2D_ReqSaveData, Exe_ReqSaveData);
+	MSG_MAPPING(MHandleMap, d2D_ReqLoadData, Exe_ReqLoadData);
+	MSG_MAPPING(MHandleMap, d2D_ReqSaveData, Exe_ReqSaveData);
 
 	MSG_MAPPING(MHandleRetMap, COM_RetChangeCtlSrv, Exe_RetChangeCtlSrv);
 }

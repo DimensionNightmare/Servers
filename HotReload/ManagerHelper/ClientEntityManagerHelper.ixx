@@ -5,7 +5,7 @@ module;
 #include <format>
 
 #include "StdMacro.h"
-#include "Server/S_Logic.pb.h"
+#include "Server/S_Dedicated.pb.h"
 export module ClientEntityManagerHelper;
 
 export import ClientEntityHelper;
@@ -13,6 +13,7 @@ export import ClientEntityManager;
 import Logger;
 import DNTask;
 import MessagePack;
+import StrUtils;
 
 using namespace std;
 using namespace GMsg;
@@ -29,7 +30,7 @@ public:
 
 	ClientEntity* GetEntity(uint32_t entityId);
 
-	DNTaskVoid LoadEntityData(ClientEntity* entity, bool needCreate = false);
+	DNTaskVoid LoadEntityData(ClientEntity* entity, d2D_ReqLoadData* request, D2d_ResLoadData* response);
 
 	void ClearNosqlProxy() { pNoSqlProxy = nullptr; }
 };
@@ -42,8 +43,9 @@ ClientEntity* ClientEntityManagerHelper::AddEntity(uint32_t entityId)
 		mEntityMap.emplace(std::piecewise_construct,
 			std::forward_as_tuple(entityId),
 			std::forward_as_tuple(entityId));
+
 		ClientEntity* entity = &mEntityMap[entityId];
-		LoadEntityData(entity, true);
+		
 		return entity;
 	}
 
@@ -78,7 +80,7 @@ ClientEntity* ClientEntityManagerHelper::GetEntity(uint32_t entityId)
 	return nullptr;
 }
 
-DNTaskVoid ClientEntityManagerHelper::LoadEntityData(ClientEntity* entity, bool needCreate)
+DNTaskVoid ClientEntityManagerHelper::LoadEntityData(ClientEntity* entity, d2D_ReqLoadData* inRequest, D2d_ResLoadData* inResponse)
 {
 	if(!pSqlClient || pSqlClient->RegistType() != uint8_t(ServerType::GateServer) || !pNoSqlProxy)
 	{
@@ -91,7 +93,6 @@ DNTaskVoid ClientEntityManagerHelper::LoadEntityData(ClientEntity* entity, bool 
 	string keyName = format("{}_{}", table_name, entityId);
 	
 	// nosql
-
 	string binData;
 	if(auto res = pNoSqlProxy->get(keyName))
 	{
@@ -101,28 +102,38 @@ DNTaskVoid ClientEntityManagerHelper::LoadEntityData(ClientEntity* entity, bool 
 	if(!binData.empty())
 	{
 		dbEntity.ParseFromString(binData);
+		string* entity_data = inResponse->add_entity_data();
+		*entity_data = binData;
+
 		entity->SetFlag(ClientEntityFlag::DBInited);
 		co_return;
 	}
 
 	entity->SetFlag(ClientEntityFlag::DBIniting);
 	// sql
-	L2D_ReqLoadData request;
-	request.set_table_name(table_name);
-	request.set_key_name(ClientEntity::SKeyName);
-	request.set_limit(1);
-	request.set_need_create(needCreate);
-	
-	string* entity_data = request.mutable_entity_data();
-	dbEntity.SerializeToString(entity_data);
+	d2D_ReqLoadData request;
+	if(inRequest)
+	{
+		request = *inRequest;
+	}
+	else
+	{
+		request.set_table_name(table_name);
+		request.set_key_name(ClientEntity::SKeyName);
+		request.set_limit(1);
+		request.set_need_create(true);
+
+		string* entity_data = request.mutable_entity_data();
+		dbEntity.SerializeToString(entity_data);
+	}
 
 	request.SerializeToString(&binData);
-
-	D2L_ResLoadData response;
 
 	uint32_t msgId = pSqlClient->GetMsgId();
 	MessagePack(msgId, MsgDeal::Redir, request.GetDescriptor()->full_name().c_str(), binData);
 
+
+	D2d_ResLoadData response;
 	{
 		auto taskGen = [](Message* msg) -> DNTask<Message*>
 			{
@@ -142,7 +153,10 @@ DNTaskVoid ClientEntityManagerHelper::LoadEntityData(ClientEntity* entity, bool 
 	if(int code = response.state_code())
 	{
 		entity->ClearFlag(ClientEntityFlag::DBIniting);
-		mDbFailure[entityId] = *entity_data;
+
+		binData = request.entity_data();
+		BytesToHexString(binData);
+		mDbFailure[entityId] = binData;
 		DNPrint(0, LoggerLevel::Debug, "Load Db Entity Error id = %u, state_code = %d! ", entityId, code);
 		co_return;
 	}
@@ -158,9 +172,11 @@ DNTaskVoid ClientEntityManagerHelper::LoadEntityData(ClientEntity* entity, bool 
 	else
 	{
 		DNPrint(0, LoggerLevel::Debug, "Load Db Entity empty data!");
+		response.clear_entity_data();
 	}
 
 	entity->ClearFlag(ClientEntityFlag::DBIniting);
+	*inResponse = response;
 
 	co_return;
 }

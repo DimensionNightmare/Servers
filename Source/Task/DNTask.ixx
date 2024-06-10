@@ -164,11 +164,14 @@ export struct DNTaskVoid
 	// Awaitable Start
 	bool await_ready() const noexcept
 	{
-		return tHandle.done();
+		// return tHandle.done();
+		return false;
 	}
 
 	void await_suspend(coroutine_handle<> caller)
-	{}
+	{
+		caller.resume();
+	}
 
 	void await_resume() noexcept
 	{}

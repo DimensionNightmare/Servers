@@ -41,7 +41,9 @@ ServerEntity* ServerEntityManagerHelper::AddEntity(uint32_t entityId, ServerType
 		mEntityMap.emplace(std::piecewise_construct,
 			std::forward_as_tuple(entityId),
 			std::forward_as_tuple(entityId, regType));
+
 		ServerEntity* entity = &mEntityMap[entityId];
+		
 		mEntityMapList[regType].emplace_back(entity);
 		return entity;
 	}
