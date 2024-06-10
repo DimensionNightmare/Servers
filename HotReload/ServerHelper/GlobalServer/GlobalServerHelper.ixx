@@ -48,17 +48,17 @@ void GlobalServerHelper::UpdateServerGroup()
 {
 	ServerEntityManagerHelper* entityMan = GetServerEntityManager();
 
-	const list<ServerEntity*>& gates = entityMan->GetEntityByList(ServerType::GateServer);
-	if (gates.size() <= 0)
+	list<ServerEntity*> gates = entityMan->GetEntityByList(ServerType::GateServer);
+	if (gates.empty())
 	{
 		return;
 	}
 
-	const list<ServerEntity*>& dbs = entityMan->GetEntityByList(ServerType::DatabaseServer);
-	const list<ServerEntity*>& logics = entityMan->GetEntityByList(ServerType::LogicServer);
+	list<ServerEntity*> dbs = entityMan->GetEntityByList(ServerType::DatabaseServer);
+	list<ServerEntity*> logics = entityMan->GetEntityByList(ServerType::LogicServer);
 
 	// alloc gate
-	COM_RetChangeCtlSrv retMsg;
+	COM_RetChangeCtlSrv request;
 	string binData;
 
 	auto registControl = [&](ServerEntity* beEntity, ServerEntity* entity)
@@ -69,11 +69,11 @@ void GlobalServerHelper::UpdateServerGroup()
 			channel->setContext(nullptr);
 
 			// sendData
-			retMsg.set_ip(beEntity->ServerIp());
-			retMsg.set_port(beEntity->ServerPort());
+			request.set_ip(beEntity->ServerIp());
+			request.set_port(beEntity->ServerPort());
 
-			retMsg.SerializeToString(&binData);
-			MessagePack(0, MsgDeal::Ret, retMsg.GetDescriptor()->full_name().c_str(), binData);
+			request.SerializeToString(&binData);
+			MessagePack(0, MsgDeal::Ret, request.GetDescriptor()->full_name().c_str(), binData);
 			channel->write(binData);
 
 			// timer destory

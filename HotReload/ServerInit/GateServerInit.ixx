@@ -138,6 +138,8 @@ int HandleGateServerInit(DNServer* server)
 					{
 						clientSock->RegistState() = RegistState::None;
 					}
+
+					clientSock->RegistType() = 0;
 				}
 
 				if (clientSock->isReconnect())

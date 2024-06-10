@@ -5,7 +5,6 @@ module;
 #include "hv/Channel.h"
 
 #include "StdMacro.h"
-#include "Server/S_Gate.pb.h"
 #include "Server/S_Logic.pb.h"
 #include "Client/C_Auth.pb.h"
 export module LogicMessage:LogicRedirect;
@@ -24,12 +23,12 @@ namespace LogicMessage
 {
 	export void Exe_RetAccountReplace(SocketChannelPtr channel, uint32_t msgId, Message* msg)
 	{
-		S2C_RetAccountReplace* requset = reinterpret_cast<S2C_RetAccountReplace*>(msg);
+		S2C_RetAccountReplace* request = reinterpret_cast<S2C_RetAccountReplace*>(msg);
 
 		LogicServerHelper* dnServer = GetLogicServer();
 		ClientEntityManagerHelper* entityMan = dnServer->GetClientEntityManager();
 
-		ClientEntity* entity = entityMan->GetEntity(requset->account_id());
+		ClientEntity* entity = entityMan->GetEntity(request->account_id());
 		if (!entity)
 		{
 			DNPrint(0, LoggerLevel::Debug, "Client Entity Kick Not Exist !");
@@ -60,13 +59,13 @@ namespace LogicMessage
 	// client request
 	export DNTaskVoid Msg_ReqClientLogin(SocketChannelPtr channel, uint32_t msgId, Message* msg)
 	{
-		C2S_ReqAuthToken* requset = reinterpret_cast<C2S_ReqAuthToken*>(msg);
+		C2S_ReqAuthToken* request = reinterpret_cast<C2S_ReqAuthToken*>(msg);
 		S2C_ResAuthToken response;
 
 		LogicServerHelper* dnServer = GetLogicServer();
 		ClientEntityManagerHelper* entityMan = dnServer->GetClientEntityManager();
 
-		ClientEntity* entity = entityMan->AddEntity(requset->account_id());
+		ClientEntity* entity = entityMan->AddEntity(request->account_id());
 		if (entity)
 		{
 			DNPrint(0, LoggerLevel::Debug, "AddEntity Client!");
@@ -75,7 +74,12 @@ namespace LogicMessage
 		else
 		{
 			DNPrint(0, LoggerLevel::Debug, "AddEntity Exist Client!");
-			entity = entityMan->GetEntity(requset->account_id());
+			entity = entityMan->GetEntity(request->account_id());
+		}
+
+		if (!entity->HasFlag(ClientEntityFlag::DBInited) && !entity->HasFlag(ClientEntityFlag::DBIniting))
+		{
+			entityMan->LoadEntityData(entity, true);
 		}
 
 		ServerEntityManagerHelper* serverEntityMan = dnServer->GetServerEntityManager();
@@ -109,10 +113,10 @@ namespace LogicMessage
 		{
 
 			DNServerProxyHelper* server = dnServer->GetSSock();
-			uint32_t smsgId = server->GetMsgId();
+			uint32_t msgId = server->GetMsgId();
 
 			msg->SerializeToString(&binData);
-			MessagePack(smsgId, MsgDeal::Req, requset->GetDescriptor()->full_name().c_str(), binData);
+			MessagePack(msgId, MsgDeal::Req, request->GetDescriptor()->full_name().c_str(), binData);
 
 			{
 				auto taskGen = [](Message* msg) -> DNTask<Message*>
@@ -121,7 +125,7 @@ namespace LogicMessage
 					};
 				auto dataChannel = taskGen(&response);
 				// wait data parse
-				server->AddMsg(smsgId, &dataChannel, 8000);
+				server->AddMsg(msgId, &dataChannel, 8000);
 				serverEntity->GetSock()->write(binData);
 				co_await dataChannel;
 				if (dataChannel.HasFlag(DNTaskFlag::Timeout))

@@ -39,20 +39,20 @@ namespace AuthMessage
 
 		client->RegistState() = RegistState::Registing;
 
-		COM_ReqRegistSrv requset;
-		requset.set_server_type((int)dnServer->GetServerType());
+		COM_ReqRegistSrv request;
+		request.set_server_type((int)dnServer->GetServerType());
 
 		if (uint32_t serverIndex = dnServer->ServerIndex())
 		{
-			requset.set_server_index(serverIndex);
+			request.set_server_index(serverIndex);
 		}
 
-		requset.set_port(server->port);
+		request.set_port(server->port);
 
 		// pack data
 		string binData;
-		requset.SerializeToString(&binData);
-		MessagePack(msgId, MsgDeal::Req, requset.GetDescriptor()->full_name().c_str(), binData);
+		request.SerializeToString(&binData);
+		MessagePack(msgId, MsgDeal::Req, request.GetDescriptor()->full_name().c_str(), binData);
 
 		// data alloc
 		COM_ResRegistSrv response;
@@ -78,6 +78,7 @@ namespace AuthMessage
 		{
 			DNPrint(0, LoggerLevel::Debug, "regist Server success! Rec index:%d", response.server_index());
 			client->RegistState() = RegistState::Registed;
+			client->RegistType() = response.server_type();
 			dnServer->ServerIndex() = response.server_index();
 		}
 		else

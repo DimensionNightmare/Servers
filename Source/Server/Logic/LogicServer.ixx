@@ -66,7 +66,7 @@ protected: // dll proxy
 	uint16_t iCtlPort = 0;
 
 	// localdb
-	unique_ptr<Redis> pNoSqlProxy;
+	shared_ptr<Redis> pNoSqlProxy;
 };
 
 
@@ -76,13 +76,14 @@ LogicServer::LogicServer()
 	emServerType = ServerType::LogicServer;
 }
 
+// need init order reversal
 LogicServer::~LogicServer()
 {
 	pSSock = nullptr;
 	pCSock = nullptr;
-	pServerEntityMan = nullptr;
-	pClientEntityMan = nullptr;
 	pRoomMan = nullptr;
+	pClientEntityMan = nullptr;
+	pServerEntityMan = nullptr;
 	pNoSqlProxy = nullptr;
 }
 

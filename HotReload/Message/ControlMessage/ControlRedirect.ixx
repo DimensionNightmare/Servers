@@ -6,7 +6,6 @@ module;
 
 #include "StdMacro.h"
 #include "Server/S_Auth.pb.h"
-#include "Server/S_Control.pb.h"
 export module ControlMessage:ControlRedirect;
 
 import DNTask;
@@ -60,10 +59,10 @@ namespace ControlMessage
 		{
 
 			DNServerProxyHelper* server = GetControlServer()->GetSSock();
-			uint32_t smsgId = server->GetMsgId();
+			uint32_t msgId = server->GetMsgId();
 
 			msg->SerializeToString(&binData);
-			MessagePack(smsgId, MsgDeal::Redir, msg->GetDescriptor()->full_name().c_str(), binData);
+			MessagePack(msgId, MsgDeal::Redir, msg->GetDescriptor()->full_name().c_str(), binData);
 
 			{
 				// message change to global
@@ -73,7 +72,7 @@ namespace ControlMessage
 					};
 				auto dataChannel = taskGen(&response);
 				// wait data parse
-				server->AddMsg(smsgId, &dataChannel, 9000);
+				server->AddMsg(msgId, &dataChannel, 9000);
 				entity->GetSock()->write(binData);
 				co_await dataChannel;
 				if (dataChannel.HasFlag(DNTaskFlag::Timeout))

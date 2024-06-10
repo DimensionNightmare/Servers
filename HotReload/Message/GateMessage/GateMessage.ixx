@@ -9,6 +9,7 @@ module;
 #include "Server/S_Global.pb.h"
 #include "Client/C_Auth.pb.h"
 #include "Server/S_Auth.pb.h"
+#include "Server/S_Logic.pb.h"
 export module GateMessage;
 
 export import :GateCommon;
@@ -45,7 +46,14 @@ void GateMessageHandle::MsgHandle(const SocketChannelPtr& channel, uint32_t msgI
 		Message* message = handle.first->New();
 		if (message->ParseFromString(msgData))
 		{
-			handle.second(channel, msgId, message);
+			try
+			{
+				handle.second(channel, msgId, message);
+			}
+			catch (const exception& e)
+			{
+				DNPrint(0, LoggerLevel::Debug, e.what());
+			}
 		}
 		else
 		{
@@ -69,7 +77,14 @@ void GateMessageHandle::MsgRetHandle(const SocketChannelPtr& channel, size_t msg
 		Message* message = handle.first->New();
 		if (message->ParseFromString(msgData))
 		{
-			handle.second(channel, message);
+			try
+			{
+				handle.second(channel, message);
+			}
+			catch (const exception& e)
+			{
+				DNPrint(0, LoggerLevel::Debug, e.what());
+			}
 		}
 		else
 		{
@@ -92,7 +107,14 @@ void GateMessageHandle::MsgRedirectHandle(const SocketChannelPtr& channel, uint3
 		Message* message = handle.first->New();
 		if (message->ParseFromString(msgData))
 		{
-			handle.second(channel, msgId, message);
+			try
+			{
+				handle.second(channel, msgId, message);
+			}
+			catch (const exception& e)
+			{
+				DNPrint(0, LoggerLevel::Debug, e.what());
+			}
 		}
 		else
 		{
@@ -121,9 +143,12 @@ void GateMessageHandle::RegMsgHandle()
 
 	MSG_MAPPING(MHandleMap, COM_ReqRegistSrv, Msg_ReqRegistSrv);
 	MSG_MAPPING(MHandleMap, C2S_ReqAuthToken, Msg_ReqAuthToken);
+	MSG_MAPPING(MHandleMap, A2g_ReqAuthAccount, Exe_ReqUserToken);
 
 	MSG_MAPPING(MHandleRetMap, COM_RetHeartbeat, Exe_RetHeartbeat);
 
-	MSG_MAPPING(MHandleRedirectMap, A2g_ReqAuthAccount, Exe_ReqUserToken);
+	MSG_MAPPING(MHandleRedirectMap, L2D_ReqLoadData, Exe_ReqLoadData);
+	MSG_MAPPING(MHandleRedirectMap, L2D_ReqSaveData, Exe_ReqSaveData);
+	
 	
 }

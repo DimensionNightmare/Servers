@@ -56,10 +56,13 @@ AuthServer::AuthServer()
 	emServerType = ServerType::AuthServer;
 }
 
+// need init order reversal
 AuthServer::~AuthServer()
 {
-	pSSock = nullptr;
+	// proxy
 	pCSock = nullptr;
+	pSSock = nullptr;
+	// other:db
 	pSqlProxy = nullptr;
 }
 

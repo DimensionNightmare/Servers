@@ -1,8 +1,6 @@
 module;
 #include <format>
 #include "pqxx/connection"
-#include "pqxx/transaction"
-#include "pqxx/nontransaction"
 
 #include "StdMacro.h"
 export module AuthServerHelper;

@@ -60,6 +60,7 @@ GateServer::GateServer()
 	emServerType = ServerType::GateServer;
 }
 
+// need init order reversal
 GateServer::~GateServer()
 {
 	pSSock = nullptr;

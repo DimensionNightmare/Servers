@@ -58,7 +58,8 @@ export void ApiAuth(HttpService* service)
 				DbSqlHelper<GDb::Account> accounts(&query);
 
 				accounts
-					// DBSelect(accInfo, account_id)
+					// DBSelectOne(accInfo, account_id)
+					.InitEntity(accInfo)
 					.SelectAll()
 					DBSelectCond(accInfo, auth_name, "=", "")
 					DBSelectCond(accInfo, auth_string, "=", " AND ")
@@ -74,7 +75,7 @@ export void ApiAuth(HttpService* service)
 					return;
 				}
 
-				accInfo = accounts.Result()[0];
+				accInfo = *accounts.Result()[0];
 			}
 			catch (const exception& e)
 			{
@@ -89,9 +90,9 @@ export void ApiAuth(HttpService* service)
 			auto taskGen = [](GDb::Account accInfo, HttpResponseWriterPtr writer) -> DNTaskVoid
 				{
 					// HttpResponseWriterPtr writer = writer;	//sharedptr ref count ++
-					A2g_ReqAuthAccount requset;
-					requset.set_account_id(accInfo.account_id());
-					requset.set_ip(writer->peeraddr());
+					A2g_ReqAuthAccount request;
+					request.set_account_id(accInfo.account_id());
+					request.set_ip(writer->peeraddr());
 
 					g2A_ResAuthAccount response;
 
@@ -112,8 +113,8 @@ export void ApiAuth(HttpService* service)
 
 					// pack data
 					string binData;
-					requset.SerializeToString(&binData);
-					MessagePack(msgId, MsgDeal::Redir, requset.GetDescriptor()->full_name().c_str(), binData);
+					request.SerializeToString(&binData);
+					MessagePack(msgId, MsgDeal::Redir, request.GetDescriptor()->full_name().c_str(), binData);
 
 					Json retData;
 
@@ -220,7 +221,7 @@ export void ApiAuth(HttpService* service)
 				pqxx::work query(*authServer->SqlProxy());
 				DbSqlHelper<GDb::Account> accounts(&query);
 
-				accounts.Insert(accInfo).Commit();
+				accounts.InitEntity(accInfo).Insert().Commit();
 
 				query.commit();
 
@@ -336,10 +337,10 @@ export void ApiAuth(HttpService* service)
 					DBSelectCond(accInfo, auth_name, "=", "")
 					.Commit();
 
-				for (const GDb::Account& one : accounts.Result())
+				for (const GDb::Account* one : accounts.Result())
 				{
 					errData["code"] = HTTP_STATUS_OK;
-					errData["message"] = one.DebugString();
+					errData["message"] = one->DebugString();
 					MSGSET(errData.dump());
 					writer->End();
 					return;

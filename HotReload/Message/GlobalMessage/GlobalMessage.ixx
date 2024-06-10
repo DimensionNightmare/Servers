@@ -5,10 +5,10 @@ module;
 
 #include "StdMacro.h"
 #include "Common/Common.pb.h"
-#include "Server/S_Control.pb.h"
 #include "Server/S_Common.pb.h"
 #include "Server/S_Global.pb.h"
 #include "Server/S_Auth.pb.h"
+#include "Server/S_Gate.pb.h"
 export module GlobalMessage;
 
 export import :GlobalCommon;
@@ -46,7 +46,14 @@ void GlobalMessageHandle::MsgHandle(const SocketChannelPtr& channel, uint32_t ms
 		Message* message = handle.first->New();
 		if (message->ParseFromString(msgData))
 		{
-			handle.second(channel, msgId, message);
+			try
+			{
+				handle.second(channel, msgId, message);
+			}
+			catch (const exception& e)
+			{
+				DNPrint(0, LoggerLevel::Debug, e.what());
+			}
 		}
 		else
 		{
@@ -69,7 +76,14 @@ void GlobalMessageHandle::MsgRetHandle(const SocketChannelPtr& channel, size_t m
 		Message* message = handle.first->New();
 		if (message->ParseFromString(msgData))
 		{
-			handle.second(channel, message);
+			try
+			{
+				handle.second(channel, message);
+			}
+			catch (const exception& e)
+			{
+				DNPrint(0, LoggerLevel::Debug, e.what());
+			}
 		}
 		else
 		{
@@ -92,7 +106,14 @@ void GlobalMessageHandle::MsgRedirectHandle(const SocketChannelPtr& channel, uin
 		Message* message = handle.first->New();
 		if (message->ParseFromString(msgData))
 		{
-			handle.second(channel, msgId, message);
+			try
+			{
+				handle.second(channel, msgId, message);
+			}
+			catch (const exception& e)
+			{
+				DNPrint(0, LoggerLevel::Debug, e.what());
+			}
 		}
 		else
 		{

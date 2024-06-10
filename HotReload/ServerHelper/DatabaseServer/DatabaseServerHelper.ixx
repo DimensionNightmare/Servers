@@ -20,7 +20,7 @@ import DbUtils;
 using namespace std;
 using namespace GDb;
 
-enum class SqlDbNameEnum : uint16_t
+export enum class SqlDbNameEnum : uint16_t
 {
 	Account,
 	Nightmare,
@@ -39,6 +39,8 @@ public:
 
 	string& GetCtlIp() { return sCtlIp; }
 	uint16_t& GetCtlPort() { return iCtlPort; }
+
+	pqxx::connection* GetSqlProxy(SqlDbNameEnum nameEnum);
 };
 
 static DatabaseServerHelper* PDatabaseServerHelper = nullptr;
@@ -107,12 +109,13 @@ bool DatabaseServerHelper::InitDatabase()
 		{
 			pqxx::work txn(*pSqlProxys[dbNameKey]);
 
-			DbSqlHelper<Account> accountInfo(&txn);
-			if (!accountInfo.IsExist())
+			DbSqlHelper<Account> helper(&txn);
+			if (!helper.IsExist())
 			{
 				DNPrint(0, LoggerLevel::Debug, "Create Table:Account");
-				accountInfo.InitTable().Commit();
+				helper.InitTable().Commit();
 			}
+
 			txn.commit();
 		}
 
@@ -121,13 +124,14 @@ bool DatabaseServerHelper::InitDatabase()
 		{
 			pqxx::work txn(*pSqlProxys[dbNameKey]);
 
-			DbSqlHelper<Player> playerInfo(&txn);
-			if (!playerInfo.IsExist())
+			DbSqlHelper<Player> helper(&txn);
+			if (!helper.IsExist())
 			{
 				DNPrint(0, LoggerLevel::Debug, "Create Table:Player");
-				playerInfo.InitTable().Commit();
+				helper.InitTable().Commit();
 			}
 
+			
 			txn.commit();
 		}
 
@@ -139,4 +143,14 @@ bool DatabaseServerHelper::InitDatabase()
 	}
 
 	return true;
+}
+
+pqxx::connection* DatabaseServerHelper::GetSqlProxy(SqlDbNameEnum nameEnum)
+{
+	uint16_t dbNameKey = (uint16_t)nameEnum;
+	if (pSqlProxys.count(dbNameKey))
+	{
+		return &*pSqlProxys[dbNameKey];
+	}
+    return nullptr;
 }

@@ -1,14 +1,10 @@
 module;
 #include <coroutine>
-#include <format>
 #include <cstdint>
 #include <list>
 #include "hv/Channel.h"
 
 #include "StdMacro.h"
-#include "Server/S_Control.pb.h"
-#include "Server/S_Global.pb.h"
-#include "Server/S_Common.pb.h"
 #include "Server/S_Auth.pb.h"
 export module GlobalMessage:GlobalRedirect;
 
@@ -30,7 +26,8 @@ namespace GlobalMessage
 		g2A_ResAuthAccount response;
 
 		// if has db not need origin
-		list<ServerEntity*> serverList = GetGlobalServer()->GetServerEntityManager()->GetEntityByList(ServerType::GateServer);
+		GlobalServerHelper* dnServer = GetGlobalServer();
+		list<ServerEntity*> serverList = dnServer->GetServerEntityManager()->GetEntityByList(ServerType::GateServer);
 
 		list<ServerEntity*> tempList;
 		for (ServerEntity* server : serverList)
@@ -58,12 +55,12 @@ namespace GlobalMessage
 
 			entity->ConnNum()++;
 
-			DNServerProxyHelper* server = GetGlobalServer()->GetSSock();
-			uint32_t smsgId = server->GetMsgId();
+			DNServerProxyHelper* server = dnServer->GetSSock();
+			uint32_t msgId = server->GetMsgId();
 
 			// pack data
 			msg->SerializeToString(&binData);
-			MessagePack(smsgId, MsgDeal::Redir, msg->GetDescriptor()->full_name().c_str(), binData);
+			MessagePack(msgId, MsgDeal::Req, msg->GetDescriptor()->full_name().c_str(), binData);
 
 			{
 				// data alloc
@@ -73,7 +70,7 @@ namespace GlobalMessage
 					};
 				auto dataChannel = taskGen(&response);
 				
-				server->AddMsg(smsgId, &dataChannel, 8000);
+				server->AddMsg(msgId, &dataChannel, 8000);
 				entity->GetSock()->write(binData);
 				co_await dataChannel;
 				if (dataChannel.HasFlag(DNTaskFlag::Timeout))

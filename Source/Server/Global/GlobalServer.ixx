@@ -59,6 +59,7 @@ GlobalServer::GlobalServer()
 	emServerType = ServerType::GlobalServer;
 }
 
+// need init order reversal
 GlobalServer::~GlobalServer()
 {
 	pSSock = nullptr;

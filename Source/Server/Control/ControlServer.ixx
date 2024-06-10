@@ -54,9 +54,11 @@ ControlServer::ControlServer()
 	emServerType = ServerType::ControlServer;
 }
 
+// need init order reversal
 ControlServer::~ControlServer()
 {
 	pSSock = nullptr;
+	
 	pServerEntityMan = nullptr;
 }
 

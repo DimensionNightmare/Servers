@@ -1,5 +1,6 @@
 module;
 #include "Server/S_Global.pb.h"
+#include "Server/S_Gate.pb.h"
 export module GateServerHelper;
 
 export import GateServer;
@@ -47,11 +48,11 @@ void GateServerHelper::ServerEntityCloseEvent(Entity* entity)
 
 	// up to Global
 	string binData;
-	g2G_RetRegistSrv retMsg;
-	retMsg.set_server_index(cEntity->ID());
-	retMsg.set_is_regist(false);
-	retMsg.SerializeToString(&binData);
-	MessagePack(0, MsgDeal::Ret, retMsg.GetDescriptor()->full_name().c_str(), binData);
+	g2G_RetRegistSrv request;
+	request.set_server_index(cEntity->ID());
+	request.set_is_regist(false);
+	request.SerializeToString(&binData);
+	MessagePack(0, MsgDeal::Ret, request.GetDescriptor()->full_name().c_str(), binData);
 
 	DNClientProxyHelper* client = GetCSock();
 	client->send(binData);
@@ -64,5 +65,23 @@ void GateServerHelper::ProxyEntityCloseEvent(Entity* entity)
 	ProxyEntity* cEntity = static_cast<ProxyEntity*>(entity);
 
 	ProxyEntityManagerHelper* entityMan = GetProxyEntityManager();
-	entityMan->RemoveEntity(cEntity->ID());
+	uint32_t entityId = cEntity->ID();
+
+	ServerEntity* serverEntity = nullptr;
+	if(uint32_t serverId = cEntity->ServerIndex())
+	{
+		serverEntity = GetServerEntityManager()->GetEntity(serverId);
+	}
+
+	if(serverEntity)
+	{
+		string binData;
+		g2L_RetProxyOffline request;
+		request.set_entity_id(entityId);
+		request.SerializeToString(&binData);
+		MessagePack(0, MsgDeal::Ret, request.GetDescriptor()->full_name().c_str(), binData);
+		serverEntity->GetSock()->write(binData);
+	}
+
+	entityMan->RemoveEntity(entityId);
 }

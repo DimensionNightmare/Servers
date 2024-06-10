@@ -106,6 +106,12 @@ public: // dll override
 
 	void RedirectClient(uint16_t port, string ip);
 
+    bool AddMsg(uint32_t msgId, DNTask<Message*>* task, uint32_t breakTime);
+
+	uint8_t& RegistType() { return iRegistType; }
+
+	uint32_t GetMsgId() { return ++iMsgId; }
+
 protected: // dll proxy
 	EventLoopThreadPtr pLoop;
 	// only oddnumber
@@ -116,6 +122,7 @@ protected: // dll proxy
 	unordered_map<uint64_t, uint32_t > mMapTimer;
 	// status
 	RegistState eRegistState = RegistState::None;
+	uint8_t iRegistType = 0;
 
 	function<void()> pRegistEvent;
 
@@ -238,15 +245,15 @@ void DNClientProxy::AddTimerRecord(size_t timerId, uint32_t id)
 
 void DNClientProxy::TickHeartbeat()
 {
-	COM_RetHeartbeat requset;
-	requset.Clear();
+	COM_RetHeartbeat request;
+	request.Clear();
 	int timespan = chrono::duration_cast<chrono::seconds>(chrono::system_clock::now().time_since_epoch()).count();
-	requset.set_timespan(timespan);
+	request.set_timespan(timespan);
 
 	string binData;
-	requset.SerializeToString(&binData);
+	request.SerializeToString(&binData);
 
-	MessagePack(0, MsgDeal::Ret, requset.GetDescriptor()->full_name().c_str(), binData);
+	MessagePack(0, MsgDeal::Ret, request.GetDescriptor()->full_name().c_str(), binData);
 
 	send(binData);
 }
@@ -263,8 +270,22 @@ void DNClientProxy::InitConnectedChannel(const SocketChannelPtr& chanhel)
 
 void DNClientProxy::RedirectClient(uint16_t port, string ip)
 {
-	eRegistState = RegistState::None;
+	DNPrint(0, LoggerLevel::Debug, "reclient to %s:%u", ip.c_str(), port);
 
+	eRegistState = RegistState::None;
+	closesocket();
 	createsocket(port, ip.c_str());
 	start();
+}
+
+bool DNClientProxy::AddMsg(uint32_t msgId, DNTask<Message*>* task, uint32_t breakTime)
+{
+	unique_lock<shared_mutex> ulock(oMsgMutex);
+	mMsgList.emplace(msgId, task);
+	// timeout
+	if (breakTime > 0)
+	{
+		task->TimerId() = CheckMessageTimeoutTimer(breakTime, msgId);
+	}
+	return true;
 }

@@ -6,7 +6,6 @@ module;
 
 #include "StdMacro.h"
 #include "Client/C_Auth.pb.h"
-#include "Server/S_Gate.pb.h" 
 export module GateMessage:GateClient;
 
 import GateServerHelper;
@@ -26,7 +25,7 @@ namespace GateMessage
 	// client request
 	export DNTaskVoid Msg_ReqAuthToken(SocketChannelPtr channel, uint32_t msgId, Message* msg)
 	{
-		C2S_ReqAuthToken* requset = reinterpret_cast<C2S_ReqAuthToken*>(msg);
+		C2S_ReqAuthToken* request = reinterpret_cast<C2S_ReqAuthToken*>(msg);
 
 		GateServerHelper* dnServer = GetGateServer();
 		ProxyEntityManagerHelper* entityMan = dnServer->GetProxyEntityManager();
@@ -34,14 +33,14 @@ namespace GateMessage
 		S2C_ResAuthToken response;
 		string binData;
 
-		ProxyEntity* entity = entityMan->GetEntity(requset->account_id());
+		ProxyEntity* entity = entityMan->GetEntity(request->account_id());
 		if (!entity)
 		{
-			DNPrint(0, LoggerLevel::Debug, "noaccount %d!!", requset->account_id());
+			DNPrint(0, LoggerLevel::Debug, "noaccount %d!!", request->account_id());
 			response.set_state_code(1);
 		}
 		// if not match, timer will destory entity
-		else if (Md5Hash(entity->Token()) != requset->token())
+		else if (Md5Hash(entity->Token()) != request->token())
 		{
 			DNPrint(0, LoggerLevel::Debug, "not match!!");
 			response.set_state_code(2);
@@ -91,12 +90,12 @@ namespace GateMessage
 
 				DNPrint(0, LoggerLevel::Debug, "Send to Logic index->%d, %d", entity->ID(), entity->ServerIndex());
 
-				requset->SerializeToString(&binData);
+				request->SerializeToString(&binData);
 
 				DNServerProxyHelper* server = dnServer->GetSSock();
-				uint32_t msgIdChild = server->GetMsgId();
+				uint32_t msgId = server->GetMsgId();
 
-				MessagePack(msgIdChild, MsgDeal::Redir, requset->GetDescriptor()->full_name().c_str(), binData);
+				MessagePack(msgId, MsgDeal::Redir, request->GetDescriptor()->full_name().c_str(), binData);
 
 				{
 					auto taskGen = [](Message* msg) -> DNTask<Message*>
@@ -104,7 +103,7 @@ namespace GateMessage
 							co_return msg;
 						};
 					auto dataChannel = taskGen(&response);
-					server->AddMsg(msgIdChild, &dataChannel, 9000);
+					server->AddMsg(msgId, &dataChannel, 9000);
 					serverEntity->GetSock()->write(binData);
 					co_await dataChannel;
 					if (dataChannel.HasFlag(DNTaskFlag::Timeout))

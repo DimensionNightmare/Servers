@@ -33,6 +33,8 @@ public:
 
 	string& GetCtlIp() { return sCtlIp; }
 	uint16_t& GetCtlPort() { return iCtlPort; }
+
+	void ClearNosqlProxy() { pNoSqlProxy = nullptr; }
 };
 
 static LogicServerHelper* PLogicServerHelper = nullptr;
@@ -50,16 +52,11 @@ export LogicServerHelper* GetLogicServer()
 
 bool LogicServerHelper::InitDatabase()
 {
-	if (pNoSqlProxy)
-	{
-		return true;
-	}
-
 	if (string* value = GetLuanchConfigParam("connection"))
 	{
 		try
 		{
-			pNoSqlProxy = make_unique<Redis>(*value);
+			pNoSqlProxy = make_shared<Redis>(*value);
 			pNoSqlProxy->ping();
 		}
 		catch (const exception& e)
@@ -68,6 +65,8 @@ bool LogicServerHelper::InitDatabase()
 			return false;
 		}
 	}
+
+	pClientEntityMan->InitSqlConn(pNoSqlProxy);
 
 	return true;
 }

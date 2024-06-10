@@ -215,6 +215,7 @@ DimensionNightmare::DimensionNightmare()
 	pLuanchParam = nullptr;
 }
 
+// need close main process
 DimensionNightmare::~DimensionNightmare()
 {
 	pServer = nullptr;

@@ -20,12 +20,13 @@ namespace ControlMessage
 	// client request
 	export void Msg_ReqRegistSrv(SocketChannelPtr channel, uint32_t msgId, Message* msg)
 	{
-		COM_ReqRegistSrv* requset = reinterpret_cast<COM_ReqRegistSrv*>(msg);
+		COM_ReqRegistSrv* request = reinterpret_cast<COM_ReqRegistSrv*>(msg);
 		COM_ResRegistSrv response;
 
-		ServerEntityManagerHelper* entityMan = GetControlServer()->GetServerEntityManager();
+		ControlServerHelper* dnServer = GetControlServer();
+		ServerEntityManagerHelper* entityMan = dnServer->GetServerEntityManager();
 
-		ServerType regType = (ServerType)requset->server_type();
+		ServerType regType = (ServerType)request->server_type();
 
 		const string& ipPort = channel->localaddr();
 
@@ -44,13 +45,14 @@ namespace ControlMessage
 		{
 			size_t pos = ipPort.find(":");
 			entity->ServerIp() = ipPort.substr(0, pos);
-			entity->ServerPort() = requset->port();
+			entity->ServerPort() = request->port();
 			entity->SetSock(channel);
 
 			channel->setContext(entity);
 
 			response.set_success(true);
 			response.set_server_index(entity->ID());
+			response.set_server_type((uint8_t(dnServer->GetServerType())));
 		}
 
 		string binData;
@@ -62,6 +64,6 @@ namespace ControlMessage
 
 	export void Exe_RetHeartbeat(SocketChannelPtr channel, Message* msg)
 	{
-		COM_RetHeartbeat* requset = reinterpret_cast<COM_RetHeartbeat*>(msg);
+		COM_RetHeartbeat* request = reinterpret_cast<COM_RetHeartbeat*>(msg);
 	}
 }

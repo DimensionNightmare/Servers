@@ -50,7 +50,7 @@ int HandleDatabaseServerInit(DNServer* server)
 					DNPrint(TipCode_SrvConnOff, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
 
 					string origin = format("{}:{}", serverProxy->GetCtlIp(), serverProxy->GetCtlPort());
-					if (clientSock->RegistState() == RegistState::Registed && peeraddr != origin)
+					if (clientSock->RegistState() == RegistState::Registed || peeraddr != origin)
 					{
 						clientSock->RegistState() = RegistState::None;
 
@@ -63,6 +63,8 @@ int HandleDatabaseServerInit(DNServer* server)
 								});
 						}
 					}
+
+					clientSock->RegistType() = 0;
 				}
 
 				if (clientSock->isReconnect())

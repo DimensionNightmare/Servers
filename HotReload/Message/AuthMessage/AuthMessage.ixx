@@ -1,7 +1,6 @@
 module;
 #include <functional>
 #include <cstdint>
-#include "google/protobuf/message.h"
 #include "hv/Channel.h"
 #include "hv/HttpService.h"
 
@@ -40,7 +39,15 @@ void AuthMessageHandle::MsgHandle(SocketChannelPtr channel, uint32_t msgId, size
 		Message* message = handle.first->New();
 		if (message->ParseFromString(msgData))
 		{
-			handle.second(channel, msgId, message);
+			try
+			{
+				handle.second(channel, msgId, message);
+			}
+			catch (const exception& e)
+			{
+				DNPrint(0, LoggerLevel::Debug, e.what());
+			}
+			
 		}
 		else
 		{

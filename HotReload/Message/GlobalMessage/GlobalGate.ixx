@@ -3,7 +3,7 @@ module;
 #include <cstdint>
 #include "hv/Channel.h"
 
-#include "Server/S_Global.pb.h"
+#include "Server/S_Gate.pb.h"
 export module GlobalMessage:GlobalGate;
 
 import DNTask;
@@ -20,13 +20,13 @@ namespace GlobalMessage
 
 	export void Exe_RetRegistSrv(SocketChannelPtr channel, Message* msg)
 	{
-		g2G_RetRegistSrv* requset = reinterpret_cast<g2G_RetRegistSrv*>(msg);
+		g2G_RetRegistSrv* request = reinterpret_cast<g2G_RetRegistSrv*>(msg);
 
 		GlobalServerHelper* dnServer = GetGlobalServer();
 		ServerEntityManagerHelper* entityMan = dnServer->GetServerEntityManager();
-		if (ServerEntity* entity = entityMan->GetEntity(requset->server_index()))
+		if (ServerEntity* entity = entityMan->GetEntity(request->server_index()))
 		{
-			if (requset->is_regist())
+			if (request->is_regist())
 			{
 				if (uint64_t timerId = entity->TimerId())
 				{
@@ -41,7 +41,7 @@ namespace GlobalMessage
 				owner->GetMapLinkNode(entity->GetServerType()).remove(entity);
 				owner->ClearFlag(ServerEntityFlag::Locked);
 
-				entityMan->RemoveEntity(requset->server_index());
+				entityMan->RemoveEntity(request->server_index());
 				dnServer->UpdateServerGroup();
 			}
 		}

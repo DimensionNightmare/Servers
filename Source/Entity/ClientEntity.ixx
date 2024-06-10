@@ -22,10 +22,12 @@ export enum class ClientEntityFlag : uint16_t
 constexpr uint16_t ClientEntityFlagSize() { return static_cast<uint16_t>(ClientEntityFlag::Max); }
 
 class ClientEntityManager;
+class ClientEntityManagerHelper;
 
 export class ClientEntity : public Entity
 {
 	friend class ClientEntityManager;
+	friend class ClientEntityManagerHelper;
 public:
 	ClientEntity();
 	ClientEntity(uint32_t id);
@@ -43,7 +45,10 @@ protected: // dll proxy
 
 	bitset<ClientEntityFlagSize()> oFlags;
 
-	unique_ptr<Player> pDbPlayer;
+	unique_ptr<Player> pDbEntity = make_unique<Player>();
+
+public:
+	inline static const char* SKeyName = "account_id";
 };
 
 ClientEntity::ClientEntity() : Entity(0)
@@ -54,9 +59,10 @@ ClientEntity::ClientEntity() : Entity(0)
 ClientEntity::ClientEntity(uint32_t id) : Entity(id)
 {
 	eEntityType = EntityType::Client;
+	pDbEntity->set_account_id(id);
 }
 
 ClientEntity::~ClientEntity()
 {
-	pDbPlayer = nullptr;
+	pDbEntity = nullptr;
 }

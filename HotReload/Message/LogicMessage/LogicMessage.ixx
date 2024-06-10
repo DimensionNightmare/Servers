@@ -6,8 +6,8 @@ module;
 #include "StdMacro.h"
 #include "Common/Common.pb.h"
 #include "Server/S_Common.pb.h"
-#include "Server/S_Gate.pb.h"
 #include "Client/C_Auth.pb.h"
+#include "Server/S_Gate.pb.h"
 export module LogicMessage;
 
 export import :LogicCommon;
@@ -44,7 +44,14 @@ void LogicMessageHandle::MsgHandle(const SocketChannelPtr& channel, uint32_t msg
 		Message* message = handle.first->New();
 		if (message->ParseFromString(msgData))
 		{
-			handle.second(channel, msgId, message);
+			try
+			{
+				handle.second(channel, msgId, message);
+			}
+			catch (const exception& e)
+			{
+				DNPrint(0, LoggerLevel::Debug, e.what());
+			}
 		}
 		else
 		{
@@ -67,7 +74,14 @@ void LogicMessageHandle::MsgRetHandle(const SocketChannelPtr& channel, size_t ms
 		Message* message = handle.first->New();
 		if (message->ParseFromString(msgData))
 		{
-			handle.second(channel, message);
+			try
+			{
+				handle.second(channel, message);
+			}
+			catch (const exception& e)
+			{
+				DNPrint(0, LoggerLevel::Debug, e.what());
+			}
 		}
 		else
 		{
@@ -90,7 +104,14 @@ void LogicMessageHandle::MsgRedirectHandle(const SocketChannelPtr& channel, uint
 		Message* message = handle.first->New();
 		if (message->ParseFromString(msgData))
 		{
-			handle.second(channel, msgId, message);
+			try
+			{
+				handle.second(channel, msgId, message);
+			}
+			catch (const exception& e)
+			{
+				DNPrint(0, LoggerLevel::Debug, e.what());
+			}
 		}
 		else
 		{
@@ -121,6 +142,8 @@ void LogicMessageHandle::RegMsgHandle()
 
 	MSG_MAPPING(MHandleRetMap, COM_RetChangeCtlSrv, Exe_RetChangeCtlSrv);
 	MSG_MAPPING(MHandleRetMap, COM_RetHeartbeat, Exe_RetHeartbeat);
+	MSG_MAPPING(MHandleRetMap, g2L_RetProxyOffline, Exe_RetProxyOffline);
+	
 
 	MSG_MAPPING(MHandleRedirectMap, S2C_RetAccountReplace, Exe_RetAccountReplace);
 	MSG_MAPPING(MHandleRedirectMap, C2S_ReqAuthToken, Msg_ReqClientLogin);

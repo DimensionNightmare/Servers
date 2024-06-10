@@ -1,22 +1,18 @@
 module;
 #include <coroutine>
 #include <string>
-#include <chrono>
 #include <cstdint>
+#include <list>
 #include "hv/Channel.h"
 
 #include "StdMacro.h"
-#include "Server/S_Global.pb.h"
-#include "Client/C_Auth.pb.h"
-#include "Server/S_Gate.pb.h"
-#include "Server/S_Auth.pb.h"
+#include "Server/S_Logic.pb.h"
 export module GateMessage:GateRedirect;
 
 import MessagePack;
 import GateServerHelper;
-import StrUtils;
 import Logger;
-import Macro;
+import DNTask;
 
 using namespace std;
 using namespace hv;
@@ -26,78 +22,111 @@ using namespace GMsg;
 namespace GateMessage
 {
 
-	export void Exe_ReqUserToken(SocketChannelPtr channel, uint32_t msgId, Message* msg)
+	export DNTaskVoid Exe_ReqLoadData(SocketChannelPtr channel, uint32_t msgId, Message* msg)
 	{
-		A2g_ReqAuthAccount* requset = reinterpret_cast<A2g_ReqAuthAccount*>(msg);
-		g2A_ResAuthAccount response;
-
-		string binData;
+		L2D_ReqLoadData* request = reinterpret_cast<L2D_ReqLoadData*>(msg);
+		D2L_ResLoadData response;
 
 		GateServerHelper* dnServer = GetGateServer();
-		ProxyEntityManagerHelper* entityMan = dnServer->GetProxyEntityManager();
-		ProxyEntity* entity = entityMan->GetEntity(requset->account_id());
-		if (entity)
+		ServerEntityManagerHelper* entityMan = dnServer->GetServerEntityManager();
+		const list<ServerEntity*>& dbServers = entityMan->GetEntityByList(ServerType::DatabaseServer);
+
+		string binData;
+		if(dbServers.empty())
 		{
-			//exit
-			if (const SocketChannelPtr& online = entity->GetSock())
-			{
-				// kick channel
-				S2C_RetAccountReplace retMsg;
-				retMsg.set_ip(requset->ip());
-
-				retMsg.SerializeToString(&binData);
-				MessagePack(0, MsgDeal::Ret, retMsg.GetDescriptor()->full_name().c_str(), binData);
-
-				//kick socket
-				online->write(binData);
-				online->setContext(nullptr);
-				online->close();
-
-
-				//kick game
-				if (uint32_t serverIndex = entity->ServerIndex())
-				{
-					DNPrint(0, LoggerLevel::Debug, "Send Logic tick User->%d, server:%d", entity->ID(), entity->ServerIndex());
-
-					ServerEntityManagerHelper* serverEntityMan = dnServer->GetServerEntityManager();
-					ServerEntity* serverEntity = serverEntityMan->GetEntity(serverIndex);
-
-					retMsg.set_account_id(entity->ID());
-
-					retMsg.SerializeToString(&binData);
-					MessagePack(0, MsgDeal::Redir, retMsg.GetDescriptor()->full_name().c_str(), binData);
-					serverEntity->GetSock()->write(binData);
-				}
-
-			}
-
+			response.set_state_code(1);
 		}
 		else
 		{
-			entity = entityMan->AddEntity(requset->account_id());
+			ServerEntity* entity = dbServers.front();
 
-			string& token = entity->Token();
-			token = GetNowTimeStr();
-			token = Md5Hash(token);
+			DNServerProxyHelper* server = dnServer->GetSSock();
+			uint32_t msgId = server->GetMsgId();
 
-			entity->ExpireTime() = chrono::duration_cast<chrono::seconds>(chrono::system_clock::now().time_since_epoch()).count();
-			entity->ExpireTime() += 30;
+			// pack data
+			msg->SerializeToString(&binData);
+			MessagePack(msgId, MsgDeal::Req, msg->GetDescriptor()->full_name().c_str(), binData);
+
+			{
+				// data alloc
+				auto taskGen = [](Message* msg) -> DNTask<Message*>
+					{
+						co_return msg;
+					};
+				auto dataChannel = taskGen(&response);
+				
+				server->AddMsg(msgId, &dataChannel, 8000);
+				entity->GetSock()->write(binData);
+				co_await dataChannel;
+				if (dataChannel.HasFlag(DNTaskFlag::Timeout))
+				{
+					DNPrint(0, LoggerLevel::Debug, "requst timeout! ");
+					response.set_state_code(2);
+				}
+			}
+
+
 		}
-
-		response.set_token(entity->Token());
-		response.set_expired_timespan(entity->ExpireTime());
-
-		// entity or token expired
-		if (!entity->TimerId())
-		{
-			entity->TimerId() = TICK_MAINSPACE_SIGN_FUNCTION(ProxyEntityManager, CheckEntityCloseTimer, entityMan, entity->ID());
-		}
-
-		DNPrint(0, LoggerLevel::Debug, "ReqUserToken User: %d!!", requset->account_id());
 
 		response.SerializeToString(&binData);
 		MessagePack(msgId, MsgDeal::Res, nullptr, binData);
 
 		channel->write(binData);
+
+		co_return;
+	}
+
+	export DNTaskVoid Exe_ReqSaveData(SocketChannelPtr channel, uint32_t msgId, Message* msg)
+	{
+		L2D_ReqSaveData* request = reinterpret_cast<L2D_ReqSaveData*>(msg);
+		D2L_ResSaveData response;
+
+		GateServerHelper* dnServer = GetGateServer();
+		ServerEntityManagerHelper* entityMan = dnServer->GetServerEntityManager();
+		const list<ServerEntity*>& dbServers = entityMan->GetEntityByList(ServerType::DatabaseServer);
+
+		string binData;
+		if(dbServers.empty())
+		{
+			response.set_state_code(1);
+		}
+		else
+		{
+			ServerEntity* entity = dbServers.front();
+
+			DNServerProxyHelper* server = dnServer->GetSSock();
+			uint32_t msgId = server->GetMsgId();
+
+			// pack data
+			msg->SerializeToString(&binData);
+			MessagePack(msgId, MsgDeal::Req, msg->GetDescriptor()->full_name().c_str(), binData);
+
+			{
+				// data alloc
+				auto taskGen = [](Message* msg) -> DNTask<Message*>
+					{
+						co_return msg;
+					};
+				auto dataChannel = taskGen(&response);
+				
+				server->AddMsg(msgId, &dataChannel, 8000);
+				entity->GetSock()->write(binData);
+				co_await dataChannel;
+				if (dataChannel.HasFlag(DNTaskFlag::Timeout))
+				{
+					DNPrint(0, LoggerLevel::Debug, "requst timeout! ");
+					response.set_state_code(2);
+				}
+			}
+
+
+		}
+
+		response.SerializeToString(&binData);
+		MessagePack(msgId, MsgDeal::Res, nullptr, binData);
+
+		channel->write(binData);
+
+		co_return;
 	}
 }

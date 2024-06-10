@@ -43,7 +43,14 @@ void ControlMessageHandle::MsgHandle(const SocketChannelPtr& channel, uint32_t m
 		Message* message = handle.first->New();
 		if (message->ParseFromString(msgData))
 		{
-			handle.second(channel, msgId, message);
+			try
+			{
+				handle.second(channel, msgId, message);
+			}
+			catch (const exception& e)
+			{
+				DNPrint(0, LoggerLevel::Debug, e.what());
+			}
 		}
 		else
 		{
@@ -66,7 +73,14 @@ void ControlMessageHandle::MsgRetHandle(const SocketChannelPtr& channel, size_t 
 		Message* message = handle.first->New();
 		if (message->ParseFromString(msgData))
 		{
-			handle.second(channel, message);
+			try
+			{
+				handle.second(channel, message);
+			}
+			catch (const exception& e)
+			{
+				DNPrint(0, LoggerLevel::Debug, e.what());
+			}
 		}
 		else
 		{
@@ -89,7 +103,14 @@ void ControlMessageHandle::MsgRedirectHandle(const SocketChannelPtr& channel, ui
 		Message* message = handle.first->New();
 		if (message->ParseFromString(msgData))
 		{
-			handle.second(channel, msgId, message);
+			try
+			{
+				handle.second(channel, msgId, message);
+			}
+			catch (const exception& e)
+			{
+				DNPrint(0, LoggerLevel::Debug, e.what());
+			}
 		}
 		else
 		{

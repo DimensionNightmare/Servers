@@ -6,9 +6,11 @@ module;
 #include "StdMacro.h"
 #include "Common/Common.pb.h"
 #include "Server/S_Common.pb.h"
+#include "Server/S_Logic.pb.h"
 export module DatabaseMessage;
 
 export import :DatabaseCommon;
+import :DatabaseGate;
 import Logger;
 
 using namespace std;
@@ -37,7 +39,14 @@ void DatabaseMessageHandle::MsgHandle(const SocketChannelPtr& channel, uint32_t 
 		Message* message = handle.first->New();
 		if (message->ParseFromString(msgData))
 		{
-			handle.second(channel, msgId, message);
+			try
+			{
+				handle.second(channel, msgId, message);
+			}
+			catch (const exception& e)
+			{
+				DNPrint(0, LoggerLevel::Debug, e.what());
+			}
 		}
 		else
 		{
@@ -60,7 +69,14 @@ void DatabaseMessageHandle::MsgRetHandle(const SocketChannelPtr& channel, size_t
 		Message* message = handle.first->New();
 		if (message->ParseFromString(msgData))
 		{
-			handle.second(channel, message);
+			try
+			{
+				handle.second(channel, message);
+			}
+			catch (const exception& e)
+			{
+				DNPrint(0, LoggerLevel::Debug, e.what());
+			}
 		}
 		else
 		{
@@ -86,6 +102,9 @@ void DatabaseMessageHandle::RegMsgHandle()
 		map.emplace(std::hash<string>{}(msg::GetDescriptor()->full_name()), \
 		make_pair(msg::internal_default_instance(), &DatabaseMessage::func))
 #endif
+
+	MSG_MAPPING(MHandleMap, L2D_ReqLoadData, Exe_ReqLoadData);
+	MSG_MAPPING(MHandleMap, L2D_ReqSaveData, Exe_ReqSaveData);
 
 	MSG_MAPPING(MHandleRetMap, COM_RetChangeCtlSrv, Exe_RetChangeCtlSrv);
 }

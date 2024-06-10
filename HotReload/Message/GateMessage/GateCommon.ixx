@@ -6,7 +6,7 @@ module;
 
 #include "StdMacro.h"
 #include "Server/S_Common.pb.h"
-#include "Server/S_Global.pb.h"
+#include "Server/S_Gate.pb.h"
 export module GateMessage:GateCommon;
 
 import DNTask;
@@ -43,21 +43,21 @@ namespace GateMessage
 
 		client->RegistState() = RegistState::Registing;
 
-		COM_ReqRegistSrv requset;
+		COM_ReqRegistSrv request;
 
-		requset.set_server_type((int)dnServer->GetServerType());
+		request.set_server_type((int)dnServer->GetServerType());
 
 		if (uint32_t serverIndex = dnServer->ServerIndex())
 		{
-			requset.set_server_index(serverIndex);
+			request.set_server_index(serverIndex);
 		}
 
-		requset.set_port(server->port);
+		request.set_port(server->port);
 
 		ServerEntityManagerHelper* entityMan = dnServer->GetServerEntityManager();
-		auto AddChild = [&requset](ServerEntity* serv)
+		auto AddChild = [&request](ServerEntity* serv)
 			{
-				COM_ReqRegistSrv* child = requset.add_childs();
+				COM_ReqRegistSrv* child = request.add_childs();
 				child->set_server_index(serv->ID());
 				child->set_server_type((uint32_t)serv->GetServerType());
 			};
@@ -76,8 +76,8 @@ namespace GateMessage
 
 		// pack data
 		string binData;
-		requset.SerializeToString(&binData);
-		MessagePack(msgId, MsgDeal::Req, requset.GetDescriptor()->full_name().c_str(), binData);
+		request.SerializeToString(&binData);
+		MessagePack(msgId, MsgDeal::Req, request.GetDescriptor()->full_name().c_str(), binData);
 
 		// data alloc
 		COM_ResRegistSrv response;
@@ -103,6 +103,7 @@ namespace GateMessage
 		{
 			DNPrint(0, LoggerLevel::Debug, "regist Server success! Rec index:%d", response.server_index());
 			client->RegistState() = RegistState::Registed;
+			client->RegistType() = response.server_type();
 			dnServer->ServerIndex() = response.server_index();
 		}
 		else
@@ -118,13 +119,14 @@ namespace GateMessage
 	// client request
 	export void Msg_ReqRegistSrv(SocketChannelPtr channel, uint32_t msgId, Message* msg)
 	{
-		COM_ReqRegistSrv* requset = reinterpret_cast<COM_ReqRegistSrv*>(msg);
+		COM_ReqRegistSrv* request = reinterpret_cast<COM_ReqRegistSrv*>(msg);
 		COM_ResRegistSrv response;
 
 		GateServerHelper* dnServer = GetGateServer();
 		ServerEntityManagerHelper* entityMan = dnServer->GetServerEntityManager();
 
-		ServerType regType = (ServerType)requset->server_type();
+		ServerType regType = (ServerType)request->server_type();
+		uint32_t serverIndex = request->server_index();
 
 		const string& ipPort = channel->localaddr();
 
@@ -139,17 +141,18 @@ namespace GateMessage
 			response.set_success(false);
 		}
 
-		else if (ServerEntity* entity = entityMan->AddEntity(requset->server_index(), regType))
+		else if (ServerEntity* entity = entityMan->AddEntity(serverIndex, regType))
 		{
 			size_t pos = ipPort.find(":");
 			entity->ServerIp() = ipPort.substr(0, pos);
-			entity->ServerPort() = requset->port();
+			entity->ServerPort() = request->port();
 			entity->SetSock(channel);
 
 			channel->setContext(entity);
 
 			response.set_success(true);
 			response.set_server_index(entity->ID());
+			response.set_server_type((uint8_t(dnServer->GetServerType())));
 		}
 
 		string binData;
@@ -161,12 +164,12 @@ namespace GateMessage
 		if (response.success())
 		{
 			// up to Global
-			g2G_RetRegistSrv retMsg;
-			retMsg.set_is_regist(true);
-			retMsg.set_server_index(requset->server_index());
+			g2G_RetRegistSrv request;
+			request.set_is_regist(true);
+			request.set_server_index(serverIndex);
 
-			retMsg.SerializeToString(&binData);
-			MessagePack(0, MsgDeal::Ret, retMsg.GetDescriptor()->full_name().c_str(), binData);
+			request.SerializeToString(&binData);
+			MessagePack(0, MsgDeal::Ret, request.GetDescriptor()->full_name().c_str(), binData);
 
 			GateServerHelper* dnServer = GetGateServer();
 			DNClientProxyHelper* client = dnServer->GetCSock();
@@ -176,6 +179,6 @@ namespace GateMessage
 
 	export void Exe_RetHeartbeat(SocketChannelPtr channel, Message* msg)
 	{
-		COM_RetHeartbeat* requset = reinterpret_cast<COM_RetHeartbeat*>(msg);
+		COM_RetHeartbeat* request = reinterpret_cast<COM_RetHeartbeat*>(msg);
 	}
 }

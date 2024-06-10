@@ -21,9 +21,6 @@ export class DNClientProxyHelper : public DNClientProxy
 private:
 	DNClientProxyHelper() = delete;
 public:
-
-	uint32_t GetMsgId() { return ++iMsgId; }
-
 	// regist to controlserver
 	RegistState& RegistState() { return eRegistState; }
 

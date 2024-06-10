@@ -59,9 +59,11 @@ DatabaseServer::DatabaseServer()
 	emServerType = ServerType::DatabaseServer;
 }
 
+// need init order reversal
 DatabaseServer::~DatabaseServer()
 {
 	pCSock = nullptr;
+	
 	pSqlProxys.clear();
 }
 

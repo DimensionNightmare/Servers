@@ -41,21 +41,21 @@ namespace GlobalMessage
 
 		client->RegistState() = RegistState::Registing;
 
-		COM_ReqRegistSrv requset;
+		COM_ReqRegistSrv request;
 
-		requset.set_server_type((int)dnServer->GetServerType());
+		request.set_server_type((int)dnServer->GetServerType());
 
 		if (uint32_t serverIndex = dnServer->ServerIndex())
 		{
-			requset.set_server_index(serverIndex);
+			request.set_server_index(serverIndex);
 		}
 
-		requset.set_port(server->port);
+		request.set_port(server->port);
 
 		// pack data
 		string binData;
-		requset.SerializeToString(&binData);
-		MessagePack(msgId, MsgDeal::Req, requset.GetDescriptor()->full_name().c_str(), binData);
+		request.SerializeToString(&binData);
+		MessagePack(msgId, MsgDeal::Req, request.GetDescriptor()->full_name().c_str(), binData);
 
 		// data alloc
 		COM_ResRegistSrv response;
@@ -81,6 +81,7 @@ namespace GlobalMessage
 		{
 			DNPrint(0, LoggerLevel::Debug, "regist Server success! Rec index:%d", response.server_index());
 			client->RegistState() = RegistState::Registed;
+			client->RegistType() = response.server_type();
 			dnServer->ServerIndex() = response.server_index();
 		}
 		else
@@ -97,13 +98,13 @@ namespace GlobalMessage
 	// client request
 	export void Msg_ReqRegistSrv(SocketChannelPtr channel, uint32_t msgId, Message* msg)
 	{
-		COM_ReqRegistSrv* requset = reinterpret_cast<COM_ReqRegistSrv*>(msg);
+		COM_ReqRegistSrv* request = reinterpret_cast<COM_ReqRegistSrv*>(msg);
 		COM_ResRegistSrv response;
 
 		GlobalServerHelper* dnServer = GetGlobalServer();
 		ServerEntityManagerHelper* entityMan = dnServer->GetServerEntityManager();
 
-		ServerType regType = (ServerType)requset->server_type();
+		ServerType regType = (ServerType)request->server_type();
 
 		const string& ipPort = channel->localaddr();
 
@@ -119,7 +120,7 @@ namespace GlobalMessage
 		}
 
 		// take task to regist !
-		else if (int serverIndex = requset->server_index())
+		else if (int serverIndex = request->server_index())
 		{
 			if (ServerEntity* entity = entityMan->GetEntity(serverIndex))
 			{
@@ -151,6 +152,7 @@ namespace GlobalMessage
 			{
 				response.set_success(true);
 				response.set_server_index(serverIndex);
+				response.set_server_type((uint8_t(dnServer->GetServerType())));
 
 				entity = entityMan->AddEntity(serverIndex, regType);
 				entity->SetSock(channel);
@@ -159,11 +161,11 @@ namespace GlobalMessage
 
 				size_t pos = ipPort.find(":");
 				entity->ServerIp() = ipPort.substr(0, pos);
-				entity->ServerPort() = requset->port();
+				entity->ServerPort() = request->port();
 
-				for (int i = 0; i < requset->childs_size(); i++)
+				for (int i = 0; i < request->childs_size(); i++)
 				{
-					const COM_ReqRegistSrv& child = requset->childs(i);
+					const COM_ReqRegistSrv& child = request->childs(i);
 					ServerType childType = (ServerType)child.server_type();
 					ServerEntity* servChild = entityMan->AddEntity(child.server_index(), childType);
 					entity->SetMapLinkNode(childType, servChild);
@@ -178,13 +180,14 @@ namespace GlobalMessage
 		{
 			size_t pos = ipPort.find(":");
 			entity->ServerIp() = ipPort.substr(0, pos);
-			entity->ServerPort() = requset->port();
+			entity->ServerPort() = request->port();
 			entity->SetSock(channel);
 
 			channel->setContext(entity);
 
 			response.set_success(true);
 			response.set_server_index(entity->ID());
+			response.set_server_type((uint8_t(dnServer->GetServerType())));
 		}
 
 		string binData;
@@ -202,6 +205,6 @@ namespace GlobalMessage
 
 	export void Exe_RetHeartbeat(SocketChannelPtr channel, Message* msg)
 	{
-		COM_RetHeartbeat* requset = reinterpret_cast<COM_RetHeartbeat*>(msg);
+		COM_RetHeartbeat* request = reinterpret_cast<COM_RetHeartbeat*>(msg);
 	}
 }

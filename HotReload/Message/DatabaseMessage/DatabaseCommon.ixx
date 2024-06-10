@@ -41,19 +41,19 @@ namespace DatabaseMessage
 
 		client->RegistState() = RegistState::Registing;
 
-		COM_ReqRegistSrv requset;
+		COM_ReqRegistSrv request;
 
-		requset.set_server_type((int)dnServer->GetServerType());
+		request.set_server_type((int)dnServer->GetServerType());
 
 		if (uint32_t serverIndex = dnServer->ServerIndex())
 		{
-			requset.set_server_index(serverIndex);
+			request.set_server_index(serverIndex);
 		}
 
 		// pack data
 		string binData;
-		requset.SerializeToString(&binData);
-		MessagePack(msgId, MsgDeal::Req, requset.GetDescriptor()->full_name().c_str(), binData);
+		request.SerializeToString(&binData);
+		MessagePack(msgId, MsgDeal::Req, request.GetDescriptor()->full_name().c_str(), binData);
 
 		// data alloc
 		COM_ResRegistSrv response;
@@ -79,6 +79,7 @@ namespace DatabaseMessage
 		{
 			DNPrint(0, LoggerLevel::Debug, "regist Server success! Rec index:%d", response.server_index());
 			client->RegistState() = RegistState::Registed;
+			client->RegistType() = response.server_type();
 			dnServer->ServerIndex() = response.server_index();
 		}
 		else
@@ -93,10 +94,10 @@ namespace DatabaseMessage
 
 	export void Exe_RetChangeCtlSrv(SocketChannelPtr channel, Message* msg)
 	{
-		COM_RetChangeCtlSrv* requset = reinterpret_cast<COM_RetChangeCtlSrv*>(msg);
+		COM_RetChangeCtlSrv* request = reinterpret_cast<COM_RetChangeCtlSrv*>(msg);
 		DatabaseServerHelper* dnServer = GetDatabaseServer();
 		DNClientProxyHelper* client = dnServer->GetCSock();
 
-		TICK_MAINSPACE_SIGN_FUNCTION(DNClientProxy, RedirectClient, client, requset->port(), requset->ip());
+		TICK_MAINSPACE_SIGN_FUNCTION(DNClientProxy, RedirectClient, client, request->port(), request->ip());
 	}
 }
