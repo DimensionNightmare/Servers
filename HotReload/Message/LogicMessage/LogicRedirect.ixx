@@ -69,6 +69,12 @@ namespace LogicMessage
 		{
 			DNPrint(0, LoggerLevel::Debug, "AddEntity Client!");
 
+			co_await entityMan->LoadEntityData(entity, nullptr, nullptr);
+
+			if(!entity->HasFlag(ClientEntityFlag::DBInited))
+			{
+				DNPrint(0, LoggerLevel::Debug, "AddEntity Client but not from db!");
+			}
 		}
 		else
 		{

@@ -87,6 +87,12 @@ DNTaskVoid ClientEntityManagerHelper::LoadEntityData(ClientEntity* entity, d2D_R
 		co_return;
 	}
 
+	if(entity->HasFlag(ClientEntityFlag::DBInited) || entity->HasFlag(ClientEntityFlag::DBIniting))
+	{
+		DNPrint(0, LoggerLevel::Debug, "entity %u is DBIniting. return .", entity->ID());
+		co_return;
+	}
+
 	auto& dbEntity = *entity->pDbEntity;
 	string table_name = dbEntity.GetDescriptor()->full_name();
 	uint32_t entityId = entity->ID();
@@ -102,8 +108,11 @@ DNTaskVoid ClientEntityManagerHelper::LoadEntityData(ClientEntity* entity, d2D_R
 	if(!binData.empty())
 	{
 		dbEntity.ParseFromString(binData);
-		string* entity_data = inResponse->add_entity_data();
-		*entity_data = binData;
+		if(inResponse)
+		{
+			string* entity_data = inResponse->add_entity_data();
+			*entity_data = binData;
+		}
 
 		entity->SetFlag(ClientEntityFlag::DBInited);
 		co_return;
@@ -173,7 +182,7 @@ DNTaskVoid ClientEntityManagerHelper::LoadEntityData(ClientEntity* entity, d2D_R
 	}
 	else
 	{
-		DNPrint(0, LoggerLevel::Debug, "Load Db Entity empty data!");
+		DNPrint(0, LoggerLevel::Debug, "Load Db Entity mutiply data!");
 		response.clear_entity_data();
 	}
 

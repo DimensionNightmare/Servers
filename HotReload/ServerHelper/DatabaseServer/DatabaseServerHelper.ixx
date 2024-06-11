@@ -1,6 +1,7 @@
 module;
 #include <format>
 #include <cstdint>
+#include <list>
 #include "pqxx/connection"
 #include "pqxx/transaction"
 #include "pqxx/nontransaction"
@@ -19,6 +20,7 @@ import DbUtils;
 
 using namespace std;
 using namespace GDb;
+using namespace google::protobuf;
 
 export enum class SqlDbNameEnum : uint16_t
 {
@@ -103,17 +105,68 @@ bool DatabaseServerHelper::InitDatabase()
 			return false;
 		}
 
+		list< IDbSqlHelper* > tables;
+
 		// check over connect other
 		uint16_t dbNameKey = (uint16_t)SqlDbNameEnum::Account;
 		if (pSqlProxys.count(dbNameKey))
 		{
 			pqxx::work txn(*pSqlProxys[dbNameKey]);
 
-			DbSqlHelper<Account> helper(&txn);
-			if (!helper.IsExist())
+			DbSqlHelper<SingleTon> singleTon(&txn);
+			if(!singleTon.IsExist())
 			{
-				DNPrint(0, LoggerLevel::Debug, "Create Table:Account");
-				helper.InitTable().Commit();
+				DNPrint(0, LoggerLevel::Debug, "Create Table:SingleTon");
+				singleTon.InitTable().Commit();
+			}
+
+			tables.clear();
+
+			DbSqlHelper<Account> account(&txn);
+			tables.push_back( &account);
+
+			SingleTon kv;
+			singleTon.InitEntity(kv);
+
+			string schemaMd5;
+
+			for (IDbSqlHelper* helper : tables)
+			{
+				kv.Clear();
+
+				const string& tableName = helper->GetName();
+				kv.set_key( format("{}_Schema", tableName));
+
+				schemaMd5 = helper->GetTableSchemaMd5();
+
+				if (!helper->IsExist())
+				{
+					
+					DNPrint(0, LoggerLevel::Debug, "Create Table:%s", tableName.c_str());
+					helper->InitTable().Commit();
+
+					
+					kv.set_value( schemaMd5 );
+					singleTon.Insert().Commit();
+					continue;
+				}
+
+				singleTon.SelectByKey("key").Commit();
+				if(!singleTon.IsSuccess() || !singleTon.Result().size())
+				{
+					continue;
+				}
+
+				kv = *singleTon.Result()[0];
+
+				if( schemaMd5 != kv.value())
+				{
+					helper->UpdateTable();
+
+
+					// kv.set_value(schemaMd5);
+					// singleTon.UpdateByKey("key").Commit();
+				}
 			}
 
 			txn.commit();
@@ -124,11 +177,44 @@ bool DatabaseServerHelper::InitDatabase()
 		{
 			pqxx::work txn(*pSqlProxys[dbNameKey]);
 
-			DbSqlHelper<Player> helper(&txn);
-			if (!helper.IsExist())
+			DbSqlHelper<SingleTon> singleTon(&txn);
+			if(!singleTon.IsExist())
 			{
-				DNPrint(0, LoggerLevel::Debug, "Create Table:Player");
-				helper.InitTable().Commit();
+				DNPrint(0, LoggerLevel::Debug, "Create Table:SingleTon");
+				singleTon.InitTable().Commit();
+			}
+
+			tables.clear();
+			
+			DbSqlHelper<Player> player(&txn);
+			tables.push_back( &player);
+
+			SingleTon kv;
+			singleTon.InitEntity(kv);
+
+			string schemaMd5;
+
+			for (IDbSqlHelper* helper : tables)
+			{
+				kv.Clear();
+
+				const string& tableName = helper->GetName();
+				kv.set_key( format("{}_schema", tableName));
+
+				schemaMd5 = helper->GetTableSchemaMd5();
+
+				if (!helper->IsExist())
+				{
+					
+					DNPrint(0, LoggerLevel::Debug, "Create Table:%s", tableName.c_str());
+					helper->InitTable().Commit();
+
+					
+					kv.set_value( schemaMd5 );
+					singleTon.Insert().Commit();
+					continue;
+				}
+
 			}
 
 			

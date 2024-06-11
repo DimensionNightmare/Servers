@@ -47,6 +47,7 @@ enum class SqlOpType : uint8_t
 	Query,
 	Update,
 	Delete,
+	UpdateTable,
 };
 
 const char* GetOpTypeBySqlOpType(SqlOpType eType)
@@ -61,6 +62,7 @@ const char* GetOpTypeBySqlOpType(SqlOpType eType)
 		ONE(SqlOpType::Query, "SELECT ");
 		ONE(SqlOpType::Update, "UPDATE ");
 		ONE(SqlOpType::Delete, "DELETE FROM ");
+		ONE(SqlOpType::UpdateTable, "");
 #undef ONE
 		default:
 			throw invalid_argument("Please Check SqlOpType");
@@ -465,12 +467,30 @@ void GetFieldDefaultValueByProtoType(const FieldDescriptor* field, string& out)
 
 }
 
+export class IDbSqlHelper 
+{
+public:
+	~IDbSqlHelper() = default;
+
+	virtual bool IsExist() = 0;
+
+	virtual IDbSqlHelper& InitTable() = 0;
+
+	virtual IDbSqlHelper& UpdateTable() = 0;
+
+	virtual bool Commit() = 0;
+
+	virtual const string& GetName() = 0;
+
+	virtual string GetTableSchemaMd5() = 0;
+};
+
 export template <class TMessage = Message>
-class DbSqlHelper
+class DbSqlHelper : public IDbSqlHelper
 {
 public:
 	DbSqlHelper(pqxx::dbtransaction* work, TMessage* = nullptr);
-	~DbSqlHelper();
+	virtual ~DbSqlHelper();
 
 	const string& GetName() { return pEntity->GetDescriptor()->name(); }
 
@@ -481,6 +501,9 @@ public:
 	bool Commit();
 	// create table
 	DbSqlHelper<TMessage>& InitTable();
+
+	DbSqlHelper<TMessage>& UpdateTable();
+
 	// insert
 	DbSqlHelper<TMessage>& Insert(bool bSetDefault = false);
 
@@ -510,6 +533,8 @@ public:
 	string GetBuildSqlStatement();
 
 	DbSqlHelper<TMessage>& InitEntity(TMessage& entity);
+
+	string GetTableSchemaMd5();
 
 private:
 	bool ChangeSqlType(SqlOpType type);
@@ -590,6 +615,13 @@ DbSqlHelper<TMessage>& DbSqlHelper<TMessage>::InitEntity(TMessage& entity)
     return *this;
 }
 
+template<class TMessage>
+string DbSqlHelper<TMessage>::GetTableSchemaMd5()
+{
+
+    return "";
+}
+
 template <class TMessage>
 bool DbSqlHelper<TMessage>::ChangeSqlType(SqlOpType type)
 {
@@ -613,6 +645,7 @@ void DbSqlHelper<TMessage>::SetResult(int affectedRows)
 		case SqlOpType::Update:
 		case SqlOpType::Delete:
 		case SqlOpType::Query:
+		case SqlOpType::UpdateTable:
 		{
 			bExecResult = affectedRows > 0;
 			break;
@@ -869,6 +902,11 @@ void DbSqlHelper<TMessage>::BuildSqlStatement()
 			ss << SEnd;
 			break;
 		}
+		case SqlOpType::UpdateTable:
+		{
+
+			break;
+		}
 		default:
 			throw invalid_argument("Please Imp BuildSqlStatement Case!");
 	}
@@ -967,6 +1005,53 @@ DbSqlHelper<TMessage>& DbSqlHelper<TMessage>::InitTable()
 	}
 
 	return *this;
+}
+
+template<class TMessage>
+DbSqlHelper<TMessage>& DbSqlHelper<TMessage>::UpdateTable()
+{
+	ChangeSqlType(SqlOpType::UpdateTable);
+
+	struct SqlColInfos
+	{
+		string name;
+		string type;
+
+		SqlColInfos(){}
+		SqlColInfos(const pqxx::row& row)
+		{
+			name = row[0].as<string>();
+			type = row[1].as<string>();
+		}
+	};
+
+	unordered_map<string, SqlColInfos> sqlColInfo;
+
+	string sqlColStatement = format(R"delim(
+SELECT
+    column_name,
+    data_type
+FROM information_schema.columns
+WHERE
+    table_schema = 'public'
+AND table_name = '{}';
+)delim", GetName());
+
+	pqxx::result result = pWork->exec(sqlColStatement);
+
+	for (int row = 0; row < result.size(); row++)
+	{
+		pqxx::row rowInfo = result[row];
+		
+		sqlColInfo.emplace(std::piecewise_construct,
+		std::forward_as_tuple(rowInfo[0].as<string>()),
+		std::forward_as_tuple(rowInfo));
+		
+	}
+
+	SqlColInfos& info = sqlColInfo.begin()->second;
+
+    return *this;
 }
 
 template <class TMessage>
