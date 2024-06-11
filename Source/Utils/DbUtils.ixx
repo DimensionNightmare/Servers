@@ -618,8 +618,16 @@ DbSqlHelper<TMessage>& DbSqlHelper<TMessage>::InitEntity(TMessage& entity)
 template<class TMessage>
 string DbSqlHelper<TMessage>::GetTableSchemaMd5()
 {
+	const Descriptor* descriptor = pEntity->GetDescriptor();
 
-    return "";
+	ostringstream stream;
+	for (int i = 0; i < descriptor->field_count(); i++)
+	{
+		stream << descriptor->field(i)->name() << ":";
+		stream << GetDbTypeByProtoType(descriptor->field(i)->cpp_type()) << ";";
+
+	}
+    return Md5Hash(stream.str());
 }
 
 template <class TMessage>
@@ -1014,28 +1022,22 @@ DbSqlHelper<TMessage>& DbSqlHelper<TMessage>::UpdateTable()
 
 	struct SqlColInfos
 	{
-		string name;
-		string type;
-
-		SqlColInfos(){}
+		SqlColInfos() = default;
 		SqlColInfos(const pqxx::row& row)
 		{
-			name = row[0].as<string>();
 			type = row[1].as<string>();
+			order = row[2].as<int>();
 		}
+
+		string type;
+		int order;
 	};
 
-	unordered_map<string, SqlColInfos> sqlColInfo;
+	string sqlColStatement = format(R"delim(SELECT
+column_name,data_type,ordinal_position
+FROM information_schema.columns WHERE table_schema = 'public' AND table_name = '{}';)delim", GetName());
 
-	string sqlColStatement = format(R"delim(
-SELECT
-    column_name,
-    data_type
-FROM information_schema.columns
-WHERE
-    table_schema = 'public'
-AND table_name = '{}';
-)delim", GetName());
+	unordered_map<string, SqlColInfos> sqlColInfo;
 
 	pqxx::result result = pWork->exec(sqlColStatement);
 
@@ -1049,8 +1051,46 @@ AND table_name = '{}';
 		
 	}
 
-	SqlColInfos& info = sqlColInfo.begin()->second;
+	const Descriptor* descriptor = pEntity->GetDescriptor();
 
+	// check col
+	for (int i = 0; i < descriptor->field_count(); i++)
+	{
+		const string& colName = descriptor->field(i)->name();
+		if(sqlColInfo.contains(colName))
+		{
+			const SqlColInfos& colInfo = sqlColInfo[colName];
+			
+			// change type
+			if(colInfo.type != GetDbTypeByProtoType(descriptor->field(i)->cpp_type()))
+			{
+				int a = 0;
+			}
+
+			// change order
+			if(colInfo.order != i)
+			{
+				int a = 0;
+			}
+
+			// already deal remove 
+			sqlColInfo.erase(colName);
+		}
+		// create col
+		else
+		{
+
+		}
+
+	}
+
+	// remove col
+	for (auto& iter : sqlColInfo)
+	{
+
+	}
+
+	// SqlColInfos& info = sqlColInfo.begin()->second;
     return *this;
 }
 
