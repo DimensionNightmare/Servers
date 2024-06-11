@@ -60,6 +60,7 @@ namespace LogicMessage
 		GDb::Player player;
 		if(!player.ParseFromString(request->entity_data()))
 		{
+			DNPrint(0, LoggerLevel::Debug, "Save data but parse error!");
 			return;
 		}
 
@@ -76,7 +77,15 @@ namespace LogicMessage
         if(GDb::Player* dbEntity = entity->GetDbEntity())
         {
             dbEntity->MergeFrom(player);
-            entity->SetFlag(ClientEntityFlag::DBModify);
+			if(request->runtime_save())
+			{
+            	entity->SetFlag(ClientEntityFlag::DBModify);
+				entity->ClearFlag(ClientEntityFlag::DBModifyPartial);
+			}
+			else
+			{
+				entity->SetFlag(ClientEntityFlag::DBModifyPartial);
+			}
         }
         else
         {

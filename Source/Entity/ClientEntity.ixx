@@ -16,6 +16,7 @@ export enum class ClientEntityFlag : uint16_t
 	DBInited = 0,
 	DBIniting,
 	DBModify,
+	DBModifyPartial,
 	Max,
 };
 

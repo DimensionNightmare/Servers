@@ -112,20 +112,22 @@ DNTaskVoid ClientEntityManagerHelper::LoadEntityData(ClientEntity* entity, d2D_R
 	entity->SetFlag(ClientEntityFlag::DBIniting);
 	// sql
 	d2D_ReqLoadData request;
+	
 	if(inRequest)
 	{
 		request = *inRequest;
 	}
 	else
 	{
-		request.set_table_name(table_name);
-		request.set_key_name(ClientEntity::SKeyName);
-		request.set_limit(1);
 		request.set_need_create(true);
 
 		string* entity_data = request.mutable_entity_data();
 		dbEntity.SerializeToString(entity_data);
 	}
+
+	request.set_limit(1);
+	request.set_table_name(table_name);
+	request.set_key_name(ClientEntity::SKeyName);
 
 	request.SerializeToString(&binData);
 

@@ -264,7 +264,9 @@ export int main(int argc, char** argv)
 
 	PInstance = nullptr;
 
-	DNPrint(0, LoggerLevel::Debug, "bye~");
+	DNPrint(0, LoggerLevel::Debug, "bye ~");
+
+	system("pause");
 
 	return 0;
 }

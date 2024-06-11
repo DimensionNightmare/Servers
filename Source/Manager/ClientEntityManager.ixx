@@ -46,7 +46,7 @@ public: // dll override
 
 	DNTaskVoid SaveEntity(ClientEntity& entity);
 
-	void CheckSaveEntity();
+	void CheckSaveEntity(bool shutdown = false);
 
 protected: // dll proxy
 	shared_ptr<Redis> pNoSqlProxy;
@@ -57,7 +57,7 @@ protected: // dll proxy
 
 ClientEntityManager::~ClientEntityManager()
 {
-	CheckSaveEntity();
+	CheckSaveEntity(true);
 }
 
 bool ClientEntityManager::Init()
@@ -131,7 +131,7 @@ DNTaskVoid ClientEntityManager::SaveEntity(ClientEntity& entity)
 	co_return;
 }
 
-void ClientEntityManager::CheckSaveEntity()
+void ClientEntityManager::CheckSaveEntity(bool shutdown)
 {
 
 	function<void(ClientEntity&)> dealFunc = nullptr;
@@ -170,6 +170,12 @@ void ClientEntityManager::CheckSaveEntity()
 		if (entity.HasFlag(ClientEntityFlag::DBModify))
 		{
 			entity.ClearFlag(ClientEntityFlag::DBModify);
+
+			dealFunc(entity);
+		}
+		else if (shutdown && entity.HasFlag(ClientEntityFlag::DBModifyPartial))
+		{
+			entity.ClearFlag(ClientEntityFlag::DBModifyPartial);
 
 			dealFunc(entity);
 		}
