@@ -152,7 +152,7 @@ void InitFieldByProtoType(const FieldDescriptor* field, list<string>& out, list<
 		out.back() += "[]";
 	}
 
-	if (!field->has_optional_keyword())
+	if (!field->is_optional())
 	{
 		out.emplace_back(SNOTNULL);
 	}
@@ -178,7 +178,7 @@ void GetFieldValueByProtoType(const FieldDescriptor* field, const Reflection* re
 {
 	out.clear();
 
-	if (field->has_optional_keyword() && !reflection->HasField(data, field))
+	if (field->is_optional() && !reflection->HasField(data, field))
 	{
 		out = SNULL;
 		return;
@@ -1043,7 +1043,7 @@ DbSqlHelper<TMessage>& DbSqlHelper<TMessage>::UpdateTable()
 			InitFieldByProtoType(field, params, primaryKey);
 
 			// can not null
-			if(!field->has_optional_keyword())
+			if(!field->is_optional())
 			{
 				params.remove(SNOTNULL);
 			}
@@ -1060,7 +1060,7 @@ DbSqlHelper<TMessage>& DbSqlHelper<TMessage>::UpdateTable()
 				{0}"{1}" DROP COLUMN {2}; 
 				{0}"{1}" RENAME COLUMN new_{2} TO {2};)", opTypeStr, GetName(), colName, tempstr));
 
-			if(!field->has_optional_keyword())
+			if(!field->is_optional())
 			{
 				mEles[""].emplace_back(format(R"({0}"{1}" ALTER COLUMN {2} SET NOT NULL;)", opTypeStr, GetName(), colName));
 			}
@@ -1130,7 +1130,7 @@ DbSqlHelper<TMessage>& DbSqlHelper<TMessage>::Insert(bool bSetDefault)
 
 		}
 		// can not null
-		else if(value.empty() && !field->has_optional_keyword())
+		else if(value.empty() && !field->is_optional())
 		{
 			if(const string& defaultStr = options.GetExtension(ext_default); !defaultStr.empty())
 			{
