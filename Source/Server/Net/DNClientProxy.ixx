@@ -13,7 +13,6 @@ export module DNClientProxy;
 
 import DNTask;
 import MessagePack;
-import Macro;
 import Logger;
 
 using namespace std;

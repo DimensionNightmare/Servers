@@ -188,7 +188,7 @@ void AuthServer::LoopEvent(function<void(EventLoopPtr)> func)
 		while (const EventLoopPtr& pLoop = pCSock->loop())
 		{
 			long id = pLoop->tid();
-			if (!looped.count(id))
+			if (!looped.contains(id))
 			{
 				func(pLoop);
 				looped[id];

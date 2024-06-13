@@ -11,7 +11,6 @@ export module ServerEntityManager;
 export import ServerEntity;
 import EntityManager;
 import Logger;
-import Macro;
 
 using namespace std;
 

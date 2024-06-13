@@ -87,13 +87,19 @@ DNTaskVoid ClientEntityManagerHelper::LoadEntityData(ClientEntity* entity, d2D_R
 		co_return;
 	}
 
+	auto& dbEntity = *entity->pDbEntity;
+
 	if(entity->HasFlag(ClientEntityFlag::DBInited) || entity->HasFlag(ClientEntityFlag::DBIniting))
 	{
 		DNPrint(0, LoggerLevel::Debug, "entity %u is DBIniting. return .", entity->ID());
+		if(inResponse)
+		{
+			string* entity_data = inResponse->add_entity_data();
+			dbEntity.SerializeToString(entity_data);
+		}
 		co_return;
 	}
 
-	auto& dbEntity = *entity->pDbEntity;
 	string table_name = dbEntity.GetDescriptor()->full_name();
 	uint32_t entityId = entity->ID();
 	string keyName = format("{}_{}", table_name, entityId);
@@ -187,7 +193,11 @@ DNTaskVoid ClientEntityManagerHelper::LoadEntityData(ClientEntity* entity, d2D_R
 	}
 
 	entity->ClearFlag(ClientEntityFlag::DBIniting);
-	*inResponse = response;
+	
+	if(inResponse)
+	{
+		*inResponse = response;
+	}
 
 	co_return;
 }

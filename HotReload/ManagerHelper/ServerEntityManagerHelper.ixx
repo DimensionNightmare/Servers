@@ -72,9 +72,9 @@ bool ServerEntityManagerHelper::RemoveEntity(uint32_t entityId)
 void ServerEntityManagerHelper::MountEntity(ServerType type, ServerEntity* entity)
 {
 	unique_lock<shared_mutex> ulock(oMapMutex);
-	if (mEntityMap.count(entity->ID()))
+	if (mEntityMap.contains(entity->ID()))
 	{
-		mEntityMapList[type].push_back(entity);
+		mEntityMapList[type].emplace_back(entity);
 	}
 }
 

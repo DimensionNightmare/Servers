@@ -9,7 +9,6 @@ export module ProxyEntityManager;
 export import ProxyEntity;
 import EntityManager;
 import Logger;
-import Macro;
 
 using namespace std;
 

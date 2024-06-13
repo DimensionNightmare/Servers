@@ -265,7 +265,7 @@ bool DimensionNightmare::InitConfig(unordered_map<string, string>& param)
 		char* current = buffer;
 		while (*current)
 		{
-			sectionNames.push_back(current);
+			sectionNames.emplace_back(current);
 			current += strlen(current) + 1;
 
 			if (sectionNames.back().find_last_of("Server") != string::npos && sectionNames.back() != serverName)
@@ -299,7 +299,7 @@ bool DimensionNightmare::InitConfig(unordered_map<string, string>& param)
 						if (endPos != string::npos)
 						{
 							string sectionName = line.substr(1, endPos - 1);
-							sectionNames.push_back(sectionName);
+							sectionNames.emplace_back(sectionName);
 						}
 					}
 					else if (line[0] != ';')

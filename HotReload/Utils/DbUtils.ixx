@@ -62,7 +62,7 @@ const char* GetOpTypeBySqlOpType(SqlOpType eType)
 		ONE(SqlOpType::Query, "SELECT ");
 		ONE(SqlOpType::Update, "UPDATE ");
 		ONE(SqlOpType::Delete, "DELETE FROM ");
-		ONE(SqlOpType::UpdateTable, "");
+		ONE(SqlOpType::UpdateTable, "ALTER TABLE ");
 #undef ONE
 		default:
 			throw invalid_argument("Please Check SqlOpType");
@@ -72,6 +72,11 @@ const char* GetOpTypeBySqlOpType(SqlOpType eType)
 	return "";
 }
 
+
+const string SqlTableColQuery = R"delim(SELECT
+column_name
+FROM information_schema.columns WHERE table_schema = 'public' AND table_name = '{}';)delim";
+
 const char* GetDbTypeByProtoType(FieldDescriptor::CppType pbType)
 {
 	// http://postgres.cn/docs/9.4/datatype-numeric.html#DATATYPE-INT
@@ -80,16 +85,12 @@ const char* GetDbTypeByProtoType(FieldDescriptor::CppType pbType)
 #define ONE(type, name) \
 		case type:          \
 			return #name;
-		ONE(FieldDescriptor::CPPTYPE_DOUBLE, DOUBLE);
-		ONE(FieldDescriptor::CPPTYPE_FLOAT, FLOAT);
-		ONE(FieldDescriptor::CPPTYPE_INT32, INTEGER);
-		ONE(FieldDescriptor::CPPTYPE_UINT32, INTEGER);
-		ONE(FieldDescriptor::CPPTYPE_INT64, BIGINT);
-		ONE(FieldDescriptor::CPPTYPE_UINT64, BIGINT);
-		ONE(FieldDescriptor::CPPTYPE_STRING, TEXT);
-		ONE(FieldDescriptor::CPPTYPE_ENUM, INTEGER);
-		ONE(FieldDescriptor::CPPTYPE_BOOL, BOOL);
-		ONE(FieldDescriptor::CPPTYPE_MESSAGE, BYTEA);
+		ONE(FieldDescriptor::CPPTYPE_INT32, integer);
+		ONE(FieldDescriptor::CPPTYPE_UINT32, integer);
+		ONE(FieldDescriptor::CPPTYPE_INT64, bigint);
+		ONE(FieldDescriptor::CPPTYPE_UINT64, bigint);
+		ONE(FieldDescriptor::CPPTYPE_STRING, character varying);
+		ONE(FieldDescriptor::CPPTYPE_MESSAGE, bytea);
 #undef ONE
 		default:
 			throw invalid_argument("Please Check CppType");
@@ -123,8 +124,12 @@ void InitFieldByProtoType(const FieldDescriptor* field, list<string>& out, list<
 		{
 			if (int lenLimit = options.GetExtension(ext_len_limit))
 			{
-				out.back().assign(format("VARCHAR({0})", lenLimit));
+				out.back().append(format("({})", lenLimit));
 			}
+			// else
+			// {
+			// 	out.back().assign("text");
+			// }
 			break;
 		}
 		case FieldDescriptor::CPPTYPE_UINT32:
@@ -136,11 +141,6 @@ void InitFieldByProtoType(const FieldDescriptor* field, list<string>& out, list<
 			}
 
 			out.emplace_back(format("CHECK ({0} > -1)", field->name()));
-			break;
-		}
-		case FieldDescriptor::CPPTYPE_DOUBLE:
-		{
-			out.back().assign("double precision");
 			break;
 		}
 		default:
@@ -251,36 +251,6 @@ void GetFieldValueByProtoType(const FieldDescriptor* field, const Reflection* re
 				out = to_string(reflection->GetUInt64(data, field));
 			}
 			break;
-		case FieldDescriptor::CPPTYPE_DOUBLE:
-			if (isRepeat)
-			{
-				for (int i = 0; i < reflection->FieldSize(data, field); i++)
-				{
-					out += to_string(reflection->GetRepeatedDouble(data, field, i)) + ",";
-				}
-				out.pop_back();
-				out = format("'{{ {} }}'", out);
-			}
-			else
-			{
-				out = to_string(reflection->GetDouble(data, field));
-			}
-			break;
-		case FieldDescriptor::CPPTYPE_FLOAT:
-			if (isRepeat)
-			{
-				for (int i = 0; i < reflection->FieldSize(data, field); i++)
-				{
-					out += to_string(reflection->GetRepeatedFloat(data, field, i)) + ",";
-				}
-				out.pop_back();
-				out = format("'{{ {} }}'", out);
-			}
-			else
-			{
-				out = to_string(reflection->GetFloat(data, field));
-			}
-			break;
 		case FieldDescriptor::CPPTYPE_STRING:
 			if (isRepeat)
 			{
@@ -294,21 +264,6 @@ void GetFieldValueByProtoType(const FieldDescriptor* field, const Reflection* re
 			else
 			{
 				out = out + "'" + reflection->GetString(data, field) + "'";
-			}
-			break;
-		case FieldDescriptor::CPPTYPE_BOOL:
-			if (isRepeat)
-			{
-				for (int i = 0; i < reflection->FieldSize(data, field); i++)
-				{
-					out += to_string(reflection->GetRepeatedBool(data, field, i)) + ",";
-				}
-				out.pop_back();
-				out = format("'{{ {} }}'", out);
-			}
-			else
-			{
-				out = to_string(reflection->GetBool(data, field));
 			}
 			break;
 		case FieldDescriptor::CPPTYPE_MESSAGE:
@@ -351,6 +306,23 @@ void GetFieldValueByProtoType(const FieldDescriptor* field, const Reflection* re
 //set field data
 void SetFieldValueByProtoType(const FieldDescriptor* field, const Reflection* reflection, Message& data, pqxx::row::reference value, bool isQueryAll)
 {
+	// if (field->is_repeated())
+	// {
+	// 	pqxx::array_parser arr = value.as_array();
+	// 	pair<pqxx::array_parser::juncture, string> elem;
+	// 	int index = 0;
+	// 	do
+	// 	{
+	// 		elem = arr.get_next();
+	// 		if (elem.first == pqxx::array_parser::juncture::string_value)
+	// 		{
+	// 			reflection->AddBool(&data, field, false);
+	// 			reflection->SetRepeatedBool(&data, field, index, elem.second == "t");
+	// 			index++;
+	// 		}
+	// 	} while (elem.first != pqxx::array_parser::juncture::done);
+	// }
+
 	switch (field->cpp_type())
 	{
 		case FieldDescriptor::CPPTYPE_INT32:
@@ -365,38 +337,8 @@ void SetFieldValueByProtoType(const FieldDescriptor* field, const Reflection* re
 		case FieldDescriptor::CPPTYPE_UINT64:
 			reflection->SetUInt64(&data, field, value.as<uint64_t>());
 			break;
-		case FieldDescriptor::CPPTYPE_DOUBLE:
-			reflection->SetDouble(&data, field, value.as<double>());
-			break;
-		case FieldDescriptor::CPPTYPE_FLOAT:
-			reflection->SetFloat(&data, field, value.as<float>());
-			break;
 		case FieldDescriptor::CPPTYPE_STRING:
 			reflection->SetString(&data, field, value.as<string>());
-			break;
-		case FieldDescriptor::CPPTYPE_BOOL:
-			if (field->is_repeated())
-			{
-				pqxx::array_parser arr = value.as_array();
-				pair<pqxx::array_parser::juncture, string> elem;
-				int index = 0;
-
-				do
-				{
-					elem = arr.get_next();
-					if (elem.first == pqxx::array_parser::juncture::string_value)
-					{
-						reflection->AddBool(&data, field, false);
-						reflection->SetRepeatedBool(&data, field, index, elem.second == "t");
-						index++;
-					}
-				} while (elem.first != pqxx::array_parser::juncture::done);
-
-			}
-			else
-			{
-				reflection->SetBool(&data, field, value.as<bool>());
-			}
 			break;
 		case FieldDescriptor::CPPTYPE_MESSAGE:
 			{
@@ -439,8 +381,6 @@ void GetFieldDefaultValueByProtoType(const FieldDescriptor* field, string& out)
 		case FieldDescriptor::CPPTYPE_UINT32:
 		case FieldDescriptor::CPPTYPE_INT64:
 		case FieldDescriptor::CPPTYPE_UINT64:
-		case FieldDescriptor::CPPTYPE_DOUBLE:
-		case FieldDescriptor::CPPTYPE_FLOAT:
 			{
 				out = "0";
 			}
@@ -448,11 +388,6 @@ void GetFieldDefaultValueByProtoType(const FieldDescriptor* field, string& out)
 		case FieldDescriptor::CPPTYPE_STRING:
 			{
 				out = "''";
-			}
-			break;
-		case FieldDescriptor::CPPTYPE_BOOL:
-			{
-				out = "false";
 			}
 			break;
 		case FieldDescriptor::CPPTYPE_MESSAGE:
@@ -474,7 +409,7 @@ public:
 
 	virtual bool IsExist() = 0;
 
-	virtual IDbSqlHelper& InitTable() = 0;
+	virtual IDbSqlHelper& CreateTable() = 0;
 
 	virtual IDbSqlHelper& UpdateTable() = 0;
 
@@ -500,7 +435,7 @@ public:
 
 	bool Commit();
 	// create table
-	DbSqlHelper<TMessage>& InitTable();
+	DbSqlHelper<TMessage>& CreateTable();
 
 	DbSqlHelper<TMessage>& UpdateTable();
 
@@ -524,7 +459,12 @@ public:
 
 	DbSqlHelper<TMessage>& DeleteCond(const char* name, const char* cond, const char* splicing, ...);
 
-	bool IsSuccess() { return bExecResult; }
+	[[nodiscard]]
+	bool IsSuccess() { 
+		bool success = bExecResult;
+		bExecResult = false;
+		return success; 
+	}
 
 	bool IsExist();
 
@@ -621,12 +561,27 @@ string DbSqlHelper<TMessage>::GetTableSchemaMd5()
 	const Descriptor* descriptor = pEntity->GetDescriptor();
 
 	ostringstream stream;
+	list<string> out;
+	list<string> primaryKey;
 	for (int i = 0; i < descriptor->field_count(); i++)
 	{
 		stream << descriptor->field(i)->name() << ":";
-		stream << GetDbTypeByProtoType(descriptor->field(i)->cpp_type()) << ";";
-
+		InitFieldByProtoType(descriptor->field(i), out, primaryKey);
+		for (auto& property : out)
+		{
+			stream << property << " ";
+		}
+		
+		stream << ";";
 	}
+
+	for(auto&  key : primaryKey)
+	{
+		stream << key << " ";
+	}
+
+	stream << ";";
+
     return Md5Hash(stream.str());
 }
 
@@ -703,6 +658,29 @@ void DbSqlHelper<TMessage>::BuildSqlStatement()
 			}
 
 			ss << SSMBegin;
+
+			const Descriptor* descriptor = pEntity->GetDescriptor();
+
+			for (int i = 0; i < descriptor->field_count(); i++)
+			{
+				const FieldDescriptor* field = descriptor->field(i);
+				const string& fieldName = field->name();
+				if(!mEles.contains(fieldName))
+				{
+					continue;
+				}
+
+				ss << fieldName;
+				for (string& props : mEles[fieldName])
+				{
+					ss << SSpace << props;
+				}
+
+				ss << SSplit;
+
+				mEles.erase(fieldName);
+			}
+
 			auto it = mEles.begin();
 			auto itEnd = mEles.end();
 			for (; it != itEnd; it++)
@@ -752,7 +730,7 @@ void DbSqlHelper<TMessage>::BuildSqlStatement()
 			{
 				ss << it->first;
 
-				mapping.push_back(it->second);
+				mapping.emplace_back(it->second);
 
 				if (next(it) != itEnd)
 				{
@@ -912,7 +890,13 @@ void DbSqlHelper<TMessage>::BuildSqlStatement()
 		}
 		case SqlOpType::UpdateTable:
 		{
-
+			for (auto& [k,items] : mEles)
+			{
+				for (auto& statement : items)
+				{
+					ss << statement << '\n';
+				}
+			}
 			break;
 		}
 		default:
@@ -956,7 +940,7 @@ bool DbSqlHelper<TMessage>::Commit()
 }
 
 template <class TMessage>
-DbSqlHelper<TMessage>& DbSqlHelper<TMessage>::InitTable()
+DbSqlHelper<TMessage>& DbSqlHelper<TMessage>::CreateTable()
 {
 	ChangeSqlType(SqlOpType::CreateTable);
 
@@ -1020,66 +1004,83 @@ DbSqlHelper<TMessage>& DbSqlHelper<TMessage>::UpdateTable()
 {
 	ChangeSqlType(SqlOpType::UpdateTable);
 
-	struct SqlColInfos
-	{
-		SqlColInfos() = default;
-		SqlColInfos(const pqxx::row& row)
-		{
-			type = row[1].as<string>();
-			order = row[2].as<int>();
-		}
+	pqxx::result result = pWork->exec( vformat(SqlTableColQuery, make_format_args(GetName() )) );
 
-		string type;
-		int order;
-	};
-
-	string sqlColStatement = format(R"delim(SELECT
-column_name,data_type,ordinal_position
-FROM information_schema.columns WHERE table_schema = 'public' AND table_name = '{}';)delim", GetName());
-
-	unordered_map<string, SqlColInfos> sqlColInfo;
-
-	pqxx::result result = pWork->exec(sqlColStatement);
+	unordered_map<string, int> sqlColInfo;
 
 	for (int row = 0; row < result.size(); row++)
 	{
-		pqxx::row rowInfo = result[row];
+		const string& name = result[row][0].as<string>();
 		
-		sqlColInfo.emplace(std::piecewise_construct,
-		std::forward_as_tuple(rowInfo[0].as<string>()),
-		std::forward_as_tuple(rowInfo));
+		sqlColInfo[name] = row;
 		
 	}
 
 	const Descriptor* descriptor = pEntity->GetDescriptor();
 
+	// clear CONSTRAINT
+	// result = pWork->exec( format("SELECT conname FROM pg_constraint WHERE conrelid = '{}'::regclass;", GetName()) );
+	// for (int row = 0; row < result.size(); row++)
+	// {
+	// 	pWork->exec(format("ALTER TABLE {} DROP CONSTRAINT {};", GetName(), result[0][0].as<string>()));
+	// }
+
+	list<string> primaryKey;
+	string tempstr;
+	string opTypeStr = GetOpTypeBySqlOpType(eType);
+
 	// check col
 	for (int i = 0; i < descriptor->field_count(); i++)
 	{
 		const string& colName = descriptor->field(i)->name();
+		list<string> params;
+
+		const FieldDescriptor* field = descriptor->field(i);
+
+		// update col
 		if(sqlColInfo.contains(colName))
 		{
-			const SqlColInfos& colInfo = sqlColInfo[colName];
-			
+			InitFieldByProtoType(field, params, primaryKey);
+
+			// can not null
+			if(!field->has_optional_keyword())
+			{
+				params.remove(SNOTNULL);
+			}
+
 			// change type
-			if(colInfo.type != GetDbTypeByProtoType(descriptor->field(i)->cpp_type()))
+			for (string& param : params)
 			{
-				int a = 0;
+				tempstr += param + " ";
 			}
 
-			// change order
-			if(colInfo.order != i)
-			{
-				int a = 0;
-			}
+			mEles[""].emplace_back(format(R"(
+				{0}"{1}" ADD COLUMN new_{2} {3};
+				UPDATE "{1}" SET new_{2} = {2};
+				{0}"{1}" DROP COLUMN {2}; 
+				{0}"{1}" RENAME COLUMN new_{2} TO {2};)", opTypeStr, GetName(), colName, tempstr));
 
+			if(!field->has_optional_keyword())
+			{
+				mEles[""].emplace_back(format(R"({0}"{1}" ALTER COLUMN {2} SET NOT NULL;)", opTypeStr, GetName(), colName));
+			}
+			
+			tempstr.clear();
+			
 			// already deal remove 
 			sqlColInfo.erase(colName);
 		}
 		// create col
 		else
 		{
-
+			InitFieldByProtoType(descriptor->field(i), params, primaryKey);
+			for (string& param : params)
+			{
+				tempstr += param + " ";
+			}
+			// ALTER TABLE table_name ADD COLUMN column_name data_type [column_constraint];
+			mEles[""].emplace_back(format(R"({}"{}" ADD COLUMN {} {};)", opTypeStr, GetName(), colName, tempstr));
+			tempstr.clear();
 		}
 
 	}
@@ -1087,10 +1088,9 @@ FROM information_schema.columns WHERE table_schema = 'public' AND table_name = '
 	// remove col
 	for (auto& iter : sqlColInfo)
 	{
-
+		mEles[""].emplace_back(format(R"({}"{}" DROP COLUMN {};)", opTypeStr, GetName(), iter.first));
 	}
 
-	// SqlColInfos& info = sqlColInfo.begin()->second;
     return *this;
 }
 
@@ -1287,7 +1287,7 @@ void DbSqlHelper<TMessage>::PaserQuery(pqxx::result& result)
 	vector<string> keys;
 	for (int col = 0; col < result.columns(); ++col)
 	{
-		keys.push_back(result.column_name(col));
+		keys.emplace_back(result.column_name(col));
 	}
 
 	const Descriptor* descriptor = pEntity->GetDescriptor();
@@ -1312,7 +1312,7 @@ void DbSqlHelper<TMessage>::PaserQuery(pqxx::result& result)
 				SetFieldValueByProtoType(field, reflection, *gen, rowInfo[col], isQueryAll);
 			}
 		}
-		mResult.push_back(gen);
+		mResult.emplace_back(gen);
 	}
 }
 
