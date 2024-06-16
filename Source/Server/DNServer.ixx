@@ -2,15 +2,15 @@ module;
 #include <functional> 
 #include <cstdint>
 #include <list>
-#include "hv/EventLoop.h"
+#include <string>
+#include <mutex>
 
 #include "StdMacro.h"
 export module DNServer;
 
 import I10nText;
 import Config.Server;
-
-using namespace std;
+import ThirdParty.Libhv;
 
 export enum class ServerType : uint8_t
 {
@@ -52,7 +52,7 @@ public:
 
 	uint32_t& ServerIndex() { return iServerIndex; }
 
-	virtual void LoopEvent(function<void(hv::EventLoopPtr)> func) = 0;
+	virtual void LoopEvent(function<void(EventLoopPtr)> func) = 0;
 
 	bool& IsRun() { return bInRun; }
 
@@ -76,10 +76,12 @@ protected:
 };
 
 DNServer::DNServer()
-{}
+{
+}
 
 DNServer::~DNServer()
-{}
+{
+}
 
 bool DNServer::Init()
 {

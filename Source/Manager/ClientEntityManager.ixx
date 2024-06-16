@@ -4,11 +4,10 @@ module;
 #include <shared_mutex>
 #include <cstdint>
 #include <coroutine>
-#include "sw/redis++/redis++.h"
+#include <format>
+#include <functional>
 
 #include "StdMacro.h"
-#include "GDef/GDef.pb.h"
-#include "Server/S_Dedicated.pb.h"
 export module ClientEntityManager;
 
 export import ClientEntity;
@@ -19,12 +18,8 @@ import DNClientProxy;
 import DNTask;
 import MessagePack;
 import StrUtils;
-
-using namespace std;
-using namespace sw::redis;
-using namespace GDb;
-using namespace google::protobuf;
-using namespace GMsg;
+import ThirdParty.PbGen;
+import ThirdParty.RedisPP;
 
 export class ClientEntityManager : public EntityManager<ClientEntity>
 {
@@ -35,9 +30,9 @@ public:
 
 	virtual bool Init() override;
 
-    void InitSqlConn(const shared_ptr<Redis>& redisConn);
+	void InitSqlConn(const shared_ptr<Redis>& redisConn);
 
-    void InitSqlConn(DNClientProxy* sockClient);
+	void InitSqlConn(DNClientProxy* sockClient);
 
 	virtual void TickMainFrame() override;
 
@@ -78,7 +73,7 @@ DNTaskVoid ClientEntityManager::SaveEntity(ClientEntity& entity)
 {
 	uint32_t entityId = entity.ID();
 
-	auto& dbEntity =  *entity.pDbEntity;
+	auto& dbEntity = *entity.pDbEntity;
 
 	string entity_data;
 	dbEntity.SerializeToString(&entity_data);
@@ -114,7 +109,7 @@ DNTaskVoid ClientEntityManager::SaveEntity(ClientEntity& entity)
 		}
 	}
 
-	if(int code = response.state_code())
+	if (int code = response.state_code())
 	{
 		BytesToHexString(entity_data);
 		mDbFailure[entityId] = entity_data;
@@ -135,13 +130,13 @@ void ClientEntityManager::CheckSaveEntity(bool shutdown)
 
 	function<void(ClientEntity&)> dealFunc = nullptr;
 
-	if(!pSqlClient || pSqlClient->RegistType() != uint8_t(ServerType::GateServer) || !pNoSqlProxy)
+	if (!pSqlClient || pSqlClient->RegistType() != uint8_t(ServerType::GateServer) || !pNoSqlProxy)
 	{
 		dealFunc = [this](ClientEntity& entity)
 			{
 				string binData;
 				uint32_t entityId = entity.ID();
-				if(!entity.pDbEntity)
+				if (!entity.pDbEntity)
 				{
 					DNPrint(0, LoggerLevel::Debug, "SaveEntity not pb Data:%u", entityId);
 					return;
@@ -160,7 +155,7 @@ void ClientEntityManager::CheckSaveEntity(bool shutdown)
 
 	for (auto& [ID, entity] : mEntityMap)
 	{
-		if(!entity.pDbEntity)
+		if (!entity.pDbEntity)
 		{
 			DNPrint(0, LoggerLevel::Debug, "SaveEntity not pb Data:%u", ID);
 			continue;

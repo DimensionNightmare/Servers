@@ -5,9 +5,6 @@ module;
 #endif
 #include <functional>
 #include <string>
-#include "google/protobuf/message.h"
-#include "hv/hasync.h"
-#include "hv/hlog.h"
 
 #include "StdMacro.h"
 export module HotReload;
@@ -22,6 +19,8 @@ import LogicServerInit;
 import DNClientProxyHelper;
 import Logger;
 import Config.Server;
+import ThirdParty.Libhv;
+import ThirdParty.PbGen;
 
 #ifdef _WIN32
 	#ifdef HOTRELOAD_BUILD
@@ -66,12 +65,12 @@ extern "C"
 {
 	HOTRELOAD int InitHotReload(DNServer* server)
 	{
-		hlog_disable();
+		HV_hlog_disable();
 
 		SetLoggerLevel(LoggerLevel::Debug);
 
 		SetLuanchConfig(server->pLuanchConfig);
-		SetDNl10nInstance(server->pDNl10nInstance);
+		SetDNl10nInstance(server->pDNl10nInstance, true);
 
 		ServerType servertype = server->GetServerType();
 		bool isDeal = false;
@@ -130,8 +129,8 @@ extern "C"
 				break;
 		}
 
-		google::protobuf::ShutdownProtobufLibrary();
-		hv::async::cleanup();
+		PB_ShutdownProtobufLibrary();
+		HV_cleanup();
 
 		return isDeal;
 	}

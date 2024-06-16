@@ -3,11 +3,8 @@ module;
 #include <string>
 #include <chrono>
 #include <cstdint>
-#include "hv/Channel.h"
 
 #include "StdMacro.h"
-#include "Client/C_Auth.pb.h"
-#include "Server/S_Auth.pb.h"
 export module GateMessage:GateGlobal;
 
 import MessagePack;
@@ -15,11 +12,8 @@ import GateServerHelper;
 import StrUtils;
 import Logger;
 import Macro;
-
-using namespace std;
-using namespace hv;
-using namespace google::protobuf;
-using namespace GMsg;
+import ThirdParty.Libhv;
+import ThirdParty.PbGen;
 
 namespace GateMessage
 {
@@ -99,5 +93,5 @@ namespace GateMessage
 
 		channel->write(binData);
 	}
-    
+
 }

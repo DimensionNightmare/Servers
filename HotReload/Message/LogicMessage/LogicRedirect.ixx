@@ -2,21 +2,17 @@ module;
 #include <coroutine>
 #include <cstdint>
 #include <list>
-#include "hv/Channel.h"
+#include <string>
 
 #include "StdMacro.h"
-#include "Client/C_Auth.pb.h"
 export module LogicMessage:LogicRedirect;
 
 import DNTask;
 import MessagePack;
 import LogicServerHelper;
 import Logger;
-
-using namespace std;
-using namespace google::protobuf;
-using namespace hv;
-using namespace GMsg;
+import ThirdParty.Libhv;
+import ThirdParty.PbGen;
 
 namespace LogicMessage
 {
@@ -54,7 +50,7 @@ namespace LogicMessage
 		// close entity save data
 		entityMan->RemoveEntity(entity->ID());
 	}
-	
+
 	// client request
 	export DNTaskVoid Msg_ReqClientLogin(SocketChannelPtr channel, uint32_t msgId, Message* msg)
 	{
@@ -71,7 +67,7 @@ namespace LogicMessage
 
 			co_await entityMan->LoadEntityData(entity, nullptr, nullptr);
 
-			if(!entity->HasFlag(ClientEntityFlag::DBInited))
+			if (!entity->HasFlag(ClientEntityFlag::DBInited))
 			{
 				DNPrint(0, LoggerLevel::Debug, "AddEntity Client but not from db!");
 			}

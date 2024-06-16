@@ -2,13 +2,12 @@ module;
 #include <unordered_map>
 #include <shared_mutex>
 #include <cstdint>
-#include "hv/EventLoopThread.h"
 export module EntityManager;
 
 import Entity;
+import ThirdParty.Libhv;
 
 using namespace std;
-using namespace hv;
 
 export template<class TEntity = Entity>
 class EntityManager
@@ -33,7 +32,7 @@ protected: // dll proxy
 	unordered_map<uint64_t, uint32_t > mMapTimer;
 	shared_mutex oTimerMutex;
 
-	EventLoopThreadPtr pLoop;
+	shared_ptr<EventLoopThread> pLoop;
 };
 
 

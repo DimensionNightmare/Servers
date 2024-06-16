@@ -3,12 +3,9 @@ module;
 #include <thread>
 #include <iostream>
 #include <unordered_map>
-#include "pqxx/connection"
-#include "hv/hsocket.h"
-#include "hv/EventLoopThread.h"
+#include <string>
 
 #include "StdMacro.h"
-#include "Common/Common.pb.h"
 export module DatabaseServer;
 
 export import DNServer;
@@ -16,9 +13,9 @@ import DNServerProxy;
 import DNClientProxy;
 import Logger;
 import Config.Server;
-
-using namespace std;
-using namespace hv;
+import ThirdParty.Libhv;
+import ThirdParty.PbGen;
+import ThirdParty.Libpqxx;
 
 export class DatabaseServer : public DNServer
 {
@@ -47,7 +44,7 @@ public: // dll override
 protected: // dll proxy
 	unique_ptr<DNClientProxy> pCSock;
 
-	unordered_map<uint16_t, unique_ptr<pqxx::connection>> pSqlProxys;
+	unordered_map<uint16_t, unique_ptr<connection>> pSqlProxys;
 
 	// record orgin info
 	string sCtlIp;
@@ -63,7 +60,7 @@ DatabaseServer::DatabaseServer()
 DatabaseServer::~DatabaseServer()
 {
 	pCSock = nullptr;
-	
+
 	pSqlProxys.clear();
 }
 
@@ -72,7 +69,7 @@ bool DatabaseServer::Init()
 	string* value = GetLuanchConfigParam("byCtl");
 	if (!value || !stoi(*value))
 	{
-		DNPrint(ErrCode_SrvByCtl, LoggerLevel::Error, nullptr);
+		DNPrint(ErrCode::ErrCode_SrvByCtl, LoggerLevel::Error, nullptr);
 		return false;
 	}
 
@@ -83,7 +80,7 @@ bool DatabaseServer::Init()
 	// connet ControlServer
 	string* ctlPort = GetLuanchConfigParam("ctlPort");
 	string* ctlIp = GetLuanchConfigParam("ctlIp");
-	if (ctlPort && ctlIp && is_ipaddr(ctlIp->c_str()))
+	if (ctlPort && ctlIp)
 	{
 		pCSock = make_unique<DNClientProxy>();
 

@@ -1,12 +1,9 @@
 module;
 #include <functional>
 #include <cstdint>
-#include "hv/Channel.h"
+#include <string>
 
 #include "StdMacro.h"
-#include "Common/Common.pb.h"
-#include "Server/S_Common.pb.h"
-#include "Server/S_Auth.pb.h"
 export module ControlMessage;
 
 export import :ControlGlobal;
@@ -14,11 +11,8 @@ import :ControlCommon;
 import :ControlAuth;
 import :ControlRedirect;
 import Logger;
-
-using namespace std;
-using namespace hv;
-using namespace google::protobuf;
-using namespace GMsg;
+import ThirdParty.Libhv;
+import ThirdParty.PbGen;
 
 export class ControlMessageHandle
 {
@@ -54,14 +48,14 @@ void ControlMessageHandle::MsgHandle(const SocketChannelPtr& channel, uint32_t m
 		}
 		else
 		{
-			DNPrint(ErrCode_MsgParse, LoggerLevel::Error, nullptr);
+			DNPrint(ErrCode::ErrCode_MsgParse, LoggerLevel::Error, nullptr);
 		}
 
 		delete message;
 	}
 	else
 	{
-		DNPrint(ErrCode_MsgHandleFind, LoggerLevel::Error, nullptr);
+		DNPrint(ErrCode::ErrCode_MsgHandleFind, LoggerLevel::Error, nullptr);
 	}
 }
 
@@ -84,14 +78,14 @@ void ControlMessageHandle::MsgRetHandle(const SocketChannelPtr& channel, size_t 
 		}
 		else
 		{
-			DNPrint(ErrCode_MsgParse, LoggerLevel::Error, nullptr);
+			DNPrint(ErrCode::ErrCode_MsgParse, LoggerLevel::Error, nullptr);
 		}
 
 		delete message;
 	}
 	else
 	{
-		DNPrint(ErrCode_MsgHandleFind, LoggerLevel::Error, nullptr);
+		DNPrint(ErrCode::ErrCode_MsgHandleFind, LoggerLevel::Error, nullptr);
 	}
 }
 
@@ -114,31 +108,31 @@ void ControlMessageHandle::MsgRedirectHandle(const SocketChannelPtr& channel, ui
 		}
 		else
 		{
-			DNPrint(ErrCode_MsgParse, LoggerLevel::Error, nullptr);
+			DNPrint(ErrCode::ErrCode_MsgParse, LoggerLevel::Error, nullptr);
 		}
 
 		delete message;
 	}
 	else
 	{
-		DNPrint(ErrCode_MsgHandleFind, LoggerLevel::Error, nullptr);
+		DNPrint(ErrCode::ErrCode_MsgHandleFind, LoggerLevel::Error, nullptr);
 	}
 }
 
 void ControlMessageHandle::RegMsgHandle()
 {
 #ifdef _WIN32
-	#define MSG_MAPPING(map, msg, func) \
+#define MSG_MAPPING(map, msg, func) \
 		map.emplace(std::hash<string>::_Do_hash(msg::GetDescriptor()->full_name()), \
 		make_pair(msg::internal_default_instance(), &ControlMessage::func))
 #elif __unix__
-	#define MSG_MAPPING(map, msg, func) \
+#define MSG_MAPPING(map, msg, func) \
 		map.emplace(std::hash<string>{}(msg::GetDescriptor()->full_name()), \
 		make_pair(msg::internal_default_instance(), &ControlMessage::func))
 #endif
 
 	MSG_MAPPING(MHandleMap, COM_ReqRegistSrv, Msg_ReqRegistSrv);
-	
+
 	MSG_MAPPING(MHandleRetMap, COM_RetHeartbeat, Exe_RetHeartbeat);
 
 	MSG_MAPPING(MHandleRedirectMap, A2g_ReqAuthAccount, Msg_ReqAuthAccount);

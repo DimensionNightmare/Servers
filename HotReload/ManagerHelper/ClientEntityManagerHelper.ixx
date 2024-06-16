@@ -5,7 +5,6 @@ module;
 #include <format>
 
 #include "StdMacro.h"
-#include "Server/S_Dedicated.pb.h"
 export module ClientEntityManagerHelper;
 
 export import ClientEntityHelper;
@@ -14,10 +13,7 @@ import Logger;
 import DNTask;
 import MessagePack;
 import StrUtils;
-
-using namespace std;
-using namespace GMsg;
-using namespace google::protobuf;
+import ThirdParty.PbGen;
 
 export class ClientEntityManagerHelper : public ClientEntityManager
 {
@@ -45,7 +41,7 @@ ClientEntity* ClientEntityManagerHelper::AddEntity(uint32_t entityId)
 			std::forward_as_tuple(entityId));
 
 		ClientEntity* entity = &mEntityMap[entityId];
-		
+
 		return entity;
 	}
 
@@ -82,17 +78,17 @@ ClientEntity* ClientEntityManagerHelper::GetEntity(uint32_t entityId)
 
 DNTaskVoid ClientEntityManagerHelper::LoadEntityData(ClientEntity* entity, d2D_ReqLoadData* inRequest, D2d_ResLoadData* inResponse)
 {
-	if(!pSqlClient || pSqlClient->RegistType() != uint8_t(ServerType::GateServer) || !pNoSqlProxy)
+	if (!pSqlClient || pSqlClient->RegistType() != uint8_t(ServerType::GateServer) || !pNoSqlProxy)
 	{
 		co_return;
 	}
 
 	auto& dbEntity = *entity->pDbEntity;
 
-	if(entity->HasFlag(ClientEntityFlag::DBInited) || entity->HasFlag(ClientEntityFlag::DBIniting))
+	if (entity->HasFlag(ClientEntityFlag::DBInited) || entity->HasFlag(ClientEntityFlag::DBIniting))
 	{
 		DNPrint(0, LoggerLevel::Debug, "entity %u is DBIniting. return .", entity->ID());
-		if(inResponse)
+		if (inResponse)
 		{
 			string* entity_data = inResponse->add_entity_data();
 			dbEntity.SerializeToString(entity_data);
@@ -103,18 +99,18 @@ DNTaskVoid ClientEntityManagerHelper::LoadEntityData(ClientEntity* entity, d2D_R
 	string table_name = dbEntity.GetDescriptor()->full_name();
 	uint32_t entityId = entity->ID();
 	string keyName = format("{}_{}", table_name, entityId);
-	
+
 	// nosql
 	string binData;
-	if(auto res = pNoSqlProxy->get(keyName))
+	if (auto res = pNoSqlProxy->get(keyName))
 	{
 		binData = res.value();
 	}
-	
-	if(!binData.empty())
+
+	if (!binData.empty())
 	{
 		dbEntity.ParseFromString(binData);
-		if(inResponse)
+		if (inResponse)
 		{
 			string* entity_data = inResponse->add_entity_data();
 			*entity_data = binData;
@@ -127,8 +123,8 @@ DNTaskVoid ClientEntityManagerHelper::LoadEntityData(ClientEntity* entity, d2D_R
 	entity->SetFlag(ClientEntityFlag::DBIniting);
 	// sql
 	d2D_ReqLoadData request;
-	
-	if(inRequest)
+
+	if (inRequest)
 	{
 		request = *inRequest;
 	}
@@ -167,7 +163,7 @@ DNTaskVoid ClientEntityManagerHelper::LoadEntityData(ClientEntity* entity, d2D_R
 		}
 	}
 
-	if(int code = response.state_code())
+	if (int code = response.state_code())
 	{
 		entity->ClearFlag(ClientEntityFlag::DBIniting);
 
@@ -178,7 +174,7 @@ DNTaskVoid ClientEntityManagerHelper::LoadEntityData(ClientEntity* entity, d2D_R
 		co_return;
 	}
 
-	if(int lenth = response.entity_data_size(); lenth == 1)
+	if (int lenth = response.entity_data_size(); lenth == 1)
 	{
 		const string entityData = response.entity_data(0);
 		dbEntity.ParseFromString(entityData);
@@ -193,8 +189,8 @@ DNTaskVoid ClientEntityManagerHelper::LoadEntityData(ClientEntity* entity, d2D_R
 	}
 
 	entity->ClearFlag(ClientEntityFlag::DBIniting);
-	
-	if(inResponse)
+
+	if (inResponse)
 	{
 		*inResponse = response;
 	}

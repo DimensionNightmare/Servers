@@ -1,11 +1,9 @@
 module;
 #include <cstdint>
-#include "hv/EventLoop.h"
-#include "hv/hsocket.h"
-#include "hv/EventLoopThread.h"
+#include <string>
+#include <memory>
 
 #include "StdMacro.h"
-#include "Common/Common.pb.h"
 export module GlobalServer;
 
 export import DNServer;
@@ -14,9 +12,8 @@ import DNClientProxy;
 import ServerEntityManager;
 import Logger;
 import Config.Server;
-
-using namespace std;
-using namespace hv;
+import ThirdParty.Libhv;
+import ThirdParty.PbGen;
 
 export class GlobalServer : public DNServer
 {
@@ -84,32 +81,18 @@ bool GlobalServer::Init()
 	int listenfd = pSSock->createsocket(port, "0.0.0.0");
 	if (listenfd < 0)
 	{
-		DNPrint(ErrCode_CreateSocket, LoggerLevel::Error, nullptr);
+		DNPrint(ErrCode::ErrCode_CreateSocket, LoggerLevel::Error, nullptr);
 		return false;
 	}
 
-	// if not set port mean need get port by self 
-	if (port == 0)
-	{
-		struct sockaddr_in addr;
-		socklen_t addrLen = sizeof(addr);
-		if (getsockname(listenfd, reinterpret_cast<struct sockaddr*>(&addr), &addrLen) < 0)
-		{
-			DNPrint(ErrCode_GetSocketName, LoggerLevel::Error, nullptr);
-			return false;
-		}
-
-		pSSock->port = ntohs(addr.sin_port);
-	}
-
-	DNPrint(TipCode_SrvListenOn, LoggerLevel::Normal, nullptr, pSSock->port, listenfd);
-
 	pSSock->Init();
+
+	DNPrint(TipCode::TipCode_SrvListenOn, LoggerLevel::Normal, nullptr, pSSock->port, listenfd);
 
 	//connet ControlServer
 	string* ctlPort = GetLuanchConfigParam("ctlPort");
 	string* ctlIp = GetLuanchConfigParam("ctlIp");
-	if (ctlPort && ctlIp && is_ipaddr(ctlIp->c_str()))
+	if (ctlPort && ctlIp)
 	{
 		pCSock = make_unique<DNClientProxy>();
 
@@ -126,7 +109,8 @@ bool GlobalServer::Init()
 }
 
 void GlobalServer::InitCmd(unordered_map<string, function<void(stringstream*)>>& cmdMap)
-{}
+{
+}
 
 bool GlobalServer::Start()
 {
@@ -137,7 +121,7 @@ bool GlobalServer::Start()
 
 	if (!pSSock)
 	{
-		DNPrint(ErrCode_SrvNotInit, LoggerLevel::Error, nullptr);
+		DNPrint(ErrCode::ErrCode_SrvNotInit, LoggerLevel::Error, nullptr);
 		return false;
 	}
 

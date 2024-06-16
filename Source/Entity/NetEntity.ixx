@@ -1,11 +1,10 @@
 module;
 #include <cstdint>
-#include "hv/Channel.h"
 export module NetEntity;
 
 export import Entity;
+import ThirdParty.Libhv;
 
-using namespace hv;
 using namespace std;
 
 export class NetEntity : public Entity
@@ -29,7 +28,8 @@ protected: // dll proxy
 };
 
 NetEntity::NetEntity(uint32_t id) : Entity(id)
-{}
+{
+}
 
 NetEntity::~NetEntity()
 {

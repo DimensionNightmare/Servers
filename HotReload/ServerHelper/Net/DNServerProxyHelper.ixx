@@ -2,7 +2,6 @@ module;
 #include <functional>
 #include <shared_mutex>
 #include <cstdint>
-#include "google/protobuf/message.h"
 
 #include "StdMacro.h"
 export module DNServerProxyHelper;
@@ -10,9 +9,7 @@ export module DNServerProxyHelper;
 export import DNServerProxy;
 import DNTask;
 import Macro;
-
-using namespace std;
-using namespace google::protobuf;
+import ThirdParty.PbGen;
 
 export class DNServerProxyHelper : public DNServerProxy
 {

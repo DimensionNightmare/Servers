@@ -1,14 +1,16 @@
 module;
 #include <fstream>
 #include <format>
+#include <string>
+#include <iostream>
+#include <unordered_map>
 
-#include "l10n/l10n.pb.h"
 export module I10nText;
 
 import Config.Server;
+import ThirdParty.PbGen;
 
 using namespace std;
-using namespace l10n;
 
 enum class LangType : uint8_t
 {
@@ -22,10 +24,14 @@ export class DNl10n
 	typedef const string& (TipText::* TipTextFunc)() const;
 public:
 	DNl10n();
+	~DNl10n();
 	const char* InitConfigData();
 public:
 	unique_ptr<L10nErr> pErrMsgData;
+	unordered_map<uint32_t, const ErrText*> mErrMsgDllData;
+
 	unique_ptr<L10nTip> pTipMsgData;
+	unordered_map<uint32_t, const TipText*> mTipMsgDllData;
 
 	ErrTextFunc pErrMsgFunc = nullptr;
 	TipTextFunc pTipMsgFunc = nullptr;
@@ -34,13 +40,49 @@ public:
 };
 
 DNl10n::DNl10n()
-{}
+{
+}
+
+DNl10n::~DNl10n()
+{
+	pErrMsgData = nullptr;
+	pTipMsgData =  nullptr;
+
+	mErrMsgDllData.clear();
+	mTipMsgDllData.clear();
+
+}
 
 DNl10n* PInstance = nullptr;
+bool DllSpace = false;
 
-export void SetDNl10nInstance(DNl10n* point)
+export void SetDNl10nInstance(DNl10n* point, bool IsDllInit = false)
 {
 	PInstance = point;
+
+	DllSpace = IsDllInit;
+
+	/// PB's map find key need same runtimespace.
+	/// reason is absl hashkey need random address.
+	/// absl\hash\internal\hash.h kSeed
+	if(DllSpace)
+	{
+		auto& errMap = PInstance->mErrMsgDllData;
+		errMap.clear();
+
+		for (auto& one : PInstance->pErrMsgData->data_map())
+		{
+			errMap[one.first] = &one.second;
+		}
+
+		auto& tipMap = PInstance->mTipMsgDllData;
+		tipMap.clear();
+
+		for (auto& one : PInstance->pTipMsgData->data_map())
+		{
+			tipMap[one.first] = &one.second;
+		}		
+	}
 }
 
 const char* DNl10n::InitConfigData()
@@ -127,34 +169,64 @@ const char* DNl10n::InitConfigData()
 
 export const char* GetErrText(int type)
 {
-	if (!PInstance || !ErrCode_IsValid(type))
+	if (!PInstance || !PB_ErrCode_IsValid(type))
 	{
 		return nullptr;
 	}
 
-	auto& dataMap = PInstance->pErrMsgData->data_map();
-	auto data = dataMap.find(type);
-	if (data == dataMap.end())
+	if(DllSpace)
 	{
-		throw invalid_argument(format("I10n Err Config not exist this type {}", ErrCode_Name(type)).c_str());
-	}
+		auto& dataMap = PInstance->pErrMsgData->data_map();
+		auto data = dataMap.find(type);
+		if (data == dataMap.end())
+		{
+			throw invalid_argument(format("I10n Err Config not exist this type {}", PB_ErrCode_Name(type)));
+		}
 
-	return (data->second.*(PInstance->pErrMsgFunc))().c_str();
+		return (data->second.*(PInstance->pErrMsgFunc))().c_str();
+	}
+	else
+	{
+		auto& dataMap = PInstance->mErrMsgDllData;
+		auto data = dataMap.find(type);
+		if (data == dataMap.end())
+		{
+			throw invalid_argument(format("I10n Err Config not exist this type {}", PB_ErrCode_Name(type)));
+		}
+
+		return (data->second->*(PInstance->pErrMsgFunc))().c_str();
+	}
+	
 }
 
 export const char* GetTipText(int type)
 {
-	if (!PInstance || !TipCode_IsValid(type))
+	if (!PInstance || !PB_TipCode_IsValid(type))
 	{
 		return nullptr;
 	}
 
-	auto& dataMap = PInstance->pTipMsgData->data_map();
-	auto data = dataMap.find(type);
-	if (data == dataMap.end())
+	if(!DllSpace)
 	{
-		throw invalid_argument(format("I10n Tip Config not exist this type {}", TipCode_Name(type)).c_str());
+		auto& dataMap = PInstance->pTipMsgData->data_map();
+		auto data = dataMap.find(type);
+		if (data == dataMap.end())
+		{
+			throw invalid_argument(format("I10n Tip Config not exist this type {}", PB_TipCode_Name(type)));
+		}
+
+		return (data->second.*(PInstance->pTipMsgFunc))().c_str();
+	}
+	else
+	{
+		auto& dataMap = PInstance->mTipMsgDllData;
+		auto data = dataMap.find(type);
+		if (data == dataMap.end())
+		{
+			throw invalid_argument(format("I10n Tip Config not exist this type {}", PB_TipCode_Name(type)));
+		}
+
+		return (data->second->*(PInstance->pTipMsgFunc))().c_str();
 	}
 
-	return (data->second.*(PInstance->pTipMsgFunc))().c_str();
 }

@@ -10,5 +10,3 @@ private:
 
 public:
 };
-
-

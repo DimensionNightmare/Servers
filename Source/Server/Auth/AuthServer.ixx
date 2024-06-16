@@ -1,11 +1,9 @@
 module;
 #include <cstdint>
-#include "pqxx/connection"
-#include "hv/hsocket.h"
-#include "hv/EventLoopThread.h"
+#include <string>
+#include <memory>
 
 #include "StdMacro.h"
-#include "Common/Common.pb.h"
 export module AuthServer;
 
 export import DNServer;
@@ -13,9 +11,9 @@ import DNWebProxy;
 import DNClientProxy;
 import Logger;
 import Config.Server;
-
-using namespace std;
-using namespace hv;
+import ThirdParty.Libhv;
+import ThirdParty.PbGen;
+import ThirdParty.Libpqxx;
 
 export class AuthServer : public DNServer
 {
@@ -38,7 +36,7 @@ public:
 
 	virtual void LoopEvent(function<void(EventLoopPtr)> func) override;
 
-	pqxx::connection* SqlProxy() { return pSqlProxy.get(); }
+	connection* SqlProxy() { return pSqlProxy.get(); }
 
 public: // dll override
 	virtual DNWebProxy* GetSSock() { return pSSock.get(); }
@@ -46,7 +44,7 @@ public: // dll override
 protected: // dll proxy
 	unique_ptr<DNWebProxy> pSSock;
 	unique_ptr<DNClientProxy> pCSock;
-	unique_ptr<pqxx::connection> pSqlProxy;
+	unique_ptr<connection> pSqlProxy;
 };
 
 
@@ -71,7 +69,7 @@ bool AuthServer::Init()
 	string* value = GetLuanchConfigParam("byCtl");
 	if (!value || !stoi(*value))
 	{
-		DNPrint(ErrCode_SrvByCtl, LoggerLevel::Error, nullptr);
+		DNPrint(ErrCode::ErrCode_SrvByCtl, LoggerLevel::Error, nullptr);
 		return false;
 	}
 
@@ -90,12 +88,12 @@ bool AuthServer::Init()
 	pSSock->setPort(port);
 	pSSock->setThreadNum(4);
 
-	DNPrint(TipCode_SrvListenOn, LoggerLevel::Normal, nullptr, pSSock->port, 0);
+	DNPrint(TipCode::TipCode_SrvListenOn, LoggerLevel::Normal, nullptr, pSSock->port, 0);
 
 	//connet ControlServer
 	string* ctlPort = GetLuanchConfigParam("ctlPort");
 	string* ctlIp = GetLuanchConfigParam("ctlIp");
-	if (ctlPort && ctlIp && is_ipaddr(ctlIp->c_str()))
+	if (ctlPort && ctlIp)
 	{
 		pCSock = make_unique<DNClientProxy>();
 
@@ -118,7 +116,7 @@ bool AuthServer::Start()
 {
 	if (!pSSock)
 	{
-		DNPrint(ErrCode_SrvNotInit, LoggerLevel::Error, nullptr);
+		DNPrint(ErrCode::ErrCode_SrvNotInit, LoggerLevel::Error, nullptr);
 		return false;
 	}
 	int code = pSSock->Start();

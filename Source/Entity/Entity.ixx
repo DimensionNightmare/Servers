@@ -38,4 +38,5 @@ Entity::Entity(uint32_t id)
 }
 
 Entity::~Entity()
-{}
+{
+}

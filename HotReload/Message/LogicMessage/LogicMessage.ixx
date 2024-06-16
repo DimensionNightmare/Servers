@@ -1,14 +1,9 @@
 module;
 #include <functional>
 #include <cstdint>
-#include "hv/Channel.h"
+#include <string>
 
 #include "StdMacro.h"
-#include "Common/Common.pb.h"
-#include "Server/S_Common.pb.h"
-#include "Client/C_Auth.pb.h"
-#include "Server/S_Gate.pb.h"
-#include "Server/S_Dedicated.pb.h"
 export module LogicMessage;
 
 export import :LogicCommon;
@@ -16,11 +11,8 @@ import :LogicGate;
 import :LogicRedirect;
 import :LogicDedicated;
 import Logger;
-
-using namespace std;
-using namespace hv;
-using namespace google::protobuf;
-using namespace GMsg;
+import ThirdParty.Libhv;
+import ThirdParty.PbGen;
 
 export class LogicMessageHandle
 {
@@ -57,14 +49,14 @@ void LogicMessageHandle::MsgHandle(const SocketChannelPtr& channel, uint32_t msg
 		}
 		else
 		{
-			DNPrint(ErrCode_MsgParse, LoggerLevel::Error, nullptr);
+			DNPrint(ErrCode::ErrCode_MsgParse, LoggerLevel::Error, nullptr);
 		}
 
 		delete message;
 	}
 	else
 	{
-		DNPrint(ErrCode_MsgHandleFind, LoggerLevel::Error, nullptr);
+		DNPrint(ErrCode::ErrCode_MsgHandleFind, LoggerLevel::Error, nullptr);
 	}
 }
 
@@ -87,14 +79,14 @@ void LogicMessageHandle::MsgRetHandle(const SocketChannelPtr& channel, size_t ms
 		}
 		else
 		{
-			DNPrint(ErrCode_MsgParse, LoggerLevel::Error, nullptr);
+			DNPrint(ErrCode::ErrCode_MsgParse, LoggerLevel::Error, nullptr);
 		}
 
 		delete message;
 	}
 	else
 	{
-		DNPrint(ErrCode_MsgHandleFind, LoggerLevel::Error, nullptr);
+		DNPrint(ErrCode::ErrCode_MsgHandleFind, LoggerLevel::Error, nullptr);
 	}
 }
 
@@ -117,25 +109,25 @@ void LogicMessageHandle::MsgRedirectHandle(const SocketChannelPtr& channel, uint
 		}
 		else
 		{
-			DNPrint(ErrCode_MsgParse, LoggerLevel::Error, nullptr);
+			DNPrint(ErrCode::ErrCode_MsgParse, LoggerLevel::Error, nullptr);
 		}
 
 		delete message;
 	}
 	else
 	{
-		DNPrint(ErrCode_MsgHandleFind, LoggerLevel::Error, nullptr);
+		DNPrint(ErrCode::ErrCode_MsgHandleFind, LoggerLevel::Error, nullptr);
 	}
 }
 
 void LogicMessageHandle::RegMsgHandle()
 {
 #ifdef _WIN32
-	#define MSG_MAPPING(map, msg, func) \
+#define MSG_MAPPING(map, msg, func) \
 		map.emplace(std::hash<string>::_Do_hash(msg::GetDescriptor()->full_name()), \
 		make_pair(msg::internal_default_instance(), &LogicMessage::func))
 #elif __unix__
-	#define MSG_MAPPING(map, msg, func) \
+#define MSG_MAPPING(map, msg, func) \
 		map.emplace(std::hash<string>{}(msg::GetDescriptor()->full_name()), \
 		make_pair(msg::internal_default_instance(), &LogicMessage::func))
 #endif
@@ -147,7 +139,7 @@ void LogicMessageHandle::RegMsgHandle()
 	MSG_MAPPING(MHandleRetMap, COM_RetHeartbeat, Exe_RetHeartbeat);
 	MSG_MAPPING(MHandleRetMap, g2L_RetProxyOffline, Exe_RetProxyOffline);
 	MSG_MAPPING(MHandleRetMap, d2D_ReqSaveData, Msg_ReqSaveData);
-	
+
 
 	MSG_MAPPING(MHandleRedirectMap, S2C_RetAccountReplace, Exe_RetAccountReplace);
 	MSG_MAPPING(MHandleRedirectMap, C2S_ReqAuthToken, Msg_ReqClientLogin);

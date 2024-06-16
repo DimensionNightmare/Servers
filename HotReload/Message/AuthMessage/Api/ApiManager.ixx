@@ -1,34 +1,39 @@
 module;
-#include "hv/HttpServer.h"
+#include <functional>
+
+#include "hv/json.hpp"
 export module ApiManager;
 
 import AuthServerHelper;
 import :ApiAuth;
+import ThirdParty.Libhv;
 
-using namespace hv;
+using namespace std;
 
 export void ApiInit(HttpService* service)
 {
-	service->preprocessor = [](HttpRequest* req, HttpResponse* resp) -> int
+	service->preprocessor = [](const HttpContextPtr& ctx) -> int
 		{
-			if (req->path.contains("/Test/"))
+			static int success = 0;
+
+			if (ctx->request->path.contains("/Test/"))
 			{
-				return HTTP_STATUS_NEXT;
+				return success;
 			}
 
 			AuthServerHelper* authServer = GetAuthServer();
 
-			Json errData;
+			nlohmann::json errData;
 
 			if (authServer->GetCSock()->RegistState() != RegistState::Registed)
 			{
-				errData["code"] = HTTP_STATUS_BAD_REQUEST;
+				errData["code"] = http_status::HTTP_STATUS_BAD_REQUEST;
 				errData["message"] = "Server Disconnect!";
-				resp->SetBody(errData.dump());
-				return !HTTP_STATUS_NEXT;
+				ctx->response->SetBody(errData.dump());
+				return !success;
 			}
 
-			return HTTP_STATUS_NEXT;
+			return success;
 		};
 
 	ApiAuth(service);

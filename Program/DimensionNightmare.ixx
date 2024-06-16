@@ -2,6 +2,7 @@ module;
 #ifdef _WIN32
 	#include <consoleapi2.h>
 	#include <libloaderapi.h>
+	#include <WinBase.h>
 #elif __unix__
 	#include <dlfcn.h>
 #endif
@@ -10,10 +11,11 @@ module;
 #include <format>
 #include <list>
 #include <random>
-#include "hv/EventLoop.h"
+#include <unordered_map>
+#include <string>
+#include <functional>
 
 #include "StdMacro.h"
-#include "Common/Common.pb.h"
 export module DimensionNightmare;
 
 import ControlServer;
@@ -26,8 +28,7 @@ import StrUtils;
 import I10nText;
 import Logger;
 import Config.Server;
-
-using namespace std;
+import ThirdParty.PbGen;
 
 #ifdef __unix__
 #define Sleep(ms) usleep(ms*1000)
@@ -48,7 +49,7 @@ struct HotReloadDll
 		void* hModule = LoadLibraryA(fullPath.c_str());
 		if (!hModule)
 		{
-			DNPrint(ErrCode_DllLoad, LoggerLevel::Error, nullptr, GetLastError());
+			DNPrint(ErrCode::ErrCode_DllLoad, LoggerLevel::Error, nullptr, GetLastError());
 			return nullptr;
 		}
 
@@ -98,7 +99,7 @@ struct HotReloadDll
 	{
 		if (!filesystem::exists(SDllDir))
 		{
-			DNPrint(ErrCode_DllMenuPath, LoggerLevel::Error, nullptr);
+			DNPrint(ErrCode::ErrCode_DllMenuPath, LoggerLevel::Error, nullptr);
 			return false;
 		}
 
@@ -411,7 +412,7 @@ bool DimensionNightmare::Init()
 			pServer = make_unique<LogicServer>();
 			break;
 		default:
-			DNPrint(ErrCode_SrvTypeNotVaild, LoggerLevel::Error, nullptr);
+			DNPrint(ErrCode::ErrCode_SrvTypeNotVaild, LoggerLevel::Error, nullptr);
 			return false;
 	}
 
@@ -489,7 +490,6 @@ void DimensionNightmare::InitCmdHandle()
 			ZeroMemory(&startInfo, sizeof(startInfo));
 			startInfo.cb = sizeof(startInfo);
 
-			startInfo.wShowWindow = SW_NORMAL;
 			startInfo.dwFlags = STARTF_USESHOWWINDOW;
 			if (CreateProcessA(NULL, allStr.data(),
 				NULL, NULL, FALSE, CREATE_NEW_CONSOLE, NULL, NULL, &startInfo, &pinfo))

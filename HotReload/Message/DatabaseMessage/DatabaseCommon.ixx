@@ -1,10 +1,10 @@
 module;
 #include <coroutine>
 #include <cstdint>
-#include "hv/Channel.h"
+#include <string>
+#include <memory>
 
 #include "StdMacro.h"
-#include "Server/S_Common.pb.h"
 export module DatabaseMessage:DatabaseCommon;
 
 import DNTask;
@@ -12,11 +12,8 @@ import MessagePack;
 import DatabaseServerHelper;
 import Logger;
 import Macro;
-
-using namespace std;
-using namespace hv;
-using namespace google::protobuf;
-using namespace GMsg;
+import ThirdParty.Libhv;
+import ThirdParty.PbGen;
 
 namespace DatabaseMessage
 {

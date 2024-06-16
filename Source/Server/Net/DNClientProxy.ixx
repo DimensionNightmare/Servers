@@ -2,23 +2,17 @@ module;
 #include <functional> 
 #include <shared_mutex>
 #include <cstdint>
-#include "hv/TcpClient.h"
-#include "hv/EventLoopThread.h"
-#include "google/protobuf/message.h"
 
 #include "StdMacro.h"
-#include "Server/S_Common.pb.h"
-#include "Common/Common.pb.h"
+#include "hv/EventLoop.h"
+#include "hv/hsocket.h"
 export module DNClientProxy;
 
 import DNTask;
 import MessagePack;
 import Logger;
-
-using namespace std;
-using namespace google::protobuf;
-using namespace hv;
-using namespace GMsg;
+import ThirdParty.Libhv;
+import ThirdParty.PbGen;
 
 export enum class RegistState : uint8_t
 {
@@ -112,7 +106,7 @@ public: // dll override
 	uint32_t GetMsgId() { return ++iMsgId; }
 
 protected: // dll proxy
-	EventLoopThreadPtr pLoop;
+	shared_ptr<EventLoopThread> pLoop;
 	// only oddnumber
 	atomic<uint32_t> iMsgId;
 	// unordered_
@@ -193,7 +187,7 @@ void DNClientProxy::TickRegistEvent(size_t timerID)
 		}
 		else
 		{
-			DNPrint(ErrCode_NotCallbackEvent, LoggerLevel::Error, nullptr);
+			DNPrint(ErrCode::ErrCode_NotCallbackEvent, LoggerLevel::Error, nullptr);
 		}
 	}
 	else

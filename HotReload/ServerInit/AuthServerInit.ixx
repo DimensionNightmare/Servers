@@ -1,10 +1,7 @@
 module;
-#include "google/protobuf/message.h"
-#include "hv/Channel.h"
-#include "hv/HttpServer.h"
+#include <string>
 
 #include "StdMacro.h"
-#include "Common/Common.pb.h"
 export module AuthServerInit;
 
 import AuthServerHelper;
@@ -13,10 +10,8 @@ import AuthMessage;
 import DNTask;
 import Logger;
 import Macro;
-
-using namespace hv;
-using namespace std;
-using namespace google::protobuf;
+import ThirdParty.Libhv;
+import ThirdParty.PbGen;
 
 export int HandleAuthServerInit(DNServer* server);
 export int HandleAuthServerShutdown(DNServer* server);
@@ -47,13 +42,13 @@ int HandleAuthServerInit(DNServer* server)
 
 				if (channel->isConnected())
 				{
-					DNPrint(TipCode_CliConnOn, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
+					DNPrint(TipCode::TipCode_CliConnOn, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
 					clientSock->SetRegistEvent(&AuthMessage::Evt_ReqRegistSrv);
 					TICK_MAINSPACE_SIGN_FUNCTION(DNClientProxy, InitConnectedChannel, clientSock, channel);
 				}
 				else
 				{
-					DNPrint(TipCode_CliConnOff, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
+					DNPrint(TipCode::TipCode_CliConnOff, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
 					if (clientSock->RegistState() == RegistState::Registed)
 					{
 						clientSock->RegistState() = RegistState::None;
@@ -93,12 +88,12 @@ int HandleAuthServerInit(DNServer* server)
 					}
 					else
 					{
-						DNPrint(ErrCode_MsgFind, LoggerLevel::Error, nullptr);
+						DNPrint(ErrCode::ErrCode_MsgFind, LoggerLevel::Error, nullptr);
 					}
 				}
 				else
 				{
-					DNPrint(ErrCode_MsgDealType, LoggerLevel::Error, nullptr);
+					DNPrint(ErrCode::ErrCode_MsgDealType, LoggerLevel::Error, nullptr);
 				}
 			};
 

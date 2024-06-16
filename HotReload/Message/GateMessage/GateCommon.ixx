@@ -2,22 +2,18 @@ module;
 #include <coroutine>
 #include <cstdint>
 #include <list>
-#include "hv/Channel.h"
+#include <string>
+#include <memory>
 
 #include "StdMacro.h"
-#include "Server/S_Common.pb.h"
-#include "Server/S_Gate.pb.h"
 export module GateMessage:GateCommon;
 
 import DNTask;
 import MessagePack;
 import GateServerHelper;
 import Logger;
-
-using namespace std;
-using namespace hv;
-using namespace google::protobuf;
-using namespace GMsg;
+import ThirdParty.Libhv;
+import ThirdParty.PbGen;
 
 namespace GateMessage
 {

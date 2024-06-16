@@ -10,8 +10,6 @@ export import ServerEntityManager;
 export import ServerEntityHelper;
 import Logger;
 
-using namespace std;
-
 export class ServerEntityManagerHelper : public ServerEntityManager
 {
 private:
@@ -43,7 +41,7 @@ ServerEntity* ServerEntityManagerHelper::AddEntity(uint32_t entityId, ServerType
 			std::forward_as_tuple(entityId, regType));
 
 		ServerEntity* entity = &mEntityMap[entityId];
-		
+
 		mEntityMapList[regType].emplace_back(entity);
 		return entity;
 	}

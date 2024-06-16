@@ -1,17 +1,15 @@
 module;
 #include <cstdint>
-#include "hv/Channel.h"
+#include <string>
 
-#include "Server/S_Common.pb.h"
 export module ControlMessage:ControlCommon;
 
 import DNTask;
 import MessagePack;
 import ControlServerHelper;
+import ThirdParty.Libhv;
+import ThirdParty.PbGen;
 
-using namespace google::protobuf;
-using namespace GMsg;
-using namespace hv;
 using namespace std;
 
 namespace ControlMessage

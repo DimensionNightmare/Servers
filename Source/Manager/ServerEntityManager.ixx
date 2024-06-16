@@ -12,8 +12,6 @@ export import ServerEntity;
 import EntityManager;
 import Logger;
 
-using namespace std;
-
 export class ServerEntityManager : public EntityManager<ServerEntity>
 {
 public:
@@ -23,7 +21,7 @@ public:
 
 	virtual bool Init() override;
 
-	
+
 	virtual void TickMainFrame() override;
 
 public: // dll override

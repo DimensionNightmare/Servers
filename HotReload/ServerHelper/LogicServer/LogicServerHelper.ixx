@@ -1,10 +1,8 @@
 module;
 #include <format>
 #include <cstdint>
-#include "sw/redis++/redis++.h"
 
 #include "StdMacro.h"
-
 export module LogicServerHelper;
 
 export import LogicServer;
@@ -14,9 +12,7 @@ export import ServerEntityManagerHelper;
 export import ClientEntityManagerHelper;
 import Logger;
 import Config.Server;
-
-using namespace std;
-using namespace sw::redis;
+import ThirdParty.RedisPP;
 
 export class LogicServerHelper : public LogicServer
 {
@@ -42,7 +38,7 @@ static LogicServerHelper* PLogicServerHelper = nullptr;
 export void SetLogicServer(LogicServer* server)
 {
 	PLogicServerHelper = static_cast<LogicServerHelper*>(server);
-	assert(PLogicServerHelper != nullptr);
+	ASSERT(PLogicServerHelper != nullptr);
 }
 
 export LogicServerHelper* GetLogicServer()

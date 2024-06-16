@@ -1,11 +1,8 @@
 module;
 #include <functional>
 #include <format>
-#include "google/protobuf/message.h"
-#include "hv/Channel.h"
 
 #include "StdMacro.h"
-#include "Common/Common.pb.h"
 export module LogicServerInit;
 
 import LogicServerHelper;
@@ -14,10 +11,8 @@ import LogicMessage;
 import DNTask;
 import Logger;
 import Macro;
-
-using namespace hv;
-using namespace std;
-using namespace google::protobuf;
+import ThirdParty.Libhv;
+import ThirdParty.PbGen;
 
 export int HandleLogicServerInit(DNServer* server);
 export int HandleLogicServerShutdown(DNServer* server);
@@ -40,11 +35,11 @@ int HandleLogicServerInit(DNServer* server)
 				const string& peeraddr = channel->peeraddr();
 				if (channel->isConnected())
 				{
-					DNPrint(TipCode_CliConnOn, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
+					DNPrint(TipCode::TipCode_CliConnOn, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
 				}
 				else
 				{
-					DNPrint(TipCode_CliConnOff, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
+					DNPrint(TipCode::TipCode_CliConnOff, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
 					if (ServerEntity* entity = channel->getContext<ServerEntity>())
 					{
 						ServerEntityManagerHelper* entityMan = serverProxy->GetServerEntityManager();
@@ -92,12 +87,12 @@ int HandleLogicServerInit(DNServer* server)
 					}
 					else
 					{
-						DNPrint(ErrCode_MsgFind, LoggerLevel::Error, nullptr);
+						DNPrint(ErrCode::ErrCode_MsgFind, LoggerLevel::Error, nullptr);
 					}
 				}
 				else
 				{
-					DNPrint(ErrCode_MsgDealType, LoggerLevel::Error, nullptr);
+					DNPrint(ErrCode::ErrCode_MsgDealType, LoggerLevel::Error, nullptr);
 				}
 			};
 
@@ -118,7 +113,7 @@ int HandleLogicServerInit(DNServer* server)
 
 				if (channel->isConnected())
 				{
-					DNPrint(TipCode_SrvConnOn, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
+					DNPrint(TipCode::TipCode_SrvConnOn, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
 					clientSock->SetRegistEvent(&LogicMessage::Evt_ReqRegistSrv);
 					TICK_MAINSPACE_SIGN_FUNCTION(DNClientProxy, InitConnectedChannel, clientSock, channel);
 
@@ -126,7 +121,7 @@ int HandleLogicServerInit(DNServer* server)
 				}
 				else
 				{
-					DNPrint(TipCode_SrvConnOff, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
+					DNPrint(TipCode::TipCode_SrvConnOff, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
 
 					string origin = format("{}:{}", serverProxy->GetCtlIp(), serverProxy->GetCtlPort());
 					if (clientSock->RegistState() == RegistState::Registed || peeraddr != origin)
@@ -190,12 +185,12 @@ int HandleLogicServerInit(DNServer* server)
 					}
 					else
 					{
-						DNPrint(ErrCode_MsgFind, LoggerLevel::Error, nullptr);
+						DNPrint(ErrCode::ErrCode_MsgFind, LoggerLevel::Error, nullptr);
 					}
 				}
 				else
 				{
-					DNPrint(ErrCode_MsgDealType, LoggerLevel::Error, nullptr);
+					DNPrint(ErrCode::ErrCode_MsgDealType, LoggerLevel::Error, nullptr);
 				}
 			};
 
@@ -228,7 +223,7 @@ int HandleLogicServerShutdown(DNServer* server)
 	}
 
 	serverProxy->ClearNosqlProxy();
-	
+
 	if (ClientEntityManagerHelper* entityMan = serverProxy->GetClientEntityManager())
 	{
 		entityMan->ClearNosqlProxy();

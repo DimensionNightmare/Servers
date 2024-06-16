@@ -1,14 +1,9 @@
 module;
 #include <functional>
 #include <cstdint>
-#include "hv/Channel.h"
+#include <string>
 
 #include "StdMacro.h"
-#include "Common/Common.pb.h"
-#include "Server/S_Common.pb.h"
-#include "Server/S_Global.pb.h"
-#include "Server/S_Auth.pb.h"
-#include "Server/S_Gate.pb.h"
 export module GlobalMessage;
 
 export import :GlobalCommon;
@@ -17,11 +12,8 @@ import :GlobalGate;
 import :GlobalRedirect;
 import Logger;
 import Config.Server;
-
-using namespace std;
-using namespace hv;
-using namespace google::protobuf;
-using namespace GMsg;
+import ThirdParty.Libhv;
+import ThirdParty.PbGen;
 
 export class GlobalMessageHandle
 {
@@ -57,14 +49,14 @@ void GlobalMessageHandle::MsgHandle(const SocketChannelPtr& channel, uint32_t ms
 		}
 		else
 		{
-			DNPrint(ErrCode_MsgParse, LoggerLevel::Error, nullptr);
+			DNPrint(ErrCode::ErrCode_MsgParse, LoggerLevel::Error, nullptr);
 		}
 
 		delete message;
 	}
 	else
 	{
-		DNPrint(ErrCode_MsgHandleFind, LoggerLevel::Error, nullptr);
+		DNPrint(ErrCode::ErrCode_MsgHandleFind, LoggerLevel::Error, nullptr);
 	}
 }
 
@@ -87,14 +79,14 @@ void GlobalMessageHandle::MsgRetHandle(const SocketChannelPtr& channel, size_t m
 		}
 		else
 		{
-			DNPrint(ErrCode_MsgParse, LoggerLevel::Error, nullptr);
+			DNPrint(ErrCode::ErrCode_MsgParse, LoggerLevel::Error, nullptr);
 		}
 
 		delete message;
 	}
 	else
 	{
-		DNPrint(ErrCode_MsgHandleFind, LoggerLevel::Error, nullptr);
+		DNPrint(ErrCode::ErrCode_MsgHandleFind, LoggerLevel::Error, nullptr);
 	}
 }
 
@@ -117,25 +109,25 @@ void GlobalMessageHandle::MsgRedirectHandle(const SocketChannelPtr& channel, uin
 		}
 		else
 		{
-			DNPrint(ErrCode_MsgParse, LoggerLevel::Error, nullptr);
+			DNPrint(ErrCode::ErrCode_MsgParse, LoggerLevel::Error, nullptr);
 		}
 
 		delete message;
 	}
 	else
 	{
-		DNPrint(ErrCode_MsgHandleFind, LoggerLevel::Error, nullptr);
+		DNPrint(ErrCode::ErrCode_MsgHandleFind, LoggerLevel::Error, nullptr);
 	}
 }
 
 void GlobalMessageHandle::RegMsgHandle()
 {
 #ifdef _WIN32
-	#define MSG_MAPPING(map, msg, func) \
+#define MSG_MAPPING(map, msg, func) \
 		map.emplace(std::hash<string>::_Do_hash(msg::GetDescriptor()->full_name()), \
 		make_pair(msg::internal_default_instance(), &GlobalMessage::func))
 #elif __unix__
-	#define MSG_MAPPING(map, msg, func) \
+#define MSG_MAPPING(map, msg, func) \
 		map.emplace(std::hash<string>{}(msg::GetDescriptor()->full_name()), \
 		make_pair(msg::internal_default_instance(), &GlobalMessage::func))
 #endif

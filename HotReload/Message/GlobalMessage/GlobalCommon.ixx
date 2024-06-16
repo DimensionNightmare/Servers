@@ -1,21 +1,18 @@
 module;
 #include <coroutine>
 #include <cstdint>
-#include "hv/Channel.h"
+#include <string>
+#include <memory>
 
 #include "StdMacro.h"
-#include "Server/S_Common.pb.h"
 export module GlobalMessage:GlobalCommon;
 
 import DNTask;
 import MessagePack;
 import GlobalServerHelper;
 import Logger;
-
-using namespace hv;
-using namespace std;
-using namespace google::protobuf;
-using namespace GMsg;
+import ThirdParty.Libhv;
+import ThirdParty.PbGen;
 
 namespace GlobalMessage
 {

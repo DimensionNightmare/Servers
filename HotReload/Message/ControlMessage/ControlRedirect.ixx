@@ -2,21 +2,17 @@ module;
 #include <coroutine>
 #include <cstdint>
 #include <list>
-#include "hv/Channel.h"
+#include <string>
 
 #include "StdMacro.h"
-#include "Server/S_Auth.pb.h"
 export module ControlMessage:ControlRedirect;
 
 import DNTask;
 import MessagePack;
 import ControlServerHelper;
 import Logger;
-
-using namespace std;
-using namespace hv;
-using namespace google::protobuf;
-using namespace GMsg;
+import ThirdParty.Libhv;
+import ThirdParty.PbGen;
 
 namespace ControlMessage
 {

@@ -1,6 +1,8 @@
 module;
-#include "Server/S_Global.pb.h"
-#include "Server/S_Gate.pb.h"
+#include <string>
+#include <memory>
+
+#include "StdMacro.h"
 export module GateServerHelper;
 
 export import GateServer;
@@ -10,9 +12,7 @@ export import ServerEntityManagerHelper;
 export import ProxyEntityManagerHelper;
 import MessagePack;
 import Entity;
-
-using namespace std;
-using namespace GMsg;
+import ThirdParty.PbGen;
 
 export class GateServerHelper : public GateServer
 {
@@ -34,6 +34,7 @@ static GateServerHelper* PGateServerHelper = nullptr;
 export void SetGateServer(GateServer* server)
 {
 	PGateServerHelper = static_cast<GateServerHelper*>(server);
+	ASSERT(PGateServerHelper != nullptr)
 }
 
 export GateServerHelper* GetGateServer()
@@ -68,12 +69,12 @@ void GateServerHelper::ProxyEntityCloseEvent(Entity* entity)
 	uint32_t entityId = cEntity->ID();
 
 	ServerEntity* serverEntity = nullptr;
-	if(uint32_t serverId = cEntity->ServerIndex())
+	if (uint32_t serverId = cEntity->ServerIndex())
 	{
 		serverEntity = GetServerEntityManager()->GetEntity(serverId);
 	}
 
-	if(serverEntity)
+	if (serverEntity)
 	{
 		string binData;
 		g2L_RetProxyOffline request;

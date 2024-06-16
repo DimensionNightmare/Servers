@@ -3,21 +3,17 @@ module;
 #include <format>
 #include <chrono>
 #include <cstdint>
-#include "google/protobuf/message.h"
-#include "google/protobuf/reflection.h"
-#include "google/protobuf/descriptor.pb.h"
-#include "pqxx/transaction"
-#include "pqxx/result"
 
-#include "StdMacro.h"
 #include "Common/DbExtend.pb.h"
+#include "StdMacro.h"
+
 export module DbUtils;
 
 import StrUtils;
 import Logger;
+import ThirdParty.PbGen;
+import ThirdParty.Libpqxx;
 
-using namespace std;
-using namespace google::protobuf;
 using namespace std::chrono;
 
 // statement
@@ -157,7 +153,7 @@ void InitFieldByProtoType(const FieldDescriptor* field, list<string>& out, list<
 		out.emplace_back(SNOTNULL);
 	}
 
-	if ( const string& defaultStr = options.GetExtension(ext_default); !defaultStr.empty())
+	if (const string& defaultStr = options.GetExtension(ext_default); !defaultStr.empty())
 	{
 		out.emplace_back(format("{0} {1}", SDefault, defaultStr));
 	}
@@ -292,8 +288,7 @@ void GetFieldValueByProtoType(const FieldDescriptor* field, const Reflection* re
 			{
 				if (out.size() > len_limit)
 				{
-					out = format("field {} lenth > {} limit !!!", field->name(), len_limit);
-					throw invalid_argument(out.c_str());
+					throw invalid_argument(format("field {} lenth > {} limit !!!", field->name(), len_limit));
 				}
 			}
 			break;
@@ -304,23 +299,23 @@ void GetFieldValueByProtoType(const FieldDescriptor* field, const Reflection* re
 }
 
 //set field data
-void SetFieldValueByProtoType(const FieldDescriptor* field, const Reflection* reflection, Message& data, pqxx::row::reference value, bool isQueryAll)
+void SetFieldValueByProtoType(const FieldDescriptor* field, const Reflection* reflection, Message& data, pq_field value, bool isQueryAll)
 {
 	// if (field->is_repeated())
 	// {
-	// 	pqxx::array_parser arr = value.as_array();
-	// 	pair<pqxx::array_parser::juncture, string> elem;
+	// 	array_parser arr = value.as_array();
+	// 	pair<array_parser::juncture, string> elem;
 	// 	int index = 0;
 	// 	do
 	// 	{
 	// 		elem = arr.get_next();
-	// 		if (elem.first == pqxx::array_parser::juncture::string_value)
+	// 		if (elem.first == array_parser::juncture::string_value)
 	// 		{
 	// 			reflection->AddBool(&data, field, false);
 	// 			reflection->SetRepeatedBool(&data, field, index, elem.second == "t");
 	// 			index++;
 	// 		}
-	// 	} while (elem.first != pqxx::array_parser::juncture::done);
+	// 	} while (elem.first != array_parser::juncture::done);
 	// }
 
 	switch (field->cpp_type())
@@ -341,21 +336,21 @@ void SetFieldValueByProtoType(const FieldDescriptor* field, const Reflection* re
 			reflection->SetString(&data, field, value.as<string>());
 			break;
 		case FieldDescriptor::CPPTYPE_MESSAGE:
+		{
+			if (field->is_repeated())
 			{
-				if(field->is_repeated())
-				{
-					throw invalid_argument("Please Regist SelectField::Type");
-				}
-				else
-				{
-					Message* msg = reflection->MutableMessage(&data, field);
-					string msgData = value.as<string>();
-					msgData = msgData.substr(2);
-					HexStringToBytes(msgData);
-					msg->ParseFromString(msgData);
-				}
+				throw invalid_argument("Please Regist SelectField::Type");
 			}
-			break;
+			else
+			{
+				Message* msg = reflection->MutableMessage(&data, field);
+				string msgData = value.as<string>();
+				msgData = msgData.substr(2);
+				HexStringToBytes(msgData);
+				msg->ParseFromString(msgData);
+			}
+		}
+		break;
 		default:
 			throw invalid_argument("Please Regist SelectField::Type");
 			break;
@@ -369,32 +364,32 @@ void GetFieldDefaultValueByProtoType(const FieldDescriptor* field, string& out)
 
 	const FieldOptions& options = field->options();
 
-	if(field->is_repeated())
+	if (field->is_repeated())
 	{
 		out = "{}";
 		return;
 	}
-	
+
 	switch (field->cpp_type())
 	{
 		case FieldDescriptor::CPPTYPE_INT32:
 		case FieldDescriptor::CPPTYPE_UINT32:
 		case FieldDescriptor::CPPTYPE_INT64:
 		case FieldDescriptor::CPPTYPE_UINT64:
-			{
-				out = "0";
-			}
-			break;
+		{
+			out = "0";
+		}
+		break;
 		case FieldDescriptor::CPPTYPE_STRING:
-			{
-				out = "''";
-			}
-			break;
+		{
+			out = "''";
+		}
+		break;
 		case FieldDescriptor::CPPTYPE_MESSAGE:
-			{
-				out = "E'\\\\x'";
-			}
-			break;
+		{
+			out = "E'\\\\x'";
+		}
+		break;
 		default:
 			throw invalid_argument("Please Regist InsertField::CppType");
 			break;
@@ -402,7 +397,7 @@ void GetFieldDefaultValueByProtoType(const FieldDescriptor* field, string& out)
 
 }
 
-export class IDbSqlHelper 
+export class IDbSqlHelper
 {
 public:
 	~IDbSqlHelper() = default;
@@ -424,7 +419,7 @@ export template <class TMessage = Message>
 class DbSqlHelper : public IDbSqlHelper
 {
 public:
-	DbSqlHelper(pqxx::dbtransaction* work, TMessage* = nullptr);
+	DbSqlHelper(dbtransaction* work, TMessage* = nullptr);
 	virtual ~DbSqlHelper();
 
 	const string& GetName() { return pEntity->GetDescriptor()->name(); }
@@ -460,10 +455,11 @@ public:
 	DbSqlHelper<TMessage>& DeleteCond(const char* name, const char* cond, const char* splicing, ...);
 
 	[[nodiscard]]
-	bool IsSuccess() { 
+	bool IsSuccess()
+	{
 		bool success = bExecResult;
 		bExecResult = false;
-		return success; 
+		return success;
 	}
 
 	bool IsExist();
@@ -483,7 +479,7 @@ private:
 
 	void BuildSqlStatement();
 
-	void PaserQuery(pqxx::result& result);
+	void PaserQuery(pq_result& result);
 
 	void ReleaseResult();
 
@@ -494,7 +490,7 @@ private:
 	// create table, instert
 	unordered_map<string, list<string>> mEles;
 
-	pqxx::dbtransaction* pWork = nullptr;
+	dbtransaction* pWork = nullptr;
 
 	string sSqlStatement;
 
@@ -510,7 +506,7 @@ private:
 };
 
 template <class TMessage>
-DbSqlHelper<TMessage>::DbSqlHelper(pqxx::dbtransaction* work, TMessage* entity)
+DbSqlHelper<TMessage>::DbSqlHelper(dbtransaction* work, TMessage* entity)
 {
 	pWork = work;
 	pEntity = entity;
@@ -545,14 +541,14 @@ template<class TMessage>
 string DbSqlHelper<TMessage>::GetBuildSqlStatement()
 {
 	BuildSqlStatement();
-    return sSqlStatement;
+	return sSqlStatement;
 }
 
 template<class TMessage>
 DbSqlHelper<TMessage>& DbSqlHelper<TMessage>::InitEntity(TMessage& entity)
 {
 	pEntity = &entity;
-    return *this;
+	return *this;
 }
 
 template<class TMessage>
@@ -571,18 +567,18 @@ string DbSqlHelper<TMessage>::GetTableSchemaMd5()
 		{
 			stream << property << " ";
 		}
-		
+
 		stream << ";";
 	}
 
-	for(auto&  key : primaryKey)
+	for (auto& key : primaryKey)
 	{
 		stream << key << " ";
 	}
 
 	stream << ";";
 
-    return Md5Hash(stream.str());
+	return Md5Hash(stream.str());
 }
 
 template <class TMessage>
@@ -665,7 +661,7 @@ void DbSqlHelper<TMessage>::BuildSqlStatement()
 			{
 				const FieldDescriptor* field = descriptor->field(i);
 				const string& fieldName = field->name();
-				if(!mEles.contains(fieldName))
+				if (!mEles.contains(fieldName))
 				{
 					continue;
 				}
@@ -890,11 +886,11 @@ void DbSqlHelper<TMessage>::BuildSqlStatement()
 		}
 		case SqlOpType::UpdateTable:
 		{
-			for (auto& [k,items] : mEles)
+			for (auto& [k, items] : mEles)
 			{
 				for (auto& statement : items)
 				{
-					ss << statement << '\n';
+					ss << statement;
 				}
 			}
 			break;
@@ -918,7 +914,7 @@ bool DbSqlHelper<TMessage>::Commit()
 
 	DNPrint(0, LoggerLevel::Debug, "%s ", sSqlStatement.c_str());
 
-	pqxx::result result = pWork->exec(sSqlStatement);
+	pq_result result = pWork->exec(sSqlStatement);
 
 	if (eType == SqlOpType::Query)
 	{
@@ -930,7 +926,7 @@ bool DbSqlHelper<TMessage>::Commit()
 		{
 			iQueryCount = result[0][0].as<uint32_t>();
 		}
-		
+
 		iLimitCount = 0;
 	}
 
@@ -1004,16 +1000,16 @@ DbSqlHelper<TMessage>& DbSqlHelper<TMessage>::UpdateTable()
 {
 	ChangeSqlType(SqlOpType::UpdateTable);
 
-	pqxx::result result = pWork->exec( vformat(SqlTableColQuery, make_format_args(GetName() )) );
+	pq_result result = pWork->exec(vformat(SqlTableColQuery, make_format_args(GetName())));
 
 	unordered_map<string, int> sqlColInfo;
 
 	for (int row = 0; row < result.size(); row++)
 	{
 		const string& name = result[row][0].as<string>();
-		
+
 		sqlColInfo[name] = row;
-		
+
 	}
 
 	const Descriptor* descriptor = pEntity->GetDescriptor();
@@ -1038,12 +1034,12 @@ DbSqlHelper<TMessage>& DbSqlHelper<TMessage>::UpdateTable()
 		const FieldDescriptor* field = descriptor->field(i);
 
 		// update col
-		if(sqlColInfo.contains(colName))
+		if (sqlColInfo.contains(colName))
 		{
 			InitFieldByProtoType(field, params, primaryKey);
 
 			// can not null
-			if(!field->is_optional())
+			if (!field->is_optional())
 			{
 				params.remove(SNOTNULL);
 			}
@@ -1054,19 +1050,19 @@ DbSqlHelper<TMessage>& DbSqlHelper<TMessage>::UpdateTable()
 				tempstr += param + " ";
 			}
 
-			mEles[""].emplace_back(format(R"(
-				{0}"{1}" ADD COLUMN new_{2} {3};
-				UPDATE "{1}" SET new_{2} = {2};
-				{0}"{1}" DROP COLUMN {2}; 
-				{0}"{1}" RENAME COLUMN new_{2} TO {2};)", opTypeStr, GetName(), colName, tempstr));
+			mEles[""].emplace_back(format("{0}\"{1}\" ADD COLUMN new_{2} {3};\nUPDATE \"{1}\" SET new_{2} = {2};\n{0}\"{1}\" DROP COLUMN {2};\n{0}\"{1}\" RENAME COLUMN new_{2} TO {2};\n", opTypeStr, GetName(), colName, tempstr));
 
-			if(!field->is_optional())
+			cout << mEles[""].back() << endl;
+
+			if (!field->is_optional())
 			{
-				mEles[""].emplace_back(format(R"({0}"{1}" ALTER COLUMN {2} SET NOT NULL;)", opTypeStr, GetName(), colName));
+				mEles[""].emplace_back(format("{0}\"{1}\" ALTER COLUMN {2} SET NOT NULL;\n", opTypeStr, GetName(), colName));
+
+				cout << mEles[""].back() << endl;
 			}
-			
+
 			tempstr.clear();
-			
+
 			// already deal remove 
 			sqlColInfo.erase(colName);
 		}
@@ -1079,7 +1075,7 @@ DbSqlHelper<TMessage>& DbSqlHelper<TMessage>::UpdateTable()
 				tempstr += param + " ";
 			}
 			// ALTER TABLE table_name ADD COLUMN column_name data_type [column_constraint];
-			mEles[""].emplace_back(format(R"({}"{}" ADD COLUMN {} {};)", opTypeStr, GetName(), colName, tempstr));
+			mEles[""].emplace_back(format("{}\"{}\" ADD COLUMN {} {};\n", opTypeStr, GetName(), colName, tempstr));
 			tempstr.clear();
 		}
 
@@ -1088,10 +1084,10 @@ DbSqlHelper<TMessage>& DbSqlHelper<TMessage>::UpdateTable()
 	// remove col
 	for (auto& iter : sqlColInfo)
 	{
-		mEles[""].emplace_back(format(R"({}"{}" DROP COLUMN {};)", opTypeStr, GetName(), iter.first));
+		mEles[""].emplace_back(format("{}\"{}\" DROP COLUMN {};\n", opTypeStr, GetName(), iter.first));
 	}
 
-    return *this;
+	return *this;
 }
 
 template <class TMessage>
@@ -1115,7 +1111,7 @@ DbSqlHelper<TMessage>& DbSqlHelper<TMessage>::Insert(bool bSetDefault)
 		// if primary_key and not other ext. throw
 		if (options.GetExtension(ext_primary_key) && !options.GetExtension(ext_autogen) && !reflection->HasField(*pEntity, field))
 		{
-			throw invalid_argument( format("Insert <{}> Data Not Set primary_key <{}> Data!", GetName(), field->name()));
+			throw invalid_argument(format("Insert <{}> Data Not Set primary_key <{}> Data!", GetName(), field->name()));
 		}
 
 		value.clear();
@@ -1125,20 +1121,20 @@ DbSqlHelper<TMessage>& DbSqlHelper<TMessage>::Insert(bool bSetDefault)
 			GetFieldValueByProtoType(field, reflection, *pEntity, value);
 		}
 
-		if(!value.empty())
+		if (!value.empty())
 		{
 
 		}
 		// can not null
-		else if(value.empty() && !field->is_optional())
+		else if (value.empty() && !field->is_optional())
 		{
-			if(const string& defaultStr = options.GetExtension(ext_default); !defaultStr.empty())
+			if (const string& defaultStr = options.GetExtension(ext_default); !defaultStr.empty())
 			{
 				value = defaultStr;
 			}
-			else if(bSetDefault)
+			else if (bSetDefault)
 			{
-				if( options.GetExtension(ext_datetime))
+				if (options.GetExtension(ext_datetime))
 				{
 					value = nowTime;
 				}
@@ -1157,7 +1153,7 @@ DbSqlHelper<TMessage>& DbSqlHelper<TMessage>::Insert(bool bSetDefault)
 			continue;
 		}
 
-		
+
 		mEles[field->name()].emplace_back(value);
 	}
 
@@ -1190,7 +1186,7 @@ DbSqlHelper<TMessage>& DbSqlHelper<TMessage>::SelectOne(const char* name, ...)
 template<class TMessage>
 DbSqlHelper<TMessage>& DbSqlHelper<TMessage>::SelectByKey(const char* name, ...)
 {
-    ChangeSqlType(SqlOpType::Query);
+	ChangeSqlType(SqlOpType::Query);
 	const Descriptor* descriptor = pEntity->GetDescriptor();
 	const Reflection* reflection = pEntity->GetReflection();
 
@@ -1203,7 +1199,7 @@ DbSqlHelper<TMessage>& DbSqlHelper<TMessage>::SelectByKey(const char* name, ...)
 	const FieldOptions& options = field->options();
 	if (!options.GetExtension(ext_primary_key))
 	{
-		throw invalid_argument( format(" {} is not table {} key!", name, GetName()));
+		throw invalid_argument(format(" {} is not table {} key!", name, GetName()));
 		return *this;
 	}
 
@@ -1212,13 +1208,13 @@ DbSqlHelper<TMessage>& DbSqlHelper<TMessage>::SelectByKey(const char* name, ...)
 
 	if (value.empty())
 	{
-		throw invalid_argument( format(" table {} key is not set!", GetName()));
+		throw invalid_argument(format(" table {} key is not set!", GetName()));
 		return *this;
 	}
 
 	mEles[SSELECTALL].emplace_back(format("{}={}", field->name(), value));
 
-    return *this;
+	return *this;
 }
 
 template <class TMessage>
@@ -1280,7 +1276,7 @@ DbSqlHelper<TMessage>& DbSqlHelper<TMessage>::SelectCond(const char* name, const
 }
 
 template <class TMessage>
-void DbSqlHelper<TMessage>::PaserQuery(pqxx::result& result)
+void DbSqlHelper<TMessage>::PaserQuery(pq_result& result)
 {
 	ReleaseResult();
 
@@ -1299,15 +1295,15 @@ void DbSqlHelper<TMessage>::PaserQuery(pqxx::result& result)
 	{
 		TMessage* gen = pEntity->New();
 
-		pqxx::row rowInfo = result[row];
+		pq_row rowInfo = result[row];
 		for (int col = 0; col < rowInfo.size(); col++)
 		{
 			if (rowInfo[col].is_null())
 			{
 				continue;
 			}
-			
-			if(const FieldDescriptor* field = descriptor->FindFieldByLowercaseName(keys[col]))
+
+			if (const FieldDescriptor* field = descriptor->FindFieldByLowercaseName(keys[col]))
 			{
 				SetFieldValueByProtoType(field, reflection, *gen, rowInfo[col], isQueryAll);
 			}
@@ -1364,7 +1360,7 @@ DbSqlHelper<TMessage>& DbSqlHelper<TMessage>::UpdateByKey(const char* name, ...)
 	const FieldOptions& options = field->options();
 	if (!options.GetExtension(ext_primary_key))
 	{
-		throw invalid_argument( format(" {} is not table {} key!", name, GetName()));
+		throw invalid_argument(format(" {} is not table {} key!", name, GetName()));
 		return *this;
 	}
 
@@ -1373,7 +1369,7 @@ DbSqlHelper<TMessage>& DbSqlHelper<TMessage>::UpdateByKey(const char* name, ...)
 
 	if (value.empty())
 	{
-		throw invalid_argument( format(" table {} key is not set!", GetName()));
+		throw invalid_argument(format(" table {} key is not set!", GetName()));
 		return *this;
 	}
 
@@ -1381,18 +1377,18 @@ DbSqlHelper<TMessage>& DbSqlHelper<TMessage>::UpdateByKey(const char* name, ...)
 
 	for (int i = 0; i < descriptor->field_count(); i++)
 	{
-		if(field != descriptor->field(i) && reflection->HasField(*pEntity, field))
+		if (field != descriptor->field(i) && reflection->HasField(*pEntity, field))
 		{
 			UpdateOne(descriptor->field(i)->lowercase_name().c_str());
 		}
 	}
 
-	if(mEles[SUPDATE].empty())
+	if (mEles[SUPDATE].empty())
 	{
-		throw invalid_argument( format(" table {} Not Update Data!", GetName()));
+		throw invalid_argument(format(" table {} Not Update Data!", GetName()));
 	}
 
-    return *this;
+	return *this;
 }
 
 template <class TMessage>

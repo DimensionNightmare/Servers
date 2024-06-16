@@ -5,6 +5,7 @@ module;
 	#include <libloaderapi.h>
 #endif
 #include <unordered_map>
+#include <format>
 export module Macro;
 
 using namespace std;
@@ -51,7 +52,7 @@ auto TickMainSpaceDll(Class* obj, const char* methodName, Method method, Args...
 		className = className.substr(pos + 1);
 	}
 
-	string fullFuncName = className + "_" + methodName;
+	string fullFuncName = format("{}_{}", className, methodName);
 
 	static unordered_map<string, void*> cache;
 

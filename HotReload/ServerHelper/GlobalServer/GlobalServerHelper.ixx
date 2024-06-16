@@ -1,9 +1,8 @@
 module;
 #include <list>
-#include "hv/Channel.h"
+#include <string>
 
 #include "StdMacro.h"
-#include "Server/S_Common.pb.h"
 export module GlobalServerHelper;
 
 export import GlobalServer;
@@ -13,10 +12,8 @@ export import ServerEntityManagerHelper;
 import MessagePack;
 import Macro;
 import Logger;
-
-using namespace std;
-using namespace hv;
-using namespace GMsg;
+import ThirdParty.Libhv;
+import ThirdParty.PbGen;
 
 export class GlobalServerHelper : public GlobalServer
 {
@@ -36,6 +33,7 @@ static GlobalServerHelper* PGlobalServerHelper = nullptr;
 export void SetGlobalServer(GlobalServer* server)
 {
 	PGlobalServerHelper = static_cast<GlobalServerHelper*>(server);
+	ASSERT(PGlobalServerHelper != nullptr)
 }
 
 export GlobalServerHelper* GetGlobalServer()

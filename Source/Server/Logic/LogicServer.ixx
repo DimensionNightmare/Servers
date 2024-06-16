@@ -1,12 +1,9 @@
 module;
 #include <cstdint>
-#include "hv/EventLoop.h"
-#include "hv/hsocket.h"
-#include "hv/EventLoopThread.h"
-#include "sw/redis++/redis++.h"
+#include <string>
+#include <memory>
 
 #include "StdMacro.h"
-#include "Common/Common.pb.h"
 export module LogicServer;
 
 export import DNServer;
@@ -17,10 +14,9 @@ import ClientEntityManager;
 import RoomEntityManager;
 import Logger;
 import Config.Server;
-
-using namespace std;
-using namespace hv;
-using namespace sw::redis;
+import ThirdParty.Libhv;
+import ThirdParty.PbGen;
+import ThirdParty.RedisPP;
 
 export class LogicServer : public DNServer
 {
@@ -92,7 +88,7 @@ bool LogicServer::Init()
 	string* value = GetLuanchConfigParam("byCtl");
 	if (!value || !stoi(*value))
 	{
-		DNPrint(ErrCode_SrvByCtl, LoggerLevel::Error, nullptr);
+		DNPrint(ErrCode::ErrCode_SrvByCtl, LoggerLevel::Error, nullptr);
 		return false;
 	}
 
@@ -111,33 +107,19 @@ bool LogicServer::Init()
 	int listenfd = pSSock->createsocket(port, "0.0.0.0");
 	if (listenfd < 0)
 	{
-		DNPrint(ErrCode_CreateSocket, LoggerLevel::Error, nullptr);
+		DNPrint(ErrCode::ErrCode_CreateSocket, LoggerLevel::Error, nullptr);
 		return false;
 	}
 
-	// if not set port mean need get port by self 
-	if (port == 0)
-	{
-		struct sockaddr_in addr;
-		socklen_t addrLen = sizeof(addr);
-		if (getsockname(listenfd, reinterpret_cast<struct sockaddr*>(&addr), &addrLen) < 0)
-		{
-			DNPrint(ErrCode_GetSocketName, LoggerLevel::Error, nullptr);
-			return false;
-		}
-
-		pSSock->port = ntohs(addr.sin_port);
-	}
-
-	DNPrint(TipCode_SrvListenOn, LoggerLevel::Normal, nullptr, pSSock->port, listenfd);
-
-
 	pSSock->Init();
+
+	DNPrint(TipCode::TipCode_SrvListenOn, LoggerLevel::Normal, nullptr, pSSock->port, listenfd);
+
 
 	//connet ControlServer
 	string* ctlPort = GetLuanchConfigParam("ctlPort");
 	string* ctlIp = GetLuanchConfigParam("ctlIp");
-	if (ctlPort && ctlIp && is_ipaddr(ctlIp->c_str()))
+	if (ctlPort && ctlIp)
 	{
 		pCSock = make_unique<DNClientProxy>();
 
@@ -170,7 +152,7 @@ bool LogicServer::Start()
 {
 	if (!pSSock)
 	{
-		DNPrint(ErrCode_SrvNotInit, LoggerLevel::Error, nullptr);
+		DNPrint(ErrCode::ErrCode_SrvNotInit, LoggerLevel::Error, nullptr);
 		return false;
 	}
 

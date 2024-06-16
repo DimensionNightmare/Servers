@@ -1,9 +1,7 @@
 module;
-#include "google/protobuf/message.h"
-#include "hv/Channel.h"
+#include <string>
 
 #include "StdMacro.h"
-#include "Common/Common.pb.h"
 export module ControlServerInit;
 
 import ControlServerHelper;
@@ -12,10 +10,8 @@ import ControlMessage;
 import DNTask;
 import Logger;
 import Macro;
-
-using namespace hv;
-using namespace std;
-using namespace google::protobuf;
+import ThirdParty.Libhv;
+import ThirdParty.PbGen;
 
 export int HandleControlServerInit(DNServer* server);
 export int HandleControlServerShutdown(DNServer* server);
@@ -39,12 +35,12 @@ int HandleControlServerInit(DNServer* server)
 				const string& peeraddr = channel->peeraddr();
 				if (channel->isConnected())
 				{
-					DNPrint(TipCode_CliConnOn, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
+					DNPrint(TipCode::TipCode_CliConnOn, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
 					TICK_MAINSPACE_SIGN_FUNCTION(DNServerProxy, InitConnectedChannel, serverSock, channel);
 				}
 				else
 				{
-					DNPrint(TipCode_CliConnOff, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
+					DNPrint(TipCode::TipCode_CliConnOff, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
 
 					// not used
 					if (ServerEntity* entity = channel->getContext<ServerEntity>())
@@ -95,12 +91,12 @@ int HandleControlServerInit(DNServer* server)
 					}
 					else
 					{
-						DNPrint(ErrCode_MsgFind, LoggerLevel::Error, nullptr);
+						DNPrint(ErrCode::ErrCode_MsgFind, LoggerLevel::Error, nullptr);
 					}
 				}
 				else
 				{
-					DNPrint(ErrCode_MsgDealType, LoggerLevel::Error, nullptr);
+					DNPrint(ErrCode::ErrCode_MsgDealType, LoggerLevel::Error, nullptr);
 				}
 			};
 

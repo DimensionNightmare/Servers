@@ -3,21 +3,16 @@ module;
 #include <string>
 #include <cstdint>
 #include <list>
-#include "hv/Channel.h"
 
 #include "StdMacro.h"
-#include "Server/S_Dedicated.pb.h"
 export module GateMessage:GateRedirect;
 
 import MessagePack;
 import GateServerHelper;
 import Logger;
 import DNTask;
-
-using namespace std;
-using namespace hv;
-using namespace google::protobuf;
-using namespace GMsg;
+import ThirdParty.Libhv;
+import ThirdParty.PbGen;
 
 namespace GateMessage
 {
@@ -32,7 +27,7 @@ namespace GateMessage
 		const list<ServerEntity*>& dbServers = entityMan->GetEntityByList(ServerType::DatabaseServer);
 
 		string binData;
-		if(dbServers.empty())
+		if (dbServers.empty())
 		{
 			response.set_state_code(1);
 		}
@@ -54,7 +49,7 @@ namespace GateMessage
 						co_return msg;
 					};
 				auto dataChannel = taskGen(&response);
-				
+
 				server->AddMsg(msgId, &dataChannel, 8000);
 				entity->GetSock()->write(binData);
 				co_await dataChannel;
@@ -86,7 +81,7 @@ namespace GateMessage
 		const list<ServerEntity*>& dbServers = entityMan->GetEntityByList(ServerType::DatabaseServer);
 
 		string binData;
-		if(dbServers.empty())
+		if (dbServers.empty())
 		{
 			response.set_state_code(1);
 		}
@@ -108,7 +103,7 @@ namespace GateMessage
 						co_return msg;
 					};
 				auto dataChannel = taskGen(&response);
-				
+
 				server->AddMsg(msgId, &dataChannel, 8000);
 				entity->GetSock()->write(binData);
 				co_await dataChannel;

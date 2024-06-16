@@ -10,8 +10,6 @@ export import ProxyEntity;
 import EntityManager;
 import Logger;
 
-using namespace std;
-
 export class ProxyEntityManager : public EntityManager<ProxyEntity>
 {
 public:

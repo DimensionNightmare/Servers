@@ -2,19 +2,15 @@ module;
 #include <functional>
 #include <shared_mutex>
 #include <cstdint>
-#include "hv/TcpClient.h"
 
 #include "StdMacro.h"
-#include "Server/S_Common.pb.h"
 export module DNClientProxyHelper;
 
 export import DNClientProxy;
 import DNTask;
 import Macro;
-
-using namespace std;
-using namespace hv;
-using namespace google::protobuf;
+import ThirdParty.Libhv;
+import ThirdParty.PbGen;
 
 export class DNClientProxyHelper : public DNClientProxy
 {

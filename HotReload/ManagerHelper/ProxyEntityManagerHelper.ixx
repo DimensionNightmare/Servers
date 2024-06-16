@@ -9,8 +9,6 @@ export import ProxyEntityHelper;
 export import ProxyEntityManager;
 import Logger;
 
-using namespace std;
-
 export class ProxyEntityManagerHelper : public ProxyEntityManager
 {
 private:
@@ -31,7 +29,7 @@ ProxyEntity* ProxyEntityManagerHelper::AddEntity(uint32_t entityId)
 		mEntityMap.emplace(std::piecewise_construct,
 			std::forward_as_tuple(entityId),
 			std::forward_as_tuple(entityId));
-			
+
 		return &mEntityMap[entityId];
 	}
 

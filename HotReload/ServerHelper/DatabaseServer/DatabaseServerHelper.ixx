@@ -2,12 +2,8 @@ module;
 #include <format>
 #include <cstdint>
 #include <list>
-#include "pqxx/connection"
-#include "pqxx/transaction"
-#include "pqxx/nontransaction"
 
 #include "StdMacro.h"
-#include "GDef/GDef.pb.h"
 export module DatabaseServerHelper;
 
 export import DatabaseServer;
@@ -17,10 +13,8 @@ import Logger;
 import Config.Server;
 import StrUtils;
 import DbUtils;
-
-using namespace std;
-using namespace GDb;
-using namespace google::protobuf;
+import ThirdParty.PbGen;
+import ThirdParty.Libpqxx;
 
 export enum class SqlDbNameEnum : uint16_t
 {
@@ -42,7 +36,7 @@ public:
 	string& GetCtlIp() { return sCtlIp; }
 	uint16_t& GetCtlPort() { return iCtlPort; }
 
-	pqxx::connection* GetSqlProxy(SqlDbNameEnum nameEnum);
+	connection* GetSqlProxy(SqlDbNameEnum nameEnum);
 };
 
 static DatabaseServerHelper* PDatabaseServerHelper = nullptr;
@@ -50,7 +44,7 @@ static DatabaseServerHelper* PDatabaseServerHelper = nullptr;
 export void SetDatabaseServer(DatabaseServer* server)
 {
 	PDatabaseServerHelper = static_cast<DatabaseServerHelper*>(server);
-	assert(PDatabaseServerHelper != nullptr);
+	ASSERT(PDatabaseServerHelper != nullptr);
 }
 
 export DatabaseServerHelper* GetDatabaseServer()
@@ -64,8 +58,8 @@ bool DatabaseServerHelper::InitDatabase()
 	{
 		//"postgresql://root@localhost"
 		string* value = GetLuanchConfigParam("connection");
-		pqxx::connection check(*value);
-		pqxx::nontransaction checkTxn(check);
+		connection check(*value);
+		nontransaction checkTxn(check);
 
 		list<string> dbNames;
 		if (string* names = GetLuanchConfigParam("dbnames"))
@@ -97,7 +91,7 @@ bool DatabaseServerHelper::InitDatabase()
 
 				uint16_t key = (uint16_t)EnumName<SqlDbNameEnum>(dbName);
 				string connectStr = format("{} dbname = {}", *value, dbName);
-				pSqlProxys[key] = make_unique<pqxx::connection>(connectStr);
+				pSqlProxys[key] = make_unique<connection>(connectStr);
 			}
 		}
 		else
@@ -108,13 +102,13 @@ bool DatabaseServerHelper::InitDatabase()
 
 		unordered_map<SqlDbNameEnum, vector<Message*> > registTable = {
 			{
-				SqlDbNameEnum::Account, 
+				SqlDbNameEnum::Account,
 				{
 					(Message*)Account::internal_default_instance(),
-				} 
+				}
 			},
 			{
-				SqlDbNameEnum::Nightmare, 
+				SqlDbNameEnum::Nightmare,
 				{
 					(Message*)Player::internal_default_instance(),
 				}
@@ -124,36 +118,36 @@ bool DatabaseServerHelper::InitDatabase()
 		SingleTon kv;
 		string schemaMd5;
 
-		for	( auto& [dbNameEnum, dbEntitys] : registTable)
+		for (auto& [dbNameEnum, dbEntitys] : registTable)
 		{
 			uint16_t index = (uint16_t)dbNameEnum;
 			if (pSqlProxys.contains(index))
 			{
-				pqxx::work txn(*pSqlProxys[index]);
+				pq_work txn(*pSqlProxys[index]);
 				DbSqlHelper<SingleTon> singleTon(&txn);
 				singleTon.InitEntity(kv);
 
-				if(!singleTon.IsExist())
+				if (!singleTon.IsExist())
 				{
 					DNPrint(0, LoggerLevel::Debug, "Create Table:SingleTon");
 					singleTon.CreateTable().Commit();
 				}
 
-				for(Message* dbEntity : dbEntitys)
+				for (Message* dbEntity : dbEntitys)
 				{
 					DbSqlHelper<Message> helper(&txn, dbEntity);
 
 					const string& tableName = helper.GetName();
-					kv.set_key( format("{}_Schema", tableName));
+					kv.set_key(format("{}_Schema", tableName));
 					schemaMd5 = helper.GetTableSchemaMd5();
 
 					if (!helper.IsExist())
 					{
-						
+
 						DNPrint(0, LoggerLevel::Debug, "Create Table:%s", tableName.c_str());
 						helper.CreateTable().Commit();
 
-						kv.set_value( schemaMd5 );
+						kv.set_value(schemaMd5);
 						singleTon.Insert().Commit();
 						continue;
 					}
@@ -162,14 +156,14 @@ bool DatabaseServerHelper::InitDatabase()
 						DBSelectByKey(kv, key)
 						.Commit();
 
-					if(!singleTon.IsSuccess() || !singleTon.Result().size())
+					if (!singleTon.IsSuccess() || !singleTon.Result().size())
 					{
 						continue;
 					}
 
 					kv = *singleTon.Result()[0];
 
-					if( schemaMd5 != kv.value())
+					if (schemaMd5 != kv.value())
 					{
 						// cout << helper.UpdateTable().GetBuildSqlStatement() << endl;
 						helper.UpdateTable().Commit();
@@ -194,12 +188,12 @@ bool DatabaseServerHelper::InitDatabase()
 	return true;
 }
 
-pqxx::connection* DatabaseServerHelper::GetSqlProxy(SqlDbNameEnum nameEnum)
+connection* DatabaseServerHelper::GetSqlProxy(SqlDbNameEnum nameEnum)
 {
 	uint16_t dbNameKey = (uint16_t)nameEnum;
 	if (pSqlProxys.contains(dbNameKey))
 	{
 		return &*pSqlProxys[dbNameKey];
 	}
-    return nullptr;
+	return nullptr;
 }

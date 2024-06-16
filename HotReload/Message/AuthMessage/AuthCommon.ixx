@@ -1,19 +1,17 @@
 module;
 #include <coroutine>
 #include <cstdint>
+#include <string>
+#include <memory>
 
 #include "StdMacro.h"
-#include "Server/S_Common.pb.h"
 export module AuthMessage:AuthCommon;
 
 import DNTask;
 import MessagePack;
 import AuthServerHelper;
 import Logger;
-
-using namespace std;
-using namespace google::protobuf;
-using namespace GMsg;
+import ThirdParty.PbGen;
 
 namespace AuthMessage
 {

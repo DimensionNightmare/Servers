@@ -1,9 +1,8 @@
 module;
-#include "hv/EventLoop.h"
-#include "hv/EventLoopThread.h"
+#include <string>
+#include <memory>
 
 #include "StdMacro.h"
-#include "Common/Common.pb.h"
 export module ControlServer;
 
 export import DNServer;
@@ -12,9 +11,8 @@ import MessagePack;
 import ServerEntityManager;
 import Logger;
 import Config.Server;
-
-using namespace std;
-using namespace hv;
+import ThirdParty.Libhv;
+import ThirdParty.PbGen;
 
 export class ControlServer : public DNServer
 {
@@ -58,7 +56,7 @@ ControlServer::ControlServer()
 ControlServer::~ControlServer()
 {
 	pSSock = nullptr;
-	
+
 	pServerEntityMan = nullptr;
 }
 
@@ -67,7 +65,7 @@ bool ControlServer::Init()
 	string* port = GetLuanchConfigParam("port");
 	if (!port)
 	{
-		DNPrint(ErrCode_SrvNeedIPPort, LoggerLevel::Error, nullptr);
+		DNPrint(ErrCode::ErrCode_SrvNeedIPPort, LoggerLevel::Error, nullptr);
 		return false;
 	}
 
@@ -78,13 +76,13 @@ bool ControlServer::Init()
 	int listenfd = pSSock->createsocket(stoi(*port), "0.0.0.0");
 	if (listenfd < 0)
 	{
-		DNPrint(ErrCode_CreateSocket, LoggerLevel::Error, nullptr);
+		DNPrint(ErrCode::ErrCode_CreateSocket, LoggerLevel::Error, nullptr);
 		return false;
 	}
 
-	DNPrint(TipCode_SrvListenOn, LoggerLevel::Normal, nullptr, pSSock->port, listenfd);
-
 	pSSock->Init();
+
+	DNPrint(TipCode::TipCode_SrvListenOn, LoggerLevel::Normal, nullptr, pSSock->port, listenfd);
 
 	pServerEntityMan = make_unique<ServerEntityManager>();
 	pServerEntityMan->Init();
@@ -93,13 +91,14 @@ bool ControlServer::Init()
 }
 
 void ControlServer::InitCmd(unordered_map<string, function<void(stringstream*)>>& cmdMap)
-{}
+{
+}
 
 bool ControlServer::Start()
 {
 	if (!pSSock)
 	{
-		DNPrint(ErrCode_SrvNotInit, LoggerLevel::Error, nullptr);
+		DNPrint(ErrCode::ErrCode_SrvNotInit, LoggerLevel::Error, nullptr);
 		return false;
 	}
 

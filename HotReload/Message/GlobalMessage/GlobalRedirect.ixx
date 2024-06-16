@@ -2,21 +2,17 @@ module;
 #include <coroutine>
 #include <cstdint>
 #include <list>
-#include "hv/Channel.h"
+#include <string>
 
 #include "StdMacro.h"
-#include "Server/S_Auth.pb.h"
 export module GlobalMessage:GlobalRedirect;
 
 import DNTask;
 import MessagePack;
 import GlobalServerHelper;
 import Logger;
-
-using namespace std;
-using namespace hv;
-using namespace google::protobuf;
-using namespace GMsg;
+import ThirdParty.Libhv;
+import ThirdParty.PbGen;
 
 namespace GlobalMessage
 {
@@ -69,7 +65,7 @@ namespace GlobalMessage
 						co_return msg;
 					};
 				auto dataChannel = taskGen(&response);
-				
+
 				server->AddMsg(msgId, &dataChannel, 8000);
 				entity->GetSock()->write(binData);
 				co_await dataChannel;

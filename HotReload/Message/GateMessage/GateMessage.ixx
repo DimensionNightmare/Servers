@@ -1,15 +1,9 @@
 module;
 #include <functional>
 #include <cstdint>
-#include "hv/Channel.h"
+#include <string>
 
 #include "StdMacro.h"
-#include "Common/Common.pb.h"
-#include "Server/S_Common.pb.h"
-#include "Server/S_Global.pb.h"
-#include "Client/C_Auth.pb.h"
-#include "Server/S_Auth.pb.h"
-#include "Server/S_Dedicated.pb.h"
 export module GateMessage;
 
 export import :GateCommon;
@@ -17,11 +11,8 @@ import :GateGlobal;
 import :GateClient;
 import :GateRedirect;
 import Logger;
-
-using namespace std;
-using namespace hv;
-using namespace google::protobuf;
-using namespace GMsg;
+import ThirdParty.Libhv;
+import ThirdParty.PbGen;
 
 export class GateMessageHandle
 {
@@ -57,14 +48,14 @@ void GateMessageHandle::MsgHandle(const SocketChannelPtr& channel, uint32_t msgI
 		}
 		else
 		{
-			DNPrint(ErrCode_MsgParse, LoggerLevel::Error, nullptr);
+			DNPrint(ErrCode::ErrCode_MsgParse, LoggerLevel::Error, nullptr);
 		}
 
 		delete message;
 	}
 	else
 	{
-		DNPrint(ErrCode_MsgHandleFind, LoggerLevel::Error, nullptr);
+		DNPrint(ErrCode::ErrCode_MsgHandleFind, LoggerLevel::Error, nullptr);
 	}
 }
 
@@ -88,14 +79,14 @@ void GateMessageHandle::MsgRetHandle(const SocketChannelPtr& channel, size_t msg
 		}
 		else
 		{
-			DNPrint(ErrCode_MsgParse, LoggerLevel::Error, nullptr);
+			DNPrint(ErrCode::ErrCode_MsgParse, LoggerLevel::Error, nullptr);
 		}
 
 		delete message;
 	}
 	else
 	{
-		DNPrint(ErrCode_MsgHandleFind, LoggerLevel::Error, nullptr);
+		DNPrint(ErrCode::ErrCode_MsgHandleFind, LoggerLevel::Error, nullptr);
 	}
 }
 
@@ -118,25 +109,25 @@ void GateMessageHandle::MsgRedirectHandle(const SocketChannelPtr& channel, uint3
 		}
 		else
 		{
-			DNPrint(ErrCode_MsgParse, LoggerLevel::Error, nullptr);
+			DNPrint(ErrCode::ErrCode_MsgParse, LoggerLevel::Error, nullptr);
 		}
 
 		delete message;
 	}
 	else
 	{
-		DNPrint(ErrCode_MsgHandleFind, LoggerLevel::Error, nullptr);
+		DNPrint(ErrCode::ErrCode_MsgHandleFind, LoggerLevel::Error, nullptr);
 	}
 }
 
 void GateMessageHandle::RegMsgHandle()
 {
 #ifdef _WIN32
-	#define MSG_MAPPING(map, msg, func) \
+#define MSG_MAPPING(map, msg, func) \
 		map.emplace(std::hash<string>::_Do_hash(msg::GetDescriptor()->full_name()), \
 		make_pair(msg::internal_default_instance(), &GateMessage::func))
 #elif __unix__
-	#define MSG_MAPPING(map, msg, func) \
+#define MSG_MAPPING(map, msg, func) \
 		map.emplace(std::hash<string>{}(msg::GetDescriptor()->full_name()), \
 		make_pair(msg::internal_default_instance(), &GateMessage::func))
 #endif
@@ -149,6 +140,6 @@ void GateMessageHandle::RegMsgHandle()
 
 	MSG_MAPPING(MHandleRedirectMap, d2D_ReqLoadData, Exe_ReqLoadData);
 	MSG_MAPPING(MHandleRedirectMap, d2D_ReqSaveData, Exe_ReqSaveData);
-	
-	
+
+
 }

@@ -1,20 +1,15 @@
 module;
 #include <functional>
 #include <cstdint>
-#include "hv/Channel.h"
-#include "hv/HttpService.h"
+#include <string>
 
 #include "StdMacro.h"
-#include "Common/Common.pb.h"
 export module AuthMessage;
 
 export import :AuthCommon;
 import ApiManager;
-
-
-using namespace std;
-using namespace hv;
-using namespace google::protobuf;
+import ThirdParty.Libhv;
+import ThirdParty.PbGen;
 
 export class AuthMessageHandle
 {
@@ -47,18 +42,18 @@ void AuthMessageHandle::MsgHandle(SocketChannelPtr channel, uint32_t msgId, size
 			{
 				DNPrint(0, LoggerLevel::Debug, e.what());
 			}
-			
+
 		}
 		else
 		{
-			DNPrint(ErrCode_MsgParse, LoggerLevel::Error, nullptr);
+			DNPrint(ErrCode::ErrCode_MsgParse, LoggerLevel::Error, nullptr);
 		}
 
 		delete message;
 	}
 	else
 	{
-		DNPrint(ErrCode_MsgHandleFind, LoggerLevel::Error, nullptr);
+		DNPrint(ErrCode::ErrCode_MsgHandleFind, LoggerLevel::Error, nullptr);
 	}
 }
 
@@ -74,14 +69,14 @@ void AuthMessageHandle::MsgRetHandle(SocketChannelPtr channel, size_t msgHashId,
 		}
 		else
 		{
-			DNPrint(ErrCode_MsgParse, LoggerLevel::Error, nullptr);
+			DNPrint(ErrCode::ErrCode_MsgParse, LoggerLevel::Error, nullptr);
 		}
 
 		delete message;
 	}
 	else
 	{
-		DNPrint(ErrCode_MsgHandleFind, LoggerLevel::Error, nullptr);
+		DNPrint(ErrCode::ErrCode_MsgHandleFind, LoggerLevel::Error, nullptr);
 	}
 }
 

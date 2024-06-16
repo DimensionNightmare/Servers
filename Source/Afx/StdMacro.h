@@ -2,6 +2,8 @@
 
 #include <tuple>
 
+using namespace std;
+
 #define DNPrint(code, level, fmt, ...) LoggerPrint(level, code, __FUNCTION__, fmt, ##__VA_ARGS__)
 
 #define DBSelectOne(obj, name) .SelectOne(#name, [obj]() { return obj.name(); })
@@ -20,7 +22,7 @@ struct MemberFunctionArgs;
 template <typename R, typename Class, typename... Args>
 struct MemberFunctionArgs<R(Class::*)(Args...)>
 {
-	using Arguments = std::tuple<Args...>;
+	using Arguments = tuple<Args...>;
 };
 
 #define REGIST_MAINSPACE_SIGN_FUNCTION(classname, methodname)\
@@ -33,3 +35,6 @@ struct MemberFunctionArgs<R(Class::*)(Args...)>
 
 #define TICK_MAINSPACE_SIGN_FUNCTION(Class, Method, Object, ...) \
 	TickMainSpaceDll(static_cast<Class*>(Object), #Method, &Class::Method, __VA_ARGS__)
+
+#define ASSERT(expr)\
+	if (!(expr)) {abort();}

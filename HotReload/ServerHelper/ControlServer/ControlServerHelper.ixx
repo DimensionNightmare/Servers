@@ -1,11 +1,10 @@
 module;
+#include "StdMacro.h"
 export module ControlServerHelper;
 
 export import ControlServer;
 export import DNServerProxyHelper;
 export import ServerEntityManagerHelper;
-
-using namespace std;
 
 export class ControlServerHelper : public ControlServer
 {
@@ -21,6 +20,7 @@ static ControlServerHelper* PControlServerHelper = nullptr;
 export void SetControlServer(ControlServer* server)
 {
 	PControlServerHelper = static_cast<ControlServerHelper*>(server);
+	ASSERT(PControlServerHelper != nullptr)
 }
 
 export ControlServerHelper* GetControlServer()

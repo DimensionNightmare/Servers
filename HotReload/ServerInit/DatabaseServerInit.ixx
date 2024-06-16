@@ -1,11 +1,8 @@
 module;
 #include <functional>
 #include <format>
-#include "google/protobuf/message.h"
-#include "hv/Channel.h"
 
 #include "StdMacro.h"
-#include "Common/Common.pb.h"
 export module DatabaseServerInit;
 
 import DatabaseServerHelper;
@@ -14,10 +11,8 @@ import DatabaseMessage;
 import DNTask;
 import Logger;
 import Macro;
-
-using namespace hv;
-using namespace std;
-using namespace google::protobuf;
+import ThirdParty.Libhv;
+import ThirdParty.PbGen;
 
 export int HandleDatabaseServerInit(DNServer* server);
 export int HandleDatabaseServerShutdown(DNServer* server);
@@ -41,13 +36,13 @@ int HandleDatabaseServerInit(DNServer* server)
 
 				if (channel->isConnected())
 				{
-					DNPrint(TipCode_SrvConnOn, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
+					DNPrint(TipCode::TipCode_SrvConnOn, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
 					clientSock->SetRegistEvent(&DatabaseMessage::Evt_ReqRegistSrv);
 					TICK_MAINSPACE_SIGN_FUNCTION(DNClientProxy, InitConnectedChannel, clientSock, channel);
 				}
 				else
 				{
-					DNPrint(TipCode_SrvConnOff, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
+					DNPrint(TipCode::TipCode_SrvConnOff, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
 
 					string origin = format("{}:{}", serverProxy->GetCtlIp(), serverProxy->GetCtlPort());
 					if (clientSock->RegistState() == RegistState::Registed || peeraddr != origin)
@@ -105,12 +100,12 @@ int HandleDatabaseServerInit(DNServer* server)
 					}
 					else
 					{
-						DNPrint(ErrCode_MsgFind, LoggerLevel::Error, nullptr);
+						DNPrint(ErrCode::ErrCode_MsgFind, LoggerLevel::Error, nullptr);
 					}
 				}
 				else
 				{
-					DNPrint(ErrCode_MsgDealType, LoggerLevel::Error, nullptr);
+					DNPrint(ErrCode::ErrCode_MsgDealType, LoggerLevel::Error, nullptr);
 				}
 			};
 

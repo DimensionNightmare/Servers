@@ -1,11 +1,10 @@
 module;
 #include <cstdint>
-#include "hv/EventLoop.h"
-#include "hv/hsocket.h"
-#include "hv/EventLoopThread.h"
+#include <string>
+#include <unordered_map>
+#include <memory>
 
 #include "StdMacro.h"
-#include "Common/Common.pb.h"
 export module GateServer;
 
 export import DNServer;
@@ -15,9 +14,8 @@ import ServerEntityManager;
 import ProxyEntityManager;
 import Logger;
 import Config.Server;
-
-using namespace std;
-using namespace hv;
+import ThirdParty.Libhv;
+import ThirdParty.PbGen;
 
 export class GateServer : public DNServer
 {
@@ -74,7 +72,7 @@ bool GateServer::Init()
 	string* value = GetLuanchConfigParam("byCtl");
 	if (!value || !stoi(*value))
 	{
-		DNPrint(ErrCode_SrvByCtl, LoggerLevel::Error, nullptr);
+		DNPrint(ErrCode::ErrCode_SrvByCtl, LoggerLevel::Error, nullptr);
 		return false;
 	}
 
@@ -93,32 +91,18 @@ bool GateServer::Init()
 	int listenfd = pSSock->createsocket(port, "0.0.0.0");
 	if (listenfd < 0)
 	{
-		DNPrint(ErrCode_CreateSocket, LoggerLevel::Error, nullptr);
+		DNPrint(ErrCode::ErrCode_CreateSocket, LoggerLevel::Error, nullptr);
 		return false;
 	}
 
-	// if not set port mean need get port by self 
-	if (port == 0)
-	{
-		struct sockaddr_in addr;
-		socklen_t addrLen = sizeof(addr);
-		if (getsockname(listenfd, reinterpret_cast<struct sockaddr*>(&addr), &addrLen) < 0)
-		{
-			DNPrint(ErrCode_GetSocketName, LoggerLevel::Error, nullptr);
-			return false;
-		}
-
-		pSSock->port = ntohs(addr.sin_port);
-	}
-
-	DNPrint(TipCode_SrvListenOn, LoggerLevel::Normal, nullptr, pSSock->port, listenfd);
-
 	pSSock->Init();
+
+	DNPrint(TipCode::TipCode_SrvListenOn, LoggerLevel::Normal, nullptr, pSSock->port, listenfd);
 
 	//connet ControlServer
 	string* ctlPort = GetLuanchConfigParam("ctlPort");
 	string* ctlIp = GetLuanchConfigParam("ctlIp");
-	if (ctlPort && ctlIp && is_ipaddr(ctlIp->c_str()))
+	if (ctlPort && ctlIp)
 	{
 		pCSock = make_unique<DNClientProxy>();
 
@@ -137,7 +121,8 @@ bool GateServer::Init()
 }
 
 void GateServer::InitCmd(unordered_map<string, function<void(stringstream*)>>& cmdMap)
-{}
+{
+}
 
 bool GateServer::Start()
 {
@@ -149,7 +134,7 @@ bool GateServer::Start()
 
 	if (!pSSock)
 	{
-		DNPrint(ErrCode_SrvNotInit, LoggerLevel::Error, nullptr);
+		DNPrint(ErrCode::ErrCode_SrvNotInit, LoggerLevel::Error, nullptr);
 		return false;
 	}
 

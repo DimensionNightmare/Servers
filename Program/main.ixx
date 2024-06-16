@@ -22,16 +22,14 @@ module;
 #include <iostream>
 #include <future>
 #include <format>
-#include "hv/hlog.h"
 
 #include "StdMacro.h"
-#include "Common/Common.pb.h"
 export module MODULE_MAIN;
 
 import DimensionNightmare;
 import Logger;
-
-using namespace std;
+import ThirdParty.Libhv;
+import ThirdParty.PbGen;
 
 #ifdef __unix__
 #define Sleep(ms) usleep(ms*1000)
@@ -45,7 +43,7 @@ enum class LunchType : uint8_t
 
 export int main(int argc, char** argv)
 {
-	hlog_disable();
+	HV_hlog_disable();
 
 	SetLoggerLevel(LoggerLevel::Debug);
 
@@ -85,7 +83,7 @@ export int main(int argc, char** argv)
 
 	auto CtrlHandler = [](DWORD signal) -> BOOL
 		{
-			DNPrint(TipCode_CmdOpBreak, LoggerLevel::Normal, nullptr);
+			DNPrint(TipCode::TipCode_CmdOpBreak, LoggerLevel::Normal, nullptr);
 			switch (signal)
 			{
 				case CTRL_C_EVENT:
@@ -107,14 +105,14 @@ export int main(int argc, char** argv)
 
 	if (!SetConsoleCtrlHandler(CtrlHandler, true))
 	{
-		DNPrint(ErrCode_CmdCtl, LoggerLevel::Error, nullptr);
+		DNPrint(ErrCode::ErrCode_CmdCtl, LoggerLevel::Error, nullptr);
 		PInstance = nullptr;
 		return 0;
 	}
 
 	auto UnhandledHandler = [](EXCEPTION_POINTERS* ExceptionInfo) -> long
 		{
-			DNPrint(TipCode_UnhandledException, LoggerLevel::Normal, nullptr);
+			DNPrint(TipCode::TipCode_UnhandledException, LoggerLevel::Normal, nullptr);
 
 			string fileName = PInstance->Dll()->sDllDirRand;
 
@@ -175,7 +173,7 @@ export int main(int argc, char** argv)
 
 	if (!SetUnhandledExceptionFilter(UnhandledHandler))
 	{
-		DNPrint(ErrCode_UnhandledException, LoggerLevel::Error, nullptr);
+		DNPrint(ErrCode::ErrCode_UnhandledException, LoggerLevel::Error, nullptr);
 		PInstance = nullptr;
 		return 0;
 	}
@@ -183,7 +181,7 @@ export int main(int argc, char** argv)
 
 	auto CtrlHandler = [](int signal)
 		{
-			DNPrint(TipCode_CmdOpBreak, LoggerLevel::Normal, nullptr);
+			DNPrint(TipCode::TipCode_CmdOpBreak, LoggerLevel::Normal, nullptr);
 
 			PInstance->ServerIsRun() = false;
 		};
@@ -191,7 +189,7 @@ export int main(int argc, char** argv)
 
 	auto UnhandledHandler = [](int signum, siginfo_t* info, void* context)
 		{
-			DNPrint(TipCode_UnhandledException, LoggerLevel::Normal, nullptr);
+			DNPrint(TipCode::TipCode_UnhandledException, LoggerLevel::Normal, nullptr);
 
 			delete PInstance;
 			PInstance = nullptr;

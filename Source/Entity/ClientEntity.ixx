@@ -1,15 +1,14 @@
 module;
 #include <cstdint>
 #include <bitset>
-#include "pqxx/transaction"
+#include <memory>
 
-#include "GDef/GDef.pb.h"
 export module ClientEntity;
 
 import Entity;
+import ThirdParty.PbGen;
 
 using namespace std;
-using namespace GDb;
 
 export enum class ClientEntityFlag : uint16_t
 {
@@ -41,7 +40,7 @@ public: // dll override
 	void SetFlag(ClientEntityFlag flag) { oFlags.set(uint16_t(flag)); }
 	void ClearFlag(ClientEntityFlag flag) { oFlags.reset(uint16_t(flag)); }
 
-	Player* GetDbEntity(){ return &*pDbEntity;}
+	Player* GetDbEntity() { return &*pDbEntity; }
 
 protected: // dll proxy
 	uint32_t iServerIndex = 0;

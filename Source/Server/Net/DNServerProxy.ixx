@@ -2,19 +2,17 @@ module;
 #include <cstdint>
 #include <functional> 
 #include <shared_mutex>
-#include "hv/TcpServer.h"
-#include "google/protobuf/message.h"
 
 #include "StdMacro.h"
+#include "hv/EventLoop.h"
+#include "hv/hsocket.h"
 export module DNServerProxy;
 
 import DNTask;
 import MessagePack;
 import Logger;
-
-using namespace std;
-using namespace google::protobuf;
-using namespace hv;
+import ThirdParty.Libhv;
+import ThirdParty.PbGen;
 
 class TcpServerTmplTemp : public EventLoopThread, public TcpServerEventLoopTmpl<SocketChannel>
 {
@@ -23,7 +21,8 @@ public:
 		: EventLoopThread(loop)
 		, TcpServerEventLoopTmpl<SocketChannel>(EventLoopThread::loop())
 		, is_loop_owner(loop == NULL)
-	{}
+	{
+	}
 
 	virtual ~TcpServerTmplTemp()
 	{
@@ -82,7 +81,7 @@ public: // dll override
 
 public:
 	// cant init in tcpclient this class
-	EventLoopThreadPtr pLoop;
+	shared_ptr<EventLoopThread> pLoop;
 
 protected:
 	// only oddnumber
@@ -116,6 +115,20 @@ DNServerProxy::~DNServerProxy()
 
 void DNServerProxy::Init()
 {
+	// if not set port mean need get port by self 
+	if (!port && listenfd > 0)
+	{
+		struct sockaddr_in addr;
+		socklen_t addrLen = sizeof(addr);
+		if (getsockname(listenfd, reinterpret_cast<struct sockaddr*>(&addr), &addrLen) < 0)
+		{
+			DNPrint(ErrCode::ErrCode_GetSocketName, LoggerLevel::Error, nullptr);
+			return;
+		}
+
+		port = ntohs(addr.sin_port);
+	}
+
 	unpack_setting_t* setting = new unpack_setting_t();
 	setting->mode = unpack_mode_e::UNPACK_BY_LENGTH_FIELD;
 	setting->length_field_coding = unpack_coding_e::ENCODE_BY_BIG_ENDIAN;

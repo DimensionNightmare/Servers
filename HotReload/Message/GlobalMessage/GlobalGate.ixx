@@ -1,19 +1,14 @@
 module;
 #include <coroutine>
 #include <cstdint>
-#include "hv/Channel.h"
 
-#include "Server/S_Gate.pb.h"
 export module GlobalMessage:GlobalGate;
 
 import DNTask;
 import MessagePack;
 import GlobalServerHelper;
-
-using namespace std;
-using namespace hv;
-using namespace google::protobuf;
-using namespace GMsg;
+import ThirdParty.Libhv;
+import ThirdParty.PbGen;
 
 namespace GlobalMessage
 {

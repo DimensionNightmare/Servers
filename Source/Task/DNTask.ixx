@@ -6,6 +6,8 @@ module;
 #include <iostream>
 export module DNTask;
 
+import ThirdParty.PbGen;
+
 using namespace std;
 using namespace std::chrono;
 
@@ -68,7 +70,8 @@ struct DNTask
 	}
 
 	void await_resume() noexcept
-	{}
+	{
+	}
 	// Awaitable
 
 	DNTask(HandleType handle)
@@ -174,7 +177,8 @@ export struct DNTaskVoid
 	}
 
 	void await_resume() noexcept
-	{}
+	{
+	}
 	// Awaitable End
 
 	DNTaskVoid(HandleType handle)

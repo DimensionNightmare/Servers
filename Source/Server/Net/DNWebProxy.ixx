@@ -1,8 +1,7 @@
 module;
-#include "hv/HttpServer.h"
 export module DNWebProxy;
 
-using namespace hv;
+import ThirdParty.Libhv;
 
 export class DNWebProxy : public HttpServer
 {

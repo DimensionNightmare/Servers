@@ -2,12 +2,8 @@ module;
 #include <coroutine>
 #include <string>
 #include <cstdint>
-#include "hv/Channel.h"
-#include "pqxx/connection"
-#include "pqxx/transaction"
 
 #include "StdMacro.h"
-#include "Server/S_Dedicated.pb.h"
 export module DatabaseMessage:DatabaseGate;
 
 import MessagePack;
@@ -15,11 +11,9 @@ import DatabaseServerHelper;
 import Logger;
 import DbUtils;
 import MessagePack;
-
-using namespace std;
-using namespace hv;
-using namespace google::protobuf;
-using namespace GMsg;
+import ThirdParty.Libhv;
+import ThirdParty.PbGen;
+import ThirdParty.Libpqxx;
 
 namespace DatabaseMessage
 {
@@ -33,13 +27,13 @@ namespace DatabaseMessage
 
 		string binData;
 
-		if (pqxx::connection* conn = dnServer->GetSqlProxy(SqlDbNameEnum::Nightmare))
+		if (connection* conn = dnServer->GetSqlProxy(SqlDbNameEnum::Nightmare))
 		{
 			auto dealFunc = [&](Message* findMsg)
 				{
 					findMsg->ParseFromString(request->entity_data());
 
-					pqxx::work txn(*conn);
+					pq_work txn(*conn);
 					DbSqlHelper dbHelper(&txn, findMsg);
 
 					auto query = [&]()
@@ -61,9 +55,9 @@ namespace DatabaseMessage
 						};
 
 					query();
-					
+
 					// not exist just create
-					if(!response.entity_data_size() && request->need_create())
+					if (!response.entity_data_size() && request->need_create())
 					{
 						dbHelper.Insert(true).Commit();
 
@@ -71,14 +65,14 @@ namespace DatabaseMessage
 						{
 							query();
 						}
-						
+
 						txn.commit();
 					}
 				};
 
-			if (const Descriptor* descriptor = DescriptorPool::generated_pool()->FindMessageTypeByName(request->table_name()))
+			if (const Descriptor* descriptor = PB_FindMessageTypeByName(request->table_name()))
 			{
-				if (const Message* prototype = MessageFactory::generated_factory()->GetPrototype(descriptor))
+				if (const Message* prototype = PB_GetPrototype(descriptor))
 				{
 					Message* message = prototype->New();
 
@@ -86,12 +80,12 @@ namespace DatabaseMessage
 					{
 						dealFunc(message);
 					}
-					catch(const exception& e)
+					catch (const exception& e)
 					{
 						DNPrint(0, LoggerLevel::Debug, e.what());
 						response.set_state_code(5);
 					}
-					
+
 					delete message;
 				}
 				else
@@ -126,13 +120,13 @@ namespace DatabaseMessage
 
 		string binData;
 
-		if (pqxx::connection* conn = dnServer->GetSqlProxy(SqlDbNameEnum::Nightmare))
+		if (connection* conn = dnServer->GetSqlProxy(SqlDbNameEnum::Nightmare))
 		{
 			auto dealFunc = [&](Message* findMsg)
 				{
 					findMsg->ParseFromString(request->entity_data());
 
-					pqxx::work txn(*conn);
+					pq_work txn(*conn);
 					DbSqlHelper dbHelper(&txn, findMsg);
 
 					dbHelper
@@ -140,12 +134,12 @@ namespace DatabaseMessage
 						.Commit();
 
 					txn.commit();
-					
+
 				};
 
-			if (const Descriptor* descriptor = DescriptorPool::generated_pool()->FindMessageTypeByName(request->table_name()))
+			if (const Descriptor* descriptor = PB_FindMessageTypeByName(request->table_name()))
 			{
-				if (const Message* prototype = MessageFactory::generated_factory()->GetPrototype(descriptor))
+				if (const Message* prototype = PB_GetPrototype(descriptor))
 				{
 					Message* message = prototype->New();
 
@@ -153,12 +147,12 @@ namespace DatabaseMessage
 					{
 						dealFunc(message);
 					}
-					catch(const exception& e)
+					catch (const exception& e)
 					{
 						DNPrint(0, LoggerLevel::Debug, e.what());
 						response.set_state_code(5);
 					}
-					
+
 					delete message;
 				}
 				else

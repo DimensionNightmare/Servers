@@ -3,13 +3,9 @@ module;
 #include <cstdint>
 #include <format>
 #include <chrono>
-#include "google/protobuf/util/json_util.h"
-#include "hv/HttpService.h"
-#include "pqxx/transaction"
 
+#include "hv/json.hpp"
 #include "StdMacro.h"
-#include "GDef/GDef.pb.h"
-#include "Server/S_Auth.pb.h"
 export module ApiManager:ApiAuth;
 
 import AuthServerHelper;
@@ -18,11 +14,10 @@ import MessagePack;
 import Macro;
 import DbUtils;
 import Logger;
+import ThirdParty.Libhv;
+import ThirdParty.PbGen;
+import ThirdParty.Libpqxx;
 
-using namespace std;
-using namespace hv;
-using namespace google::protobuf;
-using namespace GMsg;
 using namespace std::chrono;
 
 #define MSGSET writer->response->SetBody
@@ -32,7 +27,7 @@ export void ApiAuth(HttpService* service)
 	service->POST("/Auth/User/LoginToken", [](const HttpRequestPtr& req, const HttpResponseWriterPtr& writer)
 		{
 			writer->Begin();
-			hv::Json errData;
+			nlohmann::json errData;
 
 			string authName = req->GetString("authName");
 			string authString = req->GetString("authString");
@@ -40,22 +35,22 @@ export void ApiAuth(HttpService* service)
 			if (authName.empty() || authName.size() > 32 ||
 				authString.empty() || authString.size() > 64)
 			{
-				errData["code"] = HTTP_STATUS_BAD_REQUEST;
+				errData["code"] = http_status::HTTP_STATUS_BAD_REQUEST;
 				errData["message"] = "param error!";
 				MSGSET(errData.dump());
 				writer->End();
 				return;
 			}
 
-			GDb::Account accInfo;
+			Account accInfo;
 			accInfo.set_auth_name(authName);
 			accInfo.set_auth_string(authString);
 
 			try
 			{
 				AuthServerHelper* authServer = GetAuthServer();
-				pqxx::read_transaction query(*authServer->SqlProxy());
-				DbSqlHelper<GDb::Account> accounts(&query);
+				read_transaction query(*authServer->SqlProxy());
+				DbSqlHelper<Account> accounts(&query);
 
 				accounts
 					// DBSelectOne(accInfo, account_id)
@@ -68,7 +63,7 @@ export void ApiAuth(HttpService* service)
 
 				if (accounts.Result().size() != 1)
 				{
-					errData["code"] = HTTP_STATUS_BAD_REQUEST;
+					errData["code"] = http_status::HTTP_STATUS_BAD_REQUEST;
 					errData["message"] = "not Account!";
 					MSGSET(errData.dump());
 					writer->End();
@@ -80,14 +75,14 @@ export void ApiAuth(HttpService* service)
 			catch (const exception& e)
 			{
 				DNPrint(0, LoggerLevel::Debug, "%s", e.what());
-				errData["code"] = HTTP_STATUS_BAD_REQUEST;
+				errData["code"] = http_status::HTTP_STATUS_BAD_REQUEST;
 				errData["message"] = "Server Error!!";
 				MSGSET(errData.dump());
 				writer->End();
 				return;
 			}
 
-			auto taskGen = [](GDb::Account accInfo, HttpResponseWriterPtr writer) -> DNTaskVoid
+			auto taskGen = [](Account accInfo, HttpResponseWriterPtr writer) -> DNTaskVoid
 				{
 					// HttpResponseWriterPtr writer = writer;	//sharedptr ref count ++
 					A2g_ReqAuthAccount request;
@@ -116,7 +111,7 @@ export void ApiAuth(HttpService* service)
 					request.SerializeToString(&binData);
 					MessagePack(msgId, MsgDeal::Redir, request.GetDescriptor()->full_name().c_str(), binData);
 
-					Json retData;
+					nlohmann::json retData;
 
 					{
 						// data alloc
@@ -143,8 +138,8 @@ export void ApiAuth(HttpService* service)
 					}
 
 					binData.clear();
-					util::MessageToJsonString(response, &binData);
-					retData["data"] = Json::parse(binData);
+					PB_MessageToJsonString(response, &binData);
+					retData["data"] = nlohmann::json::parse(binData);
 					retData["data"]["accountId"] = accInfo.account_id();
 
 					MSGSET(retData.dump());
@@ -158,7 +153,7 @@ export void ApiAuth(HttpService* service)
 
 	service->POST("/Auth/User/RegistUser", [](const HttpRequestPtr& req, const HttpResponseWriterPtr& writer)
 		{
-			hv::Json errData;
+			nlohmann::json errData;
 
 			string authName = req->GetString("authName");
 			string authString = req->GetString("authString");
@@ -166,7 +161,7 @@ export void ApiAuth(HttpService* service)
 			if (authName.empty() || authName.size() > 32 ||
 				authString.empty() || authString.size() > 64)
 			{
-				errData["code"] = HTTP_STATUS_BAD_REQUEST;
+				errData["code"] = http_status::HTTP_STATUS_BAD_REQUEST;
 				errData["message"] = "param error!";
 				MSGSET(errData.dump());
 				writer->End();
@@ -175,14 +170,14 @@ export void ApiAuth(HttpService* service)
 
 			AuthServerHelper* authServer = GetAuthServer();
 
-			GDb::Account accInfo;
+			Account accInfo;
 			accInfo.set_auth_name(authName);
 			accInfo.set_auth_string(authString);
 
 			try
 			{
-				pqxx::read_transaction query(*authServer->SqlProxy());
-				DbSqlHelper<GDb::Account> accounts(&query);
+				read_transaction query(*authServer->SqlProxy());
+				DbSqlHelper<Account> accounts(&query);
 
 				accounts
 					.InitEntity(accInfo)
@@ -192,7 +187,7 @@ export void ApiAuth(HttpService* service)
 
 				if (uint32_t count = accounts.ResultCount())
 				{
-					errData["code"] = HTTP_STATUS_BAD_REQUEST;
+					errData["code"] = http_status::HTTP_STATUS_BAD_REQUEST;
 					errData["message"] = "already exist authName!!";
 					MSGSET(errData.dump());
 					writer->End();
@@ -202,7 +197,7 @@ export void ApiAuth(HttpService* service)
 			catch (const exception& e)
 			{
 				DNPrint(0, LoggerLevel::Debug, "%s", e.what());
-				errData["code"] = HTTP_STATUS_BAD_REQUEST;
+				errData["code"] = http_status::HTTP_STATUS_BAD_REQUEST;
 				errData["message"] = "Regist Error!!";
 				MSGSET(errData.dump());
 				writer->End();
@@ -219,8 +214,8 @@ export void ApiAuth(HttpService* service)
 			try
 			{
 
-				pqxx::work query(*authServer->SqlProxy());
-				DbSqlHelper<GDb::Account> accounts(&query);
+				pq_work query(*authServer->SqlProxy());
+				DbSqlHelper<Account> accounts(&query);
 
 				accounts.InitEntity(accInfo).Insert().Commit();
 
@@ -242,119 +237,17 @@ export void ApiAuth(HttpService* service)
 			catch (const exception& e)
 			{
 				DNPrint(0, LoggerLevel::Debug, "%s", e.what());
-				errData["code"] = HTTP_STATUS_BAD_REQUEST;
+				errData["code"] = http_status::HTTP_STATUS_BAD_REQUEST;
 				errData["message"] = "Regist Error!!";
 				MSGSET(errData.dump());
 			}
 
-			writer->End();
-		});
-
-
-	service->POST("/Auth/Test/MainSpace", [](const HttpRequestPtr& req, const HttpResponseWriterPtr& writer)
-		{
-			string ip = req->GetString("ip");
-			int port = req->Get<int>("port", 0);
-
-			if (ip.empty() || !port)
-			{
-				writer->End();
-				return;
-			}
-
-			AuthServerHelper* authServer = GetAuthServer();
-			DNClientProxyHelper* client = authServer->GetCSock();
-
-			TICK_MAINSPACE_SIGN_FUNCTION(DNClientProxy, RedirectClient, client, port, ip);
-
-			writer->End();
-		});
-
-	service->POST("/Auth/Test/Chrono", [](const HttpRequestPtr& req, const HttpResponseWriterPtr& writer)
-		{
-			system_clock::time_point now = system_clock::now();
-			string strTIme = format("{:%Y-%m-%d %H:%M:%S}", now);
-			string strTIme1 = format("{:%Y-%m-%d %H:%M:%S}", zoned_time(current_zone(), now));
-			hv::Json errData = {
-				{ "milliseconds" , time_point_cast<milliseconds>(now).time_since_epoch().count()},
-				{ "microseconds" , time_point_cast<microseconds>(now).time_since_epoch().count()},
-				{ "nanoseconds" , time_point_cast<nanoseconds>(now).time_since_epoch().count()},
-				{ "string" ,  strTIme},
-				{"zone", strTIme1},
-			};
-
-			MSGSET(errData.dump());
 			writer->End();
 		});
 
 
 	service->POST("/Auth/Test/DB", [](const HttpRequestPtr& req, const HttpResponseWriterPtr& writer)
 		{
-			hv::Json errData;
 
-			string authName = req->GetString("authName");
-			string authString = req->GetString("authString");
-
-			if (authName.empty() || authName.size() > 32 ||
-				authString.empty() || authString.size() > 64)
-			{
-				errData["code"] = HTTP_STATUS_BAD_REQUEST;
-				errData["message"] = "param error!";
-				MSGSET(errData.dump());
-				writer->End();
-				return;
-			}
-
-
-			GDb::Account accInfo;
-			accInfo.set_auth_name(authName);
-			accInfo.set_auth_string(authString);
-
-			try
-			{
-				AuthServerHelper* authServer = GetAuthServer();
-				pqxx::work query(*authServer->SqlProxy());
-				DbSqlHelper<GDb::Account> accounts(&query);
-
-				// accounts.Insert(accInfo).Commit();
-
-				// query.commit();
-
-				// if (accounts.IsSuccess())
-				// {
-				// 	errData["code"] = HTTP_STATUS_OK;
-				// 	errData["message"] = "Regist Success!!";
-				// 	MSGSET(errData.dump());
-				// }
-				// else
-				// {
-				// 	errData["code"] = HTTP_STATUS_OK;
-				// 	errData["message"] = "Regist Error!!";
-				// 	MSGSET(errData.dump());
-				// }
-
-				accounts
-					.SelectAll()
-					DBSelectCond(accInfo, auth_name, "=", "")
-					.Commit();
-
-				for (const GDb::Account* one : accounts.Result())
-				{
-					errData["code"] = HTTP_STATUS_OK;
-					errData["message"] = one->DebugString();
-					MSGSET(errData.dump());
-					writer->End();
-					return;
-				}
-			}
-			catch (const exception& e)
-			{
-				DNPrint(0, LoggerLevel::Debug, "%s", e.what());
-				errData["code"] = HTTP_STATUS_BAD_REQUEST;
-				errData["message"] = "Regist Error!!";
-				MSGSET(errData.dump());
-			}
-
-			writer->End();
 		});
 }

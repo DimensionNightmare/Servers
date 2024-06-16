@@ -2,10 +2,9 @@ module;
 #include <coroutine>
 #include <cstdint>
 #include <list>
-#include "hv/Channel.h"
+#include <string>
 
 #include "StdMacro.h"
-#include "Client/C_Auth.pb.h"
 export module GateMessage:GateClient;
 
 import GateServerHelper;
@@ -13,11 +12,8 @@ import DNTask;
 import StrUtils;
 import MessagePack;
 import Logger;
-
-using namespace std;
-using namespace hv;
-using namespace google::protobuf;
-using namespace GMsg;
+import ThirdParty.Libhv;
+import ThirdParty.PbGen;
 
 namespace GateMessage
 {

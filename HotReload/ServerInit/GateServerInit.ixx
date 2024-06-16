@@ -1,10 +1,8 @@
 module;
 #include <functional>
-#include "google/protobuf/message.h"
-#include "hv/Channel.h"
+#include <string>
 
 #include "StdMacro.h"
-#include "Common/Common.pb.h"
 export module GateServerInit;
 
 import GateServerHelper;
@@ -14,10 +12,8 @@ import NetEntity;
 import DNTask;
 import Logger;
 import Macro;
-
-using namespace hv;
-using namespace std;
-using namespace google::protobuf;
+import ThirdParty.Libhv;
+import ThirdParty.PbGen;
 
 export int HandleGateServerInit(DNServer* server);
 export int HandleGateServerShutdown(DNServer* server);
@@ -40,12 +36,12 @@ int HandleGateServerInit(DNServer* server)
 				const string& peeraddr = channel->peeraddr();
 				if (channel->isConnected())
 				{
-					DNPrint(TipCode_CliConnOn, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
+					DNPrint(TipCode::TipCode_CliConnOn, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
 					TICK_MAINSPACE_SIGN_FUNCTION(DNServerProxy, InitConnectedChannel, serverSock, channel);
 				}
 				else
 				{
-					DNPrint(TipCode_CliConnOff, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
+					DNPrint(TipCode::TipCode_CliConnOff, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
 					if (Entity* entity = channel->getContext<Entity>())
 					{
 						switch (entity->GetEntityType())
@@ -103,12 +99,12 @@ int HandleGateServerInit(DNServer* server)
 					}
 					else
 					{
-						DNPrint(ErrCode_MsgFind, LoggerLevel::Error, nullptr);
+						DNPrint(ErrCode::ErrCode_MsgFind, LoggerLevel::Error, nullptr);
 					}
 				}
 				else
 				{
-					DNPrint(ErrCode_MsgDealType, LoggerLevel::Error, nullptr);
+					DNPrint(ErrCode::ErrCode_MsgDealType, LoggerLevel::Error, nullptr);
 				}
 			};
 
@@ -127,13 +123,13 @@ int HandleGateServerInit(DNServer* server)
 
 				if (channel->isConnected())
 				{
-					DNPrint(TipCode_SrvConnOn, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
+					DNPrint(TipCode::TipCode_SrvConnOn, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
 					clientSock->SetRegistEvent(&GateMessage::Evt_ReqRegistSrv);
 					TICK_MAINSPACE_SIGN_FUNCTION(DNClientProxy, InitConnectedChannel, clientSock, channel);
 				}
 				else
 				{
-					DNPrint(TipCode_SrvConnOff, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
+					DNPrint(TipCode::TipCode_SrvConnOff, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
 					if (clientSock->RegistState() == RegistState::Registed)
 					{
 						clientSock->RegistState() = RegistState::None;
@@ -182,12 +178,12 @@ int HandleGateServerInit(DNServer* server)
 					}
 					else
 					{
-						DNPrint(ErrCode_MsgFind, LoggerLevel::Error, nullptr);
+						DNPrint(ErrCode::ErrCode_MsgFind, LoggerLevel::Error, nullptr);
 					}
 				}
 				else
 				{
-					DNPrint(ErrCode_MsgDealType, LoggerLevel::Error, nullptr);
+					DNPrint(ErrCode::ErrCode_MsgDealType, LoggerLevel::Error, nullptr);
 				}
 			};
 

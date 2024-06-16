@@ -1,10 +1,10 @@
 module;
 #include <coroutine>
 #include <cstdint>
-#include "hv/Channel.h"
+#include <string>
+#include <memory>
 
 #include "StdMacro.h"
-#include "Server/S_Common.pb.h"
 export module LogicMessage:LogicCommon;
 
 import DNTask;
@@ -12,11 +12,7 @@ import MessagePack;
 import LogicServerHelper;
 import Logger;
 import Macro;
-
-using namespace std;
-using namespace google::protobuf;
-using namespace GMsg;
-using namespace hv;
+import ThirdParty.Libhv;
 
 namespace LogicMessage
 {

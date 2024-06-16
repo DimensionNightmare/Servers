@@ -1,6 +1,5 @@
 module;
 #include <format>
-#include "pqxx/connection"
 
 #include "StdMacro.h"
 export module AuthServerHelper;
@@ -11,8 +10,6 @@ export import DNWebProxyHelper;
 import DbUtils;
 import Logger;
 import Config.Server;
-
-using namespace std;
 
 export class AuthServerHelper : public AuthServer
 {
@@ -29,6 +26,7 @@ static AuthServerHelper* PAuthServerHelper = nullptr;
 export void SetAuthServer(AuthServer* server)
 {
 	PAuthServerHelper = static_cast<AuthServerHelper*>(server);
+	ASSERT(PAuthServerHelper != nullptr)
 }
 
 export AuthServerHelper* GetAuthServer()

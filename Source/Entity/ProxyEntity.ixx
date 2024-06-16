@@ -43,4 +43,5 @@ ProxyEntity::ProxyEntity(uint32_t id) : NetEntity(id)
 }
 
 ProxyEntity::~ProxyEntity()
-{}
+{
+}
