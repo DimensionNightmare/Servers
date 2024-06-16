@@ -87,7 +87,7 @@ export void ApiAuth(HttpService* service)
 					// HttpResponseWriterPtr writer = writer;	//sharedptr ref count ++
 					A2g_ReqAuthAccount request;
 					request.set_account_id(accInfo.account_id());
-					request.set_ip(writer->peeraddr());
+					request.set_server_ip(writer->peeraddr());
 
 					g2A_ResAuthAccount response;
 
@@ -138,7 +138,7 @@ export void ApiAuth(HttpService* service)
 					}
 
 					binData.clear();
-					PB_MessageToJsonString(response, &binData);
+					auto state = PB_MessageToJsonString(response, &binData);
 					retData["data"] = nlohmann::json::parse(binData);
 					retData["data"]["accountId"] = accInfo.account_id();
 

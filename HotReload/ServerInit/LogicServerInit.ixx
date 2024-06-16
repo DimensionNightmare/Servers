@@ -40,9 +40,9 @@ int HandleLogicServerInit(DNServer* server)
 				else
 				{
 					DNPrint(TipCode::TipCode_CliConnOff, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
-					if (ServerEntity* entity = channel->getContext<ServerEntity>())
+					if (RoomEntity* entity = channel->getContext<RoomEntity>())
 					{
-						ServerEntityManagerHelper* entityMan = serverProxy->GetServerEntityManager();
+						RoomEntityManagerHelper* entityMan = serverProxy->GetRoomEntityManager();
 						entityMan->RemoveEntity(entity->ID());
 						channel->setContext(nullptr);
 					}

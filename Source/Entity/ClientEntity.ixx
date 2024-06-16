@@ -34,7 +34,7 @@ public:
 	virtual ~ClientEntity();
 
 public: // dll override
-	uint32_t& ServerIndex() { return iServerIndex; }
+	uint32_t& RecordRoomId() { return iRecordRoomId; }
 
 	bool HasFlag(ClientEntityFlag flag) { return oFlags.test(uint16_t(flag)); }
 	void SetFlag(ClientEntityFlag flag) { oFlags.set(uint16_t(flag)); }
@@ -43,7 +43,7 @@ public: // dll override
 	Player* GetDbEntity() { return &*pDbEntity; }
 
 protected: // dll proxy
-	uint32_t iServerIndex = 0;
+	uint32_t iRecordRoomId = 0;
 
 	bitset<ClientEntityFlagSize()> oFlags;
 

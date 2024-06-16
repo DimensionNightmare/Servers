@@ -39,17 +39,17 @@ namespace ControlMessage
 			response.set_success(false);
 		}
 
-		else if (ServerEntity* entity = entityMan->AddEntity(entityMan->ServerIndex(), regType))
+		else if (ServerEntity* entity = entityMan->AddEntity(entityMan->GenServerId(), regType))
 		{
 			size_t pos = ipPort.find(":");
 			entity->ServerIp() = ipPort.substr(0, pos);
-			entity->ServerPort() = request->port();
+			entity->ServerPort() = request->server_port();
 			entity->SetSock(channel);
 
 			channel->setContext(entity);
 
 			response.set_success(true);
-			response.set_server_index(entity->ID());
+			response.set_server_id(entity->ID());
 			response.set_server_type((uint8_t(dnServer->GetServerType())));
 		}
 

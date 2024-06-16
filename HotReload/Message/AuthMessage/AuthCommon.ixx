@@ -40,12 +40,12 @@ namespace AuthMessage
 		COM_ReqRegistSrv request;
 		request.set_server_type((int)dnServer->GetServerType());
 
-		if (uint32_t serverIndex = dnServer->ServerIndex())
+		if (uint32_t serverIndex = dnServer->ServerId())
 		{
-			request.set_server_index(serverIndex);
+			request.set_server_id(serverIndex);
 		}
 
-		request.set_port(server->port);
+		request.set_server_port(server->port);
 
 		// pack data
 		string binData;
@@ -74,10 +74,10 @@ namespace AuthMessage
 
 		if (response.success())
 		{
-			DNPrint(0, LoggerLevel::Debug, "regist Server success! Rec index:%d", response.server_index());
+			DNPrint(0, LoggerLevel::Debug, "regist Server success! Rec index:%d", response.server_id());
 			client->RegistState() = RegistState::Registed;
 			client->RegistType() = response.server_type();
-			dnServer->ServerIndex() = response.server_index();
+			dnServer->ServerId() = response.server_id();
 		}
 		else
 		{

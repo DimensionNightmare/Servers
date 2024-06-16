@@ -46,14 +46,14 @@ void GlobalServerHelper::UpdateServerGroup()
 {
 	ServerEntityManagerHelper* entityMan = GetServerEntityManager();
 
-	list<ServerEntity*> gates = entityMan->GetEntityByList(ServerType::GateServer);
+	list<ServerEntity*> gates = entityMan->GetEntitysByType(ServerType::GateServer);
 	if (gates.empty())
 	{
 		return;
 	}
 
-	list<ServerEntity*> dbs = entityMan->GetEntityByList(ServerType::DatabaseServer);
-	list<ServerEntity*> logics = entityMan->GetEntityByList(ServerType::LogicServer);
+	list<ServerEntity*> dbs = entityMan->GetEntitysByType(ServerType::DatabaseServer);
+	list<ServerEntity*> logics = entityMan->GetEntitysByType(ServerType::LogicServer);
 
 	// alloc gate
 	COM_RetChangeCtlSrv request;
@@ -67,8 +67,8 @@ void GlobalServerHelper::UpdateServerGroup()
 			channel->setContext(nullptr);
 
 			// sendData
-			request.set_ip(beEntity->ServerIp());
-			request.set_port(beEntity->ServerPort());
+			request.set_server_ip(beEntity->ServerIp());
+			request.set_server_port(beEntity->ServerPort());
 
 			request.SerializeToString(&binData);
 			MessagePack(0, MsgDeal::Ret, request.GetDescriptor()->full_name().c_str(), binData);

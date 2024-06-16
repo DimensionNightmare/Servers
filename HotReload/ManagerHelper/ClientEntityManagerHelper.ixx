@@ -26,7 +26,7 @@ public:
 
 	ClientEntity* GetEntity(uint32_t entityId);
 
-	DNTaskVoid LoadEntityData(ClientEntity* entity, d2D_ReqLoadData* request, D2d_ResLoadData* response);
+	DNTaskVoid LoadEntityData(ClientEntity* entity, d2L_ReqLoadEntityData* request, L2d_ResLoadEntityData* response);
 
 	void ClearNosqlProxy() { pNoSqlProxy = nullptr; }
 };
@@ -76,14 +76,14 @@ ClientEntity* ClientEntityManagerHelper::GetEntity(uint32_t entityId)
 	return nullptr;
 }
 
-DNTaskVoid ClientEntityManagerHelper::LoadEntityData(ClientEntity* entity, d2D_ReqLoadData* inRequest, D2d_ResLoadData* inResponse)
+DNTaskVoid ClientEntityManagerHelper::LoadEntityData(ClientEntity* entity, d2L_ReqLoadEntityData* inRequest, L2d_ResLoadEntityData* inResponse)
 {
 	if (!pSqlClient || pSqlClient->RegistType() != uint8_t(ServerType::GateServer) || !pNoSqlProxy)
 	{
 		co_return;
 	}
 
-	auto& dbEntity = *entity->pDbEntity;
+	Player* dbEntity = entity->GetDbEntity();
 
 	if (entity->HasFlag(ClientEntityFlag::DBInited) || entity->HasFlag(ClientEntityFlag::DBIniting))
 	{
@@ -91,12 +91,12 @@ DNTaskVoid ClientEntityManagerHelper::LoadEntityData(ClientEntity* entity, d2D_R
 		if (inResponse)
 		{
 			string* entity_data = inResponse->add_entity_data();
-			dbEntity.SerializeToString(entity_data);
+			dbEntity->SerializeToString(entity_data);
 		}
 		co_return;
 	}
 
-	string table_name = dbEntity.GetDescriptor()->full_name();
+	string table_name = dbEntity->GetDescriptor()->full_name();
 	uint32_t entityId = entity->ID();
 	string keyName = format("{}_{}", table_name, entityId);
 
@@ -109,7 +109,7 @@ DNTaskVoid ClientEntityManagerHelper::LoadEntityData(ClientEntity* entity, d2D_R
 
 	if (!binData.empty())
 	{
-		dbEntity.ParseFromString(binData);
+		dbEntity->ParseFromString(binData);
 		if (inResponse)
 		{
 			string* entity_data = inResponse->add_entity_data();
@@ -122,18 +122,21 @@ DNTaskVoid ClientEntityManagerHelper::LoadEntityData(ClientEntity* entity, d2D_R
 
 	entity->SetFlag(ClientEntityFlag::DBIniting);
 	// sql
-	d2D_ReqLoadData request;
+	L2D_ReqLoadData request;
 
 	if (inRequest)
 	{
-		request = *inRequest;
+		request.set_table_name(inRequest->table_name());
+		request.set_key_name(inRequest->key_name());
+		request.set_entity_data(inRequest->entity_data());
+		request.set_need_create(inRequest->need_create());
 	}
 	else
 	{
 		request.set_need_create(true);
 
 		string* entity_data = request.mutable_entity_data();
-		dbEntity.SerializeToString(entity_data);
+		dbEntity->SerializeToString(entity_data);
 	}
 
 	request.set_limit(1);
@@ -146,7 +149,7 @@ DNTaskVoid ClientEntityManagerHelper::LoadEntityData(ClientEntity* entity, d2D_R
 	MessagePack(msgId, MsgDeal::Redir, request.GetDescriptor()->full_name().c_str(), binData);
 
 
-	D2d_ResLoadData response;
+	D2L_ResLoadData response;
 	{
 		auto taskGen = [](Message* msg) -> DNTask<Message*>
 			{
@@ -177,7 +180,7 @@ DNTaskVoid ClientEntityManagerHelper::LoadEntityData(ClientEntity* entity, d2D_R
 	if (int lenth = response.entity_data_size(); lenth == 1)
 	{
 		const string entityData = response.entity_data(0);
-		dbEntity.ParseFromString(entityData);
+		dbEntity->ParseFromString(entityData);
 		entity->SetFlag(ClientEntityFlag::DBInited);
 
 		pNoSqlProxy->set(keyName, entityData);
@@ -192,7 +195,12 @@ DNTaskVoid ClientEntityManagerHelper::LoadEntityData(ClientEntity* entity, d2D_R
 
 	if (inResponse)
 	{
-		*inResponse = response;
+		inResponse->set_state_code(response.state_code());
+		for(int i = 0; i < response.entity_data_size(); i++)
+		{
+			string* bytes = inResponse->add_entity_data();
+			*bytes = response.entity_data(i);
+		}
 	}
 
 	co_return;

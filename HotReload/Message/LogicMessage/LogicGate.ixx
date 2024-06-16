@@ -21,7 +21,7 @@ namespace LogicMessage
 		{
 			DNPrint(0, LoggerLevel::Debug, "Recv Client %u Disconnect !!", entity->ID());
 
-			entityMan->SaveEntity(*entity);
+			entityMan->SaveEntity(*entity, true);
 			entityMan->RemoveEntity(entity->ID());
 			return;
 		}

@@ -59,15 +59,15 @@ namespace GateMessage
 			ServerEntity* serverEntity = nullptr;
 
 			// <cache> server to load login data
-			if (uint32_t serverIndex = entity->ServerIndex())
+			if (uint32_t serverId = entity->RecordServerId())
 			{
-				serverEntity = serverEntityMan->GetEntity(serverIndex);
+				serverEntity = serverEntityMan->GetEntity(serverId);
 			}
 
 			// pool
 			if (!serverEntity)
 			{
-				list<ServerEntity*> serverEntityList = serverEntityMan->GetEntityByList(ServerType::LogicServer);
+				list<ServerEntity*> serverEntityList = serverEntityMan->GetEntitysByType(ServerType::LogicServer);
 				if (serverEntityList.empty())
 				{
 					DNPrint(0, LoggerLevel::Debug, "Msg_ReqAuthToken not LogicServer !!");
@@ -82,9 +82,9 @@ namespace GateMessage
 			//req dedicatedServer Info to Login ds.
 			if (serverEntity)
 			{
-				entity->ServerIndex() = serverEntity->ID();
+				entity->RecordServerId() = serverEntity->ID();
 
-				DNPrint(0, LoggerLevel::Debug, "Send to Logic index->%d, %d", entity->ID(), entity->ServerIndex());
+				DNPrint(0, LoggerLevel::Debug, "Send to Logic index->%d, %d", entity->ID(), entity->RecordServerId());
 
 				request->SerializeToString(&binData);
 

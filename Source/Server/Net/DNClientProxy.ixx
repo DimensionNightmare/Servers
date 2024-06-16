@@ -254,7 +254,7 @@ void DNClientProxy::TickHeartbeat()
 void DNClientProxy::InitConnectedChannel(const SocketChannelPtr& chanhel)
 {
 	chanhel->setHeartbeat(4000, std::bind(&DNClientProxy::TickHeartbeat, this));
-	channel->setWriteTimeout(12000);
+	// channel->setWriteTimeout(12000);
 	if(eRegistState == RegistState::None)
 	{
 		Timer()->setInterval(1000, std::bind(&DNClientProxy::TickRegistEvent, this, placeholders::_1));

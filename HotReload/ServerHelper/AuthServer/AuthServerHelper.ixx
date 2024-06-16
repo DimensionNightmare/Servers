@@ -10,6 +10,7 @@ export import DNWebProxyHelper;
 import DbUtils;
 import Logger;
 import Config.Server;
+import ThirdParty.Libpqxx;
 
 export class AuthServerHelper : public AuthServer
 {
@@ -48,7 +49,7 @@ bool AuthServerHelper::InitDatabase()
 
 		string* dbName = GetLuanchConfigParam("dbname");
 
-		pSqlProxy = make_unique<pqxx::connection>(format("{} dbname = {}", *value, *dbName));
+		pSqlProxy = make_unique<pq_connection>(format("{} dbname = {}", *value, *dbName));
 
 	}
 	catch (const exception& e)

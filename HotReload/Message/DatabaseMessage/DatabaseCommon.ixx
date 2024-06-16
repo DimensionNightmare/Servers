@@ -42,9 +42,9 @@ namespace DatabaseMessage
 
 		request.set_server_type((int)dnServer->GetServerType());
 
-		if (uint32_t serverIndex = dnServer->ServerIndex())
+		if (uint32_t serverIndex = dnServer->ServerId())
 		{
-			request.set_server_index(serverIndex);
+			request.set_server_id(serverIndex);
 		}
 
 		// pack data
@@ -74,10 +74,10 @@ namespace DatabaseMessage
 
 		if (response.success())
 		{
-			DNPrint(0, LoggerLevel::Debug, "regist Server success! Rec index:%d", response.server_index());
+			DNPrint(0, LoggerLevel::Debug, "regist Server success! Rec index:%d", response.server_id());
 			client->RegistState() = RegistState::Registed;
 			client->RegistType() = response.server_type();
-			dnServer->ServerIndex() = response.server_index();
+			dnServer->ServerId() = response.server_id();
 		}
 		else
 		{
@@ -95,6 +95,6 @@ namespace DatabaseMessage
 		DatabaseServerHelper* dnServer = GetDatabaseServer();
 		DNClientProxyHelper* client = dnServer->GetCSock();
 
-		TICK_MAINSPACE_SIGN_FUNCTION(DNClientProxy, RedirectClient, client, request->port(), request->ip());
+		TICK_MAINSPACE_SIGN_FUNCTION(DNClientProxy, RedirectClient, client, request->server_port(), request->server_ip());
 	}
 }

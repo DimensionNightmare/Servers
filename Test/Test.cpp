@@ -14,6 +14,8 @@
 #include "hv/json.hpp"
 #include "pqxx/pqxx"
 #include "sw/redis++/redis++.h"
+
+#undef REPEATED
 #include "google/protobuf/util/json_util.h"
 
 #include "GCfg/GCfg.pb.h"
@@ -282,7 +284,7 @@ void HexStringToBytes(string& hexString)
 	}
 }
 
-#if 1
+#if 0
 
 int main()
 {
@@ -317,3 +319,108 @@ int main()
 	std::cout << "id: " << player.account_id() << std::endl;
 }
 #endif
+class Task {
+public:
+    struct promise_type;
+    using handle_type = std::coroutine_handle<promise_type>;
+
+    Task(handle_type h) : handle(h) {}
+    ~Task() {
+        if (handle) handle.destroy();
+    }
+
+    Task(const Task&) = delete;
+    Task& operator=(const Task&) = delete;
+
+    Task(Task&& other) noexcept : handle(other.handle) {
+        other.handle = nullptr;
+    }
+
+    Task& operator=(Task&& other) noexcept {
+        if (this != &other) {
+            if (handle) handle.destroy();
+            handle = other.handle;
+            other.handle = nullptr;
+        }
+        return *this;
+    }
+
+    bool await_ready() const noexcept {
+        return false;
+    }
+
+    void await_suspend(std::coroutine_handle<> awaiting_handle) const noexcept {
+        handle.promise().awaiting = awaiting_handle;
+        handle.resume();
+    }
+
+    void await_resume() const noexcept {}
+
+    struct promise_type {
+        Task get_return_object() {
+            return Task{handle_type::from_promise(*this)};
+        }
+
+        std::suspend_always initial_suspend() noexcept {
+            return {};
+        }
+
+        std::suspend_always final_suspend() noexcept {
+            if (awaiting) {
+                awaiting.resume();
+            }
+            return {};
+        }
+
+        void return_void() {}
+        void unhandled_exception() {
+            std::terminate();
+        }
+
+        std::coroutine_handle<> awaiting = nullptr;
+    };
+
+public:
+    handle_type handle;
+};
+
+// 模拟一个等待一段时间的协程
+struct SleepFor {
+    std::chrono::milliseconds duration;
+
+    bool await_ready() const noexcept {
+        return false;
+    }
+
+    void await_suspend(std::coroutine_handle<> handle) const {
+        std::thread([handle, this] {
+            std::this_thread::sleep_for(duration);
+            handle.resume();
+        }).detach();
+    }
+
+    void await_resume() const noexcept {}
+};
+
+Task funcC() {
+    co_await SleepFor{std::chrono::milliseconds(1000)};  // 模拟异步操作
+    std::cout << "1" << std::endl;
+}
+
+Task funcB() {
+    co_await funcC();
+    std::cout << "2" << std::endl;
+}
+
+Task funcA() {
+    co_await funcB();
+    std::cout << "3" << std::endl;
+}
+
+int main() {
+    auto task = funcA();
+    task.handle.resume();  // 启动协程
+
+    std::this_thread::sleep_for(std::chrono::seconds(30));  // 确保主线程在协程执行完之前不会退出
+    return 0;
+}

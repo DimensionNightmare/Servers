@@ -2,6 +2,7 @@ module;
 #include <cstdint>
 #include <string>
 #include <memory>
+#include <functional>
 
 #include "StdMacro.h"
 export module LogicServer;
@@ -45,15 +46,14 @@ public: // dll override
 	virtual DNServerProxy* GetSSock() { return pSSock.get(); }
 	virtual DNClientProxy* GetCSock() { return pCSock.get(); }
 
-	virtual ServerEntityManager* GetServerEntityManager() { return pServerEntityMan.get(); }
 	virtual ClientEntityManager* GetClientEntityManager() { return pClientEntityMan.get(); }
+	virtual RoomEntityManager* GetRoomEntityManager() { return pRoomMan.get(); }
 
 
 protected: // dll proxy
 	unique_ptr<DNServerProxy> pSSock;
 	unique_ptr<DNClientProxy> pCSock;
 
-	unique_ptr<ServerEntityManager> pServerEntityMan;
 	unique_ptr<ClientEntityManager> pClientEntityMan;
 	unique_ptr<RoomEntityManager> pRoomMan;
 
@@ -79,7 +79,6 @@ LogicServer::~LogicServer()
 	pCSock = nullptr;
 	pRoomMan = nullptr;
 	pClientEntityMan = nullptr;
-	pServerEntityMan = nullptr;
 	pNoSqlProxy = nullptr;
 }
 
@@ -132,8 +131,6 @@ bool LogicServer::Init()
 		iCtlPort = port;
 	}
 
-	pServerEntityMan = make_unique<ServerEntityManager>();
-	pServerEntityMan->Init();
 	pClientEntityMan = make_unique<ClientEntityManager>();
 	pClientEntityMan->Init();
 	pRoomMan = make_unique<RoomEntityManager>();
@@ -184,7 +181,6 @@ void LogicServer::Pause()
 {
 	// pSSock->Timer()->pause();
 	// pCSock->Timer()->pause();
-	// pServerEntityMan->Timer()->pause();
 	// pClientEntityMan->Timer()->pause();
 	// pRoomMan->Timer()->pause();
 
@@ -203,7 +199,6 @@ void LogicServer::Resume()
 
 	// pSSock->Timer()->resume();
 	// pCSock->Timer()->resume();
-	// pServerEntityMan->Timer()->resume();
 	// pClientEntityMan->Timer()->resume();
 	// pRoomMan->Timer()->resume();
 }

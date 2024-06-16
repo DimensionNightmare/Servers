@@ -24,7 +24,7 @@ namespace GateMessage
 		g2A_ResAuthAccount response;
 
 		string binData;
-		string* reqIp = request->mutable_ip();
+		string* reqIp = request->mutable_server_ip();
 
 		GateServerHelper* dnServer = GetGateServer();
 		ProxyEntityManagerHelper* entityMan = dnServer->GetProxyEntityManager();
@@ -36,7 +36,7 @@ namespace GateMessage
 			{
 				// kick channel
 				S2C_RetAccountReplace request;
-				request.set_ip(*reqIp);
+				request.set_server_ip(*reqIp);
 
 				request.SerializeToString(&binData);
 				MessagePack(0, MsgDeal::Ret, request.GetDescriptor()->full_name().c_str(), binData);
@@ -48,12 +48,12 @@ namespace GateMessage
 
 
 				//kick game
-				if (uint32_t serverIndex = entity->ServerIndex())
+				if (uint32_t serverId = entity->RecordServerId())
 				{
-					DNPrint(0, LoggerLevel::Debug, "Send Logic tick User->%d, server:%d", entity->ID(), entity->ServerIndex());
+					DNPrint(0, LoggerLevel::Debug, "Send Logic tick User->%d, server:%d", entity->ID(), entity->RecordServerId());
 
 					ServerEntityManagerHelper* serverEntityMan = dnServer->GetServerEntityManager();
-					ServerEntity* serverEntity = serverEntityMan->GetEntity(serverIndex);
+					ServerEntity* serverEntity = serverEntityMan->GetEntity(serverId);
 
 					request.set_account_id(entity->ID());
 

@@ -3,6 +3,7 @@ module;
 #include <string>
 #include <unordered_map>
 #include <memory>
+#include <functional>
 
 #include "StdMacro.h"
 export module GateServer;

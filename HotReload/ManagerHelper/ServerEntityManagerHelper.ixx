@@ -25,9 +25,9 @@ public:
 
 	ServerEntity* GetEntity(uint32_t id);
 
-	const list<ServerEntity*>& GetEntityByList(ServerType type);
+	const list<ServerEntity*>& GetEntitysByType(ServerType type);
 
-	[[nodiscard]] uint32_t ServerIndex();
+	[[nodiscard]] uint32_t GenServerId();
 };
 
 ServerEntity* ServerEntityManagerHelper::AddEntity(uint32_t entityId, ServerType regType)
@@ -93,13 +93,13 @@ ServerEntity* ServerEntityManagerHelper::GetEntity(uint32_t entityId)
 	return nullptr;
 }
 
-const list<ServerEntity*>& ServerEntityManagerHelper::GetEntityByList(ServerType type)
+const list<ServerEntity*>& ServerEntityManagerHelper::GetEntitysByType(ServerType type)
 {
 	shared_lock<shared_mutex> lock(oMapMutex);
 	return mEntityMapList[type];
 }
 
-uint32_t ServerEntityManagerHelper::ServerIndex()
+uint32_t ServerEntityManagerHelper::GenServerId()
 {
-	return ++iServerId;
+	return ++iServerGenId;
 }

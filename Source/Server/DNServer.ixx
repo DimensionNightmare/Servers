@@ -50,7 +50,7 @@ public:
 
 	ServerType GetServerType() { return emServerType; }
 
-	uint32_t& ServerIndex() { return iServerIndex; }
+	uint32_t& ServerId() { return iServerId; }
 
 	virtual void LoopEvent(function<void(EventLoopPtr)> func) = 0;
 
@@ -68,7 +68,7 @@ protected:
 
 	bool bInRun = false;
 
-	uint32_t iServerIndex = 0;
+	uint32_t iServerId = 0;
 
 	mutex oTaskMutex;
 
@@ -88,7 +88,7 @@ bool DNServer::Init()
 	string* value = GetLuanchConfigParam("svrIndex");
 	if (value)
 	{
-		iServerIndex = stoi(*value);
+		iServerId = stoi(*value);
 	}
 
 	return true;

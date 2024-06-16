@@ -61,8 +61,6 @@ protected: // dll proxy
 	bitset<ServerEntityFlagSize()> oFlags;
 };
 
-export using ServerEntityPtr = ServerEntity*;
-
 ServerEntity::ServerEntity() :NetEntity(0)
 {
 	eEntityType = EntityType::Server;

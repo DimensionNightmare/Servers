@@ -18,6 +18,48 @@ import ThirdParty.PbGen;
 namespace GateMessage
 {
 
+	void Evt_RetRegistChild()
+	{
+		GateServerHelper* dnServer = GetGateServer();
+		ServerEntityManagerHelper* entityMan = dnServer->GetServerEntityManager();
+		DNClientProxyHelper* client = dnServer->GetCSock();
+
+		g2G_RetRegistChild request;
+
+		request.set_server_id(dnServer->ServerId());
+
+		auto AddChild = [&request](ServerEntity* serv)
+			{
+				COM_ReqRegistSrv* child = request.add_childs();
+				child->set_server_id(serv->ID());
+				child->set_server_type((uint32_t)serv->GetServerType());
+			};
+
+		const list<ServerEntity*>& dbs = entityMan->GetEntitysByType(ServerType::DatabaseServer);
+		for (ServerEntity* serv : dbs)
+		{
+			AddChild(serv);
+		}
+
+		const list<ServerEntity*>& logics = entityMan->GetEntitysByType(ServerType::LogicServer);
+		for (ServerEntity* serv : logics)
+		{
+			AddChild(serv);
+		}
+
+		if( !request.childs_size())
+		{
+			return;
+		}
+
+		// pack data
+		string binData;
+		request.SerializeToString(&binData);
+		MessagePack(0, MsgDeal::Ret, request.GetDescriptor()->full_name().c_str(), binData);
+
+		client->send(binData);
+	}
+
 	// self request
 	export DNTaskVoid Evt_ReqRegistSrv()
 	{
@@ -43,32 +85,12 @@ namespace GateMessage
 
 		request.set_server_type((int)dnServer->GetServerType());
 
-		if (uint32_t serverIndex = dnServer->ServerIndex())
+		if (uint32_t serverId = dnServer->ServerId())
 		{
-			request.set_server_index(serverIndex);
+			request.set_server_id(serverId);
 		}
 
-		request.set_port(server->port);
-
-		ServerEntityManagerHelper* entityMan = dnServer->GetServerEntityManager();
-		auto AddChild = [&request](ServerEntity* serv)
-			{
-				COM_ReqRegistSrv* child = request.add_childs();
-				child->set_server_index(serv->ID());
-				child->set_server_type((uint32_t)serv->GetServerType());
-			};
-
-		const list<ServerEntity*>& dbs = entityMan->GetEntityByList(ServerType::DatabaseServer);
-		for (ServerEntity* serv : dbs)
-		{
-			AddChild(serv);
-		}
-
-		const list<ServerEntity*>& logics = entityMan->GetEntityByList(ServerType::LogicServer);
-		for (ServerEntity* serv : logics)
-		{
-			AddChild(serv);
-		}
+		request.set_server_port(server->port);
 
 		// pack data
 		string binData;
@@ -97,10 +119,12 @@ namespace GateMessage
 
 		if (response.success())
 		{
-			DNPrint(0, LoggerLevel::Debug, "regist Server success! Rec index:%d", response.server_index());
+			DNPrint(0, LoggerLevel::Debug, "regist Server success! Rec index:%d", response.server_id());
 			client->RegistState() = RegistState::Registed;
 			client->RegistType() = response.server_type();
-			dnServer->ServerIndex() = response.server_index();
+			dnServer->ServerId() = response.server_id();
+
+			Evt_RetRegistChild();
 		}
 		else
 		{
@@ -122,7 +146,7 @@ namespace GateMessage
 		ServerEntityManagerHelper* entityMan = dnServer->GetServerEntityManager();
 
 		ServerType regType = (ServerType)request->server_type();
-		uint32_t serverIndex = request->server_index();
+		uint32_t serverId = request->server_id();
 
 		const string& ipPort = channel->localaddr();
 
@@ -137,17 +161,17 @@ namespace GateMessage
 			response.set_success(false);
 		}
 
-		else if (ServerEntity* entity = entityMan->AddEntity(serverIndex, regType))
+		else if (ServerEntity* entity = entityMan->AddEntity(serverId, regType))
 		{
 			size_t pos = ipPort.find(":");
 			entity->ServerIp() = ipPort.substr(0, pos);
-			entity->ServerPort() = request->port();
+			entity->ServerPort() = request->server_port();
 			entity->SetSock(channel);
 
 			channel->setContext(entity);
 
 			response.set_success(true);
-			response.set_server_index(entity->ID());
+			response.set_server_id(entity->ID());
 			response.set_server_type((uint8_t(dnServer->GetServerType())));
 		}
 
@@ -162,7 +186,7 @@ namespace GateMessage
 			// up to Global
 			g2G_RetRegistSrv request;
 			request.set_is_regist(true);
-			request.set_server_index(serverIndex);
+			request.set_server_id(serverId);
 
 			request.SerializeToString(&binData);
 			MessagePack(0, MsgDeal::Ret, request.GetDescriptor()->full_name().c_str(), binData);

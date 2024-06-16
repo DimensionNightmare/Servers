@@ -136,6 +136,7 @@ void GlobalMessageHandle::RegMsgHandle()
 
 	MSG_MAPPING(MHandleRetMap, g2G_RetRegistSrv, Exe_RetRegistSrv);
 	MSG_MAPPING(MHandleRetMap, COM_RetHeartbeat, Exe_RetHeartbeat);
+	MSG_MAPPING(MHandleRetMap, g2G_RetRegistChild, Exe_RetRegistChild);
 
 	MSG_MAPPING(MHandleRedirectMap, A2g_ReqAuthAccount, Msg_ReqAuthAccount);
 }

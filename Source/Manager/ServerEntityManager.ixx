@@ -34,7 +34,7 @@ public: // dll override
 protected: // dll proxy
 	unordered_map<ServerType, list<ServerEntity*> > mEntityMapList;
 	// server pull server
-	atomic<uint32_t> iServerId;
+	atomic<uint32_t> iServerGenId;
 
 };
 

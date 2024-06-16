@@ -10,6 +10,7 @@ export import :AuthCommon;
 import ApiManager;
 import ThirdParty.Libhv;
 import ThirdParty.PbGen;
+import Logger;
 
 export class AuthMessageHandle
 {

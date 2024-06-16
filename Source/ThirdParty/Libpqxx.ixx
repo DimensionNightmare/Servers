@@ -8,7 +8,7 @@ export module ThirdParty.Libpqxx;
 using namespace pqxx;
 
 export {
-	using ::connection;
+	using pq_connection = ::connection;
 	using pq_field = ::field;
 	using ::dbtransaction;
 	using pq_result = result;

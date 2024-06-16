@@ -42,12 +42,12 @@ namespace GlobalMessage
 
 		request.set_server_type((int)dnServer->GetServerType());
 
-		if (uint32_t serverIndex = dnServer->ServerIndex())
+		if (uint32_t serverId = dnServer->ServerId())
 		{
-			request.set_server_index(serverIndex);
+			request.set_server_id(serverId);
 		}
 
-		request.set_port(server->port);
+		request.set_server_port(server->port);
 
 		// pack data
 		string binData;
@@ -76,10 +76,10 @@ namespace GlobalMessage
 
 		if (response.success())
 		{
-			DNPrint(0, LoggerLevel::Debug, "regist Server success! Rec index:%d", response.server_index());
+			DNPrint(0, LoggerLevel::Debug, "regist Server success! Rec index:%d", response.server_id());
 			client->RegistState() = RegistState::Registed;
 			client->RegistType() = response.server_type();
-			dnServer->ServerIndex() = response.server_index();
+			dnServer->ServerId() = response.server_id();
 		}
 		else
 		{
@@ -117,9 +117,9 @@ namespace GlobalMessage
 		}
 
 		// take task to regist !
-		else if (int serverIndex = request->server_index())
+		else if (uint32_t serverId = request->server_id())
 		{
-			if (ServerEntity* entity = entityMan->GetEntity(serverIndex))
+			if (ServerEntity* entity = entityMan->GetEntity(serverId))
 			{
 				// wait destroy`s destroy
 				if (uint64_t timerId = entity->TimerId())
@@ -148,42 +148,32 @@ namespace GlobalMessage
 			else
 			{
 				response.set_success(true);
-				response.set_server_index(serverIndex);
+				response.set_server_id(serverId);
 				response.set_server_type((uint8_t(dnServer->GetServerType())));
 
-				entity = entityMan->AddEntity(serverIndex, regType);
+				entity = entityMan->AddEntity(serverId, regType);
 				entity->SetSock(channel);
 
 				channel->setContext(entity);
 
 				size_t pos = ipPort.find(":");
 				entity->ServerIp() = ipPort.substr(0, pos);
-				entity->ServerPort() = request->port();
-
-				for (int i = 0; i < request->childs_size(); i++)
-				{
-					const COM_ReqRegistSrv& child = request->childs(i);
-					ServerType childType = (ServerType)child.server_type();
-					ServerEntity* servChild = entityMan->AddEntity(child.server_index(), childType);
-					entity->SetMapLinkNode(childType, servChild);
-				}
-
-
+				entity->ServerPort() = request->server_port();
 			}
 
 		}
 
-		else if (ServerEntity* entity = entityMan->AddEntity(entityMan->ServerIndex(), regType))
+		else if (ServerEntity* entity = entityMan->AddEntity(entityMan->GenServerId(), regType))
 		{
 			size_t pos = ipPort.find(":");
 			entity->ServerIp() = ipPort.substr(0, pos);
-			entity->ServerPort() = request->port();
+			entity->ServerPort() = request->server_port();
 			entity->SetSock(channel);
 
 			channel->setContext(entity);
 
 			response.set_success(true);
-			response.set_server_index(entity->ID());
+			response.set_server_id(entity->ID());
 			response.set_server_type((uint8_t(dnServer->GetServerType())));
 		}
 

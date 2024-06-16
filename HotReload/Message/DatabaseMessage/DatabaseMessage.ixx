@@ -97,8 +97,8 @@ void DatabaseMessageHandle::RegMsgHandle()
 		make_pair(msg::internal_default_instance(), &DatabaseMessage::func))
 #endif
 
-	MSG_MAPPING(MHandleMap, d2D_ReqLoadData, Exe_ReqLoadData);
-	MSG_MAPPING(MHandleMap, d2D_ReqSaveData, Exe_ReqSaveData);
+	MSG_MAPPING(MHandleMap, L2D_ReqLoadData, Exe_ReqLoadData);
+	MSG_MAPPING(MHandleMap, L2D_ReqSaveData, Exe_ReqSaveData);
 
 	MSG_MAPPING(MHandleRetMap, COM_RetChangeCtlSrv, Exe_RetChangeCtlSrv);
 }

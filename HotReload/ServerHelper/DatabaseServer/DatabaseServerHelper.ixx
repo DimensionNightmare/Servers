@@ -2,6 +2,7 @@ module;
 #include <format>
 #include <cstdint>
 #include <list>
+#include <unordered_map>
 
 #include "StdMacro.h"
 export module DatabaseServerHelper;
@@ -36,7 +37,7 @@ public:
 	string& GetCtlIp() { return sCtlIp; }
 	uint16_t& GetCtlPort() { return iCtlPort; }
 
-	connection* GetSqlProxy(SqlDbNameEnum nameEnum);
+	pq_connection* GetSqlProxy(SqlDbNameEnum nameEnum);
 };
 
 static DatabaseServerHelper* PDatabaseServerHelper = nullptr;
@@ -58,7 +59,7 @@ bool DatabaseServerHelper::InitDatabase()
 	{
 		//"postgresql://root@localhost"
 		string* value = GetLuanchConfigParam("connection");
-		connection check(*value);
+		pq_connection check(*value);
 		nontransaction checkTxn(check);
 
 		list<string> dbNames;
@@ -91,7 +92,7 @@ bool DatabaseServerHelper::InitDatabase()
 
 				uint16_t key = (uint16_t)EnumName<SqlDbNameEnum>(dbName);
 				string connectStr = format("{} dbname = {}", *value, dbName);
-				pSqlProxys[key] = make_unique<connection>(connectStr);
+				pSqlProxys[key] = make_unique<pq_connection>(connectStr);
 			}
 		}
 		else
@@ -165,7 +166,7 @@ bool DatabaseServerHelper::InitDatabase()
 
 					if (schemaMd5 != kv.value())
 					{
-						// cout << helper.UpdateTable().GetBuildSqlStatement() << endl;
+						DNPrint(0, LoggerLevel::Debug, "not match md5:\n%s\n%s", schemaMd5.c_str(), kv.value().c_str());
 						helper.UpdateTable().Commit();
 
 
@@ -188,7 +189,7 @@ bool DatabaseServerHelper::InitDatabase()
 	return true;
 }
 
-connection* DatabaseServerHelper::GetSqlProxy(SqlDbNameEnum nameEnum)
+pq_connection* DatabaseServerHelper::GetSqlProxy(SqlDbNameEnum nameEnum)
 {
 	uint16_t dbNameKey = (uint16_t)nameEnum;
 	if (pSqlProxys.contains(dbNameKey))

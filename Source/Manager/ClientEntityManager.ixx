@@ -38,7 +38,7 @@ public:
 
 public: // dll override
 
-	DNTaskVoid SaveEntity(ClientEntity& entity);
+	DNTaskVoid SaveEntity(ClientEntity& entity, bool offline = false);
 
 	void CheckSaveEntity(bool shutdown = false);
 
@@ -69,23 +69,39 @@ void ClientEntityManager::InitSqlConn(DNClientProxy* sockClient)
 	pSqlClient = sockClient;
 }
 
-DNTaskVoid ClientEntityManager::SaveEntity(ClientEntity& entity)
+DNTaskVoid ClientEntityManager::SaveEntity(ClientEntity& entity, bool offline)
 {
 	uint32_t entityId = entity.ID();
 
-	auto& dbEntity = *entity.pDbEntity;
+	Player* dbEntity = entity.GetDbEntity();
+
+	DNPrint(0, LoggerLevel::Debug, "end1:%s!", dbEntity->DebugString().c_str());
+
+	// change maprecord
+	if(offline)
+	{
+		auto mapInfo = dbEntity->mutable_map_info();
+		auto cur_point = mapInfo->mutable_cur_point();
+		Vector3* property_location = dbEntity->mutable_property_entity()->mutable_location();
+		*cur_point->mutable_point() = *property_location;
+		property_location->Clear();
+
+		auto last_point = mapInfo->mutable_last_point();
+		*last_point = *cur_point;
+		last_point->Clear();
+	}
 
 	string entity_data;
-	dbEntity.SerializeToString(&entity_data);
+	dbEntity->SerializeToString(&entity_data);
 
 	// sql
-	d2D_ReqSaveData request;
-	string table_name = dbEntity.GetDescriptor()->full_name();
+	L2D_ReqSaveData request;
+	string table_name = dbEntity->GetDescriptor()->full_name();
 	request.set_table_name(table_name);
 	request.set_key_name(ClientEntity::SKeyName);
 	request.set_entity_data(entity_data);
 
-	D2d_ResSaveData response;
+	D2L_ResSaveData response;
 
 	uint32_t msgId = pSqlClient->GetMsgId();
 
@@ -128,11 +144,11 @@ DNTaskVoid ClientEntityManager::SaveEntity(ClientEntity& entity)
 void ClientEntityManager::CheckSaveEntity(bool shutdown)
 {
 
-	function<void(ClientEntity&)> dealFunc = nullptr;
+	function<void(ClientEntity&, bool)> dealFunc = nullptr;
 
 	if (!pSqlClient || pSqlClient->RegistType() != uint8_t(ServerType::GateServer) || !pNoSqlProxy)
 	{
-		dealFunc = [this](ClientEntity& entity)
+		dealFunc = [this](ClientEntity& entity, bool offline)
 			{
 				string binData;
 				uint32_t entityId = entity.ID();
@@ -150,7 +166,7 @@ void ClientEntityManager::CheckSaveEntity(bool shutdown)
 	}
 	else
 	{
-		dealFunc = std::bind(&ClientEntityManager::SaveEntity, this, std::placeholders::_1);
+		dealFunc = std::bind(&ClientEntityManager::SaveEntity, this, std::placeholders::_1, std::placeholders::_2);
 	}
 
 	for (auto& [ID, entity] : mEntityMap)
@@ -161,17 +177,17 @@ void ClientEntityManager::CheckSaveEntity(bool shutdown)
 			continue;
 		}
 
+		if(shutdown)
+		{
+			dealFunc(entity, shutdown);
+			continue;
+		}
+
 		if (entity.HasFlag(ClientEntityFlag::DBModify))
 		{
 			entity.ClearFlag(ClientEntityFlag::DBModify);
 
-			dealFunc(entity);
-		}
-		else if (shutdown && entity.HasFlag(ClientEntityFlag::DBModifyPartial))
-		{
-			entity.ClearFlag(ClientEntityFlag::DBModifyPartial);
-
-			dealFunc(entity);
+			dealFunc(entity, shutdown);
 		}
 	}
 }

@@ -132,13 +132,13 @@ void LogicMessageHandle::RegMsgHandle()
 		make_pair(msg::internal_default_instance(), &LogicMessage::func))
 #endif
 
-	MSG_MAPPING(MHandleMap, COM_ReqRegistSrv, Msg_ReqRegistSrv);
-	MSG_MAPPING(MHandleMap, d2D_ReqLoadData, Msg_ReqLoadData);
+	MSG_MAPPING(MHandleMap, d2L_ReqRegistSrv, Msg_ReqRegistSrv);
+	MSG_MAPPING(MHandleMap, d2L_ReqLoadEntityData, Msg_ReqLoadEntityData);
 
 	MSG_MAPPING(MHandleRetMap, COM_RetChangeCtlSrv, Exe_RetChangeCtlSrv);
 	MSG_MAPPING(MHandleRetMap, COM_RetHeartbeat, Exe_RetHeartbeat);
 	MSG_MAPPING(MHandleRetMap, g2L_RetProxyOffline, Exe_RetProxyOffline);
-	MSG_MAPPING(MHandleRetMap, d2D_ReqSaveData, Msg_ReqSaveData);
+	MSG_MAPPING(MHandleRetMap, d2L_ReqSaveEntityData, Msg_ReqSaveEntityData);
 
 
 	MSG_MAPPING(MHandleRedirectMap, S2C_RetAccountReplace, Exe_RetAccountReplace);

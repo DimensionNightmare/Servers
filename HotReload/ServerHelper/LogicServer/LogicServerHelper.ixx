@@ -8,7 +8,7 @@ export module LogicServerHelper;
 export import LogicServer;
 export import DNClientProxyHelper;
 export import DNServerProxyHelper;
-export import ServerEntityManagerHelper;
+export import RoomEntityManagerHelper;
 export import ClientEntityManagerHelper;
 import Logger;
 import Config.Server;
@@ -22,7 +22,7 @@ public:
 
 	DNClientProxyHelper* GetCSock() { return nullptr; }
 	DNServerProxyHelper* GetSSock() { return nullptr; }
-	ServerEntityManagerHelper* GetServerEntityManager() { return nullptr; }
+	RoomEntityManagerHelper* GetRoomEntityManager() { return nullptr; }
 	ClientEntityManagerHelper* GetClientEntityManager() { return nullptr; }
 
 	bool InitDatabase();

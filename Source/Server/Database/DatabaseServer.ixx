@@ -4,6 +4,7 @@ module;
 #include <iostream>
 #include <unordered_map>
 #include <string>
+#include <functional>
 
 #include "StdMacro.h"
 export module DatabaseServer;
@@ -44,7 +45,7 @@ public: // dll override
 protected: // dll proxy
 	unique_ptr<DNClientProxy> pCSock;
 
-	unordered_map<uint16_t, unique_ptr<connection>> pSqlProxys;
+	unordered_map<uint16_t, unique_ptr<pq_connection>> pSqlProxys;
 
 	// record orgin info
 	string sCtlIp;

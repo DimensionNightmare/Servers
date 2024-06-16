@@ -20,8 +20,6 @@ enum class LangType : uint8_t
 
 export class DNl10n
 {
-	typedef const string& (ErrText::* ErrTextFunc)() const;
-	typedef const string& (TipText::* TipTextFunc)() const;
 public:
 	DNl10n();
 	~DNl10n();
@@ -33,7 +31,10 @@ public:
 	unique_ptr<L10nTip> pTipMsgData;
 	unordered_map<uint32_t, const TipText*> mTipMsgDllData;
 
+	typedef const string& (ErrText::* ErrTextFunc)() const;
 	ErrTextFunc pErrMsgFunc = nullptr;
+
+	typedef const string& (TipText::* TipTextFunc)() const;
 	TipTextFunc pTipMsgFunc = nullptr;
 
 	LangType eType = LangType::zh_CN;
@@ -174,7 +175,9 @@ export const char* GetErrText(int type)
 		return nullptr;
 	}
 
-	if(DllSpace)
+	const ErrText *finded = nullptr;
+
+	if(!DllSpace)
 	{
 		auto& dataMap = PInstance->pErrMsgData->data_map();
 		auto data = dataMap.find(type);
@@ -183,7 +186,7 @@ export const char* GetErrText(int type)
 			throw invalid_argument(format("I10n Err Config not exist this type {}", PB_ErrCode_Name(type)));
 		}
 
-		return (data->second.*(PInstance->pErrMsgFunc))().c_str();
+		finded = &data->second;
 	}
 	else
 	{
@@ -194,9 +197,10 @@ export const char* GetErrText(int type)
 			throw invalid_argument(format("I10n Err Config not exist this type {}", PB_ErrCode_Name(type)));
 		}
 
-		return (data->second->*(PInstance->pErrMsgFunc))().c_str();
+		finded = data->second;
 	}
 	
+	return (finded->*(PInstance->pErrMsgFunc))().c_str();
 }
 
 export const char* GetTipText(int type)
@@ -205,6 +209,8 @@ export const char* GetTipText(int type)
 	{
 		return nullptr;
 	}
+
+	const TipText *finded = nullptr;
 
 	if(!DllSpace)
 	{
@@ -215,7 +221,7 @@ export const char* GetTipText(int type)
 			throw invalid_argument(format("I10n Tip Config not exist this type {}", PB_TipCode_Name(type)));
 		}
 
-		return (data->second.*(PInstance->pTipMsgFunc))().c_str();
+		finded = &data->second;
 	}
 	else
 	{
@@ -226,7 +232,8 @@ export const char* GetTipText(int type)
 			throw invalid_argument(format("I10n Tip Config not exist this type {}", PB_TipCode_Name(type)));
 		}
 
-		return (data->second->*(PInstance->pTipMsgFunc))().c_str();
+		finded = data->second;
 	}
 
+	return (finded->*(PInstance->pTipMsgFunc))().c_str();
 }

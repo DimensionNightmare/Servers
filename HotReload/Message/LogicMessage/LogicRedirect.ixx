@@ -30,17 +30,17 @@ namespace LogicMessage
 			return;
 		}
 
-		ServerEntityManagerHelper* serverEntityMan = dnServer->GetServerEntityManager();
-		ServerEntity* serverEntity = serverEntityMan->GetEntity(entity->ServerIndex());
+		RoomEntityManagerHelper* roomEntityMan = dnServer->GetRoomEntityManager();
+		RoomEntity* roomEntity = roomEntityMan->GetEntity(entity->RecordRoomId());
 
 		// cache
-		if (serverEntity)
+		if (roomEntity)
 		{
 			string binData;
 			msg->SerializeToString(&binData);
 
 			MessagePack(0, MsgDeal::Ret, msg->GetDescriptor()->full_name().c_str(), binData);
-			serverEntity->GetSock()->write(binData);
+			roomEntity->GetSock()->write(binData);
 		}
 		else
 		{
@@ -65,7 +65,7 @@ namespace LogicMessage
 		{
 			DNPrint(0, LoggerLevel::Debug, "AddEntity Client!");
 
-			co_await entityMan->LoadEntityData(entity, nullptr, nullptr);
+			// co_await entityMan->LoadEntityData(entity, nullptr, nullptr);
 
 			if (!entity->HasFlag(ClientEntityFlag::DBInited))
 			{
@@ -78,34 +78,55 @@ namespace LogicMessage
 			entity = entityMan->GetEntity(request->account_id());
 		}
 
-		ServerEntityManagerHelper* serverEntityMan = dnServer->GetServerEntityManager();
-		ServerEntity* serverEntity = nullptr;
+		RoomEntityManagerHelper* roomEntityMan = dnServer->GetRoomEntityManager();
+		RoomEntity* roomEntity = nullptr;
 
 		// cache
-		if (uint32_t serverIdx = entity->ServerIndex())
+		if (uint32_t roomId = entity->RecordRoomId())
 		{
-			serverEntity = serverEntityMan->GetEntity(serverIdx);
+			roomEntity = roomEntityMan->GetEntity(roomId);
 		}
 
 		//pool
-		if (!serverEntity)
+		if (!roomEntity)
 		{
-			list<ServerEntity*> serverEntityList = serverEntityMan->GetEntityByList(ServerType::DedicatedServer);
-			if (serverEntityList.empty())
+			uint32_t mapId = 0;
+			// from db
+			if(entity->GetDbEntity()->has_map_info())
+			{
+				MapPointRecord* mapRecord = entity->GetDbEntity()->mutable_map_info();
+				*mapRecord->mutable_cur_point() = *mapRecord->mutable_last_point();
+
+				mapId = mapRecord->cur_point().map_id();
+			}
+			// new player use default 1
+			else
+			{
+				mapId++;
+
+				MapPointRecord* mapRecord = entity->GetDbEntity()->mutable_map_info();
+				mapRecord->mutable_cur_point()->set_map_id(mapId);
+			}
+
+			DNPrint(0, LoggerLevel::Debug, "start:%s!", entity->GetDbEntity()->DebugString().c_str());
+
+			list<RoomEntity*> roomEntityList = roomEntityMan->GetEntitysByMapId(mapId);
+			if (roomEntityList.empty())
 			{
 				response.set_state_code(5);
 				DNPrint(0, LoggerLevel::Debug, "not ds Server");
 			}
 			else
 			{
-				serverEntity = serverEntityList.front();
+				roomEntity = roomEntityList.front();
 			}
+			
 		}
 
 		string binData;
 
 		// req token
-		if (serverEntity)
+		if (roomEntity)
 		{
 
 			DNServerProxyHelper* server = dnServer->GetSSock();
@@ -122,8 +143,10 @@ namespace LogicMessage
 				auto dataChannel = taskGen(&response);
 				// wait data parse
 				server->AddMsg(msgId, &dataChannel, 8000);
-				serverEntity->GetSock()->write(binData);
+				roomEntity->GetSock()->write(binData);
+				DNPrint(0, LoggerLevel::Debug, "end1:%s!", entity->GetDbEntity()->DebugString().c_str());
 				co_await dataChannel;
+				DNPrint(0, LoggerLevel::Debug, "end2:%s!", entity->GetDbEntity()->DebugString().c_str());
 				if (dataChannel.HasFlag(DNTaskFlag::Timeout))
 				{
 					DNPrint(0, LoggerLevel::Debug, "requst timeout! ");
@@ -131,10 +154,10 @@ namespace LogicMessage
 				}
 				else
 				{
-					entity->ServerIndex() = serverEntity->ID();
+					entity->RecordRoomId() = roomEntity->ID();
 					//combin
-					response.set_ip(serverEntity->ServerIp());
-					response.set_port(serverEntity->ServerPort());
+					response.set_server_ip(roomEntity->ServerIp());
+					response.set_server_port(roomEntity->ServerPort());
 				}
 
 			}
@@ -148,6 +171,8 @@ namespace LogicMessage
 		MessagePack(msgId, MsgDeal::Res, nullptr, binData);
 
 		channel->write(binData);
+
+		DNPrint(0, LoggerLevel::Debug, "end:%s!", entity->GetDbEntity()->DebugString().c_str());
 
 		co_return;
 	}

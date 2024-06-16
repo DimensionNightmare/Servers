@@ -156,7 +156,8 @@ void DNServerProxy::InitConnectedChannel(const SocketChannelPtr& channel)
 	// if not regist
 	CheckChannelByTimer(channel);
 	// if not recive data
-	channel->setReadTimeout(15000);
+	
+	// channel->setReadTimeout(15000);
 }
 
 void DNServerProxy::MessageTimeoutTimer(uint64_t timerID)

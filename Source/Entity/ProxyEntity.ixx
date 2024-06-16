@@ -20,10 +20,10 @@ public: // dll override
 
 	uint32_t& ExpireTime() { return iExpireTime; }
 
-	uint32_t& ServerIndex() { return iServerIndex; }
+	uint32_t& RecordServerId() { return iRecordServerId; }
 
 protected: // dll proxy
-	uint32_t iServerIndex = 0;
+	uint32_t iRecordServerId = 0;
 
 	string sToken;
 

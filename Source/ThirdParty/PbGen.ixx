@@ -16,6 +16,7 @@ module;
 #include "Server/S_Global.pb.h"
 #include "Server/S_Gate.pb.h"
 #include "Client/C_Auth.pb.h"
+#include "Server/S_Logic.pb.h"
 #include "Common/DbExtend.pb.h"
 export module ThirdParty.PbGen;
 
@@ -50,19 +51,26 @@ export {
 	using ::TipText;
 	using ::L10nErr;
 	using ::L10nTip;
+	using ::MapPointRecord;
+	using ::Vector3;
 };
 
 export {
-	using ::d2D_ReqLoadData;
-	using ::D2d_ResLoadData;
+	using ::L2D_ReqLoadData;
+	using ::D2L_ResLoadData;
+	using ::d2L_ReqLoadEntityData;
+	using ::L2d_ResLoadEntityData;
 	using ::COM_RetHeartbeat;
 	using ::A2g_ReqAuthAccount;
 	using ::g2A_ResAuthAccount;
 
 	using ::COM_ReqRegistSrv;
 	using ::COM_ResRegistSrv;
-	using ::d2D_ReqSaveData;
-	using ::D2d_ResSaveData;
+	using ::g2A_ResAuthAccount;
+	using ::L2D_ReqSaveData;
+	using ::D2L_ResSaveData;
+	using ::d2L_ReqSaveEntityData;
+	using ::L2d_ResSaveEntityData;
 
 	using ::COM_RetChangeCtlSrv;
 	using ::g2L_RetProxyOffline;
@@ -70,6 +78,8 @@ export {
 	using ::C2S_ReqAuthToken;
 	using ::S2C_ResAuthToken;
 	using ::S2C_RetAccountReplace;
+	using ::g2G_RetRegistChild;
+	using ::d2L_ReqRegistSrv;
 };
 
 export {

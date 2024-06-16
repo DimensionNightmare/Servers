@@ -50,7 +50,7 @@ void GateServerHelper::ServerEntityCloseEvent(Entity* entity)
 	// up to Global
 	string binData;
 	g2G_RetRegistSrv request;
-	request.set_server_index(cEntity->ID());
+	request.set_server_id(cEntity->ID());
 	request.set_is_regist(false);
 	request.SerializeToString(&binData);
 	MessagePack(0, MsgDeal::Ret, request.GetDescriptor()->full_name().c_str(), binData);
@@ -69,7 +69,7 @@ void GateServerHelper::ProxyEntityCloseEvent(Entity* entity)
 	uint32_t entityId = cEntity->ID();
 
 	ServerEntity* serverEntity = nullptr;
-	if (uint32_t serverId = cEntity->ServerIndex())
+	if (uint32_t serverId = cEntity->RecordServerId())
 	{
 		serverEntity = GetServerEntityManager()->GetEntity(serverId);
 	}

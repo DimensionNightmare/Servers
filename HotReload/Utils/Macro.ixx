@@ -60,16 +60,16 @@ auto TickMainSpaceDll(Class* obj, const char* methodName, Method method, Args...
 	if (it != cache.end())
 	{
 		MethodSign pFuncTyped = reinterpret_cast<MethodSign>(it->second);
-		return pFuncTyped(obj, make_tuple(forward<Args>(args)...));
+		return pFuncTyped(obj, make_tuple(std::forward<Args>(args)...));
 	}
 
 	if (HMODULE hModule = GetModuleHandle(NULL))
 	{
-		if (void* pFunc = GetProcAddress(hModule, fullFuncName.c_str()))
+		if (void* pFunc = reinterpret_cast<void*>(GetProcAddress(hModule, fullFuncName.c_str())))
 		{
 			cache[fullFuncName] = pFunc;
 			MethodSign pFuncTyped = reinterpret_cast<MethodSign>(pFunc);
-			return pFuncTyped(obj, make_tuple(forward<Args>(args)...));
+			return pFuncTyped(obj, make_tuple(std::forward<Args>(args)...));
 		}
 	}
 

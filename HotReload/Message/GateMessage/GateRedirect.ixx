@@ -19,12 +19,12 @@ namespace GateMessage
 
 	export DNTaskVoid Exe_ReqLoadData(SocketChannelPtr channel, uint32_t msgId, Message* msg)
 	{
-		d2D_ReqLoadData* request = reinterpret_cast<d2D_ReqLoadData*>(msg);
-		D2d_ResLoadData response;
+		L2D_ReqLoadData* request = reinterpret_cast<L2D_ReqLoadData*>(msg);
+		D2L_ResLoadData response;
 
 		GateServerHelper* dnServer = GetGateServer();
 		ServerEntityManagerHelper* entityMan = dnServer->GetServerEntityManager();
-		const list<ServerEntity*>& dbServers = entityMan->GetEntityByList(ServerType::DatabaseServer);
+		const list<ServerEntity*>& dbServers = entityMan->GetEntitysByType(ServerType::DatabaseServer);
 
 		string binData;
 		if (dbServers.empty())
@@ -73,12 +73,12 @@ namespace GateMessage
 
 	export DNTaskVoid Exe_ReqSaveData(SocketChannelPtr channel, uint32_t msgId, Message* msg)
 	{
-		d2D_ReqSaveData* request = reinterpret_cast<d2D_ReqSaveData*>(msg);
-		D2d_ResSaveData response;
+		L2D_ReqSaveData* request = reinterpret_cast<L2D_ReqSaveData*>(msg);
+		D2L_ResSaveData response;
 
 		GateServerHelper* dnServer = GetGateServer();
 		ServerEntityManagerHelper* entityMan = dnServer->GetServerEntityManager();
-		const list<ServerEntity*>& dbServers = entityMan->GetEntityByList(ServerType::DatabaseServer);
+		const list<ServerEntity*>& dbServers = entityMan->GetEntitysByType(ServerType::DatabaseServer);
 
 		string binData;
 		if (dbServers.empty())

@@ -556,27 +556,24 @@ string DbSqlHelper<TMessage>::GetTableSchemaMd5()
 {
 	const Descriptor* descriptor = pEntity->GetDescriptor();
 
-	ostringstream stream;
+	stringstream stream;
 	list<string> out;
 	list<string> primaryKey;
+	stream << "";
 	for (int i = 0; i < descriptor->field_count(); i++)
 	{
-		stream << descriptor->field(i)->name() << ":";
+		stream << descriptor->field(i)->name();
 		InitFieldByProtoType(descriptor->field(i), out, primaryKey);
-		for (auto& property : out)
+		for (const string& property : out)
 		{
-			stream << property << " ";
+			stream << property;
 		}
-
-		stream << ";";
 	}
 
 	for (auto& key : primaryKey)
 	{
-		stream << key << " ";
+		stream << key;
 	}
-
-	stream << ";";
 
 	return Md5Hash(stream.str());
 }
@@ -633,6 +630,8 @@ void DbSqlHelper<TMessage>::BuildSqlStatement()
 	}
 
 	stringstream ss;
+
+	ss << "";
 
 	string limit;
 

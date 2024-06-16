@@ -2,6 +2,7 @@ module;
 #include <cstdint>
 #include <string>
 #include <memory>
+#include <functional>
 
 #include "StdMacro.h"
 export module GlobalServer;

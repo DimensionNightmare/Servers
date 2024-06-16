@@ -2,6 +2,7 @@ module;
 #include <cstdint>
 #include <string>
 #include <memory>
+#include <functional>
 
 #include "StdMacro.h"
 export module AuthServer;
@@ -36,7 +37,7 @@ public:
 
 	virtual void LoopEvent(function<void(EventLoopPtr)> func) override;
 
-	connection* SqlProxy() { return pSqlProxy.get(); }
+	pq_connection* SqlProxy() { return pSqlProxy.get(); }
 
 public: // dll override
 	virtual DNWebProxy* GetSSock() { return pSSock.get(); }
@@ -44,7 +45,7 @@ public: // dll override
 protected: // dll proxy
 	unique_ptr<DNWebProxy> pSSock;
 	unique_ptr<DNClientProxy> pCSock;
-	unique_ptr<connection> pSqlProxy;
+	unique_ptr<pq_connection> pSqlProxy;
 };
 
 

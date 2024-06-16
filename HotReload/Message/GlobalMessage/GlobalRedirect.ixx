@@ -23,7 +23,7 @@ namespace GlobalMessage
 
 		// if has db not need origin
 		GlobalServerHelper* dnServer = GetGlobalServer();
-		list<ServerEntity*> serverList = dnServer->GetServerEntityManager()->GetEntityByList(ServerType::GateServer);
+		list<ServerEntity*> serverList = dnServer->GetServerEntityManager()->GetEntitysByType(ServerType::GateServer);
 
 		list<ServerEntity*> tempList;
 		for (ServerEntity* server : serverList)
@@ -78,8 +78,8 @@ namespace GlobalMessage
 				}
 				else
 				{
-					response.set_ip(entity->ServerIp());
-					response.set_port(entity->ServerPort());
+					response.set_server_ip(entity->ServerIp());
+					response.set_server_port(entity->ServerPort());
 				}
 
 			}

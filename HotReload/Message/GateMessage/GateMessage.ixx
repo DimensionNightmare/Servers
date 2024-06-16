@@ -138,8 +138,8 @@ void GateMessageHandle::RegMsgHandle()
 
 	MSG_MAPPING(MHandleRetMap, COM_RetHeartbeat, Exe_RetHeartbeat);
 
-	MSG_MAPPING(MHandleRedirectMap, d2D_ReqLoadData, Exe_ReqLoadData);
-	MSG_MAPPING(MHandleRedirectMap, d2D_ReqSaveData, Exe_ReqSaveData);
+	MSG_MAPPING(MHandleRedirectMap, L2D_ReqLoadData, Exe_ReqLoadData);
+	MSG_MAPPING(MHandleRedirectMap, L2D_ReqSaveData, Exe_ReqSaveData);
 
 
 }

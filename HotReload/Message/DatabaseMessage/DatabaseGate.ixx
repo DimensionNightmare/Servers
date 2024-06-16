@@ -20,14 +20,14 @@ namespace DatabaseMessage
 
 	export void Exe_ReqLoadData(SocketChannelPtr channel, uint32_t msgId, Message* msg)
 	{
-		d2D_ReqLoadData* request = reinterpret_cast<d2D_ReqLoadData*>(msg);
-		D2d_ResLoadData response;
+		L2D_ReqLoadData* request = reinterpret_cast<L2D_ReqLoadData*>(msg);
+		D2L_ResLoadData response;
 
 		DatabaseServerHelper* dnServer = GetDatabaseServer();
 
 		string binData;
 
-		if (connection* conn = dnServer->GetSqlProxy(SqlDbNameEnum::Nightmare))
+		if (pq_connection* conn = dnServer->GetSqlProxy(SqlDbNameEnum::Nightmare))
 		{
 			auto dealFunc = [&](Message* findMsg)
 				{
@@ -113,14 +113,14 @@ namespace DatabaseMessage
 
 	export void Exe_ReqSaveData(SocketChannelPtr channel, uint32_t msgId, Message* msg)
 	{
-		d2D_ReqSaveData* request = reinterpret_cast<d2D_ReqSaveData*>(msg);
-		D2d_ResSaveData response;
+		L2D_ReqSaveData* request = reinterpret_cast<L2D_ReqSaveData*>(msg);
+		D2L_ResSaveData response;
 
 		DatabaseServerHelper* dnServer = GetDatabaseServer();
 
 		string binData;
 
-		if (connection* conn = dnServer->GetSqlProxy(SqlDbNameEnum::Nightmare))
+		if (pq_connection* conn = dnServer->GetSqlProxy(SqlDbNameEnum::Nightmare))
 		{
 			auto dealFunc = [&](Message* findMsg)
 				{
