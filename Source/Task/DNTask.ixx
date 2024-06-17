@@ -30,7 +30,6 @@ struct DNTask
 	{
 		promise_type()
 		{
-			oResult = nullptr;
 		}
 
 		DNTask get_return_object()
@@ -41,28 +40,44 @@ struct DNTask
 		void return_value(const T& value)
 		{
 			oResult = &value;
+			bReturned = true;
 		}
 
 		suspend_always initial_suspend() { return {}; }
 
-		suspend_always final_suspend() noexcept { return {}; }
+		suspend_always final_suspend() noexcept
+		{
+			// DNTask don't Call by self, need Message handle Tick;
+			// ReleaseAwaitHandle();
+			return {};
+		}
 
 		void unhandled_exception() {}
 
 		const T& GetResult() const { return *oResult; }
 
-		const T* oResult;
+		void ReleaseAwaitHandle()
+		{
+			if (oAwaitHandle) { oAwaitHandle.resume(); oAwaitHandle = nullptr; }
+		}
+
+		const T* oResult = nullptr;
+
+		coroutine_handle<> oAwaitHandle = nullptr;
+
+		bool bReturned = false;
 	};
 
 	// Awaitable
 	bool await_ready() const noexcept
 	{
-		return tHandle.done();
+		return tHandle.promise().bReturned;
 	}
 
 	void await_suspend(coroutine_handle<> caller)
 	{
-		pCallPause = caller;
+		tHandle.promise().oAwaitHandle = caller;
+
 		if (HasFlag(DNTaskFlag::TimeCost))
 		{
 			oTimePoint = steady_clock::now();
@@ -77,8 +92,6 @@ struct DNTask
 	DNTask(HandleType handle)
 	{
 		tHandle = handle;
-		pCallPause = nullptr;
-		iTimerId = 0;
 		// SetFlag(DNTaskFlag::TimeCost);
 	}
 
@@ -99,12 +112,7 @@ struct DNTask
 
 	void CallResume()
 	{
-		if (!pCallPause)
-		{
-			return;
-		}
-
-		pCallPause.resume();
+		tHandle.promise().ReleaseAwaitHandle();
 	}
 
 	const T& GetResult()
@@ -135,9 +143,8 @@ public:
 
 private:
 	HandleType tHandle;
-	coroutine_handle<> pCallPause;
 	bitset<DNTaskFlagSize()> oFlags;
-	size_t iTimerId;
+	size_t iTimerId = 0;
 
 	steady_clock::time_point oTimePoint;
 };
@@ -150,7 +157,7 @@ export struct DNTaskVoid
 	{
 		promise_type() {}
 
-		void return_void() {}
+		void return_void() { bReturned = true; }
 
 		DNTaskVoid get_return_object()
 		{
@@ -159,21 +166,33 @@ export struct DNTaskVoid
 
 		suspend_never initial_suspend() { return {}; }
 
-		suspend_never final_suspend() noexcept { return {}; }
+		suspend_never final_suspend() noexcept
+		{
+			ReleaseAwaitHandle();
+			return {};
+		}
 
 		void unhandled_exception() {}
+
+		void ReleaseAwaitHandle()
+		{
+			if (oAwaitHandle) { oAwaitHandle.resume(); oAwaitHandle = nullptr; }
+		}
+
+		coroutine_handle<> oAwaitHandle = nullptr;
+
+		bool bReturned = false;
 	};
 
 	// Awaitable Start
 	bool await_ready() const noexcept
 	{
-		// return tHandle.done();
-		return false;
+		return tHandle.promise().bReturned;
 	}
 
 	void await_suspend(coroutine_handle<> caller)
 	{
-		caller.resume();
+		tHandle.promise().oAwaitHandle = caller;
 	}
 
 	void await_resume() noexcept

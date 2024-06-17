@@ -319,108 +319,272 @@ int main()
 	std::cout << "id: " << player.account_id() << std::endl;
 }
 #endif
-class Task {
+
+template <typename T>
+struct DNTask
+{
+	struct promise_type;
+	using HandleType = coroutine_handle<promise_type>;
+	struct promise_type
+	{
+		promise_type()
+		{
+		}
+
+		DNTask get_return_object()
+		{
+			return DNTask{ HandleType::from_promise(*this) };
+		}
+
+		void return_value(const T& value)
+		{
+			oResult = &value;
+			bReturned = true;
+		}
+
+		suspend_always initial_suspend() { return {}; }
+
+		suspend_always final_suspend() noexcept
+		{
+			// DNTask don't Call by self, need Message handle Tick;
+			// ReleaseAwaitHandle();
+			return {};
+		}
+
+		void unhandled_exception() {}
+
+		const T& GetResult() const { return *oResult; }
+
+		void ReleaseAwaitHandle()
+		{
+			if (oAwaitHandle) { oAwaitHandle.resume(); oAwaitHandle = nullptr; }
+		}
+
+		const T* oResult = nullptr;
+
+		coroutine_handle<> oAwaitHandle = nullptr;
+
+		bool bReturned = false;
+	};
+
+	// Awaitable
+	bool await_ready() const noexcept
+	{
+		return tHandle.promise().bReturned;
+	}
+
+	void await_suspend(coroutine_handle<> caller)
+	{
+		tHandle.promise().oAwaitHandle = caller;
+
+	
+	}
+
+	void await_resume() noexcept
+	{
+	}
+	// Awaitable
+
+	DNTask(HandleType handle)
+	{
+		tHandle = handle;
+		// SetFlag(DNTaskFlag::TimeCost);
+	}
+
+	~DNTask()
+	{
+		Destroy();
+	}
+
+	void Resume()
+	{
+		if (!tHandle || tHandle.done())
+		{
+			return;
+		}
+
+		tHandle.resume();
+	}
+
+	void CallResume()
+	{
+		tHandle.promise().ReleaseAwaitHandle();
+	}
+
+	const T& GetResult()
+	{
+		return tHandle.promise().GetResult();
+	}
+
+	void Destroy()
+	{
+	
+
+		if (tHandle)
+		{
+			tHandle.destroy();
+			tHandle = nullptr;
+		}
+	}
 public:
-    struct promise_type;
-    using handle_type = std::coroutine_handle<promise_type>;
 
-    Task(handle_type h) : handle(h) {}
-    ~Task() {
-        if (handle) handle.destroy();
-    }
 
-    Task(const Task&) = delete;
-    Task& operator=(const Task&) = delete;
+private:
+	HandleType tHandle;
 
-    Task(Task&& other) noexcept : handle(other.handle) {
-        other.handle = nullptr;
-    }
 
-    Task& operator=(Task&& other) noexcept {
-        if (this != &other) {
-            if (handle) handle.destroy();
-            handle = other.handle;
-            other.handle = nullptr;
-        }
-        return *this;
-    }
-
-    bool await_ready() const noexcept {
-        return false;
-    }
-
-    void await_suspend(std::coroutine_handle<> awaiting_handle) const noexcept {
-        handle.promise().awaiting = awaiting_handle;
-        handle.resume();
-    }
-
-    void await_resume() const noexcept {}
-
-    struct promise_type {
-        Task get_return_object() {
-            return Task{handle_type::from_promise(*this)};
-        }
-
-        std::suspend_always initial_suspend() noexcept {
-            return {};
-        }
-
-        std::suspend_always final_suspend() noexcept {
-            if (awaiting) {
-                awaiting.resume();
-            }
-            return {};
-        }
-
-        void return_void() {}
-        void unhandled_exception() {
-            std::terminate();
-        }
-
-        std::coroutine_handle<> awaiting = nullptr;
-    };
-
-public:
-    handle_type handle;
 };
 
-// 模拟一个等待一段时间的协程
-struct SleepFor {
-    std::chrono::milliseconds duration;
+struct DNTaskVoid
+{
+	struct promise_type;
+	using HandleType = coroutine_handle<promise_type>;
+	struct promise_type
+	{
+		promise_type() {}
 
-    bool await_ready() const noexcept {
-        return false;
-    }
+		void return_void() { bReturned = true; }
 
-    void await_suspend(std::coroutine_handle<> handle) const {
-        std::thread([handle, this] {
-            std::this_thread::sleep_for(duration);
-            handle.resume();
-        }).detach();
-    }
+		DNTaskVoid get_return_object()
+		{
+			return DNTaskVoid{ HandleType::from_promise(*this) };
+		}
 
-    void await_resume() const noexcept {}
+		suspend_never initial_suspend() { return {}; }
+
+		suspend_never final_suspend() noexcept
+		{
+			ReleaseAwaitHandle();
+			return {};
+		}
+
+		void unhandled_exception() {}
+
+		void ReleaseAwaitHandle()
+		{
+			if (oAwaitHandle) { oAwaitHandle.resume(); oAwaitHandle = nullptr; }
+		}
+
+		coroutine_handle<> oAwaitHandle = nullptr;
+
+		bool bReturned = false;
+	};
+
+	// Awaitable Start
+	bool await_ready() const noexcept
+	{
+		return tHandle.promise().bReturned;
+	}
+
+	void await_suspend(coroutine_handle<> caller)
+	{
+		tHandle.promise().oAwaitHandle = caller;
+	}
+
+	void await_resume() noexcept
+	{
+	}
+	// Awaitable End
+
+	DNTaskVoid(HandleType handle)
+	{
+		tHandle = handle;
+	}
+
+	void Resume()
+	{
+		if (!tHandle || tHandle.done())
+		{
+			return;
+		}
+
+		tHandle.resume();
+	}
+
+	HandleType tHandle;
 };
 
-Task funcC() {
-    co_await SleepFor{std::chrono::milliseconds(1000)};  // 模拟异步操作
+
+
+class TimerThread : public EventLoopThread {
+public:
+    std::atomic<TimerID> nextTimerID;
+    TimerThread() : EventLoopThread() {
+        nextTimerID = 0;
+        start();
+    }
+
+    virtual ~TimerThread() {
+        stop();
+        join();
+    }
+
+public:
+    // setTimer, setTimeout, killTimer, resetTimer thread-safe
+    TimerID setTimer(int timeout_ms, TimerCallback cb, uint32_t repeat = INFINITE) {
+        TimerID timerID = ++nextTimerID;
+        loop()->setTimerInLoop(timeout_ms, cb, repeat, timerID);
+        return timerID;
+    }
+    // alias javascript setTimeout, setInterval
+    TimerID setTimeout(int timeout_ms, TimerCallback cb) {
+        return setTimer(timeout_ms, cb, 1);
+    }
+    TimerID setInterval(int interval_ms, TimerCallback cb) {
+        return setTimer(interval_ms, cb, INFINITE);
+    }
+
+    void killTimer(TimerID timerID) {
+        loop()->killTimer(timerID);
+    }
+
+    void resetTimer(TimerID timerID, int timeout_ms = 0) {
+        loop()->resetTimer(timerID, timeout_ms);
+    }
+};
+
+shared_ptr<TimerThread> loop;
+
+DNTaskVoid funcD() {
     std::cout << "1" << std::endl;
+	co_return;
 }
 
-Task funcB() {
-    co_await funcC();
+DNTask<int*> funcC() {
+    std::cout << "1" << std::endl;
+	int* a = new int();
+	co_return a;
+}
+
+DNTaskVoid funcB() {
+	auto res = funcC();
+	
+	loop->setTimeout(2500, [&](int64_t timeId){
+		res.CallResume();
+	});
+	
+    co_await res;
+
+	// co_await funcD();
+	
     std::cout << "2" << std::endl;
 }
 
-Task funcA() {
+DNTaskVoid funcA() {
     co_await funcB();
+	co_await funcD();
+	co_await funcB();
+	co_await funcD();
+	co_await funcB();
     std::cout << "3" << std::endl;
 }
 
 int main() {
-    auto task = funcA();
-    task.handle.resume();  // 启动协程
+	loop = make_shared<TimerThread>();
+    funcA();
 
-    std::this_thread::sleep_for(std::chrono::seconds(30));  // 确保主线程在协程执行完之前不会退出
+    std::this_thread::sleep_for(std::chrono::seconds(20));  // 确保主线程在协程执行完之前不会退出
+
+	loop->stop(true);
     return 0;
 }
