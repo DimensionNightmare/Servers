@@ -18,17 +18,22 @@ import ThirdParty.PbGen;
 namespace GateMessage
 {
 
-	export void Exe_ReqUserToken(SocketChannelPtr channel, uint32_t msgId, Message* msg)
+	export void Exe_ReqUserToken(SocketChannelPtr channel, uint32_t msgId,  string binMsg)
 	{
-		A2g_ReqAuthAccount* request = reinterpret_cast<A2g_ReqAuthAccount*>(msg);
+		A2g_ReqAuthAccount request;
+		
+		if(!request.ParseFromString(binMsg))
+		{
+			return;
+		}
+		
 		g2A_ResAuthAccount response;
 
 		string binData;
-		string* reqIp = request->mutable_server_ip();
 
 		GateServerHelper* dnServer = GetGateServer();
 		ProxyEntityManagerHelper* entityMan = dnServer->GetProxyEntityManager();
-		ProxyEntity* entity = entityMan->GetEntity(request->account_id());
+		ProxyEntity* entity = entityMan->GetEntity(request.account_id());
 		if (entity)
 		{
 			//exit
@@ -36,7 +41,7 @@ namespace GateMessage
 			{
 				// kick channel
 				S2C_RetAccountReplace request;
-				request.set_server_ip(*reqIp);
+				request.set_server_ip(request.server_ip());
 
 				request.SerializeToString(&binData);
 				MessagePack(0, MsgDeal::Ret, request.GetDescriptor()->full_name().c_str(), binData);
@@ -67,7 +72,7 @@ namespace GateMessage
 		}
 		else
 		{
-			entity = entityMan->AddEntity(request->account_id());
+			entity = entityMan->AddEntity(request.account_id());
 
 			string& token = entity->Token();
 			token = GetNowTimeStr();
@@ -86,7 +91,7 @@ namespace GateMessage
 			entity->TimerId() = TICK_MAINSPACE_SIGN_FUNCTION(ProxyEntityManager, CheckEntityCloseTimer, entityMan, entity->ID());
 		}
 
-		DNPrint(0, LoggerLevel::Debug, "ReqUserToken User: %d!!", request->account_id());
+		DNPrint(0, LoggerLevel::Debug, "ReqUserToken User: %d!!", request.account_id());
 
 		response.SerializeToString(&binData);
 		MessagePack(msgId, MsgDeal::Res, nullptr, binData);

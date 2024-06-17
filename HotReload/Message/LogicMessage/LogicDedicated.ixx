@@ -16,13 +16,17 @@ import ThirdParty.PbGen;
 
 namespace LogicMessage
 {
-	export DNTaskVoid Msg_ReqLoadEntityData(SocketChannelPtr channel, uint32_t msgId, Message* msg)
+	export DNTaskVoid Msg_ReqLoadEntityData(SocketChannelPtr channel, uint32_t msgId,  string binMsg)
 	{
-		d2L_ReqLoadEntityData* request = reinterpret_cast<d2L_ReqLoadEntityData*>(msg);
+		d2L_ReqLoadEntityData request;
+		if(!request.ParseFromString(binMsg))
+		{
+			co_return;
+		}
 		L2d_ResLoadEntityData response;
 
 		Player player;
-		if (!player.ParseFromString(request->entity_data()))
+		if (!player.ParseFromString(request.entity_data()))
 		{
 			co_return;
 		}
@@ -39,7 +43,7 @@ namespace LogicMessage
 		else
 		{
 			
-			// co_await entityMan->LoadEntityData(entity, request, &response);
+			co_await entityMan->LoadEntityData(entity, &request, &response);
 			string* entity_data = response.add_entity_data();
 			entity->GetDbEntity()->SerializeToString(entity_data);
 			DNPrint(0, LoggerLevel::Debug, "end2:%s!", entity->GetDbEntity()->DebugString().c_str());
@@ -53,12 +57,16 @@ namespace LogicMessage
 		co_return;
 	}
 
-	export void Msg_ReqSaveEntityData(SocketChannelPtr channel, Message* msg)
+	export void Msg_ReqSaveEntityData(SocketChannelPtr channel, string binMsg)
 	{
-		d2L_ReqSaveEntityData* request = reinterpret_cast<d2L_ReqSaveEntityData*>(msg);
+		d2L_ReqSaveEntityData request;
+		if(!request.ParseFromString(binMsg))
+		{
+			return;
+		}
 
 		Player player;
-		if (!player.ParseFromString(request->entity_data()))
+		if (!player.ParseFromString(request.entity_data()))
 		{
 			DNPrint(0, LoggerLevel::Debug, "Save data but parse error!");
 			return;
@@ -79,7 +87,7 @@ namespace LogicMessage
 		if (Player* dbEntity = entity->GetDbEntity())
 		{
 			dbEntity->MergeFrom(player);
-			if (request->runtime_save())
+			if (request.runtime_save())
 			{
 				entity->SetFlag(ClientEntityFlag::DBModify);
 			}

@@ -22,9 +22,9 @@ public:
 	static void MsgRedirectHandle(const SocketChannelPtr& channel, uint32_t msgId, size_t msgHashId, const string& msgData);
 	static void RegMsgHandle();
 public:
-	inline static unordered_map<size_t, pair<const Message*, function<void(SocketChannelPtr, uint32_t, Message*)>>> MHandleMap;
-	inline static unordered_map<size_t, pair<const Message*, function<void(SocketChannelPtr, Message*)>>> MHandleRetMap;
-	inline static unordered_map<size_t, pair<const Message*, function<void(SocketChannelPtr, uint32_t, Message*)>>> MHandleRedirectMap;
+	inline static unordered_map<size_t, pair<const Message*, function<void(SocketChannelPtr, uint32_t, string)>>> MHandleMap;
+	inline static unordered_map<size_t, pair<const Message*, function<void(SocketChannelPtr, string)>>> MHandleRetMap;
+	inline static unordered_map<size_t, pair<const Message*, function<void(SocketChannelPtr, uint32_t, string)>>> MHandleRedirectMap;
 };
 
 
@@ -34,24 +34,14 @@ void ControlMessageHandle::MsgHandle(const SocketChannelPtr& channel, uint32_t m
 	if (MHandleMap.contains(msgHashId))
 	{
 		auto& handle = MHandleMap[msgHashId];
-		Message* message = handle.first->New();
-		if (message->ParseFromString(msgData))
+		try
 		{
-			try
-			{
-				handle.second(channel, msgId, message);
-			}
-			catch (const exception& e)
-			{
-				DNPrint(0, LoggerLevel::Debug, e.what());
-			}
+			handle.second(channel, msgId, msgData);
 		}
-		else
+		catch (const exception& e)
 		{
-			DNPrint(ErrCode::ErrCode_MsgParse, LoggerLevel::Error, nullptr);
+			DNPrint(0, LoggerLevel::Debug, e.what());
 		}
-
-		delete message;
 	}
 	else
 	{
@@ -64,24 +54,15 @@ void ControlMessageHandle::MsgRetHandle(const SocketChannelPtr& channel, size_t 
 	if (MHandleRetMap.contains(msgHashId))
 	{
 		auto& handle = MHandleRetMap[msgHashId];
-		Message* message = handle.first->New();
-		if (message->ParseFromString(msgData))
-		{
-			try
-			{
-				handle.second(channel, message);
-			}
-			catch (const exception& e)
-			{
-				DNPrint(0, LoggerLevel::Debug, e.what());
-			}
-		}
-		else
-		{
-			DNPrint(ErrCode::ErrCode_MsgParse, LoggerLevel::Error, nullptr);
-		}
 
-		delete message;
+		try
+		{
+			handle.second(channel, msgData);
+		}
+		catch (const exception& e)
+		{
+			DNPrint(0, LoggerLevel::Debug, e.what());
+		}
 	}
 	else
 	{
@@ -94,24 +75,14 @@ void ControlMessageHandle::MsgRedirectHandle(const SocketChannelPtr& channel, ui
 	if (MHandleRedirectMap.contains(msgHashId))
 	{
 		auto& handle = MHandleRedirectMap[msgHashId];
-		Message* message = handle.first->New();
-		if (message->ParseFromString(msgData))
+		try
 		{
-			try
-			{
-				handle.second(channel, msgId, message);
-			}
-			catch (const exception& e)
-			{
-				DNPrint(0, LoggerLevel::Debug, e.what());
-			}
+			handle.second(channel, msgId, msgData);
 		}
-		else
+		catch (const exception& e)
 		{
-			DNPrint(ErrCode::ErrCode_MsgParse, LoggerLevel::Error, nullptr);
+			DNPrint(0, LoggerLevel::Debug, e.what());
 		}
-
-		delete message;
 	}
 	else
 	{

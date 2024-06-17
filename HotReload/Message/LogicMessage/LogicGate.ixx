@@ -1,4 +1,5 @@
 module;
+#include <string>
 
 #include "StdMacro.h"
 export module LogicMessage:LogicGate;
@@ -10,14 +11,18 @@ import ThirdParty.PbGen;
 
 namespace LogicMessage
 {
-	export void Exe_RetProxyOffline(SocketChannelPtr channel, Message* msg)
+	export void Exe_RetProxyOffline(SocketChannelPtr channel, string binMsg)
 	{
-		g2L_RetProxyOffline* request = reinterpret_cast<g2L_RetProxyOffline*>(msg);
+		g2L_RetProxyOffline request;
+		if(!request.ParseFromString(binMsg))
+		{
+			return;
+		}
 
 		LogicServerHelper* dnServer = GetLogicServer();
 		ClientEntityManagerHelper* entityMan = dnServer->GetClientEntityManager();
 
-		if (ClientEntity* entity = entityMan->GetEntity(request->entity_id()))
+		if (ClientEntity* entity = entityMan->GetEntity(request.entity_id()))
 		{
 			DNPrint(0, LoggerLevel::Debug, "Recv Client %u Disconnect !!", entity->ID());
 
@@ -26,6 +31,6 @@ namespace LogicMessage
 			return;
 		}
 
-		DNPrint(0, LoggerLevel::Debug, "Recv Client %u Disconnect but not Exist!!", request->entity_id());
+		DNPrint(0, LoggerLevel::Debug, "Recv Client %u Disconnect but not Exist!!", request.entity_id());
 	}
 }

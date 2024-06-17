@@ -16,14 +16,18 @@ import ThirdParty.PbGen;
 
 namespace LogicMessage
 {
-	export void Exe_RetAccountReplace(SocketChannelPtr channel, uint32_t msgId, Message* msg)
+	export void Exe_RetAccountReplace(SocketChannelPtr channel, uint32_t msgId,  string binMsg)
 	{
-		S2C_RetAccountReplace* request = reinterpret_cast<S2C_RetAccountReplace*>(msg);
+		S2C_RetAccountReplace request;
+		if(!request.ParseFromString(binMsg))
+		{
+			return;
+		}
 
 		LogicServerHelper* dnServer = GetLogicServer();
 		ClientEntityManagerHelper* entityMan = dnServer->GetClientEntityManager();
 
-		ClientEntity* entity = entityMan->GetEntity(request->account_id());
+		ClientEntity* entity = entityMan->GetEntity(request.account_id());
 		if (!entity)
 		{
 			DNPrint(0, LoggerLevel::Debug, "Client Entity Kick Not Exist !");
@@ -36,10 +40,9 @@ namespace LogicMessage
 		// cache
 		if (roomEntity)
 		{
-			string binData;
-			msg->SerializeToString(&binData);
+			string binData = binMsg;
 
-			MessagePack(0, MsgDeal::Ret, msg->GetDescriptor()->full_name().c_str(), binData);
+			MessagePack(0, MsgDeal::Ret, request.GetDescriptor()->full_name().c_str(), binData);
 			roomEntity->GetSock()->write(binData);
 		}
 		else
@@ -52,20 +55,25 @@ namespace LogicMessage
 	}
 
 	// client request
-	export DNTaskVoid Msg_ReqClientLogin(SocketChannelPtr channel, uint32_t msgId, Message* msg)
+	export DNTaskVoid Msg_ReqClientLogin(SocketChannelPtr channel, uint32_t msgId,  string binMsg)
 	{
-		C2S_ReqAuthToken* request = reinterpret_cast<C2S_ReqAuthToken*>(msg);
+		C2S_ReqAuthToken request;
+		if(!request.ParseFromString(binMsg))
+		{
+			co_return;
+		}
 		S2C_ResAuthToken response;
 
 		LogicServerHelper* dnServer = GetLogicServer();
 		ClientEntityManagerHelper* entityMan = dnServer->GetClientEntityManager();
 
-		ClientEntity* entity = entityMan->AddEntity(request->account_id());
+		ClientEntity* entity = entityMan->AddEntity(request.account_id());
 		if (entity)
 		{
 			DNPrint(0, LoggerLevel::Debug, "AddEntity Client!");
 
-			// co_await entityMan->LoadEntityData(entity, nullptr, nullptr);
+			// msg will destroy. MessageHandle not will waiting.
+			co_await entityMan->LoadEntityData(entity, nullptr, nullptr);
 
 			if (!entity->HasFlag(ClientEntityFlag::DBInited))
 			{
@@ -75,7 +83,7 @@ namespace LogicMessage
 		else
 		{
 			DNPrint(0, LoggerLevel::Debug, "AddEntity Exist Client!");
-			entity = entityMan->GetEntity(request->account_id());
+			entity = entityMan->GetEntity(request.account_id());
 		}
 
 		RoomEntityManagerHelper* roomEntityMan = dnServer->GetRoomEntityManager();
@@ -132,8 +140,8 @@ namespace LogicMessage
 			DNServerProxyHelper* server = dnServer->GetSSock();
 			uint32_t msgId = server->GetMsgId();
 
-			msg->SerializeToString(&binData);
-			MessagePack(msgId, MsgDeal::Req, request->GetDescriptor()->full_name().c_str(), binData);
+			binData = binMsg;
+			MessagePack(msgId, MsgDeal::Req, request.GetDescriptor()->full_name().c_str(), binData);
 
 			{
 				auto taskGen = [](Message* msg) -> DNTask<Message*>

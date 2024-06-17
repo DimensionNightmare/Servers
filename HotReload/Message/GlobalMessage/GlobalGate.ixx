@@ -1,6 +1,7 @@
 module;
 #include <coroutine>
 #include <cstdint>
+#include <string>
 
 #include "StdMacro.h"
 export module GlobalMessage:GlobalGate;
@@ -15,15 +16,19 @@ import Logger;
 namespace GlobalMessage
 {
 
-	export void Exe_RetRegistSrv(SocketChannelPtr channel, Message* msg)
+	export void Exe_RetRegistSrv(SocketChannelPtr channel, string binMsg)
 	{
-		g2G_RetRegistSrv* request = reinterpret_cast<g2G_RetRegistSrv*>(msg);
+		g2G_RetRegistSrv request;
+		if(!request.ParseFromString(binMsg))
+		{
+			return;
+		}
 
 		GlobalServerHelper* dnServer = GetGlobalServer();
 		ServerEntityManagerHelper* entityMan = dnServer->GetServerEntityManager();
-		if (ServerEntity* entity = entityMan->GetEntity(request->server_id()))
+		if (ServerEntity* entity = entityMan->GetEntity(request.server_id()))
 		{
-			if (request->is_regist())
+			if (request.is_regist())
 			{
 				if (uint64_t timerId = entity->TimerId())
 				{
@@ -40,24 +45,28 @@ namespace GlobalMessage
 
 				DNPrint(0, LoggerLevel::Debug, "Global get notify release gate lock!");
 
-				entityMan->RemoveEntity(request->server_id());
+				entityMan->RemoveEntity(request.server_id());
 				dnServer->UpdateServerGroup();
 			}
 		}
 	}
 
-	export void Exe_RetRegistChild(SocketChannelPtr channel, Message* msg)
+	export void Exe_RetRegistChild(SocketChannelPtr channel, string binMsg)
 	{
-		g2G_RetRegistChild* request = reinterpret_cast<g2G_RetRegistChild*>(msg);
+		g2G_RetRegistChild request;
+		if(!request.ParseFromString(binMsg))
+		{
+			return;
+		}
 
 		GlobalServerHelper* dnServer = GetGlobalServer();
 		ServerEntityManagerHelper* entityMan = dnServer->GetServerEntityManager();
 
-		ServerEntity* entity = entityMan->GetEntity(request->server_id());
+		ServerEntity* entity = entityMan->GetEntity(request.server_id());
 
-		for (int i = 0; i < request->childs_size(); i++)
+		for (int i = 0; i < request.childs_size(); i++)
 		{
-			const COM_ReqRegistSrv& child = request->childs(i);
+			const COM_ReqRegistSrv& child = request.childs(i);
 			ServerType childType = (ServerType)child.server_type();
 			ServerEntity* servChild = entityMan->AddEntity(child.server_id(), childType);
 			entity->SetMapLinkNode(childType, servChild);

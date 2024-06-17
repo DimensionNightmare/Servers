@@ -16,8 +16,13 @@ import ThirdParty.PbGen;
 
 namespace ControlMessage
 {
-	export DNTaskVoid Msg_ReqAuthAccount(SocketChannelPtr channel, uint32_t msgId, Message* msg)
+	export DNTaskVoid Msg_ReqAuthAccount(SocketChannelPtr channel, uint32_t msgId,  string binMsg)
 	{
+		A2g_ReqAuthAccount request;
+		if(!request.ParseFromString(binMsg))
+		{
+			co_return;
+		}
 		g2A_ResAuthAccount response;
 
 		ServerEntity* entity = nullptr;
@@ -57,8 +62,8 @@ namespace ControlMessage
 			DNServerProxyHelper* server = GetControlServer()->GetSSock();
 			uint32_t msgId = server->GetMsgId();
 
-			msg->SerializeToString(&binData);
-			MessagePack(msgId, MsgDeal::Redir, msg->GetDescriptor()->full_name().c_str(), binData);
+			binData = binMsg;
+			MessagePack(msgId, MsgDeal::Redir, request.GetDescriptor()->full_name().c_str(), binData);
 
 			{
 				// message change to global

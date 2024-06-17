@@ -21,8 +21,8 @@ public:
 
 	static void RegApiHandle(HttpService* service);
 public:
-	inline static unordered_map<size_t, pair<const Message*, function<void(SocketChannelPtr, uint32_t, Message*)>>> MHandleMap;
-	inline static unordered_map<size_t, pair<const Message*, function<void(SocketChannelPtr, Message*)>>> MHandleRetMap;
+	inline static unordered_map<size_t, pair<const Message*, function<void(SocketChannelPtr, uint32_t, string)>>> MHandleMap;
+	inline static unordered_map<size_t, pair<const Message*, function<void(SocketChannelPtr, string)>>> MHandleRetMap;
 };
 
 
@@ -32,25 +32,16 @@ void AuthMessageHandle::MsgHandle(SocketChannelPtr channel, uint32_t msgId, size
 	if (MHandleMap.contains(msgHashId))
 	{
 		auto& handle = MHandleMap[msgHashId];
-		Message* message = handle.first->New();
-		if (message->ParseFromString(msgData))
+		
+		try
 		{
-			try
-			{
-				handle.second(channel, msgId, message);
-			}
-			catch (const exception& e)
-			{
-				DNPrint(0, LoggerLevel::Debug, e.what());
-			}
-
+			handle.second(channel, msgId, msgData);
 		}
-		else
+		catch (const exception& e)
 		{
-			DNPrint(ErrCode::ErrCode_MsgParse, LoggerLevel::Error, nullptr);
+			DNPrint(0, LoggerLevel::Debug, e.what());
 		}
 
-		delete message;
 	}
 	else
 	{
@@ -63,17 +54,14 @@ void AuthMessageHandle::MsgRetHandle(SocketChannelPtr channel, size_t msgHashId,
 	if (MHandleRetMap.contains(msgHashId))
 	{
 		auto& handle = MHandleRetMap[msgHashId];
-		Message* message = handle.first->New();
-		if (message->ParseFromString(msgData))
+		try
 		{
-			handle.second(channel, message);
+			handle.second(channel, msgData);
 		}
-		else
+		catch (const exception& e)
 		{
-			DNPrint(ErrCode::ErrCode_MsgParse, LoggerLevel::Error, nullptr);
+			DNPrint(0, LoggerLevel::Debug, e.what());
 		}
-
-		delete message;
 	}
 	else
 	{

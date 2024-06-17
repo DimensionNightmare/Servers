@@ -90,15 +90,19 @@ namespace LogicMessage
 	}
 
 	// client request
-	export void Msg_ReqRegistSrv(SocketChannelPtr channel, uint32_t msgId, Message* msg)
+	export void Msg_ReqRegistSrv(SocketChannelPtr channel, uint32_t msgId,  string binMsg)
 	{
-		d2L_ReqRegistSrv* request = reinterpret_cast<d2L_ReqRegistSrv*>(msg);
+		d2L_ReqRegistSrv request;
+		if(!request.ParseFromString(binMsg))
+		{
+			return;
+		}
 		COM_ResRegistSrv response;
 
 		LogicServerHelper* dnServer = GetLogicServer();
 		RoomEntityManagerHelper* entityMan = dnServer->GetRoomEntityManager();
 
-		ServerType regType = (ServerType)request->server_type();
+		ServerType regType = (ServerType)request.server_type();
 		const string& ipPort = channel->localaddr();
 
 		if (regType != ServerType::DedicatedServer || ipPort.empty())
@@ -112,7 +116,7 @@ namespace LogicMessage
 			response.set_success(false);
 		}
 
-		else if (int serverId = request->server_id())
+		else if (int serverId = request.server_id())
 		{
 			if (RoomEntity* entity = entityMan->GetEntity(serverId))
 			{
@@ -145,22 +149,22 @@ namespace LogicMessage
 				response.set_server_id(serverId);
 				response.set_server_type((uint8_t(dnServer->GetServerType())));
 
-				entity = entityMan->AddEntity(serverId, request->map_id());
+				entity = entityMan->AddEntity(serverId, request.map_id());
 				entity->SetSock(channel);
 
 				channel->setContext(entity);
 
 				size_t pos = ipPort.find(":");
 				entity->ServerIp() = ipPort.substr(0, pos);
-				entity->ServerPort() = request->server_port();
+				entity->ServerPort() = request.server_port();
 			}
 		}
 
-		else if (RoomEntity* entity = entityMan->AddEntity(entityMan->GenRoomId(), request->map_id()))
+		else if (RoomEntity* entity = entityMan->AddEntity(entityMan->GenRoomId(), request.map_id()))
 		{
 			size_t pos = ipPort.find(":");
 			entity->ServerIp() = ipPort.substr(0, pos);
-			entity->ServerPort() = request->server_port();
+			entity->ServerPort() = request.server_port();
 
 			DNPrint(0, LoggerLevel::Debug, "ds regist:%s:%d", entity->ServerIp().c_str(), entity->ServerPort());
 
@@ -180,17 +184,25 @@ namespace LogicMessage
 		channel->write(binData);
 	}
 
-	export void Exe_RetChangeCtlSrv(SocketChannelPtr channel, Message* msg)
+	export void Exe_RetChangeCtlSrv(SocketChannelPtr channel, string binMsg)
 	{
-		COM_RetChangeCtlSrv* request = reinterpret_cast<COM_RetChangeCtlSrv*>(msg);
+		COM_RetChangeCtlSrv request;
+		if(!request.ParseFromString(binMsg))
+		{
+			return;
+		}
 		LogicServerHelper* dnServer = GetLogicServer();
 		DNClientProxyHelper* client = dnServer->GetCSock();
 
-		TICK_MAINSPACE_SIGN_FUNCTION(DNClientProxy, RedirectClient, client, request->server_port(), request->server_ip());
+		TICK_MAINSPACE_SIGN_FUNCTION(DNClientProxy, RedirectClient, client, request.server_port(), request.server_ip());
 	}
 
-	export void Exe_RetHeartbeat(SocketChannelPtr channel, Message* msg)
+	export void Exe_RetHeartbeat(SocketChannelPtr channel, string binMsg)
 	{
-		COM_RetHeartbeat* request = reinterpret_cast<COM_RetHeartbeat*>(msg);
+		COM_RetHeartbeat request;
+		if(!request.ParseFromString(binMsg))
+		{
+			return;
+		}
 	}
 }

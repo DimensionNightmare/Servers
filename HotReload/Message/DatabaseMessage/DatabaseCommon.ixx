@@ -89,12 +89,16 @@ namespace DatabaseMessage
 		co_return;
 	}
 
-	export void Exe_RetChangeCtlSrv(SocketChannelPtr channel, Message* msg)
+	export void Exe_RetChangeCtlSrv(SocketChannelPtr channel, string binMsg)
 	{
-		COM_RetChangeCtlSrv* request = reinterpret_cast<COM_RetChangeCtlSrv*>(msg);
+		COM_RetChangeCtlSrv request;
+		if(!request.ParseFromString(binMsg))
+		{
+			return;
+		}
 		DatabaseServerHelper* dnServer = GetDatabaseServer();
 		DNClientProxyHelper* client = dnServer->GetCSock();
 
-		TICK_MAINSPACE_SIGN_FUNCTION(DNClientProxy, RedirectClient, client, request->server_port(), request->server_ip());
+		TICK_MAINSPACE_SIGN_FUNCTION(DNClientProxy, RedirectClient, client, request.server_port(), request.server_ip());
 	}
 }

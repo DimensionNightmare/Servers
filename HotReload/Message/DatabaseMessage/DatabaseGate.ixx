@@ -18,9 +18,13 @@ import ThirdParty.Libpqxx;
 namespace DatabaseMessage
 {
 
-	export void Exe_ReqLoadData(SocketChannelPtr channel, uint32_t msgId, Message* msg)
+	export void Exe_ReqLoadData(SocketChannelPtr channel, uint32_t msgId,  string binMsg)
 	{
-		L2D_ReqLoadData* request = reinterpret_cast<L2D_ReqLoadData*>(msg);
+		L2D_ReqLoadData request;
+		if(!request.ParseFromString(binMsg))
+		{
+			return;
+		}
 		D2L_ResLoadData response;
 
 		DatabaseServerHelper* dnServer = GetDatabaseServer();
@@ -31,7 +35,7 @@ namespace DatabaseMessage
 		{
 			auto dealFunc = [&](Message* findMsg)
 				{
-					findMsg->ParseFromString(request->entity_data());
+					findMsg->ParseFromString(request.entity_data());
 
 					pq_work txn(*conn);
 					DbSqlHelper dbHelper(&txn, findMsg);
@@ -39,8 +43,8 @@ namespace DatabaseMessage
 					auto query = [&]()
 						{
 							dbHelper
-								.SelectByKey(request->key_name().c_str())
-								.Limit(request->limit())
+								.SelectByKey(request.key_name().c_str())
+								.Limit(request.limit())
 								.Commit();
 
 							if (int resSize = dbHelper.Result().size())
@@ -57,7 +61,7 @@ namespace DatabaseMessage
 					query();
 
 					// not exist just create
-					if (!response.entity_data_size() && request->need_create())
+					if (!response.entity_data_size() && request.need_create())
 					{
 						dbHelper.Insert(true).Commit();
 
@@ -70,7 +74,7 @@ namespace DatabaseMessage
 					}
 				};
 
-			if (const Descriptor* descriptor = PB_FindMessageTypeByName(request->table_name()))
+			if (const Descriptor* descriptor = PB_FindMessageTypeByName(request.table_name()))
 			{
 				if (const Message* prototype = PB_GetPrototype(descriptor))
 				{
@@ -111,9 +115,13 @@ namespace DatabaseMessage
 		channel->write(binData);
 	}
 
-	export void Exe_ReqSaveData(SocketChannelPtr channel, uint32_t msgId, Message* msg)
+	export void Exe_ReqSaveData(SocketChannelPtr channel, uint32_t msgId,  string binMsg)
 	{
-		L2D_ReqSaveData* request = reinterpret_cast<L2D_ReqSaveData*>(msg);
+		L2D_ReqSaveData request;
+		if(!request.ParseFromString(binMsg))
+		{
+			return;
+		}
 		D2L_ResSaveData response;
 
 		DatabaseServerHelper* dnServer = GetDatabaseServer();
@@ -124,20 +132,20 @@ namespace DatabaseMessage
 		{
 			auto dealFunc = [&](Message* findMsg)
 				{
-					findMsg->ParseFromString(request->entity_data());
+					findMsg->ParseFromString(request.entity_data());
 
 					pq_work txn(*conn);
 					DbSqlHelper dbHelper(&txn, findMsg);
 
 					dbHelper
-						.UpdateByKey(request->key_name().c_str())
+						.UpdateByKey(request.key_name().c_str())
 						.Commit();
 
 					txn.commit();
 
 				};
 
-			if (const Descriptor* descriptor = PB_FindMessageTypeByName(request->table_name()))
+			if (const Descriptor* descriptor = PB_FindMessageTypeByName(request.table_name()))
 			{
 				if (const Message* prototype = PB_GetPrototype(descriptor))
 				{

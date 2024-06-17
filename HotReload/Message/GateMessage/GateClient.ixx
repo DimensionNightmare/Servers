@@ -19,9 +19,13 @@ namespace GateMessage
 {
 
 	// client request
-	export DNTaskVoid Msg_ReqAuthToken(SocketChannelPtr channel, uint32_t msgId, Message* msg)
+	export DNTaskVoid Msg_ReqAuthToken(SocketChannelPtr channel, uint32_t msgId,  string binMsg)
 	{
-		C2S_ReqAuthToken* request = reinterpret_cast<C2S_ReqAuthToken*>(msg);
+		C2S_ReqAuthToken request;
+		if(!request.ParseFromString(binMsg))
+		{
+			co_return;
+		}
 
 		GateServerHelper* dnServer = GetGateServer();
 		ProxyEntityManagerHelper* entityMan = dnServer->GetProxyEntityManager();
@@ -29,14 +33,14 @@ namespace GateMessage
 		S2C_ResAuthToken response;
 		string binData;
 
-		ProxyEntity* entity = entityMan->GetEntity(request->account_id());
+		ProxyEntity* entity = entityMan->GetEntity(request.account_id());
 		if (!entity)
 		{
-			DNPrint(0, LoggerLevel::Debug, "noaccount %d!!", request->account_id());
+			DNPrint(0, LoggerLevel::Debug, "noaccount %d!!", request.account_id());
 			response.set_state_code(1);
 		}
 		// if not match, timer will destory entity
-		else if (Md5Hash(entity->Token()) != request->token())
+		else if (Md5Hash(entity->Token()) != request.token())
 		{
 			DNPrint(0, LoggerLevel::Debug, "not match!!");
 			response.set_state_code(2);
@@ -86,12 +90,12 @@ namespace GateMessage
 
 				DNPrint(0, LoggerLevel::Debug, "Send to Logic index->%d, %d", entity->ID(), entity->RecordServerId());
 
-				request->SerializeToString(&binData);
+				binData = binMsg;
 
 				DNServerProxyHelper* server = dnServer->GetSSock();
 				uint32_t msgId = server->GetMsgId();
 
-				MessagePack(msgId, MsgDeal::Redir, request->GetDescriptor()->full_name().c_str(), binData);
+				MessagePack(msgId, MsgDeal::Redir, request.GetDescriptor()->full_name().c_str(), binData);
 
 				{
 					auto taskGen = [](Message* msg) -> DNTask<Message*>

@@ -17,8 +17,13 @@ import ThirdParty.PbGen;
 namespace GlobalMessage
 {
 
-	export DNTaskVoid Msg_ReqAuthAccount(SocketChannelPtr channel, uint32_t msgId, Message* msg)
+	export DNTaskVoid Msg_ReqAuthAccount(SocketChannelPtr channel, uint32_t msgId,  string binMsg)
 	{
+		A2g_ReqAuthAccount request;
+		if(!request.ParseFromString(binMsg))
+		{
+			co_return;
+		}
 		g2A_ResAuthAccount response;
 
 		// if has db not need origin
@@ -55,8 +60,8 @@ namespace GlobalMessage
 			uint32_t msgId = server->GetMsgId();
 
 			// pack data
-			msg->SerializeToString(&binData);
-			MessagePack(msgId, MsgDeal::Req, msg->GetDescriptor()->full_name().c_str(), binData);
+			binData = binMsg;
+			MessagePack(msgId, MsgDeal::Req, request.GetDescriptor()->full_name().c_str(), binData);
 
 			{
 				// data alloc

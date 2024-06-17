@@ -19,8 +19,8 @@ public:
 	static void MsgRetHandle(const SocketChannelPtr& channel, size_t msgHashId, const string& msgData);
 	static void RegMsgHandle();
 public:
-	inline static unordered_map<size_t, pair<const Message*, function<void(SocketChannelPtr, uint32_t, Message*)>>> MHandleMap;
-	inline static unordered_map<size_t, pair<const Message*, function<void(SocketChannelPtr, Message*)>>> MHandleRetMap;
+	inline static unordered_map<size_t, pair<const Message*, function<void(SocketChannelPtr, uint32_t, string)>>> MHandleMap;
+	inline static unordered_map<size_t, pair<const Message*, function<void(SocketChannelPtr, string)>>> MHandleRetMap;
 };
 
 
@@ -30,24 +30,15 @@ void DatabaseMessageHandle::MsgHandle(const SocketChannelPtr& channel, uint32_t 
 	if (MHandleMap.contains(msgHashId))
 	{
 		auto& handle = MHandleMap[msgHashId];
-		Message* message = handle.first->New();
-		if (message->ParseFromString(msgData))
-		{
-			try
-			{
-				handle.second(channel, msgId, message);
-			}
-			catch (const exception& e)
-			{
-				DNPrint(0, LoggerLevel::Debug, e.what());
-			}
-		}
-		else
-		{
-			DNPrint(ErrCode::ErrCode_MsgParse, LoggerLevel::Error, nullptr);
-		}
 
-		delete message;
+		try
+		{
+			handle.second(channel, msgId, msgData);
+		}
+		catch (const exception& e)
+		{
+			DNPrint(0, LoggerLevel::Debug, e.what());
+		}
 	}
 	else
 	{
@@ -60,24 +51,14 @@ void DatabaseMessageHandle::MsgRetHandle(const SocketChannelPtr& channel, size_t
 	if (MHandleRetMap.contains(msgHashId))
 	{
 		auto& handle = MHandleRetMap[msgHashId];
-		Message* message = handle.first->New();
-		if (message->ParseFromString(msgData))
+		try
 		{
-			try
-			{
-				handle.second(channel, message);
-			}
-			catch (const exception& e)
-			{
-				DNPrint(0, LoggerLevel::Debug, e.what());
-			}
+			handle.second(channel, msgData);
 		}
-		else
+		catch (const exception& e)
 		{
-			DNPrint(ErrCode::ErrCode_MsgParse, LoggerLevel::Error, nullptr);
+			DNPrint(0, LoggerLevel::Debug, e.what());
 		}
-
-		delete message;
 	}
 	else
 	{

@@ -17,9 +17,13 @@ import ThirdParty.PbGen;
 namespace GateMessage
 {
 
-	export DNTaskVoid Exe_ReqLoadData(SocketChannelPtr channel, uint32_t msgId, Message* msg)
+	export DNTaskVoid Exe_ReqLoadData(SocketChannelPtr channel, uint32_t msgId,  string binMsg)
 	{
-		L2D_ReqLoadData* request = reinterpret_cast<L2D_ReqLoadData*>(msg);
+		L2D_ReqLoadData request;
+		if(!request.ParseFromString(binMsg))
+		{
+			co_return;
+		}
 		D2L_ResLoadData response;
 
 		GateServerHelper* dnServer = GetGateServer();
@@ -39,8 +43,8 @@ namespace GateMessage
 			uint32_t msgId = server->GetMsgId();
 
 			// pack data
-			msg->SerializeToString(&binData);
-			MessagePack(msgId, MsgDeal::Req, msg->GetDescriptor()->full_name().c_str(), binData);
+			binData = binMsg;
+			MessagePack(msgId, MsgDeal::Req, request.GetDescriptor()->full_name().c_str(), binData);
 
 			{
 				// data alloc
@@ -71,9 +75,13 @@ namespace GateMessage
 		co_return;
 	}
 
-	export DNTaskVoid Exe_ReqSaveData(SocketChannelPtr channel, uint32_t msgId, Message* msg)
+	export DNTaskVoid Exe_ReqSaveData(SocketChannelPtr channel, uint32_t msgId,  string binMsg)
 	{
-		L2D_ReqSaveData* request = reinterpret_cast<L2D_ReqSaveData*>(msg);
+		L2D_ReqSaveData request;
+		if(!request.ParseFromString(binMsg))
+		{
+			co_return;
+		}
 		D2L_ResSaveData response;
 
 		GateServerHelper* dnServer = GetGateServer();
@@ -93,8 +101,8 @@ namespace GateMessage
 			uint32_t msgId = server->GetMsgId();
 
 			// pack data
-			msg->SerializeToString(&binData);
-			MessagePack(msgId, MsgDeal::Req, msg->GetDescriptor()->full_name().c_str(), binData);
+			binData = binMsg;
+			MessagePack(msgId, MsgDeal::Req, request.GetDescriptor()->full_name().c_str(), binData);
 
 			{
 				// data alloc
