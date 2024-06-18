@@ -2,6 +2,7 @@ module;
 #include <cstdint>
 #include <string>
 
+#include "StdMacro.h"
 export module ControlMessage:ControlCommon;
 
 import DNTask;
@@ -9,6 +10,7 @@ import MessagePack;
 import ControlServerHelper;
 import ThirdParty.Libhv;
 import ThirdParty.PbGen;
+import Logger;
 
 using namespace std;
 
@@ -30,6 +32,8 @@ namespace ControlMessage
 		ServerEntityManagerHelper* entityMan = dnServer->GetServerEntityManager();
 
 		ServerType regType = (ServerType)request.server_type();
+
+		DNPrint(0, LoggerLevel::Debug, "ip Reqregist: %s, %d", channel->peeraddr().c_str(), request.server_type());
 
 		const string& ipPort = channel->localaddr();
 

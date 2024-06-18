@@ -116,8 +116,6 @@ namespace LogicMessage
 				mapRecord->mutable_cur_point()->set_map_id(mapId);
 			}
 
-			DNPrint(0, LoggerLevel::Debug, "start:%s!", entity->GetDbEntity()->DebugString().c_str());
-
 			list<RoomEntity*> roomEntityList = roomEntityMan->GetEntitysByMapId(mapId);
 			if (roomEntityList.empty())
 			{
@@ -152,9 +150,9 @@ namespace LogicMessage
 				// wait data parse
 				server->AddMsg(msgId, &dataChannel, 8000);
 				roomEntity->GetSock()->write(binData);
-				DNPrint(0, LoggerLevel::Debug, "end1:%s!", entity->GetDbEntity()->DebugString().c_str());
+
 				co_await dataChannel;
-				DNPrint(0, LoggerLevel::Debug, "end2:%s!", entity->GetDbEntity()->DebugString().c_str());
+
 				if (dataChannel.HasFlag(DNTaskFlag::Timeout))
 				{
 					DNPrint(0, LoggerLevel::Debug, "requst timeout! ");
@@ -179,8 +177,6 @@ namespace LogicMessage
 		MessagePack(msgId, MsgDeal::Res, nullptr, binData);
 
 		channel->write(binData);
-
-		DNPrint(0, LoggerLevel::Debug, "end:%s!", entity->GetDbEntity()->DebugString().c_str());
 
 		co_return;
 	}

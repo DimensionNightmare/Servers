@@ -73,30 +73,28 @@ DNTaskVoid ClientEntityManager::SaveEntity(ClientEntity& entity, bool offline)
 {
 	uint32_t entityId = entity.ID();
 
-	Player* dbEntity = entity.GetDbEntity();
-
-	DNPrint(0, LoggerLevel::Debug, "end1:%s!", dbEntity->DebugString().c_str());
+	Player dbEntity = *entity.GetDbEntity();
 
 	// change maprecord
 	if(offline)
 	{
-		auto mapInfo = dbEntity->mutable_map_info();
-		auto cur_point = mapInfo->mutable_cur_point();
-		Vector3* property_location = dbEntity->mutable_property_entity()->mutable_location();
+		MapPointRecord* mapInfo = dbEntity.mutable_map_info();
+		MapPoint* cur_point = mapInfo->mutable_cur_point();
+		Vector3* property_location = dbEntity.mutable_property_entity()->mutable_location();
 		*cur_point->mutable_point() = *property_location;
 		property_location->Clear();
 
-		auto last_point = mapInfo->mutable_last_point();
+		MapPoint* last_point = mapInfo->mutable_last_point();
 		*last_point = *cur_point;
-		last_point->Clear();
+		cur_point->Clear();
 	}
 
 	string entity_data;
-	dbEntity->SerializeToString(&entity_data);
+	dbEntity.SerializeToString(&entity_data);
 
 	// sql
 	L2D_ReqSaveData request;
-	string table_name = dbEntity->GetDescriptor()->full_name();
+	string table_name = dbEntity.GetDescriptor()->full_name();
 	request.set_table_name(table_name);
 	request.set_key_name(ClientEntity::SKeyName);
 	request.set_entity_data(entity_data);

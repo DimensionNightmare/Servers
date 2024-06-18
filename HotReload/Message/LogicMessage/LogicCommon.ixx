@@ -97,6 +97,9 @@ namespace LogicMessage
 		{
 			return;
 		}
+		
+		DNPrint(0, LoggerLevel::Debug, "ip Reqregist: %s, %d", channel->peeraddr().c_str(), request.server_type());
+
 		COM_ResRegistSrv response;
 
 		LogicServerHelper* dnServer = GetLogicServer();

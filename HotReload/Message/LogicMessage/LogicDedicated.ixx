@@ -35,7 +35,7 @@ namespace LogicMessage
 		ClientEntityManagerHelper* entityMan = dnServer->GetClientEntityManager();
 
 		ClientEntity* entity = entityMan->GetEntity(player.account_id());
-		DNPrint(0, LoggerLevel::Debug, "end1:%s!", entity->GetDbEntity()->DebugString().c_str());
+
 		if (!entity)
 		{
 			response.set_state_code(1);
@@ -46,7 +46,7 @@ namespace LogicMessage
 			co_await entityMan->LoadEntityData(entity, &request, &response);
 			string* entity_data = response.add_entity_data();
 			entity->GetDbEntity()->SerializeToString(entity_data);
-			DNPrint(0, LoggerLevel::Debug, "end2:%s!", entity->GetDbEntity()->DebugString().c_str());
+
 		}
 
 		string binData;
@@ -76,7 +76,10 @@ namespace LogicMessage
 		ClientEntityManagerHelper* entityMan = dnServer->GetClientEntityManager();
 		ClientEntity* entity = entityMan->GetEntity(player.account_id());
 
-		DNPrint(0, LoggerLevel::Debug, "end1:%s!", entity->GetDbEntity()->DebugString().c_str());
+		if(!entity)
+		{
+			return;
+		}
 
 		if (!entity)
 		{
@@ -98,6 +101,5 @@ namespace LogicMessage
 			DNPrint(0, LoggerLevel::Debug, "SaveData but dbEntity is null!");
 		}
 
-		DNPrint(0, LoggerLevel::Debug, "end2:%s!", entity->GetDbEntity()->DebugString().c_str());
 	}
 }

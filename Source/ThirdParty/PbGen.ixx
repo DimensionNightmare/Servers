@@ -53,6 +53,7 @@ export {
 	using ::L10nTip;
 	using ::MapPointRecord;
 	using ::Vector3;
+	using ::MapPoint;
 };
 
 export {

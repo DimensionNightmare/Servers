@@ -144,6 +144,9 @@ namespace GateMessage
 		{
 			return;
 		}
+
+		DNPrint(0, LoggerLevel::Debug, "ip Reqregist: %s, %d", channel->peeraddr().c_str(), request.server_type());
+
 		COM_ResRegistSrv response;
 
 		GateServerHelper* dnServer = GetGateServer();
@@ -178,11 +181,18 @@ namespace GateMessage
 			response.set_server_id(entity->ID());
 			response.set_server_type((uint8_t(dnServer->GetServerType())));
 		}
+		else
+		{
+			abort();
+		}
 
 		string binData;
 		response.SerializeToString(&binData);
 
 		MessagePack(msgId, MsgDeal::Res, nullptr, binData);
+
+		DNPrint(0, LoggerLevel::Debug, "send : %s, %d size", channel->peeraddr().c_str(), binData.size());
+
 		channel->write(binData);
 
 		if (response.success())
