@@ -47,10 +47,10 @@ export {
 export {
 	using ::ErrCode;
 	using ::TipCode;
-	using ::ErrText;
-	using ::TipText;
-	using ::L10nErr;
-	using ::L10nTip;
+	using ::l10nErr;
+	using ::l10nTip;
+	using ::L10nErrs;
+	using ::L10nTips;
 	using ::MapPointRecord;
 	using ::Vector3;
 	using ::MapPoint;

@@ -25,16 +25,16 @@ public:
 	~DNl10n();
 	const char* InitConfigData();
 public:
-	unique_ptr<L10nErr> pErrMsgData;
-	unordered_map<uint32_t, const ErrText*> mErrMsgDllData;
+	unique_ptr<L10nErrs> pErrMsgData;
+	unordered_map<uint32_t, const l10nErr*> mErrMsgDllData;
 
-	unique_ptr<L10nTip> pTipMsgData;
-	unordered_map<uint32_t, const TipText*> mTipMsgDllData;
+	unique_ptr<L10nTips> pTipMsgData;
+	unordered_map<uint32_t, const l10nTip*> mTipMsgDllData;
 
-	typedef const string& (ErrText::* ErrTextFunc)() const;
+	typedef const string& (l10nErr::* ErrTextFunc)() const;
 	ErrTextFunc pErrMsgFunc = nullptr;
 
-	typedef const string& (TipText::* TipTextFunc)() const;
+	typedef const string& (l10nTip::* TipTextFunc)() const;
 	TipTextFunc pTipMsgFunc = nullptr;
 
 	LangType eType = LangType::zh_CN;
@@ -101,7 +101,7 @@ const char* DNl10n::InitConfigData()
 	}
 	else
 	{
-		pErrMsgData = make_unique<L10nErr>();
+		pErrMsgData = make_unique<L10nErrs>();
 	}
 
 	{
@@ -126,7 +126,7 @@ const char* DNl10n::InitConfigData()
 	}
 	else
 	{
-		pTipMsgData = make_unique<L10nTip>();
+		pTipMsgData = make_unique<L10nTips>();
 	}
 
 	{
@@ -148,14 +148,14 @@ const char* DNl10n::InitConfigData()
 	{
 		case LangType::zh_CN:
 		{
-			pErrMsgFunc = &ErrText::zh;
-			pTipMsgFunc = &TipText::zh;
+			pErrMsgFunc = &l10nErr::zh;
+			pTipMsgFunc = &l10nTip::zh;
 			break;
 		}
 		case LangType::en_US:
 		{
-			pErrMsgFunc = &ErrText::en;
-			pTipMsgFunc = &TipText::en;
+			pErrMsgFunc = &l10nErr::en;
+			pTipMsgFunc = &l10nTip::en;
 			break;
 		}
 		default:
@@ -175,7 +175,7 @@ export const char* GetErrText(int type)
 		return nullptr;
 	}
 
-	const ErrText *finded = nullptr;
+	const l10nErr *finded = nullptr;
 
 	if(!DllSpace)
 	{
@@ -210,7 +210,7 @@ export const char* GetTipText(int type)
 		return nullptr;
 	}
 
-	const TipText *finded = nullptr;
+	const l10nTip *finded = nullptr;
 
 	if(!DllSpace)
 	{
