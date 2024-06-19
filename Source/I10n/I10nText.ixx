@@ -25,17 +25,17 @@ public:
 	~DNl10n();
 	const char* InitConfigData();
 public:
-	unique_ptr<L10nErrs> pErrMsgData;
-	unordered_map<uint32_t, const l10nErr*> mErrMsgDllData;
+	L10nErrs mL10nErr;
+	unordered_map<uint32_t, const l10nErr*> mL10nErrDll;
 
-	unique_ptr<L10nTips> pTipMsgData;
-	unordered_map<uint32_t, const l10nTip*> mTipMsgDllData;
+	L10nTips mL10nTip;
+	unordered_map<uint32_t, const l10nTip*> mL10nTipDll;
 
 	typedef const string& (l10nErr::* ErrTextFunc)() const;
-	ErrTextFunc pErrMsgFunc = nullptr;
+	ErrTextFunc pL10nErrFunc = nullptr;
 
 	typedef const string& (l10nTip::* TipTextFunc)() const;
-	TipTextFunc pTipMsgFunc = nullptr;
+	TipTextFunc pL10nTipFunc = nullptr;
 
 	LangType eType = LangType::zh_CN;
 };
@@ -46,11 +46,8 @@ DNl10n::DNl10n()
 
 DNl10n::~DNl10n()
 {
-	pErrMsgData = nullptr;
-	pTipMsgData =  nullptr;
-
-	mErrMsgDllData.clear();
-	mTipMsgDllData.clear();
+	mL10nErrDll.clear();
+	mL10nTipDll.clear();
 
 }
 
@@ -68,18 +65,18 @@ export void SetDNl10nInstance(DNl10n* point, bool IsDllInit = false)
 	/// absl\hash\internal\hash.h kSeed
 	if(DllSpace)
 	{
-		auto& errMap = PInstance->mErrMsgDllData;
+		auto& errMap = PInstance->mL10nErrDll;
 		errMap.clear();
 
-		for (auto& one : PInstance->pErrMsgData->data_map())
+		for (auto& one : PInstance->mL10nErr.data_map())
 		{
 			errMap[one.first] = &one.second;
 		}
 
-		auto& tipMap = PInstance->mTipMsgDllData;
+		auto& tipMap = PInstance->mL10nTipDll;
 		tipMap.clear();
 
-		for (auto& one : PInstance->pTipMsgData->data_map())
+		for (auto& one : PInstance->mL10nTip.data_map())
 		{
 			tipMap[one.first] = &one.second;
 		}		
@@ -95,18 +92,10 @@ const char* DNl10n::InitConfigData()
 		return "Launch Param l10nErrPath Error !";
 	}
 
-	if (pErrMsgData)
 	{
-		pErrMsgData->Clear();
-	}
-	else
-	{
-		pErrMsgData = make_unique<L10nErrs>();
-	}
-
-	{
+		mL10nErr.Clear();
 		ifstream input(*value, ios::in | ios::binary);
-		if (!input || !pErrMsgData->ParseFromIstream(&input))
+		if (!input || !mL10nErr.ParseFromIstream(&input))
 		{
 			// DNPrint(0, LoggerLevel::Debug, "load I10n Err Config Error !");
 			return "load I10n Err Config Error !";
@@ -120,18 +109,10 @@ const char* DNl10n::InitConfigData()
 		return "Launch Param l10nTipPath Error Error !";
 	}
 
-	if (pTipMsgData)
 	{
-		pTipMsgData->Clear();
-	}
-	else
-	{
-		pTipMsgData = make_unique<L10nTips>();
-	}
-
-	{
+		mL10nTip.Clear();
 		ifstream input(*value, ios::in | ios::binary);
-		if (!input || !pTipMsgData->ParseFromIstream(&input))
+		if (!input || !mL10nTip.ParseFromIstream(&input))
 		{
 			// DNPrint(0, LoggerLevel::Debug, "load I10n Tip Config Error !");
 			return "load I10n Tip Config Error !";
@@ -148,14 +129,14 @@ const char* DNl10n::InitConfigData()
 	{
 		case LangType::zh_CN:
 		{
-			pErrMsgFunc = &l10nErr::zh;
-			pTipMsgFunc = &l10nTip::zh;
+			pL10nErrFunc = &l10nErr::zh;
+			pL10nTipFunc = &l10nTip::zh;
 			break;
 		}
 		case LangType::en_US:
 		{
-			pErrMsgFunc = &l10nErr::en;
-			pTipMsgFunc = &l10nTip::en;
+			pL10nErrFunc = &l10nErr::en;
+			pL10nTipFunc = &l10nTip::en;
 			break;
 		}
 		default:
@@ -179,7 +160,7 @@ export const char* GetErrText(int type)
 
 	if(!DllSpace)
 	{
-		auto& dataMap = PInstance->pErrMsgData->data_map();
+		auto& dataMap = PInstance->mL10nErr.data_map();
 		auto data = dataMap.find(type);
 		if (data == dataMap.end())
 		{
@@ -190,7 +171,7 @@ export const char* GetErrText(int type)
 	}
 	else
 	{
-		auto& dataMap = PInstance->mErrMsgDllData;
+		auto& dataMap = PInstance->mL10nErrDll;
 		auto data = dataMap.find(type);
 		if (data == dataMap.end())
 		{
@@ -200,7 +181,7 @@ export const char* GetErrText(int type)
 		finded = data->second;
 	}
 	
-	return (finded->*(PInstance->pErrMsgFunc))().c_str();
+	return (finded->*(PInstance->pL10nErrFunc))().c_str();
 }
 
 export const char* GetTipText(int type)
@@ -214,7 +195,7 @@ export const char* GetTipText(int type)
 
 	if(!DllSpace)
 	{
-		auto& dataMap = PInstance->pTipMsgData->data_map();
+		auto& dataMap = PInstance->mL10nTip.data_map();
 		auto data = dataMap.find(type);
 		if (data == dataMap.end())
 		{
@@ -225,7 +206,7 @@ export const char* GetTipText(int type)
 	}
 	else
 	{
-		auto& dataMap = PInstance->mTipMsgDllData;
+		auto& dataMap = PInstance->mL10nTipDll;
 		auto data = dataMap.find(type);
 		if (data == dataMap.end())
 		{
@@ -235,5 +216,5 @@ export const char* GetTipText(int type)
 		finded = data->second;
 	}
 
-	return (finded->*(PInstance->pTipMsgFunc))().c_str();
+	return (finded->*(PInstance->pL10nTipFunc))().c_str();
 }
