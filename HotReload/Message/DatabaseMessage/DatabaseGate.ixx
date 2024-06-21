@@ -6,11 +6,11 @@ module;
 #include "StdMacro.h"
 export module DatabaseMessage:DatabaseGate;
 
-import MessagePack;
+import FuncHelper;
 import DatabaseServerHelper;
 import Logger;
 import DbUtils;
-import MessagePack;
+import FuncHelper;
 import ThirdParty.Libhv;
 import ThirdParty.PbGen;
 import ThirdParty.Libpqxx;
@@ -110,9 +110,8 @@ namespace DatabaseMessage
 		}
 
 		response.SerializeToString(&binData);
-		MessagePack(msgId, MsgDeal::Res, nullptr, binData);
 
-		channel->write(binData);
+		MessagePackAndSend(msgId, MsgDeal::Res, nullptr, binData, channel);
 	}
 
 	export void Exe_ReqSaveData(SocketChannelPtr channel, uint32_t msgId,  string binMsg)
@@ -181,8 +180,7 @@ namespace DatabaseMessage
 		}
 
 		response.SerializeToString(&binData);
-		MessagePack(msgId, MsgDeal::Res, nullptr, binData);
 
-		channel->write(binData);
+		MessagePackAndSend(msgId, MsgDeal::Res, nullptr, binData, channel);
 	}
 }

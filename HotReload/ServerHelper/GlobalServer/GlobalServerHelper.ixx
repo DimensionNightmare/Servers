@@ -9,7 +9,7 @@ export import GlobalServer;
 export import DNClientProxyHelper;
 export import DNServerProxyHelper;
 export import ServerEntityManagerHelper;
-import MessagePack;
+import FuncHelper;
 import Macro;
 import Logger;
 import ThirdParty.Libhv;
@@ -71,12 +71,9 @@ void GlobalServerHelper::UpdateServerGroup()
 			request.set_server_port(beEntity->ServerPort());
 
 			request.SerializeToString(&binData);
-			MessagePack(0, MsgDeal::Ret, request.GetDescriptor()->full_name().c_str(), binData);
-			channel->write(binData);
-
 			// timer destory
 			entity->TimerId() = TICK_MAINSPACE_SIGN_FUNCTION(ServerEntityManager, CheckEntityCloseTimer, entityMan, entity->ID());
-
+			MessagePackAndSend(0, MsgDeal::Ret, request.GetDescriptor()->full_name().c_str(), binData, channel);
 			entity->SetSock(nullptr);
 		};
 

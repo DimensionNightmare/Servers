@@ -10,7 +10,7 @@ export import DNClientProxyHelper;
 export import DNServerProxyHelper;
 export import ServerEntityManagerHelper;
 export import ProxyEntityManagerHelper;
-import MessagePack;
+import FuncHelper;
 import Entity;
 import ThirdParty.PbGen;
 
@@ -53,10 +53,7 @@ void GateServerHelper::ServerEntityCloseEvent(Entity* entity)
 	request.set_server_id(cEntity->ID());
 	request.set_is_regist(false);
 	request.SerializeToString(&binData);
-	MessagePack(0, MsgDeal::Ret, request.GetDescriptor()->full_name().c_str(), binData);
-
-	DNClientProxyHelper* client = GetCSock();
-	client->send(binData);
+	MessagePackAndSend(0, MsgDeal::Ret, request.GetDescriptor()->full_name().c_str(), binData, GetCSock()->GetChannel());
 
 	GetServerEntityManager()->RemoveEntity(cEntity->ID());
 }
@@ -80,8 +77,7 @@ void GateServerHelper::ProxyEntityCloseEvent(Entity* entity)
 		g2L_RetProxyOffline request;
 		request.set_entity_id(entityId);
 		request.SerializeToString(&binData);
-		MessagePack(0, MsgDeal::Ret, request.GetDescriptor()->full_name().c_str(), binData);
-		serverEntity->GetSock()->write(binData);
+		MessagePackAndSend(0, MsgDeal::Ret, request.GetDescriptor()->full_name().c_str(), binData, serverEntity->GetSock());
 	}
 
 	entityMan->RemoveEntity(entityId);

@@ -10,7 +10,7 @@ export module GateMessage:GateClient;
 import GateServerHelper;
 import DNTask;
 import StrUtils;
-import MessagePack;
+import FuncHelper;
 import Logger;
 import ThirdParty.Libhv;
 import ThirdParty.PbGen;
@@ -88,40 +88,34 @@ namespace GateMessage
 			{
 				entity->RecordServerId() = serverEntity->ID();
 
-				DNPrint(0, LoggerLevel::Debug, "Send to Logic index->%d, %d", entity->ID(), entity->RecordServerId());
-
-				binData = binMsg;
+				auto taskGen = [](Message* msg) -> DNTask<Message*>
+					{
+						co_return msg;
+					};
+				auto dataChannel = taskGen(&response);
 
 				DNServerProxyHelper* server = dnServer->GetSSock();
 				uint32_t msgId = server->GetMsgId();
+				server->AddMsg(msgId, &dataChannel, 9000);
 
-				MessagePack(msgId, MsgDeal::Redir, request.GetDescriptor()->full_name().c_str(), binData);
+				binData = binMsg;
 
+				MessagePackAndSend(msgId, MsgDeal::Redir, request.GetDescriptor()->full_name().c_str(), binData, serverEntity->GetSock());
+				
+				co_await dataChannel;
+				if (dataChannel.HasFlag(DNTaskFlag::Timeout))
 				{
-					auto taskGen = [](Message* msg) -> DNTask<Message*>
-						{
-							co_return msg;
-						};
-					auto dataChannel = taskGen(&response);
-					server->AddMsg(msgId, &dataChannel, 9000);
-					serverEntity->GetSock()->write(binData);
-					co_await dataChannel;
-					if (dataChannel.HasFlag(DNTaskFlag::Timeout))
-					{
-						response.set_state_code(4);
-						DNPrint(0, LoggerLevel::Debug, "requst timeout! ");
-					}
-
+					response.set_state_code(4);
+					DNPrint(0, LoggerLevel::Debug, "requst timeout! ");
 				}
+
 			}
 
 		}
 
 		response.SerializeToString(&binData);
 
-		MessagePack(msgId, MsgDeal::Res, nullptr, binData);
-
-		channel->write(binData);
+		MessagePackAndSend(msgId, MsgDeal::Res, nullptr, binData, channel);
 
 		co_return;
 	}

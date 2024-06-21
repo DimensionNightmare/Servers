@@ -16,7 +16,7 @@ import EntityManager;
 import Logger;
 import DNClientProxy;
 import DNTask;
-import MessagePack;
+import FuncHelper;
 import StrUtils;
 import ThirdParty.PbGen;
 import ThirdParty.RedisPP;
@@ -101,20 +101,20 @@ DNTaskVoid ClientEntityManager::SaveEntity(ClientEntity& entity, bool offline)
 
 	D2L_ResSaveData response;
 
-	uint32_t msgId = pSqlClient->GetMsgId();
-
-	string binData;
-	request.SerializeToString(&binData);
-	MessagePack(msgId, MsgDeal::Redir, request.GetDescriptor()->full_name().c_str(), binData);
-
 	{
 		auto taskGen = [](Message* msg) -> DNTask<Message*>
 			{
 				co_return msg;
 			};
 		auto dataChannel = taskGen(&response);
+
+		uint32_t msgId = pSqlClient->GetMsgId();
 		pSqlClient->AddMsg(msgId, &dataChannel, 9000);
-		pSqlClient->send(binData);
+
+		string binData;
+		request.SerializeToString(&binData);
+		MessagePackAndSend(msgId, MsgDeal::Redir, request.GetDescriptor()->full_name().c_str(), binData, pSqlClient->GetChannel());
+
 		co_await dataChannel;
 		if (dataChannel.HasFlag(DNTaskFlag::Timeout))
 		{

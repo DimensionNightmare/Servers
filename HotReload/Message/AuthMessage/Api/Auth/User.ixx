@@ -10,7 +10,7 @@ export module ApiManager:ApiAuth;
 
 import AuthServerHelper;
 import DNTask;
-import MessagePack;
+import FuncHelper;
 import Macro;
 import DbUtils;
 import Logger;
@@ -93,23 +93,11 @@ export void ApiAuth(HttpService* service)
 
 					AuthServerHelper* authServer = GetAuthServer();
 					DNClientProxyHelper* client = authServer->GetCSock();
-					uint32_t msgId = client->GetMsgId();
-
-					// first Can send Msg?
-					if (client->GetMsg(msgId))
-					{
-						DNPrint(0, LoggerLevel::Debug, "+++++ %lu, ", msgId);
-						co_return;
-					}
-					// else
-					// {
-					DNPrint(0, LoggerLevel::Debug, "----- %lu, ", msgId);
-					// }
 
 					// pack data
 					string binData;
 					request.SerializeToString(&binData);
-					MessagePack(msgId, MsgDeal::Redir, request.GetDescriptor()->full_name().c_str(), binData);
+					
 
 					nlohmann::json retData;
 
@@ -119,10 +107,13 @@ export void ApiAuth(HttpService* service)
 							{
 								co_return msg;
 							};
+
 						auto dataChannel = taskGen(&response);
-						// wait data parse
+						
+						uint32_t msgId = client->GetMsgId();
 						client->AddMsg(msgId, &dataChannel);
-						client->send(binData);
+						MessagePackAndSend(msgId, MsgDeal::Redir, request.GetDescriptor()->full_name().c_str(), binData, client->GetChannel());
+						
 						co_await dataChannel;
 						if (dataChannel.HasFlag(DNTaskFlag::Timeout))
 						{

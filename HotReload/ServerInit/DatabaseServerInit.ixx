@@ -6,7 +6,7 @@ module;
 export module DatabaseServerInit;
 
 import DatabaseServerHelper;
-import MessagePack;
+import FuncHelper;
 import DatabaseMessage;
 import DNTask;
 import Logger;
@@ -71,6 +71,15 @@ int HandleDatabaseServerInit(DNServer* server)
 			{
 				MessagePacket packet;
 				memcpy(&packet, buf->data(), MessagePacket::PackLenth);
+
+				DNPrint(0, LoggerLevel::Debug, "%s Recv type=%d With Mid:%u", channel->peeraddr().c_str(), packet.dealType, packet.msgId);
+
+				if(packet.pkgLenth > 2 * 1024)
+				{
+					DNPrint(0, LoggerLevel::Debug, "Recv byte len limit=%u", packet.pkgLenth);
+					return;
+				}
+				
 				string msgData(buf->base + MessagePacket::PackLenth, packet.pkgLenth);
 
 				if (packet.dealType == MsgDeal::Req)

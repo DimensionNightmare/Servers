@@ -8,7 +8,7 @@ module;
 export module LogicMessage:LogicRedirect;
 
 import DNTask;
-import MessagePack;
+import FuncHelper;
 import LogicServerHelper;
 import Logger;
 import ThirdParty.Libhv;
@@ -42,8 +42,7 @@ namespace LogicMessage
 		{
 			string binData = binMsg;
 
-			MessagePack(0, MsgDeal::Ret, request.GetDescriptor()->full_name().c_str(), binData);
-			roomEntity->GetSock()->write(binData);
+			MessagePackAndSend(0, MsgDeal::Ret, request.GetDescriptor()->full_name().c_str(), binData, roomEntity->GetSock());
 		}
 		else
 		{
@@ -134,38 +133,36 @@ namespace LogicMessage
 		// req token
 		if (roomEntity)
 		{
+			binData = binMsg;
+
+			
+			auto taskGen = [](Message* msg) -> DNTask<Message*>
+				{
+					co_return msg;
+				};
+			auto dataChannel = taskGen(&response);
 
 			DNServerProxyHelper* server = dnServer->GetSSock();
 			uint32_t msgId = server->GetMsgId();
 
-			binData = binMsg;
-			MessagePack(msgId, MsgDeal::Req, request.GetDescriptor()->full_name().c_str(), binData);
+			// wait data parse
+			server->AddMsg(msgId, &dataChannel, 8000);
 
+			MessagePackAndSend(msgId, MsgDeal::Req, request.GetDescriptor()->full_name().c_str(), binData, roomEntity->GetSock());
+
+			co_await dataChannel;
+
+			if (dataChannel.HasFlag(DNTaskFlag::Timeout))
 			{
-				auto taskGen = [](Message* msg) -> DNTask<Message*>
-					{
-						co_return msg;
-					};
-				auto dataChannel = taskGen(&response);
-				// wait data parse
-				server->AddMsg(msgId, &dataChannel, 8000);
-				roomEntity->GetSock()->write(binData);
-
-				co_await dataChannel;
-
-				if (dataChannel.HasFlag(DNTaskFlag::Timeout))
-				{
-					DNPrint(0, LoggerLevel::Debug, "requst timeout! ");
-					response.set_state_code(6);
-				}
-				else
-				{
-					entity->RecordRoomId() = roomEntity->ID();
-					//combin
-					response.set_server_ip(roomEntity->ServerIp());
-					response.set_server_port(roomEntity->ServerPort());
-				}
-
+				DNPrint(0, LoggerLevel::Debug, "requst timeout! ");
+				response.set_state_code(6);
+			}
+			else
+			{
+				entity->RecordRoomId() = roomEntity->ID();
+				//combin
+				response.set_server_ip(roomEntity->ServerIp());
+				response.set_server_port(roomEntity->ServerPort());
 			}
 
 		}
@@ -174,9 +171,7 @@ namespace LogicMessage
 
 		// pack data
 		response.SerializeToString(&binData);
-		MessagePack(msgId, MsgDeal::Res, nullptr, binData);
-
-		channel->write(binData);
+		MessagePackAndSend(msgId, MsgDeal::Res, nullptr, binData, channel);
 
 		co_return;
 	}

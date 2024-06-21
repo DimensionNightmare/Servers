@@ -35,6 +35,7 @@ export {
 	using ::hio_t;
 	using ::TcpClient;
 	using ::TcpServer;
+	using ::EventLoop;
 };
 
 export {

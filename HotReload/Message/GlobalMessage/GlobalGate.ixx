@@ -7,7 +7,7 @@ module;
 export module GlobalMessage:GlobalGate;
 
 import DNTask;
-import MessagePack;
+import FuncHelper;
 import GlobalServerHelper;
 import ThirdParty.Libhv;
 import ThirdParty.PbGen;

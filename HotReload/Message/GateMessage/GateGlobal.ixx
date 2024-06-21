@@ -7,7 +7,7 @@ module;
 #include "StdMacro.h"
 export module GateMessage:GateGlobal;
 
-import MessagePack;
+import FuncHelper;
 import GateServerHelper;
 import StrUtils;
 import Logger;
@@ -44,10 +44,9 @@ namespace GateMessage
 				request.set_server_ip(request.server_ip());
 
 				request.SerializeToString(&binData);
-				MessagePack(0, MsgDeal::Ret, request.GetDescriptor()->full_name().c_str(), binData);
+				MessagePackAndSend(0, MsgDeal::Ret, request.GetDescriptor()->full_name().c_str(), binData, online);
 
 				//kick socket
-				online->write(binData);
 				online->setContext(nullptr);
 				online->close();
 
@@ -63,8 +62,7 @@ namespace GateMessage
 					request.set_account_id(entity->ID());
 
 					request.SerializeToString(&binData);
-					MessagePack(0, MsgDeal::Redir, request.GetDescriptor()->full_name().c_str(), binData);
-					serverEntity->GetSock()->write(binData);
+					MessagePackAndSend(0, MsgDeal::Redir, request.GetDescriptor()->full_name().c_str(), binData, serverEntity->GetSock());
 				}
 
 			}
@@ -94,9 +92,7 @@ namespace GateMessage
 		DNPrint(0, LoggerLevel::Debug, "ReqUserToken User: %d!!", request.account_id());
 
 		response.SerializeToString(&binData);
-		MessagePack(msgId, MsgDeal::Res, nullptr, binData);
-
-		channel->write(binData);
+		MessagePackAndSend(msgId, MsgDeal::Res, nullptr, binData, channel);
 	}
 
 }

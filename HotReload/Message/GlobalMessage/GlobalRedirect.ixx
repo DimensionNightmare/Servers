@@ -8,7 +8,7 @@ module;
 export module GlobalMessage:GlobalRedirect;
 
 import DNTask;
-import MessagePack;
+import FuncHelper;
 import GlobalServerHelper;
 import Logger;
 import ThirdParty.Libhv;
@@ -50,53 +50,50 @@ namespace GlobalMessage
 		}
 		else
 		{
-
 			ServerEntity* entity = tempList.front();
 			DNPrint(0, LoggerLevel::Debug, "send to GateServer : %d", entity->ID());
 
 			entity->ConnNum()++;
 
+			// pack data
+			binData = binMsg;
+
+			// data alloc
+			auto taskGen = [](Message* msg) -> DNTask<Message*>
+				{
+					co_return msg;
+				};
+			auto dataChannel = taskGen(&response);
+
 			DNServerProxyHelper* server = dnServer->GetSSock();
 			uint32_t msgId = server->GetMsgId();
 
-			// pack data
-			binData = binMsg;
-			MessagePack(msgId, MsgDeal::Req, request.GetDescriptor()->full_name().c_str(), binData);
+			server->AddMsg(msgId, &dataChannel, 8000);
+			
+			MessagePackAndSend(msgId, MsgDeal::Req, request.GetDescriptor()->full_name().c_str(), binData, entity->GetSock());
 
+			co_await dataChannel;
+			if (dataChannel.HasFlag(DNTaskFlag::Timeout))
 			{
-				// data alloc
-				auto taskGen = [](Message* msg) -> DNTask<Message*>
-					{
-						co_return msg;
-					};
-				auto dataChannel = taskGen(&response);
+				DNPrint(0, LoggerLevel::Debug, "requst timeout! ");
+				response.set_state_code(5);
 
-				server->AddMsg(msgId, &dataChannel, 8000);
-				entity->GetSock()->write(binData);
-				co_await dataChannel;
-				if (dataChannel.HasFlag(DNTaskFlag::Timeout))
-				{
-					DNPrint(0, LoggerLevel::Debug, "requst timeout! ");
-					response.set_state_code(5);
-
-					entity->ConnNum()--;
-				}
-				else
-				{
-					response.set_server_ip(entity->ServerIp());
-					response.set_server_port(entity->ServerPort());
-				}
-
+				entity->ConnNum()--;
 			}
+			else
+			{
+				response.set_server_ip(entity->ServerIp());
+				response.set_server_port(entity->ServerPort());
+			}
+
+			
 
 			// DNPrint(0, LoggerLevel::Debug, "%s", response.DebugString().c_str());
 		}
 
 		response.SerializeToString(&binData);
 
-		MessagePack(msgId, MsgDeal::Res, nullptr, binData);
-
-		channel->write(binData);
+		MessagePackAndSend(msgId, MsgDeal::Res, nullptr, binData, channel);
 
 		co_return;
 	}

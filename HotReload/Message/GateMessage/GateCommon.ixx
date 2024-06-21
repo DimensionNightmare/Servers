@@ -9,7 +9,7 @@ module;
 export module GateMessage:GateCommon;
 
 import DNTask;
-import MessagePack;
+import FuncHelper;
 import GateServerHelper;
 import Logger;
 import ThirdParty.Libhv;
@@ -55,9 +55,7 @@ namespace GateMessage
 		// pack data
 		string binData;
 		request.SerializeToString(&binData);
-		MessagePack(0, MsgDeal::Ret, request.GetDescriptor()->full_name().c_str(), binData);
-
-		client->send(binData);
+		MessagePackAndSend(0, MsgDeal::Ret, request.GetDescriptor()->full_name().c_str(), binData, client->GetChannel());
 	}
 
 	// self request
@@ -66,19 +64,9 @@ namespace GateMessage
 		GateServerHelper* dnServer = GetGateServer();
 		DNClientProxyHelper* client = dnServer->GetCSock();
 		DNServerProxy* server = dnServer->GetSSock();
-		uint32_t msgId = client->GetMsgId();
-
-		// first Can send Msg?
-		if (client->GetMsg(msgId))
-		{
-			DNPrint(0, LoggerLevel::Debug, "+++++ %lu, ", msgId);
-			co_return;
-		}
-		else
-		{
-			DNPrint(0, LoggerLevel::Debug, "Client:%s, port:%hu", client->remote_host.c_str(), client->remote_port);
-		}
-
+		
+		DNPrint(0, LoggerLevel::Debug, "Client:%s, port:%hu", client->remote_host.c_str(), client->remote_port);
+		
 		client->RegistState() = RegistState::Registing;
 
 		COM_ReqRegistSrv request;
@@ -95,7 +83,7 @@ namespace GateMessage
 		// pack data
 		string binData;
 		request.SerializeToString(&binData);
-		MessagePack(msgId, MsgDeal::Req, request.GetDescriptor()->full_name().c_str(), binData);
+		
 
 		// data alloc
 		COM_ResRegistSrv response;
@@ -106,9 +94,11 @@ namespace GateMessage
 					co_return msg;
 				};
 			auto dataChannel = taskGen(&response);
-			// wait data parse
+			
+			uint32_t msgId = client->GetMsgId();
 			client->AddMsg(msgId, &dataChannel);
-			client->send(binData);
+			MessagePackAndSend(msgId, MsgDeal::Req, request.GetDescriptor()->full_name().c_str(), binData, client->GetChannel());
+
 			co_await dataChannel;
 			if (dataChannel.HasFlag(DNTaskFlag::Timeout))
 			{
@@ -128,7 +118,7 @@ namespace GateMessage
 		}
 		else
 		{
-			DNPrint(0, LoggerLevel::Debug, "regist Server error! msg:%lu ", msgId);
+			DNPrint(0, LoggerLevel::Debug, "regist Server error!");
 			// dnServer->IsRun() = false; //exit application
 			client->RegistState() = RegistState::None;
 		}
@@ -189,11 +179,7 @@ namespace GateMessage
 		string binData;
 		response.SerializeToString(&binData);
 
-		MessagePack(msgId, MsgDeal::Res, nullptr, binData);
-
-		DNPrint(0, LoggerLevel::Debug, "send : %s, %d size", channel->peeraddr().c_str(), binData.size());
-
-		channel->write(binData);
+		MessagePackAndSend(msgId, MsgDeal::Res, nullptr, binData, channel);
 
 		if (response.success())
 		{
@@ -203,11 +189,12 @@ namespace GateMessage
 			request.set_server_id(serverId);
 
 			request.SerializeToString(&binData);
-			MessagePack(0, MsgDeal::Ret, request.GetDescriptor()->full_name().c_str(), binData);
+			
 
 			GateServerHelper* dnServer = GetGateServer();
 			DNClientProxyHelper* client = dnServer->GetCSock();
-			client->send(binData);
+
+			MessagePackAndSend(0, MsgDeal::Ret, request.GetDescriptor()->full_name().c_str(), binData, client->GetChannel());
 		}
 	}
 

@@ -8,7 +8,7 @@ module;
 export module AuthMessage:AuthCommon;
 
 import DNTask;
-import MessagePack;
+import FuncHelper;
 import AuthServerHelper;
 import Logger;
 import ThirdParty.PbGen;
@@ -24,17 +24,8 @@ namespace AuthMessage
 		DNWebProxyHelper* server = dnServer->GetSSock();
 		uint32_t msgId = client->GetMsgId();
 
-		// first Can send Msg?
-		if (client->GetMsg(msgId))
-		{
-			DNPrint(0, LoggerLevel::Debug, "+++++ %lu, ", msgId);
-			co_return;
-		}
-		else
-		{
-			DNPrint(0, LoggerLevel::Debug, "Client:%s, port:%hu", client->remote_host.c_str(), client->remote_port);
-		}
-
+		DNPrint(0, LoggerLevel::Debug, "Client:%s, port:%hu", client->remote_host.c_str(), client->remote_port);
+		
 		client->RegistState() = RegistState::Registing;
 
 		COM_ReqRegistSrv request;
@@ -50,8 +41,7 @@ namespace AuthMessage
 		// pack data
 		string binData;
 		request.SerializeToString(&binData);
-		MessagePack(msgId, MsgDeal::Req, request.GetDescriptor()->full_name().c_str(), binData);
-
+		
 		// data alloc
 		COM_ResRegistSrv response;
 
@@ -61,9 +51,11 @@ namespace AuthMessage
 					co_return msg;
 				};
 			auto dataChannel = taskGen(&response);
-			// wait data parse
+			
+			uint32_t msgId = client->GetMsgId();
 			client->AddMsg(msgId, &dataChannel);
-			client->send(binData);
+			MessagePackAndSend(msgId, MsgDeal::Req, request.GetDescriptor()->full_name().c_str(), binData, client->GetChannel());
+
 			co_await dataChannel;
 			if (dataChannel.HasFlag(DNTaskFlag::Timeout))
 			{
@@ -81,7 +73,7 @@ namespace AuthMessage
 		}
 		else
 		{
-			DNPrint(0, LoggerLevel::Debug, "regist Server error! msg:%lu ", msgId);
+			DNPrint(0, LoggerLevel::Debug, "regist Server error!  ");
 			// dnServer->IsRun() = false; //exit application
 			client->RegistState() = RegistState::None;
 		}

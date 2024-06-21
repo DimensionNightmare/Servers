@@ -29,6 +29,8 @@ public: // dll override
 
 	uint64_t CheckEntityCloseTimer(uint32_t entityId);
 
+	ServerEntity* GetEntity(uint32_t entityId);
+
 	bool RemoveEntity(uint32_t entityId);
 
 protected: // dll proxy
@@ -61,11 +63,19 @@ void ServerEntityManager::EntityCloseTimer(uint64_t timerID)
 	}
 
 	uint32_t entityId = mMapTimer[timerID];
-	if (RemoveEntity(entityId))
-	{
-		DNPrint(0, LoggerLevel::Debug, "EntityCloseTimer server destory entity");
-	}
 
+	if(ServerEntity* rm = GetEntity(entityId))
+	{
+		if(ServerEntity* link = rm->LinkNode())
+		{
+			link->GetMapLinkNode(rm->GetServerType()).remove(rm);
+		}
+
+		RemoveEntity(entityId);
+		
+		DNPrint(0, LoggerLevel::Debug, "EntityCloseTimer server destory entity");
+		
+	}
 }
 
 uint64_t ServerEntityManager::CheckEntityCloseTimer(uint32_t entityId)
@@ -75,6 +85,16 @@ uint64_t ServerEntityManager::CheckEntityCloseTimer(uint32_t entityId)
 	AddTimerRecord(timerId, entityId);
 
 	return timerId;
+}
+
+ServerEntity* ServerEntityManager::GetEntity(uint32_t entityId)
+{
+	unique_lock<shared_mutex> ulock(oMapMutex);
+	if (mEntityMap.contains(entityId))
+	{
+		return &mEntityMap[entityId];
+	}
+	return nullptr;
 }
 
 bool ServerEntityManager::RemoveEntity(uint32_t entityId)

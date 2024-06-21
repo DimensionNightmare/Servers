@@ -11,7 +11,7 @@ export import ClientEntityHelper;
 export import ClientEntityManager;
 import Logger;
 import DNTask;
-import MessagePack;
+import FuncHelper;
 import StrUtils;
 import ThirdParty.PbGen;
 
@@ -145,10 +145,6 @@ DNTaskVoid ClientEntityManagerHelper::LoadEntityData(ClientEntity* entity, d2L_R
 
 	request.SerializeToString(&binData);
 
-	uint32_t msgId = pSqlClient->GetMsgId();
-	MessagePack(msgId, MsgDeal::Redir, request.GetDescriptor()->full_name().c_str(), binData);
-
-
 	D2L_ResLoadData response;
 	{
 		auto taskGen = [](Message* msg) -> DNTask<Message*>
@@ -156,8 +152,11 @@ DNTaskVoid ClientEntityManagerHelper::LoadEntityData(ClientEntity* entity, d2L_R
 				co_return msg;
 			};
 		auto dataChannel = taskGen(&response);
+
+		uint32_t msgId = pSqlClient->GetMsgId();
 		pSqlClient->AddMsg(msgId, &dataChannel, 9000);
-		pSqlClient->send(binData);
+		MessagePackAndSend(msgId, MsgDeal::Redir, request.GetDescriptor()->full_name().c_str(), binData, pSqlClient->GetChannel());
+
 		co_await dataChannel;
 		if (dataChannel.HasFlag(DNTaskFlag::Timeout))
 		{

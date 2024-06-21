@@ -8,7 +8,7 @@ module;
 export module LogicMessage:LogicDedicated;
 
 import DNTask;
-import MessagePack;
+import FuncHelper;
 import LogicServerHelper;
 import Logger;
 import ThirdParty.Libhv;
@@ -51,8 +51,7 @@ namespace LogicMessage
 
 		string binData;
 		response.SerializeToString(&binData);
-		MessagePack(msgId, MsgDeal::Res, nullptr, binData);
-		channel->write(binData);
+		MessagePackAndSend(msgId, MsgDeal::Res, nullptr, binData, channel);
 
 		co_return;
 	}

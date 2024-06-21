@@ -6,7 +6,7 @@ module;
 export module ControlMessage:ControlCommon;
 
 import DNTask;
-import MessagePack;
+import FuncHelper;
 import ControlServerHelper;
 import ThirdParty.Libhv;
 import ThirdParty.PbGen;
@@ -65,8 +65,7 @@ namespace ControlMessage
 		string binData;
 		response.SerializeToString(&binData);
 
-		MessagePack(msgId, MsgDeal::Res, nullptr, binData);
-		channel->write(binData);
+		MessagePackAndSend(msgId, MsgDeal::Res, nullptr, binData, channel);
 	}
 
 	export void Exe_RetHeartbeat(SocketChannelPtr channel, string binMsg)

@@ -9,7 +9,7 @@ module;
 export module DNClientProxy;
 
 import DNTask;
-import MessagePack;
+import FuncHelper;
 import Logger;
 import ThirdParty.Libhv;
 import ThirdParty.PbGen;
@@ -99,11 +99,13 @@ public: // dll override
 
 	void RedirectClient(uint16_t port, string ip);
 
-    bool AddMsg(uint32_t msgId, DNTask<Message*>* task, uint32_t breakTime);
+	bool AddMsg(uint32_t msgId, DNTask<Message*>* task, uint32_t breakTime);
 
 	uint8_t& RegistType() { return iRegistType; }
 
 	uint32_t GetMsgId() { return ++iMsgId; }
+
+	const SocketChannelPtr& GetChannel() { return channel; }
 
 protected: // dll proxy
 	shared_ptr<EventLoopThread> pLoop;
@@ -246,16 +248,14 @@ void DNClientProxy::TickHeartbeat()
 	string binData;
 	request.SerializeToString(&binData);
 
-	MessagePack(0, MsgDeal::Ret, request.GetDescriptor()->full_name().c_str(), binData);
-
-	send(binData);
+	MessagePackAndSend(0, MsgDeal::Ret, request.GetDescriptor()->full_name().c_str(), binData, GetChannel());
 }
 
 void DNClientProxy::InitConnectedChannel(const SocketChannelPtr& chanhel)
 {
-	chanhel->setHeartbeat(4000, std::bind(&DNClientProxy::TickHeartbeat, this));
+	// chanhel->setHeartbeat(4000, std::bind(&DNClientProxy::TickHeartbeat, this));
 	// channel->setWriteTimeout(12000);
-	if(eRegistState == RegistState::None)
+	if (eRegistState == RegistState::None)
 	{
 		Timer()->setInterval(1000, std::bind(&DNClientProxy::TickRegistEvent, this, placeholders::_1));
 	}
@@ -267,8 +267,11 @@ void DNClientProxy::RedirectClient(uint16_t port, string ip)
 
 	eRegistState = RegistState::None;
 	closesocket();
-	createsocket(port, ip.c_str());
-	start();
+	Timer()->setTimeout(500, [=](uint64_t)
+		{
+			createsocket(port, ip.c_str());
+			start();
+		});
 }
 
 bool DNClientProxy::AddMsg(uint32_t msgId, DNTask<Message*>* task, uint32_t breakTime)
