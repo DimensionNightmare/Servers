@@ -21,6 +21,7 @@ import Logger;
 import Config.Server;
 import ThirdParty.Libhv;
 import ThirdParty.PbGen;
+import StrUtils;
 
 #ifdef _WIN32
 	#ifdef HOTRELOAD_BUILD
@@ -67,12 +68,13 @@ extern "C"
 	{
 		HV_hlog_disable();
 
-		SetLoggerLevel(LoggerLevel::Debug);
-
 		SetLuanchConfig(server->pLuanchConfig);
 		SetDNl10nInstance(server->pDNl10nInstance, true);
 
 		ServerType servertype = server->GetServerType();
+		string_view serverName = EnumName(servertype);
+		SetLoggerLevel(LoggerLevel::Debug, serverName);
+
 		bool isDeal = false;
 		switch (servertype)
 		{

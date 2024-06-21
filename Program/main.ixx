@@ -11,6 +11,7 @@ module;
 	#include <synchapi.h>
 	#include <handleapi.h>
 	#include <dbghelp.h>
+	#include <WinBase.h>
 	#pragma comment(lib, "dbghelp.lib")
 #elif __unix__
 	#include <csignal>
@@ -22,14 +23,17 @@ module;
 #include <iostream>
 #include <future>
 #include <format>
+#include <filesystem>
 
 #include "StdMacro.h"
 export module MODULE_MAIN;
 
 import DimensionNightmare;
 import Logger;
+import DNServer;
 import ThirdParty.Libhv;
 import ThirdParty.PbGen;
+import StrUtils;
 
 #ifdef __unix__
 #define Sleep(ms) usleep(ms*1000)
@@ -43,13 +47,18 @@ enum class LunchType : uint8_t
 
 export int main(int argc, char** argv)
 {
-	HV_hlog_disable();
+#ifdef _WIN32
+	SetCurrentDirectoryA(filesystem::current_path().string().c_str());
+	system("chcp 65001");
+#elif __unix__
+	chdir(filesystem::current_path().string().c_str());
+#endif
 
-	SetLoggerLevel(LoggerLevel::Debug);
-
+	filesystem::path execPath = argv[0];
 	// lunch param
-	unordered_map<string, string> lunchParam;
-	lunchParam.emplace("luanchPath", argv[0]);
+	unordered_map<string, string> lunchParam = {
+		{"program", execPath.filename().string()},
+	};
 
 	for (int i = 1; i < argc; i++)
 	{
@@ -65,6 +74,26 @@ export int main(int argc, char** argv)
 
 		lunchParam.emplace(split.substr(0, pos), split.substr(pos + 1));
 	}
+
+	if (!lunchParam.contains("svrType"))
+	{
+		DNPrint(0, LoggerLevel::Error, "lunch param svrType is null! ");
+		return 0;
+	}
+
+	ServerType serverType = (ServerType)stoi(lunchParam["svrType"]);
+	if (serverType <= ServerType::None || serverType >= ServerType::Max)
+	{
+		DNPrint(0, LoggerLevel::Error, "serverType Not Invalid! ");
+		return 0;
+	}
+
+	string_view serverName = EnumName(serverType);
+	SetLoggerLevel(LoggerLevel::Debug, serverName);
+
+	HV_hlog_disable();
+
+	DNPrint(0, LoggerLevel::Normal, "hello ~");
 
 	PInstance = make_unique<DimensionNightmare>();
 	if (!PInstance->InitConfig(lunchParam))
@@ -262,9 +291,7 @@ export int main(int argc, char** argv)
 
 	PInstance = nullptr;
 
-	DNPrint(0, LoggerLevel::Debug, "bye ~");
-
-	system("pause");
+	DNPrint(0, LoggerLevel::Normal, "bye ~");
 
 	return 0;
 }

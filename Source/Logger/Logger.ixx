@@ -3,6 +3,8 @@ module;
 #include <cstdarg>
 #include <format>
 #include <iostream>
+#include <fstream>
+#include <optional>
 export module Logger;
 
 import StrUtils;
@@ -19,10 +21,29 @@ export enum class LoggerLevel : uint8_t
 };
 
 LoggerLevel SLogLevel = LoggerLevel::Normal;
+ofstream LogFile; 
 
-export void SetLoggerLevel(LoggerLevel level)
+export void SetLoggerLevel(optional<LoggerLevel> level = nullopt, optional<string_view> path = nullopt)
 {
-	SLogLevel = level;
+	if(level.has_value())
+	{
+		SLogLevel = level.value();
+	}
+	
+	if(!LogFile.is_open() && path.has_value())
+	{
+		LogFile = ofstream( format("{}/Output.log", path.value()), std::ios::app);
+	}
+}
+
+ofstream* GetLoggerFile()
+{
+	if (!LogFile.is_open())
+	{
+		return nullptr;
+	}
+
+	return &LogFile;
 }
 
 export void LoggerPrint(LoggerLevel level, int code, const char* funcName, const char* fmt, ...)
@@ -56,14 +77,21 @@ export void LoggerPrint(LoggerLevel level, int code, const char* funcName, const
 
 	va_list args;
 	va_start(args, fmt);
-	size_t len = vsnprintf(0, 0, fmt, args) + 1;
-	string message;
+	size_t len = vsnprintf(0, 0, fmt, args);
+	static string message;
 	message.resize(len); // need space for NUL
 	// va_end(args);
 
 	va_start(args, fmt);
-	vsnprintf(&message[0], len, fmt, args);
+	vsnprintf(&message[0], len + 1, fmt, args);
 	va_end(args);
 
-	cout << format("[{}] {} -> \n{}", GetNowTimeStr(), funcName, message) << endl;
+	string outputStr = format("[{}] {} -> \n{}\n", GetNowTimeStr(), funcName, message);
+	cout << outputStr;
+
+	if(ofstream* file = GetLoggerFile())
+	{
+		*file << outputStr;
+		file->flush();
+	}
 }

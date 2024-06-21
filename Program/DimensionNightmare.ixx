@@ -45,7 +45,14 @@ struct HotReloadDll
 	#endif
 
 		constexpr size_t subLen = sizeof(SDllDir);
-		SetConsoleTitleA(dllPath.substr(subLen).data());
+		
+		string pathDeal(dllPath);
+		if (size_t pos = pathDeal.find(SDllDir); pos != string::npos)
+		{
+			pathDeal.erase(pos - 1, subLen);
+		}
+
+		SetConsoleTitleA(pathDeal.c_str());
 		void* hModule = LoadLibraryA(fullPath.c_str());
 		if (!hModule)
 		{
@@ -114,7 +121,7 @@ struct HotReloadDll
 		mt19937 gen(rd());
 		uniform_int_distribution<int>  u(10000, 99999);
 
-		string newDllDirRand = format("{}_{}_{}", SDllDir, EnumName(type), u(gen));
+		string newDllDirRand = format("{}/{}_{}", EnumName(type), SDllDir, u(gen));
 		try
 		{
 			filesystem::create_directories(newDllDirRand.c_str());
@@ -226,149 +233,125 @@ DimensionNightmare::~DimensionNightmare()
 
 bool DimensionNightmare::InitConfig(unordered_map<string, string>& param)
 {
-	if (!param.contains("svrType"))
-	{
-		DNPrint(0, LoggerLevel::Debug, "lunch param svrType is null! ");
-		return false;
-	}
-
-	ServerType serverType = (ServerType)stoi(param["svrType"]);
-	if (serverType <= ServerType::None || serverType >= ServerType::Max)
-	{
-		DNPrint(0, LoggerLevel::Debug, "serverType Not Invalid! ");
-		return false;
-	}
-
-	filesystem::path execPath = param["luanchPath"];
-
-#ifdef _WIN32
-	SetCurrentDirectoryA(execPath.parent_path().string().c_str());
-#elif __unix__
-	chdir(execPath.parent_path().string().c_str());
-#endif
-
-	{
+	
 #ifndef NDEBUG
 		const char* iniFilePath = "../../../Config/ServerDebug.ini";
 #else
 		const char* iniFilePath = "./Config/Server.ini";
 #endif
 
+	if(!filesystem::exists(iniFilePath))
+	{
+		DNPrint(0, LoggerLevel::Error, "ConfigIni Not Finded!");
+		return false;
+	}
+
 		// get ini Config
-		string_view serverName = EnumName(serverType);
+	ServerType serverType = (ServerType)stoi(param["svrType"]);
+	string_view serverName = EnumName(serverType);
 
-		vector<string> sectionNames;
+	vector<string> sectionNames;
 
 #ifdef _WIN32
-		char buffer[512] = { 0 };
-		size_t bufferSize = sizeof(buffer);
-		GetPrivateProfileSectionNamesA(buffer, bufferSize, iniFilePath);
-		char* current = buffer;
-		while (*current)
-		{
-			sectionNames.emplace_back(current);
-			current += strlen(current) + 1;
+	char buffer[512] = { 0 };
+	size_t bufferSize = sizeof(buffer);
+	GetPrivateProfileSectionNamesA(buffer, bufferSize, iniFilePath);
+	char* current = buffer;
+	while (*current)
+	{
+		sectionNames.emplace_back(current);
+		current += strlen(current) + 1;
 
-			if (sectionNames.back().find_last_of("Server") != string::npos && sectionNames.back() != serverName)
-			{
-				sectionNames.pop_back();
-			}
+		if (sectionNames.back().find_last_of("Server") != string::npos && sectionNames.back() != serverName)
+		{
+			sectionNames.pop_back();
 		}
+	}
 #elif __unix__
-		unordered_map<string, list<string>> sectionVal;
+	unordered_map<string, list<string>> sectionVal;
 
-		auto GetINISectionNames = [&](const char* iniFilePath)
-			{
-				ifstream file(iniFilePath);
-				if (!file.is_open())
-				{
-					cerr << "Failed to open INI file: " << iniFilePath << endl;
-					return;
-				}
-
-				string line;
-				while (getline(file, line))
-				{
-					if (line.empty())
-					{
-						continue;
-					}
-
-					if (line[0] == '[')
-					{
-						size_t endPos = line.find_first_of("]");
-						if (endPos != string::npos)
-						{
-							string sectionName = line.substr(1, endPos - 1);
-							sectionNames.emplace_back(sectionName);
-						}
-					}
-					else if (line[0] != ';')
-					{
-						sectionVal[sectionNames.back()].emplace_back(line);
-					}
-				}
-
-				file.close();
-			};
-
-		GetINISectionNames(iniFilePath);
-
-		auto iter = sectionNames.begin();
-		while (iter != sectionNames.end())
+	auto GetINISectionNames = [&](const char* iniFilePath)
 		{
-			if ((*iter).find("Server") != std::string::npos && *iter != serverName)
+			ifstream file(iniFilePath);
+			if (!file.is_open())
 			{
-				sectionVal.erase(*iter);
-				iter = sectionNames.erase(iter);
+				cerr << "Failed to open INI file: " << iniFilePath << endl;
+				return;
 			}
-			else
+
+			string line;
+			while (getline(file, line))
 			{
-				++iter;
+				if (line.empty())
+				{
+					continue;
+				}
+
+				if (line[0] == '[')
+				{
+					size_t endPos = line.find_first_of("]");
+					if (endPos != string::npos)
+					{
+						string sectionName = line.substr(1, endPos - 1);
+						sectionNames.emplace_back(sectionName);
+					}
+				}
+				else if (line[0] != ';')
+				{
+					sectionVal[sectionNames.back()].emplace_back(line);
+				}
 			}
+
+			file.close();
+		};
+
+	GetINISectionNames(iniFilePath);
+
+	auto iter = sectionNames.begin();
+	while (iter != sectionNames.end())
+	{
+		if ((*iter).find("Server") != std::string::npos && *iter != serverName)
+		{
+			sectionVal.erase(*iter);
+			iter = sectionNames.erase(iter);
 		}
+		else
+		{
+			++iter;
+		}
+	}
 #endif
 
-		for (const string& sectionName : sectionNames)
-		{
+	for (const string& sectionName : sectionNames)
+	{
 #ifdef _WIN32
-			GetPrivateProfileSectionA(sectionName.c_str(), buffer, bufferSize, iniFilePath);
-			char* keyValuePair = buffer;
-			while (*keyValuePair)
-			{
-				string split(keyValuePair);
-				keyValuePair += strlen(keyValuePair) + 1;
+		GetPrivateProfileSectionA(sectionName.c_str(), buffer, bufferSize, iniFilePath);
+		char* keyValuePair = buffer;
+		while (*keyValuePair)
+		{
+			string split(keyValuePair);
+			keyValuePair += strlen(keyValuePair) + 1;
 #elif __unix__
-			for (const string& keyValuePair : sectionVal[sectionName])
-			{
-				string split(keyValuePair);
+		for (const string& keyValuePair : sectionVal[sectionName])
+		{
+			string split(keyValuePair);
 #endif
 
-				size_t pos = split.find('=');
-				if (pos != string::npos)
+			size_t pos = split.find('=');
+			if (pos != string::npos)
+			{
+				string key = split.substr(0, pos);
+				if (param.contains(key))
 				{
-					string key = split.substr(0, pos);
-					if (param.contains(key))
-					{
-						continue;
-					}
-
-					param.emplace(key, split.substr(pos + 1));
+					continue;
 				}
 
+				param.emplace(key, split.substr(pos + 1));
 			}
+
 		}
 	}
 
-	// local output 
-	// *** if use locale::global, webProxy cant push file to webclient, dont kown why ***
-	// locale::global(locale(param["locale"]));
-	// wcout.imbue(locale("zh_CN.UTF-8"));
-	// wcout.imbue(locale("zh_CN.UTF-8"));
-	// cout.imbue(locale("zh_CN.UTF-8"));
-#ifdef _WIN32
-	system("chcp 65001");
-#endif
 	// set global Launch config  
 	{
 		pLuanchParam = &param;
@@ -379,7 +362,7 @@ bool DimensionNightmare::InitConfig(unordered_map<string, string>& param)
 	pl10n = make_unique<DNl10n>();
 	if (const char* codeStr = pl10n->InitConfigData())
 	{
-		DNPrint(0, LoggerLevel::Debug, codeStr);
+		DNPrint(0, LoggerLevel::Error, codeStr);
 		return false;
 	}
 
@@ -434,13 +417,13 @@ bool DimensionNightmare::Init()
 
 	if (!OnRegHotReload())
 	{
-		DNPrint(0, LoggerLevel::Debug, "program lunch OnRegHotReload error!");
+		DNPrint(0, LoggerLevel::Error, "program lunch OnRegHotReload error!");
 		return false;
 	}
 
 	if (!pServer->Start())
 	{
-		DNPrint(0, LoggerLevel::Debug, "program lunch Server Start error!");
+		DNPrint(0, LoggerLevel::Error, "program lunch Server Start error!");
 		return false;
 	}
 
@@ -476,7 +459,7 @@ void DimensionNightmare::InitCmdHandle()
 	auto open = [](stringstream* ss)
 		{
 			string str;
-			string allStr = *GetLuanchConfigParam("luanchPath") + " ";
+			string allStr = *GetLuanchConfigParam("program") + " ";
 			while (*ss >> str)
 			{
 				allStr += str + " ";
@@ -491,6 +474,7 @@ void DimensionNightmare::InitCmdHandle()
 			startInfo.cb = sizeof(startInfo);
 
 			startInfo.dwFlags = STARTF_USESHOWWINDOW;
+			startInfo.wShowWindow = 1; // SW_SHOWNORMAL;
 			if (CreateProcessA(NULL, allStr.data(),
 				NULL, NULL, FALSE, CREATE_NEW_CONSOLE, NULL, NULL, &startInfo, &pinfo))
 #elif __unix__
@@ -501,7 +485,7 @@ void DimensionNightmare::InitCmdHandle()
 			}
 			else
 			{
-				cout << "error" << endl;
+				cout << "error:" << GetLastError() << endl;
 			}
 		};
 

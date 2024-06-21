@@ -41,4 +41,6 @@ export {
 export {
 	void HV_cleanup() { ::async::cleanup(); }
 	void HV_hlog_disable() { hlog_disable(); }
+
+	void HV_hio_setcb_close(hio_t* io, hclose_cb close_cb) {  hio_setcb_close(io, close_cb);}
 };
