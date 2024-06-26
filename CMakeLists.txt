@@ -7,6 +7,7 @@ message("${CMAKE_VERSION}
 ${CMAKE_SYSTEM_NAME}
 ${CMAKE_SYSTEM_VERSION}
 ${CMAKE_BUILD_TYPE}
+${MSVC_VERSION}
 ${CMAKE_SYSTEM_PROCESSOR}")
 
 set(CMAKE_CXX_STANDARD 23)
@@ -85,6 +86,12 @@ set_property(TARGET DimensionNightmareServer PROPERTY CXX_STANDARD 23)
 
 target_compile_definitions(DimensionNightmareServer PRIVATE _${CMAKE_SYSTEM_PROCESSOR}_)
 
+if(NOT CMAKE_SYSTEM_NAME MATCHES "Linux")
+	set_target_properties(DimensionNightmareServer PROPERTIES RUNTIME_OUTPUT_DIRECTORY  $<1:${CMAKE_BINARY_DIR}/>)
+else()
+	set_target_properties(DimensionNightmareServer PROPERTIES LIBRARY_OUTPUT_DIRECTORY $<1:${CMAKE_BINARY_DIR}/>)
+endif()
+
 ################################ HotReload ################################
 
 file(GLOB_RECURSE srcHotReloadModule CONFIGURE_DEPENDS 
@@ -102,9 +109,9 @@ target_sources(HotReload
 target_compile_definitions(HotReload PRIVATE HOTRELOAD_BUILD _${CMAKE_SYSTEM_PROCESSOR}_)
 
 if(NOT CMAKE_SYSTEM_NAME MATCHES "Linux")
-	set_target_properties(HotReload PROPERTIES RUNTIME_OUTPUT_DIRECTORY  ${CMAKE_BINARY_DIR}/Runtime)
+	set_target_properties(HotReload PROPERTIES RUNTIME_OUTPUT_DIRECTORY  $<1:${CMAKE_BINARY_DIR}/Runtime>)
 else()
-	set_target_properties(HotReload PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/Runtime)
+	set_target_properties(HotReload PROPERTIES LIBRARY_OUTPUT_DIRECTORY $<1:${CMAKE_BINARY_DIR}/Runtime>)
 endif()
 
 target_link_libraries(HotReload PRIVATE MainSource)
