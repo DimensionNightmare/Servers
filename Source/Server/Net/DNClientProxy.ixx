@@ -21,41 +21,12 @@ export enum class RegistState : uint8_t
 	Registed,
 };
 
-class DNSocketChannel : public SocketChannel
-{
-public:
-	DNSocketChannel(hio_t* io) : SocketChannel(io)
-	{
-		auto cb = [](hio_t* io)
-			{
-				if (SocketChannel* channel = (SocketChannel*)hio_context(io))
-				{
-					if (channel->status != Channel::CONNECTING)
-					{
-						channel->status = Channel::CLOSED;
-					}
-
-					if (channel->onclose)
-					{
-						channel->onclose();
-					}
-				}
-			};
-		// HV_hio_setcb_close(io_, cb);
-	}
-
-	// bool isClosed()
-	// {
-	// 	return status != Channel::CONNECTING  && !isOpened();
-	// }
-};
-
-class TcpClientTmplTemp : public EventLoopThread, public TcpClientEventLoopTmpl<DNSocketChannel>
+class TcpClientTmplTemp : public EventLoopThread, public TcpClientEventLoopTmpl<SocketChannel>
 {
 public:
 	TcpClientTmplTemp(EventLoopPtr loop = NULL)
 		: EventLoopThread(loop)
-		, TcpClientEventLoopTmpl<DNSocketChannel>(EventLoopThread::loop())
+		, TcpClientEventLoopTmpl<SocketChannel>(EventLoopThread::loop())
 		, is_loop_owner(loop == NULL)
 	{
 	}
@@ -74,7 +45,7 @@ public:
 	{
 		if (isRunning())
 		{
-			TcpClientEventLoopTmpl<DNSocketChannel>::start();
+			TcpClientEventLoopTmpl<SocketChannel>::start();
 		}
 		else
 		{
@@ -89,7 +60,7 @@ public:
 	// stop thread-safe
 	void stop(bool wait_threads_stopped = true)
 	{
-		TcpClientEventLoopTmpl<DNSocketChannel>::closesocket();
+		TcpClientEventLoopTmpl<SocketChannel>::closesocket();
 		if (is_loop_owner)
 		{
 			EventLoopThread::stop(wait_threads_stopped);

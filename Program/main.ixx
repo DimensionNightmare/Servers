@@ -47,14 +47,15 @@ enum class LunchType : uint8_t
 
 export int main(int argc, char** argv)
 {
+	filesystem::path execPath = argv[0];
+	
 #ifdef _WIN32
-	SetCurrentDirectoryA(filesystem::current_path().string().c_str());
+	SetCurrentDirectoryA(execPath.parent_path().string().c_str());
 	system("chcp 65001");
 #elif __unix__
-	chdir(filesystem::current_path().string().c_str());
+	chdir(execPath.parent_path().string().c_str());
 #endif
 
-	filesystem::path execPath = argv[0];
 	// lunch param
 	unordered_map<string, string> lunchParam = {
 		{"program", execPath.filename().string()},
