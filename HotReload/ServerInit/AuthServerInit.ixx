@@ -69,7 +69,7 @@ int HandleAuthServerInit(DNServer* server)
 				MessagePacket packet;
 				memcpy(&packet, buf->data(), MessagePacket::PackLenth);
 
-				DNPrint(0, LoggerLevel::Debug, "%s Recv type=%d With Mid:%u", channel->peeraddr().c_str(), packet.dealType, packet.msgId);
+				DNPrint(0, LoggerLevel::Debug, "c %s Recv type=%d With Mid:%u", channel->peeraddr().c_str(), packet.dealType, packet.msgId);
 
 				if(packet.pkgLenth > 2 * 1024)
 				{
