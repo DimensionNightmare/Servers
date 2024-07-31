@@ -45,6 +45,49 @@ enum class LunchType : uint8_t
 	PULL,
 };
 
+void WriteDumpFile(const char* fileName, EXCEPTION_POINTERS* ExceptionInfo = nullptr)
+{
+	HANDLE hDumpFile = CreateFile(
+		fileName,
+		GENERIC_WRITE,
+		0,
+		nullptr,
+		CREATE_ALWAYS,
+		FILE_ATTRIBUTE_NORMAL,
+		nullptr
+	);
+
+	if (hDumpFile != INVALID_HANDLE_VALUE)
+	{
+		MINIDUMP_EXCEPTION_INFORMATION info;
+		info.ThreadId = GetCurrentThreadId();
+		info.ExceptionPointers = ExceptionInfo;
+		info.ClientPointers = FALSE;
+
+		MINIDUMP_TYPE dumpType = (MINIDUMP_TYPE)(
+			MiniDumpWithDataSegs |
+			MiniDumpWithFullMemory |
+			MiniDumpWithHandleData |
+			MiniDumpWithThreadInfo |
+			MiniDumpWithUnloadedModules |
+			MiniDumpWithFullMemoryInfo |
+			MiniDumpWithProcessThreadData
+			);
+
+		MiniDumpWriteDump(
+			GetCurrentProcess(),
+			GetCurrentProcessId(),
+			hDumpFile,
+			dumpType, // MiniDumpNormal
+			ExceptionInfo ? &info : nullptr,
+			nullptr,
+			nullptr
+		);
+
+		CloseHandle(hDumpFile);
+	}
+}
+
 export int main(int argc, char** argv)
 {
 	filesystem::path execPath = argv[0];
@@ -155,45 +198,7 @@ export int main(int argc, char** argv)
 				fileName = format("{}/MiniDump.dmp", fileName);
 			}
 
-			HANDLE hDumpFile = CreateFile(
-				fileName.c_str(),
-				GENERIC_WRITE,
-				0,
-				nullptr,
-				CREATE_ALWAYS,
-				FILE_ATTRIBUTE_NORMAL,
-				nullptr
-			);
-
-			if (hDumpFile != INVALID_HANDLE_VALUE)
-			{
-				MINIDUMP_EXCEPTION_INFORMATION info;
-				info.ThreadId = GetCurrentThreadId();
-				info.ExceptionPointers = ExceptionInfo;
-				info.ClientPointers = FALSE;
-
-				MINIDUMP_TYPE dumpType = (MINIDUMP_TYPE)(
-					MiniDumpWithDataSegs |
-					MiniDumpWithFullMemory |
-					MiniDumpWithHandleData |
-					MiniDumpWithThreadInfo |
-					MiniDumpWithUnloadedModules |
-					MiniDumpWithFullMemoryInfo |
-					MiniDumpWithProcessThreadData
-					);
-
-				MiniDumpWriteDump(
-					GetCurrentProcess(),
-					GetCurrentProcessId(),
-					hDumpFile,
-					dumpType, // MiniDumpNormal
-					&info,
-					nullptr,
-					nullptr
-				);
-
-				CloseHandle(hDumpFile);
-			}
+			WriteDumpFile(fileName.c_str());
 
 			PInstance->Dll()->isNormalFree = false;
 			PInstance->ServerIsRun() = false;
@@ -239,6 +244,8 @@ export int main(int argc, char** argv)
 
 #endif
 
+	DNPrint(0, LoggerLevel::Normal, "Dimension Instance addr:0x%p", PInstance.get());
+
 	auto InputEvent = async(launch::async, []()
 		{
 			stringstream ss;
@@ -272,6 +279,15 @@ export int main(int argc, char** argv)
 						int a = 100;
 						int b = 0;
 						int c = a / b;
+					}
+					else if (str == "dump_memory")
+					{
+						string fileName;
+						ss >> fileName;
+						if(!fileName.empty())
+						{
+							WriteDumpFile(fileName.append(".dmp").c_str());
+						}
 					}
 					else
 					{

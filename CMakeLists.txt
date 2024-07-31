@@ -15,24 +15,24 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 # set(CMAKE_UNITY_BUILD ON)
-find_program(CCACHE_PROGRAM ccache)
-if(CCACHE_PROGRAM)
-  message(STATUS "Set up ccache ...")
-  set(CMAKE_C_COMPILER_LAUNCHER ccache)
-  set(CMAKE_CXX_COMPILER_LAUNCHER ccache)
-endif()
+# find_program(CCACHE_PROGRAM ccache)
+# if(CCACHE_PROGRAM)
+#   message(STATUS "Set up ccache ...")
+#   set(CMAKE_C_COMPILER_LAUNCHER ccache)
+#   set(CMAKE_CXX_COMPILER_LAUNCHER ccache)
+# endif()
 
 if(CMAKE_SYSTEM_NAME MATCHES "Linux")
 	set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 endif()
 
 set(CMAKE_PREFIX_PATH
-"../Environment/Install/libhv/${CMAKE_BUILD_TYPE}"
-"../Environment/Install/protobuf/${CMAKE_BUILD_TYPE}"
-"../Environment/Install/pbgen/${CMAKE_BUILD_TYPE}"
-"../Environment/Install/libpqxx/${CMAKE_BUILD_TYPE}"
-"../Environment/Install/hiredis/${CMAKE_BUILD_TYPE}"
-"../Environment/Install/redis-plus-plus/${CMAKE_BUILD_TYPE}"
+"../Environment/Install/${CMAKE_BUILD_TYPE}/libhv"
+"../Environment/Install/${CMAKE_BUILD_TYPE}/protobuf"
+"../Environment/Install/${CMAKE_BUILD_TYPE}/pbgen"
+"../Environment/Install/${CMAKE_BUILD_TYPE}/libpqxx"
+"../Environment/Install/${CMAKE_BUILD_TYPE}/hiredis"
+"../Environment/Install/${CMAKE_BUILD_TYPE}/redis-plus-plus"
 )
 
 find_package(libhv CONFIG REQUIRED)
