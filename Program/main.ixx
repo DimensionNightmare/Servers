@@ -251,7 +251,41 @@ export int main(int argc, char** argv)
 			stringstream ss;
 			string str;
 
-			while (true)
+			bool bRun = true;
+
+			auto quit = [&]()
+				{
+					PInstance->ServerIsRun() = false;
+					bRun = false;
+				};
+
+			auto abort = [&]()
+				{
+					int a = 100;
+					int b = 0;
+					int c = a / b;
+				};
+
+			auto dump_memory = [&]()
+				{
+					string fileName;
+					ss >> fileName;
+					if(!fileName.empty())
+					{
+						WriteDumpFile(fileName.append(".dmp").c_str());
+					}
+				};
+
+			std::unordered_map<string, function<void()>> cmdMap = 
+			{
+				#define one(func) {#func, func}
+
+				one(quit), one(abort), one(dump_memory),
+				
+				#undef one
+			};
+
+			while (bRun)
 			{
 				getline(cin, str);
 
@@ -269,25 +303,9 @@ export int main(int argc, char** argv)
 
 					cout << "<cmd " << str << ">\n";
 
-					if (str == "quit")
+					if (cmdMap.contains(str))
 					{
-						PInstance->ServerIsRun() = false;
-						break;
-					}
-					else if (str == "abort")
-					{
-						int a = 100;
-						int b = 0;
-						int c = a / b;
-					}
-					else if (str == "dump_memory")
-					{
-						string fileName;
-						ss >> fileName;
-						if(!fileName.empty())
-						{
-							WriteDumpFile(fileName.append(".dmp").c_str());
-						}
+						cmdMap[str]();
 					}
 					else
 					{

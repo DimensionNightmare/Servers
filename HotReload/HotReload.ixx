@@ -69,7 +69,7 @@ extern "C"
 		HV_hlog_disable();
 
 		SetLuanchConfig(server->pLuanchConfig);
-		SetDNl10nInstance(server->pDNl10nInstance, true);
+		SetDNl10nInstance(server->pDNl10nInstance);
 
 		ServerType servertype = server->GetServerType();
 		string_view serverName = EnumName(servertype);
