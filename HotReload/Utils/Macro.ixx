@@ -56,8 +56,7 @@ auto TickMainSpaceDll(Class* obj, const char* methodName, Method method, Args...
 
 	static unordered_map<string, void*> cache;
 
-	auto it = cache.find(fullFuncName);
-	if (it != cache.end())
+	if (auto it = cache.find(fullFuncName);it != cache.end())
 	{
 		MethodSign pFuncTyped = reinterpret_cast<MethodSign>(it->second);
 		return pFuncTyped(obj, make_tuple(std::forward<Args>(args)...));
