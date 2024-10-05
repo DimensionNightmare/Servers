@@ -203,6 +203,7 @@ public:
 
 	void TickMainFrame();
 
+	DNl10n* GetDNl10n(){return pl10n.get();}
 private:
 	unique_ptr<HotReloadDll> pHotDll;
 
@@ -490,11 +491,12 @@ void DimensionNightmare::InitCmdHandle()
 		};
 
 	mCmdHandle = {
-		{"pause", pause},
-		{"resume", resume},
-		{"reload", reload},
-		{"open", open},
-		{"reloadConfig", reloadConfig},
+		#define one(func) {#func, func}
+		
+		one(pause), one(resume), one(reload), one(open),
+		one(reloadConfig)
+		
+		#undef one
 	};
 
 	if (pServer)
@@ -513,7 +515,7 @@ void DimensionNightmare::InitCmdHandle()
 
 void DimensionNightmare::ExecCommand(string * cmd, stringstream * ss)
 {
-	if (mCmdHandle.find(*cmd) != mCmdHandle.end())
+	if (mCmdHandle.contains(*cmd))
 	{
 		mCmdHandle[*cmd](ss);
 	}

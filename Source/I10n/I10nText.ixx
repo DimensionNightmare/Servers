@@ -54,35 +54,14 @@ DNl10n::~DNl10n()
 DNl10n* PInstance = nullptr;
 bool DllSpace = false;
 
-export void SetDNl10nInstance(DNl10n* point, bool IsDllInit = false)
+export void SetDNl10nInstance(DNl10n* point)
 {
 	PInstance = point;
-
-	DllSpace = IsDllInit;
-
-	/// PB's map find key need same runtimespace.
-	/// reason is absl hashkey need random address.
-	/// absl\hash\internal\hash.h kSeed
-	if(DllSpace)
-	{
-		auto& errMap = PInstance->mL10nErrDll;
-		errMap.clear();
-
-		for (auto& one : PInstance->mL10nErr.data_map())
-		{
-			errMap[one.first] = &one.second;
-		}
-
-		auto& tipMap = PInstance->mL10nTipDll;
-		tipMap.clear();
-
-		for (auto& one : PInstance->mL10nTip.data_map())
-		{
-			tipMap[one.first] = &one.second;
-		}		
-	}
 }
 
+/// PB's map find key need same runtimespace.
+/// reason is absl hashkey need random address.
+/// absl\hash\internal\hash.h kSeed
 const char* DNl10n::InitConfigData()
 {
 	string* value = GetLuanchConfigParam("l10nErrPath");
@@ -100,6 +79,14 @@ const char* DNl10n::InitConfigData()
 			// DNPrint(0, LoggerLevel::Debug, "load I10n Err Config Error !");
 			return "load I10n Err Config Error !";
 		}
+
+		mL10nErrDll.clear();
+
+		for (auto& one : mL10nErr.data_map())
+		{
+			mL10nErrDll[one.first] = &one.second;
+		}
+
 	}
 
 	value = GetLuanchConfigParam("l10nTipPath");
@@ -116,6 +103,13 @@ const char* DNl10n::InitConfigData()
 		{
 			// DNPrint(0, LoggerLevel::Debug, "load I10n Tip Config Error !");
 			return "load I10n Tip Config Error !";
+		}
+
+		mL10nTipDll.clear();
+
+		for (auto& one : mL10nTip.data_map())
+		{
+			mL10nTipDll[one.first] = &one.second;
 		}
 	}
 
@@ -156,32 +150,13 @@ export const char* GetErrText(int type)
 		return nullptr;
 	}
 
-	const l10nErr *finded = nullptr;
-
-	if(!DllSpace)
+	auto& dataMap = PInstance->mL10nErrDll;
+	if (!dataMap.contains(type))
 	{
-		auto& dataMap = PInstance->mL10nErr.data_map();
-		auto data = dataMap.find(type);
-		if (data == dataMap.end())
-		{
-			throw invalid_argument(format("I10n Err Config not exist this type {}", PB_ErrCode_Name(type)));
-		}
-
-		finded = &data->second;
+		throw invalid_argument(format("I10n Err Config not exist this type {}", PB_ErrCode_Name(type)));
 	}
-	else
-	{
-		auto& dataMap = PInstance->mL10nErrDll;
-		auto data = dataMap.find(type);
-		if (data == dataMap.end())
-		{
-			throw invalid_argument(format("I10n Err Config not exist this type {}", PB_ErrCode_Name(type)));
-		}
 
-		finded = data->second;
-	}
-	
-	return (finded->*(PInstance->pL10nErrFunc))().c_str();
+	return (dataMap[type]->*(PInstance->pL10nErrFunc))().c_str();
 }
 
 export const char* GetTipText(int type)
@@ -191,30 +166,11 @@ export const char* GetTipText(int type)
 		return nullptr;
 	}
 
-	const l10nTip *finded = nullptr;
-
-	if(!DllSpace)
+	auto& dataMap = PInstance->mL10nTipDll;
+	if (!dataMap.contains(type))
 	{
-		auto& dataMap = PInstance->mL10nTip.data_map();
-		auto data = dataMap.find(type);
-		if (data == dataMap.end())
-		{
-			throw invalid_argument(format("I10n Tip Config not exist this type {}", PB_TipCode_Name(type)));
-		}
-
-		finded = &data->second;
-	}
-	else
-	{
-		auto& dataMap = PInstance->mL10nTipDll;
-		auto data = dataMap.find(type);
-		if (data == dataMap.end())
-		{
-			throw invalid_argument(format("I10n Tip Config not exist this type {}", PB_TipCode_Name(type)));
-		}
-
-		finded = data->second;
+		throw invalid_argument(format("I10n Tip Config not exist this type {}", PB_TipCode_Name(type)));
 	}
 
-	return (finded->*(PInstance->pL10nTipFunc))().c_str();
+	return (dataMap[type]->*(PInstance->pL10nTipFunc))().c_str();
 }
