@@ -16,7 +16,7 @@ export enum class LoggerLevel : uint8_t
 {
 	Debug,
 	Normal,
-	Waring,
+	Warning,
 	Error,
 };
 

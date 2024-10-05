@@ -49,8 +49,8 @@ export {
 	using ::TipCode;
 	using ::l10nErr;
 	using ::l10nTip;
-	using ::L10nErrs;
-	using ::L10nTips;
+	using ::l10nErrs;
+	using ::l10nTips;
 	using ::MapPointRecord;
 	using ::Vector3;
 	using ::MapPoint;

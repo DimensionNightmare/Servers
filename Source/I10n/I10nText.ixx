@@ -25,10 +25,10 @@ public:
 	~DNl10n();
 	const char* InitConfigData();
 public:
-	L10nErrs mL10nErr;
+	l10nErrs mL10nErr;
 	unordered_map<uint32_t, const l10nErr*> mL10nErrDll;
 
-	L10nTips mL10nTip;
+	l10nTips mL10nTip;
 	unordered_map<uint32_t, const l10nTip*> mL10nTipDll;
 
 	typedef const string& (l10nErr::* ErrTextFunc)() const;
