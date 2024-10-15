@@ -1,8 +1,4 @@
 module;
-#include <coroutine>
-#include <string>
-#include <cstdint>
-
 #include "StdMacro.h"
 export module DatabaseMessage:DatabaseGate;
 

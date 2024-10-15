@@ -1,8 +1,4 @@
 module;
-#include <functional>
-#include <cstdint>
-#include <string>
-
 #include "StdMacro.h"
 export module GateMessage;
 

@@ -1,8 +1,4 @@
 module;
-#include <shared_mutex>
-#include <cstdint>
-#include <functional>
-
 #include "StdMacro.h"
 export module ProxyEntityManager;
 

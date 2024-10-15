@@ -1,10 +1,4 @@
 module;
-#include <coroutine>
-#include <cstdint>
-#include <list>
-#include <string>
-#include <memory>
-
 #include "StdMacro.h"
 export module GateMessage:GateCommon;
 

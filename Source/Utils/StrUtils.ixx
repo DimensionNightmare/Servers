@@ -1,16 +1,9 @@
 module;
-#include <cstdint>
-#include <string>
-#include <array>
-#include <format>
-#include <chrono>
-#include <regex>
 #ifdef _WIN32
 #include <timezoneapi.h>
 #endif
+#include "StdMacro.h"
 export module StrUtils;
-
-using namespace std;
 
 export template <auto value>
 constexpr auto EnumName()

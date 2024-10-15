@@ -1,6 +1,4 @@
 module;
-#include <string>
-
 #include "google/protobuf/reflection.h"
 #include "google/protobuf/descriptor.pb.h"
 #include "google/protobuf/util/json_util.h"
@@ -18,9 +16,10 @@ module;
 #include "Client/C_Auth.pb.h"
 #include "Server/S_Logic.pb.h"
 #include "Common/DbExtend.pb.h"
+
+#include "StdMacro.h"
 export module ThirdParty.PbGen;
 
-using namespace std;
 using namespace google::protobuf;
 using namespace GMsg;
 using namespace l10n;

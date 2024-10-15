@@ -3,9 +3,6 @@ module;
 #ifdef _WIN32
 	#include <windef.h>
 #endif
-#include <functional>
-#include <string>
-
 #include "StdMacro.h"
 export module HotReload;
 

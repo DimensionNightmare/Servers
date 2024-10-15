@@ -1,7 +1,4 @@
 module;
-#include <cstdint>
-#include <string>
-
 #include "StdMacro.h"
 export module ControlMessage:ControlCommon;
 
@@ -11,8 +8,6 @@ import ControlServerHelper;
 import ThirdParty.Libhv;
 import ThirdParty.PbGen;
 import Logger;
-
-using namespace std;
 
 namespace ControlMessage
 {

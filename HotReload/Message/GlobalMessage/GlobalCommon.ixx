@@ -1,9 +1,4 @@
 module;
-#include <coroutine>
-#include <cstdint>
-#include <string>
-#include <memory>
-
 #include "StdMacro.h"
 export module GlobalMessage:GlobalCommon;
 

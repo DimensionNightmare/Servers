@@ -1,23 +1,9 @@
 module;
-#include <tuple>
-#include <string>
 #ifdef _WIN32
 	#include <libloaderapi.h>
 #endif
-#include <unordered_map>
-#include <format>
+#include "StdMacro.h"
 export module Macro;
-
-using namespace std;
-
-template <typename Method>
-struct MemberFunctionArgs;
-
-template <typename R, typename Class, typename... Args>
-struct MemberFunctionArgs<R(Class::*)(Args...)>
-{
-	using Arguments = tuple<Args...>;
-};
 
 template<typename T>
 struct MemberFunctionReturnType;

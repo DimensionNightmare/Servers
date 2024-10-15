@@ -1,6 +1,6 @@
 #pragma once
 
-#include <tuple>
+import std.compat;
 
 using namespace std;
 
@@ -22,7 +22,7 @@ struct MemberFunctionArgs;
 template <typename R, typename Class, typename... Args>
 struct MemberFunctionArgs<R(Class::*)(Args...)>
 {
-	using Arguments = tuple<Args...>;
+	using Arguments = std::tuple<Args...>;
 };
 
 #define REGIST_MAINSPACE_SIGN_FUNCTION(classname, methodname)\
@@ -30,7 +30,7 @@ struct MemberFunctionArgs<R(Class::*)(Args...)>
 	using methodname##_Args = typename MemberFunctionArgs<methodname##_Sign>::Arguments;\
 	__declspec(dllexport) auto classname##_##methodname(classname *obj, methodname##_Args args)\
 	{\
-		return apply([&obj](auto &&...unpack) { return obj->methodname(forward<decltype(unpack)>(unpack)...); }, args);\
+		return apply([&obj](auto &&...unpack) { return obj->methodname(std::forward<decltype(unpack)>(unpack)...); }, args);\
 	}
 
 #define TICK_MAINSPACE_SIGN_FUNCTION(Class, Method, Object, ...) \

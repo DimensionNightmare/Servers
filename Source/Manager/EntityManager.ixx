@@ -1,13 +1,9 @@
 module;
-#include <unordered_map>
-#include <shared_mutex>
-#include <cstdint>
+#include "StdMacro.h"
 export module EntityManager;
 
 import Entity;
 import ThirdParty.Libhv;
-
-using namespace std;
 
 export template<class TEntity = Entity>
 class EntityManager

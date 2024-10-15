@@ -1,14 +1,11 @@
 module;
-#include <functional>
-
 #include "hv/json.hpp"
+#include "StdMacro.h"
 export module ApiManager;
 
 import AuthServerHelper;
 import :ApiAuth;
 import ThirdParty.Libhv;
-
-using namespace std;
 
 export void ApiInit(HttpService* service)
 {

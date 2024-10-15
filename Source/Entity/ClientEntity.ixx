@@ -1,14 +1,9 @@
 module;
-#include <cstdint>
-#include <bitset>
-#include <memory>
-
+#include "StdMacro.h"
 export module ClientEntity;
 
 import Entity;
 import ThirdParty.PbGen;
-
-using namespace std;
 
 export enum class ClientEntityFlag : uint16_t
 {

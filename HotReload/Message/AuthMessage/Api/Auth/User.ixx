@@ -1,9 +1,4 @@
 module;
-#include <coroutine>
-#include <cstdint>
-#include <format>
-#include <chrono>
-
 #include "hv/json.hpp"
 #include "StdMacro.h"
 export module ApiManager:ApiAuth;

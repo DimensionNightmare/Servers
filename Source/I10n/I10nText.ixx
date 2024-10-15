@@ -1,16 +1,9 @@
 module;
-#include <fstream>
-#include <format>
-#include <string>
-#include <iostream>
-#include <unordered_map>
-
+#include "StdMacro.h"
 export module I10nText;
 
 import Config.Server;
 import ThirdParty.PbGen;
-
-using namespace std;
 
 enum class LangType : uint8_t
 {

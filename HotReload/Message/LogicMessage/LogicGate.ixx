@@ -1,6 +1,4 @@
 module;
-#include <string>
-
 #include "StdMacro.h"
 export module LogicMessage:LogicGate;
 

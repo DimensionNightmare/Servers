@@ -1,9 +1,4 @@
 module;
-#include <coroutine>
-#include <string>
-#include <cstdint>
-#include <list>
-
 #include "StdMacro.h"
 export module GateMessage:GateRedirect;
 

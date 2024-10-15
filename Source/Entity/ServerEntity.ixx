@@ -1,15 +1,9 @@
 module;
-#include <string>
-#include <list>
-#include <unordered_map>
-#include <bitset>
-#include <cstdint>
+#include "StdMacro.h"
 export module ServerEntity;
 
 import NetEntity;
 export import DNServer;
-
-using namespace std;
 
 export enum class ServerEntityFlag : uint16_t
 {

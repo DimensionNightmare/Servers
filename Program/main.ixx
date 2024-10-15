@@ -19,11 +19,6 @@ module;
 	#include <fcntl.h>
 	#include <sys/stat.h>
 #endif
-#include <string>
-#include <iostream>
-#include <future>
-#include <format>
-#include <filesystem>
 
 #include "StdMacro.h"
 export module MODULE_MAIN;

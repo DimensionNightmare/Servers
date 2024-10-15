@@ -1,5 +1,5 @@
 module;
-#include <cstdint>
+#include "StdMacro.h"
 export module Entity;
 
 export enum class EntityType : uint8_t
@@ -11,8 +11,6 @@ export enum class EntityType : uint8_t
 	Client,
 	Room,
 };
-
-using namespace std;
 
 // normal data normal get/set
 // if class function has logic. please imp to helper.

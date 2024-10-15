@@ -1,9 +1,6 @@
 module;
-#include <unordered_map>
-#include <string>
+#include "StdMacro.h"
 export module Config.Server;
-
-using namespace std;
 
 unordered_map<string, string>* LuanchConfig = nullptr;
 

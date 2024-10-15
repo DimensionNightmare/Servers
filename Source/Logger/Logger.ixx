@@ -1,16 +1,10 @@
 module;
-#include <string>
+#include "StdMacro.h"
 #include <cstdarg>
-#include <format>
-#include <iostream>
-#include <fstream>
-#include <optional>
 export module Logger;
 
 import StrUtils;
 import I10nText;
-
-using namespace std;
 
 export enum class LoggerLevel : uint8_t
 {

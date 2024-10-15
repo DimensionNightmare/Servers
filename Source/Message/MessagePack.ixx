@@ -1,10 +1,6 @@
 module;
-#include <string>
-#include <cstdint>
-#include <string.h>
+#include "StdMacro.h"
 export module MessagePack;
-
-using namespace std;
 
 export enum class MsgDir : uint8_t
 {

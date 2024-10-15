@@ -1,9 +1,4 @@
 module;
-#include <coroutine>
-#include <cstdint>
-#include <list>
-#include <string>
-
 #include "StdMacro.h"
 export module LogicMessage:LogicRedirect;
 

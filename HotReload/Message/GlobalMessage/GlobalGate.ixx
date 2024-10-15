@@ -1,8 +1,4 @@
 module;
-#include <coroutine>
-#include <cstdint>
-#include <string>
-
 #include "StdMacro.h"
 export module GlobalMessage:GlobalGate;
 

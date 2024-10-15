@@ -1,11 +1,8 @@
 module;
-#include <string>
-#include <cstdint>
+#include "StdMacro.h"
 export module ProxyEntity;
 
 import NetEntity;
-
-using namespace std;
 
 export class ProxyEntity : public NetEntity
 {
