@@ -7,6 +7,4 @@ export class ClientEntityHelper : public ClientEntity
 {
 private:
 	ClientEntityHelper() = delete;
-public:
-
 };

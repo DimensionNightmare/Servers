@@ -13,145 +13,129 @@ import ThirdParty.PbGen;
 
 export class ControlServer : public DNServer
 {
+
 public:
-	ControlServer();
 
-	~ControlServer();
-
-	virtual bool Init() override;
-
-	virtual void InitCmd(unordered_map<string, function<void(stringstream*)>>& cmdMap) override;
-
-	virtual bool Start() override;
-
-	virtual bool Stop() override;
-
-	virtual void Pause() override;
-
-	virtual void Resume() override;
-
-	virtual void LoopEvent(function<void(EventLoopPtr)> func) override;
-
-public: // dll override
-	virtual DNServerProxy* GetSSock() { return pSSock.get(); }
-	virtual ServerEntityManager* GetServerEntityManager() { return pServerEntityMan.get(); }
-
-protected: // dll proxy
-	unique_ptr<DNServerProxy> pSSock;
-
-	unique_ptr<ServerEntityManager> pServerEntityMan;
-};
-
-
-
-ControlServer::ControlServer()
-{
-	emServerType = ServerType::ControlServer;
-}
-
-// need init order reversal
-ControlServer::~ControlServer()
-{
-	pSSock = nullptr;
-
-	pServerEntityMan = nullptr;
-}
-
-bool ControlServer::Init()
-{
-	string* port = GetLuanchConfigParam("port");
-	if (!port)
+	ControlServer()
 	{
-		DNPrint(ErrCode::ErrCode_SrvNeedIPPort, LoggerLevel::Error, nullptr);
-		return false;
+		emServerType = ServerType::ControlServer;
 	}
 
-	DNServer::Init();
-
-	pSSock = make_unique<DNServerProxy>();
-
-	int listenfd = pSSock->createsocket(stoi(*port), "0.0.0.0");
-	if (listenfd < 0)
+	// need init order reversal
+	~ControlServer()
 	{
-		DNPrint(ErrCode::ErrCode_CreateSocket, LoggerLevel::Error, nullptr);
-		return false;
+		pSSock = nullptr;
+
+		pServerEntityMan = nullptr;
 	}
 
-	pSSock->Init();
-
-	DNPrint(TipCode::TipCode_SrvListenOn, LoggerLevel::Normal, nullptr, pSSock->port, listenfd);
-
-	pServerEntityMan = make_unique<ServerEntityManager>();
-	pServerEntityMan->Init();
-
-	return true;
-}
-
-void ControlServer::InitCmd(unordered_map<string, function<void(stringstream*)>>& cmdMap)
-{
-}
-
-bool ControlServer::Start()
-{
-	if (!pSSock)
+	virtual bool Init() override
 	{
-		DNPrint(ErrCode::ErrCode_SrvNotInit, LoggerLevel::Error, nullptr);
-		return false;
+		string* port = GetLuanchConfigParam("port");
+		if (!port)
+		{
+			DNPrint(ErrCode::ErrCode_SrvNeedIPPort, LoggerLevel::Error, nullptr);
+			return false;
+		}
+
+		DNServer::Init();
+
+		pSSock = make_unique<DNServerProxy>();
+
+		int listenfd = pSSock->createsocket(stoi(*port), "0.0.0.0");
+		if (listenfd < 0)
+		{
+			DNPrint(ErrCode::ErrCode_CreateSocket, LoggerLevel::Error, nullptr);
+			return false;
+		}
+
+		pSSock->Init();
+
+		DNPrint(TipCode::TipCode_SrvListenOn, LoggerLevel::Normal, nullptr, pSSock->port, listenfd);
+
+		pServerEntityMan = make_unique<ServerEntityManager>();
+		pServerEntityMan->Init();
+
+		return true;
 	}
 
-	pSSock->Start();
-	return true;
-}
-
-bool ControlServer::Stop()
-{
-	if (pSSock)
+	virtual void InitCmd(unordered_map<string, function<void(stringstream*)>>& cmdMap) override
 	{
-		pSSock->End();
 	}
-	return true;
-}
 
-void ControlServer::Pause()
-{
-	// pSSock->Timer()->pause();
-	// pServerEntityMan->Timer()->pause();
+	virtual bool Start() override
+	{
+		if (!pSSock)
+		{
+			DNPrint(ErrCode::ErrCode_SrvNotInit, LoggerLevel::Error, nullptr);
+			return false;
+		}
 
-	LoopEvent([](EventLoopPtr loop)
+		pSSock->Start();
+		return true;
+	}
+
+	virtual bool Stop() override
+	{
+		if (pSSock)
+		{
+			pSSock->End();
+		}
+		return true;
+	}
+
+	virtual void Pause() override
+	{
+		// pSSock->Timer()->pause();
+		// pServerEntityMan->Timer()->pause();
+
+		LoopEvent([](EventLoopPtr loop)
 		{
 			loop->pause();
 		});
-}
+	}
 
-void ControlServer::Resume()
-{
-	LoopEvent([](EventLoopPtr loop)
+	virtual void Resume() override
+	{
+		LoopEvent([](EventLoopPtr loop)
 		{
 			loop->resume();
 		});
 
-	// pSSock->Timer()->resume();
-	// pServerEntityMan->Timer()->resume();
-}
-
-void ControlServer::LoopEvent(function<void(EventLoopPtr)> func)
-{
-	unordered_map<long, bool> looped;
-	if (pSSock)
-	{
-		looped.clear();
-		while (const EventLoopPtr& pLoop = pSSock->loop())
-		{
-			long id = pLoop->tid();
-			if (!looped.contains(id))
-			{
-				func(pLoop);
-				looped[id];
-			}
-			else
-			{
-				break;
-			}
-		};
+		// pSSock->Timer()->resume();
+		// pServerEntityMan->Timer()->resume();
 	}
-}
+
+	virtual void LoopEvent(function<void(EventLoopPtr)> func) override
+	{
+		unordered_map<long, bool> looped;
+		if (pSSock)
+		{
+			looped.clear();
+			while (const EventLoopPtr& pLoop = pSSock->loop())
+			{
+				long id = pLoop->tid();
+				if (!looped.contains(id))
+				{
+					func(pLoop);
+					looped[id];
+				}
+				else
+				{
+					break;
+				}
+			};
+		}
+	}
+
+public: // dll override
+
+	virtual DNServerProxy* GetSSock() { return pSSock.get(); }
+
+	virtual ServerEntityManager* GetServerEntityManager() { return pServerEntityMan.get(); }
+protected: // dll proxy
+
+	unique_ptr<DNServerProxy> pSSock;
+
+	unique_ptr<ServerEntityManager> pServerEntityMan;
+};

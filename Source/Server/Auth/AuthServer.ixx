@@ -13,6 +13,7 @@ import ThirdParty.Libpqxx;
 
 export class AuthServer : public DNServer
 {
+	
 public:
 	AuthServer()
 	{

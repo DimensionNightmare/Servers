@@ -7,7 +7,4 @@ export class ServerEntityHelper : public ServerEntity
 {
 private:
 	ServerEntityHelper() = delete;
-public:
-
 };
-

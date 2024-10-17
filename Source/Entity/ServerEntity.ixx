@@ -16,6 +16,7 @@ constexpr uint16_t ServerEntityFlagSize() { return static_cast<uint16_t>(ServerE
 /// @brief this is server proxy entity
 export class ServerEntity : public NetEntity
 {
+	
 public:
 
 	ServerEntity() :NetEntity(0)

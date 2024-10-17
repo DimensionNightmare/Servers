@@ -1,5 +1,6 @@
 module;
 #include <stdlib.h>
+
 #include "StdMacro.h"
 export module ObjectTrace;
 

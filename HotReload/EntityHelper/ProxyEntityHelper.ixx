@@ -7,7 +7,4 @@ export class ProxyEntityHelper : public ProxyEntity
 {
 private:
 	ProxyEntityHelper() = delete;
-public:
-
 };
-

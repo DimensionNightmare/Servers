@@ -61,6 +61,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 
 extern "C"
 {
+	
 	HOTRELOAD int InitHotReload(DNServer* server)
 	{
 		HV_hlog_disable();

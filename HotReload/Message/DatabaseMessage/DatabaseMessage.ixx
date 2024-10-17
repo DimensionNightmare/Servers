@@ -10,72 +10,70 @@ import ThirdParty.PbGen;
 
 export class DatabaseMessageHandle
 {
+
 public:
-	static void MsgHandle(const SocketChannelPtr& channel, uint32_t msgId, size_t msgHashId, const string& msgData);
-	static void MsgRetHandle(const SocketChannelPtr& channel, size_t msgHashId, const string& msgData);
-	static void RegMsgHandle();
-public:
-	inline static unordered_map<size_t, pair<const Message*, function<void(SocketChannelPtr, uint32_t, string)>>> MHandleMap;
-	inline static unordered_map<size_t, pair<const Message*, function<void(SocketChannelPtr, string)>>> MHandleRetMap;
-};
 
-
-
-void DatabaseMessageHandle::MsgHandle(const SocketChannelPtr& channel, uint32_t msgId, size_t msgHashId, const string& msgData)
-{
-	if (MHandleMap.contains(msgHashId))
+	static void MsgHandle(const SocketChannelPtr& channel, uint32_t msgId, size_t msgHashId, const string& msgData)
 	{
-		auto& handle = MHandleMap[msgHashId];
+		if (MHandleMap.contains(msgHashId))
+		{
+			auto& handle = MHandleMap[msgHashId];
 
-		try
-		{
-			handle.second(channel, msgId, msgData);
+			try
+			{
+				handle.second(channel, msgId, msgData);
+			}
+			catch (const exception& e)
+			{
+				DNPrint(0, LoggerLevel::Debug, e.what());
+			}
 		}
-		catch (const exception& e)
+		else
 		{
-			DNPrint(0, LoggerLevel::Debug, e.what());
+			DNPrint(ErrCode::ErrCode_MsgHandleFind, LoggerLevel::Error, nullptr);
 		}
 	}
-	else
-	{
-		DNPrint(ErrCode::ErrCode_MsgHandleFind, LoggerLevel::Error, nullptr);
-	}
-}
 
-void DatabaseMessageHandle::MsgRetHandle(const SocketChannelPtr& channel, size_t msgHashId, const string& msgData)
-{
-	if (MHandleRetMap.contains(msgHashId))
+	static void MsgRetHandle(const SocketChannelPtr& channel, size_t msgHashId, const string& msgData)
 	{
-		auto& handle = MHandleRetMap[msgHashId];
-		try
+		if (MHandleRetMap.contains(msgHashId))
 		{
-			handle.second(channel, msgData);
+			auto& handle = MHandleRetMap[msgHashId];
+			try
+			{
+				handle.second(channel, msgData);
+			}
+			catch (const exception& e)
+			{
+				DNPrint(0, LoggerLevel::Debug, e.what());
+			}
 		}
-		catch (const exception& e)
+		else
 		{
-			DNPrint(0, LoggerLevel::Debug, e.what());
+			DNPrint(ErrCode::ErrCode_MsgHandleFind, LoggerLevel::Error, nullptr);
 		}
 	}
-	else
-	{
-		DNPrint(ErrCode::ErrCode_MsgHandleFind, LoggerLevel::Error, nullptr);
-	}
-}
 
-void DatabaseMessageHandle::RegMsgHandle()
-{
+	static void RegMsgHandle()
+	{
 #ifdef _WIN32
-#define MSG_MAPPING(map, msg, func) \
+	#define MSG_MAPPING(map, msg, func) \
 		map.emplace(std::hash<string>::_Do_hash(msg::GetDescriptor()->full_name()), \
 		make_pair(msg::internal_default_instance(), &DatabaseMessage::func))
 #elif __unix__
-#define MSG_MAPPING(map, msg, func) \
+	#define MSG_MAPPING(map, msg, func) \
 		map.emplace(std::hash<string>{}(msg::GetDescriptor()->full_name()), \
 		make_pair(msg::internal_default_instance(), &DatabaseMessage::func))
 #endif
 
-	MSG_MAPPING(MHandleMap, L2D_ReqLoadData, Exe_ReqLoadData);
-	MSG_MAPPING(MHandleMap, L2D_ReqSaveData, Exe_ReqSaveData);
+		MSG_MAPPING(MHandleMap, L2D_ReqLoadData, Exe_ReqLoadData);
+		MSG_MAPPING(MHandleMap, L2D_ReqSaveData, Exe_ReqSaveData);
 
-	MSG_MAPPING(MHandleRetMap, COM_RetChangeCtlSrv, Exe_RetChangeCtlSrv);
-}
+		MSG_MAPPING(MHandleRetMap, COM_RetChangeCtlSrv, Exe_RetChangeCtlSrv);
+	}
+public:
+
+	inline static unordered_map<size_t, pair<const Message*, function<void(SocketChannelPtr, uint32_t, string)>>> MHandleMap;
+
+	inline static unordered_map<size_t, pair<const Message*, function<void(SocketChannelPtr, string)>>> MHandleRetMap;
+};

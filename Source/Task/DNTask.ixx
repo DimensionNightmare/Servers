@@ -63,7 +63,8 @@ struct DNTask
 		bool bReturned = false;
 	};
 
-	// Awaitable
+#pragma region Awaitable
+
 	bool await_ready() const noexcept
 	{
 		return tHandle.promise().bReturned;
@@ -82,7 +83,7 @@ struct DNTask
 	void await_resume() noexcept
 	{
 	}
-	// Awaitable
+#pragma endregion
 
 	DNTask(HandleType handle)
 	{
@@ -135,10 +136,12 @@ public:
 	void ClearFlag(DNTaskFlag flag) { oFlags.reset(uint16_t(flag)); }
 
 	size_t& TimerId() { return iTimerId; }
-
 private:
+
 	HandleType tHandle;
+
 	bitset<DNTaskFlagSize()> oFlags;
+
 	size_t iTimerId = 0;
 
 	steady_clock::time_point oTimePoint;
@@ -179,7 +182,8 @@ export struct DNTaskVoid
 		bool bReturned = false;
 	};
 
-	// Awaitable Start
+#pragma region Awaitable Start
+
 	bool await_ready() const noexcept
 	{
 		return tHandle.promise().bReturned;
@@ -193,7 +197,7 @@ export struct DNTaskVoid
 	void await_resume() noexcept
 	{
 	}
-	// Awaitable End
+#pragma endregion
 
 	DNTaskVoid(HandleType handle)
 	{

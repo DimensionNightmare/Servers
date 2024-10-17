@@ -11,10 +11,7 @@ import Macro;
 import ThirdParty.Libhv;
 import ThirdParty.PbGen;
 
-export int HandleDatabaseServerInit(DNServer* server);
-export int HandleDatabaseServerShutdown(DNServer* server);
-
-int HandleDatabaseServerInit(DNServer* server)
+export int HandleDatabaseServerInit(DNServer* server)
 {
 	SetDatabaseServer(static_cast<DatabaseServer*>(server));
 
@@ -122,7 +119,7 @@ int HandleDatabaseServerInit(DNServer* server)
 	return serverProxy->InitDatabase();
 }
 
-int HandleDatabaseServerShutdown(DNServer* server)
+export int HandleDatabaseServerShutdown(DNServer* server)
 {
 	DatabaseServerHelper* serverProxy = GetDatabaseServer();
 

@@ -8,6 +8,7 @@ import Logger;
 
 export class ProxyEntityManager : public EntityManager<ProxyEntity>
 {
+	
 public:
 	ProxyEntityManager() = default;
 

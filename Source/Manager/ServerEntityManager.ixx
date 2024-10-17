@@ -8,6 +8,7 @@ import Logger;
 
 export class ServerEntityManager : public EntityManager<ServerEntity>
 {
+	
 public:
 	ServerEntityManager() = default;
 

@@ -11,10 +11,7 @@ import Macro;
 import ThirdParty.Libhv;
 import ThirdParty.PbGen;
 
-export int HandleGlobalServerInit(DNServer* server);
-export int HandleGlobalServerShutdown(DNServer* server);
-
-int HandleGlobalServerInit(DNServer* server)
+export int HandleGlobalServerInit(DNServer* server)
 {
 	SetGlobalServer(static_cast<GlobalServer*>(server));
 
@@ -200,7 +197,7 @@ int HandleGlobalServerInit(DNServer* server)
 
 }
 
-int HandleGlobalServerShutdown(DNServer* server)
+export int HandleGlobalServerShutdown(DNServer* server)
 {
 	GlobalServerHelper* serverProxy = GetGlobalServer();
 

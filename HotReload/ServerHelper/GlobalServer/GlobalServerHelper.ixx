@@ -14,49 +14,36 @@ import ThirdParty.PbGen;
 
 export class GlobalServerHelper : public GlobalServer
 {
+
 private:
+
 	GlobalServerHelper() = delete;;
 public:
 
 	DNClientProxyHelper* GetCSock() { return nullptr; }
+
 	DNServerProxyHelper* GetSSock() { return nullptr; }
+
 	ServerEntityManagerHelper* GetServerEntityManager() { return nullptr; }
 
-	void UpdateServerGroup();
-};
-
-static GlobalServerHelper* PGlobalServerHelper = nullptr;
-
-export void SetGlobalServer(GlobalServer* server)
-{
-	PGlobalServerHelper = static_cast<GlobalServerHelper*>(server);
-	ASSERT(PGlobalServerHelper != nullptr)
-}
-
-export GlobalServerHelper* GetGlobalServer()
-{
-	return PGlobalServerHelper;
-}
-
-
-void GlobalServerHelper::UpdateServerGroup()
-{
-	ServerEntityManagerHelper* entityMan = GetServerEntityManager();
-
-	list<ServerEntity*> gates = entityMan->GetEntitysByType(ServerType::GateServer);
-	if (gates.empty())
+	void UpdateServerGroup()
 	{
-		return;
-	}
+		ServerEntityManagerHelper* entityMan = GetServerEntityManager();
 
-	list<ServerEntity*> dbs = entityMan->GetEntitysByType(ServerType::DatabaseServer);
-	list<ServerEntity*> logics = entityMan->GetEntitysByType(ServerType::LogicServer);
+		list<ServerEntity*> gates = entityMan->GetEntitysByType(ServerType::GateServer);
+		if (gates.empty())
+		{
+			return;
+		}
 
-	// alloc gate
-	COM_RetChangeCtlSrv request;
-	string binData;
+		list<ServerEntity*> dbs = entityMan->GetEntitysByType(ServerType::DatabaseServer);
+		list<ServerEntity*> logics = entityMan->GetEntitysByType(ServerType::LogicServer);
 
-	auto registControl = [&](ServerEntity* beEntity, ServerEntity* entity)
+		// alloc gate
+		COM_RetChangeCtlSrv request;
+		string binData;
+
+		auto registControl = [&](ServerEntity* beEntity, ServerEntity* entity)
 		{
 			const SocketChannelPtr& channel = entity->GetSock();
 			entity->LinkNode() = beEntity;
@@ -74,39 +61,53 @@ void GlobalServerHelper::UpdateServerGroup()
 			entity->SetSock(nullptr);
 		};
 
-	for (ServerEntity* gate : gates)
-	{
-		if (gate->HasFlag(ServerEntityFlag::Locked))
+		for (ServerEntity* gate : gates)
 		{
-			continue;
-		}
+			if (gate->HasFlag(ServerEntityFlag::Locked))
+			{
+				continue;
+			}
 
-		list<ServerEntity*>& gatesDb = gate->GetMapLinkNode(ServerType::DatabaseServer);
-		list<ServerEntity*>& gatesLogic = gate->GetMapLinkNode(ServerType::LogicServer);
-		if (!dbs.empty() && gatesDb.size() < 1)
-		{
-			ServerEntity* ele = dbs.front();
-			// dbs.pop_front();
-			registControl(gate, ele);
-			entityMan->UnMountEntity(ele->GetServerType(), ele);
-			gatesDb.emplace_back(ele);
-		}
+			list<ServerEntity*>& gatesDb = gate->GetMapLinkNode(ServerType::DatabaseServer);
+			list<ServerEntity*>& gatesLogic = gate->GetMapLinkNode(ServerType::LogicServer);
+			if (!dbs.empty() && gatesDb.size() < 1)
+			{
+				ServerEntity* ele = dbs.front();
+				// dbs.pop_front();
+				registControl(gate, ele);
+				entityMan->UnMountEntity(ele->GetServerType(), ele);
+				gatesDb.emplace_back(ele);
+			}
 
-		if (!logics.empty() && gatesLogic.size() < 1)
-		{
-			ServerEntity* ele = logics.front();
-			// logics.pop_front();
-			registControl(gate, ele);
-			entityMan->UnMountEntity(ele->GetServerType(), ele);
-			gatesLogic.emplace_back(ele);
-		}
+			if (!logics.empty() && gatesLogic.size() < 1)
+			{
+				ServerEntity* ele = logics.front();
+				// logics.pop_front();
+				registControl(gate, ele);
+				entityMan->UnMountEntity(ele->GetServerType(), ele);
+				gatesLogic.emplace_back(ele);
+			}
 
-		if (gatesDb.size() && gatesLogic.size())
-		{
-			// UnMountEntity(gate->GetServerType(), it);
-			gate->SetFlag(ServerEntityFlag::Locked);
-			DNPrint(0, LoggerLevel::Debug, "Gate:%u locked!", gate->ID());
-		}
+			if (gatesDb.size() && gatesLogic.size())
+			{
+				// UnMountEntity(gate->GetServerType(), it);
+				gate->SetFlag(ServerEntityFlag::Locked);
+				DNPrint(0, LoggerLevel::Debug, "Gate:%u locked!", gate->ID());
+			}
 
+		}
 	}
+};
+
+static GlobalServerHelper* PGlobalServerHelper = nullptr;
+
+export void SetGlobalServer(GlobalServer* server)
+{
+	PGlobalServerHelper = static_cast<GlobalServerHelper*>(server);
+	ASSERT(PGlobalServerHelper != nullptr)
+}
+
+export GlobalServerHelper* GetGlobalServer()
+{
+	return PGlobalServerHelper;
 }

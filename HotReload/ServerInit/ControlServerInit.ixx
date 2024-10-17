@@ -11,11 +11,7 @@ import Macro;
 import ThirdParty.Libhv;
 import ThirdParty.PbGen;
 
-export int HandleControlServerInit(DNServer* server);
-export int HandleControlServerShutdown(DNServer* server);
-
-
-int HandleControlServerInit(DNServer* server)
+export int HandleControlServerInit(DNServer* server)
 {
 	SetControlServer(static_cast<ControlServer*>(server));
 
@@ -114,7 +110,7 @@ int HandleControlServerInit(DNServer* server)
 	return true;
 }
 
-int HandleControlServerShutdown(DNServer* server)
+export int HandleControlServerShutdown(DNServer* server)
 {
 	ControlServerHelper* serverProxy = GetControlServer();
 	if (DNServerProxyHelper* serverSock = serverProxy->GetSSock())

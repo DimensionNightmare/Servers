@@ -7,6 +7,7 @@ import ThirdParty.Libhv;
 
 export class NetEntity : public Entity
 {
+	
 protected:
 	//dont new this class
 	NetEntity(uint32_t id) : Entity(id)

@@ -16,6 +16,7 @@ import ThirdParty.RedisPP;
 /// @brief manager client proxys
 export class ClientEntityManager : public EntityManager<ClientEntity>
 {
+	
 public:
 	ClientEntityManager() = default;
 

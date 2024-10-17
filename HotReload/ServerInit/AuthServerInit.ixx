@@ -11,10 +11,7 @@ import Macro;
 import ThirdParty.Libhv;
 import ThirdParty.PbGen;
 
-export int HandleAuthServerInit(DNServer* server);
-export int HandleAuthServerShutdown(DNServer* server);
-
-int HandleAuthServerInit(DNServer* server)
+export int HandleAuthServerInit(DNServer* server)
 {
 	SetAuthServer(static_cast<AuthServer*>(server));
 
@@ -112,7 +109,7 @@ int HandleAuthServerInit(DNServer* server)
 	return serverProxy->InitDatabase();
 }
 
-int HandleAuthServerShutdown(DNServer* server)
+export int HandleAuthServerShutdown(DNServer* server)
 {
 	AuthServerHelper* serverProxy = GetAuthServer();
 

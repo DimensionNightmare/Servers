@@ -8,6 +8,7 @@ import ThirdParty.Libhv;
 export template<class TEntity = Entity>
 class EntityManager
 {
+	
 public:
 	/// @brief timer manager create
 	EntityManager()

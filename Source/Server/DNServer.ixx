@@ -24,15 +24,32 @@ export enum class ServerType : uint8_t
 
 export class DNServer
 {
-public:
-	DNServer();
-	virtual ~DNServer();
 
 public:
 
-	virtual bool Init();
+	DNServer()
+	{
+	}
 
-	virtual void InitCmd(unordered_map<string, function<void(stringstream*)>>& cmdMap) { pCmdMap = &cmdMap; }
+	virtual ~DNServer()
+	{
+	}
+
+	virtual bool Init()
+	{
+		string* value = GetLuanchConfigParam("svrIndex");
+		if (value)
+		{
+			iServerId = stoi(*value);
+		}
+
+		return true;
+	}
+
+	virtual void InitCmd(unordered_map<string, function<void(stringstream*)>>& cmdMap) 
+	{ 
+		pCmdMap = &cmdMap; 
+	}
 
 	virtual bool Start() = 0;
 
@@ -50,14 +67,15 @@ public:
 
 	bool& IsRun() { return bInRun; }
 
-	virtual void TickMainFrame();
+	virtual void TickMainFrame(){}
 
 public: // dll override
+
 	DNl10n* pDNl10nInstance = nullptr;
 
 	unordered_map<string, string>* pLuanchConfig = nullptr;
-
 protected:
+
 	ServerType emServerType = ServerType::None;
 
 	bool bInRun = false;
@@ -68,27 +86,3 @@ protected:
 
 	unordered_map<string, function<void(stringstream*)>>* pCmdMap = nullptr;
 };
-
-DNServer::DNServer()
-{
-}
-
-DNServer::~DNServer()
-{
-}
-
-bool DNServer::Init()
-{
-	string* value = GetLuanchConfigParam("svrIndex");
-	if (value)
-	{
-		iServerId = stoi(*value);
-	}
-
-	return true;
-}
-
-void DNServer::TickMainFrame()
-{
-
-}

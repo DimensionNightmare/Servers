@@ -12,10 +12,7 @@ import Macro;
 import ThirdParty.Libhv;
 import ThirdParty.PbGen;
 
-export int HandleGateServerInit(DNServer* server);
-export int HandleGateServerShutdown(DNServer* server);
-
-int HandleGateServerInit(DNServer* server)
+export int HandleGateServerInit(DNServer* server)
 {
 	SetGateServer(static_cast<GateServer*>(server));
 
@@ -209,7 +206,7 @@ int HandleGateServerInit(DNServer* server)
 	return true;
 }
 
-int HandleGateServerShutdown(DNServer* server)
+export int HandleGateServerShutdown(DNServer* server)
 {
 	GateServerHelper* serverProxy = GetGateServer();
 

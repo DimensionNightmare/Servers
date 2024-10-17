@@ -1,6 +1,4 @@
 module;
-#include "hv/EventLoop.h"
-#include "hv/hsocket.h"
 #include "StdMacro.h"
 export module DNClientProxy;
 
@@ -19,13 +17,16 @@ export enum class RegistState : uint8_t
 
 class TcpClientTmplTemp : public EventLoopThread, public TcpClientEventLoopTmpl<SocketChannel>
 {
+
 public:
-	TcpClientTmplTemp(EventLoopPtr loop = NULL)
+
+	TcpClientTmplTemp(EventLoopPtr loop = nullptr)
 		: EventLoopThread(loop)
 		, TcpClientEventLoopTmpl<SocketChannel>(EventLoopThread::loop())
-		, is_loop_owner(loop == NULL)
+		, is_loop_owner(loop == nullptr)
 	{
 	}
+
 	virtual ~TcpClientTmplTemp()
 	{
 		stop(true);
@@ -62,85 +63,29 @@ public:
 			EventLoopThread::stop(wait_threads_stopped);
 		}
 	}
-
 private:
+
 	bool is_loop_owner;
 };
 
 export class DNClientProxy : public TcpClientTmplTemp
 {
+
 public:
-	DNClientProxy();
-	~DNClientProxy();
 
-	void Init();
-
-	void Start();
-
-	void End();
-
-public: // dll override
-	void TickRegistEvent(size_t timerID);
-
-	void MessageTimeoutTimer(uint64_t timerID);
-	uint64_t CheckMessageTimeoutTimer(uint32_t breakTime, uint32_t msgId);
-
-	const EventLoopPtr& Timer() { return pLoop->loop(); }
-
-	void AddTimerRecord(size_t timerId, uint32_t id);
-
-	void TickHeartbeat();
-
-	void InitConnectedChannel(const SocketChannelPtr& chanhel);
-
-	void RedirectClient(uint16_t port, string ip);
-
-	bool AddMsg(uint32_t msgId, DNTask<Message*>* task, uint32_t breakTime);
-
-	uint8_t& RegistType() { return iRegistType; }
-
-	uint32_t GetMsgId() { return ++iMsgId; }
-
-	const SocketChannelPtr& GetChannel() { return channel; }
-
-protected: // dll proxy
-	shared_ptr<EventLoopThread> pLoop;
-	// only oddnumber
-	atomic<uint32_t> iMsgId;
-	// unordered_
-	unordered_map<uint32_t, DNTask<Message*>* > mMsgList;
-	//
-	unordered_map<uint64_t, uint32_t > mMapTimer;
-	// status
-	RegistState eRegistState = RegistState::None;
-	uint8_t iRegistType = 0;
-
-	function<void()> pRegistEvent;
-
-	shared_mutex oMsgMutex;
-	shared_mutex oTimerMutex;
-};
-
-extern "C"
-{
-	REGIST_MAINSPACE_SIGN_FUNCTION(DNClientProxy, InitConnectedChannel);
-	REGIST_MAINSPACE_SIGN_FUNCTION(DNClientProxy, CheckMessageTimeoutTimer);
-	REGIST_MAINSPACE_SIGN_FUNCTION(DNClientProxy, RedirectClient);
-}
-
-DNClientProxy::DNClientProxy()
+	DNClientProxy()
 {
 	pLoop = make_shared<EventLoopThread>();
 }
 
-DNClientProxy::~DNClientProxy()
+	~DNClientProxy()
 {
 	pLoop = nullptr;
 	mMsgList.clear();
 	mMapTimer.clear();
 }
 
-void DNClientProxy::Init()
+	void Init()
 {
 	shared_ptr<reconn_setting_t> reconn = make_shared<reconn_setting_t>();
 	reconn->min_delay = 1000;
@@ -158,19 +103,20 @@ void DNClientProxy::Init()
 
 }
 
-void DNClientProxy::Start()
+	void Start()
 {
 	pLoop->start();
 	start();
 }
 
-void DNClientProxy::End()
+	void End()
 {
 	pLoop->stop(true);
 	stop(true);
 }
+public: // dll override
 
-void DNClientProxy::TickRegistEvent(size_t timerID)
+	void TickRegistEvent(size_t timerID)
 {
 	if (eRegistState == RegistState::Registing)
 	{
@@ -194,7 +140,7 @@ void DNClientProxy::TickRegistEvent(size_t timerID)
 	}
 }
 
-void DNClientProxy::MessageTimeoutTimer(uint64_t timerID)
+	void MessageTimeoutTimer(uint64_t timerID)
 {
 	uint32_t msgId = -1;
 	{
@@ -220,7 +166,7 @@ void DNClientProxy::MessageTimeoutTimer(uint64_t timerID)
 	}
 }
 
-uint64_t DNClientProxy::CheckMessageTimeoutTimer(uint32_t breakTime, uint32_t msgId)
+	uint64_t CheckMessageTimeoutTimer(uint32_t breakTime, uint32_t msgId)
 {
 	uint64_t timerId = Timer()->setTimeout(breakTime, std::bind(&DNClientProxy::MessageTimeoutTimer, this, placeholders::_1));
 	unique_lock<shared_mutex> ulock(oTimerMutex);
@@ -228,13 +174,15 @@ uint64_t DNClientProxy::CheckMessageTimeoutTimer(uint32_t breakTime, uint32_t ms
 	return timerId;
 }
 
-void DNClientProxy::AddTimerRecord(size_t timerId, uint32_t id)
+	const EventLoopPtr& Timer() { return pLoop->loop(); }
+
+	void AddTimerRecord(size_t timerId, uint32_t id)
 {
 	unique_lock<shared_mutex> ulock(oTimerMutex);
 	mMapTimer.emplace(timerId, id);
 }
 
-void DNClientProxy::TickHeartbeat()
+	void TickHeartbeat()
 {
 	COM_RetHeartbeat request;
 	request.Clear();
@@ -247,7 +195,7 @@ void DNClientProxy::TickHeartbeat()
 	MessagePackAndSend(0, MsgDeal::Ret, request.GetDescriptor()->full_name().c_str(), binData, GetChannel());
 }
 
-void DNClientProxy::InitConnectedChannel(const SocketChannelPtr& chanhel)
+	void InitConnectedChannel(const SocketChannelPtr& chanhel)
 {
 	// chanhel->setHeartbeat(4000, std::bind(&DNClientProxy::TickHeartbeat, this));
 	// channel->setWriteTimeout(12000);
@@ -257,7 +205,7 @@ void DNClientProxy::InitConnectedChannel(const SocketChannelPtr& chanhel)
 	}
 }
 
-void DNClientProxy::RedirectClient(uint16_t port, string ip)
+	void RedirectClient(uint16_t port, string ip)
 {
 	DNPrint(0, LoggerLevel::Debug, "reclient to %s:%u", ip.c_str(), port);
 
@@ -270,7 +218,7 @@ void DNClientProxy::RedirectClient(uint16_t port, string ip)
 		});
 }
 
-bool DNClientProxy::AddMsg(uint32_t msgId, DNTask<Message*>* task, uint32_t breakTime)
+	bool AddMsg(uint32_t msgId, DNTask<Message*>* task, uint32_t breakTime)
 {
 	unique_lock<shared_mutex> ulock(oMsgMutex);
 	mMsgList.emplace(msgId, task);
@@ -280,4 +228,42 @@ bool DNClientProxy::AddMsg(uint32_t msgId, DNTask<Message*>* task, uint32_t brea
 		task->TimerId() = CheckMessageTimeoutTimer(breakTime, msgId);
 	}
 	return true;
+	}
+
+	uint8_t& RegistType() { return iRegistType; }
+
+	uint32_t GetMsgId() { return ++iMsgId; }
+
+	const SocketChannelPtr& GetChannel() { return channel; }
+
+protected: // dll proxy
+
+	shared_ptr<EventLoopThread> pLoop;
+
+	// only oddnumber
+	atomic<uint32_t> iMsgId;
+
+	// unordered_
+	unordered_map<uint32_t, DNTask<Message*>* > mMsgList;
+
+	//
+	unordered_map<uint64_t, uint32_t > mMapTimer;
+
+	// status
+	RegistState eRegistState = RegistState::None;
+
+	uint8_t iRegistType = 0;
+
+	function<void()> pRegistEvent;
+
+	shared_mutex oMsgMutex;
+
+	shared_mutex oTimerMutex;
+};
+
+extern "C"
+{
+	REGIST_MAINSPACE_SIGN_FUNCTION(DNClientProxy, InitConnectedChannel);
+	REGIST_MAINSPACE_SIGN_FUNCTION(DNClientProxy, CheckMessageTimeoutTimer);
+	REGIST_MAINSPACE_SIGN_FUNCTION(DNClientProxy, RedirectClient);
 }

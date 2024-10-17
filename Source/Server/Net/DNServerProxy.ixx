@@ -1,6 +1,4 @@
 module;
-#include "hv/EventLoop.h"
-
 #include "StdMacro.h"
 export module DNServerProxy;
 
@@ -12,11 +10,13 @@ import ThirdParty.PbGen;
 
 class TcpServerTmplTemp : public EventLoopThread, public TcpServerEventLoopTmpl<SocketChannel>
 {
+
 public:
-	TcpServerTmplTemp(EventLoopPtr loop = NULL)
+
+	TcpServerTmplTemp(EventLoopPtr loop = nullptr)
 		: EventLoopThread(loop)
 		, TcpServerEventLoopTmpl<SocketChannel>(EventLoopThread::loop())
-		, is_loop_owner(loop == NULL)
+		, is_loop_owner(loop == nullptr)
 	{
 	}
 
@@ -46,83 +46,42 @@ public:
 		}
 		TcpServerEventLoopTmpl<SocketChannel>::stop(wait_threads_stopped);
 	}
-
 private:
+
 	bool is_loop_owner;
 };
 
 export class DNServerProxy : public TcpServerTmplTemp
 {
-public:
-	DNServerProxy();
-	~DNServerProxy();
-
-	void Init();
-
-	void Start();
-
-	void End();
-
-public: // dll override
-	void InitConnectedChannel(const SocketChannelPtr& channel);
-
-	void MessageTimeoutTimer(uint64_t timerID);
-	void ChannelTimeoutTimer(uint64_t timerID);
-
-	const EventLoopPtr& Timer() { return pLoop->loop(); }
-	void AddTimerRecord(size_t timerId, uint32_t id);
-
-	void CheckChannelByTimer(SocketChannelPtr channel);
-	uint64_t CheckMessageTimeoutTimer(uint32_t breakTime, uint32_t msgId);
 
 public:
-	// cant init in tcpclient this class
-	shared_ptr<EventLoopThread> pLoop;
 
-protected:
-	// only oddnumber
-	atomic<uint32_t> iMsgId;
-	// unordered_
-	unordered_map<uint32_t, DNTask<Message*>* > mMsgList;
-	//
-	unordered_map<uint64_t, uint32_t > mMapTimer;
-
-	shared_mutex oMsgMutex;
-	shared_mutex oTimerMutex;
-};
-
-extern "C"
-{
-	REGIST_MAINSPACE_SIGN_FUNCTION(DNServerProxy, InitConnectedChannel);
-	REGIST_MAINSPACE_SIGN_FUNCTION(DNServerProxy, CheckMessageTimeoutTimer);
-}
-
-DNServerProxy::DNServerProxy()
+	DNServerProxy()
 {
 	pLoop = make_shared<EventLoopThread>();
 }
 
-DNServerProxy::~DNServerProxy()
+	~DNServerProxy()
 {
 	pLoop = nullptr;
 	mMsgList.clear();
 	mMapTimer.clear();
 }
 
-void DNServerProxy::Init()
+	void Init()
 {
 	// if not set port mean need get port by self 
 	if (!port && listenfd > 0)
 	{
-		struct sockaddr_in addr;
-		socklen_t addrLen = sizeof(addr);
-		if (getsockname(listenfd, reinterpret_cast<struct sockaddr*>(&addr), &addrLen) < 0)
+			sockaddr_in addr;
+			int addrLen = sizeof(addr);
+			if (LibhvExport::getsockname(listenfd, reinterpret_cast<struct sockaddr*>(&addr), &addrLen) < 0)
 		{
 			DNPrint(ErrCode::ErrCode_GetSocketName, LoggerLevel::Error, nullptr);
 			return;
 		}
 
-		port = ntohs(addr.sin_port);
+			port = LibhvExport::ntohs(addr.sin_port);
 	}
 
 	shared_ptr<unpack_setting_t> setting = make_shared<unpack_setting_t>();
@@ -135,19 +94,21 @@ void DNServerProxy::Init()
 	setThreadNum(4);
 }
 
-void DNServerProxy::Start()
+	void Start()
 {
 	pLoop->start();
 	start();
 }
 
-void DNServerProxy::End()
+	void End()
 {
 	pLoop->stop(true);
 	stop(true);
 }
 
-void DNServerProxy::InitConnectedChannel(const SocketChannelPtr& channel)
+public: // dll override
+
+	void InitConnectedChannel(const SocketChannelPtr& channel)
 {
 	// if not regist
 	CheckChannelByTimer(channel);
@@ -156,7 +117,7 @@ void DNServerProxy::InitConnectedChannel(const SocketChannelPtr& channel)
 	// channel->setReadTimeout(15000);
 }
 
-void DNServerProxy::MessageTimeoutTimer(uint64_t timerID)
+	void MessageTimeoutTimer(uint64_t timerID)
 {
 	uint32_t id = -1;
 	{
@@ -183,7 +144,7 @@ void DNServerProxy::MessageTimeoutTimer(uint64_t timerID)
 
 }
 
-void DNServerProxy::ChannelTimeoutTimer(uint64_t timerID)
+	void ChannelTimeoutTimer(uint64_t timerID)
 {
 	uint32_t id = -1;
 	{
@@ -210,22 +171,45 @@ void DNServerProxy::ChannelTimeoutTimer(uint64_t timerID)
 
 }
 
-void DNServerProxy::AddTimerRecord(size_t timerId, uint32_t id)
+	const EventLoopPtr& Timer() { return pLoop->loop(); }
+
+	void AddTimerRecord(size_t timerId, uint32_t id)
 {
 	unique_lock<shared_mutex> ulock(oTimerMutex);
 	mMapTimer.emplace(timerId, id);
 }
 
-void DNServerProxy::CheckChannelByTimer(SocketChannelPtr channel)
+	void CheckChannelByTimer(SocketChannelPtr channel)
 {
 	size_t timerId = Timer()->setTimeout(5000, std::bind(&DNServerProxy::ChannelTimeoutTimer, this, placeholders::_1));
 	AddTimerRecord(timerId, channel->id());
 }
-
-uint64_t DNServerProxy::CheckMessageTimeoutTimer(uint32_t breakTime, uint32_t msgId)
+	uint64_t CheckMessageTimeoutTimer(uint32_t breakTime, uint32_t msgId)
 {
 	uint64_t timerId = Timer()->setTimeout(breakTime, std::bind(&DNServerProxy::MessageTimeoutTimer, this, placeholders::_1));
 	unique_lock<shared_mutex> ulock(oTimerMutex);
 	mMapTimer[timerId] = msgId;
 	return timerId;
+	}
+public:
+	// cant init in tcpclient this class
+	shared_ptr<EventLoopThread> pLoop;
+
+protected:
+	// only oddnumber
+	atomic<uint32_t> iMsgId;
+	// unordered_
+	unordered_map<uint32_t, DNTask<Message*>* > mMsgList;
+	//
+	unordered_map<uint64_t, uint32_t > mMapTimer;
+
+	shared_mutex oMsgMutex;
+	
+	shared_mutex oTimerMutex;
+};
+
+extern "C"
+{
+	REGIST_MAINSPACE_SIGN_FUNCTION(DNServerProxy, InitConnectedChannel);
+	REGIST_MAINSPACE_SIGN_FUNCTION(DNServerProxy, CheckMessageTimeoutTimer);
 }

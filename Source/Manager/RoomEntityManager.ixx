@@ -8,6 +8,7 @@ import Logger;
 
 export class RoomEntityManager : public EntityManager<RoomEntity>
 {
+	
 public:
 	RoomEntityManager() = default;
 	~RoomEntityManager() = default;

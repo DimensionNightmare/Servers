@@ -5,22 +5,20 @@ import ThirdParty.Libhv;
 
 export class DNWebProxy : public HttpServer
 {
+
 public:
+
 	DNWebProxy() = default;
+
 	~DNWebProxy() = default;
 
-	int Start();
+	int Start()
+	{
+		return start();
+	}
 
-	void End();
-public: // dll override
+	void End()
+	{
+		stop();
+	}
 };
-
-int DNWebProxy::Start()
-{
-	return start();
-}
-
-void DNWebProxy::End()
-{
-	stop();
-}

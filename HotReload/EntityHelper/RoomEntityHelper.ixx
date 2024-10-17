@@ -7,7 +7,4 @@ export class RoomEntityHelper : public RoomEntity
 {
 private:
 	RoomEntityHelper() = delete;
-public:
-
 };
-

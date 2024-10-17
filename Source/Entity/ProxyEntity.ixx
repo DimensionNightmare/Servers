@@ -7,6 +7,7 @@ import NetEntity;
 /// @brief this is client proxy entity
 export class ProxyEntity : public NetEntity
 {
+	
 public:
 
 	ProxyEntity() : NetEntity(0)

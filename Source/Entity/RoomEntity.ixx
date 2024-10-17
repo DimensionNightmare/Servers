@@ -7,6 +7,7 @@ import NetEntity;
 /// @brief room mean set/team/... client collection.
 export class RoomEntity : public NetEntity
 {
+	
 public:
 
 	RoomEntity() : NetEntity(0)

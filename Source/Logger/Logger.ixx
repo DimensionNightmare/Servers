@@ -1,6 +1,7 @@
 module;
-#include "StdMacro.h"
 #include <cstdarg>
+
+#include "StdMacro.h"
 export module Logger;
 
 import StrUtils;

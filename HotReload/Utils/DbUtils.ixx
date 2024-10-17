@@ -413,9 +413,19 @@ public:
 export template <class TMessage = Message>
 class DbSqlHelper : public IDbSqlHelper
 {
+
 public:
-	DbSqlHelper(dbtransaction* work, TMessage* = nullptr);
-	virtual ~DbSqlHelper();
+
+	DbSqlHelper(dbtransaction* work, TMessage* entity = nullptr)
+	{
+		pWork = work;
+		pEntity = entity;
+	}
+
+	virtual ~DbSqlHelper()
+	{
+		ReleaseResult();
+	}
 
 	const string& GetName() { return pEntity->GetDescriptor()->name(); }
 
@@ -423,31 +433,486 @@ public:
 
 	uint32_t ResultCount() { return iQueryCount; }
 
-	bool Commit();
-	// create table
-	DbSqlHelper<TMessage>& CreateTable();
+	bool Commit()
+	{
+		BuildSqlStatement();
 
-	DbSqlHelper<TMessage>& UpdateTable();
+		if (!pWork || sSqlStatement.empty())
+		{
+			return false;
+		}
+
+		DNPrint(0, LoggerLevel::Debug, "%s ", sSqlStatement.c_str());
+
+		pq_result result = pWork->exec(sSqlStatement);
+
+		if (eType == SqlOpType::Query)
+		{
+			if (!iQueryCount)
+			{
+				PaserQuery(result);
+			}
+			else
+			{
+				iQueryCount = result[0][0].as<uint32_t>();
+			}
+
+			iLimitCount = 0;
+		}
+
+		SetResult(result.affected_rows());
+
+		return true;
+	}
+
+	// create table
+	DbSqlHelper<TMessage>& CreateTable()
+	{
+		ChangeSqlType(SqlOpType::CreateTable);
+
+		const Descriptor* descriptor = pEntity->GetDescriptor();
+
+		list<string> primaryKey;
+
+		for (int i = 0; i < descriptor->field_count(); i++)
+		{
+			const FieldDescriptor* field = descriptor->field(i);
+
+			// should init table
+			if (field->is_repeated() && field->cpp_type() == FieldDescriptor::CPPTYPE_MESSAGE)
+			{
+				throw runtime_error("Not imp!!!");
+			}
+
+			list<string> params;
+			InitFieldByProtoType(field, params, primaryKey);
+
+			// unregist type
+			if (params.size() == 0)
+			{
+				continue;
+			}
+
+			mEles.emplace(make_pair(field->name(), params));
+		}
+
+		if (mEles.contains(SPrimaryKey))
+		{
+			throw invalid_argument("Not Allow Exist 'PRIMARY KEY' map key!");
+		}
+
+		if (primaryKey.size())
+		{
+			string temp = SSMBegin;
+			for (auto it = primaryKey.begin(); it != primaryKey.end(); it++)
+			{
+				temp += *it;
+
+				if (next(it) != primaryKey.end())
+				{
+					temp += SSplit;
+				}
+			}
+
+			temp += SSMEnd;
+
+			primaryKey.clear();
+			primaryKey.emplace_back(temp);
+
+			mEles.emplace(make_pair(SPrimaryKey, primaryKey));
+		}
+
+		return *this;
+	}
+
+	DbSqlHelper<TMessage>& UpdateTable()
+	{
+		ChangeSqlType(SqlOpType::UpdateTable);
+
+		pq_result result = pWork->exec(vformat(SqlTableColQuery, make_format_args(GetName())));
+
+		unordered_map<string, int> sqlColInfo;
+
+		for (int row = 0; row < result.size(); row++)
+		{
+			const string& name = result[row][0].as<string>();
+
+			sqlColInfo[name] = row;
+
+		}
+
+		const Descriptor* descriptor = pEntity->GetDescriptor();
+
+		// clear CONSTRAINT
+		// result = pWork->exec( format("SELECT conname FROM pg_constraint WHERE conrelid = '{}'::regclass;", GetName()) );
+		// for (int row = 0; row < result.size(); row++)
+		// {
+		// 	pWork->exec(format("ALTER TABLE {} DROP CONSTRAINT {};", GetName(), result[0][0].as<string>()));
+		// }
+
+		list<string> primaryKey;
+		string tempstr;
+		string opTypeStr = GetOpTypeBySqlOpType(eType);
+
+		// check col
+		for (int i = 0; i < descriptor->field_count(); i++)
+		{
+			const string& colName = descriptor->field(i)->name();
+			list<string> params;
+
+			const FieldDescriptor* field = descriptor->field(i);
+
+			// update col
+			if (sqlColInfo.contains(colName))
+			{
+				InitFieldByProtoType(field, params, primaryKey);
+
+				// can not null
+				if (!field->is_optional())
+				{
+					params.remove(SNOTNULL);
+				}
+
+				// change type
+				for (string& param : params)
+				{
+					tempstr += param + " ";
+				}
+
+				mEles[""].emplace_back(format("{0}\"{1}\" ADD COLUMN new_{2} {3};\nUPDATE \"{1}\" SET new_{2} = {2};\n{0}\"{1}\" DROP COLUMN {2};\n{0}\"{1}\" RENAME COLUMN new_{2} TO {2};\n", opTypeStr, GetName(), colName, tempstr));
+
+				cout << mEles[""].back() << endl;
+
+				if (!field->is_optional())
+				{
+					mEles[""].emplace_back(format("{0}\"{1}\" ALTER COLUMN {2} SET NOT NULL;\n", opTypeStr, GetName(), colName));
+
+					cout << mEles[""].back() << endl;
+				}
+
+				tempstr.clear();
+
+				// already deal remove 
+				sqlColInfo.erase(colName);
+			}
+			// create col
+			else
+			{
+				InitFieldByProtoType(descriptor->field(i), params, primaryKey);
+				for (string& param : params)
+				{
+					tempstr += param + " ";
+				}
+				// ALTER TABLE table_name ADD COLUMN column_name data_type [column_constraint];
+				mEles[""].emplace_back(format("{}\"{}\" ADD COLUMN {} {};\n", opTypeStr, GetName(), colName, tempstr));
+				tempstr.clear();
+			}
+
+		}
+
+		// remove col
+		for (auto& iter : sqlColInfo)
+		{
+			mEles[""].emplace_back(format("{}\"{}\" DROP COLUMN {};\n", opTypeStr, GetName(), iter.first));
+		}
+
+		return *this;
+	}
 
 	// insert
-	DbSqlHelper<TMessage>& Insert(bool bSetDefault = false);
+	DbSqlHelper<TMessage>& Insert(bool bSetDefault = false)
+	{
+		ChangeSqlType(SqlOpType::Insert);
+
+		const Descriptor* descriptor = pEntity->GetDescriptor();
+		const Reflection* reflection = pEntity->GetReflection();
+
+		string value;
+
+		string nowTime = to_string(time_point_cast<nanoseconds>(system_clock::now()).time_since_epoch().count());
+
+		for (int i = 0; i < descriptor->field_count(); i++)
+		{
+			const FieldDescriptor* field = descriptor->field(i);
+
+			const FieldOptions& options = field->options();
+
+			// if primary_key and not other ext. throw
+			if (options.GetExtension(ext_primary_key) && !options.GetExtension(ext_autogen) && !reflection->HasField(*pEntity, field))
+			{
+				throw invalid_argument(format("Insert <{}> Data Not Set primary_key <{}> Data!", GetName(), field->name()));
+			}
+
+			value.clear();
+
+			if (reflection->HasField(*pEntity, field))
+			{
+				GetFieldValueByProtoType(field, reflection, *pEntity, value);
+			}
+
+			if (!value.empty())
+			{
+
+			}
+			// can not null
+			else if (value.empty() && !field->is_optional())
+			{
+				if (const string& defaultStr = options.GetExtension(ext_default); !defaultStr.empty())
+				{
+					value = defaultStr;
+				}
+				else if (bSetDefault)
+				{
+					if (options.GetExtension(ext_datetime))
+					{
+						value = nowTime;
+					}
+					else
+					{
+						GetFieldDefaultValueByProtoType(field, value);
+					}
+				}
+				else
+				{
+					continue;
+				}
+			}
+			else
+			{
+				continue;
+			}
+
+
+			mEles[field->name()].emplace_back(value);
+		}
+
+		return *this;
+	}
 
 	// query
-	DbSqlHelper<TMessage>& SelectOne(const char* name, ...);
+	DbSqlHelper<TMessage>& SelectOne(const char* name, ...)
+	{
+		ChangeSqlType(SqlOpType::Query);
 
-	DbSqlHelper<TMessage>& SelectByKey(const char* name, ...);
+		const Descriptor* descriptor = pEntity->GetDescriptor();
+		const Reflection* reflection = pEntity->GetReflection();
 
-	DbSqlHelper<TMessage>& SelectAll(bool foreach = false, bool quertCount = false);
+		if (mEles.contains(SSELECTALL))
+		{
+			throw invalid_argument("exist other select statement!!");
+		}
 
-	DbSqlHelper<TMessage>& SelectCond(const char* name, const char* cond, const char* splicing, ...);
+		if (const FieldDescriptor* field = descriptor->FindFieldByLowercaseName(name))
+		{
+			string name = field->name();
+			DirectFieldNameByProtoType(field, name);
+			mEles[name];
+		}
 
-	DbSqlHelper<TMessage>& UpdateOne(const char* name, ...);
+		return *this;
+	}
 
-	DbSqlHelper<TMessage>& UpdateByKey(const char* name, ...);
+	DbSqlHelper<TMessage>& SelectByKey(const char* name, ...)
+	{
+		ChangeSqlType(SqlOpType::Query);
+		const Descriptor* descriptor = pEntity->GetDescriptor();
+		const Reflection* reflection = pEntity->GetReflection();
 
-	DbSqlHelper<TMessage>& UpdateCond(const char* name, const char* cond, const char* splicing, ...);
+		const FieldDescriptor* field = descriptor->FindFieldByLowercaseName(name);
+		if (!field)
+		{
+			return *this;
+		}
 
-	DbSqlHelper<TMessage>& DeleteCond(const char* name, const char* cond, const char* splicing, ...);
+		const FieldOptions& options = field->options();
+		if (!options.GetExtension(ext_primary_key))
+		{
+			throw invalid_argument(format(" {} is not table {} key!", name, GetName()));
+			return *this;
+		}
+
+		string value;
+		GetFieldValueByProtoType(field, reflection, *pEntity, value);
+
+		if (value.empty())
+		{
+			throw invalid_argument(format(" table {} key is not set!", GetName()));
+			return *this;
+		}
+
+		mEles[SSELECTALL].emplace_back(format("{}={}", field->name(), value));
+
+		return *this;
+	}
+
+	DbSqlHelper<TMessage>& SelectAll(bool foreach = false, bool quertCount = false)
+	{
+		ChangeSqlType(SqlOpType::Query);
+
+		// not default
+		if (foreach)
+		{
+			const Descriptor* descriptor = pEntity->GetDescriptor();
+			for (int i = 0; i < descriptor->field_count(); i++)
+			{
+				SelectOne(descriptor->field(i)->lowercase_name().c_str());
+			}
+			return *this;
+		}
+
+		// not default
+		iQueryCount = quertCount;
+
+		mEles[SSELECTALL];
+
+		if (mEles.size() > 1)
+		{
+			throw invalid_argument("exist other select statement!!");
+		}
+
+		return *this;
+	}
+
+	DbSqlHelper<TMessage>& SelectCond(const char* name, const char* cond, const char* splicing, ...)
+	{
+		const Descriptor* descriptor = pEntity->GetDescriptor();
+		const Reflection* reflection = pEntity->GetReflection();
+
+		const FieldDescriptor* field = descriptor->FindFieldByLowercaseName(name);
+		if (!field)
+		{
+			return *this;
+		}
+
+		string value;
+		GetFieldValueByProtoType(field, reflection, *pEntity, value);
+
+		value = string() + splicing + name + cond + value;
+
+		if (mEles.contains(SSELECTALL))
+		{
+			mEles[SSELECTALL].emplace_back(value);
+		}
+		else
+		{
+			mEles.begin()->second.emplace_back(value);
+		}
+
+		return *this;
+	}
+
+	DbSqlHelper<TMessage>& UpdateOne(const char* name, ...)
+	{
+		ChangeSqlType(SqlOpType::Update);
+
+		const Descriptor* descriptor = pEntity->GetDescriptor();
+		const Reflection* reflection = pEntity->GetReflection();
+
+		const FieldDescriptor* field = descriptor->FindFieldByLowercaseName(name);
+		if (!field)
+		{
+			return *this;
+		}
+
+		string value;
+		GetFieldValueByProtoType(field, reflection, *pEntity, value);
+
+		mEles[SUPDATE].emplace_back(format("{}={}", field->name(), value));
+
+		return *this;
+	}
+
+	DbSqlHelper<TMessage>& UpdateByKey(const char* name, ...)
+	{
+		ChangeSqlType(SqlOpType::Update);
+		const Descriptor* descriptor = pEntity->GetDescriptor();
+		const Reflection* reflection = pEntity->GetReflection();
+
+		const FieldDescriptor* field = descriptor->FindFieldByLowercaseName(name);
+		if (!field)
+		{
+			return *this;
+		}
+
+		const FieldOptions& options = field->options();
+		if (!options.GetExtension(ext_primary_key))
+		{
+			throw invalid_argument(format(" {} is not table {} key!", name, GetName()));
+			return *this;
+		}
+
+		string value;
+		GetFieldValueByProtoType(field, reflection, *pEntity, value);
+
+		if (value.empty())
+		{
+			throw invalid_argument(format(" table {} key is not set!", GetName()));
+			return *this;
+		}
+
+		mEles[SUPDATECOND].emplace_back(format("{}={}", field->name(), value));
+
+		for (int i = 0; i < descriptor->field_count(); i++)
+		{
+			if (field != descriptor->field(i) && reflection->HasField(*pEntity, field))
+			{
+				UpdateOne(descriptor->field(i)->lowercase_name().c_str());
+			}
+		}
+
+		if (mEles[SUPDATE].empty())
+		{
+			throw invalid_argument(format(" table {} Not Update Data!", GetName()));
+		}
+
+		return *this;
+	}
+
+	DbSqlHelper<TMessage>& UpdateCond(const char* name, const char* cond, const char* splicing, ...)
+	{
+		ChangeSqlType(SqlOpType::Update);
+
+		const Descriptor* descriptor = pEntity->GetDescriptor();
+		const Reflection* reflection = pEntity->GetReflection();
+
+		const FieldDescriptor* field = descriptor->FindFieldByLowercaseName(name);
+		if (!field)
+		{
+			return *this;
+		}
+
+		string value;
+		GetFieldValueByProtoType(field, reflection, *pEntity, value);
+		value = string() + splicing + name + cond + value;
+
+		mEles[SUPDATECOND].emplace_back(value);
+
+		return *this;
+	}
+
+	DbSqlHelper<TMessage>& DeleteCond(const char* name, const char* cond, const char* splicing, ...)
+	{
+		ChangeSqlType(SqlOpType::Delete);
+
+		const Descriptor* descriptor = pEntity->GetDescriptor();
+		const Reflection* reflection = pEntity->GetReflection();
+
+		const FieldDescriptor* field = descriptor->FindFieldByLowercaseName(name);
+		if (!field)
+		{
+			return *this;
+		}
+
+		string value;
+
+		GetFieldValueByProtoType(field, reflection, *pEntity, value);
+
+		value = string() + splicing + name + cond + value;
+
+		mEles[SUPDATECOND].emplace_back(value);
+
+		return *this;
+	}
 
 	[[nodiscard]]
 	bool IsSuccess()
@@ -457,31 +922,432 @@ public:
 		return success;
 	}
 
-	bool IsExist();
+	bool IsExist()
+	{
+		return pWork->query_value<bool>(format("SELECT EXISTS ( SELECT 1 FROM pg_catalog.pg_tables WHERE schemaname = 'public' AND tablename = '{}');", GetName()));
+	}
 
-	DbSqlHelper<TMessage>& Limit(uint32_t limit);
+	DbSqlHelper<TMessage>& Limit(uint32_t limit)
+	{
+		if (iQueryCount)
+		{
+			throw invalid_argument("Exist Limit Cant use count(*)");
+		}
 
-	string GetBuildSqlStatement();
+		iLimitCount = limit;
 
-	DbSqlHelper<TMessage>& InitEntity(TMessage& entity);
+		return *this;
+	}
 
-	string GetTableSchemaMd5();
+	string GetBuildSqlStatement()
+	{
+		BuildSqlStatement();
+		return sSqlStatement;
+	}
 
+	DbSqlHelper<TMessage>& InitEntity(TMessage& entity)
+	{
+		pEntity = &entity;
+		return *this;
+	}
+
+	string GetTableSchemaMd5()
+	{
+		const Descriptor* descriptor = pEntity->GetDescriptor();
+
+		stringstream stream;
+		list<string> out;
+		list<string> primaryKey;
+		stream << "";
+		for (int i = 0; i < descriptor->field_count(); i++)
+		{
+			stream << descriptor->field(i)->name();
+			InitFieldByProtoType(descriptor->field(i), out, primaryKey);
+			for (const string& property : out)
+			{
+				stream << property;
+			}
+		}
+
+		for (auto& key : primaryKey)
+		{
+			stream << key;
+		}
+
+		return Md5Hash(stream.str());
+	}
 private:
-	bool ChangeSqlType(SqlOpType type);
 
-	void SetResult(int affectedRows);
+	bool ChangeSqlType(SqlOpType type)
+	{
+		if (eType != SqlOpType::None && eType != type)
+		{
+			throw invalid_argument("Not Commit to Change OpType");
+			return false;
+		}
 
-	void BuildSqlStatement();
+		eType = type;
+		bExecResult = false;
+		iExecResultCount = 0;
+		return true;
+	}
 
-	void PaserQuery(pq_result& result);
+	void SetResult(int affectedRows)
+	{
+		switch (eType)
+		{
+			case SqlOpType::Update:
+			case SqlOpType::Delete:
+			case SqlOpType::Query:
+			case SqlOpType::UpdateTable:
+			{
+				bExecResult = affectedRows > 0;
+				break;
+			}
+			case SqlOpType::Insert:
+			case SqlOpType::CreateTable:
+			{
+				bExecResult = affectedRows == iExecResultCount;
+				break;
+			}
+			default:
+				throw invalid_argument("Please Imp SetResult Case!");
+		}
 
-	void ReleaseResult();
+		iExecResultCount = 0;
+		eType = SqlOpType::None;
+		mEles.clear();
+	}
 
+	void BuildSqlStatement()
+	{
+		if (eType == SqlOpType::None)
+		{
+			return;
+		}
+
+		stringstream ss;
+
+		ss << "";
+
+		string limit;
+
+		if (iLimitCount)
+		{
+			limit = format(" limit {}", iLimitCount);
+		}
+
+		switch (eType)
+		{
+			case SqlOpType::CreateTable:
+			{
+				ss << GetOpTypeBySqlOpType(eType) << "\"" << GetName() << "\"";
+
+				if (!mEles.size())
+				{
+					// data null
+					return;
+				}
+
+				ss << SSMBegin;
+
+				const Descriptor* descriptor = pEntity->GetDescriptor();
+
+				for (int i = 0; i < descriptor->field_count(); i++)
+				{
+					const FieldDescriptor* field = descriptor->field(i);
+					const string& fieldName = field->name();
+					if (!mEles.contains(fieldName))
+					{
+						continue;
+					}
+
+					ss << fieldName;
+					for (string& props : mEles[fieldName])
+					{
+						ss << SSpace << props;
+					}
+
+					ss << SSplit;
+
+					mEles.erase(fieldName);
+				}
+
+				auto it = mEles.begin();
+				auto itEnd = mEles.end();
+				for (; it != itEnd; it++)
+				{
+					ss << it->first;
+					for (string& props : it->second)
+					{
+						ss << SSpace << props;
+					}
+
+					if (next(it) != itEnd)
+					{
+						ss << SSplit;
+					}
+					else
+					{
+						ss << SSMEnd;
+					}
+				}
+				ss << SEnd;
+
+				iExecResultCount = 1;
+				break;
+			}
+			case SqlOpType::Insert:
+			{
+				ss << GetOpTypeBySqlOpType(eType) << "\"" << GetName() << "\"";
+
+				if (!mEles.size())
+				{
+					// key null
+					return;
+				}
+
+				size_t dataLen = mEles.begin()->second.size();
+				if (!dataLen)
+				{
+					// value null
+					return;
+				}
+
+				ss << SSMBegin;
+				auto it = mEles.begin();
+				auto itEnd = mEles.end();
+				vector<list<string>> mapping;
+				for (; it != itEnd; it++)
+				{
+					ss << it->first;
+
+					mapping.emplace_back(it->second);
+
+					if (next(it) != itEnd)
+					{
+						ss << SSplit;
+					}
+					else
+					{
+						ss << SSMEnd;
+					}
+				}
+
+				ss << "VALUES";
+
+				size_t mappingSize = mapping.size() - 1;
+				for (int lst = 0; lst < dataLen; lst++)
+				{
+					ss << SSMBegin;
+					for (int pos = 0; pos < mapping.size(); pos++)
+					{
+						ss << mapping[pos].front();
+						mapping[pos].pop_front();
+						if (mappingSize != pos)
+						{
+							ss << SSplit;
+						}
+					}
+					ss << SSMEnd;
+
+					if (lst + 1 != dataLen)
+					{
+						ss << SSplit;
+					}
+
+					iExecResultCount = iExecResultCount + 1;
+				}
+				ss << SEnd;
+				break;
+			}
+			case SqlOpType::Query:
+			{
+				string selectElems;
+				auto it = mEles.begin();
+				auto itEnd = mEles.end();
+				for (; it != itEnd; it++)
+				{
+					if (!iQueryCount)
+					{
+						selectElems.append(it->first);
+						if (next(it) != itEnd)
+						{
+							selectElems += SSplit;
+						}
+					}
+					else
+					{
+						selectElems = "COUNT(*)";
+						break;
+					}
+				}
+
+				ss << GetOpTypeBySqlOpType(eType) << selectElems << " FROM " << "\"" << GetName() << "\"";
+
+				bool hasCondition = false;
+
+				for (it = mEles.begin(); it != itEnd; it++)
+				{
+					for (string& cond : it->second)
+					{
+						if (!hasCondition)
+						{
+							hasCondition = true;
+							ss << SWHERE;
+						}
+
+						ss << cond;
+					}
+				}
+
+				ss << limit;
+
+				ss << SEnd;
+				break;
+			}
+			case SqlOpType::Update:
+			{
+				auto& updates = mEles[SUPDATE];
+				if (!updates.size())
+				{
+					throw invalid_argument("NOT SET UPDATE PROPERTY !");
+				}
+
+				string selectElems;
+				auto it = updates.begin();
+				auto itEnd = updates.end();
+				for (; it != itEnd; it++)
+				{
+					selectElems.append(*it);
+
+					if (next(it) != itEnd)
+					{
+						selectElems += SSplit;
+					}
+				}
+
+				ss << GetOpTypeBySqlOpType(eType) << "\"" << GetName() << "\"" << " SET " << selectElems;
+
+				auto& updateConds = mEles[SUPDATECOND];
+
+				bool hasCondition = false;
+
+				for (auto condIt = updateConds.begin(); condIt != updateConds.end(); condIt++)
+				{
+					if (!hasCondition)
+					{
+						hasCondition = true;
+						ss << SWHERE;
+					}
+
+					ss << *condIt;
+				}
+
+				ss << limit;
+
+				ss << SEnd;
+				break;
+			}
+			case SqlOpType::Delete:
+			{
+				ss << GetOpTypeBySqlOpType(eType) << "\"" << GetName() << "\"";
+
+				bool hasCondition = false;
+
+				if (mEles.size())
+				{
+					auto it = mEles.begin();
+					auto itEnd = mEles.end();
+
+					for (it = mEles.begin(); it != itEnd; it++)
+					{
+						for (string& cond : it->second)
+						{
+							if (!hasCondition)
+							{
+								hasCondition = true;
+								ss << SWHERE;
+							}
+
+							ss << cond;
+						}
+					}
+				}
+
+				ss << limit;
+
+				ss << SEnd;
+				break;
+			}
+			case SqlOpType::UpdateTable:
+			{
+				for (auto& [k, items] : mEles)
+				{
+					for (auto& statement : items)
+					{
+						ss << statement;
+					}
+				}
+				break;
+			}
+			default:
+				throw invalid_argument("Please Imp BuildSqlStatement Case!");
+		}
+
+		sSqlStatement = ss.str();
+	}
+
+	void PaserQuery(pq_result& result)
+	{
+		ReleaseResult();
+
+		vector<string> keys;
+		for (int col = 0; col < result.columns(); ++col)
+		{
+			keys.emplace_back(result.column_name(col));
+		}
+
+		const Descriptor* descriptor = pEntity->GetDescriptor();
+		const Reflection* reflection = pEntity->GetReflection();
+
+		bool isQueryAll = mEles.contains(SSELECTALL);
+
+		for (int row = 0; row < result.size(); row++)
+		{
+			TMessage* gen = pEntity->New();
+
+			pq_row rowInfo = result[row];
+			for (int col = 0; col < rowInfo.size(); col++)
+			{
+				if (rowInfo[col].is_null())
+				{
+					continue;
+				}
+
+				if (const FieldDescriptor* field = descriptor->FindFieldByLowercaseName(keys[col]))
+				{
+					SetFieldValueByProtoType(field, reflection, *gen, rowInfo[col], isQueryAll);
+				}
+			}
+			mResult.emplace_back(gen);
+		}
+	}
+
+	void ReleaseResult()
+	{
+		for (auto& it : mResult)
+		{
+			delete it;
+		}
+		mResult.clear();
+	}
 private:
+
 	vector<TMessage*> mResult;
 
 	SqlOpType eType = SqlOpType::None;
+
 	// create table, instert
 	unordered_map<string, list<string>> mEles;
 
@@ -499,936 +1365,3 @@ private:
 
 	TMessage* pEntity = nullptr;
 };
-
-template <class TMessage>
-DbSqlHelper<TMessage>::DbSqlHelper(dbtransaction* work, TMessage* entity)
-{
-	pWork = work;
-	pEntity = entity;
-}
-
-template<class TMessage>
-DbSqlHelper<TMessage>::~DbSqlHelper()
-{
-	ReleaseResult();
-}
-
-template <class TMessage>
-bool DbSqlHelper<TMessage>::IsExist()
-{
-	return pWork->query_value<bool>(format("SELECT EXISTS ( SELECT 1 FROM pg_catalog.pg_tables WHERE schemaname = 'public' AND tablename = '{}');", GetName()));
-}
-
-template <class TMessage>
-DbSqlHelper<TMessage>& DbSqlHelper<TMessage>::Limit(uint32_t limit)
-{
-	if (iQueryCount)
-	{
-		throw invalid_argument("Exist Limit Cant use count(*)");
-	}
-
-	iLimitCount = limit;
-
-	return *this;
-}
-
-template<class TMessage>
-string DbSqlHelper<TMessage>::GetBuildSqlStatement()
-{
-	BuildSqlStatement();
-	return sSqlStatement;
-}
-
-template<class TMessage>
-DbSqlHelper<TMessage>& DbSqlHelper<TMessage>::InitEntity(TMessage& entity)
-{
-	pEntity = &entity;
-	return *this;
-}
-
-template<class TMessage>
-string DbSqlHelper<TMessage>::GetTableSchemaMd5()
-{
-	const Descriptor* descriptor = pEntity->GetDescriptor();
-
-	stringstream stream;
-	list<string> out;
-	list<string> primaryKey;
-	stream << "";
-	for (int i = 0; i < descriptor->field_count(); i++)
-	{
-		stream << descriptor->field(i)->name();
-		InitFieldByProtoType(descriptor->field(i), out, primaryKey);
-		for (const string& property : out)
-		{
-			stream << property;
-		}
-	}
-
-	for (auto& key : primaryKey)
-	{
-		stream << key;
-	}
-
-	return Md5Hash(stream.str());
-}
-
-template <class TMessage>
-bool DbSqlHelper<TMessage>::ChangeSqlType(SqlOpType type)
-{
-	if (eType != SqlOpType::None && eType != type)
-	{
-		throw invalid_argument("Not Commit to Change OpType");
-		return false;
-	}
-
-	eType = type;
-	bExecResult = false;
-	iExecResultCount = 0;
-	return true;
-}
-
-template <class TMessage>
-void DbSqlHelper<TMessage>::SetResult(int affectedRows)
-{
-	switch (eType)
-	{
-		case SqlOpType::Update:
-		case SqlOpType::Delete:
-		case SqlOpType::Query:
-		case SqlOpType::UpdateTable:
-		{
-			bExecResult = affectedRows > 0;
-			break;
-		}
-		case SqlOpType::Insert:
-		case SqlOpType::CreateTable:
-		{
-			bExecResult = affectedRows == iExecResultCount;
-			break;
-		}
-		default:
-			throw invalid_argument("Please Imp SetResult Case!");
-	}
-
-	iExecResultCount = 0;
-	eType = SqlOpType::None;
-	mEles.clear();
-}
-
-template <class TMessage>
-void DbSqlHelper<TMessage>::BuildSqlStatement()
-{
-	if (eType == SqlOpType::None)
-	{
-		return;
-	}
-
-	stringstream ss;
-
-	ss << "";
-
-	string limit;
-
-	if (iLimitCount)
-	{
-		limit = format(" limit {}", iLimitCount);
-	}
-
-	switch (eType)
-	{
-		case SqlOpType::CreateTable:
-		{
-			ss << GetOpTypeBySqlOpType(eType) << "\"" << GetName() << "\"";
-
-			if (!mEles.size())
-			{
-				// data null
-				return;
-			}
-
-			ss << SSMBegin;
-
-			const Descriptor* descriptor = pEntity->GetDescriptor();
-
-			for (int i = 0; i < descriptor->field_count(); i++)
-			{
-				const FieldDescriptor* field = descriptor->field(i);
-				const string& fieldName = field->name();
-				if (!mEles.contains(fieldName))
-				{
-					continue;
-				}
-
-				ss << fieldName;
-				for (string& props : mEles[fieldName])
-				{
-					ss << SSpace << props;
-				}
-
-				ss << SSplit;
-
-				mEles.erase(fieldName);
-			}
-
-			auto it = mEles.begin();
-			auto itEnd = mEles.end();
-			for (; it != itEnd; it++)
-			{
-				ss << it->first;
-				for (string& props : it->second)
-				{
-					ss << SSpace << props;
-				}
-
-				if (next(it) != itEnd)
-				{
-					ss << SSplit;
-				}
-				else
-				{
-					ss << SSMEnd;
-				}
-			}
-			ss << SEnd;
-
-			iExecResultCount = 1;
-			break;
-		}
-		case SqlOpType::Insert:
-		{
-			ss << GetOpTypeBySqlOpType(eType) << "\"" << GetName() << "\"";
-
-			if (!mEles.size())
-			{
-				// key null
-				return;
-			}
-
-			size_t dataLen = mEles.begin()->second.size();
-			if (!dataLen)
-			{
-				// value null
-				return;
-			}
-
-			ss << SSMBegin;
-			auto it = mEles.begin();
-			auto itEnd = mEles.end();
-			vector<list<string>> mapping;
-			for (; it != itEnd; it++)
-			{
-				ss << it->first;
-
-				mapping.emplace_back(it->second);
-
-				if (next(it) != itEnd)
-				{
-					ss << SSplit;
-				}
-				else
-				{
-					ss << SSMEnd;
-				}
-			}
-
-			ss << "VALUES";
-
-			size_t mappingSize = mapping.size() - 1;
-			for (int lst = 0; lst < dataLen; lst++)
-			{
-				ss << SSMBegin;
-				for (int pos = 0; pos < mapping.size(); pos++)
-				{
-					ss << mapping[pos].front();
-					mapping[pos].pop_front();
-					if (mappingSize != pos)
-					{
-						ss << SSplit;
-					}
-				}
-				ss << SSMEnd;
-
-				if (lst + 1 != dataLen)
-				{
-					ss << SSplit;
-				}
-
-				iExecResultCount = iExecResultCount + 1;
-			}
-			ss << SEnd;
-			break;
-		}
-		case SqlOpType::Query:
-		{
-			string selectElems;
-			auto it = mEles.begin();
-			auto itEnd = mEles.end();
-			for (; it != itEnd; it++)
-			{
-				if (!iQueryCount)
-				{
-					selectElems.append(it->first);
-					if (next(it) != itEnd)
-					{
-						selectElems += SSplit;
-					}
-				}
-				else
-				{
-					selectElems = "COUNT(*)";
-					break;
-				}
-			}
-
-			ss << GetOpTypeBySqlOpType(eType) << selectElems << " FROM " << "\"" << GetName() << "\"";
-
-			bool hasCondition = false;
-
-			for (it = mEles.begin(); it != itEnd; it++)
-			{
-				for (string& cond : it->second)
-				{
-					if (!hasCondition)
-					{
-						hasCondition = true;
-						ss << SWHERE;
-					}
-
-					ss << cond;
-				}
-			}
-
-			ss << limit;
-
-			ss << SEnd;
-			break;
-		}
-		case SqlOpType::Update:
-		{
-			auto& updates = mEles[SUPDATE];
-			if (!updates.size())
-			{
-				throw invalid_argument("NOT SET UPDATE PROPERTY !");
-			}
-
-			string selectElems;
-			auto it = updates.begin();
-			auto itEnd = updates.end();
-			for (; it != itEnd; it++)
-			{
-				selectElems.append(*it);
-
-				if (next(it) != itEnd)
-				{
-					selectElems += SSplit;
-				}
-			}
-
-			ss << GetOpTypeBySqlOpType(eType) << "\"" << GetName() << "\"" << " SET " << selectElems;
-
-			auto& updateConds = mEles[SUPDATECOND];
-
-			bool hasCondition = false;
-
-			for (auto condIt = updateConds.begin(); condIt != updateConds.end(); condIt++)
-			{
-				if (!hasCondition)
-				{
-					hasCondition = true;
-					ss << SWHERE;
-				}
-
-				ss << *condIt;
-			}
-
-			ss << limit;
-
-			ss << SEnd;
-			break;
-		}
-		case SqlOpType::Delete:
-		{
-			ss << GetOpTypeBySqlOpType(eType) << "\"" << GetName() << "\"";
-
-			bool hasCondition = false;
-
-			if (mEles.size())
-			{
-				auto it = mEles.begin();
-				auto itEnd = mEles.end();
-
-				for (it = mEles.begin(); it != itEnd; it++)
-				{
-					for (string& cond : it->second)
-					{
-						if (!hasCondition)
-						{
-							hasCondition = true;
-							ss << SWHERE;
-						}
-
-						ss << cond;
-					}
-				}
-			}
-
-			ss << limit;
-
-			ss << SEnd;
-			break;
-		}
-		case SqlOpType::UpdateTable:
-		{
-			for (auto& [k, items] : mEles)
-			{
-				for (auto& statement : items)
-				{
-					ss << statement;
-				}
-			}
-			break;
-		}
-		default:
-			throw invalid_argument("Please Imp BuildSqlStatement Case!");
-	}
-
-	sSqlStatement = ss.str();
-}
-
-template <class TMessage>
-bool DbSqlHelper<TMessage>::Commit()
-{
-	BuildSqlStatement();
-
-	if (!pWork || sSqlStatement.empty())
-	{
-		return false;
-	}
-
-	DNPrint(0, LoggerLevel::Debug, "%s ", sSqlStatement.c_str());
-
-	pq_result result = pWork->exec(sSqlStatement);
-
-	if (eType == SqlOpType::Query)
-	{
-		if (!iQueryCount)
-		{
-			PaserQuery(result);
-		}
-		else
-		{
-			iQueryCount = result[0][0].as<uint32_t>();
-		}
-
-		iLimitCount = 0;
-	}
-
-	SetResult(result.affected_rows());
-
-	return true;
-}
-
-template <class TMessage>
-DbSqlHelper<TMessage>& DbSqlHelper<TMessage>::CreateTable()
-{
-	ChangeSqlType(SqlOpType::CreateTable);
-
-	const Descriptor* descriptor = pEntity->GetDescriptor();
-
-	list<string> primaryKey;
-
-	for (int i = 0; i < descriptor->field_count(); i++)
-	{
-		const FieldDescriptor* field = descriptor->field(i);
-
-		// should init table
-		if (field->is_repeated() && field->cpp_type() == FieldDescriptor::CPPTYPE_MESSAGE)
-		{
-			throw runtime_error("Not imp!!!");
-		}
-
-		list<string> params;
-		InitFieldByProtoType(field, params, primaryKey);
-
-		// unregist type
-		if (params.size() == 0)
-		{
-			continue;
-		}
-
-		mEles.emplace(make_pair(field->name(), params));
-	}
-
-	if (mEles.contains(SPrimaryKey))
-	{
-		throw invalid_argument("Not Allow Exist 'PRIMARY KEY' map key!");
-	}
-
-	if (primaryKey.size())
-	{
-		string temp = SSMBegin;
-		for (auto it = primaryKey.begin(); it != primaryKey.end(); it++)
-		{
-			temp += *it;
-
-			if (next(it) != primaryKey.end())
-			{
-				temp += SSplit;
-			}
-		}
-
-		temp += SSMEnd;
-
-		primaryKey.clear();
-		primaryKey.emplace_back(temp);
-
-		mEles.emplace(make_pair(SPrimaryKey, primaryKey));
-	}
-
-	return *this;
-}
-
-template<class TMessage>
-DbSqlHelper<TMessage>& DbSqlHelper<TMessage>::UpdateTable()
-{
-	ChangeSqlType(SqlOpType::UpdateTable);
-
-	pq_result result = pWork->exec(vformat(SqlTableColQuery, make_format_args(GetName())));
-
-	unordered_map<string, int> sqlColInfo;
-
-	for (int row = 0; row < result.size(); row++)
-	{
-		const string& name = result[row][0].as<string>();
-
-		sqlColInfo[name] = row;
-
-	}
-
-	const Descriptor* descriptor = pEntity->GetDescriptor();
-
-	// clear CONSTRAINT
-	// result = pWork->exec( format("SELECT conname FROM pg_constraint WHERE conrelid = '{}'::regclass;", GetName()) );
-	// for (int row = 0; row < result.size(); row++)
-	// {
-	// 	pWork->exec(format("ALTER TABLE {} DROP CONSTRAINT {};", GetName(), result[0][0].as<string>()));
-	// }
-
-	list<string> primaryKey;
-	string tempstr;
-	string opTypeStr = GetOpTypeBySqlOpType(eType);
-
-	// check col
-	for (int i = 0; i < descriptor->field_count(); i++)
-	{
-		const string& colName = descriptor->field(i)->name();
-		list<string> params;
-
-		const FieldDescriptor* field = descriptor->field(i);
-
-		// update col
-		if (sqlColInfo.contains(colName))
-		{
-			InitFieldByProtoType(field, params, primaryKey);
-
-			// can not null
-			if (!field->is_optional())
-			{
-				params.remove(SNOTNULL);
-			}
-
-			// change type
-			for (string& param : params)
-			{
-				tempstr += param + " ";
-			}
-
-			mEles[""].emplace_back(format("{0}\"{1}\" ADD COLUMN new_{2} {3};\nUPDATE \"{1}\" SET new_{2} = {2};\n{0}\"{1}\" DROP COLUMN {2};\n{0}\"{1}\" RENAME COLUMN new_{2} TO {2};\n", opTypeStr, GetName(), colName, tempstr));
-
-			cout << mEles[""].back() << endl;
-
-			if (!field->is_optional())
-			{
-				mEles[""].emplace_back(format("{0}\"{1}\" ALTER COLUMN {2} SET NOT NULL;\n", opTypeStr, GetName(), colName));
-
-				cout << mEles[""].back() << endl;
-			}
-
-			tempstr.clear();
-
-			// already deal remove 
-			sqlColInfo.erase(colName);
-		}
-		// create col
-		else
-		{
-			InitFieldByProtoType(descriptor->field(i), params, primaryKey);
-			for (string& param : params)
-			{
-				tempstr += param + " ";
-			}
-			// ALTER TABLE table_name ADD COLUMN column_name data_type [column_constraint];
-			mEles[""].emplace_back(format("{}\"{}\" ADD COLUMN {} {};\n", opTypeStr, GetName(), colName, tempstr));
-			tempstr.clear();
-		}
-
-	}
-
-	// remove col
-	for (auto& iter : sqlColInfo)
-	{
-		mEles[""].emplace_back(format("{}\"{}\" DROP COLUMN {};\n", opTypeStr, GetName(), iter.first));
-	}
-
-	return *this;
-}
-
-template <class TMessage>
-DbSqlHelper<TMessage>& DbSqlHelper<TMessage>::Insert(bool bSetDefault)
-{
-	ChangeSqlType(SqlOpType::Insert);
-
-	const Descriptor* descriptor = pEntity->GetDescriptor();
-	const Reflection* reflection = pEntity->GetReflection();
-
-	string value;
-
-	string nowTime = to_string(time_point_cast<nanoseconds>(system_clock::now()).time_since_epoch().count());
-
-	for (int i = 0; i < descriptor->field_count(); i++)
-	{
-		const FieldDescriptor* field = descriptor->field(i);
-
-		const FieldOptions& options = field->options();
-
-		// if primary_key and not other ext. throw
-		if (options.GetExtension(ext_primary_key) && !options.GetExtension(ext_autogen) && !reflection->HasField(*pEntity, field))
-		{
-			throw invalid_argument(format("Insert <{}> Data Not Set primary_key <{}> Data!", GetName(), field->name()));
-		}
-
-		value.clear();
-
-		if (reflection->HasField(*pEntity, field))
-		{
-			GetFieldValueByProtoType(field, reflection, *pEntity, value);
-		}
-
-		if (!value.empty())
-		{
-
-		}
-		// can not null
-		else if (value.empty() && !field->is_optional())
-		{
-			if (const string& defaultStr = options.GetExtension(ext_default); !defaultStr.empty())
-			{
-				value = defaultStr;
-			}
-			else if (bSetDefault)
-			{
-				if (options.GetExtension(ext_datetime))
-				{
-					value = nowTime;
-				}
-				else
-				{
-					GetFieldDefaultValueByProtoType(field, value);
-				}
-			}
-			else
-			{
-				continue;
-			}
-		}
-		else
-		{
-			continue;
-		}
-
-
-		mEles[field->name()].emplace_back(value);
-	}
-
-	return *this;
-}
-
-template <class TMessage>
-DbSqlHelper<TMessage>& DbSqlHelper<TMessage>::SelectOne(const char* name, ...)
-{
-	ChangeSqlType(SqlOpType::Query);
-
-	const Descriptor* descriptor = pEntity->GetDescriptor();
-	const Reflection* reflection = pEntity->GetReflection();
-
-	if (mEles.contains(SSELECTALL))
-	{
-		throw invalid_argument("exist other select statement!!");
-	}
-
-	if (const FieldDescriptor* field = descriptor->FindFieldByLowercaseName(name))
-	{
-		string name = field->name();
-		DirectFieldNameByProtoType(field, name);
-		mEles[name];
-	}
-
-	return *this;
-}
-
-template<class TMessage>
-DbSqlHelper<TMessage>& DbSqlHelper<TMessage>::SelectByKey(const char* name, ...)
-{
-	ChangeSqlType(SqlOpType::Query);
-	const Descriptor* descriptor = pEntity->GetDescriptor();
-	const Reflection* reflection = pEntity->GetReflection();
-
-	const FieldDescriptor* field = descriptor->FindFieldByLowercaseName(name);
-	if (!field)
-	{
-		return *this;
-	}
-
-	const FieldOptions& options = field->options();
-	if (!options.GetExtension(ext_primary_key))
-	{
-		throw invalid_argument(format(" {} is not table {} key!", name, GetName()));
-		return *this;
-	}
-
-	string value;
-	GetFieldValueByProtoType(field, reflection, *pEntity, value);
-
-	if (value.empty())
-	{
-		throw invalid_argument(format(" table {} key is not set!", GetName()));
-		return *this;
-	}
-
-	mEles[SSELECTALL].emplace_back(format("{}={}", field->name(), value));
-
-	return *this;
-}
-
-template <class TMessage>
-DbSqlHelper<TMessage>& DbSqlHelper<TMessage>::SelectAll(bool foreach, bool quertCount)
-{
-	ChangeSqlType(SqlOpType::Query);
-
-	// not default
-	if (foreach)
-	{
-		const Descriptor* descriptor = pEntity->GetDescriptor();
-		for (int i = 0; i < descriptor->field_count(); i++)
-		{
-			SelectOne(descriptor->field(i)->lowercase_name().c_str());
-		}
-		return *this;
-	}
-
-	// not default
-	iQueryCount = quertCount;
-
-	mEles[SSELECTALL];
-
-	if (mEles.size() > 1)
-	{
-		throw invalid_argument("exist other select statement!!");
-	}
-
-	return *this;
-}
-
-template <class TMessage>
-DbSqlHelper<TMessage>& DbSqlHelper<TMessage>::SelectCond(const char* name, const char* cond, const char* splicing, ...)
-{
-	const Descriptor* descriptor = pEntity->GetDescriptor();
-	const Reflection* reflection = pEntity->GetReflection();
-
-	const FieldDescriptor* field = descriptor->FindFieldByLowercaseName(name);
-	if (!field)
-	{
-		return *this;
-	}
-
-	string value;
-	GetFieldValueByProtoType(field, reflection, *pEntity, value);
-
-	value = string() + splicing + name + cond + value;
-
-	if (mEles.contains(SSELECTALL))
-	{
-		mEles[SSELECTALL].emplace_back(value);
-	}
-	else
-	{
-		mEles.begin()->second.emplace_back(value);
-	}
-
-	return *this;
-}
-
-template <class TMessage>
-void DbSqlHelper<TMessage>::PaserQuery(pq_result& result)
-{
-	ReleaseResult();
-
-	vector<string> keys;
-	for (int col = 0; col < result.columns(); ++col)
-	{
-		keys.emplace_back(result.column_name(col));
-	}
-
-	const Descriptor* descriptor = pEntity->GetDescriptor();
-	const Reflection* reflection = pEntity->GetReflection();
-
-	bool isQueryAll = mEles.contains(SSELECTALL);
-
-	for (int row = 0; row < result.size(); row++)
-	{
-		TMessage* gen = pEntity->New();
-
-		pq_row rowInfo = result[row];
-		for (int col = 0; col < rowInfo.size(); col++)
-		{
-			if (rowInfo[col].is_null())
-			{
-				continue;
-			}
-
-			if (const FieldDescriptor* field = descriptor->FindFieldByLowercaseName(keys[col]))
-			{
-				SetFieldValueByProtoType(field, reflection, *gen, rowInfo[col], isQueryAll);
-			}
-		}
-		mResult.emplace_back(gen);
-	}
-}
-
-template<class TMessage>
-void DbSqlHelper<TMessage>::ReleaseResult()
-{
-	for (auto& it : mResult)
-	{
-		delete it;
-	}
-	mResult.clear();
-}
-
-template <class TMessage>
-DbSqlHelper<TMessage>& DbSqlHelper<TMessage>::UpdateOne(const char* name, ...)
-{
-	ChangeSqlType(SqlOpType::Update);
-
-	const Descriptor* descriptor = pEntity->GetDescriptor();
-	const Reflection* reflection = pEntity->GetReflection();
-
-	const FieldDescriptor* field = descriptor->FindFieldByLowercaseName(name);
-	if (!field)
-	{
-		return *this;
-	}
-
-	string value;
-	GetFieldValueByProtoType(field, reflection, *pEntity, value);
-
-	mEles[SUPDATE].emplace_back(format("{}={}", field->name(), value));
-
-	return *this;
-}
-
-template<class TMessage>
-DbSqlHelper<TMessage>& DbSqlHelper<TMessage>::UpdateByKey(const char* name, ...)
-{
-	ChangeSqlType(SqlOpType::Update);
-	const Descriptor* descriptor = pEntity->GetDescriptor();
-	const Reflection* reflection = pEntity->GetReflection();
-
-	const FieldDescriptor* field = descriptor->FindFieldByLowercaseName(name);
-	if (!field)
-	{
-		return *this;
-	}
-
-	const FieldOptions& options = field->options();
-	if (!options.GetExtension(ext_primary_key))
-	{
-		throw invalid_argument(format(" {} is not table {} key!", name, GetName()));
-		return *this;
-	}
-
-	string value;
-	GetFieldValueByProtoType(field, reflection, *pEntity, value);
-
-	if (value.empty())
-	{
-		throw invalid_argument(format(" table {} key is not set!", GetName()));
-		return *this;
-	}
-
-	mEles[SUPDATECOND].emplace_back(format("{}={}", field->name(), value));
-
-	for (int i = 0; i < descriptor->field_count(); i++)
-	{
-		if (field != descriptor->field(i) && reflection->HasField(*pEntity, field))
-		{
-			UpdateOne(descriptor->field(i)->lowercase_name().c_str());
-		}
-	}
-
-	if (mEles[SUPDATE].empty())
-	{
-		throw invalid_argument(format(" table {} Not Update Data!", GetName()));
-	}
-
-	return *this;
-}
-
-template <class TMessage>
-DbSqlHelper<TMessage>& DbSqlHelper<TMessage>::UpdateCond(const char* name, const char* cond, const char* splicing, ...)
-{
-	ChangeSqlType(SqlOpType::Update);
-
-	const Descriptor* descriptor = pEntity->GetDescriptor();
-	const Reflection* reflection = pEntity->GetReflection();
-
-	const FieldDescriptor* field = descriptor->FindFieldByLowercaseName(name);
-	if (!field)
-	{
-		return *this;
-	}
-
-	string value;
-	GetFieldValueByProtoType(field, reflection, *pEntity, value);
-	value = string() + splicing + name + cond + value;
-
-	mEles[SUPDATECOND].emplace_back(value);
-
-	return *this;
-}
-
-template <class TMessage>
-DbSqlHelper<TMessage>& DbSqlHelper<TMessage>::DeleteCond(const char* name, const char* cond, const char* splicing, ...)
-{
-	ChangeSqlType(SqlOpType::Delete);
-
-	const Descriptor* descriptor = pEntity->GetDescriptor();
-	const Reflection* reflection = pEntity->GetReflection();
-
-	const FieldDescriptor* field = descriptor->FindFieldByLowercaseName(name);
-	if (!field)
-	{
-		return *this;
-	}
-
-	string value;
-
-	GetFieldValueByProtoType(field, reflection, *pEntity, value);
-
-	value = string() + splicing + name + cond + value;
-
-	mEles[SUPDATECOND].emplace_back(value);
-
-	return *this;
-}

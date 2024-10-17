@@ -11,10 +11,7 @@ import Macro;
 import ThirdParty.Libhv;
 import ThirdParty.PbGen;
 
-export int HandleLogicServerInit(DNServer* server);
-export int HandleLogicServerShutdown(DNServer* server);
-
-int HandleLogicServerInit(DNServer* server)
+export int HandleLogicServerInit(DNServer* server)
 {
 	SetLogicServer(static_cast<LogicServer*>(server));
 
@@ -216,7 +213,7 @@ int HandleLogicServerInit(DNServer* server)
 	return serverProxy->InitDatabase();
 }
 
-int HandleLogicServerShutdown(DNServer* server)
+export int HandleLogicServerShutdown(DNServer* server)
 {
 	LogicServerHelper* serverProxy = GetLogicServer();
 

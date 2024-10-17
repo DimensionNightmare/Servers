@@ -16,7 +16,8 @@ export module ThirdParty.Libhv;
 
 using namespace hv;
 
-export {
+export 
+{
 	using ::SocketChannelPtr;
 	using ::HttpRequestPtr;
 	using ::HttpResponsePtr;
@@ -36,11 +37,30 @@ export {
 	using ::TcpClient;
 	using ::TcpServer;
 	using ::EventLoop;
+	using ::sockaddr_in;
+	using ::sockaddr;
+	using ::reconn_setting_t;
 };
 
-export {
-	void HV_cleanup() { ::async::cleanup(); }
-	void HV_hlog_disable() { hlog_disable(); }
+export namespace LibhvExport
+{
+	
+	void cleanup()
+	{
+		::async::cleanup();
+	}
 
-	void HV_hio_setcb_close(hio_t* io, hclose_cb close_cb) {  hio_setcb_close(io, close_cb);}
+#pragma push_macro("hlog_disable")
+#undef hlog_disable
+	void hlog_disable()
+	{
+#pragma pop_macro("hlog_disable")
+		hlog_disable();
+	}
+
+	void hio_setcb_close(hio_t* io, hclose_cb close_cb) {  ::hio_setcb_close(io, close_cb);}
+	
+	int getsockname(const SOCKET& s, sockaddr *name, int *namelen){ return ::getsockname(s, name, namelen); }
+
+	u_short ntohs(u_short netshort){ return ::ntohs(netshort); }
 };

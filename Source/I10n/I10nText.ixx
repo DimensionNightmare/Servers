@@ -25,6 +25,7 @@ export void SetDNl10nInstance(DNl10n* point)
 
 export class DNl10n
 {
+	
 public:
 	
 	DNl10n(){}
