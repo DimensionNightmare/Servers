@@ -4,11 +4,21 @@ export module RoomEntity;
 
 import NetEntity;
 
+/// @brief room mean set/team/... client collection.
 export class RoomEntity : public NetEntity
 {
 public:
-	RoomEntity();
-	RoomEntity(uint32_t id);
+
+	RoomEntity() : NetEntity(0)
+	{
+		eEntityType = EntityType::Room;
+	}
+
+	RoomEntity(uint32_t id) : NetEntity(id)
+	{
+		eEntityType = EntityType::Room;
+	}
+
 	virtual ~RoomEntity() = default;
 
 	uint32_t& MapID() { return iMapId; }
@@ -22,19 +32,13 @@ public:
 public: // dll override
 
 protected: // dll proxy
+
 	uint32_t iMapId = 0;
 
 	string sServIp;
+
 	uint16_t iServPort = 0;
+
 	uint32_t IConnNum = 0;
+	
 };
-
-RoomEntity::RoomEntity() : NetEntity(0)
-{
-	eEntityType = EntityType::Room;
-}
-
-RoomEntity::RoomEntity(uint32_t id) : NetEntity(id)
-{
-	eEntityType = EntityType::Room;
-}

@@ -22,11 +22,11 @@ int HandleAuthServerInit(DNServer* server)
 
 	if (DNWebProxyHelper* serverSock = serverProxy->GetSSock())
 	{
-		HttpService* service = new HttpService();
+		shared_ptr<HttpService> service = make_shared<HttpService>();
 
-		AuthMessageHandle::RegApiHandle(service);
+		AuthMessageHandle::RegApiHandle(service.get());
 
-		serverSock->registerHttpService(service);
+		serverSock->registerHttpService(service.get());
 	}
 
 	if (DNClientProxyHelper* clientSock = serverProxy->GetCSock())

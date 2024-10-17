@@ -12,74 +12,68 @@ public:
 	RoomEntityManager() = default;
 	~RoomEntityManager() = default;
 
-	virtual bool Init() override;
+	virtual bool Init() override
+	{
+		return EntityManager::Init();
+	}
 
-	virtual void TickMainFrame() override;
+	virtual void TickMainFrame() override
+	{
+	}
 
 public:
-	void EntityCloseTimer(uint64_t timerID);
 
-	uint64_t CheckEntityCloseTimer(uint32_t entityId);
+	void EntityCloseTimer(uint64_t timerID)
+	{
+		unique_lock<shared_mutex> ulock(oTimerMutex);
+		if (!mMapTimer.contains(timerID))
+		{
+			return;
+		}
 
-	bool RemoveEntity(uint32_t entityId);
+		uint32_t entityId = mMapTimer[timerID];
+		if (RemoveEntity(entityId))
+		{
+			DNPrint(0, LoggerLevel::Debug, "EntityCloseTimer Room destory entity");
+		}
+
+	}
+
+	uint64_t CheckEntityCloseTimer(uint32_t entityId)
+	{
+		uint64_t timerId = Timer()->setTimeout(10000, std::bind(&RoomEntityManager::EntityCloseTimer, this, placeholders::_1));
+
+		AddTimerRecord(timerId, entityId);
+
+		return timerId;
+	}
+
+	bool RemoveEntity(uint32_t entityId)
+	{
+		if (mEntityMap.contains(entityId))
+		{
+			RoomEntity* entity = &mEntityMap[entityId];
+			unique_lock<shared_mutex> ulock(oMapMutex);
+
+			mEntityMapList[entity->MapID()].remove(entity);
+
+			mEntityMap.erase(entityId);
+			return true;
+		}
+
+		return false;
+	}
+
 protected:
+	/// @brief 
 	unordered_map<uint32_t, list<RoomEntity*>> mEntityMapList;
 
+	/// @brief 
 	atomic<uint32_t> iRoomGenId;
+
 };
 
 extern "C"
 {
 	REGIST_MAINSPACE_SIGN_FUNCTION(RoomEntityManager, CheckEntityCloseTimer);
-}
-
-bool RoomEntityManager::Init()
-{
-	return EntityManager::Init();
-}
-
-void RoomEntityManager::TickMainFrame()
-{
-}
-
-
-void RoomEntityManager::EntityCloseTimer(uint64_t timerID)
-{
-	unique_lock<shared_mutex> ulock(oTimerMutex);
-	if (!mMapTimer.contains(timerID))
-	{
-		return;
-	}
-
-	uint32_t entityId = mMapTimer[timerID];
-	if (RemoveEntity(entityId))
-	{
-		DNPrint(0, LoggerLevel::Debug, "EntityCloseTimer Room destory entity");
-	}
-
-}
-
-uint64_t RoomEntityManager::CheckEntityCloseTimer(uint32_t entityId)
-{
-	uint64_t timerId = Timer()->setTimeout(10000, std::bind(&RoomEntityManager::EntityCloseTimer, this, placeholders::_1));
-
-	AddTimerRecord(timerId, entityId);
-
-	return timerId;
-}
-
-bool RoomEntityManager::RemoveEntity(uint32_t entityId)
-{
-	if (mEntityMap.contains(entityId))
-	{
-		RoomEntity* entity = &mEntityMap[entityId];
-		unique_lock<shared_mutex> ulock(oMapMutex);
-
-		mEntityMapList[entity->MapID()].remove(entity);
-
-		mEntityMap.erase(entityId);
-		return true;
-	}
-
-	return false;
 }

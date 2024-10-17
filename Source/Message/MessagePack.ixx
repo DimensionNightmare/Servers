@@ -40,21 +40,21 @@ export bool MessagePack(uint32_t msgId, MsgDeal deal, const char* pbName, string
 	packet.pkgLenth = uint32_t(data.size());
 
 	if (pbName == nullptr) [[unlikely]]
-		{
-			packet.msgHashId = 0;
-		}
+	{
+		packet.msgHashId = 0;
+	}
 	else [[likely]]
-		{
+	{
 #ifdef _WIN32
-			packet.msgHashId = hash<string>::_Do_hash(pbName);
+		packet.msgHashId = hash<string>::_Do_hash(pbName);
 #elif __unix__
-			packet.msgHashId = hash<string>{}(pbName);
+		packet.msgHashId = hash<string>{}(pbName);
 #endif
-		}
+	}
 
-		data.resize(MessagePacket::PackLenth + packet.pkgLenth);
+	data.resize(MessagePacket::PackLenth + packet.pkgLenth);
 
-		memmove(data.data() + MessagePacket::PackLenth, data.data(), packet.pkgLenth);
-		memcpy(data.data(), &packet, MessagePacket::PackLenth);
-		return true;
+	memmove(data.data() + MessagePacket::PackLenth, data.data(), packet.pkgLenth);
+	memcpy(data.data(), &packet, MessagePacket::PackLenth);
+	return true;
 }

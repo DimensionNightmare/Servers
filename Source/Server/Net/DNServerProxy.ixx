@@ -125,13 +125,13 @@ void DNServerProxy::Init()
 		port = ntohs(addr.sin_port);
 	}
 
-	unpack_setting_t* setting = new unpack_setting_t();
+	shared_ptr<unpack_setting_t> setting = make_shared<unpack_setting_t>();
 	setting->mode = unpack_mode_e::UNPACK_BY_LENGTH_FIELD;
 	setting->length_field_coding = unpack_coding_e::ENCODE_BY_BIG_ENDIAN;
 	setting->body_offset = MessagePacket::PackLenth;
 	setting->length_field_bytes = 1;
 	setting->length_field_offset = 0;
-	setUnpack(setting);
+	setUnpack(setting.get());
 	setThreadNum(4);
 }
 

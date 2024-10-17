@@ -15,8 +15,10 @@ export enum class LoggerLevel : uint8_t
 };
 
 LoggerLevel SLogLevel = LoggerLevel::Normal;
+
 ofstream LogFile; 
 
+/// @brief set logger type and Log file Init 
 export void SetLoggerLevel(optional<LoggerLevel> level = nullopt, optional<string_view> path = nullopt)
 {
 	if(level.has_value())
@@ -30,6 +32,7 @@ export void SetLoggerLevel(optional<LoggerLevel> level = nullopt, optional<strin
 	}
 }
 
+/// @brief Log file pointer 
 ofstream* GetLoggerFile()
 {
 	if (!LogFile.is_open())
@@ -40,6 +43,7 @@ ofstream* GetLoggerFile()
 	return &LogFile;
 }
 
+/// @brief print char to command-line/log-file. 
 export void LoggerPrint(LoggerLevel level, int code, const char* funcName, const char* fmt, ...)
 {
 	if (level < SLogLevel)

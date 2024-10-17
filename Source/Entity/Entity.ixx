@@ -17,24 +17,31 @@ export enum class EntityType : uint8_t
 
 export class Entity
 {
+
 public:
-	Entity(uint32_t id);
-	virtual ~Entity();
+	/// @brief must give id 
+	Entity(uint32_t id)
+	{
+		iId = id;
+	}
+
+	virtual ~Entity()
+	{
+	}
+	
 public: // dll override
+
 	uint32_t ID() { return iId; }
+
+	/// @brief entity type total enum
 	EntityType GetEntityType() { return eEntityType; }
+
 protected: // dll proxy
 
 protected:
+
 	EntityType eEntityType = EntityType::None;
+
 	uint32_t iId = 0;
+
 };
-
-Entity::Entity(uint32_t id)
-{
-	iId = id;
-}
-
-Entity::~Entity()
-{
-}

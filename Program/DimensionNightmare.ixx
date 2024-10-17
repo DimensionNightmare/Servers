@@ -22,11 +22,12 @@ import Config.Server;
 import ThirdParty.PbGen;
 
 #ifdef __unix__
-#define Sleep(ms) usleep(ms*1000)
+	#define Sleep(ms) usleep(ms*1000)
 #endif
 
 struct HotReloadDll
 {
+	/// @brief load dll/so runtime library
 	void* LoadHandle(string_view dllPath)
 	{
 #ifdef _WIN32
@@ -66,6 +67,7 @@ struct HotReloadDll
 		return hModule;
 	};
 
+	/// @brief unload dll/so runtime library
 	void FreeHandle()
 	{
 		if (oLibHandle)
@@ -93,6 +95,7 @@ struct HotReloadDll
 		sDllDirRand.clear();
 	};
 
+	/// @brief reload dll/so runtime library
 	bool ReloadHandle(ServerType type)
 	{
 		if (!filesystem::exists(SDllDir))
@@ -137,17 +140,20 @@ struct HotReloadDll
 		return false;
 	};
 
+	/// @brief
 	HotReloadDll()
 	{
 		isNormalFree = true;
 		oLibHandle = NULL;
 	};
 
+	/// @brief
 	~HotReloadDll()
 	{
 		FreeHandle();
 	};
 
+	/// @brief get runtime lib funcpointer
 	void* GetFuncPtr(const char* funcName)
 	{
 #ifdef _WIN32
@@ -157,396 +163,394 @@ struct HotReloadDll
 #endif
 		return nullptr;
 	}
+
 public:
+	/// @brief runtime library floder name
 	inline static const char* SDllDir = "Runtime";
+
+	/// @brief runtime library file name
 	inline static const char* SDllName = "HotReload";
 
 	string sDllDirRand;
 
+	/// @brief runtime library loaded pointer
 	void* oLibHandle;
 
+	/// @brief nomal exit or exception exit
 	bool isNormalFree;
+
 };
 
 export class DimensionNightmare
 {
 
 public:
-	DimensionNightmare();
+	/// @brief
+	DimensionNightmare()
+	{
+		pLuanchParam = nullptr;
+	}
 
-	~DimensionNightmare();
+	// need close main process
+	~DimensionNightmare()
+	{
+		pServer = nullptr;
+		pHotDll = nullptr;
+		pl10n = nullptr;
+	}
 
-	bool InitConfig(unordered_map<string, string>& param);
-
-	bool Init();
-
-	void InitCmdHandle();
-
-	void ExecCommand(string* cmd, stringstream* ss);
-
-	bool OnRegHotReload();
-
-	bool OnUnregHotReload();
-
-	HotReloadDll* Dll() { return pHotDll.get(); }
-
-	bool& ServerIsRun() { return pServer->IsRun(); }
-
-	void TickMainFrame();
-
-	DNl10n* GetDNl10n(){return pl10n.get();}
-private:
-	unique_ptr<HotReloadDll> pHotDll;
-
-	unique_ptr<DNServer> pServer;
-
-	unique_ptr<DNl10n> pl10n;
-
-	unordered_map<string, function<void(stringstream*)>> mCmdHandle;
-
-	// mount param
-	unordered_map<string, string>* pLuanchParam;
-};
-
-export unique_ptr<DimensionNightmare> PInstance;
-
-DimensionNightmare::DimensionNightmare()
-{
-	pLuanchParam = nullptr;
-}
-
-// need close main process
-DimensionNightmare::~DimensionNightmare()
-{
-	pServer = nullptr;
-	pHotDll = nullptr;
-	pl10n = nullptr;
-}
-
-bool DimensionNightmare::InitConfig(unordered_map<string, string>& param)
-{
-	
+	/// @brief load ini config
+	bool InitConfig(unordered_map<string, string>& param)
+	{
 #ifndef NDEBUG
 		const char* iniFilePath = "../../../Config/ServerDebug.ini";
 #else
 		const char* iniFilePath = "./Config/Server.ini";
 #endif
 
-	if(!filesystem::exists(iniFilePath))
-	{
-		DNPrint(0, LoggerLevel::Error, "ConfigIni Not Finded!");
-		return false;
-	}
+		if(!filesystem::exists(iniFilePath))
+		{
+			DNPrint(0, LoggerLevel::Error, "ConfigIni Not Finded!");
+			return false;
+		}
 
 		// get ini Config
-	ServerType serverType = (ServerType)stoi(param["svrType"]);
-	string_view serverName = EnumName(serverType);
+		ServerType serverType = (ServerType)stoi(param["svrType"]);
+		string_view serverName = EnumName(serverType);
 
-	vector<string> sectionNames;
+		vector<string> sectionNames;
 
 #ifdef _WIN32
-	char buffer[512] = { 0 };
-	size_t bufferSize = sizeof(buffer);
-	GetPrivateProfileSectionNamesA(buffer, bufferSize, iniFilePath);
-	char* current = buffer;
-	while (*current)
-	{
-		sectionNames.emplace_back(current);
-		current += strlen(current) + 1;
-
-		if (sectionNames.back().find_last_of("Server") != string::npos && sectionNames.back() != serverName)
+		char buffer[512] = { 0 };
+		size_t bufferSize = sizeof(buffer);
+		GetPrivateProfileSectionNamesA(buffer, bufferSize, iniFilePath);
+		char* current = buffer;
+		while (*current)
 		{
-			sectionNames.pop_back();
-		}
-	}
-#elif __unix__
-	unordered_map<string, list<string>> sectionVal;
+			sectionNames.emplace_back(current);
+			current += strlen(current) + 1;
 
-	auto GetINISectionNames = [&](const char* iniFilePath)
-		{
-			ifstream file(iniFilePath);
-			if (!file.is_open())
+			if (sectionNames.back().find_last_of("Server") != string::npos && sectionNames.back() != serverName)
 			{
-				cerr << "Failed to open INI file: " << iniFilePath << endl;
-				return;
+				sectionNames.pop_back();
 			}
+		}
+#elif __unix__
+		unordered_map<string, list<string>> sectionVal;
 
-			string line;
-			while (getline(file, line))
+		auto GetINISectionNames = [&](const char* iniFilePath)
 			{
-				if (line.empty())
+				ifstream file(iniFilePath);
+				if (!file.is_open())
 				{
-					continue;
+					cerr << "Failed to open INI file: " << iniFilePath << endl;
+					return;
 				}
 
-				if (line[0] == '[')
+				string line;
+				while (getline(file, line))
 				{
-					size_t endPos = line.find_first_of("]");
-					if (endPos != string::npos)
+					if (line.empty())
 					{
-						string sectionName = line.substr(1, endPos - 1);
-						sectionNames.emplace_back(sectionName);
+						continue;
+					}
+
+					if (line[0] == '[')
+					{
+						size_t endPos = line.find_first_of("]");
+						if (endPos != string::npos)
+						{
+							string sectionName = line.substr(1, endPos - 1);
+							sectionNames.emplace_back(sectionName);
+						}
+					}
+					else if (line[0] != ';')
+					{
+						sectionVal[sectionNames.back()].emplace_back(line);
 					}
 				}
-				else if (line[0] != ';')
-				{
-					sectionVal[sectionNames.back()].emplace_back(line);
-				}
-			}
 
-			file.close();
-		};
+				file.close();
+			};
 
-	GetINISectionNames(iniFilePath);
+		GetINISectionNames(iniFilePath);
 
-	auto iter = sectionNames.begin();
-	while (iter != sectionNames.end())
-	{
-		if ((*iter).find("Server") != std::string::npos && *iter != serverName)
+		auto iter = sectionNames.begin();
+		while (iter != sectionNames.end())
 		{
-			sectionVal.erase(*iter);
-			iter = sectionNames.erase(iter);
-		}
-		else
-		{
-			++iter;
-		}
-	}
-#endif
-
-	for (const string& sectionName : sectionNames)
-	{
-#ifdef _WIN32
-		GetPrivateProfileSectionA(sectionName.c_str(), buffer, bufferSize, iniFilePath);
-		char* keyValuePair = buffer;
-		while (*keyValuePair)
-		{
-			string split(keyValuePair);
-			keyValuePair += strlen(keyValuePair) + 1;
-#elif __unix__
-		for (const string& keyValuePair : sectionVal[sectionName])
-		{
-			string split(keyValuePair);
-#endif
-
-			size_t pos = split.find('=');
-			if (pos != string::npos)
+			if ((*iter).find("Server") != std::string::npos && *iter != serverName)
 			{
-				string key = split.substr(0, pos);
-				if (param.contains(key))
-				{
-					continue;
-				}
-
-				param.emplace(key, split.substr(pos + 1));
-			}
-
-		}
-	}
-
-	// set global Launch config  
-	{
-		pLuanchParam = &param;
-		SetLuanchConfig(pLuanchParam);
-	}
-
-	// I10n Config
-	pl10n = make_unique<DNl10n>();
-	if (const char* codeStr = pl10n->InitConfigData())
-	{
-		DNPrint(0, LoggerLevel::Error, codeStr);
-		return false;
-	}
-
-	return true;
-}
-
-bool DimensionNightmare::Init()
-{
-	string* value = GetLuanchConfigParam("svrType");
-	ServerType serverType = (ServerType)stoi(*value);
-
-	switch (serverType)
-	{
-		case ServerType::ControlServer:
-			pServer = make_unique<ControlServer>();
-			break;
-		case ServerType::GlobalServer:
-			pServer = make_unique<GlobalServer>();
-			break;
-		case ServerType::AuthServer:
-			pServer = make_unique<AuthServer>();
-			break;
-		case ServerType::GateServer:
-			pServer = make_unique<GateServer>();
-			break;
-		case ServerType::DatabaseServer:
-			pServer = make_unique<DatabaseServer>();
-			break;
-		case ServerType::LogicServer:
-			pServer = make_unique<LogicServer>();
-			break;
-		default:
-			DNPrint(ErrCode::ErrCode_SrvTypeNotVaild, LoggerLevel::Error, nullptr);
-			return false;
-	}
-
-	pServer->pLuanchConfig = pLuanchParam;
-	pServer->pDNl10nInstance = pl10n.get();
-
-	if (!pServer->Init())
-	{
-		return false;
-	}
-
-	pHotDll = make_unique<HotReloadDll>();
-	if (!pHotDll->ReloadHandle(serverType))
-	{
-		return false;
-	}
-
-	InitCmdHandle();
-
-	if (!OnRegHotReload())
-	{
-		DNPrint(0, LoggerLevel::Error, "program lunch OnRegHotReload error!");
-		return false;
-	}
-
-	if (!pServer->Start())
-	{
-		DNPrint(0, LoggerLevel::Error, "program lunch Server Start error!");
-		return false;
-	}
-
-	return pServer->IsRun() = true;
-}
-
-void DimensionNightmare::InitCmdHandle()
-{
-	auto pause = [this](stringstream* = nullptr)
-		{
-			pServer->Pause();
-		};
-
-	auto resume = [this](stringstream* = nullptr)
-		{
-			pServer->Resume();
-		};
-
-	auto reload = [&, pause, resume](stringstream* ss = nullptr)
-		{
-			pause();
-			OnUnregHotReload();
-			pHotDll->ReloadHandle(pServer->GetServerType());
-			OnRegHotReload();
-			resume();
-		};
-
-	auto reloadConfig = [this](stringstream* ss = nullptr)
-		{
-			InitConfig(*pLuanchParam);
-		};
-
-	auto open = [](stringstream* ss)
-		{
-			string str;
-			string allStr = *GetLuanchConfigParam("program") + " ";
-			while (*ss >> str)
-			{
-				allStr += str + " ";
-			}
-
-			cout << allStr << endl;
-
-#ifdef _WIN32
-			PROCESS_INFORMATION pinfo = {};
-			STARTUPINFOA startInfo = {};
-			ZeroMemory(&startInfo, sizeof(startInfo));
-			startInfo.cb = sizeof(startInfo);
-
-			startInfo.dwFlags = STARTF_USESHOWWINDOW;
-			startInfo.wShowWindow = 1; // SW_SHOWNORMAL;
-			if (CreateProcessA(NULL, allStr.data(),
-				NULL, NULL, FALSE, CREATE_NEW_CONSOLE, NULL, NULL, &startInfo, &pinfo))
-#elif __unix__
-			if (0)
-#endif
-			{
-				cout << "success" << endl;
+				sectionVal.erase(*iter);
+				iter = sectionNames.erase(iter);
 			}
 			else
 			{
-				cout << "error:" << GetLastError() << endl;
+				++iter;
 			}
+		}
+#endif
+
+		for (const string& sectionName : sectionNames)
+		{
+#ifdef _WIN32
+			GetPrivateProfileSectionA(sectionName.c_str(), buffer, bufferSize, iniFilePath);
+			char* keyValuePair = buffer;
+			while (*keyValuePair)
+			{
+				string split(keyValuePair);
+				keyValuePair += strlen(keyValuePair) + 1;
+#elif __unix__
+			for (const string& keyValuePair : sectionVal[sectionName])
+			{
+				string split(keyValuePair);
+#endif
+
+				size_t pos = split.find('=');
+				if (pos != string::npos)
+				{
+					string key = split.substr(0, pos);
+					if (param.contains(key))
+					{
+						continue;
+					}
+
+					param.emplace(key, split.substr(pos + 1));
+				}
+
+			}
+		}
+
+		// set global Launch config  
+		{
+			pLuanchParam = &param;
+			SetLuanchConfig(pLuanchParam);
+		}
+
+		// I10n Config
+		pl10n = make_unique<DNl10n>();
+		if (const char* codeStr = pl10n->InitConfigData())
+		{
+			DNPrint(0, LoggerLevel::Error, codeStr);
+			return false;
+		}
+
+		return true;
+	}
+
+	/// @brief create server
+	bool Init()
+	{
+		string* value = GetLuanchConfigParam("svrType");
+		ServerType serverType = (ServerType)stoi(*value);
+
+		switch (serverType)
+		{
+			case ServerType::ControlServer:
+				pServer = make_unique<ControlServer>();
+				break;
+			case ServerType::GlobalServer:
+				pServer = make_unique<GlobalServer>();
+				break;
+			case ServerType::AuthServer:
+				pServer = make_unique<AuthServer>();
+				break;
+			case ServerType::GateServer:
+				pServer = make_unique<GateServer>();
+				break;
+			case ServerType::DatabaseServer:
+				pServer = make_unique<DatabaseServer>();
+				break;
+			case ServerType::LogicServer:
+				pServer = make_unique<LogicServer>();
+				break;
+			default:
+				DNPrint(ErrCode::ErrCode_SrvTypeNotVaild, LoggerLevel::Error, nullptr);
+				return false;
+		}
+
+		pServer->pLuanchConfig = pLuanchParam;
+		pServer->pDNl10nInstance = pl10n.get();
+
+		if (!pServer->Init())
+		{
+			return false;
+		}
+
+		pHotDll = make_unique<HotReloadDll>();
+		if (!pHotDll->ReloadHandle(serverType))
+		{
+			return false;
+		}
+
+		InitCmdHandle();
+
+		if (!OnRegHotReload())
+		{
+			DNPrint(0, LoggerLevel::Error, "program lunch OnRegHotReload error!");
+			return false;
+		}
+
+		if (!pServer->Start())
+		{
+			DNPrint(0, LoggerLevel::Error, "program lunch Server Start error!");
+			return false;
+		}
+
+		return pServer->IsRun() = true;
+	}
+	
+	/// @brief init command line 
+	void InitCmdHandle()
+	{
+		auto pause = [this](stringstream* = nullptr)
+			{
+				pServer->Pause();
+			};
+
+		auto resume = [this](stringstream* = nullptr)
+			{
+				pServer->Resume();
+			};
+
+		auto reload = [&, pause, resume](stringstream* ss = nullptr)
+			{
+				pause();
+				OnUnregHotReload();
+				pHotDll->ReloadHandle(pServer->GetServerType());
+				OnRegHotReload();
+				resume();
+			};
+
+		auto reloadConfig = [this](stringstream* ss = nullptr)
+			{
+				InitConfig(*pLuanchParam);
+			};
+
+		auto open = [](stringstream* ss)
+			{
+				string str;
+				string allStr = *GetLuanchConfigParam("program") + " ";
+				while (*ss >> str)
+				{
+					allStr += str + " ";
+				}
+
+				cout << allStr << endl;
+
+#ifdef _WIN32
+				PROCESS_INFORMATION pinfo = {};
+				STARTUPINFOA startInfo = {};
+				ZeroMemory(&startInfo, sizeof(startInfo));
+				startInfo.cb = sizeof(startInfo);
+
+				startInfo.dwFlags = STARTF_USESHOWWINDOW;
+				startInfo.wShowWindow = 1; // SW_SHOWNORMAL;
+				if (CreateProcessA(NULL, allStr.data(),
+					NULL, NULL, FALSE, CREATE_NEW_CONSOLE, NULL, NULL, &startInfo, &pinfo))
+#elif __unix__
+				if (0)
+#endif
+				{
+					cout << "success" << endl;
+				}
+				else
+				{
+					cout << "error:" << GetLastError() << endl;
+				}
+			};
+
+		mCmdHandle = {
+			#define one(func) {#func, func}
+			
+			one(pause), one(resume), one(reload), one(open),
+			one(reloadConfig)
+			
+			#undef one
 		};
 
-	mCmdHandle = {
-		#define one(func) {#func, func}
-		
-		one(pause), one(resume), one(reload), one(open),
-		one(reloadConfig)
-		
-		#undef one
-	};
-
-	if (pServer)
-	{
-		pServer->InitCmd(mCmdHandle);
-	}
-
-	printf("\nCommand: ");
-	for (auto& [k, v] : mCmdHandle)
-	{
-		printf("%s,", k.c_str());
-	}
-
-	printf("\n\n");
-}
-
-void DimensionNightmare::ExecCommand(string * cmd, stringstream * ss)
-{
-	if (mCmdHandle.contains(*cmd))
-	{
-		mCmdHandle[*cmd](ss);
-	}
-}
-
-bool DimensionNightmare::OnRegHotReload()
-{
-	if (void* funtPtr = pHotDll->GetFuncPtr("InitHotReload"))
-	{
-		using funcSign = int (*)(DNServer*);
-		if (funcSign func = reinterpret_cast<funcSign>(funtPtr))
+		if (pServer)
 		{
-			return func(pServer.get()) == int(true);
+			pServer->InitCmd(mCmdHandle);
 		}
-	}
 
-	return false;
-}
+		printf("\nCommand: ");
+		for (auto& [k, v] : mCmdHandle)
+		{
+			printf("%s,", k.c_str());
+		}
 
-bool DimensionNightmare::OnUnregHotReload()
-{
-	// launch error pHotDll is Null
-	if (!pHotDll)
+		printf("\n\n");
+	}	
+
+	/// @brief exec command line
+	void ExecCommand(string* cmd, stringstream* ss)
 	{
+		if (mCmdHandle.contains(*cmd))
+		{
+			mCmdHandle[*cmd](ss);
+		}
+	}	
+
+	/// @brief exec runtime lib func
+	bool OnRegHotReload()
+	{
+		if (void* funtPtr = pHotDll->GetFuncPtr("InitHotReload"))
+		{
+			using funcSign = int (*)(DNServer*);
+			if (funcSign func = reinterpret_cast<funcSign>(funtPtr))
+			{
+				return func(pServer.get()) == int(true);
+			}
+		}
+
 		return false;
 	}
 
-	if (void* funtPtr = pHotDll->GetFuncPtr("ShutdownHotReload"))
+	/// @brief exec runtime lib func
+	bool OnUnregHotReload()
 	{
-		using funcSign = int (*)(DNServer*);
-		if (funcSign func = reinterpret_cast<funcSign>(funtPtr))
+		// launch error pHotDll is Null
+		if (!pHotDll)
 		{
-			return func(pServer.get()) == int(true);
+			return false;
 		}
+
+		if (void* funtPtr = pHotDll->GetFuncPtr("ShutdownHotReload"))
+		{
+			using funcSign = int (*)(DNServer*);
+			if (funcSign func = reinterpret_cast<funcSign>(funtPtr))
+			{
+				return func(pServer.get()) == int(true);
+			}
+		}
+
+		return false;
 	}
 
-	return false;
-}
+	HotReloadDll* Dll() { return pHotDll.get(); }
 
-void DimensionNightmare::TickMainFrame()
-{
-	pServer->TickMainFrame();
-}
+	bool& ServerIsRun() { return pServer->IsRun(); }
+
+	void TickMainFrame() { pServer->TickMainFrame(); }
+
+	DNl10n* GetDNl10n(){return pl10n.get();}
+
+private:
+	/// @brief runtime lib service pointer
+	unique_ptr<HotReloadDll> pHotDll;
+
+	/// @brief server service pointer
+	unique_ptr<DNServer> pServer;
+
+	/// @brief l10n language service pointer
+	unique_ptr<DNl10n> pl10n;
+
+	/// @brief command line function mapping
+	unordered_map<string, function<void(stringstream*)>> mCmdHandle;
+
+	// mount ini param
+	unordered_map<string, string>* pLuanchParam;
+	
+};
+
+export unique_ptr<DimensionNightmare> PInstance;

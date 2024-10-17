@@ -31,7 +31,7 @@ import ThirdParty.PbGen;
 import StrUtils;
 
 #ifdef __unix__
-#define Sleep(ms) usleep(ms*1000)
+	#define Sleep(ms) usleep(ms*1000)
 #endif
 
 enum class LunchType : uint8_t

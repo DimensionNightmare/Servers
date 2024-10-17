@@ -4,19 +4,33 @@ export module ProxyEntity;
 
 import NetEntity;
 
+/// @brief this is client proxy entity
 export class ProxyEntity : public NetEntity
 {
 public:
-	ProxyEntity();
-	ProxyEntity(uint32_t id);
 
-	virtual ~ProxyEntity();
+	ProxyEntity() : NetEntity(0)
+	{
+		eEntityType = EntityType::Proxy;
+	}
+
+	ProxyEntity(uint32_t id) : NetEntity(id)
+	{
+		eEntityType = EntityType::Proxy;
+	}
+
+	virtual ~ProxyEntity()
+	{
+	}
 
 public: // dll override
+	/// @brief authenticate token
 	string& Token() { return sToken; }
 
+	/// @brief authenticate token expire time
 	uint32_t& ExpireTime() { return iExpireTime; }
 
+	/// @brief alread connected serverid 
 	uint32_t& RecordServerId() { return iRecordServerId; }
 
 protected: // dll proxy
@@ -25,20 +39,5 @@ protected: // dll proxy
 	string sToken;
 
 	uint32_t iExpireTime = 0;
+
 };
-
-
-
-ProxyEntity::ProxyEntity() : NetEntity(0)
-{
-	eEntityType = EntityType::Proxy;
-}
-
-ProxyEntity::ProxyEntity(uint32_t id) : NetEntity(id)
-{
-	eEntityType = EntityType::Proxy;
-}
-
-ProxyEntity::~ProxyEntity()
-{
-}
