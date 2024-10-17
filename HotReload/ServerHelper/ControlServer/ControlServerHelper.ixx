@@ -2,9 +2,9 @@ module;
 #include "StdMacro.h"
 export module ControlServerHelper;
 
-export import ControlServer;
-export import DNServerProxyHelper;
-export import ServerEntityManagerHelper;
+import ControlServer;
+import DNServerProxyHelper;
+import ServerEntityManagerHelper;
 
 export class ControlServerHelper : public ControlServer
 {

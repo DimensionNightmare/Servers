@@ -10,6 +10,9 @@ import Logger;
 import Macro;
 import ThirdParty.Libhv;
 import ThirdParty.PbGen;
+import DNServer;
+import DNServerProxyHelper;
+import MessagePack;
 
 export int HandleControlServerInit(DNServer* server)
 {

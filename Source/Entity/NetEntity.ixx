@@ -2,7 +2,7 @@ module;
 #include "StdMacro.h"
 export module NetEntity;
 
-export import Entity;
+import Entity;
 import ThirdParty.Libhv;
 
 export class NetEntity : public Entity

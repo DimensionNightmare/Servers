@@ -64,7 +64,7 @@ extern "C"
 	
 	HOTRELOAD int InitHotReload(DNServer* server)
 	{
-		HV_hlog_disable();
+		HVExport::hlog_disable();
 
 		SetLuanchConfig(server->pLuanchConfig);
 		SetDNl10nInstance(server->pDNl10nInstance);
@@ -129,8 +129,8 @@ extern "C"
 				break;
 		}
 
-		PB_ShutdownProtobufLibrary();
-		HV_cleanup();
+		PBExport::ShutdownProtobufLibrary();
+		HVExport::cleanup();
 
 		return isDeal;
 	}

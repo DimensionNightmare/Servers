@@ -2,8 +2,8 @@ module;
 #include "StdMacro.h"
 export module RoomEntityManagerHelper;
 
-export import RoomEntityManager;
-export import RoomEntityHelper;
+import RoomEntityManager;
+import RoomEntityHelper;
 import Logger;
 
 export class RoomEntityManagerHelper : public RoomEntityManager

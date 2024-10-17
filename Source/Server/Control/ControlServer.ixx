@@ -2,7 +2,7 @@ module;
 #include "StdMacro.h"
 export module ControlServer;
 
-export import DNServer;
+import DNServer;
 import DNServerProxy;
 import MessagePack;
 import ServerEntityManager;

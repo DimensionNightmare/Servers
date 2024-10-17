@@ -1,7 +1,7 @@
 module;
 #include "google/protobuf/reflection.h"
 #include "google/protobuf/descriptor.pb.h"
-#include "google/protobuf/util/json_util.h"
+#include "google/protobuf/json/json.h"
 #include "google/protobuf/extension_set.h"
 
 #include "GCfg/GCfg.pb.h"
@@ -15,7 +15,6 @@ module;
 #include "Server/S_Gate.pb.h"
 #include "Client/C_Auth.pb.h"
 #include "Server/S_Logic.pb.h"
-#include "Common/DbExtend.pb.h"
 
 #include "StdMacro.h"
 export module ThirdParty.PbGen;
@@ -26,7 +25,8 @@ using namespace l10n;
 using namespace GCfg;
 using namespace GDb;
 
-export {
+export 
+{
 	using ::Message;
 	using ::Descriptor;
 	using ::FieldDescriptor;
@@ -41,9 +41,7 @@ export {
 	using ::Account;
 	using ::Player;
 	using ::SingleTon;
-};
 
-export {
 	using ::ErrCode;
 	using ::TipCode;
 	using ::l10nErr;
@@ -53,9 +51,7 @@ export {
 	using ::MapPointRecord;
 	using ::Vector3;
 	using ::MapPoint;
-};
 
-export {
 	using ::L2D_ReqLoadData;
 	using ::D2L_ResLoadData;
 	using ::d2L_ReqLoadEntityData;
@@ -82,14 +78,15 @@ export {
 	using ::d2L_ReqRegistSrv;
 };
 
-export {
-	void PB_ShutdownProtobufLibrary() { ShutdownProtobufLibrary(); }
-	auto PB_MessageToJsonString(const Message& message, std::string* output) { return util::MessageToJsonString(message, output); }
-	const Descriptor* PB_FindMessageTypeByName(absl::string_view name) { return DescriptorPool::generated_pool()->FindMessageTypeByName(name); }
-	const Message* PB_GetPrototype(const Descriptor* descriptor) { return MessageFactory::generated_factory()->GetPrototype(descriptor); }
-	bool PB_ErrCode_IsValid(int type) { return ErrCode_IsValid(type); }
-	bool PB_TipCode_IsValid(int type) { return TipCode_IsValid(type); }
+export namespace PBExport
+{
+	void ShutdownProtobufLibrary() { ::ShutdownProtobufLibrary(); }
+	auto MessageToJsonString(const Message& message, std::string* output) { return json::MessageToJsonString(message, output); }
+	const Descriptor* FindMessageTypeByName(absl::string_view name) { return DescriptorPool::generated_pool()->FindMessageTypeByName(name); }
+	const Message* GetPrototype(const Descriptor* descriptor) { return MessageFactory::generated_factory()->GetPrototype(descriptor); }
+	bool ErrCode_IsValid(int type) { return ::ErrCode_IsValid(type); }
+	bool TipCode_IsValid(int type) { return ::TipCode_IsValid(type); }
 
-	const string& PB_ErrCode_Name(int type) { return ErrCode_Name((ErrCode)type); }
-	const string& PB_TipCode_Name(int type) { return TipCode_Name((TipCode)type); }
+	const string& ErrCode_Name(int type) { return ::ErrCode_Name((ErrCode)type); }
+	const string& TipCode_Name(int type) { return ::TipCode_Name((TipCode)type); }
 };

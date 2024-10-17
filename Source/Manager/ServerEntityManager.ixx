@@ -2,9 +2,10 @@ module;
 #include "StdMacro.h"
 export module ServerEntityManager;
 
-export import ServerEntity;
+import ServerEntity;
 import EntityManager;
 import Logger;
+import DNServer;
 
 export class ServerEntityManager : public EntityManager<ServerEntity>
 {
@@ -103,8 +104,3 @@ protected: // dll proxy
 	atomic<uint32_t> iServerGenId;
 
 };
-
-extern "C"
-{
-	REGIST_MAINSPACE_SIGN_FUNCTION(ServerEntityManager, CheckEntityCloseTimer);
-}

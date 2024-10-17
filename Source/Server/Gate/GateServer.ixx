@@ -2,7 +2,7 @@ module;
 #include "StdMacro.h"
 export module GateServer;
 
-export import DNServer;
+import DNServer;
 import DNServerProxy;
 import DNClientProxy;
 import ServerEntityManager;

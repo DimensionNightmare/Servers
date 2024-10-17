@@ -20,6 +20,7 @@ import I10nText;
 import Logger;
 import Config.Server;
 import ThirdParty.PbGen;
+import DNServer;
 
 #ifdef __unix__
 	#define Sleep(ms) usleep(ms*1000)
@@ -554,3 +555,36 @@ private:
 };
 
 export unique_ptr<DimensionNightmare> PInstance;
+
+#pragma region Export main space 
+template <typename Method>
+struct MemberFunctionArgs;
+
+template <typename R, typename Class, typename... Args>
+struct MemberFunctionArgs<R(Class::*)(Args...)>
+{
+	using Arguments = std::tuple<Args...>;
+};
+
+#define REGIST_MAINSPACE_SIGN_FUNCTION(classname, methodname)\
+	using classname##_##methodname##_Sign = decltype(&classname::methodname);\
+	using classname##_##methodname##_Args = typename MemberFunctionArgs<classname##_##methodname##_Sign>::Arguments;\
+	__declspec(dllexport) auto classname##_##methodname(classname *obj, classname##_##methodname##_Args args)\
+	{\
+		return apply([&obj](auto &&...unpack) { return obj->methodname(std::forward<decltype(unpack)>(unpack)...); }, args);\
+	}
+
+extern "C"
+{
+	REGIST_MAINSPACE_SIGN_FUNCTION(ProxyEntityManager, CheckEntityCloseTimer);
+	REGIST_MAINSPACE_SIGN_FUNCTION(RoomEntityManager, CheckEntityCloseTimer);
+	REGIST_MAINSPACE_SIGN_FUNCTION(ServerEntityManager, CheckEntityCloseTimer);
+	REGIST_MAINSPACE_SIGN_FUNCTION(DNClientProxy, InitConnectedChannel);
+	REGIST_MAINSPACE_SIGN_FUNCTION(DNClientProxy, CheckMessageTimeoutTimer);
+	REGIST_MAINSPACE_SIGN_FUNCTION(DNClientProxy, RedirectClient);
+	REGIST_MAINSPACE_SIGN_FUNCTION(DNServerProxy, InitConnectedChannel);
+	REGIST_MAINSPACE_SIGN_FUNCTION(DNServerProxy, CheckMessageTimeoutTimer);
+}
+
+
+#pragma endregion

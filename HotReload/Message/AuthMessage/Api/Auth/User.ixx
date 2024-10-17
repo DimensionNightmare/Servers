@@ -124,7 +124,7 @@ export void ApiAuth(HttpService* service)
 					}
 
 					binData.clear();
-					auto state = PB_MessageToJsonString(response, &binData);
+					auto state = PBExport::MessageToJsonString(response, &binData);
 					retData["data"] = nlohmann::json::parse(binData);
 					retData["data"]["accountId"] = accInfo.account_id();
 

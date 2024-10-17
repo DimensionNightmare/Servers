@@ -3,7 +3,7 @@ module;
 export module ServerEntity;
 
 import NetEntity;
-export import DNServer;
+import DNServer;
 
 export enum class ServerEntityFlag : uint16_t
 {

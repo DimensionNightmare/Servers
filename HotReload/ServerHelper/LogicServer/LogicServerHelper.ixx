@@ -2,11 +2,11 @@ module;
 #include "StdMacro.h"
 export module LogicServerHelper;
 
-export import LogicServer;
-export import DNClientProxyHelper;
-export import DNServerProxyHelper;
-export import RoomEntityManagerHelper;
-export import ClientEntityManagerHelper;
+import LogicServer;
+import DNClientProxyHelper;
+import DNServerProxyHelper;
+import RoomEntityManagerHelper;
+import ClientEntityManagerHelper;
 import Logger;
 import Config.Server;
 import ThirdParty.RedisPP;

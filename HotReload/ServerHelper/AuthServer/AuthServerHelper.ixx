@@ -2,9 +2,9 @@ module;
 #include "StdMacro.h"
 export module AuthServerHelper;
 
-export import AuthServer;
-export import DNClientProxyHelper;
-export import DNWebProxyHelper;
+import AuthServer;
+import DNClientProxyHelper;
+import DNWebProxyHelper;
 import DbUtils;
 import Logger;
 import Config.Server;

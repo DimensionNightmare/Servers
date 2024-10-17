@@ -6,6 +6,7 @@ import LogicServerHelper;
 import Logger;
 import ThirdParty.Libhv;
 import ThirdParty.PbGen;
+import ClientEntityManagerHelper;
 
 namespace LogicMessage
 {

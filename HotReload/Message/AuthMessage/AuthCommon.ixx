@@ -7,6 +7,7 @@ import FuncHelper;
 import AuthServerHelper;
 import Logger;
 import ThirdParty.PbGen;
+import DNClientProxyHelper;
 
 namespace AuthMessage
 {

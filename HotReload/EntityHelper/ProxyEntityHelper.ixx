@@ -1,7 +1,7 @@
 module;
 export module ProxyEntityHelper;
 
-export import ProxyEntity;
+import ProxyEntity;
 
 export class ProxyEntityHelper : public ProxyEntity
 {

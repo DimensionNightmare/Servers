@@ -2,8 +2,8 @@ module;
 #include "StdMacro.h"
 export module ClientEntityManager;
 
-export import ClientEntity;
-export import DNServer;
+import ClientEntity;
+import DNServer;
 import EntityManager;
 import Logger;
 import DNClientProxy;

@@ -2,10 +2,10 @@ module;
 #include "StdMacro.h"
 export module GlobalServerHelper;
 
-export import GlobalServer;
-export import DNClientProxyHelper;
-export import DNServerProxyHelper;
-export import ServerEntityManagerHelper;
+import GlobalServer;
+import DNClientProxyHelper;
+import DNServerProxyHelper;
+import ServerEntityManagerHelper;
 import FuncHelper;
 import Macro;
 import Logger;

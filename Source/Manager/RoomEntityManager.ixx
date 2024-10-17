@@ -2,7 +2,7 @@ module;
 #include "StdMacro.h"
 export module RoomEntityManager;
 
-export import RoomEntity;
+import RoomEntity;
 import EntityManager;
 import Logger;
 
@@ -73,8 +73,3 @@ protected:
 	atomic<uint32_t> iRoomGenId;
 
 };
-
-extern "C"
-{
-	REGIST_MAINSPACE_SIGN_FUNCTION(RoomEntityManager, CheckEntityCloseTimer);
-}

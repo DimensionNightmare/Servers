@@ -8,6 +8,8 @@ import GlobalServerHelper;
 import Logger;
 import ThirdParty.Libhv;
 import ThirdParty.PbGen;
+import ServerEntity;
+import ServerEntityManagerHelper;
 
 namespace GlobalMessage
 {

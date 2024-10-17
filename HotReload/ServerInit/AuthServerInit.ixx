@@ -10,6 +10,9 @@ import Logger;
 import Macro;
 import ThirdParty.Libhv;
 import ThirdParty.PbGen;
+import DNServer;
+import DNWebProxyHelper;
+import MessagePack;
 
 export int HandleAuthServerInit(DNServer* server)
 {
@@ -19,11 +22,11 @@ export int HandleAuthServerInit(DNServer* server)
 
 	if (DNWebProxyHelper* serverSock = serverProxy->GetSSock())
 	{
-		shared_ptr<HttpService> service = make_shared<HttpService>();
+		HttpService* service = new HttpService();
 
-		AuthMessageHandle::RegApiHandle(service.get());
+		AuthMessageHandle::RegApiHandle(service);
 
-		serverSock->registerHttpService(service.get());
+		serverSock->registerHttpService(service);
 	}
 
 	if (DNClientProxyHelper* clientSock = serverProxy->GetCSock())

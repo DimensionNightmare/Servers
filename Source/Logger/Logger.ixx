@@ -85,7 +85,7 @@ export void LoggerPrint(LoggerLevel level, int code, const char* funcName, const
 	vsnprintf(&message[0], len + 1, fmt, args);
 	va_end(args);
 
-	string outputStr = format("[{}] {} -> \n{}\n", GetNowTimeStr(), funcName, message);
+	string outputStr = format("[{}] {} -> \n\t{}\n", GetNowTimeStr(), funcName, message);
 	cout << outputStr;
 
 	if(ofstream* file = GetLoggerFile())

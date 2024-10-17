@@ -70,9 +70,9 @@ namespace DatabaseMessage
 					}
 				};
 
-			if (const Descriptor* descriptor = PB_FindMessageTypeByName(request.table_name()))
+			if (const Descriptor* descriptor = PBExport::FindMessageTypeByName(request.table_name()))
 			{
-				if (const Message* prototype = PB_GetPrototype(descriptor))
+				if (const Message* prototype = PBExport::GetPrototype(descriptor))
 				{
 					Message* message = prototype->New();
 
@@ -140,9 +140,9 @@ namespace DatabaseMessage
 
 				};
 
-			if (const Descriptor* descriptor = PB_FindMessageTypeByName(request.table_name()))
+			if (const Descriptor* descriptor = PBExport::FindMessageTypeByName(request.table_name()))
 			{
-				if (const Message* prototype = PB_GetPrototype(descriptor))
+				if (const Message* prototype = PBExport::GetPrototype(descriptor))
 				{
 					Message* message = prototype->New();
 

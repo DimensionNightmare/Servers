@@ -2,7 +2,7 @@ module;
 #include "StdMacro.h"
 export module GlobalServer;
 
-export import DNServer;
+import DNServer;
 import DNServerProxy;
 import DNClientProxy;
 import ServerEntityManager;

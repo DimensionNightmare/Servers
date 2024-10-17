@@ -2,7 +2,7 @@ module;
 #include "StdMacro.h"
 export module DNClientProxyHelper;
 
-export import DNClientProxy;
+import DNClientProxy;
 import DNTask;
 import Macro;
 import ThirdParty.Libhv;

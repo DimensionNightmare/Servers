@@ -2,7 +2,7 @@ module;
 #include "StdMacro.h"
 export module ProxyEntityManager;
 
-export import ProxyEntity;
+import ProxyEntity;
 import EntityManager;
 import Logger;
 
@@ -72,8 +72,3 @@ protected: // dll proxy
 
 
 };
-
-extern "C"
-{
-	REGIST_MAINSPACE_SIGN_FUNCTION(ProxyEntityManager, CheckEntityCloseTimer);
-}

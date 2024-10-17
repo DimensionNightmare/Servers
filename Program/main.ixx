@@ -130,7 +130,7 @@ export int main(int argc, char** argv)
 	string_view serverName = EnumName(serverType);
 	SetLoggerLevel(LoggerLevel::Debug, serverName);
 
-	HV_hlog_disable();
+	HVExport::hlog_disable();
 
 	DNPrint(0, LoggerLevel::Normal, "hello ~");
 

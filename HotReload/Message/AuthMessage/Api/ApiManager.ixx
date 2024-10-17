@@ -11,11 +11,11 @@ export void ApiInit(HttpService* service)
 {
 	service->preprocessor = [](const HttpContextPtr& ctx) -> int
 		{
-			static int success = 0;
+			static bool pass = 0;
 
 			if (ctx->request->path.contains("/Test/"))
 			{
-				return success;
+				return pass;
 			}
 
 			AuthServerHelper* authServer = GetAuthServer();
@@ -27,10 +27,10 @@ export void ApiInit(HttpService* service)
 				errData["code"] = http_status::HTTP_STATUS_BAD_REQUEST;
 				errData["message"] = "Server Disconnect!";
 				ctx->response->SetBody(errData.dump());
-				return !success;
+				return !pass;
 			}
 
-			return success;
+			return pass;
 		};
 
 	ApiAuth(service);

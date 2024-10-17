@@ -2,9 +2,9 @@ module;
 #include "StdMacro.h"
 export module DatabaseServerHelper;
 
-export import DatabaseServer;
-export import DNClientProxyHelper;
-export import ServerEntityManagerHelper;
+import DatabaseServer;
+import DNClientProxyHelper;
+import ServerEntityManagerHelper;
 import Logger;
 import Config.Server;
 import StrUtils;

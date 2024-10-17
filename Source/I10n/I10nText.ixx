@@ -145,7 +145,7 @@ public:
 
 export const char* GetErrText(int type)
 {
-	if (!PInstance || !PB_ErrCode_IsValid(type))
+	if (!PInstance || !PBExport::ErrCode_IsValid(type))
 	{
 		return nullptr;
 	}
@@ -153,7 +153,7 @@ export const char* GetErrText(int type)
 	auto& dataMap = PInstance->mL10nErrDll;
 	if (!dataMap.contains(type))
 	{
-		throw invalid_argument(format("I10n Err Config not exist this type {}", PB_ErrCode_Name(type)));
+		throw invalid_argument(format("I10n Err Config not exist this type {}", PBExport::ErrCode_Name(type)));
 	}
 
 	return (dataMap[type]->*(PInstance->pL10nErrFunc))().c_str();
@@ -161,7 +161,7 @@ export const char* GetErrText(int type)
 
 export const char* GetTipText(int type)
 {
-	if (!PInstance || !PB_TipCode_IsValid(type))
+	if (!PInstance || !PBExport::TipCode_IsValid(type))
 	{
 		return nullptr;
 	}
@@ -169,7 +169,7 @@ export const char* GetTipText(int type)
 	auto& dataMap = PInstance->mL10nTipDll;
 	if (!dataMap.contains(type))
 	{
-		throw invalid_argument(format("I10n Tip Config not exist this type {}", PB_TipCode_Name(type)));
+		throw invalid_argument(format("I10n Tip Config not exist this type {}", PBExport::TipCode_Name(type)));
 	}
 
 	return (dataMap[type]->*(PInstance->pL10nTipFunc))().c_str();

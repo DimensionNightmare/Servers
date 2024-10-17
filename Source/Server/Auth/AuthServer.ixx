@@ -2,7 +2,7 @@ module;
 #include "StdMacro.h"
 export module AuthServer;
 
-export import DNServer;
+import DNServer;
 import DNWebProxy;
 import DNClientProxy;
 import Logger;

@@ -2,8 +2,8 @@ module;
 #include "StdMacro.h"
 export module ServerEntityManagerHelper;
 
-export import ServerEntityManager;
-export import ServerEntityHelper;
+import ServerEntityManager;
+import ServerEntityHelper;
 import Logger;
 
 export class ServerEntityManagerHelper : public ServerEntityManager

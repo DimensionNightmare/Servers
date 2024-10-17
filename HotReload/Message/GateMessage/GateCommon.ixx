@@ -8,6 +8,7 @@ import GateServerHelper;
 import Logger;
 import ThirdParty.Libhv;
 import ThirdParty.PbGen;
+import ServerEntityManagerHelper;
 
 namespace GateMessage
 {

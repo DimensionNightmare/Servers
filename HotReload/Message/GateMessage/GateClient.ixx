@@ -9,6 +9,7 @@ import FuncHelper;
 import Logger;
 import ThirdParty.Libhv;
 import ThirdParty.PbGen;
+import ProxyEntityManagerHelper;
 
 namespace GateMessage
 {

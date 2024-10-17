@@ -8,6 +8,7 @@ import ControlServerHelper;
 import ThirdParty.Libhv;
 import ThirdParty.PbGen;
 import Logger;
+import ServerEntityManagerHelper;
 
 namespace ControlMessage
 {

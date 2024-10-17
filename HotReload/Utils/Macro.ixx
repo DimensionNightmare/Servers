@@ -23,6 +23,15 @@ struct DefaultReturnValue<void> {
 	static void get() {}
 };
 
+template <typename Method>
+struct MemberFunctionArgs;
+
+template <typename R, typename Class, typename... Args>
+struct MemberFunctionArgs<R(Class::*)(Args...)>
+{
+	using Arguments = std::tuple<Args...>;
+};
+
 export template <typename Class, typename Method, typename... Args>
 auto TickMainSpaceDll(Class* obj, const char* methodName, Method method, Args... args)
 {

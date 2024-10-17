@@ -2,7 +2,7 @@ module;
 #include "StdMacro.h"
 export module DatabaseServer;
 
-export import DNServer;
+import DNServer;
 import DNServerProxy;
 import DNClientProxy;
 import Logger;

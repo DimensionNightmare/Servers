@@ -2,8 +2,8 @@ module;
 #include "StdMacro.h"
 export module ProxyEntityManagerHelper;
 
-export import ProxyEntityHelper;
-export import ProxyEntityManager;
+import ProxyEntityHelper;
+import ProxyEntityManager;
 import Logger;
 
 export class ProxyEntityManagerHelper : public ProxyEntityManager

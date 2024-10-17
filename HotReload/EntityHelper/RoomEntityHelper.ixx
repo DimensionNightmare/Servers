@@ -1,7 +1,7 @@
 module;
 export module RoomEntityHelper;
 
-export import RoomEntity;
+import RoomEntity;
 
 export class RoomEntityHelper : public RoomEntity
 {

@@ -2,13 +2,14 @@ module;
 #include "StdMacro.h"
 export module ClientEntityManagerHelper;
 
-export import ClientEntityHelper;
-export import ClientEntityManager;
+import ClientEntityHelper;
+import ClientEntityManager;
 import Logger;
 import DNTask;
 import FuncHelper;
 import StrUtils;
 import ThirdParty.PbGen;
+import DNServer;
 
 export class ClientEntityManagerHelper : public ClientEntityManager
 {
@@ -134,9 +135,9 @@ public:
 		D2L_ResLoadData response;
 		{
 			auto taskGen = [](Message* msg) -> DNTask<Message*>
-			{
-				co_return msg;
-			};
+				{
+					co_return msg;
+				};
 			auto dataChannel = taskGen(&response);
 
 			uint32_t msgId = pSqlClient->GetMsgId();

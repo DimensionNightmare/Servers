@@ -2,7 +2,7 @@ module;
 #include "StdMacro.h"
 export module DNServerProxyHelper;
 
-export import DNServerProxy;
+import DNServerProxy;
 import DNTask;
 import Macro;
 import ThirdParty.PbGen;

@@ -4,6 +4,7 @@ export module ThirdParty.RedisPP;
 
 using namespace sw::redis;
 
-export {
+export 
+{
 	using ::Redis;
 };

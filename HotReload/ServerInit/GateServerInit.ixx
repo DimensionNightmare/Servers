@@ -11,6 +11,9 @@ import Logger;
 import Macro;
 import ThirdParty.Libhv;
 import ThirdParty.PbGen;
+import DNServer;
+import MessagePack;
+import DNServerProxyHelper;
 
 export int HandleGateServerInit(DNServer* server)
 {

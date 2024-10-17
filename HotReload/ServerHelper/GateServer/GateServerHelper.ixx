@@ -2,11 +2,11 @@ module;
 #include "StdMacro.h"
 export module GateServerHelper;
 
-export import GateServer;
-export import DNClientProxyHelper;
-export import DNServerProxyHelper;
-export import ServerEntityManagerHelper;
-export import ProxyEntityManagerHelper;
+import GateServer;
+import DNClientProxyHelper;
+import DNServerProxyHelper;
+import ServerEntityManagerHelper;
+import ProxyEntityManagerHelper;
 import FuncHelper;
 import Entity;
 import ThirdParty.PbGen;

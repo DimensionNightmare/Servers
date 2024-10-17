@@ -1,7 +1,7 @@
 module;
 export module ClientEntityHelper;
 
-export import ClientEntity;
+import ClientEntity;
 
 export class ClientEntityHelper : public ClientEntity
 {
