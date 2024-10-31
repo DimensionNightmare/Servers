@@ -29,10 +29,10 @@ using namespace google::protobuf;
 
 // #define TIMERSTART(tag) auto tag##_start = chrono::steady_clock::now(),tag##_end = tag##_start
 // #define TIMEREND(tag) tag##_end = chrono::steady_clock::now()
-// #define DURATION_s(tag) DNPrint(0, LoggerLevel::Debug, "%s costs %d s\n",#tag,chrono::duration_cast<chrono::seconds>(tag##_end - tag##_start).count())
-// #define DURATION_ms(tag) DNPrint(0, LoggerLevel::Debug, "%s costs %d ms\n",#tag,chrono::duration_cast<chrono::milliseconds>(tag##_end - tag##_start).count());
-// #define DURATION_us(tag) DNPrint(0, LoggerLevel::Debug, "%s costs %d us\n",#tag,chrono::duration_cast<chrono::microseconds>(tag##_end - tag##_start).count());
-// #define DURATION_ns(tag) DNPrint(0, LoggerLevel::Debug, "%s costs %d ns\n",#tag,chrono::duration_cast<chrono::nanoseconds>(tag##_end - tag##_start).count());
+// #define DURATION_s(tag) DNPrint(0, EMLoggerLevel::Debug, "%s costs %d s\n",#tag,chrono::duration_cast<chrono::seconds>(tag##_end - tag##_start).count())
+// #define DURATION_ms(tag) DNPrint(0, EMLoggerLevel::Debug, "%s costs %d ms\n",#tag,chrono::duration_cast<chrono::milliseconds>(tag##_end - tag##_start).count());
+// #define DURATION_us(tag) DNPrint(0, EMLoggerLevel::Debug, "%s costs %d us\n",#tag,chrono::duration_cast<chrono::microseconds>(tag##_end - tag##_start).count());
+// #define DURATION_ns(tag) DNPrint(0, EMLoggerLevel::Debug, "%s costs %d ns\n",#tag,chrono::duration_cast<chrono::nanoseconds>(tag##_end - tag##_start).count());
 
 
 #if 0
@@ -388,7 +388,7 @@ struct DNTask
 	DNTask(HandleType handle)
 	{
 		tHandle = handle;
-		// SetFlag(DNTaskFlag::TimeCost);
+		// SetFlag(EMDNTaskFlag::TimeCost);
 	}
 
 	~DNTask()

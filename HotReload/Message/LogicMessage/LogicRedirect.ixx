@@ -26,7 +26,7 @@ namespace LogicMessage
 		ClientEntity* entity = entityMan->GetEntity(request.account_id());
 		if (!entity)
 		{
-			DNPrint(0, LoggerLevel::Debug, "Client Entity Kick Not Exist !");
+			DNPrint(0, EMLoggerLevel::Debug, "Client Entity Kick Not Exist !");
 			return;
 		}
 
@@ -38,11 +38,11 @@ namespace LogicMessage
 		{
 			string binData = binMsg;
 
-			MessagePackAndSend(0, MsgDeal::Ret, request.GetDescriptor()->full_name().c_str(), binData, roomEntity->GetSock());
+			MessagePackAndSend(0, EMMsgDeal::Ret, request.GetDescriptor()->full_name().c_str(), binData, roomEntity->GetSock());
 		}
 		else
 		{
-			DNPrint(0, LoggerLevel::Debug, "Client Entity Kick Server Not Exist !");
+			DNPrint(0, EMLoggerLevel::Debug, "Client Entity Kick Server Not Exist !");
 		}
 
 		// close entity save data
@@ -65,19 +65,19 @@ namespace LogicMessage
 		ClientEntity* entity = entityMan->AddEntity(request.account_id());
 		if (entity)
 		{
-			DNPrint(0, LoggerLevel::Debug, "AddEntity Client!");
+			DNPrint(0, EMLoggerLevel::Debug, "AddEntity Client!");
 
 			// msg will destroy. MessageHandle not will waiting.
 			co_await entityMan->LoadEntityData(entity, nullptr, nullptr);
 
-			if (!entity->HasFlag(ClientEntityFlag::DBInited))
+			if (!entity->HasFlag(EMClientEntityFlag::DBInited))
 			{
-				DNPrint(0, LoggerLevel::Debug, "AddEntity Client but not from db!");
+				DNPrint(0, EMLoggerLevel::Debug, "AddEntity Client but not from db!");
 			}
 		}
 		else
 		{
-			DNPrint(0, LoggerLevel::Debug, "AddEntity Exist Client!");
+			DNPrint(0, EMLoggerLevel::Debug, "AddEntity Exist Client!");
 			entity = entityMan->GetEntity(request.account_id());
 		}
 
@@ -115,7 +115,7 @@ namespace LogicMessage
 			if (roomEntityList.empty())
 			{
 				response.set_state_code(5);
-				DNPrint(0, LoggerLevel::Debug, "not ds Server");
+				DNPrint(0, EMLoggerLevel::Debug, "not ds Server");
 			}
 			else
 			{
@@ -144,13 +144,13 @@ namespace LogicMessage
 			// wait data parse
 			server->AddMsg(msgId, &dataChannel, 8000);
 
-			MessagePackAndSend(msgId, MsgDeal::Req, request.GetDescriptor()->full_name().c_str(), binData, roomEntity->GetSock());
+			MessagePackAndSend(msgId, EMMsgDeal::Req, request.GetDescriptor()->full_name().c_str(), binData, roomEntity->GetSock());
 
 			co_await dataChannel;
 
-			if (dataChannel.HasFlag(DNTaskFlag::Timeout))
+			if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
 			{
-				DNPrint(0, LoggerLevel::Debug, "requst timeout! ");
+				DNPrint(0, EMLoggerLevel::Debug, "requst timeout! ");
 				response.set_state_code(6);
 			}
 			else
@@ -163,11 +163,11 @@ namespace LogicMessage
 
 		}
 
-		DNPrint(0, LoggerLevel::Debug, "ds:%s", response.DebugString().c_str());
+		DNPrint(0, EMLoggerLevel::Debug, "ds:%s", response.DebugString().c_str());
 
 		// pack data
 		response.SerializeToString(&binData);
-		MessagePackAndSend(msgId, MsgDeal::Res, nullptr, binData, channel);
+		MessagePackAndSend(msgId, EMMsgDeal::Res, nullptr, binData, channel);
 
 		co_return;
 	}

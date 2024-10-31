@@ -26,12 +26,12 @@ public:
 			}
 			catch (const exception& e)
 			{
-				DNPrint(0, LoggerLevel::Debug, e.what());
+				DNPrint(0, EMLoggerLevel::Debug, e.what());
 			}
 		}
 		else
 		{
-			DNPrint(ErrCode::ErrCode_MsgHandleFind, LoggerLevel::Error, nullptr);
+			DNPrint(ErrCode::ErrCode_MsgHandleFind, EMLoggerLevel::Error, nullptr);
 		}
 	}
 
@@ -46,12 +46,12 @@ public:
 			}
 			catch (const exception& e)
 			{
-				DNPrint(0, LoggerLevel::Debug, e.what());
+				DNPrint(0, EMLoggerLevel::Debug, e.what());
 			}
 		}
 		else
 		{
-			DNPrint(ErrCode::ErrCode_MsgHandleFind, LoggerLevel::Error, nullptr);
+			DNPrint(ErrCode::ErrCode_MsgHandleFind, EMLoggerLevel::Error, nullptr);
 		}
 	}
 
@@ -66,12 +66,12 @@ public:
 			}
 			catch (const exception& e)
 			{
-				DNPrint(0, LoggerLevel::Debug, e.what());
+				DNPrint(0, EMLoggerLevel::Debug, e.what());
 			}
 		}
 		else
 		{
-			DNPrint(ErrCode::ErrCode_MsgHandleFind, LoggerLevel::Error, nullptr);
+			DNPrint(ErrCode::ErrCode_MsgHandleFind, EMLoggerLevel::Error, nullptr);
 		}
 	}
 

@@ -45,7 +45,7 @@ public:
 
 			mEntityMapList[entity->MapID()].remove(entity);
 
-			DNPrint(0, LoggerLevel::Debug, "offline destory entity");
+			DNPrint(0, EMLoggerLevel::Debug, "offline destory entity");
 			mEntityMap.erase(entityId);
 			return true;
 		}

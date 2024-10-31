@@ -32,18 +32,18 @@ namespace GateMessage
 		ProxyEntity* entity = entityMan->GetEntity(request.account_id());
 		if (!entity)
 		{
-			DNPrint(0, LoggerLevel::Debug, "noaccount %d!!", request.account_id());
+			DNPrint(0, EMLoggerLevel::Debug, "noaccount %d!!", request.account_id());
 			response.set_state_code(1);
 		}
 		// if not match, timer will destory entity
 		else if (Md5Hash(entity->Token()) != request.token())
 		{
-			DNPrint(0, LoggerLevel::Debug, "not match!!");
+			DNPrint(0, EMLoggerLevel::Debug, "not match!!");
 			response.set_state_code(2);
 		}
 		else
 		{
-			DNPrint(0, LoggerLevel::Debug, "match!!");
+			DNPrint(0, EMLoggerLevel::Debug, "match!!");
 
 			channel->setContext(entity);
 			entity->SetSock(channel);
@@ -67,10 +67,10 @@ namespace GateMessage
 			// pool
 			if (!serverEntity)
 			{
-				list<ServerEntity*> serverEntityList = serverEntityMan->GetEntitysByType(ServerType::LogicServer);
+				list<ServerEntity*> serverEntityList = serverEntityMan->GetEntitysByType(EMServerType::LogicServer);
 				if (serverEntityList.empty())
 				{
-					DNPrint(0, LoggerLevel::Debug, "Msg_ReqAuthToken not LogicServer !!");
+					DNPrint(0, EMLoggerLevel::Debug, "Msg_ReqAuthToken not LogicServer !!");
 					response.set_state_code(3);
 				}
 				else
@@ -96,13 +96,13 @@ namespace GateMessage
 
 				binData = binMsg;
 
-				MessagePackAndSend(msgId, MsgDeal::Redir, request.GetDescriptor()->full_name().c_str(), binData, serverEntity->GetSock());
+				MessagePackAndSend(msgId, EMMsgDeal::Redir, request.GetDescriptor()->full_name().c_str(), binData, serverEntity->GetSock());
 				
 				co_await dataChannel;
-				if (dataChannel.HasFlag(DNTaskFlag::Timeout))
+				if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
 				{
 					response.set_state_code(4);
-					DNPrint(0, LoggerLevel::Debug, "requst timeout! ");
+					DNPrint(0, EMLoggerLevel::Debug, "requst timeout! ");
 				}
 
 			}
@@ -111,7 +111,7 @@ namespace GateMessage
 
 		response.SerializeToString(&binData);
 
-		MessagePackAndSend(msgId, MsgDeal::Res, nullptr, binData, channel);
+		MessagePackAndSend(msgId, EMMsgDeal::Res, nullptr, binData, channel);
 
 		co_return;
 	}

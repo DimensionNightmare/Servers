@@ -24,7 +24,7 @@ namespace GateMessage
 
 		GateServerHelper* dnServer = GetGateServer();
 		ServerEntityManagerHelper* entityMan = dnServer->GetServerEntityManager();
-		const list<ServerEntity*>& dbServers = entityMan->GetEntitysByType(ServerType::DatabaseServer);
+		const list<ServerEntity*>& dbServers = entityMan->GetEntitysByType(EMServerType::DatabaseServer);
 
 		string binData;
 		if (dbServers.empty())
@@ -46,12 +46,12 @@ namespace GateMessage
 			uint32_t msgId = server->GetMsgId();
 			server->AddMsg(msgId, &dataChannel, 8000);
 
-			MessagePackAndSend(msgId, MsgDeal::Req, request.GetDescriptor()->full_name().c_str(), binData, entity->GetSock());
+			MessagePackAndSend(msgId, EMMsgDeal::Req, request.GetDescriptor()->full_name().c_str(), binData, entity->GetSock());
 
 			co_await dataChannel;
-			if (dataChannel.HasFlag(DNTaskFlag::Timeout))
+			if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
 			{
-				DNPrint(0, LoggerLevel::Debug, "requst timeout! ");
+				DNPrint(0, EMLoggerLevel::Debug, "requst timeout! ");
 				response.set_state_code(2);
 			}
 			
@@ -59,7 +59,7 @@ namespace GateMessage
 		}
 
 		response.SerializeToString(&binData);
-		MessagePackAndSend(msgId, MsgDeal::Res, nullptr, binData, channel);
+		MessagePackAndSend(msgId, EMMsgDeal::Res, nullptr, binData, channel);
 
 		co_return;
 	}
@@ -75,7 +75,7 @@ namespace GateMessage
 
 		GateServerHelper* dnServer = GetGateServer();
 		ServerEntityManagerHelper* entityMan = dnServer->GetServerEntityManager();
-		const list<ServerEntity*>& dbServers = entityMan->GetEntitysByType(ServerType::DatabaseServer);
+		const list<ServerEntity*>& dbServers = entityMan->GetEntitysByType(EMServerType::DatabaseServer);
 
 		string binData;
 		if (dbServers.empty())
@@ -100,19 +100,19 @@ namespace GateMessage
 			uint32_t msgId = server->GetMsgId();
 			server->AddMsg(msgId, &dataChannel, 8000);
 
-			MessagePackAndSend(msgId, MsgDeal::Req, request.GetDescriptor()->full_name().c_str(), binData, entity->GetSock());
+			MessagePackAndSend(msgId, EMMsgDeal::Req, request.GetDescriptor()->full_name().c_str(), binData, entity->GetSock());
 
 			co_await dataChannel;
-			if (dataChannel.HasFlag(DNTaskFlag::Timeout))
+			if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
 			{
-				DNPrint(0, LoggerLevel::Debug, "requst timeout! ");
+				DNPrint(0, EMLoggerLevel::Debug, "requst timeout! ");
 				response.set_state_code(2);
 			}
 			
 		}
 
 		response.SerializeToString(&binData);
-		MessagePackAndSend(msgId, MsgDeal::Res, nullptr, binData, channel);
+		MessagePackAndSend(msgId, EMMsgDeal::Res, nullptr, binData, channel);
 
 		co_return;
 	}

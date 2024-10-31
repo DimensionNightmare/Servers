@@ -18,7 +18,7 @@ public:
 
 	GlobalServer()
 	{
-		emServerType = ServerType::GlobalServer;
+		emServerType = EMServerType::GlobalServer;
 	}
 
 	// need init order reversal
@@ -46,13 +46,13 @@ public:
 		int listenfd = pSSock->createsocket(port, "0.0.0.0");
 		if (listenfd < 0)
 		{
-			DNPrint(ErrCode::ErrCode_CreateSocket, LoggerLevel::Error, nullptr);
+			DNPrint(ErrCode::ErrCode_CreateSocket, EMLoggerLevel::Error, nullptr);
 			return false;
 		}
 
 		pSSock->Init();
 
-		DNPrint(TipCode::TipCode_SrvListenOn, LoggerLevel::Normal, nullptr, pSSock->port, listenfd);
+		DNPrint(TipCode::TipCode_SrvListenOn, EMLoggerLevel::Normal, nullptr, pSSock->port, listenfd);
 
 		//connet ControlServer
 		string* ctlPort = GetLuanchConfigParam("ctlPort");
@@ -86,7 +86,7 @@ public:
 
 		if (!pSSock)
 		{
-			DNPrint(ErrCode::ErrCode_SrvNotInit, LoggerLevel::Error, nullptr);
+			DNPrint(ErrCode::ErrCode_SrvNotInit, EMLoggerLevel::Error, nullptr);
 			return false;
 		}
 

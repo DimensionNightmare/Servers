@@ -12,12 +12,12 @@ public:
 
 	ProxyEntity() : NetEntity(0)
 	{
-		eEntityType = EntityType::Proxy;
+		eEntityType = EMEntityType::Proxy;
 	}
 
 	ProxyEntity(uint32_t id) : NetEntity(id)
 	{
-		eEntityType = EntityType::Proxy;
+		eEntityType = EMEntityType::Proxy;
 	}
 
 	virtual ~ProxyEntity()

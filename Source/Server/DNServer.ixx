@@ -6,7 +6,7 @@ import I10nText;
 import Config.Server;
 import ThirdParty.Libhv;
 
-export enum class ServerType : uint8_t
+export enum class EMServerType : uint8_t
 {
 	None,
 	ControlServer,
@@ -59,7 +59,7 @@ public:
 
 	virtual void Resume() = 0;
 
-	ServerType GetServerType() { return emServerType; }
+	EMServerType GetServerType() { return emServerType; }
 
 	uint32_t& ServerId() { return iServerId; }
 
@@ -76,7 +76,7 @@ public: // dll override
 	unordered_map<string, string>* pLuanchConfig = nullptr;
 protected:
 
-	ServerType emServerType = ServerType::None;
+	EMServerType emServerType = EMServerType::None;
 
 	bool bInRun = false;
 

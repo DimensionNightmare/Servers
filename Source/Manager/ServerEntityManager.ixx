@@ -48,7 +48,7 @@ public: // dll override
 
 			RemoveEntity(entityId);
 			
-			DNPrint(0, LoggerLevel::Debug, "EntityCloseTimer server destory entity");
+			DNPrint(0, EMLoggerLevel::Debug, "EntityCloseTimer server destory entity");
 			
 		}
 	}
@@ -86,7 +86,7 @@ public: // dll override
 
 			if (ServerEntity* owner = entity->LinkNode())
 			{
-				owner->ClearFlag(ServerEntityFlag::Locked);
+				owner->ClearFlag(EMServerEntityFlag::Locked);
 			}
 
 			mEntityMap.erase(entityId);
@@ -98,7 +98,7 @@ public: // dll override
 
 protected: // dll proxy
 	/// @brief 
-	unordered_map<ServerType, list<ServerEntity*> > mEntityMapList;
+	unordered_map<EMServerType, list<ServerEntity*> > mEntityMapList;
 	
 	// server pull server
 	atomic<uint32_t> iServerGenId;

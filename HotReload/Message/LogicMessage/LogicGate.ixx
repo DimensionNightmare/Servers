@@ -23,13 +23,13 @@ namespace LogicMessage
 
 		if (ClientEntity* entity = entityMan->GetEntity(request.entity_id()))
 		{
-			DNPrint(0, LoggerLevel::Debug, "Recv Client %u Disconnect !!", entity->ID());
+			DNPrint(0, EMLoggerLevel::Debug, "Recv Client %u Disconnect !!", entity->ID());
 
 			entityMan->SaveEntity(*entity, true);
 			entityMan->RemoveEntity(entity->ID());
 			return;
 		}
 
-		DNPrint(0, LoggerLevel::Debug, "Recv Client %u Disconnect but not Exist!!", request.entity_id());
+		DNPrint(0, EMLoggerLevel::Debug, "Recv Client %u Disconnect but not Exist!!", request.entity_id());
 	}
 }

@@ -47,7 +47,7 @@ namespace LogicMessage
 
 		string binData;
 		response.SerializeToString(&binData);
-		MessagePackAndSend(msgId, MsgDeal::Res, nullptr, binData, channel);
+		MessagePackAndSend(msgId, EMMsgDeal::Res, nullptr, binData, channel);
 
 		co_return;
 	}
@@ -63,7 +63,7 @@ namespace LogicMessage
 		Player player;
 		if (!player.ParseFromString(request.entity_data()))
 		{
-			DNPrint(0, LoggerLevel::Debug, "Save data but parse error!");
+			DNPrint(0, EMLoggerLevel::Debug, "Save data but parse error!");
 			return;
 		}
 
@@ -78,7 +78,7 @@ namespace LogicMessage
 
 		if (!entity)
 		{
-			DNPrint(0, LoggerLevel::Debug, "ReqSaveData not entity!");
+			DNPrint(0, EMLoggerLevel::Debug, "ReqSaveData not entity!");
 			return;
 		}
 
@@ -87,13 +87,13 @@ namespace LogicMessage
 			dbEntity->MergeFrom(player);
 			if (request.runtime_save())
 			{
-				entity->SetFlag(ClientEntityFlag::DBModify);
+				entity->SetFlag(EMClientEntityFlag::DBModify);
 			}
 			
 		}
 		else
 		{
-			DNPrint(0, LoggerLevel::Debug, "SaveData but dbEntity is null!");
+			DNPrint(0, EMLoggerLevel::Debug, "SaveData but dbEntity is null!");
 		}
 
 	}

@@ -16,7 +16,7 @@ private:
 	DNClientProxyHelper() = delete;
 public:
 	// regist to controlserver
-	RegistState& RegistState() { return eRegistState; }
+	EMRegistState& EMRegistState() { return eRegistState; }
 
 	void SetRegistEvent(function<void()> event)
 	{

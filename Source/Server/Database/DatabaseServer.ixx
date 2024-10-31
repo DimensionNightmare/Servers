@@ -18,7 +18,7 @@ public:
 	
 	DatabaseServer()
 	{
-		emServerType = ServerType::DatabaseServer;
+		emServerType = EMServerType::DatabaseServer;
 	}
 
 
@@ -35,7 +35,7 @@ public:
 		string* value = GetLuanchConfigParam("byCtl");
 		if (!value || !stoi(*value))
 		{
-			DNPrint(ErrCode::ErrCode_SrvByCtl, LoggerLevel::Error, nullptr);
+			DNPrint(ErrCode::ErrCode_SrvByCtl, EMLoggerLevel::Error, nullptr);
 			return false;
 		}
 

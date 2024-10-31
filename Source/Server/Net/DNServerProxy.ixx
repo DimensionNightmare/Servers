@@ -395,7 +395,7 @@ public:
 			int addrLen = sizeof(addr);
 			if (HVExport::getsockname(listenfd, reinterpret_cast<struct sockaddr*>(&addr), &addrLen) < 0)
 			{
-				DNPrint(ErrCode::ErrCode_GetSocketName, LoggerLevel::Error, nullptr);
+				DNPrint(ErrCode::ErrCode_GetSocketName, EMLoggerLevel::Error, nullptr);
 				return;
 			}
 
@@ -455,7 +455,7 @@ public: // dll override
 				unique_lock<shared_mutex> ulock(oMsgMutex);
 				DNTask<Message*>* task = mMsgList[id];
 				mMsgList.erase(id);
-				task->SetFlag(DNTaskFlag::Timeout);
+				task->SetFlag(EMDNTaskFlag::Timeout);
 				task->CallResume();
 			}
 		}
@@ -482,7 +482,7 @@ public: // dll override
 				if (!channel->context())
 				{
 					channel->close();
-					DNPrint(0, LoggerLevel::Debug, "ChannelTimeoutTimer server destory entity\n");
+					DNPrint(0, EMLoggerLevel::Debug, "ChannelTimeoutTimer server destory entity\n");
 				}
 			}
 		}

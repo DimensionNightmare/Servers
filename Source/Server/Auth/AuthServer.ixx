@@ -17,7 +17,7 @@ export class AuthServer : public DNServer
 public:
 	AuthServer()
 	{
-		emServerType = ServerType::AuthServer;
+		emServerType = EMServerType::AuthServer;
 	}
 
 	// need init order reversal
@@ -35,7 +35,7 @@ public:
 		string* value = GetLuanchConfigParam("byCtl");
 		if (!value || !stoi(*value))
 		{
-			DNPrint(ErrCode::ErrCode_SrvByCtl, LoggerLevel::Error, nullptr);
+			DNPrint(ErrCode::ErrCode_SrvByCtl, EMLoggerLevel::Error, nullptr);
 			return false;
 		}
 
@@ -54,7 +54,7 @@ public:
 		pSSock->setPort(port);
 		pSSock->setThreadNum(4);
 
-		DNPrint(TipCode::TipCode_SrvListenOn, LoggerLevel::Normal, nullptr, pSSock->port, 0);
+		DNPrint(TipCode::TipCode_SrvListenOn, EMLoggerLevel::Normal, nullptr, pSSock->port, 0);
 
 		//connet ControlServer
 		string* ctlPort = GetLuanchConfigParam("ctlPort");
@@ -81,13 +81,13 @@ public:
 	{
 		if (!pSSock)
 		{
-			DNPrint(ErrCode::ErrCode_SrvNotInit, LoggerLevel::Error, nullptr);
+			DNPrint(ErrCode::ErrCode_SrvNotInit, EMLoggerLevel::Error, nullptr);
 			return false;
 		}
 		int code = pSSock->Start();
 		if (code < 0)
 		{
-			DNPrint(0, LoggerLevel::Debug, "start error %d", code);
+			DNPrint(0, EMLoggerLevel::Debug, "start error %d", code);
 			return false;
 		}
 

@@ -30,14 +30,14 @@ public:
 	{
 		ServerEntityManagerHelper* entityMan = GetServerEntityManager();
 
-		list<ServerEntity*> gates = entityMan->GetEntitysByType(ServerType::GateServer);
+		list<ServerEntity*> gates = entityMan->GetEntitysByType(EMServerType::GateServer);
 		if (gates.empty())
 		{
 			return;
 		}
 
-		list<ServerEntity*> dbs = entityMan->GetEntitysByType(ServerType::DatabaseServer);
-		list<ServerEntity*> logics = entityMan->GetEntitysByType(ServerType::LogicServer);
+		list<ServerEntity*> dbs = entityMan->GetEntitysByType(EMServerType::DatabaseServer);
+		list<ServerEntity*> logics = entityMan->GetEntitysByType(EMServerType::LogicServer);
 
 		// alloc gate
 		COM_RetChangeCtlSrv request;
@@ -57,19 +57,19 @@ public:
 			request.SerializeToString(&binData);
 			// timer destory
 			entity->TimerId() = TICK_MAINSPACE_SIGN_FUNCTION(ServerEntityManager, CheckEntityCloseTimer, entityMan, entity->ID());
-			MessagePackAndSend(0, MsgDeal::Ret, request.GetDescriptor()->full_name().c_str(), binData, channel);
+			MessagePackAndSend(0, EMMsgDeal::Ret, request.GetDescriptor()->full_name().c_str(), binData, channel);
 			entity->SetSock(nullptr);
 		};
 
 		for (ServerEntity* gate : gates)
 		{
-			if (gate->HasFlag(ServerEntityFlag::Locked))
+			if (gate->HasFlag(EMServerEntityFlag::Locked))
 			{
 				continue;
 			}
 
-			list<ServerEntity*>& gatesDb = gate->GetMapLinkNode(ServerType::DatabaseServer);
-			list<ServerEntity*>& gatesLogic = gate->GetMapLinkNode(ServerType::LogicServer);
+			list<ServerEntity*>& gatesDb = gate->GetMapLinkNode(EMServerType::DatabaseServer);
+			list<ServerEntity*>& gatesLogic = gate->GetMapLinkNode(EMServerType::LogicServer);
 			if (!dbs.empty() && gatesDb.size() < 1)
 			{
 				ServerEntity* ele = dbs.front();
@@ -91,8 +91,8 @@ public:
 			if (gatesDb.size() && gatesLogic.size())
 			{
 				// UnMountEntity(gate->GetServerType(), it);
-				gate->SetFlag(ServerEntityFlag::Locked);
-				DNPrint(0, LoggerLevel::Debug, "Gate:%u locked!", gate->ID());
+				gate->SetFlag(EMServerEntityFlag::Locked);
+				DNPrint(0, EMLoggerLevel::Debug, "Gate:%u locked!", gate->ID());
 			}
 
 		}

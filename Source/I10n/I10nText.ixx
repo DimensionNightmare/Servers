@@ -5,7 +5,7 @@ export module I10nText;
 import Config.Server;
 import ThirdParty.PbGen;
 
-enum class LangType : uint8_t
+enum class EMLangType : uint8_t
 {
 	zh_CN,
 	en_US,
@@ -44,7 +44,7 @@ public:
 		string* value = GetLuanchConfigParam("l10nErrPath");
 		if (!value)
 		{
-			// DNPrint(0, LoggerLevel::Debug, "Launch Param l10nErrPath Error !");
+			// DNPrint(0, EMLoggerLevel::Debug, "Launch Param l10nErrPath Error !");
 			return "Launch Param l10nErrPath Error !";
 		}
 
@@ -53,7 +53,7 @@ public:
 			ifstream input(*value, ios::in | ios::binary);
 			if (!input || !mL10nErr.ParseFromIstream(&input))
 			{
-				// DNPrint(0, LoggerLevel::Debug, "load I10n Err Config Error !");
+				// DNPrint(0, EMLoggerLevel::Debug, "load I10n Err Config Error !");
 				return "load I10n Err Config Error !";
 			}
 
@@ -69,7 +69,7 @@ public:
 		value = GetLuanchConfigParam("l10nTipPath");
 		if (!value)
 		{
-			// DNPrint(0, LoggerLevel::Debug, "Launch Param l10nTipPath Error Error !");
+			// DNPrint(0, EMLoggerLevel::Debug, "Launch Param l10nTipPath Error Error !");
 			return "Launch Param l10nTipPath Error Error !";
 		}
 
@@ -78,7 +78,7 @@ public:
 			ifstream input(*value, ios::in | ios::binary);
 			if (!input || !mL10nTip.ParseFromIstream(&input))
 			{
-				// DNPrint(0, LoggerLevel::Debug, "load I10n Tip Config Error !");
+				// DNPrint(0, EMLoggerLevel::Debug, "load I10n Tip Config Error !");
 				return "load I10n Tip Config Error !";
 			}
 
@@ -93,25 +93,25 @@ public:
 		value = GetLuanchConfigParam("l10nLang");
 		if (value)
 		{
-			eType = (LangType)stoi(*value);
+			eType = (EMLangType)stoi(*value);
 		}
 
 		switch (eType)
 		{
-			case LangType::zh_CN:
+			case EMLangType::zh_CN:
 			{
 				pL10nErrFunc = &l10nErr::zh;
 				pL10nTipFunc = &l10nTip::zh;
 				break;
 			}
-			case LangType::en_US:
+			case EMLangType::en_US:
 			{
 				pL10nErrFunc = &l10nErr::en;
 				pL10nTipFunc = &l10nTip::en;
 				break;
 			}
 			default:
-				// DNPrint(0, LoggerLevel::Debug, "load I10n Lang Type Error !");
+				// DNPrint(0, EMLoggerLevel::Debug, "load I10n Lang Type Error !");
 				return "load I10n Lang Type Error !";
 		}
 
@@ -139,7 +139,7 @@ public:
 	TipTextFunc pL10nTipFunc = nullptr;
 
 	/// @brief l10n type
-	LangType eType = LangType::zh_CN;
+	EMLangType eType = EMLangType::zh_CN;
 	
 };
 

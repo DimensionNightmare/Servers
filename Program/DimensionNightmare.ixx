@@ -49,7 +49,7 @@ struct HotReloadDll
 		void* hModule = LoadLibraryA(fullPath.c_str());
 		if (!hModule)
 		{
-			DNPrint(ErrCode::ErrCode_DllLoad, LoggerLevel::Error, nullptr, GetLastError());
+			DNPrint(ErrCode::ErrCode_DllLoad, EMLoggerLevel::Error, nullptr, GetLastError());
 			return nullptr;
 		}
 
@@ -59,7 +59,7 @@ struct HotReloadDll
 		void* hModule = dlopen(fullPath.c_str(), RTLD_LAZY);
 		if (!hModule)
 		{
-			DNPrint(0, LoggerLevel::Debug, dlerror());
+			DNPrint(0, EMLoggerLevel::Debug, dlerror());
 			return nullptr;
 		}
 #endif
@@ -89,7 +89,7 @@ struct HotReloadDll
 			}
 			catch (const exception& e)
 			{
-				DNPrint(0, LoggerLevel::Debug, "filesystem:%s", e.what());
+				DNPrint(0, EMLoggerLevel::Debug, "filesystem:%s", e.what());
 			}
 		}
 
@@ -97,17 +97,17 @@ struct HotReloadDll
 	};
 
 	/// @brief reload dll/so runtime library
-	bool ReloadHandle(ServerType type)
+	bool ReloadHandle(EMServerType type)
 	{
 		if (!filesystem::exists(SDllDir))
 		{
-			DNPrint(ErrCode::ErrCode_DllMenuPath, LoggerLevel::Error, nullptr);
+			DNPrint(ErrCode::ErrCode_DllMenuPath, EMLoggerLevel::Error, nullptr);
 			return false;
 		}
 
 		if (!SDllName)
 		{
-			DNPrint(4, LoggerLevel::Error, nullptr);
+			DNPrint(4, EMLoggerLevel::Error, nullptr);
 			return false;
 		}
 #ifdef _WIN32
@@ -125,7 +125,7 @@ struct HotReloadDll
 		}
 		catch (const exception& e)
 		{
-			DNPrint(0, LoggerLevel::Debug, "%s", e.what());
+			DNPrint(0, EMLoggerLevel::Debug, "%s", e.what());
 			return false;
 		}
 #endif
@@ -211,12 +211,12 @@ public:
 
 		if(!filesystem::exists(iniFilePath))
 		{
-			DNPrint(0, LoggerLevel::Error, "ConfigIni Not Finded!");
+			DNPrint(0, EMLoggerLevel::Error, "ConfigIni Not Finded!");
 			return false;
 		}
 
 		// get ini Config
-		ServerType serverType = (ServerType)stoi(param["svrType"]);
+		EMServerType serverType = (EMServerType)stoi(param["svrType"]);
 		string_view serverName = EnumName(serverType);
 
 		vector<string> sectionNames;
@@ -331,7 +331,7 @@ public:
 		pl10n = make_unique<DNl10n>();
 		if (const char* codeStr = pl10n->InitConfigData())
 		{
-			DNPrint(0, LoggerLevel::Error, codeStr);
+			DNPrint(0, EMLoggerLevel::Error, codeStr);
 			return false;
 		}
 
@@ -342,30 +342,30 @@ public:
 	bool Init()
 	{
 		string* value = GetLuanchConfigParam("svrType");
-		ServerType serverType = (ServerType)stoi(*value);
+		EMServerType serverType = (EMServerType)stoi(*value);
 
 		switch (serverType)
 		{
-			case ServerType::ControlServer:
+			case EMServerType::ControlServer:
 				pServer = make_unique<ControlServer>();
 				break;
-			case ServerType::GlobalServer:
+			case EMServerType::GlobalServer:
 				pServer = make_unique<GlobalServer>();
 				break;
-			case ServerType::AuthServer:
+			case EMServerType::AuthServer:
 				pServer = make_unique<AuthServer>();
 				break;
-			case ServerType::GateServer:
+			case EMServerType::GateServer:
 				pServer = make_unique<GateServer>();
 				break;
-			case ServerType::DatabaseServer:
+			case EMServerType::DatabaseServer:
 				pServer = make_unique<DatabaseServer>();
 				break;
-			case ServerType::LogicServer:
+			case EMServerType::LogicServer:
 				pServer = make_unique<LogicServer>();
 				break;
 			default:
-				DNPrint(ErrCode::ErrCode_SrvTypeNotVaild, LoggerLevel::Error, nullptr);
+				DNPrint(ErrCode::ErrCode_SrvTypeNotVaild, EMLoggerLevel::Error, nullptr);
 				return false;
 		}
 
@@ -387,13 +387,13 @@ public:
 
 		if (!OnRegHotReload())
 		{
-			DNPrint(0, LoggerLevel::Error, "program lunch OnRegHotReload error!");
+			DNPrint(0, EMLoggerLevel::Error, "program lunch OnRegHotReload error!");
 			return false;
 		}
 
 		if (!pServer->Start())
 		{
-			DNPrint(0, LoggerLevel::Error, "program lunch Server Start error!");
+			DNPrint(0, EMLoggerLevel::Error, "program lunch Server Start error!");
 			return false;
 		}
 

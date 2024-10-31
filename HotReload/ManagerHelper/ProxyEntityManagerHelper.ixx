@@ -35,7 +35,7 @@ public:
 		{
 			unique_lock<shared_mutex> ulock(oMapMutex);
 
-			DNPrint(0, LoggerLevel::Debug, "destory Proxy entity");
+			DNPrint(0, EMLoggerLevel::Debug, "destory Proxy entity");
 			mEntityMap.erase(entityId);
 			return true;
 		}

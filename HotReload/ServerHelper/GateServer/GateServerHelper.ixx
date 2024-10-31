@@ -38,7 +38,7 @@ public:
 		request.set_server_id(cEntity->ID());
 		request.set_is_regist(false);
 		request.SerializeToString(&binData);
-		MessagePackAndSend(0, MsgDeal::Ret, request.GetDescriptor()->full_name().c_str(), binData, GetCSock()->GetChannel());
+		MessagePackAndSend(0, EMMsgDeal::Ret, request.GetDescriptor()->full_name().c_str(), binData, GetCSock()->GetChannel());
 
 		GetServerEntityManager()->RemoveEntity(cEntity->ID());
 	}
@@ -62,7 +62,7 @@ public:
 			g2L_RetProxyOffline request;
 			request.set_entity_id(entityId);
 			request.SerializeToString(&binData);
-			MessagePackAndSend(0, MsgDeal::Ret, request.GetDescriptor()->full_name().c_str(), binData, serverEntity->GetSock());
+			MessagePackAndSend(0, EMMsgDeal::Ret, request.GetDescriptor()->full_name().c_str(), binData, serverEntity->GetSock());
 		}
 
 		entityMan->RemoveEntity(entityId);

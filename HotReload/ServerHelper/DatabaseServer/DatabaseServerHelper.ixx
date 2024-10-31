@@ -12,7 +12,7 @@ import DbUtils;
 import ThirdParty.PbGen;
 import ThirdParty.Libpqxx;
 
-export enum class SqlDbNameEnum : uint16_t
+export enum class EMSqlDbNameEnum : uint16_t
 {
 	Account,
 	Nightmare,
@@ -48,7 +48,7 @@ public:
 				while (end != string::npos)
 				{
 					name = names->substr(start, end - start);
-					EnumName<SqlDbNameEnum>(name);
+					EnumName<EMSqlDbNameEnum>(name);
 
 					dbNames.emplace_back(name);
 					start = end + 1;
@@ -56,7 +56,7 @@ public:
 				}
 
 				name = names->substr(start);
-				EnumName<SqlDbNameEnum>(name);
+				EnumName<EMSqlDbNameEnum>(name);
 				dbNames.emplace_back(name);
 
 				for (string& dbName : dbNames)
@@ -64,10 +64,10 @@ public:
 					if (!checkTxn.query_value<bool>(format("SELECT EXISTS (SELECT 1 FROM pg_database WHERE datname = '{}');", dbName)))
 					{
 						checkTxn.exec(format("CREATE DATABASE \"{}\";", dbName));
-						DNPrint(0, LoggerLevel::Debug, "Create Database:%s", dbName.c_str());
+						DNPrint(0, EMLoggerLevel::Debug, "Create Database:%s", dbName.c_str());
 					}
 
-					uint16_t key = (uint16_t)EnumName<SqlDbNameEnum>(dbName);
+					uint16_t key = (uint16_t)EnumName<EMSqlDbNameEnum>(dbName);
 					string connectStr = format("{} dbname = {}", *value, dbName);
 					pSqlProxys[key] = make_unique<pq_connection>(connectStr);
 				}
@@ -78,15 +78,15 @@ public:
 				return false;
 			}
 
-			unordered_map<SqlDbNameEnum, vector<Message*> > registTable = {
+			unordered_map<EMSqlDbNameEnum, vector<Message*> > registTable = {
 				{
-					SqlDbNameEnum::Account,
+					EMSqlDbNameEnum::Account,
 					{
 						(Message*)Account::internal_default_instance(),
 					}
 				},
 				{
-					SqlDbNameEnum::Nightmare,
+					EMSqlDbNameEnum::Nightmare,
 					{
 						(Message*)Player::internal_default_instance(),
 					}
@@ -107,7 +107,7 @@ public:
 
 					if (!singleTon.IsExist())
 					{
-						DNPrint(0, LoggerLevel::Debug, "Create Table:SingleTon");
+						DNPrint(0, EMLoggerLevel::Debug, "Create Table:SingleTon");
 						singleTon.CreateTable().Commit();
 					}
 
@@ -122,7 +122,7 @@ public:
 						if (!helper.IsExist())
 						{
 
-							DNPrint(0, LoggerLevel::Debug, "Create Table:%s", tableName.c_str());
+							DNPrint(0, EMLoggerLevel::Debug, "Create Table:%s", tableName.c_str());
 							helper.CreateTable().Commit();
 
 							kv.set_value(schemaMd5);
@@ -143,7 +143,7 @@ public:
 
 						if (schemaMd5 != kv.value())
 						{
-							DNPrint(0, LoggerLevel::Debug, "not match md5:\n%s\n%s", schemaMd5.c_str(), kv.value().c_str());
+							DNPrint(0, EMLoggerLevel::Debug, "not match md5:\n%s\n%s", schemaMd5.c_str(), kv.value().c_str());
 							helper.UpdateTable().Commit();
 
 
@@ -159,7 +159,7 @@ public:
 		}
 		catch (const exception& e)
 		{
-			DNPrint(0, LoggerLevel::Debug, "%s", e.what());
+			DNPrint(0, EMLoggerLevel::Debug, "%s", e.what());
 			return false;
 		}
 
@@ -170,7 +170,7 @@ public:
 
 	uint16_t& GetCtlPort() { return iCtlPort; }
 
-	pq_connection* GetSqlProxy(SqlDbNameEnum nameEnum)
+	pq_connection* GetSqlProxy(EMSqlDbNameEnum nameEnum)
 	{
 		uint16_t dbNameKey = (uint16_t)nameEnum;
 		if (pSqlProxys.contains(dbNameKey))

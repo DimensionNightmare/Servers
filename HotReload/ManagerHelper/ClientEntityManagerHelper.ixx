@@ -43,7 +43,7 @@ public:
 		{
 			unique_lock<shared_mutex> ulock(oMapMutex);
 
-			DNPrint(0, LoggerLevel::Debug, "destory client entity");
+			DNPrint(0, EMLoggerLevel::Debug, "destory client entity");
 			mEntityMap.erase(entityId);
 
 			return true;
@@ -65,16 +65,16 @@ public:
 
 	DNTaskVoid LoadEntityData(ClientEntity* entity, d2L_ReqLoadEntityData* inRequest, L2d_ResLoadEntityData* inResponse)
 	{
-		if (!pSqlClient || pSqlClient->RegistType() != uint8_t(ServerType::GateServer) || !pNoSqlProxy)
+		if (!pSqlClient || pSqlClient->RegistType() != uint8_t(EMServerType::GateServer) || !pNoSqlProxy)
 		{
 			co_return;
 		}
 
 		Player* dbEntity = entity->GetDbEntity();
 
-		if (entity->HasFlag(ClientEntityFlag::DBInited) || entity->HasFlag(ClientEntityFlag::DBIniting))
+		if (entity->HasFlag(EMClientEntityFlag::DBInited) || entity->HasFlag(EMClientEntityFlag::DBIniting))
 		{
-			DNPrint(0, LoggerLevel::Debug, "entity %u is DBIniting. return .", entity->ID());
+			DNPrint(0, EMLoggerLevel::Debug, "entity %u is DBIniting. return .", entity->ID());
 			if (inResponse)
 			{
 				string* entity_data = inResponse->add_entity_data();
@@ -103,11 +103,11 @@ public:
 				*entity_data = binData;
 			}
 
-			entity->SetFlag(ClientEntityFlag::DBInited);
+			entity->SetFlag(EMClientEntityFlag::DBInited);
 			co_return;
 		}
 
-		entity->SetFlag(ClientEntityFlag::DBIniting);
+		entity->SetFlag(EMClientEntityFlag::DBIniting);
 		// sql
 		L2D_ReqLoadData request;
 
@@ -142,24 +142,24 @@ public:
 
 			uint32_t msgId = pSqlClient->GetMsgId();
 			pSqlClient->AddMsg(msgId, &dataChannel, 9000);
-			MessagePackAndSend(msgId, MsgDeal::Redir, request.GetDescriptor()->full_name().c_str(), binData, pSqlClient->GetChannel());
+			MessagePackAndSend(msgId, EMMsgDeal::Redir, request.GetDescriptor()->full_name().c_str(), binData, pSqlClient->GetChannel());
 
 			co_await dataChannel;
-			if (dataChannel.HasFlag(DNTaskFlag::Timeout))
+			if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
 			{
 				response.set_state_code(10);
-				DNPrint(0, LoggerLevel::Debug, "requst timeout! ");
+				DNPrint(0, EMLoggerLevel::Debug, "requst timeout! ");
 			}
 		}
 
 		if (int code = response.state_code())
 		{
-			entity->ClearFlag(ClientEntityFlag::DBIniting);
+			entity->ClearFlag(EMClientEntityFlag::DBIniting);
 
 			binData = request.entity_data();
 			BytesToHexString(binData);
 			mDbFailure[entityId] = binData;
-			DNPrint(0, LoggerLevel::Debug, "Load Db Entity Error id = %u, state_code = %d! ", entityId, code);
+			DNPrint(0, EMLoggerLevel::Debug, "Load Db Entity Error id = %u, state_code = %d! ", entityId, code);
 			co_return;
 		}
 
@@ -167,17 +167,17 @@ public:
 		{
 			const string entityData = response.entity_data(0);
 			dbEntity->ParseFromString(entityData);
-			entity->SetFlag(ClientEntityFlag::DBInited);
+			entity->SetFlag(EMClientEntityFlag::DBInited);
 
 			pNoSqlProxy->set(keyName, entityData);
 		}
 		else
 		{
-			DNPrint(0, LoggerLevel::Debug, "Load Db Entity mutiply data!");
+			DNPrint(0, EMLoggerLevel::Debug, "Load Db Entity mutiply data!");
 			response.clear_entity_data();
 		}
 
-		entity->ClearFlag(ClientEntityFlag::DBIniting);
+		entity->ClearFlag(EMClientEntityFlag::DBIniting);
 
 		if (inResponse)
 		{

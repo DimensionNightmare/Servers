@@ -69,7 +69,7 @@ export void ApiAuth(HttpService* service)
 			}
 			catch (const exception& e)
 			{
-				DNPrint(0, LoggerLevel::Debug, "%s", e.what());
+				DNPrint(0, EMLoggerLevel::Debug, "%s", e.what());
 				errData["code"] = http_status::HTTP_STATUS_BAD_REQUEST;
 				errData["message"] = "Server Error!!";
 				MSGSET(errData.dump());
@@ -107,10 +107,10 @@ export void ApiAuth(HttpService* service)
 						
 						uint32_t msgId = client->GetMsgId();
 						client->AddMsg(msgId, &dataChannel);
-						MessagePackAndSend(msgId, MsgDeal::Redir, request.GetDescriptor()->full_name().c_str(), binData, client->GetChannel());
+						MessagePackAndSend(msgId, EMMsgDeal::Redir, request.GetDescriptor()->full_name().c_str(), binData, client->GetChannel());
 						
 						co_await dataChannel;
-						if (dataChannel.HasFlag(DNTaskFlag::Timeout))
+						if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
 						{
 							retData["code"] = HTTP_STATUS_REQUEST_TIMEOUT;
 
@@ -182,7 +182,7 @@ export void ApiAuth(HttpService* service)
 			}
 			catch (const exception& e)
 			{
-				DNPrint(0, LoggerLevel::Debug, "%s", e.what());
+				DNPrint(0, EMLoggerLevel::Debug, "%s", e.what());
 				errData["code"] = http_status::HTTP_STATUS_BAD_REQUEST;
 				errData["message"] = "Regist Error!!";
 				MSGSET(errData.dump());
@@ -222,7 +222,7 @@ export void ApiAuth(HttpService* service)
 			}
 			catch (const exception& e)
 			{
-				DNPrint(0, LoggerLevel::Debug, "%s", e.what());
+				DNPrint(0, EMLoggerLevel::Debug, "%s", e.what());
 				errData["code"] = http_status::HTTP_STATUS_BAD_REQUEST;
 				errData["message"] = "Regist Error!!";
 				MSGSET(errData.dump());

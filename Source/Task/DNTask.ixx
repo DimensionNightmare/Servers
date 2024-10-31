@@ -6,7 +6,7 @@ import ThirdParty.PbGen;
 
 using namespace std::chrono;
 
-export enum class DNTaskFlag : uint16_t
+export enum class EMDNTaskFlag : uint16_t
 {
 	Timeout = 0,
 	PaserError,
@@ -14,7 +14,7 @@ export enum class DNTaskFlag : uint16_t
 	Max,
 };
 
-constexpr uint16_t DNTaskFlagSize() { return static_cast<uint16_t>(DNTaskFlag::Max); }
+constexpr uint16_t DNTaskFlagSize() { return static_cast<uint16_t>(EMDNTaskFlag::Max); }
 
 export template <typename T>
 struct DNTask
@@ -74,7 +74,7 @@ struct DNTask
 	{
 		tHandle.promise().oAwaitHandle = caller;
 
-		if (HasFlag(DNTaskFlag::TimeCost))
+		if (HasFlag(EMDNTaskFlag::TimeCost))
 		{
 			oTimePoint = steady_clock::now();
 		}
@@ -88,7 +88,7 @@ struct DNTask
 	DNTask(HandleType handle)
 	{
 		tHandle = handle;
-		// SetFlag(DNTaskFlag::TimeCost);
+		// SetFlag(EMDNTaskFlag::TimeCost);
 	}
 
 	~DNTask()
@@ -118,7 +118,7 @@ struct DNTask
 
 	void Destroy()
 	{
-		if (HasFlag(DNTaskFlag::TimeCost))
+		if (HasFlag(EMDNTaskFlag::TimeCost))
 		{
 			steady_clock::time_point now = steady_clock::now();
 			cout << format("tasktimeid:{}, cost:{}ms", iTimerId, duration_cast<microseconds>(now - oTimePoint).count() / 1000.0) << endl;
@@ -131,9 +131,9 @@ struct DNTask
 		}
 	}
 public:
-	bool HasFlag(DNTaskFlag flag) { return oFlags.test(uint16_t(flag)); }
-	void SetFlag(DNTaskFlag flag) { oFlags.set(uint16_t(flag)); }
-	void ClearFlag(DNTaskFlag flag) { oFlags.reset(uint16_t(flag)); }
+	bool HasFlag(EMDNTaskFlag flag) { return oFlags.test(uint16_t(flag)); }
+	void SetFlag(EMDNTaskFlag flag) { oFlags.set(uint16_t(flag)); }
+	void ClearFlag(EMDNTaskFlag flag) { oFlags.reset(uint16_t(flag)); }
 
 	size_t& TimerId() { return iTimerId; }
 private:

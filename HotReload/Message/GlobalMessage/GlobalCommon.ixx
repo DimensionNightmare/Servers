@@ -21,9 +21,9 @@ namespace GlobalMessage
 		DNClientProxyHelper* client = dnServer->GetCSock();
 		DNServerProxyHelper* server = dnServer->GetSSock();
 		
-		DNPrint(0, LoggerLevel::Debug, "Client:%s, port:%hu", client->remote_host.c_str(), client->remote_port);
+		DNPrint(0, EMLoggerLevel::Debug, "Client:%s, port:%hu", client->remote_host.c_str(), client->remote_port);
 		
-		client->RegistState() = RegistState::Registing;
+		client->EMRegistState() = EMRegistState::Registing;
 
 		COM_ReqRegistSrv request;
 
@@ -52,28 +52,28 @@ namespace GlobalMessage
 			
 			uint32_t msgId = client->GetMsgId();
 			client->AddMsg(msgId, &dataChannel);
-			MessagePackAndSend(msgId, MsgDeal::Req, request.GetDescriptor()->full_name().c_str(), binData, client->GetChannel());
+			MessagePackAndSend(msgId, EMMsgDeal::Req, request.GetDescriptor()->full_name().c_str(), binData, client->GetChannel());
 			
 			co_await dataChannel;
-			if (dataChannel.HasFlag(DNTaskFlag::Timeout))
+			if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
 			{
-				DNPrint(0, LoggerLevel::Debug, "requst timeout! ");
+				DNPrint(0, EMLoggerLevel::Debug, "requst timeout! ");
 			}
 
 		}
 
 		if (response.success())
 		{
-			DNPrint(0, LoggerLevel::Debug, "regist Server success! Rec index:%d", response.server_id());
-			client->RegistState() = RegistState::Registed;
+			DNPrint(0, EMLoggerLevel::Debug, "regist Server success! Rec index:%d", response.server_id());
+			client->EMRegistState() = EMRegistState::Registed;
 			client->RegistType() = response.server_type();
 			dnServer->ServerId() = response.server_id();
 		}
 		else
 		{
-			DNPrint(0, LoggerLevel::Debug, "regist Server error!  ");
+			DNPrint(0, EMLoggerLevel::Debug, "regist Server error!  ");
 			// dnServer->IsRun() = false; //exit application
-			client->RegistState() = RegistState::None;
+			client->EMRegistState() = EMRegistState::None;
 		}
 
 
@@ -89,18 +89,18 @@ namespace GlobalMessage
 			return;
 		}
 		
-		DNPrint(0, LoggerLevel::Debug, "ip Reqregist: %s, %d", channel->peeraddr().c_str(), request.server_type());
+		DNPrint(0, EMLoggerLevel::Debug, "ip Reqregist: %s, %d", channel->peeraddr().c_str(), request.server_type());
 
 		COM_ResRegistSrv response;
 
 		GlobalServerHelper* dnServer = GetGlobalServer();
 		ServerEntityManagerHelper* entityMan = dnServer->GetServerEntityManager();
 
-		ServerType regType = (ServerType)request.server_type();
+		EMServerType regType = (EMServerType)request.server_type();
 
 		const string& ipPort = channel->localaddr();
 
-		if (regType < ServerType::GateServer || regType > ServerType::LogicServer || ipPort.empty())
+		if (regType < EMServerType::GateServer || regType > EMServerType::LogicServer || ipPort.empty())
 		{
 			response.set_success(false);
 		}
@@ -175,7 +175,7 @@ namespace GlobalMessage
 		string binData;
 		response.SerializeToString(&binData);
 
-		MessagePackAndSend(msgId, MsgDeal::Res, nullptr, binData, channel);
+		MessagePackAndSend(msgId, EMMsgDeal::Res, nullptr, binData, channel);
 
 		if (response.success())
 		{

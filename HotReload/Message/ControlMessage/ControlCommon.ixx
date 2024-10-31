@@ -27,13 +27,13 @@ namespace ControlMessage
 		ControlServerHelper* dnServer = GetControlServer();
 		ServerEntityManagerHelper* entityMan = dnServer->GetServerEntityManager();
 
-		ServerType regType = (ServerType)request.server_type();
+		EMServerType regType = (EMServerType)request.server_type();
 
-		DNPrint(0, LoggerLevel::Debug, "ip Reqregist: %s, %d", channel->peeraddr().c_str(), request.server_type());
+		DNPrint(0, EMLoggerLevel::Debug, "ip Reqregist: %s, %d", channel->peeraddr().c_str(), request.server_type());
 
 		const string& ipPort = channel->localaddr();
 
-		if (regType < ServerType::GlobalServer || regType > ServerType::AuthServer || ipPort.empty())
+		if (regType < EMServerType::GlobalServer || regType > EMServerType::AuthServer || ipPort.empty())
 		{
 			response.set_success(false);
 		}
@@ -61,7 +61,7 @@ namespace ControlMessage
 		string binData;
 		response.SerializeToString(&binData);
 
-		MessagePackAndSend(msgId, MsgDeal::Res, nullptr, binData, channel);
+		MessagePackAndSend(msgId, EMMsgDeal::Res, nullptr, binData, channel);
 	}
 
 	export void Exe_RetHeartbeat(SocketChannelPtr channel, string binMsg)

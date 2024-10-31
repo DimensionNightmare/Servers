@@ -20,9 +20,9 @@ namespace DatabaseMessage
 		DatabaseServerHelper* dnServer = GetDatabaseServer();
 		DNClientProxyHelper* client = dnServer->GetCSock();
 		
-		DNPrint(0, LoggerLevel::Debug, "Client:%s, port:%hu", client->remote_host.c_str(), client->remote_port);
+		DNPrint(0, EMLoggerLevel::Debug, "Client:%s, port:%hu", client->remote_host.c_str(), client->remote_port);
 		
-		client->RegistState() = RegistState::Registing;
+		client->EMRegistState() = EMRegistState::Registing;
 
 		COM_ReqRegistSrv request;
 
@@ -50,28 +50,28 @@ namespace DatabaseMessage
 
 			uint32_t msgId = client->GetMsgId();
 			client->AddMsg(msgId, &dataChannel);
-			MessagePackAndSend(msgId, MsgDeal::Req, request.GetDescriptor()->full_name().c_str(), binData, client->GetChannel());
+			MessagePackAndSend(msgId, EMMsgDeal::Req, request.GetDescriptor()->full_name().c_str(), binData, client->GetChannel());
 
 			co_await dataChannel;
-			if (dataChannel.HasFlag(DNTaskFlag::Timeout))
+			if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
 			{
-				DNPrint(0, LoggerLevel::Debug, "requst timeout! ");
+				DNPrint(0, EMLoggerLevel::Debug, "requst timeout! ");
 			}
 
 		}
 
 		if (response.success())
 		{
-			DNPrint(0, LoggerLevel::Debug, "regist Server success! Rec index:%d", response.server_id());
-			client->RegistState() = RegistState::Registed;
+			DNPrint(0, EMLoggerLevel::Debug, "regist Server success! Rec index:%d", response.server_id());
+			client->EMRegistState() = EMRegistState::Registed;
 			client->RegistType() = response.server_type();
 			dnServer->ServerId() = response.server_id();
 		}
 		else
 		{
-			DNPrint(0, LoggerLevel::Debug, "regist Server error!  ");
+			DNPrint(0, EMLoggerLevel::Debug, "regist Server error!  ");
 			// dnServer->IsRun() = false; //exit application
-			client->RegistState() = RegistState::None;
+			client->EMRegistState() = EMRegistState::None;
 		}
 
 		co_return;

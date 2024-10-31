@@ -30,7 +30,7 @@ using namespace std::chrono;
 #define SUPDATE "UPDATE"
 #define SUPDATECOND "UPDATECOND"
 
-enum class SqlOpType : uint8_t
+enum class EMSqlOpType : uint8_t
 {
 	None,
 	CreateTable,
@@ -41,22 +41,22 @@ enum class SqlOpType : uint8_t
 	UpdateTable,
 };
 
-const char* GetOpTypeBySqlOpType(SqlOpType eType)
+const char* GetOpTypeBySqlOpType(EMSqlOpType eType)
 {
 	switch (eType)
 	{
 #define ONE(type, name) \
 		case type: \
 			return name;
-		ONE(SqlOpType::CreateTable, "CREATE TABLE ");
-		ONE(SqlOpType::Insert, "INSERT INTO ");
-		ONE(SqlOpType::Query, "SELECT ");
-		ONE(SqlOpType::Update, "UPDATE ");
-		ONE(SqlOpType::Delete, "DELETE FROM ");
-		ONE(SqlOpType::UpdateTable, "ALTER TABLE ");
+		ONE(EMSqlOpType::CreateTable, "CREATE TABLE ");
+		ONE(EMSqlOpType::Insert, "INSERT INTO ");
+		ONE(EMSqlOpType::Query, "SELECT ");
+		ONE(EMSqlOpType::Update, "UPDATE ");
+		ONE(EMSqlOpType::Delete, "DELETE FROM ");
+		ONE(EMSqlOpType::UpdateTable, "ALTER TABLE ");
 #undef ONE
 		default:
-			throw invalid_argument("Please Check SqlOpType");
+			throw invalid_argument("Please Check EMSqlOpType");
 			break;
 	}
 
@@ -442,11 +442,11 @@ public:
 			return false;
 		}
 
-		DNPrint(0, LoggerLevel::Debug, "%s ", sSqlStatement.c_str());
+		DNPrint(0, EMLoggerLevel::Debug, "%s ", sSqlStatement.c_str());
 
 		pq_result result = pWork->exec(sSqlStatement);
 
-		if (eType == SqlOpType::Query)
+		if (eType == EMSqlOpType::Query)
 		{
 			if (!iQueryCount)
 			{
@@ -468,7 +468,7 @@ public:
 	// create table
 	DbSqlHelper<TMessage>& CreateTable()
 	{
-		ChangeSqlType(SqlOpType::CreateTable);
+		ChangeSqlType(EMSqlOpType::CreateTable);
 
 		const Descriptor* descriptor = pEntity->GetDescriptor();
 
@@ -527,7 +527,7 @@ public:
 
 	DbSqlHelper<TMessage>& UpdateTable()
 	{
-		ChangeSqlType(SqlOpType::UpdateTable);
+		ChangeSqlType(EMSqlOpType::UpdateTable);
 
 		pq_result result = pWork->exec(vformat(SqlTableColQuery, make_format_args(GetName())));
 
@@ -622,7 +622,7 @@ public:
 	// insert
 	DbSqlHelper<TMessage>& Insert(bool bSetDefault = false)
 	{
-		ChangeSqlType(SqlOpType::Insert);
+		ChangeSqlType(EMSqlOpType::Insert);
 
 		const Descriptor* descriptor = pEntity->GetDescriptor();
 		const Reflection* reflection = pEntity->GetReflection();
@@ -692,7 +692,7 @@ public:
 	// query
 	DbSqlHelper<TMessage>& SelectOne(const char* name, ...)
 	{
-		ChangeSqlType(SqlOpType::Query);
+		ChangeSqlType(EMSqlOpType::Query);
 
 		const Descriptor* descriptor = pEntity->GetDescriptor();
 		const Reflection* reflection = pEntity->GetReflection();
@@ -714,7 +714,7 @@ public:
 
 	DbSqlHelper<TMessage>& SelectByKey(const char* name, ...)
 	{
-		ChangeSqlType(SqlOpType::Query);
+		ChangeSqlType(EMSqlOpType::Query);
 		const Descriptor* descriptor = pEntity->GetDescriptor();
 		const Reflection* reflection = pEntity->GetReflection();
 
@@ -747,7 +747,7 @@ public:
 
 	DbSqlHelper<TMessage>& SelectAll(bool foreach = false, bool quertCount = false)
 	{
-		ChangeSqlType(SqlOpType::Query);
+		ChangeSqlType(EMSqlOpType::Query);
 
 		// not default
 		if (foreach)
@@ -803,7 +803,7 @@ public:
 
 	DbSqlHelper<TMessage>& UpdateOne(const char* name, ...)
 	{
-		ChangeSqlType(SqlOpType::Update);
+		ChangeSqlType(EMSqlOpType::Update);
 
 		const Descriptor* descriptor = pEntity->GetDescriptor();
 		const Reflection* reflection = pEntity->GetReflection();
@@ -824,7 +824,7 @@ public:
 
 	DbSqlHelper<TMessage>& UpdateByKey(const char* name, ...)
 	{
-		ChangeSqlType(SqlOpType::Update);
+		ChangeSqlType(EMSqlOpType::Update);
 		const Descriptor* descriptor = pEntity->GetDescriptor();
 		const Reflection* reflection = pEntity->GetReflection();
 
@@ -870,7 +870,7 @@ public:
 
 	DbSqlHelper<TMessage>& UpdateCond(const char* name, const char* cond, const char* splicing, ...)
 	{
-		ChangeSqlType(SqlOpType::Update);
+		ChangeSqlType(EMSqlOpType::Update);
 
 		const Descriptor* descriptor = pEntity->GetDescriptor();
 		const Reflection* reflection = pEntity->GetReflection();
@@ -892,7 +892,7 @@ public:
 
 	DbSqlHelper<TMessage>& DeleteCond(const char* name, const char* cond, const char* splicing, ...)
 	{
-		ChangeSqlType(SqlOpType::Delete);
+		ChangeSqlType(EMSqlOpType::Delete);
 
 		const Descriptor* descriptor = pEntity->GetDescriptor();
 		const Reflection* reflection = pEntity->GetReflection();
@@ -978,9 +978,9 @@ public:
 	}
 private:
 
-	bool ChangeSqlType(SqlOpType type)
+	bool ChangeSqlType(EMSqlOpType type)
 	{
-		if (eType != SqlOpType::None && eType != type)
+		if (eType != EMSqlOpType::None && eType != type)
 		{
 			throw invalid_argument("Not Commit to Change OpType");
 			return false;
@@ -996,16 +996,16 @@ private:
 	{
 		switch (eType)
 		{
-			case SqlOpType::Update:
-			case SqlOpType::Delete:
-			case SqlOpType::Query:
-			case SqlOpType::UpdateTable:
+			case EMSqlOpType::Update:
+			case EMSqlOpType::Delete:
+			case EMSqlOpType::Query:
+			case EMSqlOpType::UpdateTable:
 			{
 				bExecResult = affectedRows > 0;
 				break;
 			}
-			case SqlOpType::Insert:
-			case SqlOpType::CreateTable:
+			case EMSqlOpType::Insert:
+			case EMSqlOpType::CreateTable:
 			{
 				bExecResult = affectedRows == iExecResultCount;
 				break;
@@ -1015,13 +1015,13 @@ private:
 		}
 
 		iExecResultCount = 0;
-		eType = SqlOpType::None;
+		eType = EMSqlOpType::None;
 		mEles.clear();
 	}
 
 	void BuildSqlStatement()
 	{
-		if (eType == SqlOpType::None)
+		if (eType == EMSqlOpType::None)
 		{
 			return;
 		}
@@ -1039,7 +1039,7 @@ private:
 
 		switch (eType)
 		{
-			case SqlOpType::CreateTable:
+			case EMSqlOpType::CreateTable:
 			{
 				ss << GetOpTypeBySqlOpType(eType) << "\"" << GetName() << "\"";
 
@@ -1097,7 +1097,7 @@ private:
 				iExecResultCount = 1;
 				break;
 			}
-			case SqlOpType::Insert:
+			case EMSqlOpType::Insert:
 			{
 				ss << GetOpTypeBySqlOpType(eType) << "\"" << GetName() << "\"";
 
@@ -1161,7 +1161,7 @@ private:
 				ss << SEnd;
 				break;
 			}
-			case SqlOpType::Query:
+			case EMSqlOpType::Query:
 			{
 				string selectElems;
 				auto it = mEles.begin();
@@ -1206,7 +1206,7 @@ private:
 				ss << SEnd;
 				break;
 			}
-			case SqlOpType::Update:
+			case EMSqlOpType::Update:
 			{
 				auto& updates = mEles[SUPDATE];
 				if (!updates.size())
@@ -1249,7 +1249,7 @@ private:
 				ss << SEnd;
 				break;
 			}
-			case SqlOpType::Delete:
+			case EMSqlOpType::Delete:
 			{
 				ss << GetOpTypeBySqlOpType(eType) << "\"" << GetName() << "\"";
 
@@ -1280,7 +1280,7 @@ private:
 				ss << SEnd;
 				break;
 			}
-			case SqlOpType::UpdateTable:
+			case EMSqlOpType::UpdateTable:
 			{
 				for (auto& [k, items] : mEles)
 				{
@@ -1346,7 +1346,7 @@ private:
 
 	vector<TMessage*> mResult;
 
-	SqlOpType eType = SqlOpType::None;
+	EMSqlOpType eType = EMSqlOpType::None;
 
 	// create table, instert
 	unordered_map<string, list<string>> mEles;

@@ -30,13 +30,13 @@ namespace GateMessage
 				child->set_server_type((uint32_t)serv->GetServerType());
 			};
 
-		const list<ServerEntity*>& dbs = entityMan->GetEntitysByType(ServerType::DatabaseServer);
+		const list<ServerEntity*>& dbs = entityMan->GetEntitysByType(EMServerType::DatabaseServer);
 		for (ServerEntity* serv : dbs)
 		{
 			AddChild(serv);
 		}
 
-		const list<ServerEntity*>& logics = entityMan->GetEntitysByType(ServerType::LogicServer);
+		const list<ServerEntity*>& logics = entityMan->GetEntitysByType(EMServerType::LogicServer);
 		for (ServerEntity* serv : logics)
 		{
 			AddChild(serv);
@@ -50,7 +50,7 @@ namespace GateMessage
 		// pack data
 		string binData;
 		request.SerializeToString(&binData);
-		MessagePackAndSend(0, MsgDeal::Ret, request.GetDescriptor()->full_name().c_str(), binData, client->GetChannel());
+		MessagePackAndSend(0, EMMsgDeal::Ret, request.GetDescriptor()->full_name().c_str(), binData, client->GetChannel());
 	}
 
 	// self request
@@ -60,9 +60,9 @@ namespace GateMessage
 		DNClientProxyHelper* client = dnServer->GetCSock();
 		DNServerProxy* server = dnServer->GetSSock();
 		
-		DNPrint(0, LoggerLevel::Debug, "Client:%s, port:%hu", client->remote_host.c_str(), client->remote_port);
+		DNPrint(0, EMLoggerLevel::Debug, "Client:%s, port:%hu", client->remote_host.c_str(), client->remote_port);
 		
-		client->RegistState() = RegistState::Registing;
+		client->EMRegistState() = EMRegistState::Registing;
 
 		COM_ReqRegistSrv request;
 
@@ -92,20 +92,20 @@ namespace GateMessage
 			
 			uint32_t msgId = client->GetMsgId();
 			client->AddMsg(msgId, &dataChannel);
-			MessagePackAndSend(msgId, MsgDeal::Req, request.GetDescriptor()->full_name().c_str(), binData, client->GetChannel());
+			MessagePackAndSend(msgId, EMMsgDeal::Req, request.GetDescriptor()->full_name().c_str(), binData, client->GetChannel());
 
 			co_await dataChannel;
-			if (dataChannel.HasFlag(DNTaskFlag::Timeout))
+			if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
 			{
-				DNPrint(0, LoggerLevel::Debug, "requst timeout! ");
+				DNPrint(0, EMLoggerLevel::Debug, "requst timeout! ");
 			}
 
 		}
 
 		if (response.success())
 		{
-			DNPrint(0, LoggerLevel::Debug, "regist Server success! Rec index:%d", response.server_id());
-			client->RegistState() = RegistState::Registed;
+			DNPrint(0, EMLoggerLevel::Debug, "regist Server success! Rec index:%d", response.server_id());
+			client->EMRegistState() = EMRegistState::Registed;
 			client->RegistType() = response.server_type();
 			dnServer->ServerId() = response.server_id();
 
@@ -113,9 +113,9 @@ namespace GateMessage
 		}
 		else
 		{
-			DNPrint(0, LoggerLevel::Debug, "regist Server error!");
+			DNPrint(0, EMLoggerLevel::Debug, "regist Server error!");
 			// dnServer->IsRun() = false; //exit application
-			client->RegistState() = RegistState::None;
+			client->EMRegistState() = EMRegistState::None;
 		}
 
 		co_return;
@@ -130,19 +130,19 @@ namespace GateMessage
 			return;
 		}
 
-		DNPrint(0, LoggerLevel::Debug, "ip Reqregist: %s, %d", channel->peeraddr().c_str(), request.server_type());
+		DNPrint(0, EMLoggerLevel::Debug, "ip Reqregist: %s, %d", channel->peeraddr().c_str(), request.server_type());
 
 		COM_ResRegistSrv response;
 
 		GateServerHelper* dnServer = GetGateServer();
 		ServerEntityManagerHelper* entityMan = dnServer->GetServerEntityManager();
 
-		ServerType regType = (ServerType)request.server_type();
+		EMServerType regType = (EMServerType)request.server_type();
 		uint32_t serverId = request.server_id();
 
 		const string& ipPort = channel->localaddr();
 
-		if (regType < ServerType::DatabaseServer || regType > ServerType::LogicServer || ipPort.empty())
+		if (regType < EMServerType::DatabaseServer || regType > EMServerType::LogicServer || ipPort.empty())
 		{
 			response.set_success(false);
 		}
@@ -174,7 +174,7 @@ namespace GateMessage
 		string binData;
 		response.SerializeToString(&binData);
 
-		MessagePackAndSend(msgId, MsgDeal::Res, nullptr, binData, channel);
+		MessagePackAndSend(msgId, EMMsgDeal::Res, nullptr, binData, channel);
 
 		if (response.success())
 		{
@@ -189,7 +189,7 @@ namespace GateMessage
 			GateServerHelper* dnServer = GetGateServer();
 			DNClientProxyHelper* client = dnServer->GetCSock();
 
-			MessagePackAndSend(0, MsgDeal::Ret, request.GetDescriptor()->full_name().c_str(), binData, client->GetChannel());
+			MessagePackAndSend(0, EMMsgDeal::Ret, request.GetDescriptor()->full_name().c_str(), binData, client->GetChannel());
 		}
 	}
 

@@ -33,24 +33,24 @@ export int HandleDatabaseServerInit(DNServer* server)
 
 				if (channel->isConnected())
 				{
-					DNPrint(TipCode::TipCode_SrvConnOn, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
+					DNPrint(TipCode::TipCode_SrvConnOn, EMLoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
 					clientSock->SetRegistEvent(&DatabaseMessage::Evt_ReqRegistSrv);
 					TICK_MAINSPACE_SIGN_FUNCTION(DNClientProxy, InitConnectedChannel, clientSock, channel);
 				}
 				else
 				{
-					DNPrint(TipCode::TipCode_SrvConnOff, LoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
+					DNPrint(TipCode::TipCode_SrvConnOff, EMLoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
 
 					string origin = format("{}:{}", serverProxy->GetCtlIp(), serverProxy->GetCtlPort());
-					if (clientSock->RegistState() == RegistState::Registed || peeraddr != origin)
+					if (clientSock->EMRegistState() == EMRegistState::Registed || peeraddr != origin)
 					{
-						clientSock->RegistState() = RegistState::None;
+						clientSock->EMRegistState() = EMRegistState::None;
 
 						if (clientSock->hloop())
 						{
 							clientSock->Timer()->setTimeout(200, [=](uint64_t timerID)
 								{
-									DNPrint(0, LoggerLevel::Debug, "orgin not match peeraddr %s reclient ~", origin.c_str());
+									DNPrint(0, EMLoggerLevel::Debug, "orgin not match peeraddr %s reclient ~", origin.c_str());
 									TICK_MAINSPACE_SIGN_FUNCTION(DNClientProxy, RedirectClient, clientSock, serverProxy->GetCtlPort(), serverProxy->GetCtlIp());
 								});
 						}
@@ -69,25 +69,25 @@ export int HandleDatabaseServerInit(DNServer* server)
 				MessagePacket packet;
 				memcpy(&packet, buf->data(), MessagePacket::PackLenth);
 
-				DNPrint(0, LoggerLevel::Debug, "c %s Recv type=%d With Mid:%u", channel->peeraddr().c_str(), packet.dealType, packet.msgId);
+				DNPrint(0, EMLoggerLevel::Debug, "c %s Recv type=%d With Mid:%u", channel->peeraddr().c_str(), packet.dealType, packet.msgId);
 
 				if(packet.pkgLenth > 2 * 1024)
 				{
-					DNPrint(0, LoggerLevel::Debug, "Recv byte len limit=%u", packet.pkgLenth);
+					DNPrint(0, EMLoggerLevel::Debug, "Recv byte len limit=%u", packet.pkgLenth);
 					return;
 				}
 				
 				string msgData(buf->base + MessagePacket::PackLenth, packet.pkgLenth);
 
-				if (packet.dealType == MsgDeal::Req)
+				if (packet.dealType == EMMsgDeal::Req)
 				{
 					DatabaseMessageHandle::MsgHandle(channel, packet.msgId, packet.msgHashId, msgData);
 				}
-				else if (packet.dealType == MsgDeal::Ret)
+				else if (packet.dealType == EMMsgDeal::Ret)
 				{
 					DatabaseMessageHandle::MsgRetHandle(channel, packet.msgHashId, msgData);
 				}
-				else if (packet.dealType == MsgDeal::Res)
+				else if (packet.dealType == EMMsgDeal::Res)
 				{
 					if (DNTask<Message*>* task = clientSock->GetMsg(packet.msgId)) // client sock request
 					{
@@ -98,7 +98,7 @@ export int HandleDatabaseServerInit(DNServer* server)
 						{
 							if (!message->ParseFromString(msgData))
 							{
-								task->SetFlag(DNTaskFlag::PaserError);
+								task->SetFlag(EMDNTaskFlag::PaserError);
 							}
 						}
 
@@ -106,12 +106,12 @@ export int HandleDatabaseServerInit(DNServer* server)
 					}
 					else
 					{
-						DNPrint(ErrCode::ErrCode_MsgFind, LoggerLevel::Error, nullptr);
+						DNPrint(ErrCode::ErrCode_MsgFind, EMLoggerLevel::Error, nullptr);
 					}
 				}
 				else
 				{
-					DNPrint(ErrCode::ErrCode_MsgDealType, LoggerLevel::Error, nullptr);
+					DNPrint(ErrCode::ErrCode_MsgDealType, EMLoggerLevel::Error, nullptr);
 				}
 			};
 

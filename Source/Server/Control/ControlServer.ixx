@@ -18,7 +18,7 @@ public:
 
 	ControlServer()
 	{
-		emServerType = ServerType::ControlServer;
+		emServerType = EMServerType::ControlServer;
 	}
 
 	// need init order reversal
@@ -34,7 +34,7 @@ public:
 		string* port = GetLuanchConfigParam("port");
 		if (!port)
 		{
-			DNPrint(ErrCode::ErrCode_SrvNeedIPPort, LoggerLevel::Error, nullptr);
+			DNPrint(ErrCode::ErrCode_SrvNeedIPPort, EMLoggerLevel::Error, nullptr);
 			return false;
 		}
 
@@ -45,13 +45,13 @@ public:
 		int listenfd = pSSock->createsocket(stoi(*port), "0.0.0.0");
 		if (listenfd < 0)
 		{
-			DNPrint(ErrCode::ErrCode_CreateSocket, LoggerLevel::Error, nullptr);
+			DNPrint(ErrCode::ErrCode_CreateSocket, EMLoggerLevel::Error, nullptr);
 			return false;
 		}
 
 		pSSock->Init();
 
-		DNPrint(TipCode::TipCode_SrvListenOn, LoggerLevel::Normal, nullptr, pSSock->port, listenfd);
+		DNPrint(TipCode::TipCode_SrvListenOn, EMLoggerLevel::Normal, nullptr, pSSock->port, listenfd);
 
 		pServerEntityMan = make_unique<ServerEntityManager>();
 		pServerEntityMan->Init();
@@ -67,7 +67,7 @@ public:
 	{
 		if (!pSSock)
 		{
-			DNPrint(ErrCode::ErrCode_SrvNotInit, LoggerLevel::Error, nullptr);
+			DNPrint(ErrCode::ErrCode_SrvNotInit, EMLoggerLevel::Error, nullptr);
 			return false;
 		}
 

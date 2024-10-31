@@ -39,7 +39,7 @@ public: // dll override
 		uint32_t entityId = mMapTimer[timerID];
 		if (RemoveEntity(entityId))
 		{
-			DNPrint(0, LoggerLevel::Debug, "destory proxy Timer entity");
+			DNPrint(0, EMLoggerLevel::Debug, "destory proxy Timer entity");
 		}
 
 	}

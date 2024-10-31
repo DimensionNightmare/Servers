@@ -7,7 +7,7 @@ export module Logger;
 import StrUtils;
 import I10nText;
 
-export enum class LoggerLevel : uint8_t
+export enum class EMLoggerLevel : uint8_t
 {
 	Debug,
 	Normal,
@@ -15,12 +15,12 @@ export enum class LoggerLevel : uint8_t
 	Error,
 };
 
-LoggerLevel SLogLevel = LoggerLevel::Normal;
+EMLoggerLevel SLogLevel = EMLoggerLevel::Normal;
 
 ofstream LogFile; 
 
 /// @brief set logger type and Log file Init 
-export void SetLoggerLevel(optional<LoggerLevel> level = nullopt, optional<string_view> path = nullopt)
+export void SetLoggerLevel(optional<EMLoggerLevel> level = nullopt, optional<string_view> path = nullopt)
 {
 	if(level.has_value())
 	{
@@ -45,7 +45,7 @@ ofstream* GetLoggerFile()
 }
 
 /// @brief print char to command-line/log-file. 
-export void LoggerPrint(LoggerLevel level, int code, const char* funcName, const char* fmt, ...)
+export void LoggerPrint(EMLoggerLevel level, int code, const char* funcName, const char* fmt, ...)
 {
 	if (level < SLogLevel)
 	{
@@ -56,14 +56,14 @@ export void LoggerPrint(LoggerLevel level, int code, const char* funcName, const
 	{
 		switch (level)
 		{
-			case LoggerLevel::Debug:
+			case EMLoggerLevel::Debug:
 
 				break;
-			case LoggerLevel::Normal:
+			case EMLoggerLevel::Normal:
 				fmt = GetTipText(code);
 				break;
 
-			case LoggerLevel::Error:
+			case EMLoggerLevel::Error:
 				fmt = GetErrText(code);
 				break;
 		}

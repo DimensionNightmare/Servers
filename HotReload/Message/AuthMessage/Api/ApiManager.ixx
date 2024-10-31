@@ -22,7 +22,7 @@ export void ApiInit(HttpService* service)
 
 			nlohmann::json errData;
 
-			if (authServer->GetCSock()->RegistState() != RegistState::Registed)
+			if (authServer->GetCSock()->EMRegistState() != EMRegistState::Registed)
 			{
 				errData["code"] = http_status::HTTP_STATUS_BAD_REQUEST;
 				errData["message"] = "Server Disconnect!";

@@ -39,9 +39,9 @@ namespace GlobalMessage
 				ServerEntity* owner = channel->getContext<ServerEntity>();
 				// remove and unlock
 				owner->GetMapLinkNode(entity->GetServerType()).remove(entity);
-				owner->ClearFlag(ServerEntityFlag::Locked);
+				owner->ClearFlag(EMServerEntityFlag::Locked);
 
-				DNPrint(0, LoggerLevel::Debug, "Global get notify release gate lock!");
+				DNPrint(0, EMLoggerLevel::Debug, "Global get notify release gate lock!");
 
 				entityMan->RemoveEntity(request.server_id());
 				dnServer->UpdateServerGroup();
@@ -65,7 +65,7 @@ namespace GlobalMessage
 		for (int i = 0; i < request.childs_size(); i++)
 		{
 			const COM_ReqRegistSrv& child = request.childs(i);
-			ServerType childType = (ServerType)child.server_type();
+			EMServerType childType = (EMServerType)child.server_type();
 			ServerEntity* servChild = entityMan->AddEntity(child.server_id(), childType);
 			entity->SetMapLinkNode(childType, servChild);
 		}

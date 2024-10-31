@@ -25,12 +25,12 @@ namespace GlobalMessage
 
 		// if has db not need origin
 		GlobalServerHelper* dnServer = GetGlobalServer();
-		list<ServerEntity*> serverList = dnServer->GetServerEntityManager()->GetEntitysByType(ServerType::GateServer);
+		list<ServerEntity*> serverList = dnServer->GetServerEntityManager()->GetEntitysByType(EMServerType::GateServer);
 
 		list<ServerEntity*> tempList;
 		for (ServerEntity* server : serverList)
 		{
-			if (server->HasFlag(ServerEntityFlag::Locked))
+			if (server->HasFlag(EMServerEntityFlag::Locked))
 			{
 				tempList.emplace_back(server);
 			}
@@ -43,12 +43,12 @@ namespace GlobalMessage
 		if (tempList.empty())
 		{
 			response.set_state_code(4);
-			DNPrint(0, LoggerLevel::Debug, "not exist GateServer");
+			DNPrint(0, EMLoggerLevel::Debug, "not exist GateServer");
 		}
 		else
 		{
 			ServerEntity* entity = tempList.front();
-			DNPrint(0, LoggerLevel::Debug, "send to GateServer : %d", entity->ID());
+			DNPrint(0, EMLoggerLevel::Debug, "send to GateServer : %d", entity->ID());
 
 			entity->ConnNum()++;
 
@@ -67,12 +67,12 @@ namespace GlobalMessage
 
 			server->AddMsg(msgId, &dataChannel, 8000);
 			
-			MessagePackAndSend(msgId, MsgDeal::Req, request.GetDescriptor()->full_name().c_str(), binData, entity->GetSock());
+			MessagePackAndSend(msgId, EMMsgDeal::Req, request.GetDescriptor()->full_name().c_str(), binData, entity->GetSock());
 
 			co_await dataChannel;
-			if (dataChannel.HasFlag(DNTaskFlag::Timeout))
+			if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
 			{
-				DNPrint(0, LoggerLevel::Debug, "requst timeout! ");
+				DNPrint(0, EMLoggerLevel::Debug, "requst timeout! ");
 				response.set_state_code(5);
 
 				entity->ConnNum()--;
@@ -85,12 +85,12 @@ namespace GlobalMessage
 
 			
 
-			// DNPrint(0, LoggerLevel::Debug, "%s", response.DebugString().c_str());
+			// DNPrint(0, EMLoggerLevel::Debug, "%s", response.DebugString().c_str());
 		}
 
 		response.SerializeToString(&binData);
 
-		MessagePackAndSend(msgId, MsgDeal::Res, nullptr, binData, channel);
+		MessagePackAndSend(msgId, EMMsgDeal::Res, nullptr, binData, channel);
 
 		co_return;
 	}

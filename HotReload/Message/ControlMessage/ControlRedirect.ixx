@@ -22,7 +22,7 @@ namespace ControlMessage
 		g2A_ResAuthAccount response;
 
 		ServerEntity* entity = nullptr;
-		const list<ServerEntity*>& serverList = GetControlServer()->GetServerEntityManager()->GetEntitysByType(ServerType::GlobalServer);
+		const list<ServerEntity*>& serverList = GetControlServer()->GetServerEntityManager()->GetEntitysByType(EMServerType::GlobalServer);
 
 		// std::erase_if(serverList, [](ServerEntity* itor){return itor ? itor->TimerId() : true; });
 		// serverList.sort([](ServerEntity* lhs, ServerEntity* rhs){return lhs->ConnNum() < rhs->ConnNum(); });
@@ -69,12 +69,12 @@ namespace ControlMessage
 			server->AddMsg(msgId, &dataChannel, 9000);
 
 			binData = binMsg;
-			MessagePackAndSend(msgId, MsgDeal::Redir, request.GetDescriptor()->full_name().c_str(), binData, entity->GetSock());
+			MessagePackAndSend(msgId, EMMsgDeal::Redir, request.GetDescriptor()->full_name().c_str(), binData, entity->GetSock());
 
 			co_await dataChannel;
-			if (dataChannel.HasFlag(DNTaskFlag::Timeout))
+			if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
 			{
-				DNPrint(0, LoggerLevel::Debug, "requst timeout! ");
+				DNPrint(0, EMLoggerLevel::Debug, "requst timeout! ");
 				response.set_state_code(3);
 			}
 
@@ -82,7 +82,7 @@ namespace ControlMessage
 
 		response.SerializeToString(&binData);
 
-		MessagePackAndSend(msgId, MsgDeal::Res, nullptr, binData, channel);
+		MessagePackAndSend(msgId, EMMsgDeal::Res, nullptr, binData, channel);
 		co_return;
 	}
 }

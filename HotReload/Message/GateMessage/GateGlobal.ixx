@@ -40,7 +40,7 @@ namespace GateMessage
 				request.set_server_ip(request.server_ip());
 
 				request.SerializeToString(&binData);
-				MessagePackAndSend(0, MsgDeal::Ret, request.GetDescriptor()->full_name().c_str(), binData, online);
+				MessagePackAndSend(0, EMMsgDeal::Ret, request.GetDescriptor()->full_name().c_str(), binData, online);
 
 				//kick socket
 				online->setContext(nullptr);
@@ -50,7 +50,7 @@ namespace GateMessage
 				//kick game
 				if (uint32_t serverId = entity->RecordServerId())
 				{
-					DNPrint(0, LoggerLevel::Debug, "Send Logic tick User->%d, server:%d", entity->ID(), entity->RecordServerId());
+					DNPrint(0, EMLoggerLevel::Debug, "Send Logic tick User->%d, server:%d", entity->ID(), entity->RecordServerId());
 
 					ServerEntityManagerHelper* serverEntityMan = dnServer->GetServerEntityManager();
 					ServerEntity* serverEntity = serverEntityMan->GetEntity(serverId);
@@ -58,7 +58,7 @@ namespace GateMessage
 					request.set_account_id(entity->ID());
 
 					request.SerializeToString(&binData);
-					MessagePackAndSend(0, MsgDeal::Redir, request.GetDescriptor()->full_name().c_str(), binData, serverEntity->GetSock());
+					MessagePackAndSend(0, EMMsgDeal::Redir, request.GetDescriptor()->full_name().c_str(), binData, serverEntity->GetSock());
 				}
 
 			}
@@ -85,10 +85,10 @@ namespace GateMessage
 			entity->TimerId() = TICK_MAINSPACE_SIGN_FUNCTION(ProxyEntityManager, CheckEntityCloseTimer, entityMan, entity->ID());
 		}
 
-		DNPrint(0, LoggerLevel::Debug, "ReqUserToken User: %d!!", request.account_id());
+		DNPrint(0, EMLoggerLevel::Debug, "ReqUserToken User: %d!!", request.account_id());
 
 		response.SerializeToString(&binData);
-		MessagePackAndSend(msgId, MsgDeal::Res, nullptr, binData, channel);
+		MessagePackAndSend(msgId, EMMsgDeal::Res, nullptr, binData, channel);
 	}
 
 }

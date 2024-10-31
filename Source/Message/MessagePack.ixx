@@ -2,13 +2,13 @@ module;
 #include "StdMacro.h"
 export module MessagePack;
 
-export enum class MsgDir : uint8_t
+export enum class EMMsgDir : uint8_t
 {
 	Outer = 1, 	// Client Msg
 	Inner, 		// Server Msg
 };
 
-export enum class MsgDeal : uint8_t
+export enum class EMMsgDeal : uint8_t
 {
 	Req = 1, 	// msg deal with
 	Res, 		// req result
@@ -22,8 +22,8 @@ export struct MessagePacket
 	static int PackLenth;
 	uint32_t pkgLenth = 0;	 //Pin Top !
 
-	MsgDir opType = MsgDir::Inner;
-	MsgDeal dealType = MsgDeal::Req;
+	EMMsgDir opType = EMMsgDir::Inner;
+	EMMsgDeal dealType = EMMsgDeal::Req;
 	uint16_t serverId = 0;
 	uint32_t msgId = 0;
 	size_t msgHashId = 0;
@@ -32,7 +32,7 @@ export struct MessagePacket
 
 int MessagePacket::PackLenth = sizeof(MessagePacket);
 
-export bool MessagePack(uint32_t msgId, MsgDeal deal, const char* pbName, string& data)
+export bool MessagePack(uint32_t msgId, EMMsgDeal deal, const char* pbName, string& data)
 {
 	MessagePacket packet;
 	packet.msgId = msgId;

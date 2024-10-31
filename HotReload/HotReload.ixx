@@ -69,29 +69,29 @@ extern "C"
 		SetLuanchConfig(server->pLuanchConfig);
 		SetDNl10nInstance(server->pDNl10nInstance);
 
-		ServerType servertype = server->GetServerType();
+		EMServerType servertype = server->GetServerType();
 		string_view serverName = EnumName(servertype);
-		SetLoggerLevel(LoggerLevel::Debug, serverName);
+		SetLoggerLevel(EMLoggerLevel::Debug, serverName);
 
 		bool isDeal = false;
 		switch (servertype)
 		{
-			case ServerType::ControlServer:
+			case EMServerType::ControlServer:
 				isDeal = HandleControlServerInit(server);
 				break;
-			case ServerType::GlobalServer:
+			case EMServerType::GlobalServer:
 				isDeal = HandleGlobalServerInit(server);
 				break;
-			case ServerType::AuthServer:
+			case EMServerType::AuthServer:
 				isDeal = HandleAuthServerInit(server);
 				break;
-			case ServerType::GateServer:
+			case EMServerType::GateServer:
 				isDeal = HandleGateServerInit(server);
 				break;
-			case ServerType::DatabaseServer:
+			case EMServerType::DatabaseServer:
 				isDeal = HandleDatabaseServerInit(server);
 				break;
-			case ServerType::LogicServer:
+			case EMServerType::LogicServer:
 				isDeal = HandleLogicServerInit(server);
 				break;
 			default:
@@ -103,26 +103,26 @@ extern "C"
 
 	HOTRELOAD int ShutdownHotReload(DNServer* server)
 	{
-		ServerType servertype = server->GetServerType();
+		EMServerType servertype = server->GetServerType();
 		bool isDeal = false;
 		switch (servertype)
 		{
-			case ServerType::ControlServer:
+			case EMServerType::ControlServer:
 				isDeal = HandleControlServerShutdown(server);
 				break;
-			case ServerType::GlobalServer:
+			case EMServerType::GlobalServer:
 				isDeal = HandleGlobalServerShutdown(server);
 				break;
-			case ServerType::AuthServer:
+			case EMServerType::AuthServer:
 				isDeal = HandleAuthServerShutdown(server);
 				break;
-			case ServerType::GateServer:
+			case EMServerType::GateServer:
 				isDeal = HandleGateServerShutdown(server);
 				break;
-			case ServerType::DatabaseServer:
+			case EMServerType::DatabaseServer:
 				isDeal = HandleDatabaseServerShutdown(server);
 				break;
-			case ServerType::LogicServer:
+			case EMServerType::LogicServer:
 				isDeal = HandleLogicServerShutdown(server);
 				break;
 			default:

@@ -2,7 +2,7 @@ module;
 #include "StdMacro.h"
 export module Entity;
 
-export enum class EntityType : uint8_t
+export enum class EMEntityType : uint8_t
 {
 	None,
 	// NetEntity, virtual
@@ -34,13 +34,13 @@ public: // dll override
 	uint32_t ID() { return iId; }
 
 	/// @brief entity type total enum
-	EntityType GetEntityType() { return eEntityType; }
+	EMEntityType GetEntityType() { return eEntityType; }
 
 protected: // dll proxy
 
 protected:
 
-	EntityType eEntityType = EntityType::None;
+	EMEntityType eEntityType = EMEntityType::None;
 
 	uint32_t iId = 0;
 

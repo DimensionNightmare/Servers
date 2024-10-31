@@ -27,7 +27,7 @@ namespace DatabaseMessage
 
 		string binData;
 
-		if (pq_connection* conn = dnServer->GetSqlProxy(SqlDbNameEnum::Nightmare))
+		if (pq_connection* conn = dnServer->GetSqlProxy(EMSqlDbNameEnum::Nightmare))
 		{
 			auto dealFunc = [&](Message* findMsg)
 				{
@@ -82,7 +82,7 @@ namespace DatabaseMessage
 					}
 					catch (const exception& e)
 					{
-						DNPrint(0, LoggerLevel::Debug, e.what());
+						DNPrint(0, EMLoggerLevel::Debug, e.what());
 						response.set_state_code(5);
 					}
 
@@ -107,7 +107,7 @@ namespace DatabaseMessage
 
 		response.SerializeToString(&binData);
 
-		MessagePackAndSend(msgId, MsgDeal::Res, nullptr, binData, channel);
+		MessagePackAndSend(msgId, EMMsgDeal::Res, nullptr, binData, channel);
 	}
 
 	export void Exe_ReqSaveData(SocketChannelPtr channel, uint32_t msgId,  string binMsg)
@@ -123,7 +123,7 @@ namespace DatabaseMessage
 
 		string binData;
 
-		if (pq_connection* conn = dnServer->GetSqlProxy(SqlDbNameEnum::Nightmare))
+		if (pq_connection* conn = dnServer->GetSqlProxy(EMSqlDbNameEnum::Nightmare))
 		{
 			auto dealFunc = [&](Message* findMsg)
 				{
@@ -152,7 +152,7 @@ namespace DatabaseMessage
 					}
 					catch (const exception& e)
 					{
-						DNPrint(0, LoggerLevel::Debug, e.what());
+						DNPrint(0, EMLoggerLevel::Debug, e.what());
 						response.set_state_code(5);
 					}
 
@@ -177,6 +177,6 @@ namespace DatabaseMessage
 
 		response.SerializeToString(&binData);
 
-		MessagePackAndSend(msgId, MsgDeal::Res, nullptr, binData, channel);
+		MessagePackAndSend(msgId, EMMsgDeal::Res, nullptr, binData, channel);
 	}
 }

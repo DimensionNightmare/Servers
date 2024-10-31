@@ -41,7 +41,7 @@ public:
 		}
 		catch (const exception& e)
 		{
-			DNPrint(0, LoggerLevel::Debug, "%s", e.what());
+			DNPrint(0, EMLoggerLevel::Debug, "%s", e.what());
 			return false;
 		}
 

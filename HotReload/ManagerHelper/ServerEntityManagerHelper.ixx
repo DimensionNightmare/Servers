@@ -14,7 +14,7 @@ private:
 	ServerEntityManagerHelper() {}
 public:
 
-	ServerEntity* AddEntity(uint32_t entityId, ServerType regType)
+	ServerEntity* AddEntity(uint32_t entityId, EMServerType regType)
 	{
 		if (!mEntityMap.contains(entityId))
 		{
@@ -43,7 +43,7 @@ public:
 
 			mEntityMapList[entity->GetServerType()].remove(entity);
 
-			DNPrint(0, LoggerLevel::Debug, "offline destory entity");
+			DNPrint(0, EMLoggerLevel::Debug, "offline destory entity");
 			mEntityMap.erase(entityId);
 			return true;
 		}
@@ -51,7 +51,7 @@ public:
 		return false;
 	}
 
-	void MountEntity(ServerType type, ServerEntity* entity)
+	void MountEntity(EMServerType type, ServerEntity* entity)
 	{
 		unique_lock<shared_mutex> ulock(oMapMutex);
 		if (mEntityMap.contains(entity->ID()))
@@ -60,7 +60,7 @@ public:
 		}
 	}
 
-	void UnMountEntity(ServerType type, ServerEntity* entity)
+	void UnMountEntity(EMServerType type, ServerEntity* entity)
 	{
 		unique_lock<shared_mutex> ulock(oMapMutex);
 		mEntityMapList[type].remove(entity);
@@ -77,7 +77,7 @@ public:
 		return nullptr;
 	}
 
-	const list<ServerEntity*>& GetEntitysByType(ServerType type)
+	const list<ServerEntity*>& GetEntitysByType(EMServerType type)
 	{
 		shared_lock<shared_mutex> lock(oMapMutex);
 		return mEntityMapList[type];

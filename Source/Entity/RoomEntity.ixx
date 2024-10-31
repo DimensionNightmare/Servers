@@ -12,12 +12,12 @@ public:
 
 	RoomEntity() : NetEntity(0)
 	{
-		eEntityType = EntityType::Room;
+		eEntityType = EMEntityType::Room;
 	}
 
 	RoomEntity(uint32_t id) : NetEntity(id)
 	{
-		eEntityType = EntityType::Room;
+		eEntityType = EMEntityType::Room;
 	}
 
 	virtual ~RoomEntity() = default;

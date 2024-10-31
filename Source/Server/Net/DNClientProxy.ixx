@@ -11,7 +11,7 @@ import MessagePack;
 
 #define NABS(n) ((n) < 0 ? (n) : -(n))
 
-export enum class RegistState : uint8_t
+export enum class EMRegistState : uint8_t
 {
 	None,
 	Registing,
@@ -428,12 +428,12 @@ public: // dll override
 
 	void TickRegistEvent(size_t timerID)
 	{
-		if (eRegistState == RegistState::Registing)
+		if (eRegistState == EMRegistState::Registing)
 		{
 			return;
 		}
 
-		if (channel->isConnected() && eRegistState != RegistState::Registed)
+		if (channel->isConnected() && eRegistState != EMRegistState::Registed)
 		{
 			if (pRegistEvent)
 			{
@@ -441,7 +441,7 @@ public: // dll override
 			}
 			else
 			{
-				DNPrint(ErrCode::ErrCode_NotCallbackEvent, LoggerLevel::Error, nullptr);
+				DNPrint(ErrCode::ErrCode_NotCallbackEvent, EMLoggerLevel::Error, nullptr);
 			}
 		}
 		else
@@ -470,7 +470,7 @@ public: // dll override
 				unique_lock<shared_mutex> ulock(oMsgMutex);
 				DNTask<Message*>* task = mMsgList[msgId];
 				mMsgList.erase(msgId);
-				task->SetFlag(DNTaskFlag::Timeout);
+				task->SetFlag(EMDNTaskFlag::Timeout);
 				task->CallResume();
 			}
 		}
@@ -502,14 +502,14 @@ public: // dll override
 		string binData;
 		request.SerializeToString(&binData);
 
-		MessagePackAndSend(0, MsgDeal::Ret, request.GetDescriptor()->full_name().c_str(), binData, GetChannel());
+		MessagePackAndSend(0, EMMsgDeal::Ret, request.GetDescriptor()->full_name().c_str(), binData, GetChannel());
 	}
 
 	void InitConnectedChannel(const SocketChannelPtr& chanhel)
 	{
 		// chanhel->setHeartbeat(4000, std::bind(&DNClientProxy::TickHeartbeat, this));
 		// channel->setWriteTimeout(12000);
-		if (eRegistState == RegistState::None)
+		if (eRegistState == EMRegistState::None)
 		{
 			Timer()->setInterval(1000, std::bind(&DNClientProxy::TickRegistEvent, this, placeholders::_1));
 		}
@@ -517,9 +517,9 @@ public: // dll override
 
 	void RedirectClient(uint16_t port, string ip)
 	{
-		DNPrint(0, LoggerLevel::Debug, "reclient to %s:%u", ip.c_str(), port);
+		DNPrint(0, EMLoggerLevel::Debug, "reclient to %s:%u", ip.c_str(), port);
 
-		eRegistState = RegistState::None;
+		eRegistState = EMRegistState::None;
 		closesocket();
 		Timer()->setTimeout(500, [=](uint64_t)
 		{
@@ -560,7 +560,7 @@ protected: // dll proxy
 	unordered_map<uint64_t, uint32_t > mMapTimer;
 
 	// status
-	RegistState eRegistState = RegistState::None;
+	EMRegistState eRegistState = EMRegistState::None;
 
 	uint8_t iRegistType = 0;
 

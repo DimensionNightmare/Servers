@@ -94,13 +94,13 @@ public: // dll override
 
 			string binData;
 			request.SerializeToString(&binData);
-			MessagePackAndSend(msgId, MsgDeal::Redir, request.GetDescriptor()->full_name().c_str(), binData, pSqlClient->GetChannel());
+			MessagePackAndSend(msgId, EMMsgDeal::Redir, request.GetDescriptor()->full_name().c_str(), binData, pSqlClient->GetChannel());
 
 			co_await dataChannel;
-			if (dataChannel.HasFlag(DNTaskFlag::Timeout))
+			if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
 			{
 				response.set_state_code(10);
-				DNPrint(0, LoggerLevel::Debug, "requst timeout! ");
+				DNPrint(0, EMLoggerLevel::Debug, "requst timeout! ");
 			}
 		}
 
@@ -108,7 +108,7 @@ public: // dll override
 		{
 			BytesToHexString(entity_data);
 			mDbFailure[entityId] = entity_data;
-			DNPrint(0, LoggerLevel::Debug, "Save Db Entity Error id = %u, state_code = %d! ", entityId, code);
+			DNPrint(0, EMLoggerLevel::Debug, "Save Db Entity Error id = %u, state_code = %d! ", entityId, code);
 			co_return;
 		}
 
@@ -126,7 +126,7 @@ public: // dll override
 
 		function<void(ClientEntity&, bool)> dealFunc = nullptr;
 
-		if (!pSqlClient || pSqlClient->RegistType() != uint8_t(ServerType::GateServer) || !pNoSqlProxy)
+		if (!pSqlClient || pSqlClient->RegistType() != uint8_t(EMServerType::GateServer) || !pNoSqlProxy)
 		{
 			dealFunc = [this](ClientEntity& entity, bool offline)
 				{
@@ -134,7 +134,7 @@ public: // dll override
 					uint32_t entityId = entity.ID();
 					if (!entity.GetDbEntity())
 					{
-						DNPrint(0, LoggerLevel::Debug, "SaveEntity not pb Data:%u", entityId);
+						DNPrint(0, EMLoggerLevel::Debug, "SaveEntity not pb Data:%u", entityId);
 						return;
 					}
 
@@ -153,7 +153,7 @@ public: // dll override
 		{
 			if (!entity.GetDbEntity())
 			{
-				DNPrint(0, LoggerLevel::Debug, "SaveEntity not pb Data:%u", ID);
+				DNPrint(0, EMLoggerLevel::Debug, "SaveEntity not pb Data:%u", ID);
 				continue;
 			}
 
@@ -163,9 +163,9 @@ public: // dll override
 				continue;
 			}
 
-			if (entity.HasFlag(ClientEntityFlag::DBModify))
+			if (entity.HasFlag(EMClientEntityFlag::DBModify))
 			{
-				entity.ClearFlag(ClientEntityFlag::DBModify);
+				entity.ClearFlag(EMClientEntityFlag::DBModify);
 
 				dealFunc(entity, shutdown);
 			}
