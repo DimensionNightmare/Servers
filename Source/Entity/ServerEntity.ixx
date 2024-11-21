@@ -11,8 +11,6 @@ export enum class EMServerEntityFlag : uint16_t
 	Max,
 };
 
-constexpr uint16_t ServerEntityFlagSize() { return static_cast<uint16_t>(EMServerEntityFlag::Max); }
-
 /// @brief this is server proxy entity
 export class ServerEntity : public NetEntity
 {
@@ -80,6 +78,6 @@ protected: // dll proxy
 	// be regist node need
 	unordered_map<EMServerType, list<ServerEntity*>> mMapLink;
 
-	bitset<ServerEntityFlagSize()> oFlags;
+	bitset<static_cast<uint16_t>(EMServerEntityFlag::Max)> oFlags;
 
 };

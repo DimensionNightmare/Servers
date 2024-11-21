@@ -1,7 +1,5 @@
 module;
 #include <stdlib.h>
-
-#include "StdMacro.h"
 export module ObjectTrace;
 
 void* operator new(size_t size)

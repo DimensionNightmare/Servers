@@ -14,8 +14,6 @@ export enum class EMDNTaskFlag : uint16_t
 	Max,
 };
 
-constexpr uint16_t DNTaskFlagSize() { return static_cast<uint16_t>(EMDNTaskFlag::Max); }
-
 export template <typename T>
 struct DNTask
 {
@@ -140,7 +138,7 @@ private:
 
 	HandleType tHandle;
 
-	bitset<DNTaskFlagSize()> oFlags;
+	bitset<static_cast<uint16_t>(EMDNTaskFlag::Max)> oFlags;
 
 	size_t iTimerId = 0;
 

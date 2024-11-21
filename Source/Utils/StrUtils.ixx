@@ -1,8 +1,4 @@
 module;
-#ifdef _WIN32
-#include <timezoneapi.h>
-#endif
-
 #include "StdMacro.h"
 export module StrUtils;
 
@@ -83,7 +79,9 @@ constexpr auto EnumName(string_view value)
 export string GetNowTimeStr()
 {
 	using namespace std::chrono;
-	return format("{:%Y-%m-%d %H:%M:%S}", zoned_time(current_zone(), system_clock::now()));
+	static zoned_time<system_clock::duration> currentZone(current_zone());
+    currentZone = system_clock::now(); 
+	return format("{:%Y-%m-%d %H:%M:%S}", currentZone);
 }
 
 export double StringToTimestamp(const string& datetimeStr)

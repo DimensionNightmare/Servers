@@ -27,12 +27,12 @@ using namespace sw::redis;
 using namespace GDb;
 using namespace google::protobuf;
 
-// #define TIMERSTART(tag) auto tag##_start = chrono::steady_clock::now(),tag##_end = tag##_start
-// #define TIMEREND(tag) tag##_end = chrono::steady_clock::now()
-// #define DURATION_s(tag) DNPrint(0, EMLoggerLevel::Debug, "%s costs %d s\n",#tag,chrono::duration_cast<chrono::seconds>(tag##_end - tag##_start).count())
-// #define DURATION_ms(tag) DNPrint(0, EMLoggerLevel::Debug, "%s costs %d ms\n",#tag,chrono::duration_cast<chrono::milliseconds>(tag##_end - tag##_start).count());
-// #define DURATION_us(tag) DNPrint(0, EMLoggerLevel::Debug, "%s costs %d us\n",#tag,chrono::duration_cast<chrono::microseconds>(tag##_end - tag##_start).count());
-// #define DURATION_ns(tag) DNPrint(0, EMLoggerLevel::Debug, "%s costs %d ns\n",#tag,chrono::duration_cast<chrono::nanoseconds>(tag##_end - tag##_start).count());
+#define TIMERSTART(tag) auto tag##_start = chrono::system_clock::now(),tag##_end = tag##_start
+#define TIMEREND(tag) tag##_end = chrono::system_clock::now()
+#define DURATION_s(tag)  printf("%s costs %I64d s\n",#tag,chrono::duration_cast<chrono::seconds>(tag##_end - tag##_start).count())
+#define DURATION_ms(tag) printf("%s costs %I64d ms\n",#tag,chrono::duration_cast<chrono::milliseconds>(tag##_end - tag##_start).count());
+#define DURATION_us(tag) printf("%s costs %I64d us\n",#tag,chrono::duration_cast<chrono::microseconds>(tag##_end - tag##_start).count());
+#define DURATION_ns(tag) printf("%s costs %I64d ns\n",#tag,chrono::duration_cast<chrono::nanoseconds>(tag##_end - tag##_start).count());
 
 
 #if 0
@@ -120,6 +120,18 @@ int main()
 }
 #endif
 
+
+void printTime()
+{
+	using namespace std::chrono;
+	static zoned_time<duration<long long, ratio<1, 10'000'000>>> currentZone(current_zone());
+    // currentZone = system_clock::now(); 
+	currentZone = system_clock::now();
+	cout << format("{:%Y-%m-%d %H:%M:%S}", currentZone) << endl;
+}
+
+#if 0
+
 chrono::hours GetTimezoneOffset()
 {
 	int minutes = 0;
@@ -143,16 +155,6 @@ chrono::hours GetTimezoneOffset()
 	return chrono::hours(minutes / 60);
 }
 
-void printTime()
-{
-	cout << format("{:%Y-%m-%d %H:%M:%S}", chrono::system_clock::now()) << endl;
-
-	static chrono::hours offset = GetTimezoneOffset();
-
-	cout << format("{:%Y-%m-%d %H:%M:%S}", chrono::system_clock::now() + offset) << endl;
-}
-
-#if 0
 int main()
 {
 	string jsonstr = R"(
@@ -203,6 +205,10 @@ int main()
 	// printTime();
 	// wstring msg((wchar_t*)format("[{}] {} -> \n{}", "哈哈", "asdasd", "zc").c_str());
 	// wcout <<  msg << endl;
+
+	printTime();
+
+	printTime();
 
 
 	return 0;
@@ -320,6 +326,7 @@ int main()
 }
 #endif
 
+#if 0
 template <typename T>
 struct DNTask
 {
@@ -579,6 +586,7 @@ DNTaskVoid funcA() {
     std::cout << "3" << std::endl;
 }
 
+
 int main() {
 	loop = make_shared<TimerThread>();
     funcA();
@@ -588,3 +596,58 @@ int main() {
 	loop->stop(true);
     return 0;
 }
+#endif
+
+
+#if 1
+class A
+{
+public:
+	A(){}
+	virtual ~A(){}
+	int i;
+};
+ 
+class B:public A
+{
+public:
+	B(){}
+	virtual ~B(){}
+	int j;
+};
+ 
+int main()
+{
+ 
+	B* pB = new B;
+	A* pA;
+ 
+	// printTime();
+	TIMERSTART(Time);
+	for(int i=0;i!=100000000;i++)
+	{
+		pA = static_cast<A*>(pB);
+	}
+	B* pBB;
+	// printTime();
+	TIMEREND(Time);
+
+	DURATION_ms(Time);
+
+	TIMERSTART(Time1);
+ 
+	for(int i=0;i!=100000000;i++)
+	{
+		pBB= dynamic_cast<B*>(pA);
+	}
+
+	TIMEREND(Time1);
+
+	DURATION_ms(Time1);
+	// printTime();
+ 
+ 	cout << chrono::duration_cast<chrono::nanoseconds>(Time1_end - Time1_start).count() / chrono::duration_cast<chrono::nanoseconds>(Time_end - Time_start).count() ;
+
+	return 0;
+}
+#endif

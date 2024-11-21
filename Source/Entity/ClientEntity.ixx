@@ -14,8 +14,6 @@ export enum class EMClientEntityFlag : uint16_t
 	Max,
 };
 
-constexpr uint16_t ClientEntityFlagSize() { return static_cast<uint16_t>(EMClientEntityFlag::Max); }
-
 export class ClientEntity : public Entity
 {
 
@@ -54,7 +52,7 @@ protected: // dll proxy
 
 	uint32_t iRecordRoomId = 0;
 
-	bitset<ClientEntityFlagSize()> oFlags;
+	bitset<static_cast<uint16_t>(EMClientEntityFlag::Max)> oFlags;
 
 	/// @brief db entity
 	unique_ptr<Player> pDbEntity = make_unique<Player>();
