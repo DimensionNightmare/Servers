@@ -29,7 +29,7 @@ export int HandleLogicServerInit(DNServer* server)
 
 		auto onConnection = [serverProxy](const SocketChannelPtr& channel)
 			{
-				const string& peeraddr = channel->peeraddr();
+				const std::string& peeraddr = channel->peeraddr();
 				if (channel->isConnected())
 				{
 					DNPrint(TipCode::TipCode_CliConnOn, EMLoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
@@ -59,7 +59,7 @@ export int HandleLogicServerInit(DNServer* server)
 					return;
 				}
 				
-				string msgData(buf->base + MessagePacket::PackLenth, packet.pkgLenth);
+				std::string msgData(buf->base + MessagePacket::PackLenth, packet.pkgLenth);
 
 				if (packet.dealType == EMMsgDeal::Req)
 				{
@@ -115,7 +115,7 @@ export int HandleLogicServerInit(DNServer* server)
 		//client will re_create please check
 		auto onConnection = [clientSock, serverProxy](const SocketChannelPtr& channel)
 			{
-				const string& peeraddr = channel->peeraddr();
+				const std::string& peeraddr = channel->peeraddr();
 
 				if (channel->isConnected())
 				{
@@ -129,7 +129,7 @@ export int HandleLogicServerInit(DNServer* server)
 				{
 					DNPrint(TipCode::TipCode_SrvConnOff, EMLoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
 
-					string origin = format("{}:{}", serverProxy->GetCtlIp(), serverProxy->GetCtlPort());
+					std::string origin = std::format("{}:{}", serverProxy->GetCtlIp(), serverProxy->GetCtlPort());
 					if (clientSock->EMRegistState() == EMRegistState::Registed || peeraddr != origin)
 					{
 						clientSock->EMRegistState() = EMRegistState::None;
@@ -166,7 +166,7 @@ export int HandleLogicServerInit(DNServer* server)
 					return;
 				}
 
-				string msgData(buf->base + MessagePacket::PackLenth, packet.pkgLenth);
+				std::string msgData(buf->base + MessagePacket::PackLenth, packet.pkgLenth);
 
 				if (packet.dealType == EMMsgDeal::Req)
 				{

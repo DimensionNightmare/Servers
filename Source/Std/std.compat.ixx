@@ -394,7 +394,7 @@ export using std::div;
 export using std::ldiv;
 export using std::lldiv;
 
-// <cstd::std::string>
+// <cstd::string>
 // already exported std::size_t, see <cstddef>
 export using std::memcpy;
 export using std::memmove;

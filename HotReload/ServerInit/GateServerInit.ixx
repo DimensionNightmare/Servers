@@ -30,7 +30,7 @@ export int HandleGateServerInit(DNServer* server)
 
 		auto onConnection = [serverSock, serverProxy](const SocketChannelPtr& channel)
 			{
-				const string& peeraddr = channel->peeraddr();
+				const std::string& peeraddr = channel->peeraddr();
 				if (channel->isConnected())
 				{
 					DNPrint(TipCode::TipCode_CliConnOn, EMLoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
@@ -71,7 +71,7 @@ export int HandleGateServerInit(DNServer* server)
 					return;
 				}
 
-				string msgData(buf->base + MessagePacket::PackLenth, packet.pkgLenth);
+				std::string msgData(buf->base + MessagePacket::PackLenth, packet.pkgLenth);
 
 				if (packet.dealType == EMMsgDeal::Req)
 				{
@@ -125,7 +125,7 @@ export int HandleGateServerInit(DNServer* server)
 
 		auto onConnection = [clientSock](const SocketChannelPtr& channel)
 			{
-				const string& peeraddr = channel->peeraddr();
+				const std::string& peeraddr = channel->peeraddr();
 
 				if (channel->isConnected())
 				{
@@ -163,7 +163,7 @@ export int HandleGateServerInit(DNServer* server)
 					return;
 				}
 				
-				string msgData(buf->base + MessagePacket::PackLenth, packet.pkgLenth);
+				std::string msgData(buf->base + MessagePacket::PackLenth, packet.pkgLenth);
 
 				if (packet.dealType == EMMsgDeal::Req)
 				{

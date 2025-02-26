@@ -34,7 +34,7 @@ namespace LogicMessage
 		}
 
 		// pack data
-		string binData;
+		std::string binData;
 		request.SerializeToString(&binData);
 		
 		// data alloc
@@ -76,7 +76,7 @@ namespace LogicMessage
 	}
 
 	// client request
-	export void Msg_ReqRegistSrv(SocketChannelPtr channel, uint32_t msgId,  string binMsg)
+	export void Msg_ReqRegistSrv(SocketChannelPtr channel, uint32_t msgId, std::string binMsg)
 	{
 		d2L_ReqRegistSrv request;
 		if(!request.ParseFromString(binMsg))
@@ -92,7 +92,7 @@ namespace LogicMessage
 		RoomEntityManagerHelper* entityMan = dnServer->GetRoomEntityManager();
 
 		EMServerType regType = (EMServerType)request.server_type();
-		const string& ipPort = channel->localaddr();
+		const std::string& ipPort = channel->localaddr();
 
 		if (regType != EMServerType::DedicatedServer || ipPort.empty())
 		{
@@ -166,13 +166,13 @@ namespace LogicMessage
 			response.set_server_type((uint8_t(dnServer->GetServerType())));
 		}
 
-		string binData;
+		std::string binData;
 		response.SerializeToString(&binData);
 
 		MessagePackAndSend(msgId, EMMsgDeal::Res, nullptr, binData, channel);
 	}
 
-	export void Exe_RetChangeCtlSrv(SocketChannelPtr channel, string binMsg)
+	export void Exe_RetChangeCtlSrv(SocketChannelPtr channel, std::string binMsg)
 	{
 		COM_RetChangeCtlSrv request;
 		if(!request.ParseFromString(binMsg))
@@ -185,7 +185,7 @@ namespace LogicMessage
 		TICK_MAINSPACE_SIGN_FUNCTION(DNClientProxy, RedirectClient, client, request.server_port(), request.server_ip());
 	}
 
-	export void Exe_RetHeartbeat(SocketChannelPtr channel, string binMsg)
+	export void Exe_RetHeartbeat(SocketChannelPtr channel, std::string binMsg)
 	{
 		COM_RetHeartbeat request;
 		if(!request.ParseFromString(binMsg))

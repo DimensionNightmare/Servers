@@ -5,28 +5,28 @@ export module StrUtils;
 export template <auto value>
 constexpr auto EnumName()
 {
-	string_view name;
+	std::string_view name;
 #if __GNUC__ || __clang__
 	name = __PRETTY_FUNCTION__;
 	size_t start = name.find('=') + 2;
 	size_t end = name.size() - 1;
-	name = string_view{ name.data() + start, end - start };
+	name = std::string_view{ name.data() + start, end - start };
 	start = name.rfind("::");
 #elif _MSC_VER
 	name = __FUNCSIG__;
 	size_t start = name.find('<') + 1;
 	size_t end = name.rfind(">(");
-	name = string_view{ name.data() + start, end - start };
+	name = std::string_view{ name.data() + start, end - start };
 	start = name.rfind("::");
 #endif
-	return start == string_view::npos ? name : string_view{ name.data() + start + 2, name.size() - start - 2 };
+	return start == std::string_view::npos ? name :std::string_view{ name.data() + start + 2, name.size() - start - 2 };
 }
 
 template <typename T, size_t N = 0>
 constexpr auto EnumMax()
 {
 	constexpr auto value = static_cast<T>(N);
-	if constexpr (EnumName<value>().find(")") == string_view::npos)
+	if constexpr (EnumName<value>().find(")") == std::string_view::npos)
 	{
 		return EnumMax<T, N + 1>();
 	}
@@ -41,82 +41,82 @@ constexpr auto EnumMax()
 /// @param value
 /// @return
 export template <typename T>
-	requires is_enum_v<T>
+	requires std::is_enum_v<T>
 constexpr auto EnumName(T value)
 {
 	constexpr auto num = EnumMax<T>();
-	constexpr auto names = []<size_t... Is>(index_sequence<Is...>)
+	constexpr auto names = []<size_t... Is>(std::index_sequence<Is...>)
 	{
-		return array<string_view, num>
+		return std::array<std::string_view, num>
 		{
 			EnumName<static_cast<T>(Is)>()...
 		};
-	}(make_index_sequence<num>{});
+	}(std::make_index_sequence<num>{});
 	return names[static_cast<size_t>(value)];
 }
 
 export template <typename T>
-	requires is_enum_v<T>
-constexpr auto EnumName(string_view value)
+	requires std::is_enum_v<T>
+constexpr auto EnumName(std::string_view value)
 {
 	constexpr auto num = EnumMax<T>();
-	constexpr auto names = []<size_t... Is>(index_sequence<Is...>)
+	constexpr auto names = []<size_t... Is>(std::index_sequence<Is...>)
 	{
-		return array<string_view, num>
+		return std::array<std::string_view, num>
 		{
 			EnumName<static_cast<T>(Is)>()...
 		};
-	}(make_index_sequence<num>{});
+	}(std::make_index_sequence<num>{});
 
 	auto it = find(names.begin(), names.end(), value);
 	if (it != names.end())
 	{
 		return static_cast<T>(distance(names.begin(), it));
 	}
-	throw invalid_argument("Unknown enum name");
+	throw std::invalid_argument("Unknown enum name");
 }
 
-export string GetNowTimeStr()
+export std::string GetNowTimeStr()
 {
 	using namespace std::chrono;
 	static zoned_time<system_clock::duration> currentZone(current_zone());
     currentZone = system_clock::now(); 
-	return format("{:%Y-%m-%d %H:%M:%S}", currentZone);
+	return std::format("{:%Y-%m-%d %H:%M:%S}", currentZone);
 }
 
-export double StringToTimestamp(const string& datetimeStr)
+export double StringToTimestamp(const std::string& datetimeStr)
 {
 
-	regex pattern(R"((\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\.?(\d{6})?(\+|-)(\d{2}))");
-	smatch match;
+	std::regex pattern(R"((\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\.?(\d{6})?(\+|-)(\d{2}))");
+	std::smatch match;
 
 	if (!regex_match(datetimeStr, match, pattern))
 	{
-		throw runtime_error("Invalid datetime format");
+		throw std::runtime_error("Invalid datetime std::format");
 	}
 
-	string datetime = match[1];
+	std::string datetime = match[1];
 
-	string microseconds_str = match[2];
+	std::string microseconds_str = match[2];
 
 	int timezone_offset = stoi(match[4]);
 
-	tm tm = {};
-	stringstream ss(datetime);
-	ss >> get_time(&tm, "%Y-%m-%d %H:%M:%S");
+	std::tm tm = {};
+	std::stringstream ss(datetime);
+	ss >> std::get_time(&tm, "%Y-%m-%d %H:%M:%S");
 
-	auto tp = chrono::system_clock::from_time_t(mktime(&tm));
+	auto tp = std::chrono::system_clock::from_time_t(mktime(&tm));
 
 	if (!microseconds_str.empty())
 	{
 		int microseconds = stoi(microseconds_str);
-		tp += chrono::microseconds(microseconds);
+		tp += std::chrono::microseconds(microseconds);
 	}
 
 	// time zone
 	// tp -= chrono::hours(timezone_offset);
 
-	double timestamp = chrono::duration<double>(tp.time_since_epoch()).count();
+	double timestamp = std::chrono::duration<double>(tp.time_since_epoch()).count();
 	return timestamp;
 }
 
@@ -157,13 +157,13 @@ const uint32_t MD5_CONSTANTS[] =
 	0xf7537e82, 0xbd3af235, 0x2ad7d2bb, 0xeb86d391,
 };
 
-string PaddingMessage(const string& message)
+std::string PaddingMessage(const std::string& message)
 {
 	uint64_t messageLength = message.length() * 8;
 	uint64_t paddingLength = (messageLength % 512 < 448) ? (448 - messageLength % 512) : (960 - messageLength % 512);
 	paddingLength /= 8;
 
-	string paddedMessage = message;
+	std::string paddedMessage = message;
 	paddedMessage += '\x80';
 	paddedMessage.append(paddingLength - 1, '\0');
 
@@ -175,14 +175,14 @@ string PaddingMessage(const string& message)
 	return paddedMessage;
 }
 
-export string Md5Hash(const string& message)
+export std::string Md5Hash(const std::string& message)
 {
 	uint32_t a = MD5_INIT_CONSTANTS[0];
 	uint32_t b = MD5_INIT_CONSTANTS[1];
 	uint32_t c = MD5_INIT_CONSTANTS[2];
 	uint32_t d = MD5_INIT_CONSTANTS[3];
 
-	string paddedMessage = PaddingMessage(message);
+	std::string paddedMessage = PaddingMessage(message);
 	const uint32_t* chunks = reinterpret_cast<const uint32_t*>(paddedMessage.c_str());
 
 	for (size_t i = 0; i < paddedMessage.length() / 64; ++i)
@@ -229,7 +229,7 @@ export string Md5Hash(const string& message)
 		d += dTemp;
 	}
 
-	string result;
+	std::string result;
 	result.reserve(16);
 	for (uint32_t val : {a, b, c, d})
 	{
@@ -239,18 +239,18 @@ export string Md5Hash(const string& message)
 		}
 	}
 
-	ostringstream oss;
-	oss << hex << setfill('0');
+	std::ostringstream oss;
+	oss << std::hex << std::setfill('0');
 	for (uint8_t ch : result)
 	{
-		oss << setw(2) << static_cast<uint32_t>(ch);
+		oss << std::setw(2) << static_cast<uint32_t>(ch);
 	}
 	return oss.str();
 }
 
 #pragma endregion
 
-export void BytesToHexString(string& bytes)
+export void BytesToHexString(std::string& bytes)
 {
 	std::ostringstream oss;
 	oss << std::hex << std::setfill('0');
@@ -261,9 +261,9 @@ export void BytesToHexString(string& bytes)
 	bytes = oss.str();
 }
 
-export void HexStringToBytes(string& hexString)
+export void HexStringToBytes(std::string& hexString)
 {
-	string byteString = hexString;
+	std::string byteString = hexString;
 	hexString.clear();
 	for (size_t i = 0; i < byteString.length(); i += 2)
 	{

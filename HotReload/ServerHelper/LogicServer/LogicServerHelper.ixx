@@ -29,14 +29,14 @@ public:
 
 	bool InitDatabase()
 	{
-		if (string* value = GetLuanchConfigParam("connection"))
+		if (std::string* value = GetLuanchConfigParam("connection"))
 		{
 			try
 			{
-				pNoSqlProxy = make_shared<Redis>(*value);
+				pNoSqlProxy = std::make_shared<Redis>(*value);
 				pNoSqlProxy->ping();
 			}
-			catch (const exception& e)
+			catch (const std::exception& e)
 			{
 				DNPrint(0, EMLoggerLevel::Debug, "%s", e.what());
 				return false;
@@ -48,7 +48,7 @@ public:
 		return true;
 	}
 
-	string& GetCtlIp() { return sCtlIp; }
+	std::string& GetCtlIp() { return sCtlIp; }
 
 	uint16_t& GetCtlPort() { return iCtlPort; }
 

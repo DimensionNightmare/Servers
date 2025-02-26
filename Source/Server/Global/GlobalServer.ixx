@@ -35,13 +35,13 @@ public:
 
 		uint16_t port = 0;
 
-		string* value = GetLuanchConfigParam("port");
+		std::string* value = GetLuanchConfigParam("port");
 		if (value)
 		{
 			port = stoi(*value);
 		}
 
-		pSSock = make_unique<DNServerProxy>();
+		pSSock = std::make_unique<DNServerProxy>();
 
 		int listenfd = pSSock->createsocket(port, "0.0.0.0");
 		if (listenfd < 0)
@@ -55,11 +55,11 @@ public:
 		DNPrint(TipCode::TipCode_SrvListenOn, EMLoggerLevel::Normal, nullptr, pSSock->port, listenfd);
 
 		//connet ControlServer
-		string* ctlPort = GetLuanchConfigParam("ctlPort");
-		string* ctlIp = GetLuanchConfigParam("ctlIp");
+		std::string* ctlPort = GetLuanchConfigParam("ctlPort");
+		std::string* ctlIp = GetLuanchConfigParam("ctlIp");
 		if (ctlPort && ctlIp)
 		{
-			pCSock = make_unique<DNClientProxy>();
+			pCSock = std::make_unique<DNClientProxy>();
 
 			pCSock->Init();
 
@@ -67,13 +67,13 @@ public:
 			pCSock->createsocket(port, ctlIp->c_str());
 		}
 
-		pServerEntityMan = make_unique<ServerEntityManager>();
+		pServerEntityMan = std::make_unique<ServerEntityManager>();
 		pServerEntityMan->Init();
 
 		return true;
 	}
 
-	virtual void InitCmd(unordered_map<string, function<void(stringstream*)>>& cmdMap) override
+	virtual void InitCmd( std::unordered_map<std::string, std::function<void(std::stringstream*)>>& cmdMap) override
 	{
 	}
 
@@ -133,9 +133,9 @@ public:
 		// pServerEntityMan->Timer()->resume();
 	}
 
-	virtual void LoopEvent(function<void(EventLoopPtr)> func) override
+	virtual void LoopEvent(std::function<void(EventLoopPtr)> func) override
 	{
-		unordered_map<long, bool> looped;
+		std::unordered_map<long, bool> looped;
 		if (pSSock)
 		{
 			looped.clear();
@@ -184,9 +184,9 @@ public: // dll override
 	virtual ServerEntityManager* GetServerEntityManager() { return pServerEntityMan.get(); }
 protected: // dll proxy
 
-	unique_ptr<DNServerProxy> pSSock;
+	std::unique_ptr<DNServerProxy> pSSock;
 	
-	unique_ptr<DNClientProxy> pCSock;
+	std::unique_ptr<DNClientProxy> pCSock;
 
-	unique_ptr<ServerEntityManager> pServerEntityMan;
+	std::unique_ptr<ServerEntityManager> pServerEntityMan;
 };

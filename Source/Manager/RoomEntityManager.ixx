@@ -26,7 +26,7 @@ public:
 
 	void EntityCloseTimer(uint64_t timerID)
 	{
-		unique_lock<shared_mutex> ulock(oTimerMutex);
+		std::unique_lock<std::shared_mutex> ulock(oTimerMutex);
 		if (!mMapTimer.contains(timerID))
 		{
 			return;
@@ -42,7 +42,7 @@ public:
 
 	uint64_t CheckEntityCloseTimer(uint32_t entityId)
 	{
-		uint64_t timerId = Timer()->setTimeout(10000, std::bind(&RoomEntityManager::EntityCloseTimer, this, placeholders::_1));
+		uint64_t timerId = Timer()->setTimeout(10000, std::bind(&RoomEntityManager::EntityCloseTimer, this, std::placeholders::_1));
 
 		AddTimerRecord(timerId, entityId);
 
@@ -54,7 +54,7 @@ public:
 		if (mEntityMap.contains(entityId))
 		{
 			RoomEntity* entity = &mEntityMap[entityId];
-			unique_lock<shared_mutex> ulock(oMapMutex);
+			std::unique_lock<std::shared_mutex> ulock(oMapMutex);
 
 			mEntityMapList[entity->MapID()].remove(entity);
 
@@ -67,9 +67,9 @@ public:
 
 protected:
 	/// @brief 
-	unordered_map<uint32_t, list<RoomEntity*>> mEntityMapList;
+	std::unordered_map<uint32_t, std::list<RoomEntity*>> mEntityMapList;
 
 	/// @brief 
-	atomic<uint32_t> iRoomGenId;
+	std::atomic<uint32_t> iRoomGenId;
 
 };

@@ -40,21 +40,21 @@ auto TickMainSpaceDll(Class* obj, const char* methodName, Method method, Args...
 	using RetType = typename MemberFunctionReturnType<Method>::RetType;
 	typedef RetType(*MethodSign)(Class*, ArgsTuple);
 
-	string className = typeid(Class).name();
+	std::string className = typeid(Class).name();
 	size_t pos = className.find(" ");
-	if (pos != string::npos)
+	if (pos != std::string::npos)
 	{
 		className = className.substr(pos + 1);
 	}
 
-	string fullFuncName = format("{}_{}", className, methodName);
+	std::string fullFuncName = std::format("{}_{}", className, methodName);
 
-	static unordered_map<string, void*> cache;
+	static std::unordered_map<std::string, void*> cache;
 
 	if (auto it = cache.find(fullFuncName);it != cache.end())
 	{
 		MethodSign pFuncTyped = reinterpret_cast<MethodSign>(it->second);
-		return pFuncTyped(obj, make_tuple(std::forward<Args>(args)...));
+		return pFuncTyped(obj, std::make_tuple(std::forward<Args>(args)...));
 	}
 
 	if (HMODULE hModule = GetModuleHandle(NULL))
@@ -63,7 +63,7 @@ auto TickMainSpaceDll(Class* obj, const char* methodName, Method method, Args...
 		{
 			cache[fullFuncName] = pFunc;
 			MethodSign pFuncTyped = reinterpret_cast<MethodSign>(pFunc);
-			return pFuncTyped(obj, make_tuple(std::forward<Args>(args)...));
+			return pFuncTyped(obj, std::make_tuple(std::forward<Args>(args)...));
 		}
 	}
 

@@ -24,8 +24,8 @@ export void ApiAuth(HttpService* service)
 			writer->Begin();
 			nlohmann::json errData;
 
-			string authName = req->GetString("authName");
-			string authString = req->GetString("authString");
+			std::string authName = req->GetString("authName");
+			std::string authString = req->GetString("authString");
 
 			if (authName.empty() || authName.size() > 32 ||
 				authString.empty() || authString.size() > 64)
@@ -67,7 +67,7 @@ export void ApiAuth(HttpService* service)
 
 				accInfo = *accounts.Result()[0];
 			}
-			catch (const exception& e)
+			catch (const std::exception& e)
 			{
 				DNPrint(0, EMLoggerLevel::Debug, "%s", e.what());
 				errData["code"] = http_status::HTTP_STATUS_BAD_REQUEST;
@@ -90,7 +90,7 @@ export void ApiAuth(HttpService* service)
 					DNClientProxyHelper* client = authServer->GetCSock();
 
 					// pack data
-					string binData;
+					std::string binData;
 					request.SerializeToString(&binData);
 					
 
@@ -141,8 +141,8 @@ export void ApiAuth(HttpService* service)
 		{
 			nlohmann::json errData;
 
-			string authName = req->GetString("authName");
-			string authString = req->GetString("authString");
+			std::string authName = req->GetString("authName");
+			std::string authString = req->GetString("authString");
 
 			if (authName.empty() || authName.size() > 32 ||
 				authString.empty() || authString.size() > 64)
@@ -180,7 +180,7 @@ export void ApiAuth(HttpService* service)
 					return;
 				}
 			}
-			catch (const exception& e)
+			catch (const std::exception& e)
 			{
 				DNPrint(0, EMLoggerLevel::Debug, "%s", e.what());
 				errData["code"] = http_status::HTTP_STATUS_BAD_REQUEST;
@@ -220,7 +220,7 @@ export void ApiAuth(HttpService* service)
 					MSGSET(errData.dump());
 				}
 			}
-			catch (const exception& e)
+			catch (const std::exception& e)
 			{
 				DNPrint(0, EMLoggerLevel::Debug, "%s", e.what());
 				errData["code"] = http_status::HTTP_STATUS_BAD_REQUEST;

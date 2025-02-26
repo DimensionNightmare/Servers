@@ -23,7 +23,7 @@ public:
 	{
 		if (!mEntityMap.contains(entityId))
 		{
-			unique_lock<shared_mutex> ulock(oMapMutex);
+			std::unique_lock<std::shared_mutex> ulock(oMapMutex);
 			mEntityMap.emplace(std::piecewise_construct,
 				std::forward_as_tuple(entityId),
 				std::forward_as_tuple(entityId));
@@ -41,7 +41,7 @@ public:
 
 		if (mEntityMap.contains(entityId))
 		{
-			unique_lock<shared_mutex> ulock(oMapMutex);
+			std::unique_lock<std::shared_mutex> ulock(oMapMutex);
 
 			DNPrint(0, EMLoggerLevel::Debug, "destory client entity");
 			mEntityMap.erase(entityId);
@@ -54,7 +54,7 @@ public:
 
 	ClientEntity* GetEntity(uint32_t entityId)
 	{
-		shared_lock<shared_mutex> lock(oMapMutex);
+		std::shared_lock<std::shared_mutex> lock(oMapMutex);
 		if (mEntityMap.contains(entityId))
 		{
 			return &mEntityMap[entityId];
@@ -77,18 +77,18 @@ public:
 			DNPrint(0, EMLoggerLevel::Debug, "entity %u is DBIniting. return .", entity->ID());
 			if (inResponse)
 			{
-				string* entity_data = inResponse->add_entity_data();
+				std::string* entity_data = inResponse->add_entity_data();
 				dbEntity->SerializeToString(entity_data);
 			}
 			co_return;
 		}
 
-		string table_name = dbEntity->GetDescriptor()->full_name();
+		std::string table_name = dbEntity->GetDescriptor()->full_name();
 		uint32_t entityId = entity->ID();
-		string keyName = format("{}_{}", table_name, entityId);
+		std::string keyName = std::format("{}_{}", table_name, entityId);
 
 		// nosql
-		string binData;
+		std::string binData;
 		if (auto res = pNoSqlProxy->get(keyName))
 		{
 			binData = res.value();
@@ -99,7 +99,7 @@ public:
 			dbEntity->ParseFromString(binData);
 			if (inResponse)
 			{
-				string* entity_data = inResponse->add_entity_data();
+				std::string* entity_data = inResponse->add_entity_data();
 				*entity_data = binData;
 			}
 
@@ -122,7 +122,7 @@ public:
 		{
 			request.set_need_create(true);
 
-			string* entity_data = request.mutable_entity_data();
+			std::string* entity_data = request.mutable_entity_data();
 			dbEntity->SerializeToString(entity_data);
 		}
 
@@ -165,7 +165,7 @@ public:
 
 		if (int lenth = response.entity_data_size(); lenth == 1)
 		{
-			const string entityData = response.entity_data(0);
+			const std::string entityData = response.entity_data(0);
 			dbEntity->ParseFromString(entityData);
 			entity->SetFlag(EMClientEntityFlag::DBInited);
 
@@ -184,7 +184,7 @@ public:
 			inResponse->set_state_code(response.state_code());
 			for (int i = 0; i < response.entity_data_size(); i++)
 			{
-				string* bytes = inResponse->add_entity_data();
+				std::string* bytes = inResponse->add_entity_data();
 				*bytes = response.entity_data(i);
 			}
 		}

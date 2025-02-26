@@ -18,7 +18,7 @@ public:
 	{
 		if (!mEntityMap.contains(entityId))
 		{
-			unique_lock<shared_mutex> ulock(oMapMutex);
+			std::unique_lock<std::shared_mutex> ulock(oMapMutex);
 
 			mEntityMap.emplace(std::piecewise_construct,
 				std::forward_as_tuple(entityId),
@@ -41,7 +41,7 @@ public:
 		{
 			RoomEntity* entity = &mEntityMap[entityId];
 
-			unique_lock<shared_mutex> ulock(oMapMutex);
+			std::unique_lock<std::shared_mutex> ulock(oMapMutex);
 
 			mEntityMapList[entity->MapID()].remove(entity);
 
@@ -55,7 +55,7 @@ public:
 
 	void MountEntity(RoomEntity* entity)
 	{
-		unique_lock<shared_mutex> ulock(oMapMutex);
+		std::unique_lock<std::shared_mutex> ulock(oMapMutex);
 		if (mEntityMap.contains(entity->ID()))
 		{
 			mEntityMapList[entity->MapID()].emplace_back(entity);
@@ -64,13 +64,13 @@ public:
 
 	void UnMountEntity(RoomEntity* entity)
 	{
-		unique_lock<shared_mutex> ulock(oMapMutex);
+		std::unique_lock<std::shared_mutex> ulock(oMapMutex);
 		mEntityMapList[entity->MapID()].remove(entity);
 	}
 
 	RoomEntity* GetEntity(uint32_t entityId)
 	{
-		shared_lock<shared_mutex> lock(oMapMutex);
+		std::shared_lock<std::shared_mutex> lock(oMapMutex);
 		if (mEntityMap.contains(entityId))
 		{
 			return &mEntityMap[entityId];
@@ -79,9 +79,9 @@ public:
 		return nullptr;
 	}
 
-	const list<RoomEntity*>& GetEntitysByMapId(uint32_t mapId)
+	const std::list<RoomEntity*>& GetEntitysByMapId(uint32_t mapId)
 	{
-		shared_lock<shared_mutex> lock(oMapMutex);
+		std::shared_lock<std::shared_mutex> lock(oMapMutex);
 		return mEntityMapList[mapId];
 	}
 

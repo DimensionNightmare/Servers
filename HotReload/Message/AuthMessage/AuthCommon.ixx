@@ -35,7 +35,7 @@ namespace AuthMessage
 		request.set_server_port(server->port);
 
 		// pack data
-		string binData;
+		std::string binData;
 		request.SerializeToString(&binData);
 		
 		// data alloc

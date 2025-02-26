@@ -26,7 +26,7 @@ public:
 
 public: // dll override
 	/// @brief authenticate token
-	string& Token() { return sToken; }
+	std::string& Token() { return sToken; }
 
 	/// @brief authenticate token expire time
 	uint32_t& ExpireTime() { return iExpireTime; }
@@ -37,7 +37,7 @@ public: // dll override
 protected: // dll proxy
 	uint32_t iRecordServerId = 0;
 
-	string sToken;
+	std::string sToken;
 
 	uint32_t iExpireTime = 0;
 

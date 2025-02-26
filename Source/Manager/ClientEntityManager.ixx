@@ -32,7 +32,7 @@ public:
 	}
 
 	/// @brief redisConnection pointer save
-	void InitSqlConn(const shared_ptr<Redis>& redisConn)
+	void InitSqlConn(const std::shared_ptr<Redis>& redisConn)
 	{
 		pNoSqlProxy = redisConn;
 	}
@@ -70,12 +70,12 @@ public: // dll override
 			cur_point->Clear();
 		}
 
-		string entity_data;
+		std::string entity_data;
 		dbEntity.SerializeToString(&entity_data);
 
 		// sql
 		L2D_ReqSaveData request;
-		string table_name = dbEntity.GetDescriptor()->full_name();
+		std::string table_name = dbEntity.GetDescriptor()->full_name();
 		request.set_table_name(table_name);
 		request.set_key_name(ClientEntity::SKeyName);
 		request.set_entity_data(entity_data);
@@ -92,7 +92,7 @@ public: // dll override
 			uint32_t msgId = pSqlClient->GetMsgId();
 			pSqlClient->AddMsg(msgId, &dataChannel, 9000);
 
-			string binData;
+			std::string binData;
 			request.SerializeToString(&binData);
 			MessagePackAndSend(msgId, EMMsgDeal::Redir, request.GetDescriptor()->full_name().c_str(), binData, pSqlClient->GetChannel());
 
@@ -113,7 +113,7 @@ public: // dll override
 		}
 
 		// nosql
-		string keyName = format("{}_{}", table_name, entityId);
+		std::string keyName = std::format("{}_{}", table_name, entityId);
 		pNoSqlProxy->set(keyName, entity_data);
 
 		mDbFailure.erase(entityId);
@@ -124,13 +124,13 @@ public: // dll override
 	void CheckSaveEntity(bool shutdown = false)
 	{
 
-		function<void(ClientEntity&, bool)> dealFunc = nullptr;
+		std::function<void(ClientEntity&, bool)> dealFunc = nullptr;
 
 		if (!pSqlClient || pSqlClient->RegistType() != uint8_t(EMServerType::GateServer) || !pNoSqlProxy)
 		{
 			dealFunc = [this](ClientEntity& entity, bool offline)
 				{
-					string binData;
+					std::string binData;
 					uint32_t entityId = entity.ID();
 					if (!entity.GetDbEntity())
 					{
@@ -173,10 +173,10 @@ public: // dll override
 	}
 
 protected: // dll proxy
-	shared_ptr<Redis> pNoSqlProxy;
+	std::shared_ptr<Redis> pNoSqlProxy;
 	DNClientProxy* pSqlClient;
 
 	/// @brief if save error. bin data will record to this.
-	unordered_map<uint32_t, string> mDbFailure;
+	std::unordered_map<uint32_t, std::string> mDbFailure;
 	
 };

@@ -14,7 +14,7 @@ namespace ControlMessage
 {
 
 	// client request
-	export void Msg_ReqRegistSrv(SocketChannelPtr channel, uint32_t msgId,  string binMsg)
+	export void Msg_ReqRegistSrv(SocketChannelPtr channel, uint32_t msgId, std::string binMsg)
 	{
 		COM_ReqRegistSrv request;
 		if(!request.ParseFromString(binMsg))
@@ -31,7 +31,7 @@ namespace ControlMessage
 
 		DNPrint(0, EMLoggerLevel::Debug, "ip Reqregist: %s, %d", channel->peeraddr().c_str(), request.server_type());
 
-		const string& ipPort = channel->localaddr();
+		const std::string& ipPort = channel->localaddr();
 
 		if (regType < EMServerType::GlobalServer || regType > EMServerType::AuthServer || ipPort.empty())
 		{
@@ -58,13 +58,13 @@ namespace ControlMessage
 			response.set_server_type((uint8_t(dnServer->GetServerType())));
 		}
 
-		string binData;
+		std::string binData;
 		response.SerializeToString(&binData);
 
 		MessagePackAndSend(msgId, EMMsgDeal::Res, nullptr, binData, channel);
 	}
 
-	export void Exe_RetHeartbeat(SocketChannelPtr channel, string binMsg)
+	export void Exe_RetHeartbeat(SocketChannelPtr channel, std::string binMsg)
 	{
 		COM_RetHeartbeat request;
 		if(!request.ParseFromString(binMsg))

@@ -24,7 +24,7 @@ public:
 
 	uint32_t& MapID() { return iMapId; }
 
-	string& ServerIp() { return sServIp; }
+	std::string& ServerIp() { return sServIp; }
 
 	uint16_t& ServerPort() { return iServPort; }
 
@@ -36,7 +36,7 @@ protected: // dll proxy
 
 	uint32_t iMapId = 0;
 
-	string sServIp;
+	std::string sServIp;
 
 	uint16_t iServPort = 0;
 

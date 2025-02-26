@@ -18,7 +18,7 @@ public:
 	// regist to controlserver
 	EMRegistState& EMRegistState() { return eRegistState; }
 
-	void SetRegistEvent(function<void()> event)
+	void SetRegistEvent(std::function<void()> event)
 	{
 		pRegistEvent = event;
 	}
@@ -26,7 +26,7 @@ public:
 	// task
 	DNTask<Message*>* GetMsg(uint32_t msgId)
 	{
-		shared_lock<shared_mutex> lock(oMsgMutex);
+		std::shared_lock<std::shared_mutex> lock(oMsgMutex);
 		if (mMsgList.contains(msgId))
 		{
 			return mMsgList[msgId];
@@ -36,7 +36,7 @@ public:
 
 	bool AddMsg(uint32_t msgId, DNTask<Message*>* task, uint32_t breakTime = 10000)
 	{
-		unique_lock<shared_mutex> ulock(oMsgMutex);
+		std::unique_lock<std::shared_mutex> ulock(oMsgMutex);
 		mMsgList.emplace(msgId, task);
 		// timeout
 		if (breakTime > 0)
@@ -48,7 +48,7 @@ public:
 
 	void DelMsg(uint32_t msgId)
 	{
-		unique_lock<shared_mutex> ulock(oMsgMutex);
+		std::unique_lock<std::shared_mutex> ulock(oMsgMutex);
 		if (mMsgList.contains(msgId))
 		{
 			if (DNTask<Message*>* task = mMsgList[msgId])
@@ -65,7 +65,7 @@ public:
 
 	void MsgMapClear()
 	{
-		unique_lock<shared_mutex> ulock(oMsgMutex);
+		std::unique_lock<std::shared_mutex> ulock(oMsgMutex);
 		for (auto& [k, v] : mMsgList)
 		{
 			v->CallResume();

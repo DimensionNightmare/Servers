@@ -32,7 +32,7 @@ export struct MessagePacket
 
 int MessagePacket::PackLenth = sizeof(MessagePacket);
 
-export bool MessagePack(uint32_t msgId, EMMsgDeal deal, const char* pbName, string& data)
+export bool MessagePack(uint32_t msgId, EMMsgDeal deal, const char* pbName, std::string& data)
 {
 	MessagePacket packet;
 	packet.msgId = msgId;
@@ -46,9 +46,9 @@ export bool MessagePack(uint32_t msgId, EMMsgDeal deal, const char* pbName, stri
 	else [[likely]]
 	{
 #ifdef _WIN32
-		packet.msgHashId = hash<string>::_Do_hash(pbName);
+		packet.msgHashId = std::hash<std::string>::_Do_hash(pbName);
 #elif __unix__
-		packet.msgHashId = hash<string>{}(pbName);
+		packet.msgHashId = std::hash<std::string>{}(pbName);
 #endif
 	}
 

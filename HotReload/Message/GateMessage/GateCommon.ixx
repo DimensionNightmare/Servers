@@ -30,13 +30,13 @@ namespace GateMessage
 				child->set_server_type((uint32_t)serv->GetServerType());
 			};
 
-		const list<ServerEntity*>& dbs = entityMan->GetEntitysByType(EMServerType::DatabaseServer);
+		const std::list<ServerEntity*>& dbs = entityMan->GetEntitysByType(EMServerType::DatabaseServer);
 		for (ServerEntity* serv : dbs)
 		{
 			AddChild(serv);
 		}
 
-		const list<ServerEntity*>& logics = entityMan->GetEntitysByType(EMServerType::LogicServer);
+		const std::list<ServerEntity*>& logics = entityMan->GetEntitysByType(EMServerType::LogicServer);
 		for (ServerEntity* serv : logics)
 		{
 			AddChild(serv);
@@ -48,7 +48,7 @@ namespace GateMessage
 		}
 
 		// pack data
-		string binData;
+		std::string binData;
 		request.SerializeToString(&binData);
 		MessagePackAndSend(0, EMMsgDeal::Ret, request.GetDescriptor()->full_name().c_str(), binData, client->GetChannel());
 	}
@@ -76,7 +76,7 @@ namespace GateMessage
 		request.set_server_port(server->port);
 
 		// pack data
-		string binData;
+		std::string binData;
 		request.SerializeToString(&binData);
 		
 
@@ -122,7 +122,7 @@ namespace GateMessage
 	}
 
 	// client request
-	export void Msg_ReqRegistSrv(SocketChannelPtr channel, uint32_t msgId,  string binMsg)
+	export void Msg_ReqRegistSrv(SocketChannelPtr channel, uint32_t msgId, std::string binMsg)
 	{
 		COM_ReqRegistSrv request;
 		if(!request.ParseFromString(binMsg))
@@ -140,7 +140,7 @@ namespace GateMessage
 		EMServerType regType = (EMServerType)request.server_type();
 		uint32_t serverId = request.server_id();
 
-		const string& ipPort = channel->localaddr();
+		const std::string& ipPort = channel->localaddr();
 
 		if (regType < EMServerType::DatabaseServer || regType > EMServerType::LogicServer || ipPort.empty())
 		{
@@ -171,7 +171,7 @@ namespace GateMessage
 			abort();
 		}
 
-		string binData;
+		std::string binData;
 		response.SerializeToString(&binData);
 
 		MessagePackAndSend(msgId, EMMsgDeal::Res, nullptr, binData, channel);
@@ -193,7 +193,7 @@ namespace GateMessage
 		}
 	}
 
-	export void Exe_RetHeartbeat(SocketChannelPtr channel, string binMsg)
+	export void Exe_RetHeartbeat(SocketChannelPtr channel, std::string binMsg)
 	{
 		COM_RetHeartbeat request;
 		if(!request.ParseFromString(binMsg))

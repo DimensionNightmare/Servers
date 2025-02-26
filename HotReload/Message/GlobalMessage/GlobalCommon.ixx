@@ -37,7 +37,7 @@ namespace GlobalMessage
 		request.set_server_port(server->port);
 
 		// pack data
-		string binData;
+		std::string binData;
 		request.SerializeToString(&binData);
 		
 		// data alloc
@@ -81,7 +81,7 @@ namespace GlobalMessage
 	}
 
 	// client request
-	export void Msg_ReqRegistSrv(SocketChannelPtr channel, uint32_t msgId,  string binMsg)
+	export void Msg_ReqRegistSrv(SocketChannelPtr channel, uint32_t msgId, std::string binMsg)
 	{
 		COM_ReqRegistSrv request;
 		if(!request.ParseFromString(binMsg))
@@ -98,7 +98,7 @@ namespace GlobalMessage
 
 		EMServerType regType = (EMServerType)request.server_type();
 
-		const string& ipPort = channel->localaddr();
+		const std::string& ipPort = channel->localaddr();
 
 		if (regType < EMServerType::GateServer || regType > EMServerType::LogicServer || ipPort.empty())
 		{
@@ -172,7 +172,7 @@ namespace GlobalMessage
 			response.set_server_type((uint8_t(dnServer->GetServerType())));
 		}
 
-		string binData;
+		std::string binData;
 		response.SerializeToString(&binData);
 
 		MessagePackAndSend(msgId, EMMsgDeal::Res, nullptr, binData, channel);
@@ -184,7 +184,7 @@ namespace GlobalMessage
 
 	}
 
-	export void Exe_RetHeartbeat(SocketChannelPtr channel, string binMsg)
+	export void Exe_RetHeartbeat(SocketChannelPtr channel, std::string binMsg)
 	{
 		COM_RetHeartbeat request;
 		if(!request.ParseFromString(binMsg))

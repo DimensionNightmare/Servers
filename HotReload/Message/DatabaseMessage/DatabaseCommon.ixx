@@ -34,7 +34,7 @@ namespace DatabaseMessage
 		}
 
 		// pack data
-		string binData;
+		std::string binData;
 		request.SerializeToString(&binData);
 		
 
@@ -77,7 +77,7 @@ namespace DatabaseMessage
 		co_return;
 	}
 
-	export void Exe_RetChangeCtlSrv(SocketChannelPtr channel, string binMsg)
+	export void Exe_RetChangeCtlSrv(SocketChannelPtr channel, std::string binMsg)
 	{
 		COM_RetChangeCtlSrv request;
 		if(!request.ParseFromString(binMsg))

@@ -2,8 +2,6 @@
 
 import std.compat;
 
-using namespace std;
-
 #define DNPrint(code, level, fmt, ...) LoggerPrint(level, code, __FUNCTION__, fmt, ##__VA_ARGS__)
 
 #define DBSelectOne(obj, name) .SelectOne(#name, [&obj]() { return obj.name(); })

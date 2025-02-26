@@ -6,7 +6,7 @@ import MessagePack;
 import ThirdParty.Libhv;
 import Logger;
 
-export void MessagePackAndSend(uint32_t msgId, EMMsgDeal deal, const char* pbName, string& data, const SocketChannelPtr& channel)
+export void MessagePackAndSend(uint32_t msgId, EMMsgDeal deal, const char* pbName, std::string& data, const SocketChannelPtr& channel)
 {
 	MessagePack(msgId, deal, pbName, data);
 	channel->write(data);

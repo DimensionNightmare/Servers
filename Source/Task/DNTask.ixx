@@ -18,7 +18,7 @@ export template <typename T>
 struct DNTask
 {
 	struct promise_type;
-	using HandleType = coroutine_handle<promise_type>;
+	using HandleType = std::coroutine_handle<promise_type>;
 	struct promise_type
 	{
 		promise_type()
@@ -36,9 +36,9 @@ struct DNTask
 			bReturned = true;
 		}
 
-		suspend_always initial_suspend() { return {}; }
+		std::suspend_always initial_suspend() { return {}; }
 
-		suspend_always final_suspend() noexcept
+		std::suspend_always final_suspend() noexcept
 		{
 			// DNTask don't Call by self, need Message handle Tick;
 			// ReleaseAwaitHandle();
@@ -56,7 +56,7 @@ struct DNTask
 
 		const T* oResult = nullptr;
 
-		coroutine_handle<> oAwaitHandle = nullptr;
+		std::coroutine_handle<> oAwaitHandle = nullptr;
 
 		bool bReturned = false;
 	};
@@ -68,7 +68,7 @@ struct DNTask
 		return tHandle.promise().bReturned;
 	}
 
-	void await_suspend(coroutine_handle<> caller)
+	void await_suspend(std::coroutine_handle<> caller)
 	{
 		tHandle.promise().oAwaitHandle = caller;
 
@@ -119,7 +119,7 @@ struct DNTask
 		if (HasFlag(EMDNTaskFlag::TimeCost))
 		{
 			steady_clock::time_point now = steady_clock::now();
-			cout << format("tasktimeid:{}, cost:{}ms", iTimerId, duration_cast<microseconds>(now - oTimePoint).count() / 1000.0) << endl;
+			std::cout << std::format("tasktimeid:{}, cost:{}ms", iTimerId, duration_cast<microseconds>(now - oTimePoint).count() / 1000.0) << std::endl;
 		}
 
 		if (tHandle)
@@ -138,7 +138,7 @@ private:
 
 	HandleType tHandle;
 
-	bitset<static_cast<uint16_t>(EMDNTaskFlag::Max)> oFlags;
+	std::bitset<static_cast<uint16_t>(EMDNTaskFlag::Max)> oFlags;
 
 	size_t iTimerId = 0;
 
@@ -148,7 +148,7 @@ private:
 export struct DNTaskVoid
 {
 	struct promise_type;
-	using HandleType = coroutine_handle<promise_type>;
+	using HandleType = std::coroutine_handle<promise_type>;
 	struct promise_type
 	{
 		promise_type() {}
@@ -160,9 +160,9 @@ export struct DNTaskVoid
 			return DNTaskVoid{ HandleType::from_promise(*this) };
 		}
 
-		suspend_never initial_suspend() { return {}; }
+		std::suspend_never initial_suspend() { return {}; }
 
-		suspend_never final_suspend() noexcept
+		std::suspend_never final_suspend() noexcept
 		{
 			ReleaseAwaitHandle();
 			return {};
@@ -175,7 +175,7 @@ export struct DNTaskVoid
 			if (oAwaitHandle) { oAwaitHandle.resume(); oAwaitHandle = nullptr; }
 		}
 
-		coroutine_handle<> oAwaitHandle = nullptr;
+		std::coroutine_handle<> oAwaitHandle = nullptr;
 
 		bool bReturned = false;
 	};
@@ -187,7 +187,7 @@ export struct DNTaskVoid
 		return tHandle.promise().bReturned;
 	}
 
-	void await_suspend(coroutine_handle<> caller)
+	void await_suspend(std::coroutine_handle<> caller)
 	{
 		tHandle.promise().oAwaitHandle = caller;
 	}

@@ -31,7 +31,7 @@ public: // dll override
 	/// @brief 
 	void EntityCloseTimer(uint64_t timerID)
 	{
-		unique_lock<shared_mutex> ulock(oTimerMutex);
+		std::unique_lock<std::shared_mutex> ulock(oTimerMutex);
 		if (!mMapTimer.contains(timerID))
 		{
 			return;
@@ -56,7 +56,7 @@ public: // dll override
 	/// @brief 
 	uint64_t CheckEntityCloseTimer(uint32_t entityId)
 	{
-		uint64_t timerId = Timer()->setTimeout(10000, std::bind(&ServerEntityManager::EntityCloseTimer, this, placeholders::_1));
+		uint64_t timerId = Timer()->setTimeout(10000, std::bind(&ServerEntityManager::EntityCloseTimer, this, std::placeholders::_1));
 
 		AddTimerRecord(timerId, entityId);
 
@@ -66,7 +66,7 @@ public: // dll override
 	/// @brief 
 	ServerEntity* GetEntity(uint32_t entityId)
 	{
-		unique_lock<shared_mutex> ulock(oMapMutex);
+		std::unique_lock<std::shared_mutex> ulock(oMapMutex);
 		if (mEntityMap.contains(entityId))
 		{
 			return &mEntityMap[entityId];
@@ -80,7 +80,7 @@ public: // dll override
 		if (mEntityMap.contains(entityId))
 		{
 			ServerEntity* entity = &mEntityMap[entityId];
-			unique_lock<shared_mutex> ulock(oMapMutex);
+			std::unique_lock<std::shared_mutex> ulock(oMapMutex);
 
 			mEntityMapList[entity->GetServerType()].remove(entity);
 
@@ -98,9 +98,9 @@ public: // dll override
 
 protected: // dll proxy
 	/// @brief 
-	unordered_map<EMServerType, list<ServerEntity*> > mEntityMapList;
+	std::unordered_map<EMServerType, std::list<ServerEntity*> > mEntityMapList;
 	
 	// server pull server
-	atomic<uint32_t> iServerGenId;
+	std::atomic<uint32_t> iServerGenId;
 
 };

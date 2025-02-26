@@ -70,8 +70,12 @@ extern "C"
 		SetDNl10nInstance(server->pDNl10nInstance);
 
 		EMServerType servertype = server->GetServerType();
-		string_view serverName = EnumName(servertype);
-		SetLoggerLevel(EMLoggerLevel::Debug, serverName);
+		std::string_view serverName = EnumName(servertype);
+		if(std::string* program = GetLuanchConfigParam("program"))
+		{
+			std::filesystem::path envPath = std::filesystem::path(*program).parent_path().append(serverName);
+			SetLoggerLevel(EMLoggerLevel::Debug, envPath);
+		}
 
 		bool isDeal = false;
 		switch (servertype)

@@ -40,10 +40,10 @@ enum class EMLunchType : uint8_t
 	PULL,
 };
 
-void WriteDumpFile(const char* fileName, EXCEPTION_POINTERS* ExceptionInfo = nullptr)
+void WriteDumpFile(std::filesystem::path fileName, EXCEPTION_POINTERS* ExceptionInfo = nullptr)
 {
 	HANDLE hDumpFile = CreateFile(
-		fileName,
+		fileName.string().c_str(),
 		GENERIC_WRITE,
 		0,
 		nullptr,
@@ -85,27 +85,27 @@ void WriteDumpFile(const char* fileName, EXCEPTION_POINTERS* ExceptionInfo = nul
 
 export int main(int argc, char** argv)
 {
-	filesystem::path execPath = argv[0];
+	std::filesystem::path execPath = argv[0];
 	
 #ifdef _WIN32
-	SetCurrentDirectoryA(execPath.parent_path().string().c_str());
 	system("chcp 65001");
-#elif __unix__
-	chdir(execPath.parent_path().string().c_str());
+// 	SetCurrentDirectoryA(execPath.parent_path().string().c_str());
+// #elif __unix__
+// 	chdir(execPath.parent_path().string().c_str());
 #endif
 
 	// lunch param
-	unordered_map<string, string> lunchParam = {
-		{"program", execPath.filename().string()},
+	std::unordered_map<std::string, std::string> lunchParam = {
+		{"program", execPath.string()},
 	};
 
 	for (int i = 1; i < argc; i++)
 	{
-		string split(argv[i]);
+		std::string split(argv[i]);
 
 		size_t pos = split.find('=');
 
-		if (pos == string::npos)
+		if (pos == std::string::npos)
 		{
 			DNPrint(0, EMLoggerLevel::Debug, "program lunch param error! Pos:%d ", i);
 			return 0;
@@ -127,19 +127,28 @@ export int main(int argc, char** argv)
 		return 0;
 	}
 
-	string_view serverName = EnumName(serverType);
-	SetLoggerLevel(EMLoggerLevel::Debug, serverName);
+	std::string_view serverName = EnumName(serverType);
+	lunchParam.emplace("svrName", serverName);
 
-	HVExport::hlog_disable();
-
-	DNPrint(0, EMLoggerLevel::Normal, "hello ~");
-
-	PInstance = make_unique<DimensionNightmare>();
-	if (!PInstance->InitConfig(lunchParam))
+	PInstance = std::make_unique<DimensionNightmare>(lunchParam);
+	if (!PInstance->InitConfig())
 	{
 		PInstance = nullptr;
 		return 0;
 	}
+
+	EMLoggerLevel logLevel = EMLoggerLevel::Debug;
+
+	if(lunchParam.contains("LoggerLevel"))
+	{
+		logLevel = EnumName<EMLoggerLevel>(lunchParam["LoggerLevel"]);
+	}
+
+	SetLoggerLevel(logLevel, execPath.parent_path() / serverName);
+
+	HVExport::hlog_disable();
+
+	DNPrint(0, EMLoggerLevel::Normal, "hello ~");
 
 	if (!PInstance->Init())
 	{
@@ -182,20 +191,9 @@ export int main(int argc, char** argv)
 		{
 			DNPrint(TipCode::TipCode_UnhandledException, EMLoggerLevel::Normal, nullptr);
 
-			string fileName = PInstance->Dll()->sDllDirRand;
+			WriteDumpFile(PInstance->HotReLoadDll()->sDllDirRand / "MiniDump.dmp");
 
-			if (fileName.empty())
-			{
-				fileName = "MiniDump.dmp";
-			}
-			else
-			{
-				fileName = format("{}/MiniDump.dmp", fileName);
-			}
-
-			WriteDumpFile(fileName.c_str());
-
-			PInstance->Dll()->isNormalFree = false;
+			PInstance->HotReLoadDll()->isNormalFree = false;
 			PInstance->ServerIsRun() = false;
 
 			return EXCEPTION_CONTINUE_SEARCH;
@@ -241,10 +239,10 @@ export int main(int argc, char** argv)
 
 	DNPrint(0, EMLoggerLevel::Normal, "Dimension Instance addr:0x%p", PInstance.get());
 
-	auto InputEvent = async(launch::async, []()
+	auto InputEvent = std::async(std::launch::async, []()
 		{
-			stringstream ss;
-			string str;
+			std::stringstream ss;
+			std::string str;
 
 			bool bRun = true;
 
@@ -263,15 +261,16 @@ export int main(int argc, char** argv)
 
 			auto dump_memory = [&]()
 				{
-					string fileName;
+					std::string fileName;
 					ss >> fileName;
 					if(!fileName.empty())
 					{
-						WriteDumpFile(fileName.append(".dmp").c_str());
+						fileName.append(".dmp");
+						WriteDumpFile(PInstance->HotReLoadDll()->sDllDirRand / fileName);
 					}
 				};
 
-			std::unordered_map<string, function<void()>> cmdMap = 
+			std::unordered_map<std::string, std::function<void()>> cmdMap = 
 			{
 				#define one(func) {#func, func}
 
@@ -282,7 +281,7 @@ export int main(int argc, char** argv)
 
 			while (bRun)
 			{
-				getline(cin, str);
+				std::getline(std::cin, str);
 
 				if (!PInstance || !PInstance->ServerIsRun())
 				{
@@ -296,7 +295,7 @@ export int main(int argc, char** argv)
 					str.clear();
 					ss >> str;
 
-					cout << "<cmd " << str << ">\n";
+					std::cout << "<cmd " << str << ">\n";
 
 					if (cmdMap.contains(str))
 					{
@@ -307,7 +306,7 @@ export int main(int argc, char** argv)
 						PInstance->ExecCommand(&str, &ss);
 					}
 
-					cout << "<cmd down>\n";
+					std::cout << "<cmd down>\n";
 				}
 
 			}

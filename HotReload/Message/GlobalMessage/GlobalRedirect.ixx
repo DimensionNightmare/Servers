@@ -14,7 +14,7 @@ import ServerEntityManagerHelper;
 namespace GlobalMessage
 {
 
-	export DNTaskVoid Msg_ReqAuthAccount(SocketChannelPtr channel, uint32_t msgId,  string binMsg)
+	export DNTaskVoid Msg_ReqAuthAccount(SocketChannelPtr channel, uint32_t msgId, std::string binMsg)
 	{
 		A2g_ReqAuthAccount request;
 		if(!request.ParseFromString(binMsg))
@@ -25,9 +25,9 @@ namespace GlobalMessage
 
 		// if has db not need origin
 		GlobalServerHelper* dnServer = GetGlobalServer();
-		list<ServerEntity*> serverList = dnServer->GetServerEntityManager()->GetEntitysByType(EMServerType::GateServer);
+		std::list<ServerEntity*> serverList = dnServer->GetServerEntityManager()->GetEntitysByType(EMServerType::GateServer);
 
-		list<ServerEntity*> tempList;
+		std::list<ServerEntity*> tempList;
 		for (ServerEntity* server : serverList)
 		{
 			if (server->HasFlag(EMServerEntityFlag::Locked))
@@ -39,7 +39,7 @@ namespace GlobalMessage
 		tempList.sort([](ServerEntity* lhs, ServerEntity* rhs) { return lhs->ConnNum() < rhs->ConnNum(); });
 
 
-		string binData;
+		std::string binData;
 		if (tempList.empty())
 		{
 			response.set_state_code(4);

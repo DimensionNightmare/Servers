@@ -87,6 +87,6 @@ export namespace PBExport
 	bool ErrCode_IsValid(int type) { return ::ErrCode_IsValid(type); }
 	bool TipCode_IsValid(int type) { return ::TipCode_IsValid(type); }
 
-	const string& ErrCode_Name(int type) { return ::ErrCode_Name((ErrCode)type); }
-	const string& TipCode_Name(int type) { return ::TipCode_Name((TipCode)type); }
+	const std::string& ErrCode_Name(int type) { return ::ErrCode_Name((ErrCode)type); }
+	const std::string& TipCode_Name(int type) { return ::TipCode_Name((TipCode)type); }
 };

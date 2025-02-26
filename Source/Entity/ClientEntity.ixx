@@ -52,10 +52,10 @@ protected: // dll proxy
 
 	uint32_t iRecordRoomId = 0;
 
-	bitset<static_cast<uint16_t>(EMClientEntityFlag::Max)> oFlags;
+	std::bitset<static_cast<uint16_t>(EMClientEntityFlag::Max)> oFlags;
 
 	/// @brief db entity
-	unique_ptr<Player> pDbEntity = make_unique<Player>();
+	std::unique_ptr<Player> pDbEntity = std::make_unique<Player>();
 
 public:
 

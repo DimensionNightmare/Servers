@@ -18,7 +18,7 @@ public:
 	{
 		if (!mEntityMap.contains(entityId))
 		{
-			unique_lock<shared_mutex> ulock(oMapMutex);
+			std::unique_lock<std::shared_mutex> ulock(oMapMutex);
 			mEntityMap.emplace(std::piecewise_construct,
 				std::forward_as_tuple(entityId),
 				std::forward_as_tuple(entityId));
@@ -33,7 +33,7 @@ public:
 	{
 		if (mEntityMap.contains(entityId))
 		{
-			unique_lock<shared_mutex> ulock(oMapMutex);
+			std::unique_lock<std::shared_mutex> ulock(oMapMutex);
 
 			DNPrint(0, EMLoggerLevel::Debug, "destory Proxy entity");
 			mEntityMap.erase(entityId);
@@ -45,7 +45,7 @@ public:
 
 	ProxyEntity* GetEntity(uint32_t entityId)
 	{
-		shared_lock<shared_mutex> lock(oMapMutex);
+		std::shared_lock<std::shared_mutex> lock(oMapMutex);
 		if (mEntityMap.contains(entityId))
 		{
 			return &mEntityMap[entityId];

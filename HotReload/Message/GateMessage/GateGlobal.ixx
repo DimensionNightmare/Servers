@@ -14,7 +14,7 @@ import ProxyEntityManagerHelper;
 namespace GateMessage
 {
 
-	export void Exe_ReqUserToken(SocketChannelPtr channel, uint32_t msgId,  string binMsg)
+	export void Exe_ReqUserToken(SocketChannelPtr channel, uint32_t msgId, std::string binMsg)
 	{
 		A2g_ReqAuthAccount request;
 		
@@ -25,7 +25,7 @@ namespace GateMessage
 		
 		g2A_ResAuthAccount response;
 
-		string binData;
+		std::string binData;
 
 		GateServerHelper* dnServer = GetGateServer();
 		ProxyEntityManagerHelper* entityMan = dnServer->GetProxyEntityManager();
@@ -68,11 +68,11 @@ namespace GateMessage
 		{
 			entity = entityMan->AddEntity(request.account_id());
 
-			string& token = entity->Token();
+			std::string& token = entity->Token();
 			token = GetNowTimeStr();
 			token = Md5Hash(token);
 
-			entity->ExpireTime() = chrono::duration_cast<chrono::seconds>(chrono::system_clock::now().time_since_epoch()).count();
+			entity->ExpireTime() = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 			entity->ExpireTime() += 30;
 		}
 

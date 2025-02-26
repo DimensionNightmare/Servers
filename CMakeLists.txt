@@ -26,13 +26,19 @@ if(CMAKE_SYSTEM_NAME MATCHES "Linux")
 	set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 endif()
 
+set(STR_BUILD_TYPE ${CMAKE_BUILD_TYPE})
+
+if (STR_BUILD_TYPE STREQUAL "RelWithDebInfo")
+    set(STR_BUILD_TYPE "Release")
+endif()
+
 set(CMAKE_PREFIX_PATH
-"../Environment/Install/${CMAKE_BUILD_TYPE}/libhv"
-"../Environment/Install/${CMAKE_BUILD_TYPE}/protobuf"
-"../Environment/Install/${CMAKE_BUILD_TYPE}/pbgen"
-"../Environment/Install/${CMAKE_BUILD_TYPE}/libpqxx"
-"../Environment/Install/${CMAKE_BUILD_TYPE}/hiredis"
-"../Environment/Install/${CMAKE_BUILD_TYPE}/redis-plus-plus"
+"../Environment/Install/${STR_BUILD_TYPE}/libhv"
+"../Environment/Install/${STR_BUILD_TYPE}/protobuf"
+"../Environment/Install/${STR_BUILD_TYPE}/pbgen"
+"../Environment/Install/${STR_BUILD_TYPE}/libpqxx"
+"../Environment/Install/${STR_BUILD_TYPE}/hiredis"
+"../Environment/Install/${STR_BUILD_TYPE}/redis-plus-plus"
 )
 
 find_package(libhv CONFIG REQUIRED)

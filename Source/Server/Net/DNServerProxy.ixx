@@ -272,7 +272,7 @@ private:
 			}
 			server->removeChannel(channel);
 			// NOTE: After removeChannel, channel may be destroyed,
-			// so in this lambda function, no code should be added below.
+			// so in this lambda std::function, no code should be added below.
 		};
 
 		if (server->unpack_setting)
@@ -376,7 +376,7 @@ public:
 
 	DNServerProxy()
 	{
-		pLoop = make_shared<EventLoopThread>();
+		pLoop = std::make_shared<EventLoopThread>();
 	}
 
 	~DNServerProxy()
@@ -444,7 +444,7 @@ public: // dll override
 				return;
 			}
 
-			unique_lock<shared_mutex> ulock(oTimerMutex);
+			std::unique_lock<std::shared_mutex> ulock(oTimerMutex);
 			id = mMapTimer[timerID];
 			mMapTimer.erase(timerID);
 		}
@@ -452,7 +452,7 @@ public: // dll override
 		{
 			if (mMsgList.contains(id))
 			{
-				unique_lock<shared_mutex> ulock(oMsgMutex);
+				std::unique_lock<std::shared_mutex> ulock(oMsgMutex);
 				DNTask<Message*>* task = mMsgList[id];
 				mMsgList.erase(id);
 				task->SetFlag(EMDNTaskFlag::Timeout);
@@ -471,7 +471,7 @@ public: // dll override
 				return;
 			}
 
-			unique_lock<shared_mutex> ulock(oTimerMutex);
+			std::unique_lock<std::shared_mutex> ulock(oTimerMutex);
 			id = mMapTimer[timerID];
 			mMapTimer.erase(timerID);
 		}
@@ -493,35 +493,35 @@ public: // dll override
 
 	void AddTimerRecord(size_t timerId, uint32_t id)
 	{
-		unique_lock<shared_mutex> ulock(oTimerMutex);
+		std::unique_lock<std::shared_mutex> ulock(oTimerMutex);
 		mMapTimer.emplace(timerId, id);
 	}
 
 	void CheckChannelByTimer(SocketChannelPtr channel)
 	{
-		size_t timerId = Timer()->setTimeout(5000, std::bind(&DNServerProxy::ChannelTimeoutTimer, this, placeholders::_1));
+		size_t timerId = Timer()->setTimeout(5000, std::bind(&DNServerProxy::ChannelTimeoutTimer, this, std::placeholders::_1));
 		AddTimerRecord(timerId, channel->id());
 	}
 	uint64_t CheckMessageTimeoutTimer(uint32_t breakTime, uint32_t msgId)
 	{
-		uint64_t timerId = Timer()->setTimeout(breakTime, std::bind(&DNServerProxy::MessageTimeoutTimer, this, placeholders::_1));
-		unique_lock<shared_mutex> ulock(oTimerMutex);
+		uint64_t timerId = Timer()->setTimeout(breakTime, std::bind(&DNServerProxy::MessageTimeoutTimer, this, std::placeholders::_1));
+		std::unique_lock<std::shared_mutex> ulock(oTimerMutex);
 		mMapTimer[timerId] = msgId;
 		return timerId;
 	}
 public:
 	// cant init in tcpclient this class
-	shared_ptr<EventLoopThread> pLoop;
+	std::shared_ptr<EventLoopThread> pLoop;
 
 protected:
 	// only oddnumber
-	atomic<uint32_t> iMsgId;
+	std::atomic<uint32_t> iMsgId;
 	// unordered_
-	unordered_map<uint32_t, DNTask<Message*>* > mMsgList;
+	std::unordered_map<uint32_t, DNTask<Message*>* > mMsgList;
 	//
-	unordered_map<uint64_t, uint32_t > mMapTimer;
+	std::unordered_map<uint64_t, uint32_t > mMapTimer;
 
-	shared_mutex oMsgMutex;
+	std::shared_mutex oMsgMutex;
 
-	shared_mutex oTimerMutex;
+	std::shared_mutex oTimerMutex;
 };

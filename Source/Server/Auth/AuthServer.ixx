@@ -32,7 +32,7 @@ public:
 
 	virtual bool Init() override
 	{
-		string* value = GetLuanchConfigParam("byCtl");
+		std::string* value = GetLuanchConfigParam("byCtl");
 		if (!value || !stoi(*value))
 		{
 			DNPrint(ErrCode::ErrCode_SrvByCtl, EMLoggerLevel::Error, nullptr);
@@ -49,7 +49,7 @@ public:
 			port = stoi(*value);
 		}
 
-		pSSock = make_unique<DNWebProxy>();
+		pSSock = std::make_unique<DNWebProxy>();
 		pSSock->setHost("0.0.0.0");
 		pSSock->setPort(port);
 		pSSock->setThreadNum(4);
@@ -57,11 +57,11 @@ public:
 		DNPrint(TipCode::TipCode_SrvListenOn, EMLoggerLevel::Normal, nullptr, pSSock->port, 0);
 
 		//connet ControlServer
-		string* ctlPort = GetLuanchConfigParam("ctlPort");
-		string* ctlIp = GetLuanchConfigParam("ctlIp");
+		std::string* ctlPort = GetLuanchConfigParam("ctlPort");
+		std::string* ctlIp = GetLuanchConfigParam("ctlIp");
 		if (ctlPort && ctlIp)
 		{
-			pCSock = make_unique<DNClientProxy>();
+			pCSock = std::make_unique<DNClientProxy>();
 
 			pCSock->Init();
 
@@ -72,7 +72,7 @@ public:
 		return true;
 	}
 
-	virtual void InitCmd(unordered_map<string, function<void(stringstream*)>>& cmdMap) override
+	virtual void InitCmd( std::unordered_map<std::string, std::function<void(std::stringstream*)>>& cmdMap) override
 	{
 	}
 
@@ -142,9 +142,9 @@ public:
 		// pCSock->Timer()->resume();
 	}
 
-	virtual void LoopEvent(function<void(EventLoopPtr)> func) override
+	virtual void LoopEvent(std::function<void(EventLoopPtr)> func) override
 	{
-		unordered_map<long, bool> looped;
+		std::unordered_map<long, bool> looped;
 		if (pCSock)
 		{
 			looped.clear();
@@ -174,10 +174,10 @@ public: // dll override
 
 protected: // dll proxy
 
-	unique_ptr<DNWebProxy> pSSock;
+	std::unique_ptr<DNWebProxy> pSSock;
 
-	unique_ptr<DNClientProxy> pCSock;
+	std::unique_ptr<DNClientProxy> pCSock;
 
-	unique_ptr<pq_connection> pSqlProxy;
+	std::unique_ptr<pq_connection> pSqlProxy;
 	
 };

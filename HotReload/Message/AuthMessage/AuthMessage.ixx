@@ -13,7 +13,7 @@ export class AuthMessageHandle
 
 public:
 
-	static void MsgHandle(SocketChannelPtr channel, uint32_t msgId, size_t msgHashId, const string& msgData)
+	static void MsgHandle(SocketChannelPtr channel, uint32_t msgId, size_t msgHashId, const std::string& msgData)
 	{
 		if (MHandleMap.contains(msgHashId))
 		{
@@ -23,7 +23,7 @@ public:
 			{
 				handle.second(channel, msgId, msgData);
 			}
-			catch (const exception& e)
+			catch (const std::exception& e)
 			{
 				DNPrint(0, EMLoggerLevel::Debug, e.what());
 			}
@@ -35,7 +35,7 @@ public:
 		}
 	}
 	
-	static void MsgRetHandle(SocketChannelPtr channel, size_t msgHashId, const string& msgData)
+	static void MsgRetHandle(SocketChannelPtr channel, size_t msgHashId, const std::string& msgData)
 	{
 		if (MHandleRetMap.contains(msgHashId))
 		{
@@ -44,7 +44,7 @@ public:
 			{
 				handle.second(channel, msgData);
 			}
-			catch (const exception& e)
+			catch (const std::exception& e)
 			{
 				DNPrint(0, EMLoggerLevel::Debug, e.what());
 			}
@@ -68,7 +68,7 @@ public:
 	}
 public:
 
-	inline static unordered_map<size_t, pair<const Message*, function<void(SocketChannelPtr, uint32_t, string)>>> MHandleMap;
+	inline static std::unordered_map<size_t, std::pair<const Message*, std::function<void(SocketChannelPtr, uint32_t, std::string)>>> MHandleMap;
 
-	inline static unordered_map<size_t, pair<const Message*, function<void(SocketChannelPtr, string)>>> MHandleRetMap;
+	inline static std::unordered_map<size_t, std::pair<const Message*, std::function<void(SocketChannelPtr, std::string)>>> MHandleRetMap;
 };

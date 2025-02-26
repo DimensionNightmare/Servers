@@ -14,7 +14,7 @@ import ThirdParty.Libpqxx;
 namespace DatabaseMessage
 {
 
-	export void Exe_ReqLoadData(SocketChannelPtr channel, uint32_t msgId,  string binMsg)
+	export void Exe_ReqLoadData(SocketChannelPtr channel, uint32_t msgId, std::string binMsg)
 	{
 		L2D_ReqLoadData request;
 		if(!request.ParseFromString(binMsg))
@@ -25,7 +25,7 @@ namespace DatabaseMessage
 
 		DatabaseServerHelper* dnServer = GetDatabaseServer();
 
-		string binData;
+		std::string binData;
 
 		if (pq_connection* conn = dnServer->GetSqlProxy(EMSqlDbNameEnum::Nightmare))
 		{
@@ -47,7 +47,7 @@ namespace DatabaseMessage
 							{
 								for (int cur = 0; cur < resSize; cur++)
 								{
-									string* binData = response.add_entity_data();
+									std::string* binData = response.add_entity_data();
 									dbHelper.Result()[cur]->SerializeToString(binData);
 								}
 
@@ -80,7 +80,7 @@ namespace DatabaseMessage
 					{
 						dealFunc(message);
 					}
-					catch (const exception& e)
+					catch (const std::exception& e)
 					{
 						DNPrint(0, EMLoggerLevel::Debug, e.what());
 						response.set_state_code(5);
@@ -110,7 +110,7 @@ namespace DatabaseMessage
 		MessagePackAndSend(msgId, EMMsgDeal::Res, nullptr, binData, channel);
 	}
 
-	export void Exe_ReqSaveData(SocketChannelPtr channel, uint32_t msgId,  string binMsg)
+	export void Exe_ReqSaveData(SocketChannelPtr channel, uint32_t msgId, std::string binMsg)
 	{
 		L2D_ReqSaveData request;
 		if(!request.ParseFromString(binMsg))
@@ -121,7 +121,7 @@ namespace DatabaseMessage
 
 		DatabaseServerHelper* dnServer = GetDatabaseServer();
 
-		string binData;
+		std::string binData;
 
 		if (pq_connection* conn = dnServer->GetSqlProxy(EMSqlDbNameEnum::Nightmare))
 		{
@@ -150,7 +150,7 @@ namespace DatabaseMessage
 					{
 						dealFunc(message);
 					}
-					catch (const exception& e)
+					catch (const std::exception& e)
 					{
 						DNPrint(0, EMLoggerLevel::Debug, e.what());
 						response.set_state_code(5);

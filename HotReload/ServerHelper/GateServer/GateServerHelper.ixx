@@ -33,7 +33,7 @@ public:
 		ServerEntity* cEntity = static_cast<ServerEntity*>(entity);
 
 		// up to Global
-		string binData;
+		std::string binData;
 		g2G_RetRegistSrv request;
 		request.set_server_id(cEntity->ID());
 		request.set_is_regist(false);
@@ -58,7 +58,7 @@ public:
 
 		if (serverEntity)
 		{
-			string binData;
+			std::string binData;
 			g2L_RetProxyOffline request;
 			request.set_entity_id(entityId);
 			request.SerializeToString(&binData);

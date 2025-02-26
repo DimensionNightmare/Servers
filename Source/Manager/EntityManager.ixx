@@ -13,7 +13,7 @@ public:
 	/// @brief timer manager create
 	EntityManager()
 	{
-		pLoop = make_shared<EventLoopThread>();
+		pLoop = std::make_shared<EventLoopThread>();
 	}
 
 	virtual ~EntityManager()
@@ -38,20 +38,20 @@ public: // dll override
 
 	void AddTimerRecord(size_t timerId, uint32_t id)
 	{
-		unique_lock<shared_mutex> ulock(oTimerMutex);
+		std::unique_lock<std::shared_mutex> ulock(oTimerMutex);
 		mMapTimer.emplace(timerId, id);
 	}
 	
 protected: // dll proxy
 
-	unordered_map<uint32_t, TEntity> mEntityMap;
+	std::unordered_map<uint32_t, TEntity> mEntityMap;
 	/// @brief mEntityMap Mutex
-	shared_mutex oMapMutex;
+	std::shared_mutex oMapMutex;
 	//
-	unordered_map<uint64_t, uint32_t > mMapTimer;
+	std::unordered_map<uint64_t, uint32_t> mMapTimer;
 	/// @brief mMapTimer Mutex
-	shared_mutex oTimerMutex;
+	std::shared_mutex oTimerMutex;
 
-	shared_ptr<EventLoopThread> pLoop;
+	std::shared_ptr<EventLoopThread> pLoop;
 
 };

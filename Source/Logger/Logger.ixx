@@ -17,24 +17,28 @@ export enum class EMLoggerLevel : uint8_t
 
 EMLoggerLevel SLogLevel = EMLoggerLevel::Normal;
 
-ofstream LogFile; 
+std::ofstream LogFile; 
 
 /// @brief set logger type and Log file Init 
-export void SetLoggerLevel(optional<EMLoggerLevel> level = nullopt, optional<string_view> path = nullopt)
+export void SetLoggerLevel(std::optional<EMLoggerLevel> level = std::nullopt, std::optional<std::filesystem::path> path = std::nullopt)
 {
-	if(level.has_value())
+	if(level)
 	{
-		SLogLevel = level.value();
+		SLogLevel = *level;
 	}
 	
-	if(!LogFile.is_open() && path.has_value())
+	if(!LogFile.is_open() && path)
 	{
-		LogFile = ofstream( format("{}/Output.log", path.value()), std::ios::app);
+		if(!std::filesystem::exists(*path))
+		{
+			std::filesystem::create_directories(*path);
+		}
+		LogFile = std::ofstream( std::format("{}/Output.log", path.value().string()), std::ios::app);
 	}
 }
 
 /// @brief Log file pointer 
-ofstream* GetLoggerFile()
+std::ofstream* GetLoggerFile()
 {
 	if (!LogFile.is_open())
 	{
@@ -77,7 +81,7 @@ export void LoggerPrint(EMLoggerLevel level, int code, const char* funcName, con
 	va_list args;
 	va_start(args, fmt);
 	size_t len = vsnprintf(0, 0, fmt, args);
-	static string message;
+	static std::string message;
 	message.resize(len); // need space for NUL
 	// va_end(args);
 
@@ -85,10 +89,10 @@ export void LoggerPrint(EMLoggerLevel level, int code, const char* funcName, con
 	vsnprintf(&message[0], len + 1, fmt, args);
 	va_end(args);
 
-	string outputStr = format("[{}] {} -> \n\t{}\n", GetNowTimeStr(), funcName, message);
-	cout << outputStr;
+	std::string outputStr = std::format("[{}] {} -> \n\t{}\n", GetNowTimeStr(), funcName, message);
+	std::cout << outputStr;
 
-	if(ofstream* file = GetLoggerFile())
+	if(std::ofstream* file = GetLoggerFile())
 	{
 		*file << outputStr;
 		file->flush();

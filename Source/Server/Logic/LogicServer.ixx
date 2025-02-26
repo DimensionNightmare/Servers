@@ -36,7 +36,7 @@ public:
 
 	virtual bool Init() override
 	{
-		string* value = GetLuanchConfigParam("byCtl");
+		std::string* value = GetLuanchConfigParam("byCtl");
 		if (!value || !stoi(*value))
 		{
 			DNPrint(ErrCode::ErrCode_SrvByCtl, EMLoggerLevel::Error, nullptr);
@@ -53,7 +53,7 @@ public:
 			port = stoi(*value);
 		}
 
-		pSSock = make_unique<DNServerProxy>();
+		pSSock = std::make_unique<DNServerProxy>();
 
 		int listenfd = pSSock->createsocket(port, "0.0.0.0");
 		if (listenfd < 0)
@@ -68,11 +68,11 @@ public:
 
 
 		//connet ControlServer
-		string* ctlPort = GetLuanchConfigParam("ctlPort");
-		string* ctlIp = GetLuanchConfigParam("ctlIp");
+		std::string* ctlPort = GetLuanchConfigParam("ctlPort");
+		std::string* ctlIp = GetLuanchConfigParam("ctlIp");
 		if (ctlPort && ctlIp)
 		{
-			pCSock = make_unique<DNClientProxy>();
+			pCSock = std::make_unique<DNClientProxy>();
 
 			pCSock->Init();
 
@@ -83,15 +83,15 @@ public:
 			iCtlPort = port;
 		}
 
-		pClientEntityMan = make_unique<ClientEntityManager>();
+		pClientEntityMan = std::make_unique<ClientEntityManager>();
 		pClientEntityMan->Init();
-		pRoomMan = make_unique<RoomEntityManager>();
+		pRoomMan = std::make_unique<RoomEntityManager>();
 		pRoomMan->Init();
 
 		return true;
 	}
 
-	virtual void InitCmd(unordered_map<string, function<void(stringstream*)>>& cmdMap) override
+	virtual void InitCmd( std::unordered_map<std::string, std::function<void(std::stringstream*)>>& cmdMap) override
 	{
 		DNServer::InitCmd(cmdMap);
 
@@ -155,9 +155,9 @@ public:
 		// pRoomMan->Timer()->resume();
 	}
 
-	virtual void LoopEvent(function<void(EventLoopPtr)> func) override
+	virtual void LoopEvent(std::function<void(EventLoopPtr)> func) override
 	{
-		unordered_map<long, bool> looped;
+		std::unordered_map<long, bool> looped;
 		if (pSSock)
 		{
 			while (const EventLoopPtr& pLoop = pSSock->loop())
@@ -213,18 +213,18 @@ public: // dll override
 
 protected: // dll proxy
 
-	unique_ptr<DNServerProxy> pSSock;
+	std::unique_ptr<DNServerProxy> pSSock;
 
-	unique_ptr<DNClientProxy> pCSock;
+	std::unique_ptr<DNClientProxy> pCSock;
 
-	unique_ptr<ClientEntityManager> pClientEntityMan;
+	std::unique_ptr<ClientEntityManager> pClientEntityMan;
 
-	unique_ptr<RoomEntityManager> pRoomMan;
+	std::unique_ptr<RoomEntityManager> pRoomMan;
 	// record orgin info
-	string sCtlIp;
+	std::string sCtlIp;
 	
 	uint16_t iCtlPort = 0;
 
 	// localdb
-	shared_ptr<Redis> pNoSqlProxy;
+	std::shared_ptr<Redis> pNoSqlProxy;
 };

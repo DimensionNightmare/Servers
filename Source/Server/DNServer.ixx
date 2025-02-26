@@ -37,7 +37,7 @@ public:
 
 	virtual bool Init()
 	{
-		string* value = GetLuanchConfigParam("svrIndex");
+		std::string* value = GetLuanchConfigParam("svrIndex");
 		if (value)
 		{
 			iServerId = stoi(*value);
@@ -46,7 +46,7 @@ public:
 		return true;
 	}
 
-	virtual void InitCmd(unordered_map<string, function<void(stringstream*)>>& cmdMap) 
+	virtual void InitCmd( std::unordered_map<std::string, std::function<void(std::stringstream*)>>& cmdMap) 
 	{ 
 		pCmdMap = &cmdMap; 
 	}
@@ -63,7 +63,7 @@ public:
 
 	uint32_t& ServerId() { return iServerId; }
 
-	virtual void LoopEvent(function<void(EventLoopPtr)> func) = 0;
+	virtual void LoopEvent(std::function<void(EventLoopPtr)> func) = 0;
 
 	bool& IsRun() { return bInRun; }
 
@@ -73,7 +73,7 @@ public: // dll override
 
 	DNl10n* pDNl10nInstance = nullptr;
 
-	unordered_map<string, string>* pLuanchConfig = nullptr;
+	std::unordered_map<std::string, std::string>* pLuanchConfig = nullptr;
 protected:
 
 	EMServerType emServerType = EMServerType::None;
@@ -82,7 +82,7 @@ protected:
 
 	uint32_t iServerId = 0;
 
-	mutex oTaskMutex;
+	std::mutex oTaskMutex;
 
-	unordered_map<string, function<void(stringstream*)>>* pCmdMap = nullptr;
+	std::unordered_map<std::string, std::function<void(std::stringstream*)>>* pCmdMap = nullptr;
 };

@@ -29,24 +29,15 @@ import DNServer;
 struct HotReloadDll
 {
 	/// @brief load dll/so runtime library
-	void* LoadHandle(string_view dllPath)
+	void* LoadHandle(std::filesystem::path dllPath)
 	{
 #ifdef _WIN32
-		string fullPath = filesystem::current_path().append(dllPath).append(SDllName).string() + ".dll";
+		dllPath = dllPath.append(SDllName);
 	#ifdef NDEBUG
 		SetEnvironmentVariable("PATH", "./Bin;%PATH%");
 	#endif
 
-		constexpr size_t subLen = sizeof(SDllDir);
-		
-		string pathDeal(dllPath);
-		if (size_t pos = pathDeal.find(SDllDir); pos != string::npos)
-		{
-			pathDeal.erase(pos - 1, subLen);
-		}
-
-		SetConsoleTitleA(pathDeal.c_str());
-		void* hModule = LoadLibraryA(fullPath.c_str());
+		void* hModule = LoadLibraryA(dllPath.string().c_str());
 		if (!hModule)
 		{
 			DNPrint(ErrCode::ErrCode_DllLoad, EMLoggerLevel::Error, nullptr, GetLastError());
@@ -54,8 +45,8 @@ struct HotReloadDll
 		}
 
 #elif __unix__
-		string fullPath = filesystem::current_path().append(SDllDir).string();
-		fullPath = format("{}/lib{}.so", fullPath, SDllName);
+		std::string fullPath = filesystem::current_path().append(sDllDir).string();
+		fullPath = std::format("{}/lib{}.so", fullPath, SDllName);
 		void* hModule = dlopen(fullPath.c_str(), RTLD_LAZY);
 		if (!hModule)
 		{
@@ -66,7 +57,7 @@ struct HotReloadDll
 
 
 		return hModule;
-	};
+	}
 
 	/// @brief unload dll/so runtime library
 	void FreeHandle()
@@ -85,21 +76,21 @@ struct HotReloadDll
 		{
 			try
 			{
-				filesystem::remove_all(sDllDirRand.c_str());
+				std::filesystem::remove_all(sDllDirRand.c_str());
 			}
-			catch (const exception& e)
+			catch (const std::exception& e)
 			{
 				DNPrint(0, EMLoggerLevel::Debug, "filesystem:%s", e.what());
 			}
 		}
 
 		sDllDirRand.clear();
-	};
+	}
 
 	/// @brief reload dll/so runtime library
-	bool ReloadHandle(EMServerType type)
+	bool ReloadHandle()
 	{
-		if (!filesystem::exists(SDllDir))
+		if (!std::filesystem::exists(sDllDir))
 		{
 			DNPrint(ErrCode::ErrCode_DllMenuPath, EMLoggerLevel::Error, nullptr);
 			return false;
@@ -112,47 +103,48 @@ struct HotReloadDll
 		}
 #ifdef _WIN32
 
-		random_device rd;
-		mt19937 gen(rd());
-		uniform_int_distribution<int>  u(10000, 99999);
+		std::random_device rd;
+		std::mt19937 gen(rd());
+		std::uniform_int_distribution<int>  u(10000, 99999);
 
-		string newDllDirRand = format("{}/{}_{}", EnumName(type), SDllDir, u(gen));
+		int randNum = u(gen);
+		std::filesystem::path newDllDir = sDllDir.parent_path() / std::format("{}/Runtime_{}", sServerName, randNum);
 		try
 		{
-			filesystem::create_directories(newDllDirRand.c_str());
-			static string dllPath = format("{}/{}.dll", SDllDir, SDllName);
-			filesystem::copy(dllPath.c_str(), newDllDirRand.c_str(), filesystem::copy_options::recursive);
+			std::filesystem::create_directories(newDllDir);
+			std::filesystem::copy(sDllDir / SDllName, newDllDir, std::filesystem::copy_options::recursive);
 		}
-		catch (const exception& e)
+		catch (const std::exception& e)
 		{
 			DNPrint(0, EMLoggerLevel::Debug, "%s", e.what());
 			return false;
 		}
 #endif
-		void* hModule = LoadHandle(newDllDirRand);
+		void* hModule = LoadHandle(newDllDir);
 		if (hModule)
 		{
 			FreeHandle();
 			oLibHandle = hModule;
-			sDllDirRand = newDllDirRand;
+			sDllDirRand = newDllDir;
+			SetConsoleTitleA(std::format("{}_{}", sServerName, randNum).c_str());
 			return true;
 		}
 
 		return false;
-	};
+	}
 
 	/// @brief
 	HotReloadDll()
 	{
-		isNormalFree = true;
-		oLibHandle = NULL;
-	};
+		sDllDir = std::filesystem::path(*GetLuanchConfigParam("program")).parent_path() / sDllDir;
+		sServerName = *GetLuanchConfigParam("svrName");
+	}
 
 	/// @brief
 	~HotReloadDll()
 	{
 		FreeHandle();
-	};
+	}
 
 	/// @brief get runtime lib funcpointer
 	void* GetFuncPtr(const char* funcName)
@@ -167,19 +159,20 @@ struct HotReloadDll
 
 public:
 	/// @brief runtime library floder name
-	inline static const char* SDllDir = "Runtime";
+	std::filesystem::path sDllDir = "Runtime";
 
 	/// @brief runtime library file name
-	inline static const char* SDllName = "HotReload";
+	inline static const char* SDllName = "HotReload.dll";
 
-	string sDllDirRand;
+	std::filesystem::path sDllDirRand;
 
 	/// @brief runtime library loaded pointer
-	void* oLibHandle;
+	void* oLibHandle = nullptr;
 
 	/// @brief nomal exit or exception exit
-	bool isNormalFree;
+	bool isNormalFree = true;
 
+	std::string sServerName;
 };
 
 export class DimensionNightmare
@@ -187,9 +180,8 @@ export class DimensionNightmare
 
 public:
 	/// @brief
-	DimensionNightmare()
+	DimensionNightmare( std::unordered_map<std::string, std::string>& param): pLuanchParam(param)
 	{
-		pLuanchParam = nullptr;
 	}
 
 	// need close main process
@@ -201,25 +193,24 @@ public:
 	}
 
 	/// @brief load ini config
-	bool InitConfig(unordered_map<string, string>& param)
+	bool InitConfig()
 	{
 #ifndef NDEBUG
-		const char* iniFilePath = "../../../Config/ServerDebug.ini";
+		const char* iniFilePath = "./Config/ServerDebug.ini";
 #else
 		const char* iniFilePath = "./Config/Server.ini";
 #endif
 
-		if(!filesystem::exists(iniFilePath))
+		if(!std::filesystem::exists(iniFilePath))
 		{
 			DNPrint(0, EMLoggerLevel::Error, "ConfigIni Not Finded!");
 			return false;
 		}
 
 		// get ini Config
-		EMServerType serverType = (EMServerType)stoi(param["svrType"]);
-		string_view serverName = EnumName(serverType);
+		std::string_view serverName = pLuanchParam["svrName"];
 
-		vector<string> sectionNames;
+		std::vector<std::string> sectionNames;
 
 #ifdef _WIN32
 		char buffer[512] = { 0 };
@@ -231,24 +222,24 @@ public:
 			sectionNames.emplace_back(current);
 			current += strlen(current) + 1;
 
-			if (sectionNames.back().find_last_of("Server") != string::npos && sectionNames.back() != serverName)
+			if (sectionNames.back().find_last_of("Server") != std::string::npos && sectionNames.back() != serverName)
 			{
 				sectionNames.pop_back();
 			}
 		}
 #elif __unix__
-		unordered_map<string, list<string>> sectionVal;
+		std::unordered_map<std::string, std::list<std::string>> sectionVal;
 
 		auto GetINISectionNames = [&](const char* iniFilePath)
 			{
 				ifstream file(iniFilePath);
 				if (!file.is_open())
 				{
-					cerr << "Failed to open INI file: " << iniFilePath << endl;
+					cerr << "Failed to open INI file: " << iniFilePath << std::endl;
 					return;
 				}
 
-				string line;
+				std::string line;
 				while (getline(file, line))
 				{
 					if (line.empty())
@@ -259,9 +250,9 @@ public:
 					if (line[0] == '[')
 					{
 						size_t endPos = line.find_first_of("]");
-						if (endPos != string::npos)
+						if (endPos != std::string::npos)
 						{
-							string sectionName = line.substr(1, endPos - 1);
+							std::string sectionName = line.substr(1, endPos - 1);
 							sectionNames.emplace_back(sectionName);
 						}
 					}
@@ -291,49 +282,38 @@ public:
 		}
 #endif
 
-		for (const string& sectionName : sectionNames)
+		for (const std::string& sectionName : sectionNames)
 		{
 #ifdef _WIN32
 			GetPrivateProfileSectionA(sectionName.c_str(), buffer, bufferSize, iniFilePath);
 			char* keyValuePair = buffer;
 			while (*keyValuePair)
 			{
-				string split(keyValuePair);
+				std::string split(keyValuePair);
 				keyValuePair += strlen(keyValuePair) + 1;
 #elif __unix__
-			for (const string& keyValuePair : sectionVal[sectionName])
+			for (const std::string& keyValuePair : sectionVal[sectionName])
 			{
-				string split(keyValuePair);
+				std::string split(keyValuePair);
 #endif
 
 				size_t pos = split.find('=');
-				if (pos != string::npos)
+				if (pos != std::string::npos)
 				{
-					string key = split.substr(0, pos);
-					if (param.contains(key))
+					std::string key = split.substr(0, pos);
+					if (pLuanchParam.contains(key))
 					{
 						continue;
 					}
 
-					param.emplace(key, split.substr(pos + 1));
+					pLuanchParam.emplace(key, split.substr(pos + 1));
 				}
 
 			}
 		}
 
 		// set global Launch config  
-		{
-			pLuanchParam = &param;
-			SetLuanchConfig(pLuanchParam);
-		}
-
-		// I10n Config
-		pl10n = make_unique<DNl10n>();
-		if (const char* codeStr = pl10n->InitConfigData())
-		{
-			DNPrint(0, EMLoggerLevel::Error, codeStr);
-			return false;
-		}
+		SetLuanchConfig(&pLuanchParam);
 
 		return true;
 	}
@@ -341,35 +321,43 @@ public:
 	/// @brief create server
 	bool Init()
 	{
-		string* value = GetLuanchConfigParam("svrType");
-		EMServerType serverType = (EMServerType)stoi(*value);
+		// I10n Config
+		pl10n = std::make_unique<DNl10n>();
+		if (const char* codeStr = pl10n->InitConfigData())
+		{
+			DNPrint(0, EMLoggerLevel::Error, codeStr);
+			return false;
+		}
+
+		std::string value = pLuanchParam["svrType"];
+		EMServerType serverType = (EMServerType)stoi(value);
 
 		switch (serverType)
 		{
 			case EMServerType::ControlServer:
-				pServer = make_unique<ControlServer>();
+				pServer = std::make_unique<ControlServer>();
 				break;
 			case EMServerType::GlobalServer:
-				pServer = make_unique<GlobalServer>();
+				pServer = std::make_unique<GlobalServer>();
 				break;
 			case EMServerType::AuthServer:
-				pServer = make_unique<AuthServer>();
+				pServer = std::make_unique<AuthServer>();
 				break;
 			case EMServerType::GateServer:
-				pServer = make_unique<GateServer>();
+				pServer = std::make_unique<GateServer>();
 				break;
 			case EMServerType::DatabaseServer:
-				pServer = make_unique<DatabaseServer>();
+				pServer = std::make_unique<DatabaseServer>();
 				break;
 			case EMServerType::LogicServer:
-				pServer = make_unique<LogicServer>();
+				pServer = std::make_unique<LogicServer>();
 				break;
 			default:
 				DNPrint(ErrCode::ErrCode_SrvTypeNotVaild, EMLoggerLevel::Error, nullptr);
 				return false;
 		}
 
-		pServer->pLuanchConfig = pLuanchParam;
+		pServer->pLuanchConfig = &pLuanchParam;
 		pServer->pDNl10nInstance = pl10n.get();
 
 		if (!pServer->Init())
@@ -377,8 +365,10 @@ public:
 			return false;
 		}
 
-		pHotDll = make_unique<HotReloadDll>();
-		if (!pHotDll->ReloadHandle(serverType))
+
+		pHotDll = std::make_unique<HotReloadDll>();
+
+		if (!pHotDll->ReloadHandle())
 		{
 			return false;
 		}
@@ -403,40 +393,40 @@ public:
 	/// @brief init command line 
 	void InitCmdHandle()
 	{
-		auto pause = [this](stringstream* = nullptr)
+		auto pause = [this](std::stringstream* = nullptr)
 			{
 				pServer->Pause();
 			};
 
-		auto resume = [this](stringstream* = nullptr)
+		auto resume = [this](std::stringstream* = nullptr)
 			{
 				pServer->Resume();
 			};
 
-		auto reload = [&, pause, resume](stringstream* ss = nullptr)
+		auto reload = [this, pause, resume](std::stringstream* ss = nullptr)
 			{
 				pause();
 				OnUnregHotReload();
-				pHotDll->ReloadHandle(pServer->GetServerType());
+				pHotDll->ReloadHandle();
 				OnRegHotReload();
 				resume();
 			};
 
-		auto reloadConfig = [this](stringstream* ss = nullptr)
+		auto reloadConfig = [this](std::stringstream* ss = nullptr)
 			{
-				InitConfig(*pLuanchParam);
+				InitConfig();
 			};
 
-		auto open = [](stringstream* ss)
+		auto open = [](std::stringstream* ss)
 			{
-				string str;
-				string allStr = *GetLuanchConfigParam("program") + " ";
+				std::string str;
+				std::string allStr = *GetLuanchConfigParam("program") + " ";
 				while (*ss >> str)
 				{
 					allStr += str + " ";
 				}
 
-				cout << allStr << endl;
+				std::cout << allStr << std::endl;
 
 #ifdef _WIN32
 				PROCESS_INFORMATION pinfo = {};
@@ -452,11 +442,11 @@ public:
 				if (0)
 #endif
 				{
-					cout << "success" << endl;
+					std::cout << "success" << std::endl;
 				}
 				else
 				{
-					cout << "error:" << GetLastError() << endl;
+					std::cout << "error:" << GetLastError() << std::endl;
 				}
 			};
 
@@ -484,7 +474,7 @@ public:
 	}	
 
 	/// @brief exec command line
-	void ExecCommand(string* cmd, stringstream* ss)
+	void ExecCommand(std::string* cmd, std::stringstream* ss)
 	{
 		if (mCmdHandle.contains(*cmd))
 		{
@@ -528,7 +518,7 @@ public:
 		return false;
 	}
 
-	HotReloadDll* Dll() { return pHotDll.get(); }
+	HotReloadDll* HotReLoadDll() { return pHotDll.get(); }
 
 	bool& ServerIsRun() { return pServer->IsRun(); }
 
@@ -538,23 +528,23 @@ public:
 
 private:
 	/// @brief runtime lib service pointer
-	unique_ptr<HotReloadDll> pHotDll;
+	std::unique_ptr<HotReloadDll> pHotDll;
 
 	/// @brief server service pointer
-	unique_ptr<DNServer> pServer;
+	std::unique_ptr<DNServer> pServer;
 
 	/// @brief l10n language service pointer
-	unique_ptr<DNl10n> pl10n;
+	std::unique_ptr<DNl10n> pl10n;
 
-	/// @brief command line function mapping
-	unordered_map<string, function<void(stringstream*)>> mCmdHandle;
+	/// @brief command line std::function mapping
+	std::unordered_map<std::string, std::function<void(std::stringstream*)>> mCmdHandle;
 
 	// mount ini param
-	unordered_map<string, string>* pLuanchParam;
+	std::unordered_map<std::string, std::string>& pLuanchParam;
 	
 };
 
-export unique_ptr<DimensionNightmare> PInstance;
+export std::unique_ptr<DimensionNightmare> PInstance;
 
 #pragma region Export main space 
 template <typename Method>

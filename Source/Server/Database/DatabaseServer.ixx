@@ -32,7 +32,7 @@ public:
 
 	virtual bool Init() override
 	{
-		string* value = GetLuanchConfigParam("byCtl");
+		std::string* value = GetLuanchConfigParam("byCtl");
 		if (!value || !stoi(*value))
 		{
 			DNPrint(ErrCode::ErrCode_SrvByCtl, EMLoggerLevel::Error, nullptr);
@@ -44,11 +44,11 @@ public:
 		uint16_t port = 0;
 
 		// connet ControlServer
-		string* ctlPort = GetLuanchConfigParam("ctlPort");
-		string* ctlIp = GetLuanchConfigParam("ctlIp");
+		std::string* ctlPort = GetLuanchConfigParam("ctlPort");
+		std::string* ctlIp = GetLuanchConfigParam("ctlIp");
 		if (ctlPort && ctlIp)
 		{
-			pCSock = make_unique<DNClientProxy>();
+			pCSock = std::make_unique<DNClientProxy>();
 
 			pCSock->Init();
 
@@ -62,7 +62,7 @@ public:
 		return true;
 	}
 
-	virtual void InitCmd(unordered_map<string, function<void(stringstream*)>>& cmdMap) override
+	virtual void InitCmd( std::unordered_map<std::string, std::function<void(std::stringstream*)>>& cmdMap) override
 	{
 		DNServer::InitCmd(cmdMap);
 	}
@@ -107,8 +107,8 @@ public:
 	}
 
 
-	virtual void LoopEvent(function<void(EventLoopPtr)> func) override {
-		unordered_map<long, bool> looped;
+	virtual void LoopEvent(std::function<void(EventLoopPtr)> func) override {
+		std::unordered_map<long, bool> looped;
 
 		if (pCSock)
 		{
@@ -134,12 +134,12 @@ public: // dll override
 	virtual DNClientProxy* GetCSock() { return pCSock.get(); }
 protected: // dll proxy
 
-	unique_ptr<DNClientProxy> pCSock;
+	std::unique_ptr<DNClientProxy> pCSock;
 
-	unordered_map<uint16_t, unique_ptr<pq_connection>> pSqlProxys;
+	std::unordered_map<uint16_t, std::unique_ptr<pq_connection>> pSqlProxys;
 
 	// record orgin info
-	string sCtlIp;
+	std::string sCtlIp;
 
 	uint16_t iCtlPort = 0;
 };

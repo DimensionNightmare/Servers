@@ -4,6 +4,7 @@ export module I10nText;
 
 import Config.Server;
 import ThirdParty.PbGen;
+import StrUtils;
 
 enum class EMLangType : uint8_t
 {
@@ -41,7 +42,7 @@ public:
 	/// absl\hash\internal\hash.h kSeed
 	const char* InitConfigData()
 	{
-		string* value = GetLuanchConfigParam("l10nErrPath");
+		std::string* value = GetLuanchConfigParam("l10nErrPath");
 		if (!value)
 		{
 			// DNPrint(0, EMLoggerLevel::Debug, "Launch Param l10nErrPath Error !");
@@ -50,7 +51,7 @@ public:
 
 		{
 			mL10nErr.Clear();
-			ifstream input(*value, ios::in | ios::binary);
+			std::ifstream input(*value, std::ios::in | std::ios::binary);
 			if (!input || !mL10nErr.ParseFromIstream(&input))
 			{
 				// DNPrint(0, EMLoggerLevel::Debug, "load I10n Err Config Error !");
@@ -75,7 +76,7 @@ public:
 
 		{
 			mL10nTip.Clear();
-			ifstream input(*value, ios::in | ios::binary);
+			std::ifstream input(*value, std::ios::in | std::ios::binary);
 			if (!input || !mL10nTip.ParseFromIstream(&input))
 			{
 				// DNPrint(0, EMLoggerLevel::Debug, "load I10n Tip Config Error !");
@@ -93,7 +94,7 @@ public:
 		value = GetLuanchConfigParam("l10nLang");
 		if (value)
 		{
-			eType = (EMLangType)stoi(*value);
+			eType = EnumName<EMLangType>(*value);
 		}
 
 		switch (eType)
@@ -124,18 +125,18 @@ public:
 	/// @brief main use this
 	l10nErrs mL10nErr;
 	/// @brief dll use this
-	unordered_map<uint32_t, const l10nErr*> mL10nErrDll;
+	std::unordered_map<uint32_t, const l10nErr*> mL10nErrDll;
 	/// @brief main use this
 	l10nTips mL10nTip;
 	/// @brief dll use this
-	unordered_map<uint32_t, const l10nTip*> mL10nTipDll;
+	std::unordered_map<uint32_t, const l10nTip*> mL10nTipDll;
 
 	/// @brief l10n imp. text get.
-	typedef const string& (l10nErr::* ErrTextFunc)() const;
+	typedef const std::string& (l10nErr::* ErrTextFunc)() const;
 	ErrTextFunc pL10nErrFunc = nullptr;
 
 	/// @brief l10n imp. text get.
-	typedef const string& (l10nTip::* TipTextFunc)() const;
+	typedef const std::string& (l10nTip::* TipTextFunc)() const;
 	TipTextFunc pL10nTipFunc = nullptr;
 
 	/// @brief l10n type
@@ -153,7 +154,7 @@ export const char* GetErrText(int type)
 	auto& dataMap = PInstance->mL10nErrDll;
 	if (!dataMap.contains(type))
 	{
-		throw invalid_argument(format("I10n Err Config not exist this type {}", PBExport::ErrCode_Name(type)));
+		throw std::invalid_argument(std::format("I10n Err Config not exist this type {}", PBExport::ErrCode_Name(type)));
 	}
 
 	return (dataMap[type]->*(PInstance->pL10nErrFunc))().c_str();
@@ -169,7 +170,7 @@ export const char* GetTipText(int type)
 	auto& dataMap = PInstance->mL10nTipDll;
 	if (!dataMap.contains(type))
 	{
-		throw invalid_argument(format("I10n Tip Config not exist this type {}", PBExport::TipCode_Name(type)));
+		throw std::invalid_argument(std::format("I10n Tip Config not exist this type {}", PBExport::TipCode_Name(type)));
 	}
 
 	return (dataMap[type]->*(PInstance->pL10nTipFunc))().c_str();

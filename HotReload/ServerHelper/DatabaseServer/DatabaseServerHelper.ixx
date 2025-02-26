@@ -35,17 +35,17 @@ public:
 		try
 		{
 			//"postgresql://root@localhost"
-			string* value = GetLuanchConfigParam("connection");
+			std::string* value = GetLuanchConfigParam("connection");
 			pq_connection check(*value);
 			nontransaction checkTxn(check);
 
-			list<string> dbNames;
-			if (string* names = GetLuanchConfigParam("dbnames"))
+			std::list<std::string> dbNames;
+			if (std::string* names = GetLuanchConfigParam("dbnames"))
 			{
 				size_t start = 0;
 				size_t end = names->find(",");
-				string name;
-				while (end != string::npos)
+				std::string name;
+				while (end != std::string::npos)
 				{
 					name = names->substr(start, end - start);
 					EnumName<EMSqlDbNameEnum>(name);
@@ -59,17 +59,17 @@ public:
 				EnumName<EMSqlDbNameEnum>(name);
 				dbNames.emplace_back(name);
 
-				for (string& dbName : dbNames)
+				for (std::string& dbName : dbNames)
 				{
-					if (!checkTxn.query_value<bool>(format("SELECT EXISTS (SELECT 1 FROM pg_database WHERE datname = '{}');", dbName)))
+					if (!checkTxn.query_value<bool>(std::format("SELECT EXISTS (SELECT 1 FROM pg_database WHERE datname = '{}');", dbName)))
 					{
-						checkTxn.exec(format("CREATE DATABASE \"{}\";", dbName));
+						checkTxn.exec(std::format("CREATE DATABASE \"{}\";", dbName));
 						DNPrint(0, EMLoggerLevel::Debug, "Create Database:%s", dbName.c_str());
 					}
 
 					uint16_t key = (uint16_t)EnumName<EMSqlDbNameEnum>(dbName);
-					string connectStr = format("{} dbname = {}", *value, dbName);
-					pSqlProxys[key] = make_unique<pq_connection>(connectStr);
+					std::string connectStr = std::format("{} dbname = {}", *value, dbName);
+					pSqlProxys[key] = std::make_unique<pq_connection>(connectStr);
 				}
 			}
 			else
@@ -78,7 +78,7 @@ public:
 				return false;
 			}
 
-			unordered_map<EMSqlDbNameEnum, vector<Message*> > registTable = {
+			std::unordered_map<EMSqlDbNameEnum, std::vector<Message*> > registTable = {
 				{
 					EMSqlDbNameEnum::Account,
 					{
@@ -94,7 +94,7 @@ public:
 			};
 
 			SingleTon kv;
-			string schemaMd5;
+			std::string schemaMd5;
 
 			for (auto& [dbNameEnum, dbEntitys] : registTable)
 			{
@@ -115,8 +115,8 @@ public:
 					{
 						DbSqlHelper<Message> helper(&txn, dbEntity);
 
-						const string& tableName = helper.GetName();
-						kv.set_key(format("{}_Schema", tableName));
+						const std::string& tableName = helper.GetName();
+						kv.set_key(std::format("{}_Schema", tableName));
 						schemaMd5 = helper.GetTableSchemaMd5();
 
 						if (!helper.IsExist())
@@ -157,7 +157,7 @@ public:
 			}
 
 		}
-		catch (const exception& e)
+		catch (const std::exception& e)
 		{
 			DNPrint(0, EMLoggerLevel::Debug, "%s", e.what());
 			return false;
@@ -166,7 +166,7 @@ public:
 		return true;
 	}
 
-	string& GetCtlIp() { return sCtlIp; }
+	std::string& GetCtlIp() { return sCtlIp; }
 
 	uint16_t& GetCtlPort() { return iCtlPort; }
 

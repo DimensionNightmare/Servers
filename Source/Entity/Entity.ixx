@@ -13,7 +13,7 @@ export enum class EMEntityType : uint8_t
 };
 
 // normal data normal get/set
-// if class function has logic. please imp to helper.
+// if class std::function has logic. please imp to helper.
 
 export class Entity
 {

@@ -30,18 +30,18 @@ public:
 	{
 		ServerEntityManagerHelper* entityMan = GetServerEntityManager();
 
-		list<ServerEntity*> gates = entityMan->GetEntitysByType(EMServerType::GateServer);
+		std::list<ServerEntity*> gates = entityMan->GetEntitysByType(EMServerType::GateServer);
 		if (gates.empty())
 		{
 			return;
 		}
 
-		list<ServerEntity*> dbs = entityMan->GetEntitysByType(EMServerType::DatabaseServer);
-		list<ServerEntity*> logics = entityMan->GetEntitysByType(EMServerType::LogicServer);
+		std::list<ServerEntity*> dbs = entityMan->GetEntitysByType(EMServerType::DatabaseServer);
+		std::list<ServerEntity*> logics = entityMan->GetEntitysByType(EMServerType::LogicServer);
 
 		// alloc gate
 		COM_RetChangeCtlSrv request;
-		string binData;
+		std::string binData;
 
 		auto registControl = [&](ServerEntity* beEntity, ServerEntity* entity)
 		{
@@ -68,8 +68,8 @@ public:
 				continue;
 			}
 
-			list<ServerEntity*>& gatesDb = gate->GetMapLinkNode(EMServerType::DatabaseServer);
-			list<ServerEntity*>& gatesLogic = gate->GetMapLinkNode(EMServerType::LogicServer);
+			std::list<ServerEntity*>& gatesDb = gate->GetMapLinkNode(EMServerType::DatabaseServer);
+			std::list<ServerEntity*>& gatesLogic = gate->GetMapLinkNode(EMServerType::LogicServer);
 			if (!dbs.empty() && gatesDb.size() < 1)
 			{
 				ServerEntity* ele = dbs.front();

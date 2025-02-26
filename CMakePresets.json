@@ -38,6 +38,14 @@
 			}
 		},
 		{
+			"name": "RelWithDebInfo",
+			"displayName": "RelWithDebInfo",
+			"inherits": "Debug",
+			"cacheVariables": {
+				"CMAKE_BUILD_TYPE": "RelWithDebInfo"
+			}
+		},
+		{
 			"name": "llvm-base",
 			"hidden": true,
 			"generator": "Ninja",

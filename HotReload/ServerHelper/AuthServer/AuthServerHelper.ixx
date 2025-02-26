@@ -32,14 +32,14 @@ public:
 		try
 		{
 			//"postgresql://root@localhost"
-			string* value = GetLuanchConfigParam("connection");
+			std::string* value = GetLuanchConfigParam("connection");
 
-			string* dbName = GetLuanchConfigParam("dbname");
+			std::string* dbName = GetLuanchConfigParam("dbname");
 
-			pSqlProxy = make_unique<pq_connection>(format("{} dbname = {}", *value, *dbName));
+			pSqlProxy = std::make_unique<pq_connection>(std::format("{} dbname = {}", *value, *dbName));
 
 		}
-		catch (const exception& e)
+		catch (const std::exception& e)
 		{
 			DNPrint(0, EMLoggerLevel::Debug, "%s", e.what());
 			return false;

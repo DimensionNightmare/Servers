@@ -14,7 +14,7 @@ import ServerEntityManagerHelper;
 namespace GlobalMessage
 {
 
-	export void Exe_RetRegistSrv(SocketChannelPtr channel, string binMsg)
+	export void Exe_RetRegistSrv(SocketChannelPtr channel, std::string binMsg)
 	{
 		g2G_RetRegistSrv request;
 		if(!request.ParseFromString(binMsg))
@@ -49,7 +49,7 @@ namespace GlobalMessage
 		}
 	}
 
-	export void Exe_RetRegistChild(SocketChannelPtr channel, string binMsg)
+	export void Exe_RetRegistChild(SocketChannelPtr channel, std::string binMsg)
 	{
 		g2G_RetRegistChild request;
 		if(!request.ParseFromString(binMsg))

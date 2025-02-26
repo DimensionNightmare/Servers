@@ -18,7 +18,7 @@ public:
 	{
 		if (!mEntityMap.contains(entityId))
 		{
-			unique_lock<shared_mutex> ulock(oMapMutex);
+			std::unique_lock<std::shared_mutex> ulock(oMapMutex);
 
 			mEntityMap.emplace(std::piecewise_construct,
 				std::forward_as_tuple(entityId),
@@ -39,7 +39,7 @@ public:
 		{
 			ServerEntity* entity = &mEntityMap[entityId];
 
-			unique_lock<shared_mutex> ulock(oMapMutex);
+			std::unique_lock<std::shared_mutex> ulock(oMapMutex);
 
 			mEntityMapList[entity->GetServerType()].remove(entity);
 
@@ -53,7 +53,7 @@ public:
 
 	void MountEntity(EMServerType type, ServerEntity* entity)
 	{
-		unique_lock<shared_mutex> ulock(oMapMutex);
+		std::unique_lock<std::shared_mutex> ulock(oMapMutex);
 		if (mEntityMap.contains(entity->ID()))
 		{
 			mEntityMapList[type].emplace_back(entity);
@@ -62,13 +62,13 @@ public:
 
 	void UnMountEntity(EMServerType type, ServerEntity* entity)
 	{
-		unique_lock<shared_mutex> ulock(oMapMutex);
+		std::unique_lock<std::shared_mutex> ulock(oMapMutex);
 		mEntityMapList[type].remove(entity);
 	}
 
 	ServerEntity* GetEntity(uint32_t entityId)
 	{
-		shared_lock<shared_mutex> lock(oMapMutex);
+		std::shared_lock<std::shared_mutex> lock(oMapMutex);
 		if (mEntityMap.contains(entityId))
 		{
 			return &mEntityMap[entityId];
@@ -77,9 +77,9 @@ public:
 		return nullptr;
 	}
 
-	const list<ServerEntity*>& GetEntitysByType(EMServerType type)
+	const std::list<ServerEntity*>& GetEntitysByType(EMServerType type)
 	{
-		shared_lock<shared_mutex> lock(oMapMutex);
+		std::shared_lock<std::shared_mutex> lock(oMapMutex);
 		return mEntityMapList[type];
 	}
 

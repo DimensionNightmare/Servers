@@ -13,7 +13,7 @@ import ServerEntityManagerHelper;
 namespace GateMessage
 {
 
-	export DNTaskVoid Exe_ReqLoadData(SocketChannelPtr channel, uint32_t msgId,  string binMsg)
+	export DNTaskVoid Exe_ReqLoadData(SocketChannelPtr channel, uint32_t msgId, std::string binMsg)
 	{
 		L2D_ReqLoadData request;
 		if(!request.ParseFromString(binMsg))
@@ -24,9 +24,9 @@ namespace GateMessage
 
 		GateServerHelper* dnServer = GetGateServer();
 		ServerEntityManagerHelper* entityMan = dnServer->GetServerEntityManager();
-		const list<ServerEntity*>& dbServers = entityMan->GetEntitysByType(EMServerType::DatabaseServer);
+		const std::list<ServerEntity*>& dbServers = entityMan->GetEntitysByType(EMServerType::DatabaseServer);
 
-		string binData;
+		std::string binData;
 		if (dbServers.empty())
 		{
 			response.set_state_code(1);
@@ -64,7 +64,7 @@ namespace GateMessage
 		co_return;
 	}
 
-	export DNTaskVoid Exe_ReqSaveData(SocketChannelPtr channel, uint32_t msgId,  string binMsg)
+	export DNTaskVoid Exe_ReqSaveData(SocketChannelPtr channel, uint32_t msgId, std::string binMsg)
 	{
 		L2D_ReqSaveData request;
 		if(!request.ParseFromString(binMsg))
@@ -75,9 +75,9 @@ namespace GateMessage
 
 		GateServerHelper* dnServer = GetGateServer();
 		ServerEntityManagerHelper* entityMan = dnServer->GetServerEntityManager();
-		const list<ServerEntity*>& dbServers = entityMan->GetEntitysByType(EMServerType::DatabaseServer);
+		const std::list<ServerEntity*>& dbServers = entityMan->GetEntitysByType(EMServerType::DatabaseServer);
 
-		string binData;
+		std::string binData;
 		if (dbServers.empty())
 		{
 			response.set_state_code(1);

@@ -48,15 +48,15 @@ int main()
 			auto map = Weapons.data_map();
 			for (auto one : map)
 			{
-				cout << "key" << one.first << endl;
-				cout << "value" << one.second.DebugString() << endl;
+				std::cout << "key" << one.first << std::endl;
+				std::cout << "value" << one.second.DebugString() << std::endl;
 			}
 			auto find = map.find(55);
-			cout << "success" << endl;
+			std::cout << "success" << std::endl;
 		}
 		else
 		{
-			cout << "error" << endl;
+			std::cout << "error" << std::endl;
 		}
 
 	}
@@ -65,12 +65,12 @@ int main()
 	mt19937 gen(rd());
 	bernoulli_distribution  u;
 	for (int i = 0; i < 5; i++)
-		cout << u(gen) << endl;
+		std::cout << u(gen) << std::endl;
 
-	string msgName = GCfg::CharacterPlayer::GetDescriptor()->full_name();
-	cout << msgName.size() << " " << msgName.length() << " " << strlen(msgName.c_str()) << endl;
-	auto hashres = hash<string>::_Do_hash.operator()("");
-	cout << size_t(hashres) << " " << hashres << endl;
+	std::string msgName = GCfg::CharacterPlayer::GetDescriptor()->full_name();
+	std::cout << msgName.size() << " " << msgName.length() << " " << strlen(msgName.c_str()) << std::endl;
+	auto hashres = std::hash<std::string>::_Do_hash.operator()("");
+	std::cout << size_t(hashres) << " " << hashres << std::endl;
 
 	A a;
 	B* b = (B*)&a;
@@ -79,7 +79,7 @@ int main()
 	// c.msg();
 	A* d = &c;
 	d->msg();
-	cout << sizeof(a) << endl;
+	std::cout << sizeof(a) << std::endl;
 
 	return 0;
 }
@@ -95,11 +95,11 @@ int main()
 		{
 			if (Weapons.ParseFromIstream(&input))
 			{
-				cout << "success" << endl;
+				std::cout << "success" << std::endl;
 			}
 			else
 			{
-				cout << "error" << endl;
+				std::cout << "error" << std::endl;
 			}
 		}
 		else
@@ -113,7 +113,7 @@ int main()
 	{
 		const GCfg::PlayerInfo* info = &item->second;
 		// info->clear_type();
-		const string& name = info->name();
+		const std::string& name = info->name();
 		// name.empty();
 		// info->set_type(GCfg::NTypeCharacterPlayer_Normal);
 	}
@@ -127,7 +127,7 @@ void printTime()
 	static zoned_time<duration<long long, ratio<1, 10'000'000>>> currentZone(current_zone());
     // currentZone = system_clock::now(); 
 	currentZone = system_clock::now();
-	cout << format("{:%Y-%m-%d %H:%M:%S}", currentZone) << endl;
+	std::cout << std::format("{:%Y-%m-%d %H:%M:%S}", currentZone) << std::endl;
 }
 
 #if 0
@@ -143,12 +143,12 @@ chrono::hours GetTimezoneOffset()
 	{
 		minutes = -timeZoneInfo.Bias;
 		wcout.imbue(locale("zh_CN.UTF-8"));
-		wcout << "Standard Name: " << timeZoneInfo.StandardName << endl;
-		wcout << "Daylight Name: " << timeZoneInfo.DaylightName << endl;
+		wcout << "Standard Name: " << timeZoneInfo.StandardName << std::endl;
+		wcout << "Daylight Name: " << timeZoneInfo.DaylightName << std::endl;
 	}
 	else
 	{
-		cerr << "Failed to get time zone information." << endl;
+		cerr << "Failed to get time zone information." << std::endl;
 	}
 #endif
 
@@ -157,7 +157,7 @@ chrono::hours GetTimezoneOffset()
 
 int main()
 {
-	string jsonstr = R"(
+	std::string jsonstr = R"(
 	{
 		"aa": 1,
 		"bb":{
@@ -186,7 +186,7 @@ int main()
 	// chrono::system_clock clock;
 
 	// chrono::system_clock time_;
-	// cout << format("{:%Y-%m-%d %H:%M:%S}", time_.now()) << endl;
+	// cout << std::format("{:%Y-%m-%d %H:%M:%S}", time_.now()) << std::endl;
 
 	//  time_;
 	// TIMERSTART(for_loop);
@@ -204,7 +204,7 @@ int main()
 	// DURATION_ms(for_loop);
 	// printTime();
 	// wstring msg((wchar_t*)format("[{}] {} -> \n{}", "哈哈", "asdasd", "zc").c_str());
-	// wcout <<  msg << endl;
+	// wcout <<  msg << std::endl;
 
 	printTime();
 
@@ -233,17 +233,17 @@ int main()
 	{
 		Redis* con = new Redis(connection_options, pool_options);
 		con->ping();
-		unordered_map<string, string> hashTerm;
+		std::unordered_map<std::string, std::string> hashTerm;
 		con->hgetall("*", inserter(hashTerm, hashTerm.end()));
 
 		for (const auto& [k, v] : hashTerm)
 		{
-			cout << "m[" << k << "] = (" << v << ") " << endl;
+			std::cout << "m[" << k << "] = (" << v << ") " << std::endl;
 		}
 	}
-	catch (const exception& e)
+	catch (const std::exception& e)
 	{
-		cout << e.what() << endl;
+		std::cout << e.what() << std::endl;
 	}
 
 	std::ios_base::sync_with_stdio(false);
@@ -257,7 +257,7 @@ int main()
 	{
 		if (std::cin.peek() != EOF)
 		{
-			string userInput;
+			std::string userInput;
 			std::cin >> userInput;
 			std::cout << "You entered: " << userInput << std::endl;
 
@@ -269,7 +269,7 @@ int main()
 }
 #endif
 
-void BytesToHexString(string& bytes)
+void BytesToHexString(std::string& bytes)
 {
 	std::ostringstream oss;
 	oss << std::hex << std::setfill('0');
@@ -280,9 +280,9 @@ void BytesToHexString(string& bytes)
 	bytes = oss.str();
 }
 
-void HexStringToBytes(string& hexString)
+void HexStringToBytes(std::string& hexString)
 {
-	string byteString = hexString;
+	std::string byteString = hexString;
 	hexString.clear();
 	for (size_t i = 0; i < byteString.length(); i += 2)
 	{
@@ -301,20 +301,20 @@ int main()
 	propertyEntity->set_mp_max(1);
 	propertyEntity->set_attack(1);
 	propertyEntity->set_defense(1);
-	string msgData;
+	std::string msgData;
 	msgData = "asdasda";
 	player.SerializeToString(&msgData);
 
 	BytesToHexString(msgData);
 
-	std::cout << "Hex string: " << msgData << std::endl;
+	std::cout << "Hexstd::string: " << msgData << std::endl;
 
 	HexStringToBytes(msgData);
 
 	std::cout << "Bytes: " << msgData << std::endl;
 	player.Clear();
 	player.ParseFromString(msgData);
-	string msgData1;
+	std::string msgData1;
 	util::MessageToJsonString(player, &msgData1);
 
 	std::cout << "Serlize: " << msgData1 << std::endl;
@@ -331,7 +331,7 @@ template <typename T>
 struct DNTask
 {
 	struct promise_type;
-	using HandleType = coroutine_handle<promise_type>;
+	using HandleType = std::coroutine_handle<promise_type>;
 	struct promise_type
 	{
 		promise_type()
@@ -349,9 +349,9 @@ struct DNTask
 			bReturned = true;
 		}
 
-		suspend_always initial_suspend() { return {}; }
+		std::suspend_always initial_suspend() { return {}; }
 
-		suspend_always final_suspend() noexcept
+		std::suspend_always final_suspend() noexcept
 		{
 			// DNTask don't Call by self, need Message handle Tick;
 			// ReleaseAwaitHandle();
@@ -369,7 +369,7 @@ struct DNTask
 
 		const T* oResult = nullptr;
 
-		coroutine_handle<> oAwaitHandle = nullptr;
+		std::coroutine_handle<> oAwaitHandle = nullptr;
 
 		bool bReturned = false;
 	};
@@ -380,7 +380,7 @@ struct DNTask
 		return tHandle.promise().bReturned;
 	}
 
-	void await_suspend(coroutine_handle<> caller)
+	void await_suspend(std::coroutine_handle<> caller)
 	{
 		tHandle.promise().oAwaitHandle = caller;
 
@@ -445,7 +445,7 @@ private:
 struct DNTaskVoid
 {
 	struct promise_type;
-	using HandleType = coroutine_handle<promise_type>;
+	using HandleType = std::coroutine_handle<promise_type>;
 	struct promise_type
 	{
 		promise_type() {}
@@ -457,9 +457,9 @@ struct DNTaskVoid
 			return DNTaskVoid{ HandleType::from_promise(*this) };
 		}
 
-		suspend_never initial_suspend() { return {}; }
+		std::suspend_never initial_suspend() { return {}; }
 
-		suspend_never final_suspend() noexcept
+		std::suspend_never final_suspend() noexcept
 		{
 			ReleaseAwaitHandle();
 			return {};
@@ -472,7 +472,7 @@ struct DNTaskVoid
 			if (oAwaitHandle) { oAwaitHandle.resume(); oAwaitHandle = nullptr; }
 		}
 
-		coroutine_handle<> oAwaitHandle = nullptr;
+		std::coroutine_handle<> oAwaitHandle = nullptr;
 
 		bool bReturned = false;
 	};
@@ -483,7 +483,7 @@ struct DNTaskVoid
 		return tHandle.promise().bReturned;
 	}
 
-	void await_suspend(coroutine_handle<> caller)
+	void await_suspend(std::coroutine_handle<> caller)
 	{
 		tHandle.promise().oAwaitHandle = caller;
 	}
@@ -588,7 +588,7 @@ DNTaskVoid funcA() {
 
 
 int main() {
-	loop = make_shared<TimerThread>();
+	loop = std::make_shared<TimerThread>();
     funcA();
 
     std::this_thread::sleep_for(std::chrono::seconds(20));  // 确保主线程在协程执行完之前不会退出
@@ -646,7 +646,7 @@ int main()
 	DURATION_ms(Time1);
 	// printTime();
  
- 	cout << chrono::duration_cast<chrono::nanoseconds>(Time1_end - Time1_start).count() / chrono::duration_cast<chrono::nanoseconds>(Time_end - Time_start).count() ;
+ 	std::cout << chrono::duration_cast<chrono::nanoseconds>(Time1_end - Time1_start).count() / chrono::duration_cast<chrono::nanoseconds>(Time_end - Time_start).count() ;
 
 	return 0;
 }

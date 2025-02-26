@@ -12,7 +12,7 @@ import ServerEntity;
 
 namespace ControlMessage
 {
-	export DNTaskVoid Msg_ReqAuthAccount(SocketChannelPtr channel, uint32_t msgId,  string binMsg)
+	export DNTaskVoid Msg_ReqAuthAccount(SocketChannelPtr channel, uint32_t msgId, std::string binMsg)
 	{
 		A2g_ReqAuthAccount request;
 		if(!request.ParseFromString(binMsg))
@@ -22,7 +22,7 @@ namespace ControlMessage
 		g2A_ResAuthAccount response;
 
 		ServerEntity* entity = nullptr;
-		const list<ServerEntity*>& serverList = GetControlServer()->GetServerEntityManager()->GetEntitysByType(EMServerType::GlobalServer);
+		const std::list<ServerEntity*>& serverList = GetControlServer()->GetServerEntityManager()->GetEntitysByType(EMServerType::GlobalServer);
 
 		// std::erase_if(serverList, [](ServerEntity* itor){return itor ? itor->TimerId() : true; });
 		// serverList.sort([](ServerEntity* lhs, ServerEntity* rhs){return lhs->ConnNum() < rhs->ConnNum(); });
@@ -46,7 +46,7 @@ namespace ControlMessage
 			}
 		}
 
-		string binData;
+		std::string binData;
 
 		if (!entity)
 		{

@@ -15,7 +15,7 @@ namespace GateMessage
 {
 
 	// client request
-	export DNTaskVoid Msg_ReqAuthToken(SocketChannelPtr channel, uint32_t msgId,  string binMsg)
+	export DNTaskVoid Msg_ReqAuthToken(SocketChannelPtr channel, uint32_t msgId, std::string binMsg)
 	{
 		C2S_ReqAuthToken request;
 		if(!request.ParseFromString(binMsg))
@@ -27,7 +27,7 @@ namespace GateMessage
 		ProxyEntityManagerHelper* entityMan = dnServer->GetProxyEntityManager();
 
 		S2C_ResAuthToken response;
-		string binData;
+		std::string binData;
 
 		ProxyEntity* entity = entityMan->GetEntity(request.account_id());
 		if (!entity)
@@ -67,7 +67,7 @@ namespace GateMessage
 			// pool
 			if (!serverEntity)
 			{
-				list<ServerEntity*> serverEntityList = serverEntityMan->GetEntitysByType(EMServerType::LogicServer);
+				std::list<ServerEntity*> serverEntityList = serverEntityMan->GetEntitysByType(EMServerType::LogicServer);
 				if (serverEntityList.empty())
 				{
 					DNPrint(0, EMLoggerLevel::Debug, "Msg_ReqAuthToken not LogicServer !!");

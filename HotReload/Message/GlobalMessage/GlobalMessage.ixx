@@ -16,7 +16,7 @@ export class GlobalMessageHandle
 
 public:
 
-	static void MsgHandle(const SocketChannelPtr& channel, uint32_t msgId, size_t msgHashId, const string& msgData)
+	static void MsgHandle(const SocketChannelPtr& channel, uint32_t msgId, size_t msgHashId, const std::string& msgData)
 	{
 		if (MHandleMap.contains(msgHashId))
 		{
@@ -25,7 +25,7 @@ public:
 			{
 				handle.second(channel, msgId, msgData);
 			}
-			catch (const exception& e)
+			catch (const std::exception& e)
 			{
 				DNPrint(0, EMLoggerLevel::Debug, e.what());
 			}
@@ -36,7 +36,7 @@ public:
 		}
 	}
 
-	static void MsgRetHandle(const SocketChannelPtr& channel, size_t msgHashId, const string& msgData)
+	static void MsgRetHandle(const SocketChannelPtr& channel, size_t msgHashId, const std::string& msgData)
 	{
 		if (MHandleRetMap.contains(msgHashId))
 		{
@@ -45,7 +45,7 @@ public:
 			{
 				handle.second(channel, msgData);
 			}
-			catch (const exception& e)
+			catch (const std::exception& e)
 			{
 				DNPrint(0, EMLoggerLevel::Debug, e.what());
 			}
@@ -57,7 +57,7 @@ public:
 		}
 	}
 
-	static void MsgRedirectHandle(const SocketChannelPtr& channel, uint32_t msgId, size_t msgHashId, const string& msgData)
+	static void MsgRedirectHandle(const SocketChannelPtr& channel, uint32_t msgId, size_t msgHashId, const std::string& msgData)
 	{
 		if (MHandleRedirectMap.contains(msgHashId))
 		{
@@ -66,7 +66,7 @@ public:
 			{
 				handle.second(channel, msgId, msgData);
 			}
-			catch (const exception& e)
+			catch (const std::exception& e)
 			{
 				DNPrint(0, EMLoggerLevel::Debug, e.what());
 			}
@@ -81,11 +81,11 @@ public:
 	{
 #ifdef _WIN32
 	#define MSG_MAPPING(map, msg, func) \
-		map.emplace(std::hash<string>::_Do_hash(msg::GetDescriptor()->full_name()), \
+		map.emplace(std::hash<std::string>::_Do_hash(msg::GetDescriptor()->full_name()), \
 		make_pair(msg::internal_default_instance(), &GlobalMessage::func))
 #elif __unix__
 	#define MSG_MAPPING(map, msg, func) \
-		map.emplace(std::hash<string>{}(msg::GetDescriptor()->full_name()), \
+		map.emplace(std::hash<std::string>{}(msg::GetDescriptor()->full_name()), \
 		make_pair(msg::internal_default_instance(), &GlobalMessage::func))
 #endif
 
@@ -99,9 +99,9 @@ public:
 	}
 public:
 
-	inline static unordered_map<size_t, pair<const Message*, function<void(SocketChannelPtr, uint32_t, string)>>> MHandleMap;
+	inline static std::unordered_map<size_t, std::pair<const Message*, std::function<void(SocketChannelPtr, uint32_t, std::string)>>> MHandleMap;
 
-	inline static unordered_map<size_t, pair<const Message*, function<void(SocketChannelPtr, string)>>> MHandleRetMap;
+	inline static std::unordered_map<size_t, std::pair<const Message*, std::function<void(SocketChannelPtr, std::string)>>> MHandleRetMap;
 
-	inline static unordered_map<size_t, pair<const Message*, function<void(SocketChannelPtr, uint32_t, string)>>> MHandleRedirectMap;
+	inline static std::unordered_map<size_t, std::pair<const Message*, std::function<void(SocketChannelPtr, uint32_t, std::string)>>> MHandleRedirectMap;
 };

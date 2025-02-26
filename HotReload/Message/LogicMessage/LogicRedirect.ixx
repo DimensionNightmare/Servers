@@ -12,7 +12,7 @@ import ClientEntityManagerHelper;
 
 namespace LogicMessage
 {
-	export void Exe_RetAccountReplace(SocketChannelPtr channel, uint32_t msgId,  string binMsg)
+	export void Exe_RetAccountReplace(SocketChannelPtr channel, uint32_t msgId, std::string binMsg)
 	{
 		S2C_RetAccountReplace request;
 		if(!request.ParseFromString(binMsg))
@@ -36,7 +36,7 @@ namespace LogicMessage
 		// cache
 		if (roomEntity)
 		{
-			string binData = binMsg;
+			std::string binData = binMsg;
 
 			MessagePackAndSend(0, EMMsgDeal::Ret, request.GetDescriptor()->full_name().c_str(), binData, roomEntity->GetSock());
 		}
@@ -50,7 +50,7 @@ namespace LogicMessage
 	}
 
 	// client request
-	export DNTaskVoid Msg_ReqClientLogin(SocketChannelPtr channel, uint32_t msgId,  string binMsg)
+	export DNTaskVoid Msg_ReqClientLogin(SocketChannelPtr channel, uint32_t msgId, std::string binMsg)
 	{
 		C2S_ReqAuthToken request;
 		if(!request.ParseFromString(binMsg))
@@ -111,7 +111,7 @@ namespace LogicMessage
 				mapRecord->mutable_cur_point()->set_map_id(mapId);
 			}
 
-			list<RoomEntity*> roomEntityList = roomEntityMan->GetEntitysByMapId(mapId);
+			std::list<RoomEntity*> roomEntityList = roomEntityMan->GetEntitysByMapId(mapId);
 			if (roomEntityList.empty())
 			{
 				response.set_state_code(5);
@@ -124,7 +124,7 @@ namespace LogicMessage
 			
 		}
 
-		string binData;
+		std::string binData;
 
 		// req token
 		if (roomEntity)

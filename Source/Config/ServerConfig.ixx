@@ -3,16 +3,16 @@ module;
 export module Config.Server;
 
 /// @brief pointer global (luanch param) and (ini config param)
-unordered_map<string, string>* PInstance = nullptr;
+std::unordered_map<std::string, std::string>* PInstance = nullptr;
 
 /// @brief global addr set. main/dll set
-export void SetLuanchConfig(unordered_map<string, string>* param)
+export void SetLuanchConfig(std::unordered_map<std::string, std::string>* param)
 {
 	PInstance = param;
 }
 
 /// @brief global param get
-export string* GetLuanchConfigParam(const char* key)
+export std::string* GetLuanchConfigParam(const char* key)
 {
 	if (!PInstance)
 	{

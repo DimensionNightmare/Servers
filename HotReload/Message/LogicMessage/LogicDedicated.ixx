@@ -12,7 +12,7 @@ import ClientEntityManagerHelper;
 
 namespace LogicMessage
 {
-	export DNTaskVoid Msg_ReqLoadEntityData(SocketChannelPtr channel, uint32_t msgId,  string binMsg)
+	export DNTaskVoid Msg_ReqLoadEntityData(SocketChannelPtr channel, uint32_t msgId, std::string binMsg)
 	{
 		d2L_ReqLoadEntityData request;
 		if(!request.ParseFromString(binMsg))
@@ -40,19 +40,19 @@ namespace LogicMessage
 		{
 			
 			co_await entityMan->LoadEntityData(entity, &request, &response);
-			string* entity_data = response.add_entity_data();
+			std::string* entity_data = response.add_entity_data();
 			entity->GetDbEntity()->SerializeToString(entity_data);
 
 		}
 
-		string binData;
+		std::string binData;
 		response.SerializeToString(&binData);
 		MessagePackAndSend(msgId, EMMsgDeal::Res, nullptr, binData, channel);
 
 		co_return;
 	}
 
-	export void Msg_ReqSaveEntityData(SocketChannelPtr channel, string binMsg)
+	export void Msg_ReqSaveEntityData(SocketChannelPtr channel, std::string binMsg)
 	{
 		d2L_ReqSaveEntityData request;
 		if(!request.ParseFromString(binMsg))

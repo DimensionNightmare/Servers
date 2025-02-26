@@ -31,7 +31,7 @@ public:
 
 	virtual bool Init() override
 	{
-		string* port = GetLuanchConfigParam("port");
+		std::string* port = GetLuanchConfigParam("port");
 		if (!port)
 		{
 			DNPrint(ErrCode::ErrCode_SrvNeedIPPort, EMLoggerLevel::Error, nullptr);
@@ -40,7 +40,7 @@ public:
 
 		DNServer::Init();
 
-		pSSock = make_unique<DNServerProxy>();
+		pSSock = std::make_unique<DNServerProxy>();
 
 		int listenfd = pSSock->createsocket(stoi(*port), "0.0.0.0");
 		if (listenfd < 0)
@@ -53,13 +53,13 @@ public:
 
 		DNPrint(TipCode::TipCode_SrvListenOn, EMLoggerLevel::Normal, nullptr, pSSock->port, listenfd);
 
-		pServerEntityMan = make_unique<ServerEntityManager>();
+		pServerEntityMan = std::make_unique<ServerEntityManager>();
 		pServerEntityMan->Init();
 
 		return true;
 	}
 
-	virtual void InitCmd(unordered_map<string, function<void(stringstream*)>>& cmdMap) override
+	virtual void InitCmd( std::unordered_map<std::string, std::function<void(std::stringstream*)>>& cmdMap) override
 	{
 	}
 
@@ -106,9 +106,9 @@ public:
 		// pServerEntityMan->Timer()->resume();
 	}
 
-	virtual void LoopEvent(function<void(EventLoopPtr)> func) override
+	virtual void LoopEvent(std::function<void(EventLoopPtr)> func) override
 	{
-		unordered_map<long, bool> looped;
+		std::unordered_map<long, bool> looped;
 		if (pSSock)
 		{
 			looped.clear();
@@ -135,7 +135,7 @@ public: // dll override
 	virtual ServerEntityManager* GetServerEntityManager() { return pServerEntityMan.get(); }
 protected: // dll proxy
 
-	unique_ptr<DNServerProxy> pSSock;
+	std::unique_ptr<DNServerProxy> pSSock;
 
-	unique_ptr<ServerEntityManager> pServerEntityMan;
+	std::unique_ptr<ServerEntityManager> pServerEntityMan;
 };

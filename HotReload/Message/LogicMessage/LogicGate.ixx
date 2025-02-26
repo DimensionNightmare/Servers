@@ -10,7 +10,7 @@ import ClientEntityManagerHelper;
 
 namespace LogicMessage
 {
-	export void Exe_RetProxyOffline(SocketChannelPtr channel, string binMsg)
+	export void Exe_RetProxyOffline(SocketChannelPtr channel, std::string binMsg)
 	{
 		g2L_RetProxyOffline request;
 		if(!request.ParseFromString(binMsg))

@@ -45,7 +45,7 @@ public: // dll override
 	void SetFlag(EMServerEntityFlag flag) { oFlags.set(uint16_t(flag)); }
 	void ClearFlag(EMServerEntityFlag flag) { oFlags.reset(uint16_t(flag)); }
 
-	string& ServerIp() { return sServIp; }
+	std::string& ServerIp() { return sServIp; }
 
 	uint16_t& ServerPort() { return iServPort; }
 
@@ -64,20 +64,20 @@ public: // dll override
 	}
 
 	/// @brief this server childs get
-	list<ServerEntity*>& GetMapLinkNode(EMServerType type) { return mMapLink[type]; }
+	std::list<ServerEntity*>& GetMapLinkNode(EMServerType type) { return mMapLink[type]; }
 
 protected: // dll proxy
 	EMServerType emServerType = EMServerType::None;
 
-	string sServIp;
+	std::string sServIp;
 	uint16_t iServPort = 0;
 	uint32_t IConnNum = 0;
 
 	// regist node need
 	ServerEntity* pLink = nullptr;
 	// be regist node need
-	unordered_map<EMServerType, list<ServerEntity*>> mMapLink;
+	std::unordered_map<EMServerType, std::list<ServerEntity*>> mMapLink;
 
-	bitset<static_cast<uint16_t>(EMServerEntityFlag::Max)> oFlags;
+	std::bitset<static_cast<uint16_t>(EMServerEntityFlag::Max)> oFlags;
 
 };

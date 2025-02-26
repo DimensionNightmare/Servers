@@ -385,7 +385,7 @@ public:
 
 	DNClientProxy()
 	{
-		pLoop = make_shared<EventLoopThread>();
+		pLoop = std::make_shared<EventLoopThread>();
 	}
 
 	~DNClientProxy()
@@ -459,7 +459,7 @@ public: // dll override
 				return;
 			}
 
-			unique_lock<shared_mutex> ulock(oTimerMutex);
+			std::unique_lock<std::shared_mutex> ulock(oTimerMutex);
 			msgId = mMapTimer[timerID];
 			mMapTimer.erase(timerID);
 		}
@@ -467,7 +467,7 @@ public: // dll override
 		{
 			if (mMsgList.contains(msgId))
 			{
-				unique_lock<shared_mutex> ulock(oMsgMutex);
+				std::unique_lock<std::shared_mutex> ulock(oMsgMutex);
 				DNTask<Message*>* task = mMsgList[msgId];
 				mMsgList.erase(msgId);
 				task->SetFlag(EMDNTaskFlag::Timeout);
@@ -478,8 +478,8 @@ public: // dll override
 
 	uint64_t CheckMessageTimeoutTimer(uint32_t breakTime, uint32_t msgId)
 	{
-		uint64_t timerId = Timer()->setTimeout(breakTime, std::bind(&DNClientProxy::MessageTimeoutTimer, this, placeholders::_1));
-		unique_lock<shared_mutex> ulock(oTimerMutex);
+		uint64_t timerId = Timer()->setTimeout(breakTime, std::bind(&DNClientProxy::MessageTimeoutTimer, this, std::placeholders::_1));
+		std::unique_lock<std::shared_mutex> ulock(oTimerMutex);
 		mMapTimer[timerId] = msgId;
 		return timerId;
 	}
@@ -488,7 +488,7 @@ public: // dll override
 
 	void AddTimerRecord(size_t timerId, uint32_t id)
 	{
-		unique_lock<shared_mutex> ulock(oTimerMutex);
+		std::unique_lock<std::shared_mutex> ulock(oTimerMutex);
 		mMapTimer.emplace(timerId, id);
 	}
 
@@ -496,10 +496,10 @@ public: // dll override
 	{
 		COM_RetHeartbeat request;
 		request.Clear();
-		int timespan = chrono::duration_cast<chrono::seconds>(chrono::system_clock::now().time_since_epoch()).count();
+		int timespan = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 		request.set_timespan(timespan);
 
-		string binData;
+		std::string binData;
 		request.SerializeToString(&binData);
 
 		MessagePackAndSend(0, EMMsgDeal::Ret, request.GetDescriptor()->full_name().c_str(), binData, GetChannel());
@@ -511,11 +511,11 @@ public: // dll override
 		// channel->setWriteTimeout(12000);
 		if (eRegistState == EMRegistState::None)
 		{
-			Timer()->setInterval(1000, std::bind(&DNClientProxy::TickRegistEvent, this, placeholders::_1));
+			Timer()->setInterval(1000, std::bind(&DNClientProxy::TickRegistEvent, this, std::placeholders::_1));
 		}
 	}
 
-	void RedirectClient(uint16_t port, string ip)
+	void RedirectClient(uint16_t port, std::string ip)
 	{
 		DNPrint(0, EMLoggerLevel::Debug, "reclient to %s:%u", ip.c_str(), port);
 
@@ -530,7 +530,7 @@ public: // dll override
 
 	bool AddMsg(uint32_t msgId, DNTask<Message*>* task, uint32_t breakTime)
 	{
-		unique_lock<shared_mutex> ulock(oMsgMutex);
+		std::unique_lock<std::shared_mutex> ulock(oMsgMutex);
 		mMsgList.emplace(msgId, task);
 		// timeout
 		if (breakTime > 0)
@@ -548,25 +548,25 @@ public: // dll override
 
 protected: // dll proxy
 
-	shared_ptr<EventLoopThread> pLoop;
+	std::shared_ptr<EventLoopThread> pLoop;
 
 	// only oddnumber
-	atomic<uint32_t> iMsgId;
+	std::atomic<uint32_t> iMsgId;
 
 	// unordered_
-	unordered_map<uint32_t, DNTask<Message*>* > mMsgList;
+	std::unordered_map<uint32_t, DNTask<Message*>* > mMsgList;
 
 	//
-	unordered_map<uint64_t, uint32_t > mMapTimer;
+	std::unordered_map<uint64_t, uint32_t > mMapTimer;
 
 	// status
 	EMRegistState eRegistState = EMRegistState::None;
 
 	uint8_t iRegistType = 0;
 
-	function<void()> pRegistEvent;
+	std::function<void()> pRegistEvent;
 
-	shared_mutex oMsgMutex;
+	std::shared_mutex oMsgMutex;
 
-	shared_mutex oTimerMutex;
+	std::shared_mutex oTimerMutex;
 };
