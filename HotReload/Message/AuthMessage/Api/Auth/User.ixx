@@ -6,7 +6,7 @@ export module ApiManager:ApiAuth;
 import AuthServerHelper;
 import DNTask;
 import FuncHelper;
-import Macro;
+import DllUtils;
 import DbUtils;
 import Logger;
 import ThirdParty.Libhv;
@@ -37,7 +37,7 @@ export void ApiAuth(HttpService* service)
 				return;
 			}
 
-			Account accInfo;
+			DbModelAccount accInfo;
 			accInfo.set_auth_name(authName);
 			accInfo.set_auth_string(authString);
 
@@ -45,7 +45,7 @@ export void ApiAuth(HttpService* service)
 			{
 				AuthServerHelper* authServer = GetAuthServer();
 				read_transaction query(*authServer->SqlProxy());
-				DbSqlHelper<Account> accounts(&query);
+				DbSqlHelper<DbModelAccount> accounts(&query);
 
 				accounts
 					// DBSelectOne(accInfo, account_id)
@@ -59,7 +59,7 @@ export void ApiAuth(HttpService* service)
 				if (accounts.Result().size() != 1)
 				{
 					errData["code"] = http_status::HTTP_STATUS_BAD_REQUEST;
-					errData["message"] = "not Account!";
+					errData["message"] = "not DbModelAccount!";
 					MSGSET(errData.dump());
 					writer->End();
 					return;
@@ -69,7 +69,7 @@ export void ApiAuth(HttpService* service)
 			}
 			catch (const std::exception& e)
 			{
-				DNPrint(0, EMLoggerLevel::Debug, "%s", e.what());
+				DNPrint(ELogLevel_Debug, "%s", e.what());
 				errData["code"] = http_status::HTTP_STATUS_BAD_REQUEST;
 				errData["message"] = "Server Error!!";
 				MSGSET(errData.dump());
@@ -77,7 +77,7 @@ export void ApiAuth(HttpService* service)
 				return;
 			}
 
-			auto taskGen = [](Account accInfo, HttpResponseWriterPtr writer) -> DNTaskVoid
+			auto taskGen = [](DbModelAccount accInfo, HttpResponseWriterPtr writer) -> DNTaskVoid
 				{
 					// HttpResponseWriterPtr writer = writer;	//sharedptr ref count ++
 					A2g_ReqAuthAccount request;
@@ -156,14 +156,14 @@ export void ApiAuth(HttpService* service)
 
 			AuthServerHelper* authServer = GetAuthServer();
 
-			Account accInfo;
+			DbModelAccount accInfo;
 			accInfo.set_auth_name(authName);
 			accInfo.set_auth_string(authString);
 
 			try
 			{
 				read_transaction query(*authServer->SqlProxy());
-				DbSqlHelper<Account> accounts(&query);
+				DbSqlHelper<DbModelAccount> accounts(&query);
 
 				accounts
 					.InitEntity(accInfo)
@@ -182,7 +182,7 @@ export void ApiAuth(HttpService* service)
 			}
 			catch (const std::exception& e)
 			{
-				DNPrint(0, EMLoggerLevel::Debug, "%s", e.what());
+				DNPrint(ELogLevel_Debug, "%s", e.what());
 				errData["code"] = http_status::HTTP_STATUS_BAD_REQUEST;
 				errData["message"] = "Regist Error!!";
 				MSGSET(errData.dump());
@@ -201,7 +201,7 @@ export void ApiAuth(HttpService* service)
 			{
 
 				pq_work query(*authServer->SqlProxy());
-				DbSqlHelper<Account> accounts(&query);
+				DbSqlHelper<DbModelAccount> accounts(&query);
 
 				accounts.InitEntity(accInfo).Insert().Commit();
 
@@ -222,7 +222,7 @@ export void ApiAuth(HttpService* service)
 			}
 			catch (const std::exception& e)
 			{
-				DNPrint(0, EMLoggerLevel::Debug, "%s", e.what());
+				DNPrint(ELogLevel_Debug, "%s", e.what());
 				errData["code"] = http_status::HTTP_STATUS_BAD_REQUEST;
 				errData["message"] = "Regist Error!!";
 				MSGSET(errData.dump());

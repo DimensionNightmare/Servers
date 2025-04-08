@@ -54,18 +54,18 @@ public: // dll override
 	{
 		uint32_t entityId = entity.ID();
 
-		Player dbEntity = *entity.GetDbEntity();
+		DbModelPlayer dbEntity = *entity.GetDbEntity();
 
 		// change maprecord
 		if(offline)
 		{
-			MapPointRecord* mapInfo = dbEntity.mutable_map_info();
-			MapPoint* cur_point = mapInfo->mutable_cur_point();
-			Vector3* property_location = dbEntity.mutable_property_entity()->mutable_location();
+			GameDefMapPointRecord* mapInfo = dbEntity.mutable_map_info();
+			GameDefMapPoint* cur_point = mapInfo->mutable_cur_point();
+			GameDefVector3* property_location = dbEntity.mutable_property_entity()->mutable_location();
 			*cur_point->mutable_point() = *property_location;
 			property_location->Clear();
 
-			MapPoint* last_point = mapInfo->mutable_last_point();
+			GameDefMapPoint* last_point = mapInfo->mutable_last_point();
 			*last_point = *cur_point;
 			cur_point->Clear();
 		}
@@ -100,7 +100,7 @@ public: // dll override
 			if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
 			{
 				response.set_state_code(10);
-				DNPrint(0, EMLoggerLevel::Debug, "requst timeout! ");
+				DNPrint(ELogLevel_Debug, "requst timeout! ");
 			}
 		}
 
@@ -108,7 +108,7 @@ public: // dll override
 		{
 			BytesToHexString(entity_data);
 			mDbFailure[entityId] = entity_data;
-			DNPrint(0, EMLoggerLevel::Debug, "Save Db Entity Error id = %u, state_code = %d! ", entityId, code);
+			DNPrint(ELogLevel_Debug, "Save Db Entity Error id = %u, state_code = %d! ", entityId, code);
 			co_return;
 		}
 
@@ -134,7 +134,7 @@ public: // dll override
 					uint32_t entityId = entity.ID();
 					if (!entity.GetDbEntity())
 					{
-						DNPrint(0, EMLoggerLevel::Debug, "SaveEntity not pb Data:%u", entityId);
+						DNPrint(ELogLevel_Debug, "SaveEntity not pb Data:%u", entityId);
 						return;
 					}
 
@@ -153,7 +153,7 @@ public: // dll override
 		{
 			if (!entity.GetDbEntity())
 			{
-				DNPrint(0, EMLoggerLevel::Debug, "SaveEntity not pb Data:%u", ID);
+				DNPrint(ELogLevel_Debug, "SaveEntity not pb Data:%u", ID);
 				continue;
 			}
 

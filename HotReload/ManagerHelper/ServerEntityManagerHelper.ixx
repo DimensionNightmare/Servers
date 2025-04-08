@@ -43,7 +43,7 @@ public:
 
 			mEntityMapList[entity->GetServerType()].remove(entity);
 
-			DNPrint(0, EMLoggerLevel::Debug, "offline destory entity");
+			DNPrint(ELogLevel_Debug, "offline destory entity");
 			mEntityMap.erase(entityId);
 			return true;
 		}

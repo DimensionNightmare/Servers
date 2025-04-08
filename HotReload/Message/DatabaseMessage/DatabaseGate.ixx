@@ -82,7 +82,7 @@ namespace DatabaseMessage
 					}
 					catch (const std::exception& e)
 					{
-						DNPrint(0, EMLoggerLevel::Debug, e.what());
+						DNPrint(ELogLevel_Debug, e.what());
 						response.set_state_code(5);
 					}
 
@@ -152,7 +152,7 @@ namespace DatabaseMessage
 					}
 					catch (const std::exception& e)
 					{
-						DNPrint(0, EMLoggerLevel::Debug, e.what());
+						DNPrint(ELogLevel_Debug, e.what());
 						response.set_state_code(5);
 					}
 

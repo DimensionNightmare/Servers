@@ -6,7 +6,7 @@ import DNTask;
 import FuncHelper;
 import LogicServerHelper;
 import Logger;
-import Macro;
+import DllUtils;
 import ThirdParty.Libhv;
 import ThirdParty.PbGen;
 import DNClientProxyHelper;
@@ -20,7 +20,7 @@ namespace LogicMessage
 		LogicServerHelper* dnServer = GetLogicServer();
 		DNClientProxyHelper* client = dnServer->GetCSock();
 		
-		DNPrint(0, EMLoggerLevel::Debug, "Client:%s, port:%hu", client->remote_host.c_str(), client->remote_port);
+		DNPrint(ELogLevel_Debug, "Client:%s, port:%hu", client->remote_host.c_str(), client->remote_port);
 		
 		client->EMRegistState() = EMRegistState::Registing;
 
@@ -53,21 +53,21 @@ namespace LogicMessage
 			co_await dataChannel;
 			if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
 			{
-				DNPrint(0, EMLoggerLevel::Debug, "requst timeout! ");
+				DNPrint(ELogLevel_Debug, "requst timeout! ");
 			}
 
 		}
 
 		if (response.success())
 		{
-			DNPrint(0, EMLoggerLevel::Debug, "regist Server success! Rec index:%d", response.server_id());
+			DNPrint(ELogLevel_Debug, "regist Server success! Rec index:%d", response.server_id());
 			client->EMRegistState() = EMRegistState::Registed;
 			client->RegistType() = response.server_type();
 			dnServer->ServerId() = response.server_id();
 		}
 		else
 		{
-			DNPrint(0, EMLoggerLevel::Debug, "regist Server error!  ");
+			DNPrint(ELogLevel_Debug, "regist Server error!  ");
 			// dnServer->IsRun() = false; //exit application
 			client->EMRegistState() = EMRegistState::None;
 		}
@@ -84,7 +84,7 @@ namespace LogicMessage
 			return;
 		}
 		
-		DNPrint(0, EMLoggerLevel::Debug, "ip Reqregist: %s, %d", channel->peeraddr().c_str(), request.server_type());
+		DNPrint(ELogLevel_Debug, "ip Reqregist: %s, %d", channel->peeraddr().c_str(), request.server_type());
 
 		COM_ResRegistSrv response;
 
@@ -155,7 +155,7 @@ namespace LogicMessage
 			entity->ServerIp() = ipPort.substr(0, pos);
 			entity->ServerPort() = request.server_port();
 
-			DNPrint(0, EMLoggerLevel::Debug, "ds regist:%s:%d", entity->ServerIp().c_str(), entity->ServerPort());
+			DNPrint(ELogLevel_Debug, "ds regist:%s:%d", entity->ServerIp().c_str(), entity->ServerPort());
 
 			entity->SetSock(channel);
 

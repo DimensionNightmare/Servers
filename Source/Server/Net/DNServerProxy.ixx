@@ -395,7 +395,7 @@ public:
 			int addrLen = sizeof(addr);
 			if (HVExport::getsockname(listenfd, reinterpret_cast<struct sockaddr*>(&addr), &addrLen) < 0)
 			{
-				DNPrint(ErrCode::ErrCode_GetSocketName, EMLoggerLevel::Error, nullptr);
+				DNPrintCode(EL10nCode_GetSocketName);
 				return;
 			}
 
@@ -482,7 +482,7 @@ public: // dll override
 				if (!channel->context())
 				{
 					channel->close();
-					DNPrint(0, EMLoggerLevel::Debug, "ChannelTimeoutTimer server destory entity\n");
+					DNPrint(ELogLevel_Debug, "ChannelTimeoutTimer server destory entity\n");
 				}
 			}
 		}

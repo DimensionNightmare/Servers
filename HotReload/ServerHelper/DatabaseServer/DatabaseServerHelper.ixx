@@ -14,7 +14,7 @@ import ThirdParty.Libpqxx;
 
 export enum class EMSqlDbNameEnum : uint16_t
 {
-	Account,
+	DbModelAccount,
 	Nightmare,
 };
 
@@ -35,12 +35,12 @@ public:
 		try
 		{
 			//"postgresql://root@localhost"
-			std::string* value = GetLuanchConfigParam("connection");
+			std::string* value = LaunchConfig::GetParam("connection");
 			pq_connection check(*value);
 			nontransaction checkTxn(check);
 
 			std::list<std::string> dbNames;
-			if (std::string* names = GetLuanchConfigParam("dbnames"))
+			if (std::string* names = LaunchConfig::GetParam("dbnames"))
 			{
 				size_t start = 0;
 				size_t end = names->find(",");
@@ -64,7 +64,7 @@ public:
 					if (!checkTxn.query_value<bool>(std::format("SELECT EXISTS (SELECT 1 FROM pg_database WHERE datname = '{}');", dbName)))
 					{
 						checkTxn.exec(std::format("CREATE DATABASE \"{}\";", dbName));
-						DNPrint(0, EMLoggerLevel::Debug, "Create Database:%s", dbName.c_str());
+						DNPrint(ELogLevel_Debug, "Create Database:%s", dbName.c_str());
 					}
 
 					uint16_t key = (uint16_t)EnumName<EMSqlDbNameEnum>(dbName);
@@ -80,20 +80,20 @@ public:
 
 			std::unordered_map<EMSqlDbNameEnum, std::vector<Message*> > registTable = {
 				{
-					EMSqlDbNameEnum::Account,
+					EMSqlDbNameEnum::DbModelAccount,
 					{
-						(Message*)Account::internal_default_instance(),
+						(Message*)DbModelAccount::internal_default_instance(),
 					}
 				},
 				{
 					EMSqlDbNameEnum::Nightmare,
 					{
-						(Message*)Player::internal_default_instance(),
+						(Message*)DbModelPlayer::internal_default_instance(),
 					}
 				},
 			};
 
-			SingleTon kv;
+			DbModelSingleTon kv;
 			std::string schemaMd5;
 
 			for (auto& [dbNameEnum, dbEntitys] : registTable)
@@ -102,12 +102,12 @@ public:
 				if (pSqlProxys.contains(index))
 				{
 					pq_work txn(*pSqlProxys[index]);
-					DbSqlHelper<SingleTon> singleTon(&txn);
+					DbSqlHelper<DbModelSingleTon> singleTon(&txn);
 					singleTon.InitEntity(kv);
 
 					if (!singleTon.IsExist())
 					{
-						DNPrint(0, EMLoggerLevel::Debug, "Create Table:SingleTon");
+						DNPrint(ELogLevel_Debug, "Create Table:DbModelSingleTon");
 						singleTon.CreateTable().Commit();
 					}
 
@@ -122,7 +122,7 @@ public:
 						if (!helper.IsExist())
 						{
 
-							DNPrint(0, EMLoggerLevel::Debug, "Create Table:%s", tableName.c_str());
+							DNPrint(ELogLevel_Debug, "Create Table:%s", tableName.c_str());
 							helper.CreateTable().Commit();
 
 							kv.set_value(schemaMd5);
@@ -143,7 +143,7 @@ public:
 
 						if (schemaMd5 != kv.value())
 						{
-							DNPrint(0, EMLoggerLevel::Debug, "not match md5:\n%s\n%s", schemaMd5.c_str(), kv.value().c_str());
+							DNPrint(ELogLevel_Debug, "not match md5:\n%s\n%s", schemaMd5.c_str(), kv.value().c_str());
 							helper.UpdateTable().Commit();
 
 
@@ -159,7 +159,7 @@ public:
 		}
 		catch (const std::exception& e)
 		{
-			DNPrint(0, EMLoggerLevel::Debug, "%s", e.what());
+			DNPrint(ELogLevel_Debug, "%s", e.what());
 			return false;
 		}
 

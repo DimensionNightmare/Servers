@@ -43,7 +43,7 @@ public:
 		{
 			std::unique_lock<std::shared_mutex> ulock(oMapMutex);
 
-			DNPrint(0, EMLoggerLevel::Debug, "destory client entity");
+			DNPrint(ELogLevel_Debug, "destory client entity");
 			mEntityMap.erase(entityId);
 
 			return true;
@@ -70,11 +70,11 @@ public:
 			co_return;
 		}
 
-		Player* dbEntity = entity->GetDbEntity();
+		DbModelPlayer* dbEntity = entity->GetDbEntity();
 
 		if (entity->HasFlag(EMClientEntityFlag::DBInited) || entity->HasFlag(EMClientEntityFlag::DBIniting))
 		{
-			DNPrint(0, EMLoggerLevel::Debug, "entity %u is DBIniting. return .", entity->ID());
+			DNPrint(ELogLevel_Debug, "entity %u is DBIniting. return .", entity->ID());
 			if (inResponse)
 			{
 				std::string* entity_data = inResponse->add_entity_data();
@@ -148,7 +148,7 @@ public:
 			if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
 			{
 				response.set_state_code(10);
-				DNPrint(0, EMLoggerLevel::Debug, "requst timeout! ");
+				DNPrint(ELogLevel_Debug, "requst timeout! ");
 			}
 		}
 
@@ -159,7 +159,7 @@ public:
 			binData = request.entity_data();
 			BytesToHexString(binData);
 			mDbFailure[entityId] = binData;
-			DNPrint(0, EMLoggerLevel::Debug, "Load Db Entity Error id = %u, state_code = %d! ", entityId, code);
+			DNPrint(ELogLevel_Debug, "Load Db Entity Error id = %u, state_code = %d! ", entityId, code);
 			co_return;
 		}
 
@@ -173,7 +173,7 @@ public:
 		}
 		else
 		{
-			DNPrint(0, EMLoggerLevel::Debug, "Load Db Entity mutiply data!");
+			DNPrint(ELogLevel_Debug, "Load Db Entity mutiply data!");
 			response.clear_entity_data();
 		}
 

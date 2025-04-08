@@ -26,12 +26,12 @@ public:
 			}
 			catch (const std::exception& e)
 			{
-				DNPrint(0, EMLoggerLevel::Debug, e.what());
+				DNPrint(ELogLevel_Debug, e.what());
 			}
 		}
 		else
 		{
-			DNPrint(ErrCode::ErrCode_MsgHandleFind, EMLoggerLevel::Error, nullptr);
+			DNPrintCode(EL10nCode_MsgHandleFind);
 		}
 	}
 
@@ -47,12 +47,12 @@ public:
 			}
 			catch (const std::exception& e)
 			{
-				DNPrint(0, EMLoggerLevel::Debug, e.what());
+				DNPrint(ELogLevel_Debug, e.what());
 			}
 		}
 		else
 		{
-			DNPrint(ErrCode::ErrCode_MsgHandleFind, EMLoggerLevel::Error, nullptr);
+			DNPrintCode(EL10nCode_MsgHandleFind);
 		}
 	}
 
@@ -67,12 +67,12 @@ public:
 			}
 			catch (const std::exception& e)
 			{
-				DNPrint(0, EMLoggerLevel::Debug, e.what());
+				DNPrint(ELogLevel_Debug, e.what());
 			}
 		}
 		else
 		{
-			DNPrint(ErrCode::ErrCode_MsgHandleFind, EMLoggerLevel::Error, nullptr);
+			DNPrintCode(EL10nCode_MsgHandleFind);
 		}
 	}
 

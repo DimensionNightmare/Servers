@@ -20,7 +20,7 @@ namespace AuthMessage
 		DNWebProxyHelper* server = dnServer->GetSSock();
 		uint32_t msgId = client->GetMsgId();
 
-		DNPrint(0, EMLoggerLevel::Debug, "Client:%s, port:%hu", client->remote_host.c_str(), client->remote_port);
+		DNPrint(ELogLevel_Debug, "Client:%s, port:%hu", client->remote_host.c_str(), client->remote_port);
 		
 		client->EMRegistState() = EMRegistState::Registing;
 
@@ -55,21 +55,21 @@ namespace AuthMessage
 			co_await dataChannel;
 			if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
 			{
-				DNPrint(0, EMLoggerLevel::Debug, "requst timeout! ");
+				DNPrint(ELogLevel_Debug, "requst timeout! ");
 			}
 
 		}
 
 		if (response.success())
 		{
-			DNPrint(0, EMLoggerLevel::Debug, "regist Server success! Rec index:%d", response.server_id());
+			DNPrint(ELogLevel_Debug, "regist Server success! Rec index:%d", response.server_id());
 			client->EMRegistState() = EMRegistState::Registed;
 			client->RegistType() = response.server_type();
 			dnServer->ServerId() = response.server_id();
 		}
 		else
 		{
-			DNPrint(0, EMLoggerLevel::Debug, "regist Server error!  ");
+			DNPrint(ELogLevel_Debug, "regist Server error!  ");
 			// dnServer->IsRun() = false; //exit application
 			client->EMRegistState() = EMRegistState::None;
 		}

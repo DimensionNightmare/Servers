@@ -41,7 +41,7 @@ namespace GlobalMessage
 				owner->GetMapLinkNode(entity->GetServerType()).remove(entity);
 				owner->ClearFlag(EMServerEntityFlag::Locked);
 
-				DNPrint(0, EMLoggerLevel::Debug, "Global get notify release gate lock!");
+				DNPrint(ELogLevel_Debug, "Global get notify release gate lock!");
 
 				entityMan->RemoveEntity(request.server_id());
 				dnServer->UpdateServerGroup();

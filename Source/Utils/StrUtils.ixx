@@ -270,3 +270,16 @@ export void HexStringToBytes(std::string& hexString)
 		hexString += static_cast<unsigned char>(std::stoi(byteString.substr(i, 2), nullptr, 16));
 	}
 }
+
+export std::string GetPureFunctionName(const char* funcName)
+{
+    std::string name = funcName;
+
+    size_t scopePos = name.rfind("::");
+    if (scopePos != std::string::npos) {
+        name = name.substr(scopePos + 2);
+    }
+
+    size_t parenStart = name.find('(');
+    return (parenStart != std::string::npos) ? name.substr(0, parenStart) : name;
+}

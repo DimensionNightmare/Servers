@@ -25,7 +25,7 @@ using namespace l10n;
 using namespace GCfg;
 using namespace GDb;
 
-export 
+export
 {
 	using ::Message;
 	using ::Descriptor;
@@ -38,19 +38,19 @@ export
 	using ::ext_default;
 	using ::ext_datetime;
 	using ::ext_autogen;
-	using ::Account;
-	using ::Player;
-	using ::SingleTon;
+	using ::DbModelAccount;
+	using ::DbModelPlayer;
+	using ::DbModelSingleTon;
 
-	using ::ErrCode;
-	using ::TipCode;
-	using ::l10nErr;
-	using ::l10nTip;
-	using ::l10nErrs;
-	using ::l10nTips;
-	using ::MapPointRecord;
-	using ::Vector3;
-	using ::MapPoint;
+	using ::ELogLevel;
+	using ::EL10nType;
+
+	using ::EL10nCode;
+	using ::l10nCode;
+	using ::l10nCodes;
+	using ::GameDefMapPointRecord;
+	using ::GameDefVector3;
+	using ::GameDefMapPoint;
 
 	using ::L2D_ReqLoadData;
 	using ::D2L_ResLoadData;
@@ -78,15 +78,19 @@ export
 	using ::d2L_ReqRegistSrv;
 };
 
+export namespace Common
+{
+	const std::string& EL10nCode_Name(EL10nCode value){ return ::EL10nCode_Name(value); }
+	bool EL10nCode_IsValid(int value){ return ::EL10nCode_IsValid(value); }
+	bool ELogLevel_Parse(absl::string_view name, ELogLevel* value){ return ::ELogLevel_Parse(name, value); }
+	bool EL10nType_Parse(absl::string_view name, EL10nType* value){ return ::EL10nType_Parse(name, value); }
+};
+
 export namespace PBExport
 {
+
 	void ShutdownProtobufLibrary() { ::ShutdownProtobufLibrary(); }
 	auto MessageToJsonString(const Message& message, std::string* output) { return json::MessageToJsonString(message, output); }
 	const Descriptor* FindMessageTypeByName(absl::string_view name) { return DescriptorPool::generated_pool()->FindMessageTypeByName(name); }
 	const Message* GetPrototype(const Descriptor* descriptor) { return MessageFactory::generated_factory()->GetPrototype(descriptor); }
-	bool ErrCode_IsValid(int type) { return ::ErrCode_IsValid(type); }
-	bool TipCode_IsValid(int type) { return ::TipCode_IsValid(type); }
-
-	const std::string& ErrCode_Name(int type) { return ::ErrCode_Name((ErrCode)type); }
-	const std::string& TipCode_Name(int type) { return ::TipCode_Name((TipCode)type); }
-};
+}

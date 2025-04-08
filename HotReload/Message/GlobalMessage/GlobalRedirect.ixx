@@ -43,12 +43,12 @@ namespace GlobalMessage
 		if (tempList.empty())
 		{
 			response.set_state_code(4);
-			DNPrint(0, EMLoggerLevel::Debug, "not exist GateServer");
+			DNPrint(ELogLevel_Debug, "not exist GateServer");
 		}
 		else
 		{
 			ServerEntity* entity = tempList.front();
-			DNPrint(0, EMLoggerLevel::Debug, "send to GateServer : %d", entity->ID());
+			DNPrint(ELogLevel_Debug, "send to GateServer : %d", entity->ID());
 
 			entity->ConnNum()++;
 
@@ -72,7 +72,7 @@ namespace GlobalMessage
 			co_await dataChannel;
 			if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
 			{
-				DNPrint(0, EMLoggerLevel::Debug, "requst timeout! ");
+				DNPrint(ELogLevel_Debug, "requst timeout! ");
 				response.set_state_code(5);
 
 				entity->ConnNum()--;
@@ -85,7 +85,7 @@ namespace GlobalMessage
 
 			
 
-			// DNPrint(0, EMLoggerLevel::Debug, "%s", response.DebugString().c_str());
+			// DNPrint(ELogLevel_Debug, "%s", response.DebugString().c_str());
 		}
 
 		response.SerializeToString(&binData);

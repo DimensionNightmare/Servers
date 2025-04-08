@@ -1,14 +1,21 @@
 {
     "files.associations": {
-        "*.sqlbook": "sql",
-        "*.ndjson": "jsonl",
-        "*.dbclient-js": "javascript",
-        "CMakeLists.txt": "makefile",
-        "*.ixx": "cpp",
-        "filesystem": "cpp",
-        "optional": "cpp",
-        "memory": "cpp"
-    },
+		"*.sqlbook": "sql",
+		"*.ndjson": "jsonl",
+		"*.dbclient-js": "javascript",
+		"CMakeLists.txt": "makefile",
+		"*.ixx": "cpp",
+		"filesystem": "cpp",
+		"optional": "cpp",
+		"memory": "cpp",
+		"*.inc": "cpp",
+		"list": "cpp",
+		"xhash": "cpp",
+		"functional": "cpp",
+		"thread": "cpp",
+		"type_traits": "cpp",
+		"xmemory": "cpp"
+	},
     "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
 	"C_Cpp.formatting": "vcFormat",
     "C_Cpp.vcFormat.indent.lambdaBracesWhenParameter": true,
@@ -40,5 +47,8 @@
     ],
     "C_Cpp.inlayHints.autoDeclarationTypes.enabled": true,
     "C_Cpp.intelliSenseCacheSize": 51200,
-    "cmake.allowCommentsInPresetsFile": true
+    "cmake.allowCommentsInPresetsFile": true,
+	"C_Cpp.default.compileCommands": [
+		"${workspaceRoot}/out/build/compile_commands.json",
+	]
 }

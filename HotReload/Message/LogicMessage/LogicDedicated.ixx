@@ -21,7 +21,7 @@ namespace LogicMessage
 		}
 		L2d_ResLoadEntityData response;
 
-		Player player;
+		DbModelPlayer player;
 		if (!player.ParseFromString(request.entity_data()))
 		{
 			co_return;
@@ -60,10 +60,10 @@ namespace LogicMessage
 			return;
 		}
 
-		Player player;
+		DbModelPlayer player;
 		if (!player.ParseFromString(request.entity_data()))
 		{
-			DNPrint(0, EMLoggerLevel::Debug, "Save data but parse error!");
+			DNPrint(ELogLevel_Debug, "Save data but parse error!");
 			return;
 		}
 
@@ -78,11 +78,11 @@ namespace LogicMessage
 
 		if (!entity)
 		{
-			DNPrint(0, EMLoggerLevel::Debug, "ReqSaveData not entity!");
+			DNPrint(ELogLevel_Debug, "ReqSaveData not entity!");
 			return;
 		}
 
-		if (Player* dbEntity = entity->GetDbEntity())
+		if (DbModelPlayer* dbEntity = entity->GetDbEntity())
 		{
 			dbEntity->MergeFrom(player);
 			if (request.runtime_save())
@@ -93,7 +93,7 @@ namespace LogicMessage
 		}
 		else
 		{
-			DNPrint(0, EMLoggerLevel::Debug, "SaveData but dbEntity is null!");
+			DNPrint(ELogLevel_Debug, "SaveData but dbEntity is null!");
 		}
 
 	}

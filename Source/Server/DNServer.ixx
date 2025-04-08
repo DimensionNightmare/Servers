@@ -2,7 +2,7 @@ module;
 #include "StdMacro.h"
 export module DNServer;
 
-import I10nText;
+import L10nText;
 import Config.Server;
 import ThirdParty.Libhv;
 
@@ -37,7 +37,7 @@ public:
 
 	virtual bool Init()
 	{
-		std::string* value = GetLuanchConfigParam("svrIndex");
+		std::string* value = LaunchConfig::GetParam("svrIndex");
 		if (value)
 		{
 			iServerId = stoi(*value);
@@ -71,9 +71,6 @@ public:
 
 public: // dll override
 
-	DNl10n* pDNl10nInstance = nullptr;
-
-	std::unordered_map<std::string, std::string>* pLuanchConfig = nullptr;
 protected:
 
 	EMServerType emServerType = EMServerType::None;

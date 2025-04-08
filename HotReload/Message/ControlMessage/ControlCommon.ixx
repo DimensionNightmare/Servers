@@ -29,7 +29,7 @@ namespace ControlMessage
 
 		EMServerType regType = (EMServerType)request.server_type();
 
-		DNPrint(0, EMLoggerLevel::Debug, "ip Reqregist: %s, %d", channel->peeraddr().c_str(), request.server_type());
+		DNPrint(ELogLevel_Debug, "ip Reqregist: %s, %d", channel->peeraddr().c_str(), request.server_type());
 
 		const std::string& ipPort = channel->localaddr();
 

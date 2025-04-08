@@ -2,7 +2,9 @@
 
 import std.compat;
 
-#define DNPrint(code, level, fmt, ...) LoggerPrint(level, code, __FUNCTION__, fmt, ##__VA_ARGS__)
+#define DNPrintCode(code, ...) LoggerPrint(code, __FUNCTION__, ##__VA_ARGS__)
+
+#define DNPrint(level, fmt, ...) LoggerPrint(level, fmt, __FUNCTION__, ##__VA_ARGS__)
 
 #define DBSelectOne(obj, name) .SelectOne(#name, [&obj]() { return obj.name(); })
 #define DBSelectCond(obj, name, cond, splicing) .SelectCond(#name, cond, splicing, [&obj]() { return obj.name(); })
@@ -15,7 +17,7 @@ import std.compat;
 #define DBSelectByKey(obj, name) .SelectByKey(#name, [&obj]() { return obj.name(); })
 
 #define TICK_MAINSPACE_SIGN_FUNCTION(Class, Method, Object, ...) \
-	TickMainSpaceDll(static_cast<Class*>(Object), #Method, &Class::Method, __VA_ARGS__)
+	TickMainSpaceDll(Object, #Method, &Class::Method, __VA_ARGS__)
 
 #define ASSERT(expr)\
 	if (!(expr)) {abort();}

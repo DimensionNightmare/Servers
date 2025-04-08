@@ -4,7 +4,7 @@ export module DNClientProxyHelper;
 
 import DNClientProxy;
 import DNTask;
-import Macro;
+import DllUtils;
 import ThirdParty.Libhv;
 import ThirdParty.PbGen;
 

@@ -7,7 +7,7 @@ import FuncHelper;
 import AuthMessage;
 import DNTask;
 import Logger;
-import Macro;
+import DllUtils;
 import ThirdParty.Libhv;
 import ThirdParty.PbGen;
 import DNServer;
@@ -40,13 +40,13 @@ export int HandleAuthServerInit(DNServer* server)
 
 				if (channel->isConnected())
 				{
-					DNPrint(TipCode::TipCode_CliConnOn, EMLoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
+					DNPrintCode(EL10nCode_CliConnOn, peeraddr.c_str(), channel->fd(), channel->id());
 					clientSock->SetRegistEvent(&AuthMessage::Evt_ReqRegistSrv);
 					TICK_MAINSPACE_SIGN_FUNCTION(DNClientProxy, InitConnectedChannel, clientSock, channel);
 				}
 				else
 				{
-					DNPrint(TipCode::TipCode_CliConnOff, EMLoggerLevel::Normal, nullptr, peeraddr.c_str(), channel->fd(), channel->id());
+					DNPrintCode(EL10nCode_CliConnOff, peeraddr.c_str(), channel->fd(), channel->id());
 					if (clientSock->EMRegistState() == EMRegistState::Registed)
 					{
 						clientSock->EMRegistState() = EMRegistState::None;
@@ -67,11 +67,11 @@ export int HandleAuthServerInit(DNServer* server)
 				MessagePacket packet;
 				memcpy(&packet, buf->data(), MessagePacket::PackLenth);
 
-				DNPrint(0, EMLoggerLevel::Debug, "c %s Recv type=%d With Mid:%u", channel->peeraddr().c_str(), packet.dealType, packet.msgId);
+				DNPrint(ELogLevel_Debug, "c %s Recv type=%d With Mid:%u", channel->peeraddr().c_str(), packet.dealType, packet.msgId);
 
 				if(packet.pkgLenth > 2 * 1024)
 				{
-					DNPrint(0, EMLoggerLevel::Debug, "Recv byte len limit=%u", packet.pkgLenth);
+					DNPrint(ELogLevel_Debug, "Recv byte len limit=%u", packet.pkgLenth);
 					return;
 				}
 
@@ -96,12 +96,12 @@ export int HandleAuthServerInit(DNServer* server)
 					}
 					else
 					{
-						DNPrint(ErrCode::ErrCode_MsgFind, EMLoggerLevel::Error, nullptr);
+						DNPrintCode(EL10nCode_MsgFind);
 					}
 				}
 				else
 				{
-					DNPrint(ErrCode::ErrCode_MsgDealType, EMLoggerLevel::Error, nullptr);
+					DNPrintCode(EL10nCode_MsgDealType);
 				}
 			};
 

@@ -11,5 +11,5 @@ export void MessagePackAndSend(uint32_t msgId, EMMsgDeal deal, const char* pbNam
 	MessagePack(msgId, deal, pbName, data);
 	channel->write(data);
 
-	DNPrint(0, EMLoggerLevel::Debug, "%s Send type=%d With Mid:%u, Mess:%s", channel->peeraddr().c_str(), (int)deal, msgId, pbName ? pbName : "");
+	DNPrint(ELogLevel_Debug, "%s Send type=%d With Mid:%u, Mess:%s", channel->peeraddr().c_str(), (int)deal, msgId, pbName ? pbName : "");
 }

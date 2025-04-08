@@ -31,10 +31,10 @@ public:
 
 	virtual bool Init() override
 	{
-		std::string* port = GetLuanchConfigParam("port");
+		std::string* port = LaunchConfig::GetParam("port");
 		if (!port)
 		{
-			DNPrint(ErrCode::ErrCode_SrvNeedIPPort, EMLoggerLevel::Error, nullptr);
+			DNPrintCode(EL10nCode_SrvNeedIPPort);
 			return false;
 		}
 
@@ -45,13 +45,13 @@ public:
 		int listenfd = pSSock->createsocket(stoi(*port), "0.0.0.0");
 		if (listenfd < 0)
 		{
-			DNPrint(ErrCode::ErrCode_CreateSocket, EMLoggerLevel::Error, nullptr);
+			DNPrintCode(EL10nCode_CreateSocket);
 			return false;
 		}
 
 		pSSock->Init();
 
-		DNPrint(TipCode::TipCode_SrvListenOn, EMLoggerLevel::Normal, nullptr, pSSock->port, listenfd);
+		DNPrintCode(EL10nCode_SrvListenOn, pSSock->port, listenfd);
 
 		pServerEntityMan = std::make_unique<ServerEntityManager>();
 		pServerEntityMan->Init();
@@ -67,7 +67,7 @@ public:
 	{
 		if (!pSSock)
 		{
-			DNPrint(ErrCode::ErrCode_SrvNotInit, EMLoggerLevel::Error, nullptr);
+			DNPrintCode(EL10nCode_SrvNotInit);
 			return false;
 		}
 

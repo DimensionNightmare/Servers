@@ -29,7 +29,7 @@ public:
 
 	bool InitDatabase()
 	{
-		if (std::string* value = GetLuanchConfigParam("connection"))
+		if (std::string* value = LaunchConfig::GetParam("connection"))
 		{
 			try
 			{
@@ -38,7 +38,7 @@ public:
 			}
 			catch (const std::exception& e)
 			{
-				DNPrint(0, EMLoggerLevel::Debug, "%s", e.what());
+				DNPrint(ELogLevel_Debug, "%s", e.what());
 				return false;
 			}
 		}

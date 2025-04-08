@@ -32,10 +32,10 @@ public:
 
 	virtual bool Init() override
 	{
-		std::string* value = GetLuanchConfigParam("byCtl");
+		std::string* value = LaunchConfig::GetParam("byCtl");
 		if (!value || !stoi(*value))
 		{
-			DNPrint(ErrCode::ErrCode_SrvByCtl, EMLoggerLevel::Error, nullptr);
+			DNPrintCode(EL10nCode_SrvByCtl);
 			return false;
 		}
 
@@ -44,8 +44,8 @@ public:
 		uint16_t port = 0;
 
 		// connet ControlServer
-		std::string* ctlPort = GetLuanchConfigParam("ctlPort");
-		std::string* ctlIp = GetLuanchConfigParam("ctlIp");
+		std::string* ctlPort = LaunchConfig::GetParam("ctlPort");
+		std::string* ctlIp = LaunchConfig::GetParam("ctlIp");
 		if (ctlPort && ctlIp)
 		{
 			pCSock = std::make_unique<DNClientProxy>();

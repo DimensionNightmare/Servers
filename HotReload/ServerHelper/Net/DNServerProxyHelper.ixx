@@ -4,7 +4,7 @@ export module DNServerProxyHelper;
 
 import DNServerProxy;
 import DNTask;
-import Macro;
+import DllUtils;
 import ThirdParty.PbGen;
 
 export class DNServerProxyHelper : public DNServerProxy

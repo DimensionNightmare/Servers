@@ -107,7 +107,7 @@ export int main(int argc, char** argv)
 
 		if (pos == std::string::npos)
 		{
-			DNPrint(0, EMLoggerLevel::Debug, "program lunch param error! Pos:%d ", i);
+			DNPrint(ELogLevel_Debug, "program lunch param error! Pos:%d ", i);
 			return 0;
 		}
 
@@ -116,43 +116,43 @@ export int main(int argc, char** argv)
 
 	if (!lunchParam.contains("svrType"))
 	{
-		DNPrint(0, EMLoggerLevel::Error, "lunch param svrType is null! ");
+		DNPrint(ELogLevel_Error, "lunch param svrType is null! ");
 		return 0;
 	}
 
 	EMServerType serverType = (EMServerType)stoi(lunchParam["svrType"]);
 	if (serverType <= EMServerType::None || serverType >= EMServerType::Max)
 	{
-		DNPrint(0, EMLoggerLevel::Error, "serverType Not Invalid! ");
+		DNPrint(ELogLevel_Error, "serverType Not Invalid! ");
 		return 0;
 	}
 
 	std::string_view serverName = EnumName(serverType);
 	lunchParam.emplace("svrName", serverName);
 
-	PInstance = std::make_unique<DimensionNightmare>(lunchParam);
-	if (!PInstance->InitConfig())
+	std::shared_ptr<DimensionNightmare> app = std::make_shared<DimensionNightmare>();
+	if (!app->Init(lunchParam))
 	{
-		PInstance = nullptr;
+		app = nullptr;
 		return 0;
 	}
 
-	EMLoggerLevel logLevel = EMLoggerLevel::Debug;
+	ELogLevel logLevel = ELogLevel_Debug;
 
-	if(lunchParam.contains("LoggerLevel"))
+	if(lunchParam.contains("LoggerLevel") && Common::ELogLevel_Parse(lunchParam["LoggerLevel"], &logLevel))
 	{
-		logLevel = EnumName<EMLoggerLevel>(lunchParam["LoggerLevel"]);
+		
 	}
 
 	SetLoggerLevel(logLevel, execPath.parent_path() / serverName);
 
-	HVExport::hlog_disable();
+	// HVExport::hlog_disable();
 
-	DNPrint(0, EMLoggerLevel::Normal, "hello ~");
+	DNPrint(ELogLevel_Normal, "hello ~");
 
-	if (!PInstance->Init())
+	if (!app->InitServer())
 	{
-		PInstance = nullptr;
+		app = nullptr;
 		return 0;
 	}
 
@@ -160,7 +160,7 @@ export int main(int argc, char** argv)
 
 	auto CtrlHandler = [](DWORD signal) -> BOOL
 		{
-			DNPrint(TipCode::TipCode_CmdOpBreak, EMLoggerLevel::Normal, nullptr);
+			DNPrintCode(EL10nCode_CmdOpBreak);
 			switch (signal)
 			{
 				case CTRL_C_EVENT:
@@ -168,8 +168,8 @@ export int main(int argc, char** argv)
 				case CTRL_SHUTDOWN_EVENT:
 				case CTRL_BREAK_EVENT:
 				{
-					PInstance->ServerIsRun() = false;
-					while (PInstance)
+					DimensionNightmare::PInstance->ServerIsRun() = false;
+					while (DimensionNightmare::PInstance)
 					{
 						Sleep(20);
 					}
@@ -182,45 +182,44 @@ export int main(int argc, char** argv)
 
 	if (!SetConsoleCtrlHandler(CtrlHandler, true))
 	{
-		DNPrint(ErrCode::ErrCode_CmdCtl, EMLoggerLevel::Error, nullptr);
-		PInstance = nullptr;
+		DNPrintCode(EL10nCode_CmdCtl);
+		app = nullptr;
 		return 0;
 	}
 
 	auto UnhandledHandler = [](EXCEPTION_POINTERS* ExceptionInfo) -> long
 		{
-			DNPrint(TipCode::TipCode_UnhandledException, EMLoggerLevel::Normal, nullptr);
+			DNPrintCode(EL10nCode_UnhandledException);
 
-			WriteDumpFile(PInstance->HotReLoadDll()->sDllDirRand / "MiniDump.dmp");
+			WriteDumpFile(HotReloadDll::PInstance->sDllDirRand / "MiniDump.dmp");
 
-			PInstance->HotReLoadDll()->isNormalFree = false;
-			PInstance->ServerIsRun() = false;
+			HotReloadDll::PInstance->isNormalFree = false;
+			DimensionNightmare::PInstance->ServerIsRun() = false;
 
 			return EXCEPTION_CONTINUE_SEARCH;
 		};
 
 	if (!SetUnhandledExceptionFilter(UnhandledHandler))
 	{
-		DNPrint(ErrCode::ErrCode_UnhandledException, EMLoggerLevel::Error, nullptr);
-		PInstance = nullptr;
+		DNPrintCode(EL10nCode_UnhandledException);
+		app = nullptr;
 		return 0;
 	}
 #elif __unix__
 
 	auto CtrlHandler = [](int signal)
 		{
-			DNPrint(TipCode::TipCode_CmdOpBreak, EMLoggerLevel::Normal, nullptr);
+			DNPrintCode(EL10nCode_CmdOpBreak);
 
-			PInstance->ServerIsRun() = false;
+			app->ServerIsRun() = false;
 		};
 	signal(SIGINT, CtrlHandler);
 
 	auto UnhandledHandler = [](int signum, siginfo_t* info, void* context)
 		{
-			DNPrint(TipCode::TipCode_UnhandledException, EMLoggerLevel::Normal, nullptr);
+			DNPrintCode(EL10nCode_UnhandledException);
 
-			delete PInstance;
-			PInstance = nullptr;
+			app = nullptr;
 			exit(signum);
 		};
 
@@ -237,9 +236,9 @@ export int main(int argc, char** argv)
 
 #endif
 
-	DNPrint(0, EMLoggerLevel::Normal, "Dimension Instance addr:0x%p", PInstance.get());
+	DNPrint(ELogLevel_Normal, "Dimension Instance addr:0x%p", app.get());
 
-	auto InputEvent = std::async(std::launch::async, []()
+	auto InputEvent = std::async(std::launch::async, [&]()
 		{
 			std::stringstream ss;
 			std::string str;
@@ -248,7 +247,7 @@ export int main(int argc, char** argv)
 
 			auto quit = [&]()
 				{
-					PInstance->ServerIsRun() = false;
+					app->ServerIsRun() = false;
 					bRun = false;
 				};
 
@@ -266,7 +265,7 @@ export int main(int argc, char** argv)
 					if(!fileName.empty())
 					{
 						fileName.append(".dmp");
-						WriteDumpFile(PInstance->HotReLoadDll()->sDllDirRand / fileName);
+						WriteDumpFile(HotReloadDll::PInstance->sDllDirRand / fileName);
 					}
 				};
 
@@ -283,7 +282,7 @@ export int main(int argc, char** argv)
 			{
 				std::getline(std::cin, str);
 
-				if (!PInstance || !PInstance->ServerIsRun())
+				if (!app || !app->ServerIsRun())
 				{
 					break;
 				}
@@ -303,7 +302,7 @@ export int main(int argc, char** argv)
 					}
 					else
 					{
-						PInstance->ExecCommand(&str, &ss);
+						app->ExecCommand(&str, &ss);
 					}
 
 					std::cout << "<cmd down>\n";
@@ -312,15 +311,15 @@ export int main(int argc, char** argv)
 			}
 		});
 
-	while (PInstance && PInstance->ServerIsRun())
+	while (app && app->ServerIsRun())
 	{
-		PInstance->TickMainFrame();
+		app->TickMainFrame();
 		Sleep(1);
 	}
 
-	PInstance = nullptr;
+	app = nullptr;
 
-	DNPrint(0, EMLoggerLevel::Normal, "bye ~");
+	DNPrint(ELogLevel_Normal, "bye ~");
 
 	return 0;
 }

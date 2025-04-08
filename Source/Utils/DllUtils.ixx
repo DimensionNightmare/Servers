@@ -3,7 +3,7 @@ module;
 	#include <libloaderapi.h>
 #endif
 #include "StdMacro.h"
-export module Macro;
+export module DllUtils;
 
 template<typename T>
 struct MemberFunctionReturnType;

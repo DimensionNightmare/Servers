@@ -7,7 +7,7 @@ import DNClientProxyHelper;
 import DNServerProxyHelper;
 import ServerEntityManagerHelper;
 import FuncHelper;
-import Macro;
+import DllUtils;
 import Logger;
 import ThirdParty.Libhv;
 import ThirdParty.PbGen;
@@ -92,7 +92,7 @@ public:
 			{
 				// UnMountEntity(gate->GetServerType(), it);
 				gate->SetFlag(EMServerEntityFlag::Locked);
-				DNPrint(0, EMLoggerLevel::Debug, "Gate:%u locked!", gate->ID());
+				DNPrint(ELogLevel_Debug, "Gate:%u locked!", gate->ID());
 			}
 
 		}

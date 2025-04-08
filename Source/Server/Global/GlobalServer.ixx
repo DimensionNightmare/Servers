@@ -35,7 +35,7 @@ public:
 
 		uint16_t port = 0;
 
-		std::string* value = GetLuanchConfigParam("port");
+		std::string* value = LaunchConfig::GetParam("port");
 		if (value)
 		{
 			port = stoi(*value);
@@ -46,17 +46,17 @@ public:
 		int listenfd = pSSock->createsocket(port, "0.0.0.0");
 		if (listenfd < 0)
 		{
-			DNPrint(ErrCode::ErrCode_CreateSocket, EMLoggerLevel::Error, nullptr);
+			DNPrintCode(EL10nCode_CreateSocket);
 			return false;
 		}
 
 		pSSock->Init();
 
-		DNPrint(TipCode::TipCode_SrvListenOn, EMLoggerLevel::Normal, nullptr, pSSock->port, listenfd);
+		DNPrintCode(EL10nCode_SrvListenOn, pSSock->port, listenfd);
 
 		//connet ControlServer
-		std::string* ctlPort = GetLuanchConfigParam("ctlPort");
-		std::string* ctlIp = GetLuanchConfigParam("ctlIp");
+		std::string* ctlPort = LaunchConfig::GetParam("ctlPort");
+		std::string* ctlIp = LaunchConfig::GetParam("ctlIp");
 		if (ctlPort && ctlIp)
 		{
 			pCSock = std::make_unique<DNClientProxy>();
@@ -86,7 +86,7 @@ public:
 
 		if (!pSSock)
 		{
-			DNPrint(ErrCode::ErrCode_SrvNotInit, EMLoggerLevel::Error, nullptr);
+			DNPrintCode(EL10nCode_SrvNotInit);
 			return false;
 		}
 

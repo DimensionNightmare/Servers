@@ -2,28 +2,66 @@ module;
 #include "StdMacro.h"
 export module Config.Server;
 
-/// @brief pointer global (luanch param) and (ini config param)
-std::unordered_map<std::string, std::string>* PInstance = nullptr;
+import DllUtils;
 
-/// @brief global addr set. main/dll set
-export void SetLuanchConfig(std::unordered_map<std::string, std::string>* param)
+export class LaunchConfig
 {
-	PInstance = param;
-}
+public:
 
-/// @brief global param get
-export std::string* GetLuanchConfigParam(const char* key)
-{
-	if (!PInstance)
+	LaunchConfig()
 	{
+	}
+
+	~LaunchConfig()
+	{
+		pLuanchParam = nullptr;
+	}
+
+	void SetLuanchConfig(std::unordered_map<std::string, std::string>& param)
+	{
+		pLuanchParam = &param;
+	}
+
+	/// @brief global param get
+	static std::string* GetParam(const char* key)
+	{
+		static std::shared_ptr<LaunchConfig> instance = PInstance ? PInstance : GetDllInstance();
+		if (!instance)
+		{
+			return nullptr;
+		}
+
+		auto res = instance->pLuanchParam->find(key);
+		if (res != instance->pLuanchParam->end())
+		{
+			return &res->second;
+		}
+
 		return nullptr;
 	}
 
-	auto res = PInstance->find(key);
-	if (res != PInstance->end())
+	LaunchConfig* GetInstance()
 	{
-		return &res->second;
+		return PInstance.get();
 	}
 
-	return nullptr;
-}
+protected:
+
+	static std::shared_ptr<LaunchConfig> GetDllInstance()
+	{
+		if(LaunchConfig* handle = TICK_MAINSPACE_SIGN_FUNCTION(LaunchConfig, GetInstance, PInstance.get()))
+		{
+			return std::shared_ptr<LaunchConfig>(handle, [](LaunchConfig* obj){});
+		}
+		return nullptr;
+	}
+
+public:
+
+	inline static std::shared_ptr<LaunchConfig> PInstance = nullptr;
+
+protected:
+	/// @brief launch param
+	std::unordered_map<std::string, std::string>* pLuanchParam = nullptr;
+
+};

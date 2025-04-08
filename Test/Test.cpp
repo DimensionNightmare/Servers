@@ -294,7 +294,7 @@ void HexStringToBytes(std::string& hexString)
 
 int main()
 {
-	Player player;
+	DbModelPlayer player;
 	player.set_account_id(11);
 	PropertyEntity* propertyEntity = player.mutable_property_entity();
 	propertyEntity->set_hp_max(1);
@@ -599,7 +599,7 @@ int main() {
 #endif
 
 
-#if 1
+#if 0
 class A
 {
 public:
@@ -650,4 +650,20 @@ int main()
 
 	return 0;
 }
+#endif
+
+#if 1
+
+std::pair<int, int> GetTimeZoneOffset(const std::pair<int, int>& timeZoneOffset)
+{
+	return timeZoneOffset;
+}
+
+int main()
+{
+	// std::pair<int, int> timeZoneOffset = { 8, 0 };
+	auto offset = GetTimeZoneOffset({ 8, 0 });
+	std::cout << "Time Zone Offset: " << offset.first << ":" << offset.second << std::endl;
+}
+
 #endif

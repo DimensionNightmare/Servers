@@ -64,17 +64,14 @@ extern "C"
 	
 	HOTRELOAD int InitHotReload(DNServer* server)
 	{
-		HVExport::hlog_disable();
-
-		SetLuanchConfig(server->pLuanchConfig);
-		SetDNl10nInstance(server->pDNl10nInstance);
+		// HVExport::hlog_disable();
 
 		EMServerType servertype = server->GetServerType();
 		std::string_view serverName = EnumName(servertype);
-		if(std::string* program = GetLuanchConfigParam("program"))
+		if(std::string* program = LaunchConfig::GetParam("program"))
 		{
 			std::filesystem::path envPath = std::filesystem::path(*program).parent_path().append(serverName);
-			SetLoggerLevel(EMLoggerLevel::Debug, envPath);
+			SetLoggerLevel(ELogLevel_Normal, envPath);
 		}
 
 		bool isDeal = false;

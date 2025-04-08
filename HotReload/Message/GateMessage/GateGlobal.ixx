@@ -6,7 +6,7 @@ import FuncHelper;
 import GateServerHelper;
 import StrUtils;
 import Logger;
-import Macro;
+import DllUtils;
 import ThirdParty.Libhv;
 import ThirdParty.PbGen;
 import ProxyEntityManagerHelper;
@@ -50,7 +50,7 @@ namespace GateMessage
 				//kick game
 				if (uint32_t serverId = entity->RecordServerId())
 				{
-					DNPrint(0, EMLoggerLevel::Debug, "Send Logic tick User->%d, server:%d", entity->ID(), entity->RecordServerId());
+					DNPrint(ELogLevel_Debug, "Send Logic tick User->%d, server:%d", entity->ID(), entity->RecordServerId());
 
 					ServerEntityManagerHelper* serverEntityMan = dnServer->GetServerEntityManager();
 					ServerEntity* serverEntity = serverEntityMan->GetEntity(serverId);
@@ -85,7 +85,7 @@ namespace GateMessage
 			entity->TimerId() = TICK_MAINSPACE_SIGN_FUNCTION(ProxyEntityManager, CheckEntityCloseTimer, entityMan, entity->ID());
 		}
 
-		DNPrint(0, EMLoggerLevel::Debug, "ReqUserToken User: %d!!", request.account_id());
+		DNPrint(ELogLevel_Debug, "ReqUserToken User: %d!!", request.account_id());
 
 		response.SerializeToString(&binData);
 		MessagePackAndSend(msgId, EMMsgDeal::Res, nullptr, binData, channel);

@@ -442,7 +442,7 @@ public:
 			return false;
 		}
 
-		DNPrint(0, EMLoggerLevel::Debug, "%s ", sSqlStatement.c_str());
+		DNPrint(ELogLevel_Debug, "%s ", sSqlStatement.c_str());
 
 		pq_result result = pWork->exec(sSqlStatement);
 

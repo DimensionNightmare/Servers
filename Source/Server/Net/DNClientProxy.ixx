@@ -441,7 +441,7 @@ public: // dll override
 			}
 			else
 			{
-				DNPrint(ErrCode::ErrCode_NotCallbackEvent, EMLoggerLevel::Error, nullptr);
+				DNPrintCode(EL10nCode_NotCallbackEvent);
 			}
 		}
 		else
@@ -517,7 +517,7 @@ public: // dll override
 
 	void RedirectClient(uint16_t port, std::string ip)
 	{
-		DNPrint(0, EMLoggerLevel::Debug, "reclient to %s:%u", ip.c_str(), port);
+		DNPrint(ELogLevel_Debug, "reclient to %s:%u", ip.c_str(), port);
 
 		eRegistState = EMRegistState::None;
 		closesocket();

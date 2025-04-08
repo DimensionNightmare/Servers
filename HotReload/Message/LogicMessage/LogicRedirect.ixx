@@ -26,7 +26,7 @@ namespace LogicMessage
 		ClientEntity* entity = entityMan->GetEntity(request.account_id());
 		if (!entity)
 		{
-			DNPrint(0, EMLoggerLevel::Debug, "Client Entity Kick Not Exist !");
+			DNPrint(ELogLevel_Debug, "Client Entity Kick Not Exist !");
 			return;
 		}
 
@@ -42,7 +42,7 @@ namespace LogicMessage
 		}
 		else
 		{
-			DNPrint(0, EMLoggerLevel::Debug, "Client Entity Kick Server Not Exist !");
+			DNPrint(ELogLevel_Debug, "Client Entity Kick Server Not Exist !");
 		}
 
 		// close entity save data
@@ -65,19 +65,19 @@ namespace LogicMessage
 		ClientEntity* entity = entityMan->AddEntity(request.account_id());
 		if (entity)
 		{
-			DNPrint(0, EMLoggerLevel::Debug, "AddEntity Client!");
+			DNPrint(ELogLevel_Debug, "AddEntity Client!");
 
 			// msg will destroy. MessageHandle not will waiting.
 			co_await entityMan->LoadEntityData(entity, nullptr, nullptr);
 
 			if (!entity->HasFlag(EMClientEntityFlag::DBInited))
 			{
-				DNPrint(0, EMLoggerLevel::Debug, "AddEntity Client but not from db!");
+				DNPrint(ELogLevel_Debug, "AddEntity Client but not from db!");
 			}
 		}
 		else
 		{
-			DNPrint(0, EMLoggerLevel::Debug, "AddEntity Exist Client!");
+			DNPrint(ELogLevel_Debug, "AddEntity Exist Client!");
 			entity = entityMan->GetEntity(request.account_id());
 		}
 
@@ -97,7 +97,7 @@ namespace LogicMessage
 			// from db
 			if(entity->GetDbEntity()->has_map_info())
 			{
-				MapPointRecord* mapRecord = entity->GetDbEntity()->mutable_map_info();
+				GameDefMapPointRecord* mapRecord = entity->GetDbEntity()->mutable_map_info();
 				*mapRecord->mutable_cur_point() = *mapRecord->mutable_last_point();
 
 				mapId = mapRecord->cur_point().map_id();
@@ -107,7 +107,7 @@ namespace LogicMessage
 			{
 				mapId++;
 
-				MapPointRecord* mapRecord = entity->GetDbEntity()->mutable_map_info();
+				GameDefMapPointRecord* mapRecord = entity->GetDbEntity()->mutable_map_info();
 				mapRecord->mutable_cur_point()->set_map_id(mapId);
 			}
 
@@ -115,7 +115,7 @@ namespace LogicMessage
 			if (roomEntityList.empty())
 			{
 				response.set_state_code(5);
-				DNPrint(0, EMLoggerLevel::Debug, "not ds Server");
+				DNPrint(ELogLevel_Debug, "not ds Server");
 			}
 			else
 			{
@@ -150,7 +150,7 @@ namespace LogicMessage
 
 			if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
 			{
-				DNPrint(0, EMLoggerLevel::Debug, "requst timeout! ");
+				DNPrint(ELogLevel_Debug, "requst timeout! ");
 				response.set_state_code(6);
 			}
 			else
@@ -163,7 +163,7 @@ namespace LogicMessage
 
 		}
 
-		DNPrint(0, EMLoggerLevel::Debug, "ds:%s", response.DebugString().c_str());
+		DNPrint(ELogLevel_Debug, "ds:%s", response.DebugString().c_str());
 
 		// pack data
 		response.SerializeToString(&binData);
