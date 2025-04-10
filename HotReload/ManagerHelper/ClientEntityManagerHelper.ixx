@@ -70,7 +70,7 @@ public:
 			co_return;
 		}
 
-		DbModelPlayer* dbEntity = entity->GetDbEntity();
+		Player* dbEntity = entity->GetDbEntity();
 
 		if (entity->HasFlag(EMClientEntityFlag::DBInited) || entity->HasFlag(EMClientEntityFlag::DBIniting))
 		{

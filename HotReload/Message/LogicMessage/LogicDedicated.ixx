@@ -21,7 +21,7 @@ namespace LogicMessage
 		}
 		L2d_ResLoadEntityData response;
 
-		DbModelPlayer player;
+		Player player;
 		if (!player.ParseFromString(request.entity_data()))
 		{
 			co_return;
@@ -60,7 +60,7 @@ namespace LogicMessage
 			return;
 		}
 
-		DbModelPlayer player;
+		Player player;
 		if (!player.ParseFromString(request.entity_data()))
 		{
 			DNPrint(ELogLevel_Debug, "Save data but parse error!");
@@ -82,7 +82,7 @@ namespace LogicMessage
 			return;
 		}
 
-		if (DbModelPlayer* dbEntity = entity->GetDbEntity())
+		if (Player* dbEntity = entity->GetDbEntity())
 		{
 			dbEntity->MergeFrom(player);
 			if (request.runtime_save())

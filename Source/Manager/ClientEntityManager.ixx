@@ -54,7 +54,7 @@ public: // dll override
 	{
 		uint32_t entityId = entity.ID();
 
-		DbModelPlayer dbEntity = *entity.GetDbEntity();
+		Player dbEntity = *entity.GetDbEntity();
 
 		// change maprecord
 		if(offline)

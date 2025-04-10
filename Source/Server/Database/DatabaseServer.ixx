@@ -3,7 +3,6 @@ module;
 export module DatabaseServer;
 
 import DNServer;
-import DNServerProxy;
 import DNClientProxy;
 import Logger;
 import Config.Server;

@@ -9,7 +9,6 @@ import DllUtils;
 
 export class DNl10n
 {
-	
 public:
 	
 	DNl10n()
@@ -51,7 +50,7 @@ public:
 		
 		eType = EL10nType_zh_CN;
 		value = LaunchConfig::GetParam("l10nLang");
-		if (!value && !Common::EL10nType_Parse(*value, &eType))
+		if (!value && !EL10nType_Parse_(*value, &eType))
 		{	
 			
 		}
@@ -107,7 +106,7 @@ public:
 		auto& dataMap = instance->mL10nCodeDll;
 		if (!dataMap.contains(type))
 		{
-			throw std::invalid_argument(std::format("I10n Tip Config not exist this type {}", Common::EL10nCode_Name(type)));
+			throw std::invalid_argument(std::format("I10n Tip Config not exist this type {}", EL10nCode_Name_(type)));
 		}
 
 		auto& one = dataMap[type];

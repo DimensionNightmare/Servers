@@ -34,44 +34,52 @@ import StrUtils;
 	#endif
 #endif
 
-#ifdef _WIN32
-BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
-{
-	// Perform actions based on the reason for calling.
-	switch (fdwReason)
-	{
-		case DLL_PROCESS_DETACH:
-			if (lpvReserved != nullptr)
-			{
-				break;
-			}
-			break;
-		case DLL_PROCESS_ATTACH:
-			break;
-		case DLL_THREAD_ATTACH:
-			break;
-
-		case DLL_THREAD_DETACH:
-
-			break;
-	}
-	return TRUE;
-}
-#endif
 
 extern "C"
 {
 	
+
+#ifdef _WIN32
+	BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
+	{
+		// Perform actions based on the reason for calling.
+		switch (fdwReason)
+		{
+			case DLL_PROCESS_DETACH:
+				if (lpvReserved != nullptr)
+				{
+					break;
+				}
+				break;
+			case DLL_PROCESS_ATTACH:
+				break;
+			case DLL_THREAD_ATTACH:
+				break;
+
+			case DLL_THREAD_DETACH:
+
+				break;
+		}
+		return TRUE;
+	}
+#endif
+
 	HOTRELOAD int InitHotReload(DNServer* server)
 	{
-		// HVExport::hlog_disable();
+		// hlog_disable();
 
 		EMServerType servertype = server->GetServerType();
 		std::string_view serverName = EnumName(servertype);
-		if(std::string* program = LaunchConfig::GetParam("program"))
+		if(std::string* value = LaunchConfig::GetParam("program"))
 		{
-			std::filesystem::path envPath = std::filesystem::path(*program).parent_path().append(serverName);
-			SetLoggerLevel(ELogLevel_Normal, envPath);
+			std::filesystem::path envPath = std::filesystem::path(*value).parent_path().append(serverName);
+			ELogLevel logLevel = ELogLevel_Debug;
+			value = LaunchConfig::GetParam("LoggerLevel");
+			if(value && ELogLevel_Parse_(*value, &logLevel))
+			{
+				
+			}
+			SetLoggerLevel(logLevel, envPath);
 		}
 
 		bool isDeal = false;
@@ -130,8 +138,8 @@ extern "C"
 				break;
 		}
 
-		PBExport::ShutdownProtobufLibrary();
-		HVExport::cleanup();
+		ShutdownProtobufLibrary();
+		cleanup();
 
 		return isDeal;
 	}

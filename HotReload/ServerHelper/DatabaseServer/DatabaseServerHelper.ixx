@@ -14,7 +14,7 @@ import ThirdParty.Libpqxx;
 
 export enum class EMSqlDbNameEnum : uint16_t
 {
-	DbModelAccount,
+	Account,
 	Nightmare,
 };
 
@@ -80,20 +80,20 @@ public:
 
 			std::unordered_map<EMSqlDbNameEnum, std::vector<Message*> > registTable = {
 				{
-					EMSqlDbNameEnum::DbModelAccount,
+					EMSqlDbNameEnum::Account,
 					{
-						(Message*)DbModelAccount::internal_default_instance(),
+						(Message*)Account::internal_default_instance(),
 					}
 				},
 				{
 					EMSqlDbNameEnum::Nightmare,
 					{
-						(Message*)DbModelPlayer::internal_default_instance(),
+						(Message*)Player::internal_default_instance(),
 					}
 				},
 			};
 
-			DbModelSingleTon kv;
+			SingleTon kv;
 			std::string schemaMd5;
 
 			for (auto& [dbNameEnum, dbEntitys] : registTable)
@@ -102,12 +102,12 @@ public:
 				if (pSqlProxys.contains(index))
 				{
 					pq_work txn(*pSqlProxys[index]);
-					DbSqlHelper<DbModelSingleTon> singleTon(&txn);
+					DbSqlHelper<SingleTon> singleTon(&txn);
 					singleTon.InitEntity(kv);
 
 					if (!singleTon.IsExist())
 					{
-						DNPrint(ELogLevel_Debug, "Create Table:DbModelSingleTon");
+						DNPrint(ELogLevel_Debug, "Create Table:SingleTon");
 						singleTon.CreateTable().Commit();
 					}
 

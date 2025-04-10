@@ -17,7 +17,7 @@ import std.compat;
 #define DBSelectByKey(obj, name) .SelectByKey(#name, [&obj]() { return obj.name(); })
 
 #define TICK_MAINSPACE_SIGN_FUNCTION(Class, Method, Object, ...) \
-	TickMainSpaceDll(Object, #Method, &Class::Method, __VA_ARGS__)
+	TickMainSpaceDll(static_cast<Class*>(Object), #Method, &Class::Method, __VA_ARGS__)
 
 #define ASSERT(expr)\
 	if (!(expr)) {abort();}

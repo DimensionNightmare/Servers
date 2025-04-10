@@ -19,14 +19,18 @@ module;
 #include "StdMacro.h"
 export module ThirdParty.PbGen;
 
-using namespace google::protobuf;
-using namespace GMsg;
-using namespace l10n;
-using namespace GCfg;
-using namespace GDb;
+export
+{
+	const std::string& EL10nCode_Name_(EL10nCode value){ return EL10nCode_Name(value); }
+	bool EL10nCode_IsValid_(int value){ return EL10nCode_IsValid(value); }
+	bool ELogLevel_Parse_(std::string name, ELogLevel* value){ return ELogLevel_Parse(name, value); }
+	bool EL10nType_Parse_(std::string name, EL10nType* value){ return EL10nType_Parse(name, value); }
+}
 
 export
 {
+	using namespace google::protobuf;
+
 	using ::Message;
 	using ::Descriptor;
 	using ::FieldDescriptor;
@@ -38,19 +42,32 @@ export
 	using ::ext_default;
 	using ::ext_datetime;
 	using ::ext_autogen;
-	using ::DbModelAccount;
-	using ::DbModelPlayer;
-	using ::DbModelSingleTon;
 
 	using ::ELogLevel;
 	using ::EL10nType;
 
 	using ::EL10nCode;
-	using ::l10nCode;
-	using ::l10nCodes;
 	using ::GameDefMapPointRecord;
 	using ::GameDefVector3;
 	using ::GameDefMapPoint;
+
+	void ShutdownProtobufLibrary() { google::protobuf::ShutdownProtobufLibrary(); }
+	auto MessageToJsonString(const Message& message, std::string* output) { return json::MessageToJsonString(message, output); }
+	const Descriptor* FindMessageTypeByName(absl::string_view name) { return DescriptorPool::generated_pool()->FindMessageTypeByName(name); }
+	const Message* GetPrototype(const Descriptor* descriptor) { return MessageFactory::generated_factory()->GetPrototype(descriptor); }
+}
+
+export
+{
+	using namespace l10n;
+
+	using ::l10nCode;
+	using ::l10nCodes;
+}
+
+export
+{
+	using namespace GMsg;
 
 	using ::L2D_ReqLoadData;
 	using ::D2L_ResLoadData;
@@ -78,19 +95,12 @@ export
 	using ::d2L_ReqRegistSrv;
 };
 
-export namespace Common
+export
 {
-	const std::string& EL10nCode_Name(EL10nCode value){ return ::EL10nCode_Name(value); }
-	bool EL10nCode_IsValid(int value){ return ::EL10nCode_IsValid(value); }
-	bool ELogLevel_Parse(absl::string_view name, ELogLevel* value){ return ::ELogLevel_Parse(name, value); }
-	bool EL10nType_Parse(absl::string_view name, EL10nType* value){ return ::EL10nType_Parse(name, value); }
-};
+	using namespace GDb;
 
-export namespace PBExport
-{
-
-	void ShutdownProtobufLibrary() { ::ShutdownProtobufLibrary(); }
-	auto MessageToJsonString(const Message& message, std::string* output) { return json::MessageToJsonString(message, output); }
-	const Descriptor* FindMessageTypeByName(absl::string_view name) { return DescriptorPool::generated_pool()->FindMessageTypeByName(name); }
-	const Message* GetPrototype(const Descriptor* descriptor) { return MessageFactory::generated_factory()->GetPrototype(descriptor); }
+	using ::Account;
+	using ::Player;
+	using ::SingleTon;
 }
+

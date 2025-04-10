@@ -37,7 +37,7 @@ export void ApiAuth(HttpService* service)
 				return;
 			}
 
-			DbModelAccount accInfo;
+			Account accInfo;
 			accInfo.set_auth_name(authName);
 			accInfo.set_auth_string(authString);
 
@@ -45,7 +45,7 @@ export void ApiAuth(HttpService* service)
 			{
 				AuthServerHelper* authServer = GetAuthServer();
 				read_transaction query(*authServer->SqlProxy());
-				DbSqlHelper<DbModelAccount> accounts(&query);
+				DbSqlHelper<Account> accounts(&query);
 
 				accounts
 					// DBSelectOne(accInfo, account_id)
@@ -59,7 +59,7 @@ export void ApiAuth(HttpService* service)
 				if (accounts.Result().size() != 1)
 				{
 					errData["code"] = http_status::HTTP_STATUS_BAD_REQUEST;
-					errData["message"] = "not DbModelAccount!";
+					errData["message"] = "not Account!";
 					MSGSET(errData.dump());
 					writer->End();
 					return;
@@ -77,7 +77,7 @@ export void ApiAuth(HttpService* service)
 				return;
 			}
 
-			auto taskGen = [](DbModelAccount accInfo, HttpResponseWriterPtr writer) -> DNTaskVoid
+			auto taskGen = [](Account accInfo, HttpResponseWriterPtr writer) -> DNTaskVoid
 				{
 					// HttpResponseWriterPtr writer = writer;	//sharedptr ref count ++
 					A2g_ReqAuthAccount request;
@@ -124,7 +124,7 @@ export void ApiAuth(HttpService* service)
 					}
 
 					binData.clear();
-					auto state = PBExport::MessageToJsonString(response, &binData);
+					auto state = MessageToJsonString(response, &binData);
 					retData["data"] = nlohmann::json::parse(binData);
 					retData["data"]["accountId"] = accInfo.account_id();
 
@@ -156,14 +156,14 @@ export void ApiAuth(HttpService* service)
 
 			AuthServerHelper* authServer = GetAuthServer();
 
-			DbModelAccount accInfo;
+			Account accInfo;
 			accInfo.set_auth_name(authName);
 			accInfo.set_auth_string(authString);
 
 			try
 			{
 				read_transaction query(*authServer->SqlProxy());
-				DbSqlHelper<DbModelAccount> accounts(&query);
+				DbSqlHelper<Account> accounts(&query);
 
 				accounts
 					.InitEntity(accInfo)
@@ -201,7 +201,7 @@ export void ApiAuth(HttpService* service)
 			{
 
 				pq_work query(*authServer->SqlProxy());
-				DbSqlHelper<DbModelAccount> accounts(&query);
+				DbSqlHelper<Account> accounts(&query);
 
 				accounts.InitEntity(accInfo).Insert().Commit();
 

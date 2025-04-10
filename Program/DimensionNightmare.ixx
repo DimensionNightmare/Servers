@@ -422,7 +422,7 @@ public:
 
 		auto reloadConfig = [this](std::stringstream* ss = nullptr)
 			{
-				
+				DNl10n::PInstance->Init();
 			};
 
 		auto open = [](std::stringstream* ss)

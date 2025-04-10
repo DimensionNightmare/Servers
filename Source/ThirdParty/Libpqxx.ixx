@@ -5,10 +5,11 @@ module;
 #include "pqxx/result"
 export module ThirdParty.Libpqxx;
 
-using namespace pqxx;
 
 export 
 {
+	using namespace pqxx;
+	
 	using pq_connection = ::connection;
 	using pq_field = ::field;
 	using ::dbtransaction;

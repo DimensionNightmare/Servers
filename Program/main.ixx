@@ -139,14 +139,14 @@ export int main(int argc, char** argv)
 
 	ELogLevel logLevel = ELogLevel_Debug;
 
-	if(lunchParam.contains("LoggerLevel") && Common::ELogLevel_Parse(lunchParam["LoggerLevel"], &logLevel))
+	if(lunchParam.contains("LoggerLevel") && ELogLevel_Parse_(lunchParam["LoggerLevel"], &logLevel))
 	{
 		
 	}
 
 	SetLoggerLevel(logLevel, execPath.parent_path() / serverName);
 
-	// HVExport::hlog_disable();
+	// hlog_disable();
 
 	DNPrint(ELogLevel_Normal, "hello ~");
 

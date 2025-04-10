@@ -134,7 +134,7 @@ export int HandleLogicServerInit(DNServer* server)
 					{
 						clientSock->EMRegistState() = EMRegistState::None;
 
-						if (clientSock->hloop())
+						if (clientSock->isConnected())
 						{
 							clientSock->Timer()->setTimeout(200, [=](uint64_t timerID)
 								{

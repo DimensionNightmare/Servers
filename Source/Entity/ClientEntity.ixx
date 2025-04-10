@@ -5,6 +5,7 @@ export module ClientEntity;
 import Entity;
 import ThirdParty.PbGen;
 
+
 export enum class EMClientEntityFlag : uint16_t
 {
 	DBInited = 0,
@@ -46,7 +47,7 @@ public: // dll override
 	void ClearFlag(EMClientEntityFlag flag) { oFlags.reset(uint16_t(flag)); }
 
 	/// @brief db entity get
-	DbModelPlayer* GetDbEntity() { return &*pDbEntity; }
+	Player* GetDbEntity() { return &*pDbEntity; }
 
 protected: // dll proxy
 
@@ -55,7 +56,7 @@ protected: // dll proxy
 	std::bitset<static_cast<uint16_t>(EMClientEntityFlag::Max)> oFlags;
 
 	/// @brief db entity
-	std::unique_ptr<DbModelPlayer> pDbEntity = std::make_unique<DbModelPlayer>();
+	std::unique_ptr<Player> pDbEntity = std::make_unique<Player>();
 
 public:
 
