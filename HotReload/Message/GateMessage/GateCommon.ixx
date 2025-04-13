@@ -1,5 +1,4 @@
 module;
-#include "StdMacro.h"
 export module GateMessage:GateCommon;
 
 import DNTask;
@@ -50,7 +49,7 @@ namespace GateMessage
 		// pack data
 		std::string binData;
 		request.SerializeToString(&binData);
-		MessagePackAndSend(0, EMMsgDeal::Ret, request.GetDescriptor()->full_name().c_str(), binData, client->GetChannel());
+		MessagePackAndSend(0, EMMsgDeal::Ret, request.GetDescriptor()->full_name(), binData, client->GetChannel());
 	}
 
 	// self request
@@ -60,7 +59,7 @@ namespace GateMessage
 		DNClientProxyHelper* client = dnServer->GetCSock();
 		DNServerProxy* server = dnServer->GetSSock();
 		
-		DNPrint(ELogLevel_Debug, "Client:%s, port:%hu", client->remote_host.c_str(), client->remote_port);
+		LoggerPrint()(ELogLevel_Debug, "Client:{}, port:{}", client->remote_host, client->remote_port);
 		
 		client->EMRegistState() = EMRegistState::Registing;
 
@@ -92,19 +91,19 @@ namespace GateMessage
 			
 			uint32_t msgId = client->GetMsgId();
 			client->AddMsg(msgId, &dataChannel);
-			MessagePackAndSend(msgId, EMMsgDeal::Req, request.GetDescriptor()->full_name().c_str(), binData, client->GetChannel());
+			MessagePackAndSend(msgId, EMMsgDeal::Req, request.GetDescriptor()->full_name(), binData, client->GetChannel());
 
 			co_await dataChannel;
 			if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
 			{
-				DNPrint(ELogLevel_Debug, "requst timeout! ");
+				LoggerPrint()(ELogLevel_Debug, "requst timeout! ");
 			}
 
 		}
 
 		if (response.success())
 		{
-			DNPrint(ELogLevel_Debug, "regist Server success! Rec index:%d", response.server_id());
+			LoggerPrint()(ELogLevel_Debug, "regist Server success! Rec index:{}", response.server_id());
 			client->EMRegistState() = EMRegistState::Registed;
 			client->RegistType() = response.server_type();
 			dnServer->ServerId() = response.server_id();
@@ -113,7 +112,7 @@ namespace GateMessage
 		}
 		else
 		{
-			DNPrint(ELogLevel_Debug, "regist Server error!");
+			LoggerPrint()(ELogLevel_Debug, "regist Server error!");
 			// dnServer->IsRun() = false; //exit application
 			client->EMRegistState() = EMRegistState::None;
 		}
@@ -130,7 +129,7 @@ namespace GateMessage
 			return;
 		}
 
-		DNPrint(ELogLevel_Debug, "ip Reqregist: %s, %d", channel->peeraddr().c_str(), request.server_type());
+		LoggerPrint()(ELogLevel_Debug, "ip Reqregist: {}, {}", channel->peeraddr(), request.server_type());
 
 		COM_ResRegistSrv response;
 
@@ -174,7 +173,7 @@ namespace GateMessage
 		std::string binData;
 		response.SerializeToString(&binData);
 
-		MessagePackAndSend(msgId, EMMsgDeal::Res, nullptr, binData, channel);
+		MessagePackAndSend(msgId, EMMsgDeal::Res, "", binData, channel);
 
 		if (response.success())
 		{
@@ -189,7 +188,7 @@ namespace GateMessage
 			GateServerHelper* dnServer = GetGateServer();
 			DNClientProxyHelper* client = dnServer->GetCSock();
 
-			MessagePackAndSend(0, EMMsgDeal::Ret, request.GetDescriptor()->full_name().c_str(), binData, client->GetChannel());
+			MessagePackAndSend(0, EMMsgDeal::Ret, request.GetDescriptor()->full_name(), binData, client->GetChannel());
 		}
 	}
 

@@ -1,9 +1,9 @@
 module;
-#include "StdMacro.h"
 export module ServerEntity;
 
 import NetEntity;
 import DNServer;
+import std.compat;
 
 export enum class EMServerEntityFlag : uint16_t
 {

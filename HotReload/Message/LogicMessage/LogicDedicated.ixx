@@ -1,5 +1,4 @@
 module;
-#include "StdMacro.h"
 export module LogicMessage:LogicDedicated;
 
 import DNTask;
@@ -9,6 +8,7 @@ import Logger;
 import ThirdParty.Libhv;
 import ThirdParty.PbGen;
 import ClientEntityManagerHelper;
+import std.compat;
 
 namespace LogicMessage
 {
@@ -47,7 +47,7 @@ namespace LogicMessage
 
 		std::string binData;
 		response.SerializeToString(&binData);
-		MessagePackAndSend(msgId, EMMsgDeal::Res, nullptr, binData, channel);
+		MessagePackAndSend(msgId, EMMsgDeal::Res, "", binData, channel);
 
 		co_return;
 	}
@@ -63,7 +63,7 @@ namespace LogicMessage
 		Player player;
 		if (!player.ParseFromString(request.entity_data()))
 		{
-			DNPrint(ELogLevel_Debug, "Save data but parse error!");
+			LoggerPrint()(ELogLevel_Debug, "Save data but parse error!");
 			return;
 		}
 
@@ -78,7 +78,7 @@ namespace LogicMessage
 
 		if (!entity)
 		{
-			DNPrint(ELogLevel_Debug, "ReqSaveData not entity!");
+			LoggerPrint()(ELogLevel_Debug, "ReqSaveData not entity!");
 			return;
 		}
 
@@ -93,7 +93,7 @@ namespace LogicMessage
 		}
 		else
 		{
-			DNPrint(ELogLevel_Debug, "SaveData but dbEntity is null!");
+			LoggerPrint()(ELogLevel_Debug, "SaveData but dbEntity is null!");
 		}
 
 	}

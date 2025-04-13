@@ -1,8 +1,10 @@
 module;
-#include "StdMacro.h"
 export module Config.Server;
 
 import DllUtils;
+import std.compat;
+
+#define FUNCPLACE(func) #func, func
 
 export class LaunchConfig
 {
@@ -25,7 +27,7 @@ public:
 	/// @brief global param get
 	static std::string* GetParam(const char* key)
 	{
-		static std::shared_ptr<LaunchConfig> instance = PInstance ? PInstance : GetDllInstance();
+		static LaunchConfig* instance = PInstance ? PInstance.get() : GetDllInstance();
 		if (!instance)
 		{
 			return nullptr;
@@ -47,13 +49,9 @@ public:
 
 protected:
 
-	static std::shared_ptr<LaunchConfig> GetDllInstance()
+	static LaunchConfig* GetDllInstance()
 	{
-		if(LaunchConfig* handle = TICK_MAINSPACE_SIGN_FUNCTION(LaunchConfig, GetInstance, PInstance.get()))
-		{
-			return std::shared_ptr<LaunchConfig>(handle, [](LaunchConfig* obj){});
-		}
-		return nullptr;
+		return TickMainSpaceDll(PInstance.get(), FUNCPLACE(&LaunchConfig::GetInstance));
 	}
 
 public:

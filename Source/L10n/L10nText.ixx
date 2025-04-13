@@ -1,11 +1,13 @@
 module;
-#include "StdMacro.h"
 export module L10nText;
 
 import Config.Server;
 import ThirdParty.PbGen;
 import StrUtils;
 import DllUtils;
+import std.compat;
+
+#define FUNCPLACE(func) #func, func
 
 export class DNl10n
 {
@@ -29,7 +31,7 @@ public:
 		std::string* value = LaunchConfig::GetParam("l10nDataPath");
 		if (!value)
 		{
-			// DNPrint(ELogLevel_Debug, "Launch Param l10nErrPath Error !");
+			// LoggerPrint(ELogLevel_Debug)( "Launch Param l10nErrPath Error !");
 			return "Launch Param l10nErrPath Error !";
 		}
 
@@ -37,7 +39,7 @@ public:
 		std::ifstream input(*value, std::ios::in | std::ios::binary);
 		if (!input || !mL10nCode.ParseFromIstream(&input))
 		{
-			// DNPrint(ELogLevel_Debug, "load I10n Tip Config Error !");
+			// LoggerPrint(ELogLevel_Debug)( "load I10n Tip Config Error !");
 			return "load I10n Tip Config Error !";
 		}
 
@@ -50,7 +52,7 @@ public:
 		
 		eType = EL10nType_zh_CN;
 		value = LaunchConfig::GetParam("l10nLang");
-		if (!value && !EL10nType_Parse_(*value, &eType))
+		if (!value && !EL10nType_Parse(*value, &eType))
 		{	
 			
 		}
@@ -68,7 +70,7 @@ public:
 				break;
 			}
 			default:
-				// DNPrint(ELogLevel_Debug, "load I10n Lang Type Error !");
+				// LoggerPrint(ELogLevel_Debug)( "load I10n Lang Type Error !");
 				return "load I10n Lang Type Error !";
 		}
 
@@ -92,15 +94,14 @@ public:
 
 public:
 
- 	static void GetTipText(EL10nCode type, ELogLevel& logLevel, const char*& fmt)
+ 	static const std::string& GetTipText(EL10nCode type, ELogLevel& logLevel)
 	{
 		logLevel = ELogLevel_None;
-		fmt = nullptr;
-
-		static std::shared_ptr<DNl10n> instance = PInstance ? PInstance : GetDllInstance();
+		
+		static DNl10n* instance = PInstance ? PInstance.get() : GetDllInstance();
 		if (!instance)
 		{
-			return;
+			throw std::runtime_error(std::format("I10n GetTipText Cant Get Instance!"));
 		}
 
 		auto& dataMap = instance->mL10nCodeDll;
@@ -112,7 +113,7 @@ public:
 		auto& one = dataMap[type];
 
 		logLevel = one->level();
-		fmt = (one->*(instance->pL10nTipFunc))().c_str();
+		return (one->*(instance->pL10nTipFunc))();
 	}
 
 	DNl10n* GetInstance()
@@ -120,14 +121,9 @@ public:
 		return PInstance.get();
 	}
 
-	static std::shared_ptr<DNl10n> GetDllInstance()
+	static DNl10n* GetDllInstance()
 	{
-
-		if(DNl10n* handle = TICK_MAINSPACE_SIGN_FUNCTION(DNl10n, GetInstance, PInstance.get()))
-		{
-			return std::shared_ptr<DNl10n>(handle, [](DNl10n* obj){});
-		}
-		return nullptr;
+		return TickMainSpaceDll(PInstance.get(), FUNCPLACE(&DNl10n::GetInstance));
 	}
 
 public:

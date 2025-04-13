@@ -1,6 +1,7 @@
 module;
-#include "StdMacro.h"
 export module StrUtils;
+
+import std.compat;
 
 export template <auto value>
 constexpr auto EnumName()
@@ -271,7 +272,7 @@ export void HexStringToBytes(std::string& hexString)
 	}
 }
 
-export std::string GetPureFunctionName(const char* funcName)
+export std::string GetPureFunctionName(const std::string& funcName)
 {
     std::string name = funcName;
 
@@ -282,4 +283,32 @@ export std::string GetPureFunctionName(const char* funcName)
 
     size_t parenStart = name.find('(');
     return (parenStart != std::string::npos) ? name.substr(0, parenStart) : name;
+}
+
+export std::string GetClearFunctionName(const std::string& funcName)
+{
+    std::string result = std::regex_replace(result, std::regex(R"(\s+__\w+\s+)"), " ");
+
+    result = std::regex_replace(result, std::regex(R"(^\s*(?:[\w:<>\*&,\s]+\s+)+)"), "");
+
+    result = std::regex_replace(result, std::regex(R"(\s*\([^)]*$)"), "");
+
+    result = std::regex_replace(result, std::regex(R"(::<lambda_[\d\w]+>)"), "::lambda");
+
+    result = std::regex_replace(result, std::regex(R"(\s+[cv]onst\s*$)"), "");
+
+    result = std::regex_replace(result, std::regex(R"(\s+)"), " ");
+
+    result = std::regex_replace(result, std::regex(R"(^\s+|\s+$)"), "");
+
+    return result;
+}
+
+export size_t DoStringHash(const std::string& str)
+{
+#ifdef _WIN32
+		return std::hash<std::string>::_Do_hash(str);
+#elif __unix__
+		return std::hash<std::string>{}(str);
+#endif
 }

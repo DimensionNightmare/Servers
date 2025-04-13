@@ -1,5 +1,4 @@
 module;
-#include "StdMacro.h"
 export module GateMessage:GateGlobal;
 
 import FuncHelper;
@@ -10,6 +9,9 @@ import DllUtils;
 import ThirdParty.Libhv;
 import ThirdParty.PbGen;
 import ProxyEntityManagerHelper;
+import std.compat;
+
+#define FUNCPLACE(func) #func, func
 
 namespace GateMessage
 {
@@ -40,7 +42,7 @@ namespace GateMessage
 				request.set_server_ip(request.server_ip());
 
 				request.SerializeToString(&binData);
-				MessagePackAndSend(0, EMMsgDeal::Ret, request.GetDescriptor()->full_name().c_str(), binData, online);
+				MessagePackAndSend(0, EMMsgDeal::Ret, request.GetDescriptor()->full_name(), binData, online);
 
 				//kick socket
 				online->setContext(nullptr);
@@ -50,7 +52,7 @@ namespace GateMessage
 				//kick game
 				if (uint32_t serverId = entity->RecordServerId())
 				{
-					DNPrint(ELogLevel_Debug, "Send Logic tick User->%d, server:%d", entity->ID(), entity->RecordServerId());
+					LoggerPrint()(ELogLevel_Debug, "Send Logic tick User->{}, server:{}", entity->ID(), entity->RecordServerId());
 
 					ServerEntityManagerHelper* serverEntityMan = dnServer->GetServerEntityManager();
 					ServerEntity* serverEntity = serverEntityMan->GetEntity(serverId);
@@ -58,7 +60,7 @@ namespace GateMessage
 					request.set_account_id(entity->ID());
 
 					request.SerializeToString(&binData);
-					MessagePackAndSend(0, EMMsgDeal::Redir, request.GetDescriptor()->full_name().c_str(), binData, serverEntity->GetSock());
+					MessagePackAndSend(0, EMMsgDeal::Redir, request.GetDescriptor()->full_name(), binData, serverEntity->GetSock());
 				}
 
 			}
@@ -82,13 +84,13 @@ namespace GateMessage
 		// entity or token expired
 		if (!entity->TimerId())
 		{
-			entity->TimerId() = TICK_MAINSPACE_SIGN_FUNCTION(ProxyEntityManager, CheckEntityCloseTimer, entityMan, entity->ID());
+			entity->TimerId() = TickMainSpaceDll(entityMan, FUNCPLACE(&ProxyEntityManager::CheckEntityCloseTimer), entity->ID());
 		}
 
-		DNPrint(ELogLevel_Debug, "ReqUserToken User: %d!!", request.account_id());
+		LoggerPrint()(ELogLevel_Debug, "ReqUserToken User: {}!!", request.account_id());
 
 		response.SerializeToString(&binData);
-		MessagePackAndSend(msgId, EMMsgDeal::Res, nullptr, binData, channel);
+		MessagePackAndSend(msgId, EMMsgDeal::Res, "", binData, channel);
 	}
 
 }

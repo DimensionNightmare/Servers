@@ -1,5 +1,4 @@
 module;
-#include "StdMacro.h"
 export module ClientEntityManager;
 
 import ClientEntity;
@@ -94,13 +93,13 @@ public: // dll override
 
 			std::string binData;
 			request.SerializeToString(&binData);
-			MessagePackAndSend(msgId, EMMsgDeal::Redir, request.GetDescriptor()->full_name().c_str(), binData, pSqlClient->GetChannel());
+			MessagePackAndSend(msgId, EMMsgDeal::Redir, request.GetDescriptor()->full_name(), binData, pSqlClient->GetChannel());
 
 			co_await dataChannel;
 			if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
 			{
 				response.set_state_code(10);
-				DNPrint(ELogLevel_Debug, "requst timeout! ");
+				LoggerPrint()(ELogLevel_Debug, "requst timeout! ");
 			}
 		}
 
@@ -108,7 +107,7 @@ public: // dll override
 		{
 			BytesToHexString(entity_data);
 			mDbFailure[entityId] = entity_data;
-			DNPrint(ELogLevel_Debug, "Save Db Entity Error id = %u, state_code = %d! ", entityId, code);
+			LoggerPrint()(ELogLevel_Debug, "Save Db Entity Error id = {}, state_code = {}! ", entityId, code);
 			co_return;
 		}
 
@@ -134,7 +133,7 @@ public: // dll override
 					uint32_t entityId = entity.ID();
 					if (!entity.GetDbEntity())
 					{
-						DNPrint(ELogLevel_Debug, "SaveEntity not pb Data:%u", entityId);
+						LoggerPrint()(ELogLevel_Debug, "SaveEntity not pb Data:{}", entityId);
 						return;
 					}
 
@@ -153,7 +152,7 @@ public: // dll override
 		{
 			if (!entity.GetDbEntity())
 			{
-				DNPrint(ELogLevel_Debug, "SaveEntity not pb Data:%u", ID);
+				LoggerPrint()(ELogLevel_Debug, "SaveEntity not pb Data:{}", ID);
 				continue;
 			}
 

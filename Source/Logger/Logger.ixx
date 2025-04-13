@@ -1,14 +1,10 @@
 module;
-#include <cstdarg>
-
-#include "StdMacro.h"
 export module Logger;
 
 import StrUtils;
 import L10nText;
 import ThirdParty.PbGen;
-
-ELogLevel SLogLevel = ELogLevel_Normal;
+import std.compat;
 
 class LogColor {
 public:
@@ -19,124 +15,146 @@ public:
     inline static std::string RESET	= "\033[0m";
 };
 
-std::ofstream LogFile; 
-
-/// @brief set logger type and Log file Init 
-export void SetLoggerLevel(std::optional<ELogLevel> level = std::nullopt, std::optional<std::filesystem::path> path = std::nullopt)
+export struct LoggerPrint
 {
-	if(level)
-	{
-		SLogLevel = *level;
+	LoggerPrint(const std::source_location& location = std::source_location::current())
+		:olocation(location)
+    {	
 	}
-	
-	if(!LogFile.is_open() && path)
+
+	~LoggerPrint()
 	{
-		if(!std::filesystem::exists(*path))
+		if (oResult.empty())
 		{
-			std::filesystem::create_directories(*path);
+			return;
 		}
-		LogFile = std::ofstream( std::format("{}/Output.log", path.value().string()), std::ios::app);
-	}
-}
 
-/// @brief Log file pointer 
-std::ofstream* GetLoggerFile()
-{
-	if (!LogFile.is_open())
-	{
-		return nullptr;
-	}
+		switch (oLevel)
+		{
+			case ELogLevel_Normal:
+				std::cout << LogColor::BLUE << oResult << LogColor::RESET;
+				break;
+			case ELogLevel_Warning:
+				std::cout << LogColor::YELLOW << oResult << LogColor::RESET;
+				break;
+			case ELogLevel_Error:
+				std::cout << LogColor::RED << oResult << LogColor::RESET;
+				break;
+			case ELogLevel_Debug:
+				std::cout << oResult;
+				break;
+			default:
+				return;
+		}
 
-	return &LogFile;
-}
-
-/// @brief print char to command-line/log-file. 
-export void LoggerPrint(EL10nCode code, const char* funcName, ...)
-{
-	ELogLevel level = ELogLevel_Debug;
-	const char* fmt = nullptr;
-
-	DNl10n::GetTipText(code, level, fmt);
-
-	if (level < SLogLevel || !fmt)
-	{
-		return;
+		if (LogFile.is_open())
+		{
+			LogFile << oResult;
+			LogFile.flush();
+		}
 	}
 
-	va_list args;
-	va_start(args, funcName);
-	size_t len = vsnprintf(0, 0, fmt, args);
-	static std::string message;
-	message.resize(len); // need space for NUL
-	// va_end(args);
-
-	va_start(args, funcName);
-	vsnprintf(&message[0], len + 1, fmt, args);
-	va_end(args);
-
-	std::string outputStr = std::format("[{}] {} -> \n\t{}\n", GetNowTimeStr(), funcName, message);
-	switch (level)
+	template <typename... Args>
+    void operator()(ELogLevel level, const std::format_string<Args...>& fmt, Args&&... args)
 	{
-		case ELogLevel_Normal:
-			std::cout << LogColor::BLUE << outputStr << LogColor::RESET;
-			break;
-		case ELogLevel_Warning:
-			std::cout << LogColor::YELLOW << outputStr << LogColor::RESET;
-			break;
-		case ELogLevel_Error:
-			std::cout << LogColor::RED << outputStr << LogColor::RESET;
-			break;
-		default:
-			std::cout << outputStr;
+		oLevel = level;
+
+		if (level < SLogLevel)
+		{
 			return;
+		}
+
+		std::string* locCache = nullptr;
+		// if(LocCache.contains())
+		// {
+
+		// }
+
+		oResult = std::format("[{}] {} -> \n\t{}\n", 
+			GetNowTimeStr(), 
+			olocation.function_name(),
+			std::format(fmt, std::forward<Args>(args)...));
 	}
 
-	if(std::ofstream* file = GetLoggerFile())
+	template <typename... Args>
+	void operator()(EL10nCode code, Args&&... args)
 	{
-		*file << outputStr;
-		file->flush();
-	}
-}
+		const std::string& fmt = DNl10n::GetTipText(code, oLevel);
 
-/// @brief print char to command-line/log-file. 
-export void LoggerPrint(ELogLevel level, const char* fmt, const char* funcName, ...)
-{
-	if (level < SLogLevel || !fmt)
-	{
-		return;
-	}
-
-	va_list args;
-	va_start(args, funcName);
-	size_t len = vsnprintf(0, 0, fmt, args);
-	static std::string message;
-	message.resize(len); // need space for NUL
-	// va_end(args);
-
-	va_start(args, funcName);
-	vsnprintf(&message[0], len + 1, fmt, args);
-	va_end(args);
-
-	std::string outputStr = std::format("[{}] {} -> \n\t{}\n", GetNowTimeStr(), funcName, message);
-	switch (level)
-	{
-		case ELogLevel_Normal:
-			std::cout << LogColor::BLUE << outputStr << LogColor::RESET;
-			break;
-		case ELogLevel_Warning:
-			std::cout << LogColor::YELLOW << outputStr << LogColor::RESET;
-			break;
-		case ELogLevel_Error:
-			std::cout << LogColor::RED << outputStr << LogColor::RESET;
-			break;
-		default:
-			std::cout << outputStr;
+		if (oLevel < SLogLevel)
+		{
 			return;
+		}
+
+		// std::vformat(fmt, std::make_format_args(std::forward<Args>(args)...));
+		auto&& args_tuple = std::forward_as_tuple(std::forward<Args>(args)...);
+
+        auto format_args = std::apply([](auto&&... args) {
+            return std::make_format_args(args...);
+        }, args_tuple);
+		
+		oResult = std::format("[{}] {} -> \n\t{}\n", 
+			GetNowTimeStr(), 
+			olocation.function_name(), 
+			std::vformat(fmt, format_args));
 	}
 
-	if(std::ofstream* file = GetLoggerFile())
+	void operator()(EL10nCode code)
 	{
-		*file << outputStr;
-		file->flush();
+		const std::string& fmt = DNl10n::GetTipText(code, oLevel);
+
+		if (oLevel < SLogLevel)
+		{
+			return;
+		}
+		
+		oResult = std::format("[{}] {} -> \n\t{}\n", 
+			GetNowTimeStr(), 
+			olocation.function_name(),
+			fmt);
 	}
-}
+
+	void operator()(ELogLevel level, const std::string& fmt)
+	{
+		oLevel = level;
+
+		if (level < SLogLevel)
+		{
+			return;
+		}
+
+		oResult = std::format("[{}] {} -> \n\t{}\n", 
+			GetNowTimeStr(), 
+			olocation.function_name(), 
+			fmt);
+	}
+
+	/// @brief set logger type and Log file Init 
+	static void SetLoggerLevel(std::optional<ELogLevel> level = std::nullopt, std::optional<std::filesystem::path> path = std::nullopt)
+	{
+		if(level)
+		{
+			SLogLevel = *level;
+		}
+		
+		if(!LogFile.is_open() && path)
+		{
+			if(!std::filesystem::exists(*path))
+			{
+				std::filesystem::create_directories(*path);
+			}
+			LogFile = std::ofstream( std::format("{}/Output.log", path.value().string()), std::ios::app);
+		}
+	}
+
+protected:
+	const std::source_location& olocation;
+	std::string oResult;
+	ELogLevel oLevel = ELogLevel_None;
+
+protected:
+	inline static std::ofstream LogFile; 
+	inline static ELogLevel SLogLevel = ELogLevel_Normal;
+	inline static std::unordered_map<std::string, std::string> LocCache;
+};
+

@@ -1,5 +1,4 @@
 module;
-#include "StdMacro.h"
 export module RoomEntityManager;
 
 import RoomEntity;
@@ -35,7 +34,7 @@ public:
 		uint32_t entityId = mMapTimer[timerID];
 		if (RemoveEntity(entityId))
 		{
-			DNPrint(ELogLevel_Debug, "EntityCloseTimer Room destory entity");
+			LoggerPrint()(ELogLevel_Debug, "EntityCloseTimer Room destory entity");
 		}
 
 	}

@@ -1,5 +1,4 @@
 module;
-#include "StdMacro.h"
 export module DatabaseMessage:DatabaseCommon;
 
 import DNTask;
@@ -11,6 +10,8 @@ import ThirdParty.Libhv;
 import ThirdParty.PbGen;
 import DNClientProxyHelper;
 
+#define FUNCPLACE(func) #func, func
+
 namespace DatabaseMessage
 {
 
@@ -20,7 +21,7 @@ namespace DatabaseMessage
 		DatabaseServerHelper* dnServer = GetDatabaseServer();
 		DNClientProxyHelper* client = dnServer->GetCSock();
 		
-		DNPrint(ELogLevel_Debug, "Client:%s, port:%hu", client->remote_host.c_str(), client->remote_port);
+		LoggerPrint()(ELogLevel_Debug, "Client:{}, port:{}", client->remote_host, client->remote_port);
 		
 		client->EMRegistState() = EMRegistState::Registing;
 
@@ -50,26 +51,26 @@ namespace DatabaseMessage
 
 			uint32_t msgId = client->GetMsgId();
 			client->AddMsg(msgId, &dataChannel);
-			MessagePackAndSend(msgId, EMMsgDeal::Req, request.GetDescriptor()->full_name().c_str(), binData, client->GetChannel());
+			MessagePackAndSend(msgId, EMMsgDeal::Req, request.GetDescriptor()->full_name(), binData, client->GetChannel());
 
 			co_await dataChannel;
 			if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
 			{
-				DNPrint(ELogLevel_Debug, "requst timeout! ");
+				LoggerPrint()(ELogLevel_Debug, "requst timeout! ");
 			}
 
 		}
 
 		if (response.success())
 		{
-			DNPrint(ELogLevel_Debug, "regist Server success! Rec index:%d", response.server_id());
+			LoggerPrint()(ELogLevel_Debug, "regist Server success! Rec index:{}", response.server_id());
 			client->EMRegistState() = EMRegistState::Registed;
 			client->RegistType() = response.server_type();
 			dnServer->ServerId() = response.server_id();
 		}
 		else
 		{
-			DNPrint(ELogLevel_Debug, "regist Server error!  ");
+			LoggerPrint()(ELogLevel_Debug, "regist Server error!  ");
 			// dnServer->IsRun() = false; //exit application
 			client->EMRegistState() = EMRegistState::None;
 		}
@@ -87,6 +88,6 @@ namespace DatabaseMessage
 		DatabaseServerHelper* dnServer = GetDatabaseServer();
 		DNClientProxyHelper* client = dnServer->GetCSock();
 
-		TICK_MAINSPACE_SIGN_FUNCTION(DNClientProxy, RedirectClient, client, request.server_port(), request.server_ip());
+		TickMainSpaceDll(client, FUNCPLACE(&DNClientProxy::RedirectClient), request.server_port(), request.server_ip());
 	}
 }

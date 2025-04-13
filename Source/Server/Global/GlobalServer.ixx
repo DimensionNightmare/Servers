@@ -1,5 +1,4 @@
 module;
-#include "StdMacro.h"
 export module GlobalServer;
 
 import DNServer;
@@ -10,6 +9,7 @@ import Logger;
 import Config.Server;
 import ThirdParty.Libhv;
 import ThirdParty.PbGen;
+import std.compat;
 
 export class GlobalServer : public DNServer
 {
@@ -46,13 +46,13 @@ public:
 		int listenfd = pSSock->createsocket(port, "0.0.0.0");
 		if (listenfd < 0)
 		{
-			DNPrintCode(EL10nCode_CreateSocket);
+			LoggerPrint()(EL10nCode_CreateSocket);
 			return false;
 		}
 
 		pSSock->Init();
 
-		DNPrintCode(EL10nCode_SrvListenOn, pSSock->port, listenfd);
+		LoggerPrint()(EL10nCode_SrvListenOn, pSSock->port, listenfd);
 
 		//connet ControlServer
 		std::string* ctlPort = LaunchConfig::GetParam("ctlPort");
@@ -86,7 +86,7 @@ public:
 
 		if (!pSSock)
 		{
-			DNPrintCode(EL10nCode_SrvNotInit);
+			LoggerPrint()(EL10nCode_SrvNotInit);
 			return false;
 		}
 

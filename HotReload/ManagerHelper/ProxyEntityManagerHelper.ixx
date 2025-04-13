@@ -1,5 +1,4 @@
 module;
-#include "StdMacro.h"
 export module ProxyEntityManagerHelper;
 
 import ProxyEntityHelper;
@@ -35,7 +34,7 @@ public:
 		{
 			std::unique_lock<std::shared_mutex> ulock(oMapMutex);
 
-			DNPrint(ELogLevel_Debug, "destory Proxy entity");
+			LoggerPrint()(ELogLevel_Debug, "destory Proxy entity");
 			mEntityMap.erase(entityId);
 			return true;
 		}

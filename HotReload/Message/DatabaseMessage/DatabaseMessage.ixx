@@ -1,5 +1,4 @@
 module;
-#include "StdMacro.h"
 export module DatabaseMessage;
 
 export import :DatabaseCommon;
@@ -7,6 +6,7 @@ import :DatabaseGate;
 import Logger;
 import ThirdParty.Libhv;
 import ThirdParty.PbGen;
+import StrUtils;
 
 export class DatabaseMessageHandle
 {
@@ -25,12 +25,12 @@ public:
 			}
 			catch (const std::exception& e)
 			{
-				DNPrint(ELogLevel_Debug, e.what());
+				LoggerPrint()(ELogLevel_Debug, e.what());
 			}
 		}
 		else
 		{
-			DNPrintCode(EL10nCode_MsgHandleFind);
+			LoggerPrint()(EL10nCode_MsgHandleFind);
 		}
 	}
 
@@ -45,26 +45,21 @@ public:
 			}
 			catch (const std::exception& e)
 			{
-				DNPrint(ELogLevel_Debug, e.what());
+				LoggerPrint()(ELogLevel_Debug, e.what());
 			}
 		}
 		else
 		{
-			DNPrintCode(EL10nCode_MsgHandleFind);
+			LoggerPrint()(EL10nCode_MsgHandleFind);
 		}
 	}
 
 	static void RegMsgHandle()
 	{
-#ifdef _WIN32
 	#define MSG_MAPPING(map, msg, func) \
-		map.emplace(std::hash<std::string>::_Do_hash(msg::GetDescriptor()->full_name()), \
+		map.emplace(DoStringHash(msg::GetDescriptor()->full_name()), \
 		make_pair(msg::internal_default_instance(), &DatabaseMessage::func))
-#elif __unix__
-	#define MSG_MAPPING(map, msg, func) \
-		map.emplace(std::hash<std::string>{}(msg::GetDescriptor()->full_name()), \
-		make_pair(msg::internal_default_instance(), &DatabaseMessage::func))
-#endif
+
 
 		MSG_MAPPING(MHandleMap, L2D_ReqLoadData, Exe_ReqLoadData);
 		MSG_MAPPING(MHandleMap, L2D_ReqSaveData, Exe_ReqSaveData);

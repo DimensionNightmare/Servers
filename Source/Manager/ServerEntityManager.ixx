@@ -1,5 +1,4 @@
 module;
-#include "StdMacro.h"
 export module ServerEntityManager;
 
 import ServerEntity;
@@ -48,7 +47,7 @@ public: // dll override
 
 			RemoveEntity(entityId);
 			
-			DNPrint(ELogLevel_Debug, "EntityCloseTimer server destory entity");
+			LoggerPrint()(ELogLevel_Debug, "EntityCloseTimer server destory entity");
 			
 		}
 	}

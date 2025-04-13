@@ -1,5 +1,4 @@
 module;
-#include "StdMacro.h"
 export module LogicMessage:LogicCommon;
 
 import DNTask;
@@ -11,6 +10,8 @@ import ThirdParty.Libhv;
 import ThirdParty.PbGen;
 import DNClientProxyHelper;
 
+#define FUNCPLACE(func) #func, func
+
 namespace LogicMessage
 {
 
@@ -20,7 +21,7 @@ namespace LogicMessage
 		LogicServerHelper* dnServer = GetLogicServer();
 		DNClientProxyHelper* client = dnServer->GetCSock();
 		
-		DNPrint(ELogLevel_Debug, "Client:%s, port:%hu", client->remote_host.c_str(), client->remote_port);
+		LoggerPrint()(ELogLevel_Debug, "Client:{}, port:{}", client->remote_host, client->remote_port);
 		
 		client->EMRegistState() = EMRegistState::Registing;
 
@@ -49,25 +50,25 @@ namespace LogicMessage
 			
 			uint32_t msgId = client->GetMsgId();
 			client->AddMsg(msgId, &dataChannel);
-			MessagePackAndSend(msgId, EMMsgDeal::Req, request.GetDescriptor()->full_name().c_str(), binData, client->GetChannel());
+			MessagePackAndSend(msgId, EMMsgDeal::Req, request.GetDescriptor()->full_name(), binData, client->GetChannel());
 			co_await dataChannel;
 			if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
 			{
-				DNPrint(ELogLevel_Debug, "requst timeout! ");
+				LoggerPrint()(ELogLevel_Debug, "requst timeout! ");
 			}
 
 		}
 
 		if (response.success())
 		{
-			DNPrint(ELogLevel_Debug, "regist Server success! Rec index:%d", response.server_id());
+			LoggerPrint()(ELogLevel_Debug, "regist Server success! Rec index:{}", response.server_id());
 			client->EMRegistState() = EMRegistState::Registed;
 			client->RegistType() = response.server_type();
 			dnServer->ServerId() = response.server_id();
 		}
 		else
 		{
-			DNPrint(ELogLevel_Debug, "regist Server error!  ");
+			LoggerPrint()(ELogLevel_Debug, "regist Server error!  ");
 			// dnServer->IsRun() = false; //exit application
 			client->EMRegistState() = EMRegistState::None;
 		}
@@ -84,7 +85,7 @@ namespace LogicMessage
 			return;
 		}
 		
-		DNPrint(ELogLevel_Debug, "ip Reqregist: %s, %d", channel->peeraddr().c_str(), request.server_type());
+		LoggerPrint()(ELogLevel_Debug, "ip Reqregist: {}, {}", channel->peeraddr(), request.server_type());
 
 		COM_ResRegistSrv response;
 
@@ -155,7 +156,7 @@ namespace LogicMessage
 			entity->ServerIp() = ipPort.substr(0, pos);
 			entity->ServerPort() = request.server_port();
 
-			DNPrint(ELogLevel_Debug, "ds regist:%s:%d", entity->ServerIp().c_str(), entity->ServerPort());
+			LoggerPrint()(ELogLevel_Debug, "ds regist:{}:{}", entity->ServerIp(), entity->ServerPort());
 
 			entity->SetSock(channel);
 
@@ -169,7 +170,7 @@ namespace LogicMessage
 		std::string binData;
 		response.SerializeToString(&binData);
 
-		MessagePackAndSend(msgId, EMMsgDeal::Res, nullptr, binData, channel);
+		MessagePackAndSend(msgId, EMMsgDeal::Res, "", binData, channel);
 	}
 
 	export void Exe_RetChangeCtlSrv(SocketChannelPtr channel, std::string binMsg)
@@ -182,7 +183,7 @@ namespace LogicMessage
 		LogicServerHelper* dnServer = GetLogicServer();
 		DNClientProxyHelper* client = dnServer->GetCSock();
 
-		TICK_MAINSPACE_SIGN_FUNCTION(DNClientProxy, RedirectClient, client, request.server_port(), request.server_ip());
+		TickMainSpaceDll(client, FUNCPLACE(&DNClientProxy::RedirectClient),  request.server_port(), request.server_ip());
 	}
 
 	export void Exe_RetHeartbeat(SocketChannelPtr channel, std::string binMsg)

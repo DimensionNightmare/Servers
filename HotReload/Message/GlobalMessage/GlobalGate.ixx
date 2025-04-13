@@ -1,5 +1,4 @@
 module;
-#include "StdMacro.h"
 export module GlobalMessage:GlobalGate;
 
 import DNTask;
@@ -10,6 +9,7 @@ import ThirdParty.PbGen;
 import Logger;
 import DNClientProxyHelper;
 import ServerEntityManagerHelper;
+import std.compat;
 
 namespace GlobalMessage
 {
@@ -41,7 +41,7 @@ namespace GlobalMessage
 				owner->GetMapLinkNode(entity->GetServerType()).remove(entity);
 				owner->ClearFlag(EMServerEntityFlag::Locked);
 
-				DNPrint(ELogLevel_Debug, "Global get notify release gate lock!");
+				LoggerPrint()(ELogLevel_Debug, "Global get notify release gate lock!");
 
 				entityMan->RemoveEntity(request.server_id());
 				dnServer->UpdateServerGroup();

@@ -1,9 +1,6 @@
 
 module;
-#ifdef _WIN32
-	#include <windef.h>
-#endif
-#include "StdMacro.h"
+
 export module HotReload;
 
 import DNServer;
@@ -19,6 +16,8 @@ import Config.Server;
 import ThirdParty.Libhv;
 import ThirdParty.PbGen;
 import StrUtils;
+import Platform;
+import std.compat;
 
 #ifdef _WIN32
 	#ifdef HOTRELOAD_BUILD
@@ -40,33 +39,36 @@ extern "C"
 	
 
 #ifdef _WIN32
-	BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
+	int DllMain(HMODULE hinstDLL, uint32_t fdwReason, void* lpvReserved)
 	{
 		// Perform actions based on the reason for calling.
 		switch (fdwReason)
 		{
-			case DLL_PROCESS_DETACH:
+			// DLL_PROCESS_DETACH
+			case 0:
 				if (lpvReserved != nullptr)
 				{
 					break;
 				}
 				break;
-			case DLL_PROCESS_ATTACH:
+			// DLL_PROCESS_ATTACH
+			case 1:
 				break;
-			case DLL_THREAD_ATTACH:
+			// DLL_THREAD_ATTACH
+			case 2:
 				break;
-
-			case DLL_THREAD_DETACH:
+			// DLL_THREAD_DETACH
+			case 3:
 
 				break;
 		}
-		return TRUE;
+		return 1;
 	}
 #endif
 
 	HOTRELOAD int InitHotReload(DNServer* server)
 	{
-		// hlog_disable();
+		hvlog_disable();
 
 		EMServerType servertype = server->GetServerType();
 		std::string_view serverName = EnumName(servertype);
@@ -75,11 +77,11 @@ extern "C"
 			std::filesystem::path envPath = std::filesystem::path(*value).parent_path().append(serverName);
 			ELogLevel logLevel = ELogLevel_Debug;
 			value = LaunchConfig::GetParam("LoggerLevel");
-			if(value && ELogLevel_Parse_(*value, &logLevel))
+			if(value && ELogLevel_Parse(*value, &logLevel))
 			{
 				
 			}
-			SetLoggerLevel(logLevel, envPath);
+			LoggerPrint::SetLoggerLevel(logLevel, envPath);
 		}
 
 		bool isDeal = false;

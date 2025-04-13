@@ -1,5 +1,4 @@
 module;
-#include "StdMacro.h"
 export module AuthServerInit;
 
 import AuthServerHelper;
@@ -13,6 +12,9 @@ import ThirdParty.PbGen;
 import DNServer;
 import DNWebProxyHelper;
 import MessagePack;
+import std.compat;
+
+#define FUNCPLACE(func) #func, func
 
 export int HandleAuthServerInit(DNServer* server)
 {
@@ -40,13 +42,13 @@ export int HandleAuthServerInit(DNServer* server)
 
 				if (channel->isConnected())
 				{
-					DNPrintCode(EL10nCode_CliConnOn, peeraddr.c_str(), channel->fd(), channel->id());
+					LoggerPrint()(EL10nCode_CliConnOn, peeraddr, channel->fd(), channel->id());
 					clientSock->SetRegistEvent(&AuthMessage::Evt_ReqRegistSrv);
-					TICK_MAINSPACE_SIGN_FUNCTION(DNClientProxy, InitConnectedChannel, clientSock, channel);
+					TickMainSpaceDll(clientSock, FUNCPLACE(&DNClientProxy::InitConnectedChannel),  channel);
 				}
 				else
 				{
-					DNPrintCode(EL10nCode_CliConnOff, peeraddr.c_str(), channel->fd(), channel->id());
+					LoggerPrint()(EL10nCode_CliConnOff, peeraddr, channel->fd(), channel->id());
 					if (clientSock->EMRegistState() == EMRegistState::Registed)
 					{
 						clientSock->EMRegistState() = EMRegistState::None;
@@ -67,11 +69,11 @@ export int HandleAuthServerInit(DNServer* server)
 				MessagePacket packet;
 				memcpy(&packet, buf->data(), MessagePacket::PackLenth);
 
-				DNPrint(ELogLevel_Debug, "c %s Recv type=%d With Mid:%u", channel->peeraddr().c_str(), packet.dealType, packet.msgId);
+				LoggerPrint()(ELogLevel_Debug, "c {} Recv type={} With Mid:{}", channel->peeraddr(), static_cast<int>(packet.dealType), packet.msgId);
 
 				if(packet.pkgLenth > 2 * 1024)
 				{
-					DNPrint(ELogLevel_Debug, "Recv byte len limit=%u", packet.pkgLenth);
+					LoggerPrint()(ELogLevel_Debug, "Recv byte len limit={}", packet.pkgLenth);
 					return;
 				}
 
@@ -96,12 +98,12 @@ export int HandleAuthServerInit(DNServer* server)
 					}
 					else
 					{
-						DNPrintCode(EL10nCode_MsgFind);
+						LoggerPrint()(EL10nCode_MsgFind);
 					}
 				}
 				else
 				{
-					DNPrintCode(EL10nCode_MsgDealType);
+					LoggerPrint()(EL10nCode_MsgDealType);
 				}
 			};
 

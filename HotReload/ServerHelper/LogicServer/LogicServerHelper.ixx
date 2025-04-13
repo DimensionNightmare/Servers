@@ -1,5 +1,4 @@
 module;
-#include "StdMacro.h"
 export module LogicServerHelper;
 
 import LogicServer;
@@ -38,7 +37,7 @@ public:
 			}
 			catch (const std::exception& e)
 			{
-				DNPrint(ELogLevel_Debug, "%s", e.what());
+				LoggerPrint()(ELogLevel_Debug, e.what());
 				return false;
 			}
 		}
@@ -60,7 +59,7 @@ static LogicServerHelper* PLogicServerHelper = nullptr;
 export void SetLogicServer(LogicServer* server)
 {
 	PLogicServerHelper = static_cast<LogicServerHelper*>(server);
-	ASSERT(PLogicServerHelper != nullptr);
+	if (!(PLogicServerHelper != nullptr)) {abort();}
 }
 
 export LogicServerHelper* GetLogicServer()

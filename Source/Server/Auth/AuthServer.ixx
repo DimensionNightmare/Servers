@@ -1,5 +1,4 @@
 module;
-#include "StdMacro.h"
 export module AuthServer;
 
 import DNServer;
@@ -10,6 +9,7 @@ import Config.Server;
 import ThirdParty.Libhv;
 import ThirdParty.PbGen;
 import ThirdParty.Libpqxx;
+import std.compat;
 
 export class AuthServer : public DNServer
 {
@@ -35,7 +35,7 @@ public:
 		std::string* value = LaunchConfig::GetParam("byCtl");
 		if (!value || !stoi(*value))
 		{
-			DNPrintCode(EL10nCode_SrvByCtl);
+			LoggerPrint()(EL10nCode_SrvByCtl);
 			return false;
 		}
 
@@ -53,8 +53,7 @@ public:
 		pSSock->setHost("0.0.0.0");
 		pSSock->setPort(port);
 		pSSock->setThreadNum(4);
-
-		DNPrintCode(EL10nCode_SrvListenOn, pSSock->port, 0);
+		LoggerPrint()(EL10nCode_SrvListenOn, pSSock->port, 0);
 
 		//connet ControlServer
 		std::string* ctlPort = LaunchConfig::GetParam("ctlPort");
@@ -81,13 +80,13 @@ public:
 	{
 		if (!pSSock)
 		{
-			DNPrintCode(EL10nCode_SrvNotInit);
+			LoggerPrint()(EL10nCode_SrvNotInit);
 			return false;
 		}
 		int code = pSSock->Start();
 		if (code < 0)
 		{
-			DNPrint(ELogLevel_Debug, "start error %d", code);
+			LoggerPrint()(ELogLevel_Debug, "start error {}", code);
 			return false;
 		}
 

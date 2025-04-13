@@ -1,5 +1,4 @@
 module;
-#include "StdMacro.h"
 export module ClientEntityManagerHelper;
 
 import ClientEntityHelper;
@@ -43,7 +42,7 @@ public:
 		{
 			std::unique_lock<std::shared_mutex> ulock(oMapMutex);
 
-			DNPrint(ELogLevel_Debug, "destory client entity");
+			LoggerPrint()(ELogLevel_Debug, "destory client entity");
 			mEntityMap.erase(entityId);
 
 			return true;
@@ -74,7 +73,7 @@ public:
 
 		if (entity->HasFlag(EMClientEntityFlag::DBInited) || entity->HasFlag(EMClientEntityFlag::DBIniting))
 		{
-			DNPrint(ELogLevel_Debug, "entity %u is DBIniting. return .", entity->ID());
+			LoggerPrint()(ELogLevel_Debug, "entity {} is DBIniting. return .", entity->ID());
 			if (inResponse)
 			{
 				std::string* entity_data = inResponse->add_entity_data();
@@ -142,13 +141,13 @@ public:
 
 			uint32_t msgId = pSqlClient->GetMsgId();
 			pSqlClient->AddMsg(msgId, &dataChannel, 9000);
-			MessagePackAndSend(msgId, EMMsgDeal::Redir, request.GetDescriptor()->full_name().c_str(), binData, pSqlClient->GetChannel());
+			MessagePackAndSend(msgId, EMMsgDeal::Redir, request.GetDescriptor()->full_name(), binData, pSqlClient->GetChannel());
 
 			co_await dataChannel;
 			if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
 			{
 				response.set_state_code(10);
-				DNPrint(ELogLevel_Debug, "requst timeout! ");
+				LoggerPrint()(ELogLevel_Debug, "requst timeout! ");
 			}
 		}
 
@@ -159,7 +158,7 @@ public:
 			binData = request.entity_data();
 			BytesToHexString(binData);
 			mDbFailure[entityId] = binData;
-			DNPrint(ELogLevel_Debug, "Load Db Entity Error id = %u, state_code = %d! ", entityId, code);
+			LoggerPrint()(ELogLevel_Debug, "Load Db Entity Error id = {}, state_code = {}! ", entityId, code);
 			co_return;
 		}
 
@@ -173,7 +172,7 @@ public:
 		}
 		else
 		{
-			DNPrint(ELogLevel_Debug, "Load Db Entity mutiply data!");
+			LoggerPrint()(ELogLevel_Debug, "Load Db Entity mutiply data!");
 			response.clear_entity_data();
 		}
 

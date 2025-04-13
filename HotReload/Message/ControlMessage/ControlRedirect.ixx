@@ -1,5 +1,4 @@
 module;
-#include "StdMacro.h"
 export module ControlMessage:ControlRedirect;
 
 import DNTask;
@@ -9,6 +8,7 @@ import Logger;
 import ThirdParty.Libhv;
 import ThirdParty.PbGen;
 import ServerEntity;
+import std.compat;
 
 namespace ControlMessage
 {
@@ -69,12 +69,12 @@ namespace ControlMessage
 			server->AddMsg(msgId, &dataChannel, 9000);
 
 			binData = binMsg;
-			MessagePackAndSend(msgId, EMMsgDeal::Redir, request.GetDescriptor()->full_name().c_str(), binData, entity->GetSock());
+			MessagePackAndSend(msgId, EMMsgDeal::Redir, request.GetDescriptor()->full_name(), binData, entity->GetSock());
 
 			co_await dataChannel;
 			if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
 			{
-				DNPrint(ELogLevel_Debug, "requst timeout! ");
+				LoggerPrint()(ELogLevel_Debug, "requst timeout! ");
 				response.set_state_code(3);
 			}
 
@@ -82,7 +82,7 @@ namespace ControlMessage
 
 		response.SerializeToString(&binData);
 
-		MessagePackAndSend(msgId, EMMsgDeal::Res, nullptr, binData, channel);
+		MessagePackAndSend(msgId, EMMsgDeal::Res, "", binData, channel);
 		co_return;
 	}
 }

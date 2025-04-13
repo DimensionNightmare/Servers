@@ -1,5 +1,4 @@
 module;
-#include "StdMacro.h"
 export module LogicMessage:LogicGate;
 
 import LogicServerHelper;
@@ -7,6 +6,7 @@ import Logger;
 import ThirdParty.Libhv;
 import ThirdParty.PbGen;
 import ClientEntityManagerHelper;
+import std.compat;
 
 namespace LogicMessage
 {
@@ -23,13 +23,13 @@ namespace LogicMessage
 
 		if (ClientEntity* entity = entityMan->GetEntity(request.entity_id()))
 		{
-			DNPrint(ELogLevel_Debug, "Recv Client %u Disconnect !!", entity->ID());
+			LoggerPrint()(ELogLevel_Debug, "Recv Client {} Disconnect !!", entity->ID());
 
 			entityMan->SaveEntity(*entity, true);
 			entityMan->RemoveEntity(entity->ID());
 			return;
 		}
 
-		DNPrint(ELogLevel_Debug, "Recv Client %u Disconnect but not Exist!!", request.entity_id());
+		LoggerPrint()(ELogLevel_Debug, "Recv Client {} Disconnect but not Exist!!", request.entity_id());
 	}
 }

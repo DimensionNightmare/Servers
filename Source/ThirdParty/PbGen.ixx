@@ -1,4 +1,6 @@
 module;
+#include <concepts>
+
 #include "google/protobuf/reflection.h"
 #include "google/protobuf/descriptor.pb.h"
 #include "google/protobuf/json/json.h"
@@ -16,15 +18,27 @@ module;
 #include "Client/C_Auth.pb.h"
 #include "Server/S_Logic.pb.h"
 
-#include "StdMacro.h"
 export module ThirdParty.PbGen;
 
-export
-{
-	const std::string& EL10nCode_Name_(EL10nCode value){ return EL10nCode_Name(value); }
-	bool EL10nCode_IsValid_(int value){ return EL10nCode_IsValid(value); }
-	bool ELogLevel_Parse_(std::string name, ELogLevel* value){ return ELogLevel_Parse(name, value); }
-	bool EL10nType_Parse_(std::string name, EL10nType* value){ return EL10nType_Parse(name, value); }
+// make_wrapper using  to export static Function
+
+template <typename F>
+concept NoArgCallable = requires(F f) {
+    { std::invoke(f) } -> std::same_as<void>;
+};
+
+template <NoArgCallable F>
+auto make_wrapper(F&& f) {
+    return [f=std::forward<F>(f)]() { 
+        f(); 
+    };
+}
+
+template <typename F>
+auto make_wrapper(F&& f) requires (!NoArgCallable<F>) {
+    return [f=std::forward<F>(f)](auto&&... args) -> decltype(auto) {
+        return f(std::forward<decltype(args)>(args)...);
+    };
 }
 
 export
@@ -36,13 +50,7 @@ export
 	using ::FieldDescriptor;
 	using ::Reflection;
 	using ::FieldOptions;
-	using ::ext_primary_key;
-	using ::ext_len_limit;
-	using ::ext_unique;
-	using ::ext_default;
-	using ::ext_datetime;
-	using ::ext_autogen;
-
+	
 	using ::ELogLevel;
 	using ::EL10nType;
 
@@ -51,10 +59,12 @@ export
 	using ::GameDefVector3;
 	using ::GameDefMapPoint;
 
-	void ShutdownProtobufLibrary() { google::protobuf::ShutdownProtobufLibrary(); }
-	auto MessageToJsonString(const Message& message, std::string* output) { return json::MessageToJsonString(message, output); }
-	const Descriptor* FindMessageTypeByName(absl::string_view name) { return DescriptorPool::generated_pool()->FindMessageTypeByName(name); }
-	const Message* GetPrototype(const Descriptor* descriptor) { return MessageFactory::generated_factory()->GetPrototype(descriptor); }
+	using ::EL10nCode_IsValid;
+	using ::ELogLevel_Parse;
+	using ::EL10nType_Parse;
+
+	using ::ShutdownProtobufLibrary;
+	using ::json::MessageToJsonString;
 }
 
 export
@@ -93,7 +103,7 @@ export
 	using ::S2C_RetAccountReplace;
 	using ::g2G_RetRegistChild;
 	using ::d2L_ReqRegistSrv;
-};
+}
 
 export
 {
@@ -102,5 +112,56 @@ export
 	using ::Account;
 	using ::Player;
 	using ::SingleTon;
+}
+
+export
+{
+	auto EL10nCode_Name_(EL10nCode param){return EL10nCode_Name(param);}
+
+	auto FindMessageTypeByName(auto name) { return DescriptorPool::generated_pool()->FindMessageTypeByName(name); }
+	auto GetPrototype(auto descriptor) { return MessageFactory::generated_factory()->GetPrototype(descriptor); }
+
+	enum CustomFieldOptions
+	{
+		e_primary_key = 1,
+		e_len_limit = 2,
+		e_unique = 3,
+		e_default = 4,
+		e_datetime = 5,
+		e_autogen = 6,
+	};
+
+	
+	int GetNumberFieldOptions(const FieldOptions& options, CustomFieldOptions extension)
+	{
+		switch(extension)
+		{
+			case e_primary_key:
+				return options.GetExtension(ext_primary_key);
+			case e_unique:
+				return options.GetExtension(ext_unique);
+			case e_len_limit:
+				return options.GetExtension(ext_datetime);
+			case e_autogen:
+				return options.GetExtension(ext_len_limit);
+			case e_datetime:
+				return options.GetExtension(ext_autogen);
+			default:
+				throw std::invalid_argument("Invalid extension type.");
+		}
+	}
+
+
+	auto GetStringFieldOptions(const FieldOptions& options, CustomFieldOptions extension)
+	{
+		switch(extension)
+		{
+			case e_default:
+				return options.GetExtension(ext_default);
+			default:
+				throw std::invalid_argument("Invalid extension type.");
+		}
+	}
+
 }
 

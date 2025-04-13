@@ -1,5 +1,4 @@
 module;
-#include "StdMacro.h"
 export module GlobalMessage:GlobalRedirect;
 
 import DNTask;
@@ -10,6 +9,7 @@ import ThirdParty.Libhv;
 import ThirdParty.PbGen;
 import ServerEntity;
 import ServerEntityManagerHelper;
+import std.compat;
 
 namespace GlobalMessage
 {
@@ -43,12 +43,12 @@ namespace GlobalMessage
 		if (tempList.empty())
 		{
 			response.set_state_code(4);
-			DNPrint(ELogLevel_Debug, "not exist GateServer");
+			LoggerPrint()(ELogLevel_Debug, "not exist GateServer");
 		}
 		else
 		{
 			ServerEntity* entity = tempList.front();
-			DNPrint(ELogLevel_Debug, "send to GateServer : %d", entity->ID());
+			LoggerPrint()(ELogLevel_Debug, "send to GateServer : {}", entity->ID());
 
 			entity->ConnNum()++;
 
@@ -67,12 +67,12 @@ namespace GlobalMessage
 
 			server->AddMsg(msgId, &dataChannel, 8000);
 			
-			MessagePackAndSend(msgId, EMMsgDeal::Req, request.GetDescriptor()->full_name().c_str(), binData, entity->GetSock());
+			MessagePackAndSend(msgId, EMMsgDeal::Req, request.GetDescriptor()->full_name(), binData, entity->GetSock());
 
 			co_await dataChannel;
 			if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
 			{
-				DNPrint(ELogLevel_Debug, "requst timeout! ");
+				LoggerPrint()(ELogLevel_Debug, "requst timeout! ");
 				response.set_state_code(5);
 
 				entity->ConnNum()--;
@@ -85,12 +85,12 @@ namespace GlobalMessage
 
 			
 
-			// DNPrint(ELogLevel_Debug, "%s", response.DebugString().c_str());
+			LoggerPrint()(ELogLevel_Debug, response.DebugString());
 		}
 
 		response.SerializeToString(&binData);
 
-		MessagePackAndSend(msgId, EMMsgDeal::Res, nullptr, binData, channel);
+		MessagePackAndSend(msgId, EMMsgDeal::Res, "", binData, channel);
 
 		co_return;
 	}

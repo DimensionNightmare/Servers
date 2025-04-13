@@ -1,6 +1,7 @@
 module;
-#include "StdMacro.h"
 export module Entity;
+
+import std.compat;
 
 export enum class EMEntityType : uint8_t
 {

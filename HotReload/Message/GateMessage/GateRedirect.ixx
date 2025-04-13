@@ -1,5 +1,4 @@
 module;
-#include "StdMacro.h"
 export module GateMessage:GateRedirect;
 
 import FuncHelper;
@@ -9,6 +8,7 @@ import DNTask;
 import ThirdParty.Libhv;
 import ThirdParty.PbGen;
 import ServerEntityManagerHelper;
+import std.compat;
 
 namespace GateMessage
 {
@@ -46,12 +46,12 @@ namespace GateMessage
 			uint32_t msgId = server->GetMsgId();
 			server->AddMsg(msgId, &dataChannel, 8000);
 
-			MessagePackAndSend(msgId, EMMsgDeal::Req, request.GetDescriptor()->full_name().c_str(), binData, entity->GetSock());
+			MessagePackAndSend(msgId, EMMsgDeal::Req, request.GetDescriptor()->full_name(), binData, entity->GetSock());
 
 			co_await dataChannel;
 			if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
 			{
-				DNPrint(ELogLevel_Debug, "requst timeout! ");
+				LoggerPrint()(ELogLevel_Debug, "requst timeout! ");
 				response.set_state_code(2);
 			}
 			
@@ -59,7 +59,7 @@ namespace GateMessage
 		}
 
 		response.SerializeToString(&binData);
-		MessagePackAndSend(msgId, EMMsgDeal::Res, nullptr, binData, channel);
+		MessagePackAndSend(msgId, EMMsgDeal::Res, "", binData, channel);
 
 		co_return;
 	}
@@ -100,19 +100,19 @@ namespace GateMessage
 			uint32_t msgId = server->GetMsgId();
 			server->AddMsg(msgId, &dataChannel, 8000);
 
-			MessagePackAndSend(msgId, EMMsgDeal::Req, request.GetDescriptor()->full_name().c_str(), binData, entity->GetSock());
+			MessagePackAndSend(msgId, EMMsgDeal::Req, request.GetDescriptor()->full_name(), binData, entity->GetSock());
 
 			co_await dataChannel;
 			if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
 			{
-				DNPrint(ELogLevel_Debug, "requst timeout! ");
+				LoggerPrint()(ELogLevel_Debug, "requst timeout! ");
 				response.set_state_code(2);
 			}
 			
 		}
 
 		response.SerializeToString(&binData);
-		MessagePackAndSend(msgId, EMMsgDeal::Res, nullptr, binData, channel);
+		MessagePackAndSend(msgId, EMMsgDeal::Res, "", binData, channel);
 
 		co_return;
 	}

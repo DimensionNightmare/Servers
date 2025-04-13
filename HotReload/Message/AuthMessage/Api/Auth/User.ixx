@@ -1,6 +1,4 @@
 module;
-#include "hv/json.hpp"
-#include "StdMacro.h"
 export module ApiManager:ApiAuth;
 
 import AuthServerHelper;
@@ -12,6 +10,7 @@ import Logger;
 import ThirdParty.Libhv;
 import ThirdParty.PbGen;
 import ThirdParty.Libpqxx;
+import std.compat;
 
 using namespace std::chrono;
 
@@ -47,6 +46,8 @@ export void ApiAuth(HttpService* service)
 				read_transaction query(*authServer->SqlProxy());
 				DbSqlHelper<Account> accounts(&query);
 
+				#define DBSelectOne(obj, name) .SelectOne(#name, [&obj]() { return obj.name(); })
+				#define DBSelectCond(obj, name, cond, splicing) .SelectCond(#name, cond, splicing, [&obj]() { return obj.name(); })
 				accounts
 					// DBSelectOne(accInfo, account_id)
 					.InitEntity(accInfo)
@@ -69,7 +70,7 @@ export void ApiAuth(HttpService* service)
 			}
 			catch (const std::exception& e)
 			{
-				DNPrint(ELogLevel_Debug, "%s", e.what());
+				LoggerPrint()(ELogLevel_Debug, e.what());
 				errData["code"] = http_status::HTTP_STATUS_BAD_REQUEST;
 				errData["message"] = "Server Error!!";
 				MSGSET(errData.dump());
@@ -107,7 +108,7 @@ export void ApiAuth(HttpService* service)
 						
 						uint32_t msgId = client->GetMsgId();
 						client->AddMsg(msgId, &dataChannel);
-						MessagePackAndSend(msgId, EMMsgDeal::Redir, request.GetDescriptor()->full_name().c_str(), binData, client->GetChannel());
+						MessagePackAndSend(msgId, EMMsgDeal::Redir, request.GetDescriptor()->full_name(), binData, client->GetChannel());
 						
 						co_await dataChannel;
 						if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
@@ -182,7 +183,7 @@ export void ApiAuth(HttpService* service)
 			}
 			catch (const std::exception& e)
 			{
-				DNPrint(ELogLevel_Debug, "%s", e.what());
+				LoggerPrint()(ELogLevel_Debug, e.what());
 				errData["code"] = http_status::HTTP_STATUS_BAD_REQUEST;
 				errData["message"] = "Regist Error!!";
 				MSGSET(errData.dump());
@@ -222,7 +223,7 @@ export void ApiAuth(HttpService* service)
 			}
 			catch (const std::exception& e)
 			{
-				DNPrint(ELogLevel_Debug, "%s", e.what());
+				LoggerPrint()(ELogLevel_Debug, e.what());
 				errData["code"] = http_status::HTTP_STATUS_BAD_REQUEST;
 				errData["message"] = "Regist Error!!";
 				MSGSET(errData.dump());

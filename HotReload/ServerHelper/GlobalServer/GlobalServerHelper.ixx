@@ -1,5 +1,4 @@
 module;
-#include "StdMacro.h"
 export module GlobalServerHelper;
 
 import GlobalServer;
@@ -11,6 +10,8 @@ import DllUtils;
 import Logger;
 import ThirdParty.Libhv;
 import ThirdParty.PbGen;
+
+#define FUNCPLACE(func) #func, func
 
 export class GlobalServerHelper : public GlobalServer
 {
@@ -56,8 +57,8 @@ public:
 
 			request.SerializeToString(&binData);
 			// timer destory
-			entity->TimerId() = TICK_MAINSPACE_SIGN_FUNCTION(ServerEntityManager, CheckEntityCloseTimer, entityMan, entity->ID());
-			MessagePackAndSend(0, EMMsgDeal::Ret, request.GetDescriptor()->full_name().c_str(), binData, channel);
+			entity->TimerId() = TickMainSpaceDll(entityMan, FUNCPLACE(&ServerEntityManager::CheckEntityCloseTimer),  entity->ID());
+			MessagePackAndSend(0, EMMsgDeal::Ret, request.GetDescriptor()->full_name(), binData, channel);
 			entity->SetSock(nullptr);
 		};
 
@@ -92,7 +93,7 @@ public:
 			{
 				// UnMountEntity(gate->GetServerType(), it);
 				gate->SetFlag(EMServerEntityFlag::Locked);
-				DNPrint(ELogLevel_Debug, "Gate:%u locked!", gate->ID());
+				LoggerPrint()(ELogLevel_Debug, "Gate:{} locked!", gate->ID());
 			}
 
 		}
@@ -104,7 +105,7 @@ static GlobalServerHelper* PGlobalServerHelper = nullptr;
 export void SetGlobalServer(GlobalServer* server)
 {
 	PGlobalServerHelper = static_cast<GlobalServerHelper*>(server);
-	ASSERT(PGlobalServerHelper != nullptr)
+	if (!(PGlobalServerHelper != nullptr)) {abort();}
 }
 
 export GlobalServerHelper* GetGlobalServer()

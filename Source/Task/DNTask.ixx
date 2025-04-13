@@ -1,7 +1,7 @@
 module;
-#include "StdMacro.h"
 export module DNTask;
 
+import std.compat;
 import ThirdParty.PbGen;
 
 using namespace std::chrono;

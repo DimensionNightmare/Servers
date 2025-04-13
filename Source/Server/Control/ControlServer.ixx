@@ -1,5 +1,4 @@
 module;
-#include "StdMacro.h"
 export module ControlServer;
 
 import DNServer;
@@ -34,7 +33,7 @@ public:
 		std::string* port = LaunchConfig::GetParam("port");
 		if (!port)
 		{
-			DNPrintCode(EL10nCode_SrvNeedIPPort);
+			LoggerPrint(EL10nCode_SrvNeedIPPort);
 			return false;
 		}
 
@@ -45,13 +44,13 @@ public:
 		int listenfd = pSSock->createsocket(stoi(*port), "0.0.0.0");
 		if (listenfd < 0)
 		{
-			DNPrintCode(EL10nCode_CreateSocket);
+			LoggerPrint()(EL10nCode_CreateSocket);
 			return false;
 		}
 
 		pSSock->Init();
 
-		DNPrintCode(EL10nCode_SrvListenOn, pSSock->port, listenfd);
+		LoggerPrint()(EL10nCode_SrvListenOn, pSSock->port, listenfd);
 
 		pServerEntityMan = std::make_unique<ServerEntityManager>();
 		pServerEntityMan->Init();
@@ -67,7 +66,7 @@ public:
 	{
 		if (!pSSock)
 		{
-			DNPrintCode(EL10nCode_SrvNotInit);
+			LoggerPrint()(EL10nCode_SrvNotInit);
 			return false;
 		}
 

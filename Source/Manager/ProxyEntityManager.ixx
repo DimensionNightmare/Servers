@@ -1,5 +1,4 @@
 module;
-#include "StdMacro.h"
 export module ProxyEntityManager;
 
 import ProxyEntity;
@@ -39,7 +38,7 @@ public: // dll override
 		uint32_t entityId = mMapTimer[timerID];
 		if (RemoveEntity(entityId))
 		{
-			DNPrint(ELogLevel_Debug, "destory proxy Timer entity");
+			LoggerPrint()(ELogLevel_Debug, "destory proxy Timer entity");
 		}
 
 	}

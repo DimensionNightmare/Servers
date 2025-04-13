@@ -10,12 +10,13 @@ export
 {
 	using namespace pqxx;
 	
-	using pq_connection = ::connection;
-	using pq_field = ::field;
 	using ::dbtransaction;
+	using ::nontransaction;
+	using ::read_transaction;
+	
+	using pq_connection = connection;
+	using pq_field = field;
 	using pq_result = result;
 	using pq_row = row;
-	using ::nontransaction;
 	using pq_work = work;
-	using ::read_transaction;
 };

@@ -1,7 +1,14 @@
-cmake_minimum_required (VERSION 3.26 FATAL_ERROR)
+cmake_minimum_required (VERSION 3.8)
+
+set(CMAKE_EXPERIMENTAL_CXX_IMPORT_STD "a9e1cf81-9932-4810-974b-6eccaf14e457")
+
+if (POLICY CMP0141)
+	cmake_policy(SET CMP0141 NEW)
+	set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
+endif()
 
 # Top project
-project (DimensionNightmareServer)
+project (DimensionNightmareServer CXX)
 
 message("${CMAKE_VERSION}
 ${CMAKE_SYSTEM_NAME}
@@ -12,7 +19,8 @@ ${CMAKE_SYSTEM_PROCESSOR}")
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_CXX_MODULE_STD 1)
+# set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -50,10 +58,9 @@ find_package(hiredis CONFIG REQUIRED)
 find_package(redis++ CONFIG REQUIRED)
 find_package(pbgen CONFIG REQUIRED)
 
-include_directories("Source/Afx")
+add_definitions(/utf-8)
 
 ################################ MainLib ################################
-
 file(GLOB_RECURSE DNSourceModule CONFIGURE_DEPENDS 
 	"Source/*.ixx"
 )
@@ -71,8 +78,6 @@ target_link_libraries(MainSource PUBLIC
 	libpqxx::pqxx
 	redis++::redis++_static
 )
-
-target_compile_definitions(MainSource PRIVATE _${CMAKE_SYSTEM_PROCESSOR}_ MAINLIB_BUILD)
 
 set_property(TARGET MainSource PROPERTY CXX_STANDARD 23)
 
@@ -92,8 +97,6 @@ target_link_libraries(DimensionNightmareServer PRIVATE MainSource)
 
 set_property(TARGET DimensionNightmareServer PROPERTY CXX_STANDARD 23)
 
-target_compile_definitions(DimensionNightmareServer PRIVATE _${CMAKE_SYSTEM_PROCESSOR}_)
-
 if(NOT CMAKE_SYSTEM_NAME MATCHES "Linux")
 	set_target_properties(DimensionNightmareServer PROPERTIES RUNTIME_OUTPUT_DIRECTORY  $<1:${CMAKE_BINARY_DIR}/>)
 else()
@@ -107,14 +110,13 @@ file(GLOB_RECURSE srcHotReloadModule CONFIGURE_DEPENDS
 )
 
 add_library( HotReload SHARED)
-# add_library( HotReload SHARED "HotReload/HotReload.cpp")
 
 target_sources(HotReload 
 	PRIVATE FILE_SET CXX_MODULES TYPE CXX_MODULES FILES
 	${srcHotReloadModule}
 )
 
-target_compile_definitions(HotReload PRIVATE HOTRELOAD_BUILD _${CMAKE_SYSTEM_PROCESSOR}_)
+target_compile_definitions(HotReload PRIVATE HOTRELOAD_BUILD)
 
 if(NOT CMAKE_SYSTEM_NAME MATCHES "Linux")
 	set_target_properties(HotReload PROPERTIES RUNTIME_OUTPUT_DIRECTORY  $<1:${CMAKE_BINARY_DIR}/Runtime>)
@@ -133,11 +135,11 @@ file(GLOB_RECURSE srcDNTest CONFIGURE_DEPENDS
 )
 
 target_link_libraries(DNTest 
-protobuf::libprotobuf 
+	protobuf::libprotobuf 
 	pbgen 
-hv_static 
-libpqxx::pqxx
-redis++::redis++_static
+	hv_static 
+	libpqxx::pqxx
+	redis++::redis++_static
 )
 
 target_sources(DNTest PRIVATE ${srcDNTest})

@@ -1,10 +1,9 @@
 module;
-#include "StdMacro.h"
 export module ClientEntity;
 
 import Entity;
 import ThirdParty.PbGen;
-
+import std.compat;
 
 export enum class EMClientEntityFlag : uint16_t
 {

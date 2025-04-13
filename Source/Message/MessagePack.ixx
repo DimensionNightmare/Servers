@@ -1,6 +1,8 @@
 module;
-#include "StdMacro.h"
 export module MessagePack;
+
+import std.compat;
+import StrUtils;
 
 export enum class EMMsgDir : uint8_t
 {
@@ -32,24 +34,20 @@ export struct MessagePacket
 
 int MessagePacket::PackLenth = sizeof(MessagePacket);
 
-export bool MessagePack(uint32_t msgId, EMMsgDeal deal, const char* pbName, std::string& data)
+export bool MessagePack(uint32_t msgId, EMMsgDeal deal, const std::string& pbName, std::string& data)
 {
 	MessagePacket packet;
 	packet.msgId = msgId;
 	packet.dealType = deal;
 	packet.pkgLenth = uint32_t(data.size());
 
-	if (pbName == nullptr) [[unlikely]]
+	if (pbName.empty()) [[unlikely]]
 	{
 		packet.msgHashId = 0;
 	}
 	else [[likely]]
 	{
-#ifdef _WIN32
-		packet.msgHashId = std::hash<std::string>::_Do_hash(pbName);
-#elif __unix__
-		packet.msgHashId = std::hash<std::string>{}(pbName);
-#endif
+		packet.msgHashId = DoStringHash(pbName);
 	}
 
 	data.resize(MessagePacket::PackLenth + packet.pkgLenth);

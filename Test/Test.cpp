@@ -1,29 +1,34 @@
-#include <iostream>
-#include <coroutine>
-#include <unordered_map>
-#include <fstream>
-#include <random>
-#include <string>
-#include <thread>
-#include <chrono>
 // #include <Windows.h>
 #include "hv/TcpClient.h"
-#include "hv/EventLoop.h"
 #include "hv/hloop.h" 
-#include "hv/requests.h"
-#include "hv/json.hpp"
-#include "pqxx/pqxx"
-#include "sw/redis++/redis++.h"
+#include "hv/EventLoop.h"
+// #include "hv/requests.h"
+// #include "hv/json.hpp"
+// #include "pqxx/pqxx"
+// #include "sw/redis++/redis++.h"
 
-#undef REPEATED
+// #undef REPEATED
 #include "google/protobuf/util/json_util.h"
 
 #include "GCfg/GCfg.pb.h"
 #include "GDef/GDef.pb.h"
+#include "Common/Common.pb.h"
+
+#if 0
+import std.compat;
+
+#else
+#include <format>
+#include <chrono>
+#include <source_location>
+#include <iostream>
+#include <fstream>
+#endif
+
 
 using namespace hv;
 using namespace std;
-using namespace sw::redis;
+// using namespace sw::redis;
 using namespace GDb;
 using namespace google::protobuf;
 
@@ -120,7 +125,7 @@ int main()
 }
 #endif
 
-
+#if 0
 void printTime()
 {
 	using namespace std::chrono;
@@ -130,7 +135,6 @@ void printTime()
 	std::cout << std::format("{:%Y-%m-%d %H:%M:%S}", currentZone) << std::endl;
 }
 
-#if 0
 
 chrono::hours GetTimezoneOffset()
 {
@@ -269,6 +273,7 @@ int main()
 }
 #endif
 
+#if 0
 void BytesToHexString(std::string& bytes)
 {
 	std::ostringstream oss;
@@ -290,17 +295,13 @@ void HexStringToBytes(std::string& hexString)
 	}
 }
 
-#if 0
 
 int main()
 {
-	DbModelPlayer player;
+	Player player;
 	player.set_account_id(11);
-	PropertyEntity* propertyEntity = player.mutable_property_entity();
-	propertyEntity->set_hp_max(1);
-	propertyEntity->set_mp_max(1);
-	propertyEntity->set_attack(1);
-	propertyEntity->set_defense(1);
+	auto propertyEntity = player.mutable_property_entity();
+	propertyEntity->set_model_id(1);
 	std::string msgData;
 	msgData = "asdasda";
 	player.SerializeToString(&msgData);
@@ -591,7 +592,7 @@ int main() {
 	loop = std::make_shared<TimerThread>();
     funcA();
 
-    std::this_thread::sleep_for(std::chrono::seconds(20));  // 确保主线程在协程执行完之前不会退出
+    std::this_thread::sleep_for(std::chrono::seconds(20)); 
 
 	loop->stop(true);
     return 0;
@@ -648,22 +649,156 @@ int main()
  
  	std::cout << chrono::duration_cast<chrono::nanoseconds>(Time1_end - Time1_start).count() / chrono::duration_cast<chrono::nanoseconds>(Time_end - Time_start).count() ;
 
+	auto timespan = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+	std::cout << typeid(timespan).name() << std::endl;
+
 	return 0;
 }
 #endif
 
 #if 1
 
-std::pair<int, int> GetTimeZoneOffset(const std::pair<int, int>& timeZoneOffset)
+class LogColor {
+public:
+    inline static std::string RED	= "\033[31m";
+    inline static std::string GREEN	= "\033[32m";
+    inline static std::string YELLOW	= "\033[33m";
+    inline static std::string BLUE	= "\033[34m";
+    inline static std::string RESET	= "\033[0m";
+};
+
+std::string GetNowTimeStr()
 {
-	return timeZoneOffset;
+	using namespace std::chrono;
+	static zoned_time<system_clock::duration> currentZone(current_zone());
+    currentZone = system_clock::now(); 
+	return std::format("{:%Y-%m-%d %H:%M:%S}", currentZone);
 }
+
+static int aa = 0;
+
+struct LoggerPrint
+{
+	LoggerPrint(const std::source_location& location = std::source_location::current())
+		:olocation(location)
+    {	
+		aa += hv_rand(1, 2);
+	}
+
+	~LoggerPrint()
+	{
+		aa -= hv_rand(1, 2);
+		if (oResult.empty())
+		{
+			return;
+		}
+
+		switch (oLevel)
+		{
+			case ELogLevel_Normal:
+				std::cout << LogColor::BLUE << oResult << LogColor::RESET;
+				break;
+			case ELogLevel_Warning:
+				std::cout << LogColor::YELLOW << oResult << LogColor::RESET;
+				break;
+			case ELogLevel_Error:
+				std::cout << LogColor::RED << oResult << LogColor::RESET;
+				break;
+			case ELogLevel_Debug:
+				std::cout << oResult;
+				break;
+			default:
+				return;
+		}
+
+		if (LogFile.is_open())
+		{
+			LogFile << oResult;
+			LogFile.flush();
+		}
+	}
+
+	template <typename... Args>
+    void operator()(ELogLevel level, const std::format_string<Args...>& fmt, Args&&... args)
+	{
+		oLevel = level;
+
+		if (level < SLogLevel)
+		{
+			return;
+		}
+
+		std::string* locCache = nullptr;
+		// if(LocCache.contains())
+		// {
+
+		// }
+
+		oResult = std::format("[{}] {} -> \n\t{}\n", 
+			GetNowTimeStr(), 
+			olocation.function_name(),
+			std::format(fmt, std::forward<Args>(args)...));
+	}
+
+	
+	void operator()(ELogLevel level, const std::string& fmt)
+	{
+		oLevel = level;
+
+		if (level < SLogLevel)
+		{
+			return;
+		}
+
+		oResult = std::format("[{}] {} -> \n\t{}\n", 
+			GetNowTimeStr(), 
+			olocation.function_name(), 
+			fmt);
+	}
+
+	/// @brief set logger type and Log file Init 
+	static void SetLoggerLevel(std::optional<ELogLevel> level = std::nullopt, std::optional<std::filesystem::path> path = std::nullopt)
+	{
+		if(level)
+		{
+			SLogLevel = *level;
+		}
+		
+		if(!LogFile.is_open() && path)
+		{
+			if(!std::filesystem::exists(*path))
+			{
+				std::filesystem::create_directories(*path);
+			}
+			LogFile = std::ofstream( std::format("{}/Output.log", path.value().string()), std::ios::app);
+		}
+	}
+
+protected:
+	const std::source_location& olocation;
+	std::string oResult;
+	ELogLevel oLevel = ELogLevel_None;
+
+protected:
+	inline static std::ofstream LogFile; 
+	inline static ELogLevel SLogLevel = ELogLevel_Normal;
+	inline static std::unordered_map<std::string, std::string> LocCache;
+};
 
 int main()
 {
-	// std::pair<int, int> timeZoneOffset = { 8, 0 };
-	auto offset = GetTimeZoneOffset({ 8, 0 });
-	std::cout << "Time Zone Offset: " << offset.first << ":" << offset.second << std::endl;
+	LoggerPrint::SetLoggerLevel(ELogLevel_Debug, "D:/Project/DimensionNightmare/Servers");
+	TIMERSTART(Time);
+	auto logger = LoggerPrint();
+	for(int i=0;i!=10'0000;i++)
+	{
+		logger(ELogLevel_Normal, "hello ~ {}", hv_rand(0, 1999999999));
+	}
+	TIMEREND(Time); 
+
+	std::cout << aa << std::endl;
+
+	DURATION_ms(Time);
 }
 
 #endif

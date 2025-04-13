@@ -1,5 +1,4 @@
 module;
-#include "StdMacro.h"
 export module DNClientProxy;
 
 import DNTask;
@@ -8,6 +7,7 @@ import Logger;
 import ThirdParty.Libhv;
 import ThirdParty.PbGen;
 import MessagePack;
+import std.compat;
 
 #define NABS(n) ((n) < 0 ? (n) : -(n))
 
@@ -81,7 +81,7 @@ public: // dll override
 			}
 			else
 			{
-				DNPrintCode(EL10nCode_NotCallbackEvent);
+				LoggerPrint()(EL10nCode_NotCallbackEvent);
 			}
 		}
 		else
@@ -136,13 +136,13 @@ public: // dll override
 	{
 		COM_RetHeartbeat request;
 		request.Clear();
-		int timespan = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+		int64_t timespan = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 		request.set_timespan(timespan);
 
 		std::string binData;
 		request.SerializeToString(&binData);
 
-		MessagePackAndSend(0, EMMsgDeal::Ret, request.GetDescriptor()->full_name().c_str(), binData, GetChannel());
+		MessagePackAndSend(0, EMMsgDeal::Ret, request.GetDescriptor()->full_name(), binData, GetChannel());
 	}
 
 	void InitConnectedChannel(const SocketChannelPtr& chanhel)
@@ -157,7 +157,7 @@ public: // dll override
 
 	void RedirectClient(uint16_t port, std::string ip)
 	{
-		DNPrint(ELogLevel_Debug, "reclient to %s:%u", ip.c_str(), port);
+		LoggerPrint()(ELogLevel_Debug, "reclient to {}:{}", ip, port);
 
 		eRegistState = EMRegistState::None;
 		closesocket();

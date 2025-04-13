@@ -1,5 +1,4 @@
 module;
-#include "StdMacro.h"
 export module ControlServerInit;
 
 import ControlServerHelper;
@@ -13,6 +12,9 @@ import ThirdParty.PbGen;
 import DNServer;
 import DNServerProxyHelper;
 import MessagePack;
+import std.compat;
+
+#define FUNCPLACE(func) #func, func
 
 export int HandleControlServerInit(DNServer* server)
 {
@@ -32,12 +34,12 @@ export int HandleControlServerInit(DNServer* server)
 				const std::string& peeraddr = channel->peeraddr();
 				if (channel->isConnected())
 				{
-					DNPrintCode(EL10nCode_CliConnOn, peeraddr.c_str(), channel->fd(), channel->id());
-					TICK_MAINSPACE_SIGN_FUNCTION(DNServerProxy, InitConnectedChannel, serverSock, channel);
+					LoggerPrint()(EL10nCode_CliConnOn, peeraddr, channel->fd(), channel->id());
+					TickMainSpaceDll(serverSock, FUNCPLACE(&DNServerProxy::InitConnectedChannel),  channel);
 				}
 				else
 				{
-					DNPrintCode(EL10nCode_CliConnOff, peeraddr.c_str(), channel->fd(), channel->id());
+					LoggerPrint()(EL10nCode_CliConnOff, peeraddr, channel->fd(), channel->id());
 
 					// not used
 					if (ServerEntity* entity = channel->getContext<ServerEntity>())
@@ -55,11 +57,11 @@ export int HandleControlServerInit(DNServer* server)
 				MessagePacket packet;
 				memcpy(&packet, buf->data(), MessagePacket::PackLenth);
 
-				DNPrint(ELogLevel_Debug, "s %s Recv type=%d With Mid:%u", channel->peeraddr().c_str(), packet.dealType, packet.msgId);
+				LoggerPrint()(ELogLevel_Debug, "s {} Recv type={} With Mid:{}", channel->peeraddr(), static_cast<int>(packet.dealType), packet.msgId);
 
 				if(packet.pkgLenth > 2 * 1024)
 				{
-					DNPrint(ELogLevel_Debug, "Recv byte len limit=%u", packet.pkgLenth);
+					LoggerPrint()(ELogLevel_Debug, "Recv byte len limit={}", packet.pkgLenth);
 					return;
 				}
 				
@@ -97,12 +99,12 @@ export int HandleControlServerInit(DNServer* server)
 					}
 					else
 					{
-						DNPrintCode(EL10nCode_MsgFind);
+						LoggerPrint()(EL10nCode_MsgFind);
 					}
 				}
 				else
 				{
-					DNPrintCode(EL10nCode_MsgDealType);
+					LoggerPrint()(EL10nCode_MsgDealType);
 				}
 			};
 

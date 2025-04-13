@@ -1,10 +1,10 @@
 module;
-#include "StdMacro.h"
 export module DNServer;
 
 import L10nText;
 import Config.Server;
 import ThirdParty.Libhv;
+import std.compat;
 
 export enum class EMServerType : uint8_t
 {
@@ -65,8 +65,6 @@ public:
 
 	virtual void LoopEvent(std::function<void(EventLoopPtr)> func) = 0;
 
-	bool& IsRun() { return bInRun; }
-
 	virtual void TickMainFrame(){}
 
 public: // dll override
@@ -74,8 +72,6 @@ public: // dll override
 protected:
 
 	EMServerType emServerType = EMServerType::None;
-
-	bool bInRun = false;
 
 	uint32_t iServerId = 0;
 

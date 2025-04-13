@@ -1,5 +1,4 @@
 module;
-#include "StdMacro.h"
 export module DatabaseServer;
 
 import DNServer;
@@ -9,6 +8,7 @@ import Config.Server;
 import ThirdParty.Libhv;
 import ThirdParty.PbGen;
 import ThirdParty.Libpqxx;
+import std.compat;
 
 export class DatabaseServer : public DNServer
 {
@@ -34,7 +34,7 @@ public:
 		std::string* value = LaunchConfig::GetParam("byCtl");
 		if (!value || !stoi(*value))
 		{
-			DNPrintCode(EL10nCode_SrvByCtl);
+			LoggerPrint()(EL10nCode_SrvByCtl);
 			return false;
 		}
 

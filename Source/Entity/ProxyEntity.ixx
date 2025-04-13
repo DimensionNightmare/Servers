@@ -1,8 +1,8 @@
 module;
-#include "StdMacro.h"
 export module ProxyEntity;
 
 import NetEntity;
+import std.compat;
 
 /// @brief this is client proxy entity
 export class ProxyEntity : public NetEntity
@@ -29,7 +29,7 @@ public: // dll override
 	std::string& Token() { return sToken; }
 
 	/// @brief authenticate token expire time
-	uint32_t& ExpireTime() { return iExpireTime; }
+	int64_t& ExpireTime() { return iExpireTime; }
 
 	/// @brief alread connected serverid 
 	uint32_t& RecordServerId() { return iRecordServerId; }
@@ -39,6 +39,6 @@ protected: // dll proxy
 
 	std::string sToken;
 
-	uint32_t iExpireTime = 0;
+	int64_t iExpireTime = 0;
 
 };

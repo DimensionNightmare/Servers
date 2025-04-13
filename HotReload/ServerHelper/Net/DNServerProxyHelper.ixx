@@ -1,11 +1,12 @@
 module;
-#include "StdMacro.h"
 export module DNServerProxyHelper;
 
 import DNServerProxy;
 import DNTask;
 import DllUtils;
 import ThirdParty.PbGen;
+
+#define FUNCPLACE(func) #func, func
 
 export class DNServerProxyHelper : public DNServerProxy
 {
@@ -23,7 +24,7 @@ public:
 		mMsgList.emplace(msgId, task);
 		if (breakTime > 0)
 		{
-			task->TimerId() = TICK_MAINSPACE_SIGN_FUNCTION(DNServerProxy, CheckMessageTimeoutTimer, this, breakTime, msgId);
+			task->TimerId() = TickMainSpaceDll(this, FUNCPLACE(&DNServerProxy::CheckMessageTimeoutTimer),  breakTime, msgId);
 		}
 		return true;
 	}

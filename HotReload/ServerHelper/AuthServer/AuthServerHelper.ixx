@@ -1,5 +1,4 @@
 module;
-#include "StdMacro.h"
 export module AuthServerHelper;
 
 import AuthServer;
@@ -41,7 +40,7 @@ public:
 		}
 		catch (const std::exception& e)
 		{
-			DNPrint(ELogLevel_Debug, "%s", e.what());
+			LoggerPrint()(ELogLevel_Debug, "{}", e.what());
 			return false;
 		}
 
@@ -54,7 +53,7 @@ static AuthServerHelper* PAuthServerHelper = nullptr;
 export void SetAuthServer(AuthServer* server)
 {
 	PAuthServerHelper = static_cast<AuthServerHelper*>(server);
-	ASSERT(PAuthServerHelper != nullptr)
+	if (!(PAuthServerHelper != nullptr)) {abort();}
 }
 
 export AuthServerHelper* GetAuthServer()

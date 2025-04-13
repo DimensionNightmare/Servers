@@ -1,5 +1,4 @@
 module;
-#include "StdMacro.h"
 export module ControlMessage:ControlCommon;
 
 import DNTask;
@@ -9,6 +8,7 @@ import ThirdParty.Libhv;
 import ThirdParty.PbGen;
 import Logger;
 import ServerEntityManagerHelper;
+import std.compat;
 
 namespace ControlMessage
 {
@@ -29,7 +29,7 @@ namespace ControlMessage
 
 		EMServerType regType = (EMServerType)request.server_type();
 
-		DNPrint(ELogLevel_Debug, "ip Reqregist: %s, %d", channel->peeraddr().c_str(), request.server_type());
+		LoggerPrint()(ELogLevel_Debug, "ip Reqregist: {}, {}", channel->peeraddr(), request.server_type());
 
 		const std::string& ipPort = channel->localaddr();
 
@@ -61,7 +61,7 @@ namespace ControlMessage
 		std::string binData;
 		response.SerializeToString(&binData);
 
-		MessagePackAndSend(msgId, EMMsgDeal::Res, nullptr, binData, channel);
+		MessagePackAndSend(msgId, EMMsgDeal::Res, "", binData, channel);
 	}
 
 	export void Exe_RetHeartbeat(SocketChannelPtr channel, std::string binMsg)

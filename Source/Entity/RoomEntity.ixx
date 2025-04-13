@@ -1,8 +1,8 @@
 module;
-#include "StdMacro.h"
 export module RoomEntity;
 
 import NetEntity;
+import std.compat;
 
 /// @brief room mean set/team/... client collection.
 export class RoomEntity : public NetEntity

@@ -1,9 +1,9 @@
 module;
-#include "StdMacro.h"
 export module EntityManager;
 
 import Entity;
 import ThirdParty.Libhv;
+import std.compat;
 
 export template<class TEntity = Entity>
 class EntityManager

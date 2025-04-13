@@ -1,5 +1,4 @@
 module;
-#include "StdMacro.h"
 export module ServerEntityManagerHelper;
 
 import ServerEntityManager;
@@ -43,7 +42,7 @@ public:
 
 			mEntityMapList[entity->GetServerType()].remove(entity);
 
-			DNPrint(ELogLevel_Debug, "offline destory entity");
+			LoggerPrint()(ELogLevel_Debug, "offline destory entity");
 			mEntityMap.erase(entityId);
 			return true;
 		}

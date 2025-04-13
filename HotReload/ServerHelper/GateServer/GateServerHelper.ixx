@@ -1,5 +1,4 @@
 module;
-#include "StdMacro.h"
 export module GateServerHelper;
 
 import GateServer;
@@ -38,7 +37,7 @@ public:
 		request.set_server_id(cEntity->ID());
 		request.set_is_regist(false);
 		request.SerializeToString(&binData);
-		MessagePackAndSend(0, EMMsgDeal::Ret, request.GetDescriptor()->full_name().c_str(), binData, GetCSock()->GetChannel());
+		MessagePackAndSend(0, EMMsgDeal::Ret, request.GetDescriptor()->full_name(), binData, GetCSock()->GetChannel());
 
 		GetServerEntityManager()->RemoveEntity(cEntity->ID());
 	}
@@ -62,7 +61,7 @@ public:
 			g2L_RetProxyOffline request;
 			request.set_entity_id(entityId);
 			request.SerializeToString(&binData);
-			MessagePackAndSend(0, EMMsgDeal::Ret, request.GetDescriptor()->full_name().c_str(), binData, serverEntity->GetSock());
+			MessagePackAndSend(0, EMMsgDeal::Ret, request.GetDescriptor()->full_name(), binData, serverEntity->GetSock());
 		}
 
 		entityMan->RemoveEntity(entityId);
@@ -74,7 +73,7 @@ static GateServerHelper* PGateServerHelper = nullptr;
 export void SetGateServer(GateServer* server)
 {
 	PGateServerHelper = static_cast<GateServerHelper*>(server);
-	ASSERT(PGateServerHelper != nullptr)
+	if (!(PGateServerHelper != nullptr)) {abort();}
 }
 
 export GateServerHelper* GetGateServer()

@@ -1,5 +1,4 @@
 module;
-#include "StdMacro.h"
 export module DatabaseMessage:DatabaseGate;
 
 import FuncHelper;
@@ -10,6 +9,7 @@ import FuncHelper;
 import ThirdParty.Libhv;
 import ThirdParty.PbGen;
 import ThirdParty.Libpqxx;
+import std.compat;
 
 namespace DatabaseMessage
 {
@@ -39,13 +39,13 @@ namespace DatabaseMessage
 					auto query = [&]()
 						{
 							dbHelper
-								.SelectByKey(request.key_name().c_str())
+								.SelectByKey(request.key_name())
 								.Limit(request.limit())
 								.Commit();
 
-							if (int resSize = dbHelper.Result().size())
+							if (int64_t resSize = dbHelper.Result().size())
 							{
-								for (int cur = 0; cur < resSize; cur++)
+								for (int64_t cur = 0; cur < resSize; cur++)
 								{
 									std::string* binData = response.add_entity_data();
 									dbHelper.Result()[cur]->SerializeToString(binData);
@@ -82,7 +82,7 @@ namespace DatabaseMessage
 					}
 					catch (const std::exception& e)
 					{
-						DNPrint(ELogLevel_Debug, e.what());
+						LoggerPrint()(ELogLevel_Debug, e.what());
 						response.set_state_code(5);
 					}
 
@@ -107,7 +107,7 @@ namespace DatabaseMessage
 
 		response.SerializeToString(&binData);
 
-		MessagePackAndSend(msgId, EMMsgDeal::Res, nullptr, binData, channel);
+		MessagePackAndSend(msgId, EMMsgDeal::Res, "", binData, channel);
 	}
 
 	export void Exe_ReqSaveData(SocketChannelPtr channel, uint32_t msgId, std::string binMsg)
@@ -133,7 +133,7 @@ namespace DatabaseMessage
 					DbSqlHelper dbHelper(&txn, findMsg);
 
 					dbHelper
-						.UpdateByKey(request.key_name().c_str())
+						.UpdateByKey(request.key_name())
 						.Commit();
 
 					txn.commit();
@@ -152,7 +152,7 @@ namespace DatabaseMessage
 					}
 					catch (const std::exception& e)
 					{
-						DNPrint(ELogLevel_Debug, e.what());
+						LoggerPrint()(ELogLevel_Debug, e.what());
 						response.set_state_code(5);
 					}
 
@@ -177,6 +177,6 @@ namespace DatabaseMessage
 
 		response.SerializeToString(&binData);
 
-		MessagePackAndSend(msgId, EMMsgDeal::Res, nullptr, binData, channel);
+		MessagePackAndSend(msgId, EMMsgDeal::Res, "", binData, channel);
 	}
 }

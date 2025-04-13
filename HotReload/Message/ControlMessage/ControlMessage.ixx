@@ -1,5 +1,4 @@
 module;
-#include "StdMacro.h"
 export module ControlMessage;
 
 export import :ControlGlobal;
@@ -9,6 +8,7 @@ import :ControlRedirect;
 import Logger;
 import ThirdParty.Libhv;
 import ThirdParty.PbGen;
+import StrUtils;
 
 export class ControlMessageHandle
 {
@@ -26,12 +26,12 @@ public:
 			}
 			catch (const std::exception& e)
 			{
-				DNPrint(ELogLevel_Debug, e.what());
+				LoggerPrint()(ELogLevel_Debug, e.what());
 			}
 		}
 		else
 		{
-			DNPrintCode(EL10nCode_MsgHandleFind);
+			LoggerPrint()(EL10nCode_MsgHandleFind);
 		}
 	}
 
@@ -47,12 +47,12 @@ public:
 			}
 			catch (const std::exception& e)
 			{
-				DNPrint(ELogLevel_Debug, e.what());
+				LoggerPrint()(ELogLevel_Debug, e.what());
 			}
 		}
 		else
 		{
-			DNPrintCode(EL10nCode_MsgHandleFind);
+			LoggerPrint()(EL10nCode_MsgHandleFind);
 		}
 	}
 
@@ -67,26 +67,21 @@ public:
 			}
 			catch (const std::exception& e)
 			{
-				DNPrint(ELogLevel_Debug, e.what());
+				LoggerPrint()(ELogLevel_Debug, e.what());
 			}
 		}
 		else
 		{
-			DNPrintCode(EL10nCode_MsgHandleFind);
+			LoggerPrint()(EL10nCode_MsgHandleFind);
 		}
 	}
 
 	static void RegMsgHandle()
 	{
-#ifdef _WIN32
 	#define MSG_MAPPING(map, msg, func) \
-		map.emplace(std::hash<std::string>::_Do_hash(msg::GetDescriptor()->full_name()), \
+		map.emplace(DoStringHash(msg::GetDescriptor()->full_name()), \
 		make_pair(msg::internal_default_instance(), &ControlMessage::func))
-#elif __unix__
-	#define MSG_MAPPING(map, msg, func) \
-		map.emplace(std::hash<std::string>{}(msg::GetDescriptor()->full_name()), \
-		make_pair(msg::internal_default_instance(), &ControlMessage::func))
-#endif
+
 
 		MSG_MAPPING(MHandleMap, COM_ReqRegistSrv, Msg_ReqRegistSrv);
 

@@ -1,5 +1,4 @@
 module;
-#include "StdMacro.h"
 export module DatabaseServerHelper;
 
 import DatabaseServer;
@@ -11,6 +10,7 @@ import StrUtils;
 import DbUtils;
 import ThirdParty.PbGen;
 import ThirdParty.Libpqxx;
+import std.compat;
 
 export enum class EMSqlDbNameEnum : uint16_t
 {
@@ -64,7 +64,7 @@ public:
 					if (!checkTxn.query_value<bool>(std::format("SELECT EXISTS (SELECT 1 FROM pg_database WHERE datname = '{}');", dbName)))
 					{
 						checkTxn.exec(std::format("CREATE DATABASE \"{}\";", dbName));
-						DNPrint(ELogLevel_Debug, "Create Database:%s", dbName.c_str());
+						LoggerPrint()(ELogLevel_Debug, "Create Database:{}", dbName);
 					}
 
 					uint16_t key = (uint16_t)EnumName<EMSqlDbNameEnum>(dbName);
@@ -107,7 +107,7 @@ public:
 
 					if (!singleTon.IsExist())
 					{
-						DNPrint(ELogLevel_Debug, "Create Table:SingleTon");
+						LoggerPrint()(ELogLevel_Debug, "Create Table:SingleTon");
 						singleTon.CreateTable().Commit();
 					}
 
@@ -122,13 +122,25 @@ public:
 						if (!helper.IsExist())
 						{
 
-							DNPrint(ELogLevel_Debug, "Create Table:%s", tableName.c_str());
+							LoggerPrint()(ELogLevel_Debug, "Create Table:{}", tableName);
 							helper.CreateTable().Commit();
 
 							kv.set_value(schemaMd5);
 							singleTon.Insert().Commit();
 							continue;
 						}
+
+						// #define DBSelectOne(obj, name) .SelectOne(#name, [&obj]() { return obj.name(); })
+						// #define DBSelectCond(obj, name, cond, splicing) .SelectCond(#name, cond, splicing, [&obj]() { return obj.name(); })
+						// #define DBUpdate(obj, name) .Update(obj, #name, [&obj]() { return obj.name(); })
+						// #define DBUpdateCond(obj, name, cond, splicing) .UpdateCond(#name, cond, splicing, [&obj]() { return obj.name(); })
+						// #define DBDeleteCond(obj, name, cond, splicing) .DeleteCond(#name, cond, splicing, [&obj]() { return obj.name(); })
+
+						// // key method
+						// #define DBUpdateByKey(obj, name) .UpdateByKey(#name, [&obj]() { return obj.name(); })
+						// #define DBSelectByKey(obj, name) .SelectByKey(#name, [&obj]() { return obj.name(); })
+
+						#define DBSelectByKey(obj, name) .SelectByKey(#name, [&obj]() { return obj.name(); })
 
 						singleTon
 							DBSelectByKey(kv, key)
@@ -143,7 +155,7 @@ public:
 
 						if (schemaMd5 != kv.value())
 						{
-							DNPrint(ELogLevel_Debug, "not match md5:\n%s\n%s", schemaMd5.c_str(), kv.value().c_str());
+							LoggerPrint()(ELogLevel_Debug, "not match md5:\n{}\n{}", schemaMd5, kv.value());
 							helper.UpdateTable().Commit();
 
 
@@ -159,7 +171,7 @@ public:
 		}
 		catch (const std::exception& e)
 		{
-			DNPrint(ELogLevel_Debug, "%s", e.what());
+			LoggerPrint()(ELogLevel_Debug, e.what());
 			return false;
 		}
 
@@ -187,7 +199,7 @@ static DatabaseServerHelper* PDatabaseServerHelper = nullptr;
 export void SetDatabaseServer(DatabaseServer* server)
 {
 	PDatabaseServerHelper = static_cast<DatabaseServerHelper*>(server);
-	ASSERT(PDatabaseServerHelper != nullptr);
+	if (!(PDatabaseServerHelper != nullptr)) {abort();}
 }
 
 export DatabaseServerHelper* GetDatabaseServer()

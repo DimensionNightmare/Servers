@@ -1,12 +1,5 @@
 module;
-#ifdef _WIN32
-	#include <consoleapi2.h>
-	#include <libloaderapi.h>
-	#include <WinBase.h>
-#elif __unix__
-	#include <dlfcn.h>
-#endif
-#include "StdMacro.h"
+
 export module DimensionNightmare;
 
 import ControlServer;
@@ -22,6 +15,8 @@ import Config.Server;
 import ThirdParty.PbGen;
 import DNServer;
 import DllUtils;
+import std.compat;
+import Platform;
 
 #ifdef __unix__
 	#define Sleep(ms) usleep(ms*1000)
@@ -35,13 +30,13 @@ export struct HotReloadDll
 #ifdef _WIN32
 		dllPath = dllPath.append(SDllName);
 	#ifdef NDEBUG
-		SetEnvironmentVariable("PATH", "./Bin;%PATH%");
+		SetEnvironmentVariableA("PATH", "./Bin;%PATH%");
 	#endif
 
 		void* hModule = LoadLibraryA(dllPath.string().c_str());
 		if (!hModule)
 		{
-			DNPrintCode(EL10nCode_DllLoad, GetLastError());
+			LoggerPrint()(EL10nCode_DllLoad, GetLastError());
 			return nullptr;
 		}
 
@@ -51,7 +46,7 @@ export struct HotReloadDll
 		void* hModule = dlopen(fullPath.c_str(), RTLD_LAZY);
 		if (!hModule)
 		{
-			DNPrint(ELogLevel_Debug, dlerror());
+			LoggerPrint()(ELogLevel_Debug, dlerror());
 			return nullptr;
 		}
 #endif
@@ -81,7 +76,7 @@ export struct HotReloadDll
 			}
 			catch (const std::exception& e)
 			{
-				DNPrint(ELogLevel_Debug, "filesystem:%s", e.what());
+				LoggerPrint()(ELogLevel_Debug, "filesystem:{}", e.what());
 			}
 		}
 
@@ -93,13 +88,13 @@ export struct HotReloadDll
 	{
 		if (!std::filesystem::exists(sDllDir))
 		{
-			DNPrintCode(EL10nCode_DllMenuPath);
+			LoggerPrint()(EL10nCode_DllMenuPath);
 			return false;
 		}
 
 		if (!SDllName)
 		{
-			DNPrintCode(EL10nCode_DllFileName);
+			LoggerPrint()(EL10nCode_DllFileName);
 			return false;
 		}
 #ifdef _WIN32
@@ -117,7 +112,7 @@ export struct HotReloadDll
 		}
 		catch (const std::exception& e)
 		{
-			DNPrint(ELogLevel_Debug, "%s", e.what());
+			LoggerPrint()(ELogLevel_Debug, "{}", e.what());
 			return false;
 		}
 #endif
@@ -174,12 +169,9 @@ public:
 	bool isNormalFree = true;
 
 	std::string sServerName;
-
-public:
-	inline static std::shared_ptr<HotReloadDll> PInstance;
 };
 
-export class DimensionNightmare : public std::enable_shared_from_this<DimensionNightmare>
+export class DimensionNightmare
 {
 
 public:
@@ -193,12 +185,22 @@ public:
 	{
 		pServer = nullptr;
 		pHotDll = nullptr;
+		pDNl10n = nullptr;
+		pLaunchConfig = nullptr;
 	}
 
 	/// @brief load ini config
-	bool Init(std::unordered_map<std::string, std::string>& luanchParam)
+	bool Init(std::unordered_map<std::string, std::string>& launchParam)
 	{
-		PInstance = shared_from_this();
+		EMServerType serverType = (EMServerType)stoi(launchParam["svrType"]);
+		if (serverType <= EMServerType::None || serverType >= EMServerType::Max)
+		{
+			LoggerPrint()(ELogLevel_Error, "serverType Not Invalid! ");
+			return false;
+		}
+
+		std::string_view serverName = EnumName(serverType);
+		launchParam.emplace("svrName", serverName);
 
 #ifndef NDEBUG
 		const char* iniFilePath = "./Config/ServerDebug.ini";
@@ -208,19 +210,19 @@ public:
 
 		if(!std::filesystem::exists(iniFilePath))
 		{
-			DNPrint(ELogLevel_Error, "ConfigIni Not Finded!");
+			LoggerPrint()(ELogLevel_Error, "ConfigIni Not Finded!");
 			return false;
 		}
 
 		// get ini Config
-		std::string_view serverName = luanchParam["svrName"];
 
 		std::vector<std::string> sectionNames;
 
 #ifdef _WIN32
-		char buffer[512] = { 0 };
+		#define MAX_SECTION_NAME 512
+		char buffer[MAX_SECTION_NAME] = { 0 };
 		size_t bufferSize = sizeof(buffer);
-		GetPrivateProfileSectionNamesA(buffer, bufferSize, iniFilePath);
+		GetPrivateProfileSectionNamesA(buffer, MAX_SECTION_NAME, iniFilePath);
 		char* current = buffer;
 		while (*current)
 		{
@@ -292,12 +294,12 @@ public:
 			if (pos != std::string::npos)
 			{
 				std::string key = split.substr(0, pos);
-				if (luanchParam.contains(key))
+				if (launchParam.contains(key))
 				{
 					return;
 				}
 
-				luanchParam.emplace(key, split.substr(pos + 1));
+				launchParam.emplace(key, split.substr(pos + 1));
 			}
 		};
 		
@@ -305,7 +307,7 @@ public:
 		for (const std::string& sectionName : sectionNames)
 		{
 #ifdef _WIN32
-			GetPrivateProfileSectionA(sectionName.c_str(), buffer, bufferSize, iniFilePath);
+			GetPrivateProfileSectionA(sectionName.c_str(), buffer, MAX_SECTION_NAME, iniFilePath);
 			char* keyValuePair = buffer;
 			while (*keyValuePair)
 			{
@@ -323,8 +325,9 @@ public:
 		}
 
 		// set global Launch config  
-		LaunchConfig::PInstance = std::make_unique<LaunchConfig>();
-		LaunchConfig::PInstance->SetLuanchConfig(luanchParam);
+		pLaunchConfig = std::make_shared<LaunchConfig>();
+		pLaunchConfig->SetLuanchConfig(launchParam);
+		LaunchConfig::PInstance = pLaunchConfig;
 
 		return true;
 	}
@@ -333,12 +336,15 @@ public:
 	bool InitServer()
 	{
 		// I10n Config
-		DNl10n::PInstance = std::make_shared<DNl10n>();
-		if (const char* codeStr = DNl10n::PInstance->Init())
+		pDNl10n = std::make_shared<DNl10n>();
+
+		if (const char* codeStr = pDNl10n->Init())
 		{
-			DNPrint(ELogLevel_Error, codeStr);
+			LoggerPrint()(ELogLevel_Error, codeStr);
 			return false;
 		}
+
+		DNl10n::PInstance = pDNl10n;
 
 		std::string* value = LaunchConfig::GetParam("svrType");
 		EMServerType serverType = (EMServerType)stoi(*value);
@@ -364,7 +370,7 @@ public:
 				pServer = std::make_unique<LogicServer>();
 				break;
 			default:
-				DNPrintCode(EL10nCode_SrvTypeNotVaild);
+				LoggerPrint()(EL10nCode_SrvTypeNotVaild);
 				return false;
 		}
 
@@ -385,17 +391,17 @@ public:
 
 		if (!OnRegHotReload())
 		{
-			DNPrint(ELogLevel_Error, "program lunch OnRegHotReload error!");
+			LoggerPrint()(ELogLevel_Error, "program lunch OnRegHotReload error!");
 			return false;
 		}
 
 		if (!pServer->Start())
 		{
-			DNPrint(ELogLevel_Error, "program lunch Server Start error!");
+			LoggerPrint()(ELogLevel_Error, "program lunch Server Start error!");
 			return false;
 		}
 
-		return pServer->IsRun() = true;
+		return true;
 	}
 	
 	/// @brief init command line 
@@ -439,13 +445,13 @@ public:
 #ifdef _WIN32
 				PROCESS_INFORMATION pinfo = {};
 				STARTUPINFOA startInfo = {};
-				ZeroMemory(&startInfo, sizeof(startInfo));
+				memset(&startInfo, 0, sizeof(startInfo));
 				startInfo.cb = sizeof(startInfo);
 
-				startInfo.dwFlags = STARTF_USESHOWWINDOW;
-				startInfo.wShowWindow = 1; // SW_SHOWNORMAL;
-				if (CreateProcessA(NULL, allStr.data(),
-					NULL, NULL, FALSE, CREATE_NEW_CONSOLE, NULL, NULL, &startInfo, &pinfo))
+				
+				startInfo.dwFlags = 0x00000001; // STARTF_USESHOWWINDOW 0x00000001
+				startInfo.wShowWindow = 1; // SW_SHOWNORMAL 1
+				if (CreateProcessA(nullptr, allStr.data(), nullptr, nullptr, 0, 0x00000010, nullptr, nullptr, &startInfo, &pinfo)) // CREATE_NEW_CONSOLE 0x00000010
 #elif __unix__
 				if (0)
 #endif
@@ -478,7 +484,7 @@ public:
 			allCommands += k + "\n\t\t";
 		}
 
-		DNPrint(ELogLevel_Normal, allCommands.c_str());
+		LoggerPrint()(ELogLevel_Normal, allCommands);
 	}	
 
 	/// @brief exec command line
@@ -530,32 +536,28 @@ public:
 		return false;
 	}
 
-	bool& ServerIsRun() { return pServer->IsRun(); }
-
 	void TickMainFrame() { pServer->TickMainFrame(); }
+
+	HotReloadDll* GetHotDll() { return pHotDll.get();}
 private:
 	/// @brief runtime lib service pointer
-	std::shared_ptr<HotReloadDll> pHotDll;
+	std::unique_ptr<HotReloadDll> pHotDll;
 
 	/// @brief server service pointer
-	std::shared_ptr<DNServer> pServer;
+	std::unique_ptr<DNServer> pServer;
+
+	std::shared_ptr<DNl10n> pDNl10n;
+
+	std::shared_ptr<LaunchConfig> pLaunchConfig;
 
 	/// @brief command line std::function mapping
 	std::unordered_map<std::string, std::function<void(std::stringstream*)>> mCmdHandle;
 public:
-	inline static std::shared_ptr<DimensionNightmare> PInstance;
+	inline static std::unique_ptr<DimensionNightmare> PInstance;
 };
 
 
 #pragma region Export main space 
-template <typename Method>
-struct MemberFunctionArgs;
-
-template <typename R, typename Class, typename... Args>
-struct MemberFunctionArgs<R(Class::*)(Args...)>
-{
-	using Arguments = std::tuple<Args...>;
-};
 
 #define REGIST_MAINSPACE_SIGN_FUNCTION(classname, methodname)\
 	using classname##_##methodname##_Sign = decltype(&classname::methodname);\

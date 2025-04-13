@@ -1,5 +1,4 @@
 module;
-#include "StdMacro.h"
 export module LogicServerInit;
 
 import LogicServerHelper;
@@ -13,6 +12,9 @@ import ThirdParty.PbGen;
 import DNServer;
 import MessagePack;
 import DNServerProxyHelper;
+import std.compat;
+
+#define FUNCPLACE(func) #func, func
 
 export int HandleLogicServerInit(DNServer* server)
 {
@@ -32,11 +34,11 @@ export int HandleLogicServerInit(DNServer* server)
 				const std::string& peeraddr = channel->peeraddr();
 				if (channel->isConnected())
 				{
-					DNPrintCode(EL10nCode_CliConnOn, peeraddr.c_str(), channel->fd(), channel->id());
+					LoggerPrint()(EL10nCode_CliConnOn, peeraddr, channel->fd(), channel->id());
 				}
 				else
 				{
-					DNPrintCode(EL10nCode_CliConnOff, peeraddr.c_str(), channel->fd(), channel->id());
+					LoggerPrint()(EL10nCode_CliConnOff, peeraddr, channel->fd(), channel->id());
 					if (RoomEntity* entity = channel->getContext<RoomEntity>())
 					{
 						RoomEntityManagerHelper* entityMan = serverProxy->GetRoomEntityManager();
@@ -51,11 +53,11 @@ export int HandleLogicServerInit(DNServer* server)
 				MessagePacket packet;
 				memcpy(&packet, buf->data(), MessagePacket::PackLenth);
 
-				DNPrint(ELogLevel_Debug, "s %s Recv type=%d With Mid:%u", channel->peeraddr().c_str(), packet.dealType, packet.msgId);
+				LoggerPrint()(ELogLevel_Debug, "s {} Recv type={} With Mid:{}", channel->peeraddr(), static_cast<int>(packet.dealType), packet.msgId);
 
 				if(packet.pkgLenth > 2 * 1024)
 				{
-					DNPrint(ELogLevel_Debug, "Recv byte len limit=%u", packet.pkgLenth);
+					LoggerPrint()(ELogLevel_Debug, "Recv byte len limit={}", packet.pkgLenth);
 					return;
 				}
 				
@@ -93,12 +95,12 @@ export int HandleLogicServerInit(DNServer* server)
 					}
 					else
 					{
-						DNPrintCode(EL10nCode_MsgFind);
+						LoggerPrint()(EL10nCode_MsgFind);
 					}
 				}
 				else
 				{
-					DNPrintCode(EL10nCode_MsgDealType);
+					LoggerPrint()(EL10nCode_MsgDealType);
 				}
 			};
 
@@ -119,15 +121,15 @@ export int HandleLogicServerInit(DNServer* server)
 
 				if (channel->isConnected())
 				{
-					DNPrintCode(EL10nCode_SrvConnOn, peeraddr.c_str(), channel->fd(), channel->id());
+					LoggerPrint()(EL10nCode_SrvConnOn, peeraddr, channel->fd(), channel->id());
 					clientSock->SetRegistEvent(&LogicMessage::Evt_ReqRegistSrv);
-					TICK_MAINSPACE_SIGN_FUNCTION(DNClientProxy, InitConnectedChannel, clientSock, channel);
+					TickMainSpaceDll(clientSock, FUNCPLACE(&DNClientProxy::InitConnectedChannel),  channel);
 
 					serverProxy->GetClientEntityManager()->InitSqlConn(clientSock);
 				}
 				else
 				{
-					DNPrintCode(EL10nCode_SrvConnOff, peeraddr.c_str(), channel->fd(), channel->id());
+					LoggerPrint()(EL10nCode_SrvConnOff, peeraddr, channel->fd(), channel->id());
 
 					std::string origin = std::format("{}:{}", serverProxy->GetCtlIp(), serverProxy->GetCtlPort());
 					if (clientSock->EMRegistState() == EMRegistState::Registed || peeraddr != origin)
@@ -138,8 +140,8 @@ export int HandleLogicServerInit(DNServer* server)
 						{
 							clientSock->Timer()->setTimeout(200, [=](uint64_t timerID)
 								{
-									DNPrint(ELogLevel_Debug, "orgin not match peeraddr %s reclient ~", origin.c_str());
-									TICK_MAINSPACE_SIGN_FUNCTION(DNClientProxy, RedirectClient, clientSock, serverProxy->GetCtlPort(), serverProxy->GetCtlIp());
+									LoggerPrint()(ELogLevel_Debug, "orgin not match peeraddr {} reclient ~", origin);
+									TickMainSpaceDll(clientSock, FUNCPLACE(&DNClientProxy::RedirectClient),  serverProxy->GetCtlPort(), serverProxy->GetCtlIp());
 
 								});
 						}
@@ -158,11 +160,11 @@ export int HandleLogicServerInit(DNServer* server)
 				MessagePacket packet;
 				memcpy(&packet, buf->data(), MessagePacket::PackLenth);
 
-				DNPrint(ELogLevel_Debug, "c %s Recv type=%d With Mid:%u", channel->peeraddr().c_str(), packet.dealType, packet.msgId);
+				LoggerPrint()(ELogLevel_Debug, "c {} Recv type={} With Mid:{}", channel->peeraddr(), static_cast<int>(packet.dealType), packet.msgId);
 
 				if(packet.pkgLenth > 2 * 1024)
 				{
-					DNPrint(ELogLevel_Debug, "Recv byte len limit=%u", packet.pkgLenth);
+					LoggerPrint()(ELogLevel_Debug, "Recv byte len limit={}", packet.pkgLenth);
 					return;
 				}
 
@@ -200,12 +202,12 @@ export int HandleLogicServerInit(DNServer* server)
 					}
 					else
 					{
-						DNPrintCode(EL10nCode_MsgFind);
+						LoggerPrint()(EL10nCode_MsgFind);
 					}
 				}
 				else
 				{
-					DNPrintCode(EL10nCode_MsgDealType);
+					LoggerPrint()(EL10nCode_MsgDealType);
 				}
 			};
 

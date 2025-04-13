@@ -1,5 +1,4 @@
 module;
-#include "StdMacro.h"
 export module AuthMessage;
 
 export import :AuthCommon;
@@ -7,6 +6,8 @@ import ApiManager;
 import ThirdParty.Libhv;
 import ThirdParty.PbGen;
 import Logger;
+import std.compat;
+import StrUtils;
 
 export class AuthMessageHandle
 {
@@ -25,13 +26,13 @@ public:
 			}
 			catch (const std::exception& e)
 			{
-				DNPrint(ELogLevel_Debug, e.what());
+				LoggerPrint()(ELogLevel_Debug, e.what());
 			}
 
 		}
 		else
 		{
-			DNPrintCode(EL10nCode_MsgHandleFind);
+			LoggerPrint()(EL10nCode_MsgHandleFind);
 		}
 	}
 	
@@ -46,12 +47,12 @@ public:
 			}
 			catch (const std::exception& e)
 			{
-				DNPrint(ELogLevel_Debug, e.what());
+				LoggerPrint()(ELogLevel_Debug, e.what());
 			}
 		}
 		else
 		{
-			DNPrintCode(EL10nCode_MsgHandleFind);
+			LoggerPrint()(EL10nCode_MsgHandleFind);
 		}
 	}
 

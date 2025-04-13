@@ -1,5 +1,4 @@
 module;
-#include "StdMacro.h"
 export module DNServerProxy;
 
 import DNTask;
@@ -7,6 +6,7 @@ import MessagePack;
 import Logger;
 import ThirdParty.Libhv;
 import ThirdParty.PbGen;
+import std.compat;
 
 export class DNServerProxy : public TcpServer
 {
@@ -34,7 +34,7 @@ public:
 			int addrLen = sizeof(addr);
 			if (getsockname(listenfd, reinterpret_cast<struct sockaddr*>(&addr), &addrLen) < 0)
 			{
-				DNPrintCode(EL10nCode_GetSocketName);
+				LoggerPrint()(EL10nCode_GetSocketName);
 				return;
 			}
 
@@ -122,7 +122,7 @@ public: // dll override
 				if (!channel->context())
 				{
 					channel->close();
-					DNPrint(ELogLevel_Debug, "ChannelTimeoutTimer server destory entity\n");
+					LoggerPrint()(ELogLevel_Debug, "ChannelTimeoutTimer server destory entity\n");
 				}
 			}
 		}

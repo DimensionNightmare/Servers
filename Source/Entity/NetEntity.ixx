@@ -1,9 +1,9 @@
 module;
-#include "StdMacro.h"
 export module NetEntity;
 
 import Entity;
 import ThirdParty.Libhv;
+import std.compat;
 
 export class NetEntity : public Entity
 {
