@@ -97,7 +97,7 @@ namespace LogicMessage
 			// from db
 			if(entity->GetDbEntity()->has_map_info())
 			{
-				GDefMapPointRecord* mapRecord = entity->GetDbEntity()->mutable_map_info();
+				GDef_MapPointRecord* mapRecord = entity->GetDbEntity()->mutable_map_info();
 				*mapRecord->mutable_cur_point() = *mapRecord->mutable_last_point();
 
 				mapId = mapRecord->cur_point().map_id();
@@ -107,7 +107,7 @@ namespace LogicMessage
 			{
 				mapId++;
 
-				GDefMapPointRecord* mapRecord = entity->GetDbEntity()->mutable_map_info();
+				GDef_MapPointRecord* mapRecord = entity->GetDbEntity()->mutable_map_info();
 				mapRecord->mutable_cur_point()->set_map_id(mapId);
 			}
 

@@ -7,9 +7,8 @@ module;
 #include "google/protobuf/extension_set.h"
 
 #include "GCfg/GCfg.pb.h"
-#include "GDef/GDef.pb.h"
 #include "l10n/l10n.pb.h"
-#include "Common/Common.pb.h"
+#include "GDb/GDb.pb.h"
 #include "Server/S_Auth.pb.h"
 #include "Server/S_Common.pb.h"
 #include "Server/S_Dedicated.pb.h"
@@ -55,9 +54,9 @@ export
 	using ::EL10nType;
 
 	using ::EL10nCode;
-	using ::GDefMapPointRecord;
-	using ::GDefVector3;
-	using ::GDefMapPoint;
+	using ::GDef_MapPointRecord;
+	using ::GDef_Vector3;
+	using ::GDef_MapPoint;
 
 	using ::EL10nCode_IsValid;
 	using ::ELogLevel_Parse;

@@ -58,13 +58,13 @@ public: // dll override
 		// change maprecord
 		if(offline)
 		{
-			GDefMapPointRecord* mapInfo = dbEntity.mutable_map_info();
-			GDefMapPoint* cur_point = mapInfo->mutable_cur_point();
-			GDefVector3* property_location = dbEntity.mutable_property_entity()->mutable_location();
+			GDef_MapPointRecord* mapInfo = dbEntity.mutable_map_info();
+			GDef_MapPoint* cur_point = mapInfo->mutable_cur_point();
+			GDef_Vector3* property_location = dbEntity.mutable_property_entity()->mutable_location();
 			*cur_point->mutable_point() = *property_location;
 			property_location->Clear();
 
-			GDefMapPoint* last_point = mapInfo->mutable_last_point();
+			GDef_MapPoint* last_point = mapInfo->mutable_last_point();
 			*last_point = *cur_point;
 			cur_point->Clear();
 		}

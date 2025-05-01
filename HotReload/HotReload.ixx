@@ -46,10 +46,9 @@ extern "C"
 		{
 			// DLL_PROCESS_DETACH
 			case 0:
-				if (lpvReserved != nullptr)
-				{
-					break;
-				}
+				// lpvReserved != nullptr ; Staticly linked DLL process detach
+				// lpvReserved == nullptr ; LoadLibrary Dynamically linked DLL process detach 
+				
 				break;
 			// DLL_PROCESS_ATTACH
 			case 1:
@@ -145,4 +144,5 @@ extern "C"
 
 		return isDeal;
 	}
+
 }
