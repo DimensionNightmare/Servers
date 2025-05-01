@@ -23,6 +23,7 @@ import std.compat;
 #include <source_location>
 #include <iostream>
 #include <fstream>
+#include <set>
 #endif
 
 
@@ -235,7 +236,7 @@ int main()
 
 	try
 	{
-		Redis* con = new Redis(connection_options, pool_options);
+		sw::redis::Redis* con = new sw::redis::Redis(connection_options, pool_options);
 		con->ping();
 		std::unordered_map<std::string, std::string> hashTerm;
 		con->hgetall("*", inserter(hashTerm, hashTerm.end()));
@@ -298,7 +299,7 @@ void HexStringToBytes(std::string& hexString)
 
 int main()
 {
-	Player player;
+	GDb::Player player;
 	player.set_account_id(11);
 	auto propertyEntity = player.mutable_property_entity();
 	propertyEntity->set_model_id(1);
@@ -514,10 +515,10 @@ struct DNTaskVoid
 
 
 
-class TimerThread : public EventLoopThread {
+class TimerThread : public hv::EventLoopThread {
 public:
     std::atomic<TimerID> nextTimerID;
-    TimerThread() : EventLoopThread() {
+    TimerThread() : hv::EventLoopThread() {
         nextTimerID = 0;
         start();
     }
@@ -787,18 +788,41 @@ protected:
 
 int main()
 {
-	LoggerPrint::SetLoggerLevel(ELogLevel_Debug, "D:/Project/DimensionNightmare/Servers");
-	TIMERSTART(Time);
-	auto logger = LoggerPrint();
-	for(int i=0;i!=10'0000;i++)
+	// LoggerPrint::SetLoggerLevel(ELogLevel_Debug, "D:/Project/DimensionNightmare/Servers");
+	// TIMERSTART(Time);
+	// auto logger = LoggerPrint();
+	// for(int i=0;i!=10'0000;i++)
+	// {
+	// 	logger(ELogLevel_Normal, "hello ~ {}", hv_rand(0, 1999999999));
+	// }
+	// TIMEREND(Time); 
+
+	// std::cout << aa << std::endl;
+
+	// DURATION_ms(Time);
+
+	struct CompareByLength {
+		bool operator()(const std::string& a, const std::string& b) const {
+			if (a.size() != b.size()) {
+				return a.size() < b.size(); // 长度升序
+			}
+			return a < b; // 长度相同则按字典序
+		}
+	};
+
+	std::set<std::string, CompareByLength> strset;
+
+
+	strset.emplace("aaaaaaaaaaaaaaaaaa");
+	strset.emplace("xxxx");
+	strset.emplace("ccccccccccccc");
+	strset.emplace("vvvvvvvvvvvvvvvvvvv");
+	strset.emplace("1");
+
+	for(auto& one : strset)
 	{
-		logger(ELogLevel_Normal, "hello ~ {}", hv_rand(0, 1999999999));
+		// std::cout << one << std::end;
 	}
-	TIMEREND(Time); 
-
-	std::cout << aa << std::endl;
-
-	DURATION_ms(Time);
 }
 
 #endif

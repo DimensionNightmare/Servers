@@ -136,7 +136,7 @@ public:
 		// pClientEntityMan->Timer()->pause();
 		// pRoomMan->Timer()->pause();
 
-		LoopEvent([](EventLoopPtr loop)
+		LoopEvent([](hv::EventLoopPtr loop)
 		{
 			loop->pause();
 		});
@@ -144,7 +144,7 @@ public:
 
 	virtual void Resume() override
 	{
-		LoopEvent([](EventLoopPtr loop)
+		LoopEvent([](hv::EventLoopPtr loop)
 		{
 			loop->resume();
 		});
@@ -155,12 +155,12 @@ public:
 		// pRoomMan->Timer()->resume();
 	}
 
-	virtual void LoopEvent(std::function<void(EventLoopPtr)> func) override
+	virtual void LoopEvent(std::function<void(hv::EventLoopPtr)> func) override
 	{
 		std::unordered_map<long, bool> looped;
 		if (pSSock)
 		{
-			while (const EventLoopPtr& pLoop = pSSock->loop())
+			while (const hv::EventLoopPtr& pLoop = pSSock->loop())
 			{
 				long id = pLoop->tid();
 				if (!looped.contains(id))
@@ -178,7 +178,7 @@ public:
 		if (pCSock)
 		{
 			looped.clear();
-			while (const EventLoopPtr& pLoop = pCSock->loop())
+			while (const hv::EventLoopPtr& pLoop = pCSock->loop())
 			{
 				long id = pLoop->tid();
 				if (!looped.contains(id))
@@ -226,5 +226,5 @@ protected: // dll proxy
 	uint16_t iCtlPort = 0;
 
 	// localdb
-	std::shared_ptr<Redis> pNoSqlProxy;
+	std::shared_ptr<sw::redis::Redis> pNoSqlProxy;
 };

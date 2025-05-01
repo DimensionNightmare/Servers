@@ -12,14 +12,14 @@ import std.compat;
 
 namespace ControlMessage
 {
-	export DNTaskVoid Msg_ReqAuthAccount(SocketChannelPtr channel, uint32_t msgId, std::string binMsg)
+	export DNTaskVoid Msg_ReqAuthAccount(hv::SocketChannelPtr channel, uint32_t msgId, std::string binMsg)
 	{
-		A2g_ReqAuthAccount request;
+		GMsg::A2g_ReqAuthAccount request;
 		if(!request.ParseFromString(binMsg))
 		{
 			co_return;
 		}
-		g2A_ResAuthAccount response;
+		GMsg::g2A_ResAuthAccount response;
 
 		ServerEntity* entity = nullptr;
 		const std::list<ServerEntity*>& serverList = GetControlServer()->GetServerEntityManager()->GetEntitysByType(EMServerType::GlobalServer);

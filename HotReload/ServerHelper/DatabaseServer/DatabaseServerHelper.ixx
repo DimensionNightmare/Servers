@@ -36,8 +36,8 @@ public:
 		{
 			//"postgresql://root@localhost"
 			std::string* value = LaunchConfig::GetParam("connection");
-			pq_connection check(*value);
-			nontransaction checkTxn(check);
+			pqxx::connection check(*value);
+			pqxx::nontransaction checkTxn(check);
 
 			std::list<std::string> dbNames;
 			if (std::string* names = LaunchConfig::GetParam("dbnames"))
@@ -69,7 +69,7 @@ public:
 
 					uint16_t key = (uint16_t)EnumName<EMSqlDbNameEnum>(dbName);
 					std::string connectStr = std::format("{} dbname = {}", *value, dbName);
-					pSqlProxys[key] = std::make_unique<pq_connection>(connectStr);
+					pSqlProxys[key] = std::make_unique<pqxx::connection>(connectStr);
 				}
 			}
 			else
@@ -82,18 +82,18 @@ public:
 				{
 					EMSqlDbNameEnum::Account,
 					{
-						(Message*)Account::internal_default_instance(),
+						(Message*)GDb::Account::internal_default_instance(),
 					}
 				},
 				{
 					EMSqlDbNameEnum::Nightmare,
 					{
-						(Message*)Player::internal_default_instance(),
+						(Message*)GDb::Player::internal_default_instance(),
 					}
 				},
 			};
 
-			SingleTon kv;
+			GDb::SingleTon kv;
 			std::string schemaMd5;
 
 			for (auto& [dbNameEnum, dbEntitys] : registTable)
@@ -101,8 +101,8 @@ public:
 				uint16_t index = (uint16_t)dbNameEnum;
 				if (pSqlProxys.contains(index))
 				{
-					pq_work txn(*pSqlProxys[index]);
-					DbSqlHelper<SingleTon> singleTon(&txn);
+					pqxx::work txn(*pSqlProxys[index]);
+					DbSqlHelper<GDb::SingleTon> singleTon(&txn);
 					singleTon.InitEntity(kv);
 
 					if (!singleTon.IsExist())
@@ -182,7 +182,7 @@ public:
 
 	uint16_t& GetCtlPort() { return iCtlPort; }
 
-	pq_connection* GetSqlProxy(EMSqlDbNameEnum nameEnum)
+	pqxx::connection* GetSqlProxy(EMSqlDbNameEnum nameEnum)
 	{
 		uint16_t dbNameKey = (uint16_t)nameEnum;
 		if (pSqlProxys.contains(dbNameKey))

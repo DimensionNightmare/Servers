@@ -46,7 +46,7 @@ public: // dll override
 	void ClearFlag(EMClientEntityFlag flag) { oFlags.reset(uint16_t(flag)); }
 
 	/// @brief db entity get
-	Player* GetDbEntity() { return &*pDbEntity; }
+	GDb::Player* GetDbEntity() { return &*pDbEntity; }
 
 protected: // dll proxy
 
@@ -55,7 +55,7 @@ protected: // dll proxy
 	std::bitset<static_cast<uint16_t>(EMClientEntityFlag::Max)> oFlags;
 
 	/// @brief db entity
-	std::unique_ptr<Player> pDbEntity = std::make_unique<Player>();
+	std::unique_ptr<GDb::Player> pDbEntity = std::make_unique<GDb::Player>();
 
 public:
 

@@ -6,17 +6,15 @@ module;
 export module ThirdParty.Libpqxx;
 
 
-export 
+export namespace pqxx
 {
-	using namespace pqxx;
+	using pqxx::dbtransaction;
+	using pqxx::nontransaction;
+	using pqxx::read_transaction;
 	
-	using ::dbtransaction;
-	using ::nontransaction;
-	using ::read_transaction;
-	
-	using pq_connection = connection;
-	using pq_field = field;
-	using pq_result = result;
-	using pq_row = row;
-	using pq_work = work;
-};
+	using pqxx::connection;
+	using pqxx::field;
+	using pqxx::result;
+	using pqxx::row;
+	using pqxx::work;
+}

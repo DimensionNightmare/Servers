@@ -18,14 +18,10 @@ import DllUtils;
 import std.compat;
 import Platform;
 
-#ifdef __unix__
-	#define Sleep(ms) usleep(ms*1000)
-#endif
-
 export struct HotReloadDll
 {
 	/// @brief load dll/so runtime library
-	void* LoadHandle(std::filesystem::path dllPath)
+	Platform::HotHandle LoadHandle(std::filesystem::path dllPath)
 	{
 #ifdef _WIN32
 		dllPath = dllPath.append(SDllName);
@@ -33,10 +29,10 @@ export struct HotReloadDll
 		SetEnvironmentVariableA("PATH", "./Bin;%PATH%");
 	#endif
 
-		void* hModule = LoadLibraryA(dllPath.string().c_str());
+		Platform::HotHandle hModule = Platform::LoadLibraryA(dllPath.string().c_str());
 		if (!hModule)
 		{
-			LoggerPrint()(EL10nCode_DllLoad, GetLastError());
+			LoggerPrint()(EL10nCode_DllLoad, Platform::GetLastError());
 			return nullptr;
 		}
 
@@ -61,7 +57,7 @@ export struct HotReloadDll
 		if (oLibHandle)
 		{
 #ifdef _WIN32
-			FreeLibrary((HMODULE)oLibHandle);
+			Platform::FreeLibrary(oLibHandle);
 #elif __unix__
 			dlclose(oLibHandle);
 #endif
@@ -116,13 +112,13 @@ export struct HotReloadDll
 			return false;
 		}
 #endif
-		void* hModule = LoadHandle(newDllDir);
+		Platform::HotHandle hModule = LoadHandle(newDllDir);
 		if (hModule)
 		{
 			FreeHandle();
 			oLibHandle = hModule;
 			sDllDirRand = newDllDir;
-			SetConsoleTitleA(std::format("{}_{}", sServerName, randNum).c_str());
+			Platform::SetConsoleTitleA(std::format("{}_{}", sServerName, randNum).c_str());
 			return true;
 		}
 
@@ -143,10 +139,10 @@ export struct HotReloadDll
 	}
 
 	/// @brief get runtime lib funcpointer
-	void* GetFuncPtr(const char* funcName)
+	Platform::FuncHandle GetFuncPtr(const char* funcName)
 	{
 #ifdef _WIN32
-		return (void*)GetProcAddress((HMODULE)oLibHandle, funcName);
+		return Platform::GetProcAddress(oLibHandle, funcName);
 #elif __unix__
 		return dlsym(oLibHandle, funcName);
 #endif
@@ -163,7 +159,7 @@ public:
 	std::filesystem::path sDllDirRand;
 
 	/// @brief runtime library loaded pointer
-	void* oLibHandle = nullptr;
+	Platform::HotHandle oLibHandle = nullptr;
 
 	/// @brief nomal exit or exception exit
 	bool isNormalFree = true;
@@ -222,7 +218,7 @@ public:
 		#define MAX_SECTION_NAME 512
 		char buffer[MAX_SECTION_NAME] = { 0 };
 		size_t bufferSize = sizeof(buffer);
-		GetPrivateProfileSectionNamesA(buffer, MAX_SECTION_NAME, iniFilePath);
+		Platform::GetPrivateProfileSectionNamesA(buffer, MAX_SECTION_NAME, iniFilePath);
 		char* current = buffer;
 		while (*current)
 		{
@@ -307,7 +303,7 @@ public:
 		for (const std::string& sectionName : sectionNames)
 		{
 #ifdef _WIN32
-			GetPrivateProfileSectionA(sectionName.c_str(), buffer, MAX_SECTION_NAME, iniFilePath);
+			Platform::GetPrivateProfileSectionA(sectionName.c_str(), buffer, MAX_SECTION_NAME, iniFilePath);
 			char* keyValuePair = buffer;
 			while (*keyValuePair)
 			{
@@ -443,15 +439,15 @@ public:
 				std::cout << allStr << std::endl;
 
 #ifdef _WIN32
-				PROCESS_INFORMATION pinfo = {};
-				STARTUPINFOA startInfo = {};
+				Platform::PROCESS_INFORMATION pinfo = {};
+				Platform::STARTUPINFOA startInfo = {};
 				memset(&startInfo, 0, sizeof(startInfo));
 				startInfo.cb = sizeof(startInfo);
 
 				
 				startInfo.dwFlags = 0x00000001; // STARTF_USESHOWWINDOW 0x00000001
 				startInfo.wShowWindow = 1; // SW_SHOWNORMAL 1
-				if (CreateProcessA(nullptr, allStr.data(), nullptr, nullptr, 0, 0x00000010, nullptr, nullptr, &startInfo, &pinfo)) // CREATE_NEW_CONSOLE 0x00000010
+				if (Platform::CreateProcessA(nullptr, allStr.data(), nullptr, nullptr, 0, 0x00000010, nullptr, nullptr, &startInfo, &pinfo)) // CREATE_NEW_CONSOLE 0x00000010
 #elif __unix__
 				if (0)
 #endif

@@ -15,9 +15,9 @@ namespace GateMessage
 {
 
 	// client request
-	export DNTaskVoid Msg_ReqAuthToken(SocketChannelPtr channel, uint32_t msgId, std::string binMsg)
+	export DNTaskVoid Msg_ReqAuthToken(hv::SocketChannelPtr channel, uint32_t msgId, std::string binMsg)
 	{
-		C2S_ReqAuthToken request;
+		GMsg::C2S_ReqAuthToken request;
 		if(!request.ParseFromString(binMsg))
 		{
 			co_return;
@@ -26,7 +26,7 @@ namespace GateMessage
 		GateServerHelper* dnServer = GetGateServer();
 		ProxyEntityManagerHelper* entityMan = dnServer->GetProxyEntityManager();
 
-		S2C_ResAuthToken response;
+		GMsg::S2C_ResAuthToken response;
 		std::string binData;
 
 		ProxyEntity* entity = entityMan->GetEntity(request.account_id());

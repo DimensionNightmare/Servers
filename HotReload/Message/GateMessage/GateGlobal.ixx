@@ -16,16 +16,16 @@ import std.compat;
 namespace GateMessage
 {
 
-	export void Exe_ReqUserToken(SocketChannelPtr channel, uint32_t msgId, std::string binMsg)
+	export void Exe_ReqUserToken(hv::SocketChannelPtr channel, uint32_t msgId, std::string binMsg)
 	{
-		A2g_ReqAuthAccount request;
+		GMsg::A2g_ReqAuthAccount request;
 		
 		if(!request.ParseFromString(binMsg))
 		{
 			return;
 		}
 		
-		g2A_ResAuthAccount response;
+		GMsg::g2A_ResAuthAccount response;
 
 		std::string binData;
 
@@ -35,10 +35,10 @@ namespace GateMessage
 		if (entity)
 		{
 			//exit
-			if (const SocketChannelPtr& online = entity->GetSock())
+			if (const hv::SocketChannelPtr& online = entity->GetSock())
 			{
 				// kick channel
-				S2C_RetAccountReplace request;
+				GMsg::S2C_RetAccountReplace request;
 				request.set_server_ip(request.server_ip());
 
 				request.SerializeToString(&binData);

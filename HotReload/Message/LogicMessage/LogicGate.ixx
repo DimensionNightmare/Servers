@@ -10,9 +10,9 @@ import std.compat;
 
 namespace LogicMessage
 {
-	export void Exe_RetProxyOffline(SocketChannelPtr channel, std::string binMsg)
+	export void Exe_RetProxyOffline(hv::SocketChannelPtr channel, std::string binMsg)
 	{
-		g2L_RetProxyOffline request;
+		GMsg::g2L_RetProxyOffline request;
 		if(!request.ParseFromString(binMsg))
 		{
 			return;

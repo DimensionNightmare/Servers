@@ -13,7 +13,7 @@ export class DatabaseMessageHandle
 
 public:
 
-	static void MsgHandle(const SocketChannelPtr& channel, uint32_t msgId, size_t msgHashId, const std::string& msgData)
+	static void MsgHandle(const hv::SocketChannelPtr& channel, uint32_t msgId, size_t msgHashId, const std::string& msgData)
 	{
 		if (MHandleMap.contains(msgHashId))
 		{
@@ -34,7 +34,7 @@ public:
 		}
 	}
 
-	static void MsgRetHandle(const SocketChannelPtr& channel, size_t msgHashId, const std::string& msgData)
+	static void MsgRetHandle(const hv::SocketChannelPtr& channel, size_t msgHashId, const std::string& msgData)
 	{
 		if (MHandleRetMap.contains(msgHashId))
 		{
@@ -61,14 +61,14 @@ public:
 		make_pair(msg::internal_default_instance(), &DatabaseMessage::func))
 
 
-		MSG_MAPPING(MHandleMap, L2D_ReqLoadData, Exe_ReqLoadData);
-		MSG_MAPPING(MHandleMap, L2D_ReqSaveData, Exe_ReqSaveData);
+		MSG_MAPPING(MHandleMap, GMsg::L2D_ReqLoadData, Exe_ReqLoadData);
+		MSG_MAPPING(MHandleMap, GMsg::L2D_ReqSaveData, Exe_ReqSaveData);
 
-		MSG_MAPPING(MHandleRetMap, COM_RetChangeCtlSrv, Exe_RetChangeCtlSrv);
+		MSG_MAPPING(MHandleRetMap, GMsg::COM_RetChangeCtlSrv, Exe_RetChangeCtlSrv);
 	}
 public:
 
-	inline static std::unordered_map<size_t, std::pair<const Message*, std::function<void(SocketChannelPtr, uint32_t, std::string)>>> MHandleMap;
+	inline static std::unordered_map<size_t, std::pair<const Message*, std::function<void(hv::SocketChannelPtr, uint32_t, std::string)>>> MHandleMap;
 
-	inline static std::unordered_map<size_t, std::pair<const Message*, std::function<void(SocketChannelPtr, std::string)>>> MHandleRetMap;
+	inline static std::unordered_map<size_t, std::pair<const Message*, std::function<void(hv::SocketChannelPtr, std::string)>>> MHandleRetMap;
 };

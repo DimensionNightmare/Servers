@@ -120,7 +120,7 @@ public:
 	{
 		// pCSock->Timer()->pause();
 
-		LoopEvent([](EventLoopPtr loop)
+		LoopEvent([](hv::EventLoopPtr loop)
 			{
 				loop->pause();
 			});
@@ -133,7 +133,7 @@ public:
 	{
 		pSSock->start();
 
-		LoopEvent([](EventLoopPtr loop)
+		LoopEvent([](hv::EventLoopPtr loop)
 			{
 				loop->resume();
 			});
@@ -141,13 +141,13 @@ public:
 		// pCSock->Timer()->resume();
 	}
 
-	virtual void LoopEvent(std::function<void(EventLoopPtr)> func) override
+	virtual void LoopEvent(std::function<void(hv::EventLoopPtr)> func) override
 	{
 		std::unordered_map<long, bool> looped;
 		if (pCSock)
 		{
 			looped.clear();
-			while (const EventLoopPtr& pLoop = pCSock->loop())
+			while (const hv::EventLoopPtr& pLoop = pCSock->loop())
 			{
 				long id = pLoop->tid();
 				if (!looped.contains(id))
@@ -163,7 +163,7 @@ public:
 		}
 	}
 
-	pq_connection* SqlProxy() { return pSqlProxy.get(); }
+	pqxx::connection* SqlProxy() { return pSqlProxy.get(); }
 
 public: // dll override
 
@@ -177,6 +177,6 @@ protected: // dll proxy
 
 	std::unique_ptr<DNClientProxy> pCSock;
 
-	std::unique_ptr<pq_connection> pSqlProxy;
+	std::unique_ptr<pqxx::connection> pSqlProxy;
 	
 };

@@ -22,10 +22,10 @@ public:
 
 public: // dll override
 	/// @brief net socket set
-	const SocketChannelPtr& GetSock() { return pSock; }
+	const hv::SocketChannelPtr& GetSock() { return pSock; }
 
 	/// @brief net socket get
-	void SetSock(const SocketChannelPtr& channel) { pSock = channel; }
+	void SetSock(const hv::SocketChannelPtr& channel) { pSock = channel; }
 
 	/// @brief the this close timedown destroy timerid.
 	/// @brief authenticate,shutdown and reconnect waiting.
@@ -33,7 +33,7 @@ public: // dll override
 
 protected: // dll proxy
 
-	SocketChannelPtr pSock;
+	hv::SocketChannelPtr pSock;
 
 	uint64_t iCloseTimerId = 0;
 	

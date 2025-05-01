@@ -39,7 +39,7 @@ extern "C"
 	
 
 #ifdef _WIN32
-	int DllMain(HMODULE hinstDLL, uint32_t fdwReason, void* lpvReserved)
+	int DllMain(Platform::HotHandle hinstDLL, uint32_t fdwReason, void* lpvReserved)
 	{
 		// Perform actions based on the reason for calling.
 		switch (fdwReason)
@@ -68,7 +68,7 @@ extern "C"
 
 	HOTRELOAD int InitHotReload(DNServer* server)
 	{
-		hvlog_disable();
+		Libhv::hvlog_disable();
 
 		EMServerType servertype = server->GetServerType();
 		std::string_view serverName = EnumName(servertype);
@@ -141,7 +141,7 @@ extern "C"
 		}
 
 		ShutdownProtobufLibrary();
-		cleanup();
+		Libhv::cleanup();
 
 		return isDeal;
 	}

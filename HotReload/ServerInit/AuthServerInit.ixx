@@ -24,7 +24,7 @@ export int HandleAuthServerInit(DNServer* server)
 
 	if (DNWebProxyHelper* serverSock = serverProxy->GetSSock())
 	{
-		HttpService* service = new HttpService();
+		hv::HttpService* service = new hv::HttpService();
 
 		AuthMessageHandle::RegApiHandle(service);
 
@@ -36,7 +36,7 @@ export int HandleAuthServerInit(DNServer* server)
 		clientSock->onConnection = nullptr;
 		clientSock->onMessage = nullptr;
 
-		auto onConnection = [clientSock](const SocketChannelPtr& channel)
+		auto onConnection = [clientSock](const hv::SocketChannelPtr& channel)
 			{
 				const std::string& peeraddr = channel->peeraddr();
 
@@ -63,7 +63,7 @@ export int HandleAuthServerInit(DNServer* server)
 				}
 			};
 
-		auto onMessage = [clientSock](const SocketChannelPtr& channel, Buffer* buf)
+		auto onMessage = [clientSock](const hv::SocketChannelPtr& channel, hv::Buffer* buf)
 			{
 				
 				MessagePacket packet;
@@ -132,7 +132,7 @@ export int HandleAuthServerShutdown(DNServer* server)
 	{
 		if (serverSock->service != nullptr)
 		{
-			HttpService* temp = serverSock->service;
+			hv::HttpService* temp = serverSock->service;
 			serverSock->service = nullptr;
 			delete temp;
 		}

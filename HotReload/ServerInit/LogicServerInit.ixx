@@ -29,7 +29,7 @@ export int HandleLogicServerInit(DNServer* server)
 		serverSock->onConnection = nullptr;
 		serverSock->onMessage = nullptr;
 
-		auto onConnection = [serverProxy](const SocketChannelPtr& channel)
+		auto onConnection = [serverProxy](const hv::SocketChannelPtr& channel)
 			{
 				const std::string& peeraddr = channel->peeraddr();
 				if (channel->isConnected())
@@ -48,7 +48,7 @@ export int HandleLogicServerInit(DNServer* server)
 				}
 			};
 
-		auto onMessage = [serverSock](const SocketChannelPtr& channel, Buffer* buf)
+		auto onMessage = [serverSock](const hv::SocketChannelPtr& channel, hv::Buffer* buf)
 			{
 				MessagePacket packet;
 				memcpy(&packet, buf->data(), MessagePacket::PackLenth);
@@ -115,7 +115,7 @@ export int HandleLogicServerInit(DNServer* server)
 		clientSock->onMessage = nullptr;
 
 		//client will re_create please check
-		auto onConnection = [clientSock, serverProxy](const SocketChannelPtr& channel)
+		auto onConnection = [clientSock, serverProxy](const hv::SocketChannelPtr& channel)
 			{
 				const std::string& peeraddr = channel->peeraddr();
 
@@ -155,7 +155,7 @@ export int HandleLogicServerInit(DNServer* server)
 				}
 			};
 
-		auto onMessage = [clientSock](const SocketChannelPtr& channel, Buffer* buf)
+		auto onMessage = [clientSock](const hv::SocketChannelPtr& channel, hv::Buffer* buf)
 			{
 				MessagePacket packet;
 				memcpy(&packet, buf->data(), MessagePacket::PackLenth);

@@ -8,14 +8,14 @@ import ThirdParty.Libhv;
 import ThirdParty.PbGen;
 import std.compat;
 
-export class DNServerProxy : public TcpServer
+export class DNServerProxy : public hv::TcpServer
 {
 
 public:
 
 	DNServerProxy()
 	{
-		pLoop = std::make_shared<EventLoopThread>();
+		pLoop = std::make_shared<hv::EventLoopThread>();
 	}
 
 	~DNServerProxy()
@@ -55,7 +55,7 @@ public:
 	{
 		pLoop->start();
 		// start();
-		HVRun(this);
+		Libhv::Run(this);
 	}
 
 	void End()
@@ -66,7 +66,7 @@ public:
 
 public: // dll override
 
-	void InitConnectedChannel(const SocketChannelPtr& channel)
+	void InitConnectedChannel(const hv::SocketChannelPtr& channel)
 	{
 		// if not regist
 		CheckChannelByTimer(channel);
@@ -129,7 +129,7 @@ public: // dll override
 
 	}
 
-	const EventLoopPtr& Timer() { return pLoop->loop(); }
+	const hv::EventLoopPtr& Timer() { return pLoop->loop(); }
 
 	void AddTimerRecord(size_t timerId, uint32_t id)
 	{
@@ -137,7 +137,7 @@ public: // dll override
 		mMapTimer.emplace(timerId, id);
 	}
 
-	void CheckChannelByTimer(SocketChannelPtr channel)
+	void CheckChannelByTimer(hv::SocketChannelPtr channel)
 	{
 		size_t timerId = Timer()->setTimeout(5000, std::bind(&DNServerProxy::ChannelTimeoutTimer, this, std::placeholders::_1));
 		AddTimerRecord(timerId, channel->id());
@@ -151,7 +151,7 @@ public: // dll override
 	}
 public:
 	// cant init in tcpclient this class
-	std::shared_ptr<EventLoopThread> pLoop;
+	std::shared_ptr<hv::EventLoopThread> pLoop;
 
 protected:
 	// only oddnumber

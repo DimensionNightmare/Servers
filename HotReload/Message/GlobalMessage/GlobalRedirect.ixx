@@ -14,14 +14,14 @@ import std.compat;
 namespace GlobalMessage
 {
 
-	export DNTaskVoid Msg_ReqAuthAccount(SocketChannelPtr channel, uint32_t msgId, std::string binMsg)
+	export DNTaskVoid Msg_ReqAuthAccount(hv::SocketChannelPtr channel, uint32_t msgId, std::string binMsg)
 	{
-		A2g_ReqAuthAccount request;
+		GMsg::A2g_ReqAuthAccount request;
 		if(!request.ParseFromString(binMsg))
 		{
 			co_return;
 		}
-		g2A_ResAuthAccount response;
+		GMsg::g2A_ResAuthAccount response;
 
 		// if has db not need origin
 		GlobalServerHelper* dnServer = GetGlobalServer();

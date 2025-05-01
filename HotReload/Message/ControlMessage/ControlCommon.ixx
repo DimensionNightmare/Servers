@@ -14,15 +14,15 @@ namespace ControlMessage
 {
 
 	// client request
-	export void Msg_ReqRegistSrv(SocketChannelPtr channel, uint32_t msgId, std::string binMsg)
+	export void Msg_ReqRegistSrv(hv::SocketChannelPtr channel, uint32_t msgId, std::string binMsg)
 	{
-		COM_ReqRegistSrv request;
+		GMsg::COM_ReqRegistSrv request;
 		if(!request.ParseFromString(binMsg))
 		{
 			return;
 		}
 
-		COM_ResRegistSrv response;
+		GMsg::COM_ResRegistSrv response;
 
 		ControlServerHelper* dnServer = GetControlServer();
 		ServerEntityManagerHelper* entityMan = dnServer->GetServerEntityManager();
@@ -64,9 +64,9 @@ namespace ControlMessage
 		MessagePackAndSend(msgId, EMMsgDeal::Res, "", binData, channel);
 	}
 
-	export void Exe_RetHeartbeat(SocketChannelPtr channel, std::string binMsg)
+	export void Exe_RetHeartbeat(hv::SocketChannelPtr channel, std::string binMsg)
 	{
-		COM_RetHeartbeat request;
+		GMsg::COM_RetHeartbeat request;
 		if(!request.ParseFromString(binMsg))
 		{
 			return;

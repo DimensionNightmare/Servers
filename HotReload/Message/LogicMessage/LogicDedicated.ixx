@@ -12,16 +12,16 @@ import std.compat;
 
 namespace LogicMessage
 {
-	export DNTaskVoid Msg_ReqLoadEntityData(SocketChannelPtr channel, uint32_t msgId, std::string binMsg)
+	export DNTaskVoid Msg_ReqLoadEntityData(hv::SocketChannelPtr channel, uint32_t msgId, std::string binMsg)
 	{
-		d2L_ReqLoadEntityData request;
+		GMsg::d2L_ReqLoadEntityData request;
 		if(!request.ParseFromString(binMsg))
 		{
 			co_return;
 		}
-		L2d_ResLoadEntityData response;
+		GMsg::L2d_ResLoadEntityData response;
 
-		Player player;
+		GDb::Player player;
 		if (!player.ParseFromString(request.entity_data()))
 		{
 			co_return;
@@ -52,15 +52,15 @@ namespace LogicMessage
 		co_return;
 	}
 
-	export void Msg_ReqSaveEntityData(SocketChannelPtr channel, std::string binMsg)
+	export void Msg_ReqSaveEntityData(hv::SocketChannelPtr channel, std::string binMsg)
 	{
-		d2L_ReqSaveEntityData request;
+		GMsg::d2L_ReqSaveEntityData request;
 		if(!request.ParseFromString(binMsg))
 		{
 			return;
 		}
 
-		Player player;
+		GDb::Player player;
 		if (!player.ParseFromString(request.entity_data()))
 		{
 			LoggerPrint()(ELogLevel_Debug, "Save data but parse error!");
@@ -82,7 +82,7 @@ namespace LogicMessage
 			return;
 		}
 
-		if (Player* dbEntity = entity->GetDbEntity())
+		if (GDb::Player* dbEntity = entity->GetDbEntity())
 		{
 			dbEntity->MergeFrom(player);
 			if (request.runtime_save())

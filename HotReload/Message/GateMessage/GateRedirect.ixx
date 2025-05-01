@@ -13,14 +13,14 @@ import std.compat;
 namespace GateMessage
 {
 
-	export DNTaskVoid Exe_ReqLoadData(SocketChannelPtr channel, uint32_t msgId, std::string binMsg)
+	export DNTaskVoid Exe_ReqLoadData(hv::SocketChannelPtr channel, uint32_t msgId, std::string binMsg)
 	{
-		L2D_ReqLoadData request;
+		GMsg::L2D_ReqLoadData request;
 		if(!request.ParseFromString(binMsg))
 		{
 			co_return;
 		}
-		D2L_ResLoadData response;
+		GMsg::D2L_ResLoadData response;
 
 		GateServerHelper* dnServer = GetGateServer();
 		ServerEntityManagerHelper* entityMan = dnServer->GetServerEntityManager();
@@ -64,14 +64,14 @@ namespace GateMessage
 		co_return;
 	}
 
-	export DNTaskVoid Exe_ReqSaveData(SocketChannelPtr channel, uint32_t msgId, std::string binMsg)
+	export DNTaskVoid Exe_ReqSaveData(hv::SocketChannelPtr channel, uint32_t msgId, std::string binMsg)
 	{
-		L2D_ReqSaveData request;
+		GMsg::L2D_ReqSaveData request;
 		if(!request.ParseFromString(binMsg))
 		{
 			co_return;
 		}
-		D2L_ResSaveData response;
+		GMsg::D2L_ResSaveData response;
 
 		GateServerHelper* dnServer = GetGateServer();
 		ServerEntityManagerHelper* entityMan = dnServer->GetServerEntityManager();

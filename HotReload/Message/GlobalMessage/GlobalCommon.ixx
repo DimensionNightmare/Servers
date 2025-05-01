@@ -24,7 +24,7 @@ namespace GlobalMessage
 		
 		client->EMRegistState() = EMRegistState::Registing;
 
-		COM_ReqRegistSrv request;
+		GMsg::COM_ReqRegistSrv request;
 
 		request.set_server_type((int)dnServer->GetServerType());
 
@@ -40,7 +40,7 @@ namespace GlobalMessage
 		request.SerializeToString(&binData);
 		
 		// data alloc
-		COM_ResRegistSrv response;
+		GMsg::COM_ResRegistSrv response;
 
 		{
 			auto taskGen = [](Message* msg) -> DNTask<Message*>
@@ -80,9 +80,9 @@ namespace GlobalMessage
 	}
 
 	// client request
-	export void Msg_ReqRegistSrv(SocketChannelPtr channel, uint32_t msgId, std::string binMsg)
+	export void Msg_ReqRegistSrv(hv::SocketChannelPtr channel, uint32_t msgId, std::string binMsg)
 	{
-		COM_ReqRegistSrv request;
+		GMsg::COM_ReqRegistSrv request;
 		if(!request.ParseFromString(binMsg))
 		{
 			return;
@@ -90,7 +90,7 @@ namespace GlobalMessage
 		
 		LoggerPrint()(ELogLevel_Debug, "ip Reqregist: {}, {}", channel->peeraddr(), request.server_type());
 
-		COM_ResRegistSrv response;
+		GMsg::COM_ResRegistSrv response;
 
 		GlobalServerHelper* dnServer = GetGlobalServer();
 		ServerEntityManagerHelper* entityMan = dnServer->GetServerEntityManager();
@@ -123,7 +123,7 @@ namespace GlobalMessage
 				}
 
 				// already connect
-				if (const SocketChannelPtr& sock = entity->GetSock())
+				if (const hv::SocketChannelPtr& sock = entity->GetSock())
 				{
 					response.set_success(false);
 				}
@@ -183,9 +183,9 @@ namespace GlobalMessage
 
 	}
 
-	export void Exe_RetHeartbeat(SocketChannelPtr channel, std::string binMsg)
+	export void Exe_RetHeartbeat(hv::SocketChannelPtr channel, std::string binMsg)
 	{
-		COM_RetHeartbeat request;
+		GMsg::COM_RetHeartbeat request;
 		if(!request.ParseFromString(binMsg))
 		{
 			return;

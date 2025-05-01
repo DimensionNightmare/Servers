@@ -41,12 +41,12 @@ public:
 		std::list<ServerEntity*> logics = entityMan->GetEntitysByType(EMServerType::LogicServer);
 
 		// alloc gate
-		COM_RetChangeCtlSrv request;
+		GMsg::COM_RetChangeCtlSrv request;
 		std::string binData;
 
 		auto registControl = [&](ServerEntity* beEntity, ServerEntity* entity)
 		{
-			const SocketChannelPtr& channel = entity->GetSock();
+			const hv::SocketChannelPtr& channel = entity->GetSock();
 			entity->LinkNode() = beEntity;
 
 			channel->setContext(nullptr);

@@ -18,14 +18,14 @@ export enum class EMRegistState : uint8_t
 	Registed,
 };
 
-export class DNClientProxy : public TcpClient
+export class DNClientProxy : public hv::TcpClient
 {
 
 public:
 
 	DNClientProxy()
 	{
-		pLoop = std::make_shared<EventLoopThread>();
+		pLoop = std::make_shared<hv::EventLoopThread>();
 	}
 
 	~DNClientProxy()
@@ -37,13 +37,13 @@ public:
 
 	void Init()
 	{
-		reconn_setting_t reconn;
+		hv::reconn_setting_t reconn;
 		reconn.min_delay = 1000;
 		reconn.max_delay = 10000;
 		reconn.delay_policy = 2;
 		setReconnect(&reconn);
 
-		unpack_setting_t setting;
+		hv::unpack_setting_t setting;
 		setting.mode = unpack_mode_e::UNPACK_BY_LENGTH_FIELD;
 		setting.length_field_coding = unpack_coding_e::ENCODE_BY_BIG_ENDIAN;
 		setting.body_offset = MessagePacket::PackLenth;
@@ -56,7 +56,7 @@ public:
 	void Start()
 	{
 		pLoop->start();
-		HVRun(this);
+		Libhv::Run(this);
 	}
 
 	void End()
@@ -124,7 +124,7 @@ public: // dll override
 		return timerId;
 	}
 
-	const EventLoopPtr& Timer() { return pLoop->loop(); }
+	const hv::EventLoopPtr& Timer() { return pLoop->loop(); }
 
 	void AddTimerRecord(size_t timerId, uint32_t id)
 	{
@@ -134,7 +134,7 @@ public: // dll override
 
 	void TickHeartbeat()
 	{
-		COM_RetHeartbeat request;
+		GMsg::COM_RetHeartbeat request;
 		request.Clear();
 		int64_t timespan = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 		request.set_timespan(timespan);
@@ -145,7 +145,7 @@ public: // dll override
 		MessagePackAndSend(0, EMMsgDeal::Ret, request.GetDescriptor()->full_name(), binData, GetChannel());
 	}
 
-	void InitConnectedChannel(const SocketChannelPtr& chanhel)
+	void InitConnectedChannel(const hv::SocketChannelPtr& chanhel)
 	{
 		// chanhel->setHeartbeat(4000, std::bind(&DNClientProxy::TickHeartbeat, this));
 		// channel->setWriteTimeout(12000);
@@ -165,7 +165,7 @@ public: // dll override
 		{
 			createsocket(port, ip.c_str());
 			// start();
-			HVRun(this);
+			Libhv::Run(this);
 		});
 	}
 
@@ -185,11 +185,11 @@ public: // dll override
 
 	uint32_t GetMsgId() { return ++iMsgId; }
 
-	const SocketChannelPtr& GetChannel() { return channel; }
+	const hv::SocketChannelPtr& GetChannel() { return channel; }
 
 protected: // dll proxy
 
-	std::shared_ptr<EventLoopThread> pLoop;
+	std::shared_ptr<hv::EventLoopThread> pLoop;
 
 	// only oddnumber
 	std::atomic<uint32_t> iMsgId;

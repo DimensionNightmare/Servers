@@ -6,7 +6,8 @@ import L10nText;
 import ThirdParty.PbGen;
 import std.compat;
 
-class LogColor {
+class LogColor
+{
 public:
     inline static std::string RED	= "\033[31m";
     inline static std::string GREEN	= "\033[32m";
@@ -63,12 +64,6 @@ export struct LoggerPrint
 		{
 			return;
 		}
-
-		std::string* locCache = nullptr;
-		// if(LocCache.contains())
-		// {
-
-		// }
 
 		oResult = std::format("[{}] {} -> \n\t{}\n", 
 			GetNowTimeStr(), 
@@ -155,6 +150,5 @@ protected:
 protected:
 	inline static std::ofstream LogFile; 
 	inline static ELogLevel SLogLevel = ELogLevel_Normal;
-	inline static std::unordered_map<std::string, std::string> LocCache;
 };
 

@@ -15,7 +15,7 @@ export class GateMessageHandle
 
 public:
 
-	static void MsgHandle(const SocketChannelPtr& channel, uint32_t msgId, size_t msgHashId, const std::string& msgData)
+	static void MsgHandle(const hv::SocketChannelPtr& channel, uint32_t msgId, size_t msgHashId, const std::string& msgData)
 	{
 		if (MHandleMap.contains(msgHashId))
 		{
@@ -35,7 +35,7 @@ public:
 		}
 	}
 
-	static void MsgRetHandle(const SocketChannelPtr& channel, size_t msgHashId, const std::string& msgData)
+	static void MsgRetHandle(const hv::SocketChannelPtr& channel, size_t msgHashId, const std::string& msgData)
 	{
 		if (MHandleRetMap.contains(msgHashId))
 		{
@@ -55,7 +55,7 @@ public:
 		}
 	}
 
-	static void MsgRedirectHandle(const SocketChannelPtr& channel, uint32_t msgId, size_t msgHashId, const std::string& msgData)
+	static void MsgRedirectHandle(const hv::SocketChannelPtr& channel, uint32_t msgId, size_t msgHashId, const std::string& msgData)
 	{
 		if (MHandleRedirectMap.contains(msgHashId))
 		{
@@ -82,20 +82,20 @@ public:
 		make_pair(msg::internal_default_instance(), &GateMessage::func))
 
 
-		MSG_MAPPING(MHandleMap, COM_ReqRegistSrv, Msg_ReqRegistSrv);
-		MSG_MAPPING(MHandleMap, C2S_ReqAuthToken, Msg_ReqAuthToken);
-		MSG_MAPPING(MHandleMap, A2g_ReqAuthAccount, Exe_ReqUserToken);
+		MSG_MAPPING(MHandleMap, GMsg::COM_ReqRegistSrv, Msg_ReqRegistSrv);
+		MSG_MAPPING(MHandleMap, GMsg::C2S_ReqAuthToken, Msg_ReqAuthToken);
+		MSG_MAPPING(MHandleMap, GMsg::A2g_ReqAuthAccount, Exe_ReqUserToken);
 
-		MSG_MAPPING(MHandleRetMap, COM_RetHeartbeat, Exe_RetHeartbeat);
+		MSG_MAPPING(MHandleRetMap, GMsg::COM_RetHeartbeat, Exe_RetHeartbeat);
 
-		MSG_MAPPING(MHandleRedirectMap, L2D_ReqLoadData, Exe_ReqLoadData);
-		MSG_MAPPING(MHandleRedirectMap, L2D_ReqSaveData, Exe_ReqSaveData);
+		MSG_MAPPING(MHandleRedirectMap, GMsg::L2D_ReqLoadData, Exe_ReqLoadData);
+		MSG_MAPPING(MHandleRedirectMap, GMsg::L2D_ReqSaveData, Exe_ReqSaveData);
 
 
 	}
 
 public:
-	inline static std::unordered_map<size_t, std::pair<const Message*, std::function<void(SocketChannelPtr, uint32_t, std::string)>>> MHandleMap;
-	inline static std::unordered_map<size_t, std::pair<const Message*, std::function<void(SocketChannelPtr, std::string)>>> MHandleRetMap;
-	inline static std::unordered_map<size_t, std::pair<const Message*, std::function<void(SocketChannelPtr, uint32_t, std::string)>>> MHandleRedirectMap;
+	inline static std::unordered_map<size_t, std::pair<const Message*, std::function<void(hv::SocketChannelPtr, uint32_t, std::string)>>> MHandleMap;
+	inline static std::unordered_map<size_t, std::pair<const Message*, std::function<void(hv::SocketChannelPtr, std::string)>>> MHandleRetMap;
+	inline static std::unordered_map<size_t, std::pair<const Message*, std::function<void(hv::SocketChannelPtr, uint32_t, std::string)>>> MHandleRedirectMap;
 };

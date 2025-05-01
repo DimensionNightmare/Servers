@@ -13,7 +13,7 @@ public:
 	/// @brief timer manager create
 	EntityManager()
 	{
-		pLoop = std::make_shared<EventLoopThread>();
+		pLoop = std::make_shared<hv::EventLoopThread>();
 	}
 
 	virtual ~EntityManager()
@@ -34,7 +34,7 @@ public:
 
 public: // dll override
 
-	const EventLoopPtr& Timer() { return pLoop->loop(); }
+	const hv::EventLoopPtr& Timer() { return pLoop->loop(); }
 
 	void AddTimerRecord(size_t timerId, uint32_t id)
 	{
@@ -52,6 +52,6 @@ protected: // dll proxy
 	/// @brief mMapTimer Mutex
 	std::shared_mutex oTimerMutex;
 
-	std::shared_ptr<EventLoopThread> pLoop;
+	std::shared_ptr<hv::EventLoopThread> pLoop;
 
 };

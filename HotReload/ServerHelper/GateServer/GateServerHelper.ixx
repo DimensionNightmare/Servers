@@ -33,7 +33,7 @@ public:
 
 		// up to Global
 		std::string binData;
-		g2G_RetRegistSrv request;
+		GMsg::g2G_RetRegistSrv request;
 		request.set_server_id(cEntity->ID());
 		request.set_is_regist(false);
 		request.SerializeToString(&binData);
@@ -58,7 +58,7 @@ public:
 		if (serverEntity)
 		{
 			std::string binData;
-			g2L_RetProxyOffline request;
+			GMsg::g2L_RetProxyOffline request;
 			request.set_entity_id(entityId);
 			request.SerializeToString(&binData);
 			MessagePackAndSend(0, EMMsgDeal::Ret, request.GetDescriptor()->full_name(), binData, serverEntity->GetSock());

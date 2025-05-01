@@ -35,7 +35,7 @@ public:
 
 			std::string* dbName = LaunchConfig::GetParam("dbname");
 
-			pSqlProxy = std::make_unique<pq_connection>(std::format("{} dbname = {}", *value, *dbName));
+			pSqlProxy = std::make_unique<pqxx::connection>(std::format("{} dbname = {}", *value, *dbName));
 
 		}
 		catch (const std::exception& e)

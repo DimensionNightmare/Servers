@@ -30,7 +30,7 @@ export int HandleGateServerInit(DNServer* server)
 		serverSock->onConnection = nullptr;
 		serverSock->onMessage = nullptr;
 
-		auto onConnection = [serverSock, serverProxy](const SocketChannelPtr& channel)
+		auto onConnection = [serverSock, serverProxy](const hv::SocketChannelPtr& channel)
 			{
 				const std::string& peeraddr = channel->peeraddr();
 				if (channel->isConnected())
@@ -60,7 +60,7 @@ export int HandleGateServerInit(DNServer* server)
 				}
 			};
 
-		auto onMessage = [serverSock](const SocketChannelPtr& channel, Buffer* buf)
+		auto onMessage = [serverSock](const hv::SocketChannelPtr& channel, hv::Buffer* buf)
 			{
 				MessagePacket packet;
 				memcpy(&packet, buf->data(), MessagePacket::PackLenth);
@@ -125,7 +125,7 @@ export int HandleGateServerInit(DNServer* server)
 		clientSock->onConnection = nullptr;
 		clientSock->onMessage = nullptr;
 
-		auto onConnection = [clientSock](const SocketChannelPtr& channel)
+		auto onConnection = [clientSock](const hv::SocketChannelPtr& channel)
 			{
 				const std::string& peeraddr = channel->peeraddr();
 
@@ -152,7 +152,7 @@ export int HandleGateServerInit(DNServer* server)
 				}
 			};
 
-		auto onMessage = [clientSock](const SocketChannelPtr& channel, Buffer* buf)
+		auto onMessage = [clientSock](const hv::SocketChannelPtr& channel, hv::Buffer* buf)
 			{
 				MessagePacket packet;
 				memcpy(&packet, buf->data(), MessagePacket::PackLenth);

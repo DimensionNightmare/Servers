@@ -29,7 +29,7 @@ export int HandleControlServerInit(DNServer* server)
 		serverSock->onConnection = nullptr;
 		serverSock->onMessage = nullptr;
 
-		auto onConnection = [serverProxy, serverSock](const SocketChannelPtr& channel)
+		auto onConnection = [serverProxy, serverSock](const hv::SocketChannelPtr& channel)
 			{
 				const std::string& peeraddr = channel->peeraddr();
 				if (channel->isConnected())
@@ -52,7 +52,7 @@ export int HandleControlServerInit(DNServer* server)
 				}
 			};
 
-		auto onMessage = [serverSock](const SocketChannelPtr& channel, Buffer* buf)
+		auto onMessage = [serverSock](const hv::SocketChannelPtr& channel, hv::Buffer* buf)
 			{
 				MessagePacket packet;
 				memcpy(&packet, buf->data(), MessagePacket::PackLenth);

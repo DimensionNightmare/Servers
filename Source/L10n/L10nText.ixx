@@ -61,12 +61,12 @@ public:
 		{
 			case EL10nType_zh_CN:
 			{
-				pL10nTipFunc = &l10nCode::zh_cn;
+				pL10nTipFunc = &l10n::l10nCode::zh_cn;
 				break;
 			}
 			case EL10nType_en_US:
 			{
-				pL10nTipFunc = &l10nCode::en_us;
+				pL10nTipFunc = &l10n::l10nCode::en_us;
 				break;
 			}
 			default:
@@ -80,13 +80,13 @@ public:
 public:
 
 	/// @brief main use this
-	l10nCodes mL10nCode;
+	l10n::l10nCodes mL10nCode;
 
 	/// @brief dll use this
-	std::unordered_map<uint32_t, const l10nCode*> mL10nCodeDll;
+	std::unordered_map<uint32_t, const l10n::l10nCode*> mL10nCodeDll;
 
 	/// @brief l10n imp. text get.
-	typedef const std::string& (l10nCode::* TipTextFunc)() const;
+	typedef const std::string& (l10n::l10nCode::* TipTextFunc)() const;
 	TipTextFunc pL10nTipFunc = nullptr;
 
 	/// @brief l10n type
@@ -107,7 +107,7 @@ public:
 		auto& dataMap = instance->mL10nCodeDll;
 		if (!dataMap.contains(type))
 		{
-			throw std::invalid_argument(std::format("I10n Tip Config not exist this type {}", EL10nCode_Name_(type)));
+			throw std::invalid_argument(std::format("I10n Tip Config not exist this type {}", PbGen::EL10nCode_Name_(type)));
 		}
 
 		auto& one = dataMap[type];

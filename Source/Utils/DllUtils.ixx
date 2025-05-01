@@ -52,15 +52,12 @@ auto TickMainSpaceDll(void* obj, const char* classmethod, Method method, Args...
 		return pFuncTyped(obj, std::make_tuple(std::forward<Args>(args)...));
 	}
 
-	if (auto hModule = GetModuleHandleA(nullptr))
+	if (Platform::FuncHandle pFunc = Platform::GetProcAddress(nullptr, methodName.c_str()))
 	{
-		if (void* pFunc = reinterpret_cast<void*>(GetProcAddress(hModule, methodName.c_str())))
-		{
-			cache[methodName] = pFunc;
-			MethodSign pFuncTyped = reinterpret_cast<MethodSign>(pFunc);
-			return pFuncTyped(obj, std::forward_as_tuple(std::forward<Args>(args)...));
-		}
+		cache[methodName] = pFunc;
+		MethodSign pFuncTyped = reinterpret_cast<MethodSign>(pFunc);
+		return pFuncTyped(obj, std::forward_as_tuple(std::forward<Args>(args)...));
 	}
-
+	
 	return DefaultReturnValue<RetType>::get();
 }

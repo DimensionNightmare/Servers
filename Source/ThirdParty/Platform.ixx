@@ -49,14 +49,16 @@ auto make_wrapper(F&& f) requires (!NoArgCallable<F>) {
 
 #ifdef _WIN32
 
-export
+export namespace Platform
 {
-	using ::HMODULE;
-	using ::GetModuleHandleA;
-	using ::GetProcAddress;
-	using ::SetConsoleTitleA;
+	using HotHandle = ::HMODULE;
+	using FuncHandle = ::FARPROC;
 	using ::LoadLibraryA;
 	using ::FreeLibrary;
+	using ::GetProcAddress;
+	using ::Sleep;
+
+	using ::SetConsoleTitleA;
 	using ::GetLastError;
 	using ::GetPrivateProfileSectionNamesA;
 	using ::GetPrivateProfileSectionA;
@@ -66,13 +68,12 @@ export
 	using ::_EXCEPTION_POINTERS;
 	using ::_MINIDUMP_EXCEPTION_INFORMATION;
 	using ::CreateFileA;
+	using ::CloseHandle;
 	using ::SetUnhandledExceptionFilter;
 	using ::GetCurrentThreadId;
 	using ::GetCurrentProcess;
 	using ::GetCurrentProcessId;
 	using ::MINIDUMP_TYPE;
-	using ::CloseHandle;
-	using ::Sleep;
 	using ::MiniDumpWriteDump;
 	using ::SetConsoleCtrlHandler;
 	using ::SetEnvironmentVariableA;

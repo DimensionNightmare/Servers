@@ -16,9 +16,9 @@ using namespace std::chrono;
 
 #define MSGSET writer->response->SetBody
 
-export void ApiAuth(HttpService* service)
+export void ApiAuth(hv::HttpService* service)
 {
-	service->POST("/Auth/User/LoginToken", [](const HttpRequestPtr& req, const HttpResponseWriterPtr& writer)
+	service->POST("/Auth/User/LoginToken", [](const hv::HttpRequestPtr& req, const hv::HttpResponseWriterPtr& writer)
 		{
 			writer->Begin();
 			nlohmann::json errData;
@@ -36,15 +36,15 @@ export void ApiAuth(HttpService* service)
 				return;
 			}
 
-			Account accInfo;
+			GDb::Account accInfo;
 			accInfo.set_auth_name(authName);
 			accInfo.set_auth_string(authString);
 
 			try
 			{
 				AuthServerHelper* authServer = GetAuthServer();
-				read_transaction query(*authServer->SqlProxy());
-				DbSqlHelper<Account> accounts(&query);
+				pqxx::read_transaction query(*authServer->SqlProxy());
+				DbSqlHelper<GDb::Account> accounts(&query);
 
 				#define DBSelectOne(obj, name) .SelectOne(#name, [&obj]() { return obj.name(); })
 				#define DBSelectCond(obj, name, cond, splicing) .SelectCond(#name, cond, splicing, [&obj]() { return obj.name(); })
@@ -78,14 +78,14 @@ export void ApiAuth(HttpService* service)
 				return;
 			}
 
-			auto taskGen = [](Account accInfo, HttpResponseWriterPtr writer) -> DNTaskVoid
+			auto taskGen = [](GDb::Account accInfo, hv::HttpResponseWriterPtr writer) -> DNTaskVoid
 				{
 					// HttpResponseWriterPtr writer = writer;	//sharedptr ref count ++
-					A2g_ReqAuthAccount request;
+					GMsg::A2g_ReqAuthAccount request;
 					request.set_account_id(accInfo.account_id());
 					request.set_server_ip(writer->peeraddr());
 
-					g2A_ResAuthAccount response;
+					GMsg::g2A_ResAuthAccount response;
 
 					AuthServerHelper* authServer = GetAuthServer();
 					DNClientProxyHelper* client = authServer->GetCSock();
@@ -138,7 +138,7 @@ export void ApiAuth(HttpService* service)
 			taskGen(accInfo, writer);
 		});
 
-	service->POST("/Auth/User/RegistUser", [](const HttpRequestPtr& req, const HttpResponseWriterPtr& writer)
+	service->POST("/Auth/User/RegistUser", [](const hv::HttpRequestPtr& req, const hv::HttpResponseWriterPtr& writer)
 		{
 			nlohmann::json errData;
 
@@ -157,14 +157,14 @@ export void ApiAuth(HttpService* service)
 
 			AuthServerHelper* authServer = GetAuthServer();
 
-			Account accInfo;
+			GDb::Account accInfo;
 			accInfo.set_auth_name(authName);
 			accInfo.set_auth_string(authString);
 
 			try
 			{
-				read_transaction query(*authServer->SqlProxy());
-				DbSqlHelper<Account> accounts(&query);
+				pqxx::read_transaction query(*authServer->SqlProxy());
+				DbSqlHelper<GDb::Account> accounts(&query);
 
 				accounts
 					.InitEntity(accInfo)
@@ -201,8 +201,8 @@ export void ApiAuth(HttpService* service)
 			try
 			{
 
-				pq_work query(*authServer->SqlProxy());
-				DbSqlHelper<Account> accounts(&query);
+				pqxx::work query(*authServer->SqlProxy());
+				DbSqlHelper<GDb::Account> accounts(&query);
 
 				accounts.InitEntity(accInfo).Insert().Commit();
 
@@ -233,7 +233,7 @@ export void ApiAuth(HttpService* service)
 		});
 
 
-	service->POST("/Auth/Test/DB", [](const HttpRequestPtr& req, const HttpResponseWriterPtr& writer)
+	service->POST("/Auth/Test/DB", [](const hv::HttpRequestPtr& req, const hv::HttpResponseWriterPtr& writer)
 		{
 
 		});

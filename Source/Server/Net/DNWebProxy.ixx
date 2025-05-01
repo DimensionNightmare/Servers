@@ -3,7 +3,7 @@ export module DNWebProxy;
 
 import ThirdParty.Libhv;
 
-export class DNWebProxy : public HttpServer
+export class DNWebProxy : public hv::HttpServer
 {
 
 public:

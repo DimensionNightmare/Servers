@@ -25,7 +25,7 @@ namespace DatabaseMessage
 		
 		client->EMRegistState() = EMRegistState::Registing;
 
-		COM_ReqRegistSrv request;
+		GMsg::COM_ReqRegistSrv request;
 
 		request.set_server_type((int)dnServer->GetServerType());
 
@@ -40,7 +40,7 @@ namespace DatabaseMessage
 		
 
 		// data alloc
-		COM_ResRegistSrv response;
+		GMsg::COM_ResRegistSrv response;
 
 		{
 			auto taskGen = [](Message* msg) -> DNTask<Message*>
@@ -78,9 +78,9 @@ namespace DatabaseMessage
 		co_return;
 	}
 
-	export void Exe_RetChangeCtlSrv(SocketChannelPtr channel, std::string binMsg)
+	export void Exe_RetChangeCtlSrv(hv::SocketChannelPtr channel, std::string binMsg)
 	{
-		COM_RetChangeCtlSrv request;
+		GMsg::COM_RetChangeCtlSrv request;
 		if(!request.ParseFromString(binMsg))
 		{
 			return;

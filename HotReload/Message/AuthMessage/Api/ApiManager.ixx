@@ -5,9 +5,9 @@ import AuthServerHelper;
 import :ApiAuth;
 import ThirdParty.Libhv;
 
-export void ApiInit(HttpService* service)
+export void ApiInit(hv::HttpService* service)
 {
-	service->preprocessor = [](const HttpContextPtr& ctx) -> int
+	service->preprocessor = [](const hv::HttpContextPtr& ctx) -> int
 		{
 			static bool pass = 0;
 

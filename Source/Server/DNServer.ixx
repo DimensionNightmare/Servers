@@ -63,7 +63,7 @@ public:
 
 	uint32_t& ServerId() { return iServerId; }
 
-	virtual void LoopEvent(std::function<void(EventLoopPtr)> func) = 0;
+	virtual void LoopEvent(std::function<void(hv::EventLoopPtr)> func) = 0;
 
 	virtual void TickMainFrame(){}
 

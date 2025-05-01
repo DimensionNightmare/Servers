@@ -32,7 +32,7 @@ public:
 		{
 			try
 			{
-				pNoSqlProxy = std::make_shared<Redis>(*value);
+				pNoSqlProxy = std::make_shared<sw::redis::Redis>(*value);
 				pNoSqlProxy->ping();
 			}
 			catch (const std::exception& e)

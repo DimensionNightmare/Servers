@@ -7,10 +7,6 @@ import Logger;
 import std.compat;
 import Platform;
 
-#ifdef __unix__
-	#define Sleep(ms) usleep(ms*1000)
-#endif
-
 enum class EMLunchType : uint8_t
 {
 	GLOBAL,
@@ -19,7 +15,7 @@ enum class EMLunchType : uint8_t
 
 void WriteDumpFile(std::filesystem::path fileName, _EXCEPTION_POINTERS* ExceptionInfo = nullptr)
 {
-	auto hDumpFile = CreateFileA(
+	auto hDumpFile = Platform::CreateFileA(
 		fileName.string().c_str(),
 		0x40000000L, // GENERIC_WRITE
 		0,
@@ -32,12 +28,12 @@ void WriteDumpFile(std::filesystem::path fileName, _EXCEPTION_POINTERS* Exceptio
 	// INVALID_HANDLE_VALUE ((HANDLE)(LONG_PTR)-1)
 	if (hDumpFile != (void*)(int64_t*)-1)
 	{
-		_MINIDUMP_EXCEPTION_INFORMATION info;
-		info.ThreadId = GetCurrentThreadId();
+		Platform::_MINIDUMP_EXCEPTION_INFORMATION info;
+		info.ThreadId = Platform::GetCurrentThreadId();
 		info.ExceptionPointers = ExceptionInfo;
 		info.ClientPointers = 0;
 
-		MINIDUMP_TYPE dumpType = (MINIDUMP_TYPE)(
+		Platform::MINIDUMP_TYPE dumpType = (Platform::MINIDUMP_TYPE)(
 			MiniDumpWithDataSegs |
 			MiniDumpWithFullMemory |
 			MiniDumpWithHandleData |
@@ -47,9 +43,9 @@ void WriteDumpFile(std::filesystem::path fileName, _EXCEPTION_POINTERS* Exceptio
 			MiniDumpWithProcessThreadData
 			);
 
-		MiniDumpWriteDump(
-			GetCurrentProcess(),
-			GetCurrentProcessId(),
+		Platform::MiniDumpWriteDump(
+			Platform::GetCurrentProcess(),
+			Platform::GetCurrentProcessId(),
 			hDumpFile,
 			dumpType, // MiniDumpNormal
 			ExceptionInfo ? &info : nullptr,
@@ -57,7 +53,7 @@ void WriteDumpFile(std::filesystem::path fileName, _EXCEPTION_POINTERS* Exceptio
 			nullptr
 		);
 
-		CloseHandle(hDumpFile);
+		Platform::CloseHandle(hDumpFile);
 	}
 }
 
@@ -119,7 +115,7 @@ export int main(int argc, char** argv)
 
 	LoggerPrint::SetLoggerLevel(logLevel, execPath.parent_path() / launchParam["svrName"]);
 
-	hvlog_disable();
+	Libhv::hvlog_disable();
 
 	LoggerPrint()(ELogLevel_Normal, "hello ~");
 
@@ -156,7 +152,7 @@ export int main(int argc, char** argv)
 			return false;
 		};
 
-	if (!SetConsoleCtrlHandler(CtrlHandler, true))
+	if (!Platform::SetConsoleCtrlHandler(CtrlHandler, true))
 	{
 		LoggerPrint()(EL10nCode_CmdCtl);
 		App = nullptr;
@@ -179,7 +175,7 @@ export int main(int argc, char** argv)
 			return 0; // EXCEPTION_CONTINUE_SEARCH
 		};
 
-	if (!SetUnhandledExceptionFilter(UnhandledHandler))
+	if (!Platform::SetUnhandledExceptionFilter(UnhandledHandler))
 	{
 		LoggerPrint()(EL10nCode_UnhandledException);
 		App = nullptr;
@@ -299,10 +295,10 @@ export int main(int argc, char** argv)
 	while (AppRun && App)
 	{
 		App->TickMainFrame();
-		Sleep(1);
+		Platform::Sleep(1);
 	}
 
-	Sleep(50);
+	Platform::Sleep(50);
 
 	LoggerPrint()(ELogLevel_Normal, "bye ~");
 

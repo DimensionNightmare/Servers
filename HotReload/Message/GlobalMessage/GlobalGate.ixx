@@ -14,9 +14,9 @@ import std.compat;
 namespace GlobalMessage
 {
 
-	export void Exe_RetRegistSrv(SocketChannelPtr channel, std::string binMsg)
+	export void Exe_RetRegistSrv(hv::SocketChannelPtr channel, std::string binMsg)
 	{
-		g2G_RetRegistSrv request;
+		GMsg::g2G_RetRegistSrv request;
 		if(!request.ParseFromString(binMsg))
 		{
 			return;
@@ -49,9 +49,9 @@ namespace GlobalMessage
 		}
 	}
 
-	export void Exe_RetRegistChild(SocketChannelPtr channel, std::string binMsg)
+	export void Exe_RetRegistChild(hv::SocketChannelPtr channel, std::string binMsg)
 	{
-		g2G_RetRegistChild request;
+		GMsg::g2G_RetRegistChild request;
 		if(!request.ParseFromString(binMsg))
 		{
 			return;
@@ -64,7 +64,7 @@ namespace GlobalMessage
 
 		for (int i = 0; i < request.childs_size(); i++)
 		{
-			const COM_ReqRegistSrv& child = request.childs(i);
+			const GMsg::COM_ReqRegistSrv& child = request.childs(i);
 			EMServerType childType = (EMServerType)child.server_type();
 			ServerEntity* servChild = entityMan->AddEntity(child.server_id(), childType);
 			entity->SetMapLinkNode(childType, servChild);

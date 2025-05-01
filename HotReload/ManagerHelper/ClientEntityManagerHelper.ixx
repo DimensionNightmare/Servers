@@ -62,14 +62,14 @@ public:
 		return nullptr;
 	}
 
-	DNTaskVoid LoadEntityData(ClientEntity* entity, d2L_ReqLoadEntityData* inRequest, L2d_ResLoadEntityData* inResponse)
+	DNTaskVoid LoadEntityData(ClientEntity* entity, GMsg::d2L_ReqLoadEntityData* inRequest, GMsg::L2d_ResLoadEntityData* inResponse)
 	{
 		if (!pSqlClient || pSqlClient->RegistType() != uint8_t(EMServerType::GateServer) || !pNoSqlProxy)
 		{
 			co_return;
 		}
 
-		Player* dbEntity = entity->GetDbEntity();
+		GDb::Player* dbEntity = entity->GetDbEntity();
 
 		if (entity->HasFlag(EMClientEntityFlag::DBInited) || entity->HasFlag(EMClientEntityFlag::DBIniting))
 		{
@@ -108,7 +108,7 @@ public:
 
 		entity->SetFlag(EMClientEntityFlag::DBIniting);
 		// sql
-		L2D_ReqLoadData request;
+		GMsg::L2D_ReqLoadData request;
 
 		if (inRequest)
 		{
@@ -131,7 +131,7 @@ public:
 
 		request.SerializeToString(&binData);
 
-		D2L_ResLoadData response;
+		GMsg::D2L_ResLoadData response;
 		{
 			auto taskGen = [](Message* msg) -> DNTask<Message*>
 				{

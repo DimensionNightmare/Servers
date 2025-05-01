@@ -29,58 +29,52 @@ auto make_wrapper(F&& f) requires (!NoArgCallable<F>) {
 
 export
 {
-	using namespace hv;
+	using ::sockaddr_in;
+	using ::sockaddr;
+	using ::getsockname;
+	using ::ntohs;
+	using ::sockaddr_u;
+}
 
+export namespace hv
+{
 	using ::HttpRequestPtr;
 	using ::HttpResponsePtr;
 	using ::HttpResponseWriterPtr;
 	using ::HttpContextPtr;
 	using ::http_ctx_handler;
 	using ::http_status;
+	
 	using ::hio_t;
-	using ::sockaddr_in;
-	using ::sockaddr;
-	using ::load_balance_e;
 	using ::hssl_ctx_opt_t;
 	using ::unpack_setting_t;
 	using ::hevent_t;
 	using ::reconn_setting_t;
-	using ::sockaddr_u;
-	using ::SocketChannelPtr;
-	using ::HttpService;
-	using ::Buffer;
-	using ::EventLoopThread;
-	using ::EventLoopPtr;
-	using ::SocketChannel;
-	using ::HttpServer;
-	using ::EventLoop;
-	using ::EventLoopThreadPool;
-	using ::TcpClient;
-	using ::TcpServer;
-
-	using ::getsockname;
-	using ::ntohs;
 	using ::logger_set_file;
-};
 
-export namespace hv
+	using hv::HttpService;
+	using hv::Buffer;
+	using hv::EventLoopThread;
+	using hv::SocketChannel;
+	using hv::HttpServer;
+	using hv::EventLoop;
+	using hv::EventLoopThreadPool;
+	using hv::TcpClient;
+	using hv::TcpServer;
+
+	using SocketChannelPtr = std::shared_ptr<hv::SocketChannel>;
+	using EventLoopPtr = std::shared_ptr<hv::EventLoop>;
+}
+
+export namespace Libhv
 {
-	auto cleanup = make_wrapper(async::cleanup);
+	auto cleanup = make_wrapper(hv::async::cleanup);
 
-	void hvlog_disable()
-	{
-		hlog_disable();
-	}
+	void hvlog_disable() { hlog_disable(); }
 
-	void HVRun(TcpClient* obj)
-	{
-		obj->start();
-	}
+	void Run(hv::TcpClient* obj) { obj->start(); }
 
-	void HVRun(TcpServer* obj)
-	{
-		obj->start();
-	}
+	void Run(hv::TcpServer* obj) { obj->start(); }
 
 }
 

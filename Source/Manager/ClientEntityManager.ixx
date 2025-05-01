@@ -31,7 +31,7 @@ public:
 	}
 
 	/// @brief redisConnection pointer save
-	void InitSqlConn(const std::shared_ptr<Redis>& redisConn)
+	void InitSqlConn(const std::shared_ptr<sw::redis::Redis>& redisConn)
 	{
 		pNoSqlProxy = redisConn;
 	}
@@ -53,18 +53,18 @@ public: // dll override
 	{
 		uint32_t entityId = entity.ID();
 
-		Player dbEntity = *entity.GetDbEntity();
+		GDb::Player dbEntity = *entity.GetDbEntity();
 
 		// change maprecord
 		if(offline)
 		{
-			GameDefMapPointRecord* mapInfo = dbEntity.mutable_map_info();
-			GameDefMapPoint* cur_point = mapInfo->mutable_cur_point();
-			GameDefVector3* property_location = dbEntity.mutable_property_entity()->mutable_location();
+			GDefMapPointRecord* mapInfo = dbEntity.mutable_map_info();
+			GDefMapPoint* cur_point = mapInfo->mutable_cur_point();
+			GDefVector3* property_location = dbEntity.mutable_property_entity()->mutable_location();
 			*cur_point->mutable_point() = *property_location;
 			property_location->Clear();
 
-			GameDefMapPoint* last_point = mapInfo->mutable_last_point();
+			GDefMapPoint* last_point = mapInfo->mutable_last_point();
 			*last_point = *cur_point;
 			cur_point->Clear();
 		}
@@ -73,13 +73,13 @@ public: // dll override
 		dbEntity.SerializeToString(&entity_data);
 
 		// sql
-		L2D_ReqSaveData request;
+		GMsg::L2D_ReqSaveData request;
 		std::string table_name = dbEntity.GetDescriptor()->full_name();
 		request.set_table_name(table_name);
 		request.set_key_name(ClientEntity::SKeyName);
 		request.set_entity_data(entity_data);
 
-		D2L_ResSaveData response;
+		GMsg::D2L_ResSaveData response;
 
 		{
 			auto taskGen = [](Message* msg) -> DNTask<Message*>
@@ -172,7 +172,7 @@ public: // dll override
 	}
 
 protected: // dll proxy
-	std::shared_ptr<Redis> pNoSqlProxy;
+	std::shared_ptr<sw::redis::Redis> pNoSqlProxy;
 	DNClientProxy* pSqlClient;
 
 	/// @brief if save error. bin data will record to this.

@@ -29,7 +29,7 @@ export int HandleDatabaseServerInit(DNServer* server)
 		clientSock->onConnection = nullptr;
 		clientSock->onMessage = nullptr;
 
-		auto onConnection = [clientSock, serverProxy](const SocketChannelPtr& channel)
+		auto onConnection = [clientSock, serverProxy](const hv::SocketChannelPtr& channel)
 			{
 				const std::string& peeraddr = channel->peeraddr();
 
@@ -66,7 +66,7 @@ export int HandleDatabaseServerInit(DNServer* server)
 				}
 			};
 
-		auto onMessage = [clientSock](const SocketChannelPtr& channel, Buffer* buf)
+		auto onMessage = [clientSock](const hv::SocketChannelPtr& channel, hv::Buffer* buf)
 			{
 				MessagePacket packet;
 				memcpy(&packet, buf->data(), MessagePacket::PackLenth);

@@ -18,13 +18,13 @@ namespace GateMessage
 		ServerEntityManagerHelper* entityMan = dnServer->GetServerEntityManager();
 		DNClientProxyHelper* client = dnServer->GetCSock();
 
-		g2G_RetRegistChild request;
+		GMsg::g2G_RetRegistChild request;
 
 		request.set_server_id(dnServer->ServerId());
 
 		auto AddChild = [&request](ServerEntity* serv)
 			{
-				COM_ReqRegistSrv* child = request.add_childs();
+				GMsg::COM_ReqRegistSrv* child = request.add_childs();
 				child->set_server_id(serv->ID());
 				child->set_server_type((uint32_t)serv->GetServerType());
 			};
@@ -63,7 +63,7 @@ namespace GateMessage
 		
 		client->EMRegistState() = EMRegistState::Registing;
 
-		COM_ReqRegistSrv request;
+		GMsg::COM_ReqRegistSrv request;
 
 		request.set_server_type((int)dnServer->GetServerType());
 
@@ -80,7 +80,7 @@ namespace GateMessage
 		
 
 		// data alloc
-		COM_ResRegistSrv response;
+		GMsg::COM_ResRegistSrv response;
 
 		{
 			auto taskGen = [](Message* msg) -> DNTask<Message*>
@@ -121,9 +121,9 @@ namespace GateMessage
 	}
 
 	// client request
-	export void Msg_ReqRegistSrv(SocketChannelPtr channel, uint32_t msgId, std::string binMsg)
+	export void Msg_ReqRegistSrv(hv::SocketChannelPtr channel, uint32_t msgId, std::string binMsg)
 	{
-		COM_ReqRegistSrv request;
+		GMsg::COM_ReqRegistSrv request;
 		if(!request.ParseFromString(binMsg))
 		{
 			return;
@@ -131,7 +131,7 @@ namespace GateMessage
 
 		LoggerPrint()(ELogLevel_Debug, "ip Reqregist: {}, {}", channel->peeraddr(), request.server_type());
 
-		COM_ResRegistSrv response;
+		GMsg::COM_ResRegistSrv response;
 
 		GateServerHelper* dnServer = GetGateServer();
 		ServerEntityManagerHelper* entityMan = dnServer->GetServerEntityManager();
@@ -178,7 +178,7 @@ namespace GateMessage
 		if (response.success())
 		{
 			// up to Global
-			g2G_RetRegistSrv request;
+			GMsg::g2G_RetRegistSrv request;
 			request.set_is_regist(true);
 			request.set_server_id(serverId);
 
@@ -192,9 +192,9 @@ namespace GateMessage
 		}
 	}
 
-	export void Exe_RetHeartbeat(SocketChannelPtr channel, std::string binMsg)
+	export void Exe_RetHeartbeat(hv::SocketChannelPtr channel, std::string binMsg)
 	{
-		COM_RetHeartbeat request;
+		GMsg::COM_RetHeartbeat request;
 		if(!request.ParseFromString(binMsg))
 		{
 			return;

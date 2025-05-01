@@ -29,7 +29,7 @@ export int HandleGlobalServerInit(DNServer* server)
 		serverSock->onConnection = nullptr;
 		serverSock->onMessage = nullptr;
 
-		auto onConnection = [serverProxy, serverSock](const SocketChannelPtr& channel)
+		auto onConnection = [serverProxy, serverSock](const hv::SocketChannelPtr& channel)
 			{
 				const std::string& peeraddr = channel->peeraddr();
 				if (channel->isConnected())
@@ -50,7 +50,7 @@ export int HandleGlobalServerInit(DNServer* server)
 				}
 			};
 
-		auto onMessage = [serverSock](const SocketChannelPtr& channel, Buffer* buf)
+		auto onMessage = [serverSock](const hv::SocketChannelPtr& channel, hv::Buffer* buf)
 			{
 				MessagePacket packet;
 				memcpy(&packet, buf->data(), MessagePacket::PackLenth);
@@ -115,7 +115,7 @@ export int HandleGlobalServerInit(DNServer* server)
 		clientSock->onConnection = nullptr;
 		clientSock->onMessage = nullptr;
 
-		auto onConnection = [clientSock](const SocketChannelPtr& channel)
+		auto onConnection = [clientSock](const hv::SocketChannelPtr& channel)
 			{
 				const std::string& peeraddr = channel->peeraddr();
 
@@ -142,7 +142,7 @@ export int HandleGlobalServerInit(DNServer* server)
 				}
 			};
 
-		auto onMessage = [clientSock](const SocketChannelPtr& channel, Buffer* buf)
+		auto onMessage = [clientSock](const hv::SocketChannelPtr& channel, hv::Buffer* buf)
 			{
 				MessagePacket packet;
 				memcpy(&packet, buf->data(), MessagePacket::PackLenth);

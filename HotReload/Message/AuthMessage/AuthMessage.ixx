@@ -14,7 +14,7 @@ export class AuthMessageHandle
 
 public:
 
-	static void MsgHandle(SocketChannelPtr channel, uint32_t msgId, size_t msgHashId, const std::string& msgData)
+	static void MsgHandle(hv::SocketChannelPtr channel, uint32_t msgId, size_t msgHashId, const std::string& msgData)
 	{
 		if (MHandleMap.contains(msgHashId))
 		{
@@ -36,7 +36,7 @@ public:
 		}
 	}
 	
-	static void MsgRetHandle(SocketChannelPtr channel, size_t msgHashId, const std::string& msgData)
+	static void MsgRetHandle(hv::SocketChannelPtr channel, size_t msgHashId, const std::string& msgData)
 	{
 		if (MHandleRetMap.contains(msgHashId))
 		{
@@ -61,7 +61,7 @@ public:
 
 	}
 
-	static void RegApiHandle(HttpService* service)
+	static void RegApiHandle(hv::HttpService* service)
 	{
 		service->Static("/", "./");
 
@@ -69,7 +69,7 @@ public:
 	}
 public:
 
-	inline static std::unordered_map<size_t, std::pair<const Message*, std::function<void(SocketChannelPtr, uint32_t, std::string)>>> MHandleMap;
+	inline static std::unordered_map<size_t, std::pair<const Message*, std::function<void(hv::SocketChannelPtr, uint32_t, std::string)>>> MHandleMap;
 
-	inline static std::unordered_map<size_t, std::pair<const Message*, std::function<void(SocketChannelPtr, std::string)>>> MHandleRetMap;
+	inline static std::unordered_map<size_t, std::pair<const Message*, std::function<void(hv::SocketChannelPtr, std::string)>>> MHandleRetMap;
 };

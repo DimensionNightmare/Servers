@@ -12,9 +12,9 @@ import std.compat;
 
 namespace LogicMessage
 {
-	export void Exe_RetAccountReplace(SocketChannelPtr channel, uint32_t msgId, std::string binMsg)
+	export void Exe_RetAccountReplace(hv::SocketChannelPtr channel, uint32_t msgId, std::string binMsg)
 	{
-		S2C_RetAccountReplace request;
+		GMsg::S2C_RetAccountReplace request;
 		if(!request.ParseFromString(binMsg))
 		{
 			return;
@@ -50,14 +50,14 @@ namespace LogicMessage
 	}
 
 	// client request
-	export DNTaskVoid Msg_ReqClientLogin(SocketChannelPtr channel, uint32_t msgId, std::string binMsg)
+	export DNTaskVoid Msg_ReqClientLogin(hv::SocketChannelPtr channel, uint32_t msgId, std::string binMsg)
 	{
-		C2S_ReqAuthToken request;
+		GMsg::C2S_ReqAuthToken request;
 		if(!request.ParseFromString(binMsg))
 		{
 			co_return;
 		}
-		S2C_ResAuthToken response;
+		GMsg::S2C_ResAuthToken response;
 
 		LogicServerHelper* dnServer = GetLogicServer();
 		ClientEntityManagerHelper* entityMan = dnServer->GetClientEntityManager();
@@ -97,7 +97,7 @@ namespace LogicMessage
 			// from db
 			if(entity->GetDbEntity()->has_map_info())
 			{
-				GameDefMapPointRecord* mapRecord = entity->GetDbEntity()->mutable_map_info();
+				GDefMapPointRecord* mapRecord = entity->GetDbEntity()->mutable_map_info();
 				*mapRecord->mutable_cur_point() = *mapRecord->mutable_last_point();
 
 				mapId = mapRecord->cur_point().map_id();
@@ -107,7 +107,7 @@ namespace LogicMessage
 			{
 				mapId++;
 
-				GameDefMapPointRecord* mapRecord = entity->GetDbEntity()->mutable_map_info();
+				GDefMapPointRecord* mapRecord = entity->GetDbEntity()->mutable_map_info();
 				mapRecord->mutable_cur_point()->set_map_id(mapId);
 			}
 

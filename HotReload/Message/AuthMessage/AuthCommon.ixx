@@ -23,7 +23,7 @@ namespace AuthMessage
 		
 		client->EMRegistState() = EMRegistState::Registing;
 
-		COM_ReqRegistSrv request;
+		GMsg::COM_ReqRegistSrv request;
 		request.set_server_type((int)dnServer->GetServerType());
 
 		if (uint32_t serverIndex = dnServer->ServerId())
@@ -38,7 +38,7 @@ namespace AuthMessage
 		request.SerializeToString(&binData);
 		
 		// data alloc
-		COM_ResRegistSrv response;
+		GMsg::COM_ResRegistSrv response;
 
 		{
 			auto taskGen = [](Message* msg) -> DNTask<Message*>

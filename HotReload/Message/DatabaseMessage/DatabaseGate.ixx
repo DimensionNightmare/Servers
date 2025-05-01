@@ -14,26 +14,26 @@ import std.compat;
 namespace DatabaseMessage
 {
 
-	export void Exe_ReqLoadData(SocketChannelPtr channel, uint32_t msgId, std::string binMsg)
+	export void Exe_ReqLoadData(hv::SocketChannelPtr channel, uint32_t msgId, std::string binMsg)
 	{
-		L2D_ReqLoadData request;
+		GMsg::L2D_ReqLoadData request;
 		if(!request.ParseFromString(binMsg))
 		{
 			return;
 		}
-		D2L_ResLoadData response;
+		GMsg::D2L_ResLoadData response;
 
 		DatabaseServerHelper* dnServer = GetDatabaseServer();
 
 		std::string binData;
 
-		if (pq_connection* conn = dnServer->GetSqlProxy(EMSqlDbNameEnum::Nightmare))
+		if (pqxx::connection* conn = dnServer->GetSqlProxy(EMSqlDbNameEnum::Nightmare))
 		{
 			auto dealFunc = [&](Message* findMsg)
 				{
 					findMsg->ParseFromString(request.entity_data());
 
-					pq_work txn(*conn);
+					pqxx::work txn(*conn);
 					DbSqlHelper dbHelper(&txn, findMsg);
 
 					auto query = [&]()
@@ -70,9 +70,9 @@ namespace DatabaseMessage
 					}
 				};
 
-			if (const Descriptor* descriptor = FindMessageTypeByName(request.table_name()))
+			if (const Descriptor* descriptor = PbGen::FindMessageTypeByName(request.table_name()))
 			{
-				if (const Message* prototype = GetPrototype(descriptor))
+				if (const Message* prototype = PbGen::GetPrototype(descriptor))
 				{
 					Message* message = prototype->New();
 
@@ -110,26 +110,26 @@ namespace DatabaseMessage
 		MessagePackAndSend(msgId, EMMsgDeal::Res, "", binData, channel);
 	}
 
-	export void Exe_ReqSaveData(SocketChannelPtr channel, uint32_t msgId, std::string binMsg)
+	export void Exe_ReqSaveData(hv::SocketChannelPtr channel, uint32_t msgId, std::string binMsg)
 	{
-		L2D_ReqSaveData request;
+		GMsg::L2D_ReqSaveData request;
 		if(!request.ParseFromString(binMsg))
 		{
 			return;
 		}
-		D2L_ResSaveData response;
+		GMsg::D2L_ResSaveData response;
 
 		DatabaseServerHelper* dnServer = GetDatabaseServer();
 
 		std::string binData;
 
-		if (pq_connection* conn = dnServer->GetSqlProxy(EMSqlDbNameEnum::Nightmare))
+		if (pqxx::connection* conn = dnServer->GetSqlProxy(EMSqlDbNameEnum::Nightmare))
 		{
 			auto dealFunc = [&](Message* findMsg)
 				{
 					findMsg->ParseFromString(request.entity_data());
 
-					pq_work txn(*conn);
+					pqxx::work txn(*conn);
 					DbSqlHelper dbHelper(&txn, findMsg);
 
 					dbHelper
@@ -140,9 +140,9 @@ namespace DatabaseMessage
 
 				};
 
-			if (const Descriptor* descriptor = FindMessageTypeByName(request.table_name()))
+			if (const Descriptor* descriptor = PbGen::FindMessageTypeByName(request.table_name()))
 			{
-				if (const Message* prototype = GetPrototype(descriptor))
+				if (const Message* prototype = PbGen::GetPrototype(descriptor))
 				{
 					Message* message = prototype->New();
 

@@ -25,7 +25,7 @@ namespace LogicMessage
 		
 		client->EMRegistState() = EMRegistState::Registing;
 
-		COM_ReqRegistSrv request;
+		GMsg::COM_ReqRegistSrv request;
 
 		request.set_server_type((int)dnServer->GetServerType());
 
@@ -39,7 +39,7 @@ namespace LogicMessage
 		request.SerializeToString(&binData);
 		
 		// data alloc
-		COM_ResRegistSrv response;
+		GMsg::COM_ResRegistSrv response;
 
 		{
 			auto taskGen = [](Message* msg) -> DNTask<Message*>
@@ -77,9 +77,9 @@ namespace LogicMessage
 	}
 
 	// client request
-	export void Msg_ReqRegistSrv(SocketChannelPtr channel, uint32_t msgId, std::string binMsg)
+	export void Msg_ReqRegistSrv(hv::SocketChannelPtr channel, uint32_t msgId, std::string binMsg)
 	{
-		d2L_ReqRegistSrv request;
+		GMsg::d2L_ReqRegistSrv request;
 		if(!request.ParseFromString(binMsg))
 		{
 			return;
@@ -87,7 +87,7 @@ namespace LogicMessage
 		
 		LoggerPrint()(ELogLevel_Debug, "ip Reqregist: {}, {}", channel->peeraddr(), request.server_type());
 
-		COM_ResRegistSrv response;
+		GMsg::COM_ResRegistSrv response;
 
 		LogicServerHelper* dnServer = GetLogicServer();
 		RoomEntityManagerHelper* entityMan = dnServer->GetRoomEntityManager();
@@ -118,7 +118,7 @@ namespace LogicMessage
 				}
 
 				// already connect
-				if (const SocketChannelPtr& sock = entity->GetSock())
+				if (const hv::SocketChannelPtr& sock = entity->GetSock())
 				{
 					response.set_success(false);
 				}
@@ -173,9 +173,9 @@ namespace LogicMessage
 		MessagePackAndSend(msgId, EMMsgDeal::Res, "", binData, channel);
 	}
 
-	export void Exe_RetChangeCtlSrv(SocketChannelPtr channel, std::string binMsg)
+	export void Exe_RetChangeCtlSrv(hv::SocketChannelPtr channel, std::string binMsg)
 	{
-		COM_RetChangeCtlSrv request;
+		GMsg::COM_RetChangeCtlSrv request;
 		if(!request.ParseFromString(binMsg))
 		{
 			return;
@@ -186,9 +186,9 @@ namespace LogicMessage
 		TickMainSpaceDll(client, FUNCPLACE(&DNClientProxy::RedirectClient),  request.server_port(), request.server_ip());
 	}
 
-	export void Exe_RetHeartbeat(SocketChannelPtr channel, std::string binMsg)
+	export void Exe_RetHeartbeat(hv::SocketChannelPtr channel, std::string binMsg)
 	{
-		COM_RetHeartbeat request;
+		GMsg::COM_RetHeartbeat request;
 		if(!request.ParseFromString(binMsg))
 		{
 			return;

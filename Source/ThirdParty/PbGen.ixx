@@ -55,9 +55,9 @@ export
 	using ::EL10nType;
 
 	using ::EL10nCode;
-	using ::GameDefMapPointRecord;
-	using ::GameDefVector3;
-	using ::GameDefMapPoint;
+	using ::GDefMapPointRecord;
+	using ::GDefVector3;
+	using ::GDefMapPoint;
 
 	using ::EL10nCode_IsValid;
 	using ::ELogLevel_Parse;
@@ -65,61 +65,6 @@ export
 
 	using ::ShutdownProtobufLibrary;
 	using ::json::MessageToJsonString;
-}
-
-export
-{
-	using namespace l10n;
-
-	using ::l10nCode;
-	using ::l10nCodes;
-}
-
-export
-{
-	using namespace GMsg;
-
-	using ::L2D_ReqLoadData;
-	using ::D2L_ResLoadData;
-	using ::d2L_ReqLoadEntityData;
-	using ::L2d_ResLoadEntityData;
-	using ::COM_RetHeartbeat;
-	using ::A2g_ReqAuthAccount;
-	using ::g2A_ResAuthAccount;
-
-	using ::COM_ReqRegistSrv;
-	using ::COM_ResRegistSrv;
-	using ::g2A_ResAuthAccount;
-	using ::L2D_ReqSaveData;
-	using ::D2L_ResSaveData;
-	using ::d2L_ReqSaveEntityData;
-	using ::L2d_ResSaveEntityData;
-
-	using ::COM_RetChangeCtlSrv;
-	using ::g2L_RetProxyOffline;
-	using ::g2G_RetRegistSrv;
-	using ::C2S_ReqAuthToken;
-	using ::S2C_ResAuthToken;
-	using ::S2C_RetAccountReplace;
-	using ::g2G_RetRegistChild;
-	using ::d2L_ReqRegistSrv;
-}
-
-export
-{
-	using namespace GDb;
-
-	using ::Account;
-	using ::Player;
-	using ::SingleTon;
-}
-
-export
-{
-	auto EL10nCode_Name_(EL10nCode param){return EL10nCode_Name(param);}
-
-	auto FindMessageTypeByName(auto name) { return DescriptorPool::generated_pool()->FindMessageTypeByName(name); }
-	auto GetPrototype(auto descriptor) { return MessageFactory::generated_factory()->GetPrototype(descriptor); }
 
 	enum CustomFieldOptions
 	{
@@ -130,8 +75,69 @@ export
 		e_datetime = 5,
 		e_autogen = 6,
 	};
+}
 
+export namespace l10n
+{
+
+	using l10n::l10nCode;
+	using l10n::l10nCodes;
+}
+
+
+export namespace GMsg
+{
+	using GMsg::COM_RetHeartbeat;
+	using GMsg::COM_ReqRegistSrv;
+	using GMsg::COM_ResRegistSrv;
+	using GMsg::COM_RetChangeCtlSrv;
+
+	// DB <-> Logic
+	using GMsg::L2D_ReqLoadData;
+	using GMsg::D2L_ResLoadData;
+	using GMsg::L2D_ReqSaveData;
+	using GMsg::D2L_ResSaveData;
+
+	// DS <-> Logic
+	using GMsg::d2L_ReqLoadEntityData;
+	using GMsg::L2d_ResLoadEntityData;
+	using GMsg::d2L_ReqSaveEntityData;
+	using GMsg::L2d_ResSaveEntityData;
+	using GMsg::d2L_ReqRegistSrv;
+
+	// Gate <-> Logic
+	using GMsg::g2L_RetProxyOffline;
+
+	// Auth <-> Gate
+	using GMsg::A2g_ReqAuthAccount;
+	using GMsg::g2A_ResAuthAccount;
 	
+	// Global <-> Gate
+	using GMsg::g2G_RetRegistSrv;
+	using GMsg::g2G_RetRegistChild;
+
+	// Server <-> Client
+	using GMsg::C2S_ReqAuthToken;
+	using GMsg::S2C_ResAuthToken;
+	using GMsg::S2C_RetAccountReplace;
+}
+
+export namespace GDb
+{
+	using GDb::Account;
+	using GDb::Player;
+	using GDb::SingleTon;
+}
+
+export namespace PbGen
+{
+
+	auto EL10nCode_Name_(EL10nCode param){return EL10nCode_Name(param);}
+
+	auto FindMessageTypeByName(auto name) { return DescriptorPool::generated_pool()->FindMessageTypeByName(name); }
+
+	auto GetPrototype(auto descriptor) { return MessageFactory::generated_factory()->GetPrototype(descriptor); }
+
 	int GetNumberFieldOptions(const FieldOptions& options, CustomFieldOptions extension)
 	{
 		switch(extension)
@@ -150,7 +156,6 @@ export
 				throw std::invalid_argument("Invalid extension type.");
 		}
 	}
-
 
 	auto GetStringFieldOptions(const FieldOptions& options, CustomFieldOptions extension)
 	{

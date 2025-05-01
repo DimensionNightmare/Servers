@@ -90,14 +90,14 @@ public:
 	{
 		// pCSock->Timer()->pause();
 
-		LoopEvent([](EventLoopPtr loop)
+		LoopEvent([](hv::EventLoopPtr loop)
 		{
 			loop->pause();
 		});
 	}
 
 	virtual void Resume() override {
-		LoopEvent([](EventLoopPtr loop)
+		LoopEvent([](hv::EventLoopPtr loop)
 		{
 			loop->resume();
 		});
@@ -106,13 +106,13 @@ public:
 	}
 
 
-	virtual void LoopEvent(std::function<void(EventLoopPtr)> func) override {
+	virtual void LoopEvent(std::function<void(hv::EventLoopPtr)> func) override {
 		std::unordered_map<long, bool> looped;
 
 		if (pCSock)
 		{
 			looped.clear();
-			while (const EventLoopPtr& pLoop = pCSock->loop())
+			while (const hv::EventLoopPtr& pLoop = pCSock->loop())
 			{
 				long id = pLoop->tid();
 				if (!looped.contains(id))
@@ -135,7 +135,7 @@ protected: // dll proxy
 
 	std::unique_ptr<DNClientProxy> pCSock;
 
-	std::unordered_map<uint16_t, std::unique_ptr<pq_connection>> pSqlProxys;
+	std::unordered_map<uint16_t, std::unique_ptr<pqxx::connection>> pSqlProxys;
 
 	// record orgin info
 	std::string sCtlIp;
