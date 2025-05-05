@@ -2,7 +2,6 @@ module;
 
 export module DimensionNightmare;
 
-import StrUtils;
 import L10nText;
 import Logger;
 import Config.Server;
@@ -17,6 +16,7 @@ import RoomEntityManager;
 import ServerEntityManager;
 import DNClientProxy;
 import DNServerProxy;
+import StrUtils;
 
 export class DimensionNightmare
 {
@@ -35,168 +35,18 @@ public:
 	}
 
 	/// @brief load ini config
-	bool Init(std::unordered_map<std::string, std::string>&& launchParam)
+	bool Init(ServerTypeBitFlag& bitFlag, std::unordered_map<std::string, std::unordered_map<std::string, std::string>>&& inIniFileParam)
 	{
-		ServerTypeBitFlag bitFlag;
-		
-		for(auto& serverType : StrSplit(launchParam["svrType"], ","))
-		{
-			bitFlag.set(stoi(serverType));
-		}
-
-		launchParam.erase("svrType");
-
-		uint64_t bitFlagValue = bitFlag.to_ulong();
-		if (bitFlagValue == 0 || bitFlagValue >= (1 << static_cast<uint8_t>(EMServerType::Max)))
-		{
-			SPidLogger.Record(ELogLevel_Error, "serverType Not Invalid! ");
-			return false;
-		}
-
-#ifndef NDEBUG
-		const char* iniFilePath = "./Config/ServerDebug.ini";
-#else
-		const char* iniFilePath = "./Config/Server.ini";
-#endif
-
-		if(!std::filesystem::exists(iniFilePath))
-		{
-			SPidLogger.Record(ELogLevel_Error, "ConfigIni Not Finded!");
-			return false;
-		}
-
-		// get ini Config
-		std::unordered_map<std::string, std::unordered_map<std::string, std::string>> sectionNames;
-
-#ifdef _WIN32
-		#define MAX_SECTION_NAME 512
-		char buffer[MAX_SECTION_NAME] = { 0 };
-		size_t bufferSize = sizeof(buffer);
-		Platform::GetPrivateProfileSectionNamesA(buffer, MAX_SECTION_NAME, iniFilePath);
-		char* current = buffer;
-		while (*current)
-		{
-			sectionNames[current];
-			current += strlen(current) + 1;
-
-			// if (sectionNames.back().find_last_of("Server") != std::string::npos && sectionNames.back() != serverName)
-			// {
-			// 	sectionNames.pop_back();
-			// }
-		}
-#elif __unix__
-		std::unordered_map<std::string, std::list<std::string>> sectionVal;
-
-		auto GetINISectionNames = [&](const char* iniFilePath)
-			{
-				ifstream file(iniFilePath);
-				if (!file.is_open())
-				{
-					cerr << "Failed to open INI file: " << iniFilePath << std::endl;
-					return;
-				}
-
-				std::string line;
-				while (getline(file, line))
-				{
-					if (line.empty())
-					{
-						continue;
-					}
-
-					if (line[0] == '[')
-					{
-						size_t endPos = line.find_first_of("]");
-						if (endPos != std::string::npos)
-						{
-							std::string sectionName = line.substr(1, endPos - 1);
-							sectionNames.emplace_back(sectionName);
-						}
-					}
-					else if (line[0] != ';')
-					{
-						sectionVal[sectionNames.back()].emplace_back(line);
-					}
-				}
-
-				file.close();
-			};
-
-		GetINISectionNames(iniFilePath);
-
-		auto iter = sectionNames.begin();
-		while (iter != sectionNames.end())
-		{
-			if ((*iter).find("Server") != std::string::npos && *iter != serverName)
-			{
-				sectionVal.erase(*iter);
-				iter = sectionNames.erase(iter);
-			}
-			else
-			{
-				++iter;
-			}
-		}
-#endif
-		auto handler = [&](std::unordered_map<std::string, std::string>& map, std::string& split)
-		{
-			size_t pos = split.find('=');
-			if (pos != std::string::npos)
-			{
-				std::string key = split.substr(0, pos);
-				// if (launchParam.contains(key))
-				// {
-				// 	return;
-				// }
-
-				map.emplace(key, split.substr(pos + 1));
-			}
-		};
-		
-
-		for (auto& [sectionName, sectionMap] : sectionNames)
-		{
-			if (sectionName.find_last_of("Server") != std::string::npos)
-			{
-				sectionMap.emplace("svrName", sectionName);
-			}
-
-#ifdef _WIN32
-			Platform::GetPrivateProfileSectionA(sectionName.c_str(), buffer, MAX_SECTION_NAME, iniFilePath);
-			char* keyValuePair = buffer;
-			while (*keyValuePair)
-			{
-				std::string split(keyValuePair);
-				keyValuePair += strlen(keyValuePair) + 1;
-				handler(sectionMap, split);
-			}
-#elif __unix__
-			for (const std::string& keyValuePair : sectionVal[sectionName])
-			{
-				std::string split(keyValuePair);
-				handler(split);
-			}
-#endif
-		}
-
-		// muti server only this valid.
-		if(bitFlag.count() > 1)
-		{
-			sectionNames["Common"]["program"] = launchParam["program"];
-		}
-		else
-		{
-			launchParam.merge(sectionNames["Common"]);
-			sectionNames["Common"] = std::move(launchParam);
-		}
-
+		auto iniFileParam = std::move(inIniFileParam);
+		// drop up
+	
 		for(auto& [serverEnum, serverName] : ServerTypeList)
 		{
 			// set global Launch config
 			if(bitFlag.test(serverEnum))
 			{
-				auto merge = sectionNames["Common"];
-				merge.merge(sectionNames[serverName]);
+				auto merge = iniFileParam["Common"];
+				merge.merge(iniFileParam[serverName]);
 				if(!InitServer(std::move(merge)))
 				{
 					return false;
@@ -208,16 +58,23 @@ public:
 	}
 
 	/// @brief create server
-	bool InitServer(std::unordered_map<std::string, std::string>&& launchParam)
+	bool InitServer(std::unordered_map<std::string, std::string>&& iniServerParam)
 	{
 
 		World::Ptr world = std::make_shared<World>();
 		oWorlds.push_back(world);
 
-		world->MoveLuanchConfigToSelf(std::move(launchParam));
+		world->MoveLuanchConfigToSelf(std::move(iniServerParam));
 
 		LoggerPrint::Ptr logger = world->AddSystem<LoggerPrint>();
-		world->AddSystem<DNl10n>();
+		DNl10n::Ptr dnL10n = world->AddSystem<DNl10n>();
+
+		if(const char* errInfo = dnL10n->Init())
+		{
+			
+			return false;
+		}
+
 		DNServer::Ptr server = world->AddSystem<DNServer>();
 		
 		std::string* value = world->LuanchParam("svrName");

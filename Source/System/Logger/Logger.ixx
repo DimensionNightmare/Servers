@@ -27,9 +27,8 @@ protected:
 	LoggerPrint(World::Ptr world):System(world)
 	{
 		eSystemType = EMSystemType::LoggerPrint;
+		pDNl10n = world->GetSystem<DNl10n>(EMSystemType::DNl10n);
 	}
-
-	LoggerPrint():System(nullptr){}
 public:
 
 
@@ -39,15 +38,19 @@ public:
 
 	bool Awake() override
 	{
-		ELogLevel logLevel = ELogLevel_Debug;
 		if(std::string* value = GetWorld()->LuanchParam("LoggerLevel"))
 		{
+			ELogLevel logLevel = ELogLevel_Debug;
 			ELogLevel_Parse(*value, &logLevel);
+			SetLoggerLevel(logLevel, std::nullopt);
 		}
 
-		std::filesystem::path logFile = *GetWorld()->LuanchParam("program");
-		logFile = logFile.parent_path() / *GetWorld()->LuanchParam("svrName");
-		SetLoggerLevel(logLevel, logFile);
+		if(std::string* value = GetWorld()->LuanchParam("program"))
+		{
+			std::filesystem::path logFile = *value;
+			logFile = logFile.parent_path() / *GetWorld()->LuanchParam("svrName");
+			SetLoggerLevel(std::nullopt, logFile);
+		}
 
 		return true;
 	}
@@ -119,7 +122,7 @@ public:
 	void Record(EL10nCode code, Args&&... args)
 	{
 		ELogLevel level;
-		const std::string& fmt = DNl10n::GetTipText(code, level);
+		const std::string& fmt = pDNl10n->GetTipText(code, level);
 
 		if (level < eLogLevel)
 		{
@@ -144,7 +147,7 @@ public:
 	void Record(EL10nCode code)
 	{
 		ELogLevel level;
-		const std::string& fmt = DNl10n::GetTipText(code, level);
+		const std::string& fmt = pDNl10n->GetTipText(code, level);
 
 		if (level < eLogLevel)
 		{
@@ -181,6 +184,8 @@ protected:
 	std::ofstream LogFile; 
 
 	ELogLevel eLogLevel = ELogLevel_Normal;
+
+	DNl10n::Ptr pDNl10n;
 };
 
 class LoggerPrintPid
@@ -188,40 +193,57 @@ class LoggerPrintPid
 public:
 	LoggerPrintPid()
 	{
-
+		pWorld = std::make_shared<World>();
+		pWorld->AddSystem<DNl10n>();
+		pLogger = pWorld->AddSystem<LoggerPrint>();
 	}
 
-	~LoggerPrintPid() = default;
-
-	void Init(ELogLevel level, std::filesystem::path path)
+	~LoggerPrintPid()
 	{
+		pWorld->Dispose();
+		pWorld = nullptr;
+	}
 
-		logger.SetLoggerLevel(level, path);
+	void Init(std::optional<ELogLevel> level = std::nullopt, std::optional<std::filesystem::path> path = std::nullopt)
+	{
+		pLogger->SetLoggerLevel(level, path);
+	}
+
+	void Init(std::unordered_map<std::string, std::string> commonInfo)
+	{
+		pWorld->MoveLuanchConfigToSelf(std::move(commonInfo));
+		DNl10n::Ptr pL10n = pWorld->GetSystem<DNl10n>(EMSystemType::DNl10n);
+		if(const char* errInfo = pL10n->Init())
+		{
+			throw std::exception(errInfo);
+		}
 	}
 
 	template <typename... Args>
     void Record(ELogLevel level, const std::format_string<Args...>& fmt, Args&&... args)
 	{
-		logger.Record(level, fmt, std::forward<Args>(args)...);
+		pLogger->Record(level, fmt, std::forward<Args>(args)...);
 	}
 
 	void Record(ELogLevel level, const std::string& fmt)
 	{
-		logger.Record(level, fmt);
+		pLogger->Record(level, fmt);
 	}
 
 	template <typename... Args>
 	void Record(EL10nCode code, Args&&... args)
 	{
-		logger.Record(code, std::forward<Args>(args)...);
+		pLogger->Record(code, std::forward<Args>(args)...);
 	}
 
 	void Record(EL10nCode code)
 	{
-		logger.Record(code);
+		pLogger->Record(code);
 	}
 
-	LoggerPrint logger;
+private:
+	World::Ptr pWorld;
+	LoggerPrint::Ptr pLogger;
 };
 
 export LoggerPrintPid SPidLogger;

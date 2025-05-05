@@ -6,6 +6,7 @@ import std.compat;
 import DimensionNightmare;
 import Logger;
 import Platform;
+import StrUtils;
 
 enum class EMLunchType : uint8_t
 {
@@ -72,31 +73,34 @@ export int main(int argc, char** argv)
 // 	chdir(execPath.parent_path().string().c_str());
 #endif
 
-	// lunch param
-	std::unordered_map<std::string, std::string> launchParam = {
-		{"program", execPath.string()},
-	};
-
-	for (int i = 1; i < argc; i++)
 	{
-		std::string split(argv[i]);
+		SPidLogger.Init(ELogLevel_Debug, std::nullopt);
 
-		size_t pos = split.find('=');
+		// lunch param
+		std::unordered_map<std::string, std::string> launchParam = {
+			{"program", execPath.string()},
+		};
 
-		if (pos == std::string::npos)
+		for (int i = 1; i < argc; i++)
 		{
-			SPidLogger.Record(ELogLevel_Debug, "program lunch param error! Pos:{} ", i);
-			return 0;
+			std::string split(argv[i]);
+
+			size_t pos = split.find('=');
+
+			if (pos == std::string::npos)
+			{
+				SPidLogger.Record(ELogLevel_Debug, "program lunch param error! Pos:{} ", i);
+				return 0;
+			}
+
+			launchParam.emplace(split.substr(0, pos), split.substr(pos + 1));
 		}
 
-		launchParam.emplace(split.substr(0, pos), split.substr(pos + 1));
-	}
+		/// @brief load ini config
+		ServerTypeBitFlag bitFlag;
+		std::unordered_map<std::string, std::unordered_map<std::string, std::string>> iniFileParam;
 
-	/// @brief load ini config
-	ServerTypeBitFlag bitFlag;
-	std::unordered_map<std::string, std::unordered_map<std::string, std::string>> iniFileParam;
-
-	auto InitIniConfig = [&]()-> bool
+		auto InitIniConfig = [&]()-> bool
 		{
 			if (!launchParam.contains("svrType"))
 			{
@@ -255,19 +259,26 @@ export int main(int argc, char** argv)
 			return true;
 		};
 
-	if(InitIniConfig() == false)
-	{
-		return 0;
+		if(InitIniConfig() == false)
+		{
+			return 0;
+		}
+
+		SPidLogger.Init(iniFileParam["Common"]);
+
+		App = std::make_unique<DimensionNightmare>();
+		
+		if (!App->Init(bitFlag, std::move(iniFileParam)))
+		{
+			App = nullptr;
+			return 0;
+		}
+		
+		DWORD pid = Platform::GetCurrentProcessId();
+
+		SPidLogger.Init(std::nullopt, execPath.parent_path() / std::format("PID_{}", pid));
 	}
 
-	App = std::make_unique<DimensionNightmare>();
-	
-	if (!App->Init(std::move(launchParam)))
-	{
-		App = nullptr;
-		return 0;
-	}
-	
 	SPidLogger.Record(ELogLevel_Normal, "hello ~");
 
 #ifdef _WIN32
@@ -396,9 +407,8 @@ export int main(int argc, char** argv)
 
 			auto open = [&]()
 				{
-					std::string str;
-					std::string allStr = *LaunchConfig::GetParam("program") + " ";
-					while (*ss >> str)
+					std::string allStr = execPath.string() + " ";
+					while (ss >> str)
 					{
 						allStr += str + " ";
 					}
@@ -431,7 +441,7 @@ export int main(int argc, char** argv)
 			{
 				#define one(func) {#func, func}
 
-				one(quit), one(abort), one(dump_memory),
+				one(quit), one(abort), one(dump_memory), one(open)
 				
 				#undef one
 			};

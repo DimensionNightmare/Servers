@@ -31,15 +31,15 @@ public:
 
 	bool Awake() override
 	{
-		std::string* port = GetOnwer()->GetWorld()->LuanchParam("port");
-		if (!port)
+		std::string* inport = GetOnwer()->GetWorld()->LuanchParam("port");
+		if (!inport)
 		{
 			pLogger->Record(EL10nCode_SrvNeedIPPort);
 			// return false;
 			return false;
 		}
 
-		int listenfd = createsocket(stoi(*port), "0.0.0.0");
+		int listenfd = createsocket(stoi(*inport), "0.0.0.0");
 		if (listenfd < 0)
 		{
 			pLogger->Record(EL10nCode_CreateSocket);
@@ -47,15 +47,6 @@ public:
 			return false;
 		}
 
-		Init();
-
-		pLogger->Record(EL10nCode_SrvListenOn, *port, listenfd);
-
-		return true;
-	}
-
-	void Init()
-	{
 		// if not set port mean need get port by self 
 		if (!port && listenfd > 0)
 		{
@@ -64,7 +55,7 @@ public:
 			if (getsockname(listenfd, reinterpret_cast<struct sockaddr*>(&addr), &addrLen) < 0)
 			{
 				pLogger->Record(EL10nCode_GetSocketName);
-				return;
+				return false;
 			}
 
 			port = ntohs(addr.sin_port);
@@ -78,6 +69,10 @@ public:
 		setting.length_field_offset = 0;
 		setUnpack(&setting);
 		setThreadNum(4);
+
+		pLogger->Record(EL10nCode_SrvListenOn, port, listenfd);
+
+		return true;
 	}
 
 	void Start()

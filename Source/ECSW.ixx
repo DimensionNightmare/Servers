@@ -27,6 +27,35 @@ export enum class EMSystemType : uint8_t
 	DNServer,
 };
 
+export enum class EMServerType : uint8_t
+{
+	None = 0			,
+	ControlServer 		,
+	GlobalServer 		,
+	AuthServer 			,
+
+	GateServer 			,
+	DatabaseServer 		,
+	LogicServer 		,
+
+	DedicatedServer 	,
+	Max					,
+};
+
+export using ServerTypeBitFlag = std::bitset<static_cast<uint8_t>(EMServerType::Max)>;
+
+export std::array<std::pair<uint8_t, std::string>, 7> ServerTypeList = {{
+	#define one(name) {static_cast<uint8_t>(EMServerType::name), #name}
+	one(ControlServer),
+	one(GlobalServer),
+	one(AuthServer),
+	one(GateServer),
+	one(DatabaseServer),
+	one(LogicServer),
+	one(DedicatedServer),
+	#undef one
+}};
+
 class World;
 
 // normal data normal get/set

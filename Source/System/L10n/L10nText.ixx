@@ -29,11 +29,11 @@ public:
 
 	bool Awake() override
 	{
-		if (const char* codeStr = Init())
-		{
-			// SPidLogger.Record(ELogLevel_Error, codeStr);
-			return false;
-		}
+		// if (const char* codeStr = Init())
+		// {
+		// 	// SPidLogger.Record(ELogLevel_Error, codeStr);
+		// 	return false;
+		// }
 
 		return true;
 	}
