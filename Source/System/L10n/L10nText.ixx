@@ -5,7 +5,6 @@ import Config.Server;
 import ThirdParty.PbGen;
 import StrUtils;
 import DllUtils;
-import std.compat;
 import ECSW;
 
 #define FUNCPLACE(func) #func, func
@@ -32,7 +31,7 @@ public:
 	{
 		if (const char* codeStr = Init())
 		{
-			// LoggerPrint::Log(ELogLevel_Error, codeStr);
+			// SPidLogger.Record(ELogLevel_Error, codeStr);
 			return false;
 		}
 

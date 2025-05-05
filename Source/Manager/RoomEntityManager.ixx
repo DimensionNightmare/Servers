@@ -34,7 +34,7 @@ public:
 		uint32_t entityId = mMapTimer[timerID];
 		if (RemoveEntity(entityId))
 		{
-			LoggerPrint::Log(ELogLevel_Debug, "EntityCloseTimer Room destory entity");
+			SPidLogger.Record(ELogLevel_Debug, "EntityCloseTimer Room destory entity");
 		}
 
 	}

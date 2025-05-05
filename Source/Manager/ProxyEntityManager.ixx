@@ -38,7 +38,7 @@ public: // dll override
 		uint32_t entityId = mMapTimer[timerID];
 		if (RemoveEntity(entityId))
 		{
-			LoggerPrint::Log(ELogLevel_Debug, "destory proxy Timer entity");
+			SPidLogger.Record(ELogLevel_Debug, "destory proxy Timer entity");
 		}
 
 	}

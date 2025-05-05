@@ -47,7 +47,7 @@ public: // dll override
 
 			RemoveEntity(entityId);
 			
-			LoggerPrint::Log(ELogLevel_Debug, "EntityCloseTimer server destory entity");
+			SPidLogger.Record(ELogLevel_Debug, "EntityCloseTimer server destory entity");
 			
 		}
 	}

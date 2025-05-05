@@ -6,7 +6,6 @@ import MessagePack;
 import Logger;
 import ThirdParty.Libhv;
 import ThirdParty.PbGen;
-import std.compat;
 import ECSW;
 
 export class DNServerProxy : public Component, public hv::TcpServer
@@ -18,6 +17,7 @@ protected:
 		eComponentType = EMComponentType::DNServerProxy;
 
 		pLoop = std::make_shared<hv::EventLoopThread>();
+		pLogger = entity->GetWorld()->GetSystem<LoggerPrint>(EMSystemType::LoggerPrint);
 	}
 
 public:
@@ -34,7 +34,7 @@ public:
 		std::string* port = GetOnwer()->GetWorld()->LuanchParam("port");
 		if (!port)
 		{
-			LoggerPrint()(EL10nCode_SrvNeedIPPort);
+			pLogger->Record(EL10nCode_SrvNeedIPPort);
 			// return false;
 			return false;
 		}
@@ -42,14 +42,14 @@ public:
 		int listenfd = createsocket(stoi(*port), "0.0.0.0");
 		if (listenfd < 0)
 		{
-			LoggerPrint()(EL10nCode_CreateSocket);
+			pLogger->Record(EL10nCode_CreateSocket);
 			// return false;
 			return false;
 		}
 
 		Init();
 
-		LoggerPrint()(EL10nCode_SrvListenOn, *port, listenfd);
+		pLogger->Record(EL10nCode_SrvListenOn, *port, listenfd);
 
 		return true;
 	}
@@ -63,7 +63,7 @@ public:
 			int addrLen = sizeof(addr);
 			if (getsockname(listenfd, reinterpret_cast<struct sockaddr*>(&addr), &addrLen) < 0)
 			{
-				LoggerPrint()(EL10nCode_GetSocketName);
+				pLogger->Record(EL10nCode_GetSocketName);
 				return;
 			}
 
@@ -151,7 +151,7 @@ public: // dll override
 				if (!channel->context())
 				{
 					channel->close();
-					LoggerPrint::Log(ELogLevel_Debug, "ChannelTimeoutTimer server destory entity\n");
+					SPidLogger.Record(ELogLevel_Debug, "ChannelTimeoutTimer server destory entity\n");
 				}
 			}
 		}
@@ -194,4 +194,6 @@ protected:
 	std::shared_mutex oMsgMutex;
 
 	std::shared_mutex oTimerMutex;
+
+	LoggerPrint::Ptr pLogger;
 };

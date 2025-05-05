@@ -42,7 +42,7 @@ auto TickMainSpaceDll(void* obj, const char* classmethod, Method method, Args...
 
 	std::string methodName = std::regex_replace(++classmethod, std::regex(R"(::)"), "_");
 
-	std::cout << typeid(RetType).name() << std::endl;
+	// std::cout << typeid(RetType).name() << std::endl;
 
 	static std::unordered_map<std::string, void*> cache;
 

@@ -4,7 +4,6 @@ export module DNServer;
 import L10nText;
 import Config.Server;
 import ThirdParty.Libhv;
-import std.compat;
 import ECSW;
 
 export enum class EMServerType : uint8_t
@@ -69,8 +68,8 @@ public:
 	}
 
 	virtual void InitCmd( std::unordered_map<std::string, std::function<void(std::stringstream*)>>& cmdMap) 
-	{ 
-		pCmdMap = &cmdMap; 
+	{
+		
 	}
 
 	virtual bool Start(){ return true;}
@@ -98,6 +97,4 @@ protected:
 	uint32_t iServerId = 0;
 
 	std::mutex oTaskMutex;
-
-	std::unordered_map<std::string, std::function<void(std::stringstream*)>>* pCmdMap = nullptr;
 };

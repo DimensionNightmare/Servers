@@ -7,7 +7,6 @@ import Logger;
 import ThirdParty.Libhv;
 import ThirdParty.PbGen;
 import MessagePack;
-import std.compat;
 import ECSW;
 
 #define NABS(n) ((n) < 0 ? (n) : -(n))
@@ -82,7 +81,7 @@ public: // dll override
 			}
 			else
 			{
-				LoggerPrint()(EL10nCode_NotCallbackEvent);
+				// LoggerPrint()(EL10nCode_NotCallbackEvent);
 			}
 		}
 		else
@@ -158,7 +157,7 @@ public: // dll override
 
 	void RedirectClient(uint16_t port, std::string ip)
 	{
-		LoggerPrint::Log(ELogLevel_Debug, "reclient to {}:{}", ip, port);
+		SPidLogger.Record(ELogLevel_Debug, "reclient to {}:{}", ip, port);
 
 		eRegistState = EMRegistState::None;
 		closesocket();

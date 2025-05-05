@@ -213,8 +213,11 @@ public:
 
 	virtual ~World() = default;
 
-	template<typename T>
+	template<typename T = System>
 	std::shared_ptr<T> AddSystem();
+
+	template<typename T = System>
+	std::shared_ptr<T> GetSystem(EMSystemType type);
 
 	void Dispose();
 
@@ -282,6 +285,28 @@ std::shared_ptr<T> World::AddSystem()
 		}
 		mSystemMap.emplace_back(system);
 		return system;
+	}
+	catch(const std::exception& e)
+	{
+		std::cerr << e.what() << '\n';
+	}
+	
+	return nullptr;
+}
+
+template<typename T>
+std::shared_ptr<T> World::GetSystem(EMSystemType type)
+{
+	static_assert(std::is_base_of_v<System, T>, "T must inherit from System");
+	try
+	{
+		for(auto& one : mSystemMap)
+		{
+			if(one->GetSystemType() == type)
+			{
+				return std::static_pointer_cast<T>(one);
+			}
+		}
 	}
 	catch(const std::exception& e)
 	{

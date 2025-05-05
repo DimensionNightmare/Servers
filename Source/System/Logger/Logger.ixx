@@ -3,93 +3,35 @@ export module Logger;
 
 import StrUtils;
 import L10nText;
-import ThirdParty.PbGen;
-import std.compat;
+export import ThirdParty.PbGen;
 import ECSW;
+
+
+class LoggerPrintPid;
 
 class LogColor
 {
 public:
-    inline static std::string RED	= "\033[31m";
-    inline static std::string GREEN	= "\033[32m";
+    inline static std::string RED		= "\033[31m";
+    inline static std::string GREEN		= "\033[32m";
     inline static std::string YELLOW	= "\033[33m";
-    inline static std::string BLUE	= "\033[34m";
-    inline static std::string RESET	= "\033[0m";
+    inline static std::string BLUE		= "\033[34m";
+    inline static std::string RESET		= "\033[0m" ;
 };
 
 export class LoggerPrint : public System
 {
 protected:
 	friend class World;
+	friend class LoggerPrintPid;
 	LoggerPrint(World::Ptr world):System(world)
 	{
 		eSystemType = EMSystemType::LoggerPrint;
 	}
+
+	LoggerPrint():System(nullptr){}
 public:
-	inline static ELogLevel SELogLevel = ELogLevel_Debug;
 
-	template <typename... Args>
-    static void Log(ELogLevel level, const std::format_string<Args...>& fmt, Args&&... args)
-	{
-		if (level < SELogLevel)
-		{
-			return;
-		}
-
-		std::string oResult = std::format("[{}] {} -> \n\t{}\n", 
-			GetNowTimeStr(), 
-			"", // olocation.function_name(),
-			std::format(fmt, std::forward<Args>(args)...));
-		
-		switch (level)
-		{
-			case ELogLevel_Normal:
-				std::cout << LogColor::BLUE << oResult << LogColor::RESET;
-				break;
-			case ELogLevel_Warning:
-				std::cout << LogColor::YELLOW << oResult << LogColor::RESET;
-				break;
-			case ELogLevel_Error:
-				std::cout << LogColor::RED << oResult << LogColor::RESET;
-				break;
-			case ELogLevel_Debug:
-				std::cout << oResult;
-				break;
-			default:
-				return;
-		}
-	}
-
-	static void Log(ELogLevel level, const std::string& fmt)
-	{
-		if (level < SELogLevel)
-		{
-			return;
-		}
-
-		std::string oResult = std::format("[{}] {} -> \n\t{}\n", 
-			GetNowTimeStr(), 
-			"", //olocation.function_name(), 
-			fmt);
-
-		switch (level)
-		{
-			case ELogLevel_Normal:
-				std::cout << LogColor::BLUE << oResult << LogColor::RESET;
-				break;
-			case ELogLevel_Warning:
-				std::cout << LogColor::YELLOW << oResult << LogColor::RESET;
-				break;
-			case ELogLevel_Error:
-				std::cout << LogColor::RED << oResult << LogColor::RESET;
-				break;
-			case ELogLevel_Debug:
-				std::cout << oResult;
-				break;
-			default:
-				return;
-		}
-	}
 
 public:
 	using Ptr = std::shared_ptr<LoggerPrint>;
@@ -110,26 +52,26 @@ public:
 		return true;
 	}
 
-	void flush()
+	void flush(ELogLevel level, std::string& result)
 	{
-		if (oResult.empty())
+		if (result.empty())
 		{
 			return;
 		}
 
-		switch (oLevel)
+		switch (level)
 		{
 			case ELogLevel_Normal:
-				std::cout << LogColor::BLUE << oResult << LogColor::RESET;
+				std::cout << LogColor::BLUE << result << LogColor::RESET;
 				break;
 			case ELogLevel_Warning:
-				std::cout << LogColor::YELLOW << oResult << LogColor::RESET;
+				std::cout << LogColor::YELLOW << result << LogColor::RESET;
 				break;
 			case ELogLevel_Error:
-				std::cout << LogColor::RED << oResult << LogColor::RESET;
+				std::cout << LogColor::RED << result << LogColor::RESET;
 				break;
 			case ELogLevel_Debug:
-				std::cout << oResult;
+				std::cout << result;
 				break;
 			default:
 				return;
@@ -137,17 +79,49 @@ public:
 
 		if (LogFile.is_open())
 		{
-			LogFile << oResult;
+			LogFile << result;
 			LogFile.flush();
 		}
 	}
 
 	template <typename... Args>
-	void operator()(EL10nCode code, Args&&... args)
+    void Record(ELogLevel level, const std::format_string<Args...>& fmt, Args&&... args)
 	{
-		const std::string& fmt = DNl10n::GetTipText(code, oLevel);
+		if (level < eLogLevel)
+		{
+			return;
+		}
 
-		if (oLevel < eLogLevel)
+		std::string result = std::format("[{}] {} -> \n\t{}\n", 
+			GetNowTimeStr(), 
+			"", // olocation.function_name(),
+			std::format(fmt, std::forward<Args>(args)...));
+		
+		flush(level, result);
+	}
+
+	void Record(ELogLevel level, const std::string& fmt)
+	{
+		if (level < eLogLevel)
+		{
+			return;
+		}
+
+		std::string result = std::format("[{}] {} -> \n\t{}\n", 
+			GetNowTimeStr(), 
+			"", //olocation.function_name(), 
+			fmt);
+
+		flush(level, result);
+	}
+
+	template <typename... Args>
+	void Record(EL10nCode code, Args&&... args)
+	{
+		ELogLevel level;
+		const std::string& fmt = DNl10n::GetTipText(code, level);
+
+		if (level < eLogLevel)
 		{
 			return;
 		}
@@ -159,29 +133,30 @@ public:
             return std::make_format_args(args...);
         }, args_tuple);
 		
-		oResult = std::format("[{}] {} -> \n\t{}\n", 
+		std::string result = std::format("[{}] {} -> \n\t{}\n", 
 			GetNowTimeStr(), 
 			"", // olocation.function_name(), 
 			std::vformat(fmt, format_args));
 		
-		flush();
+		flush(level, result);
 	}
 
-	void operator()(EL10nCode code)
+	void Record(EL10nCode code)
 	{
-		const std::string& fmt = DNl10n::GetTipText(code, oLevel);
+		ELogLevel level;
+		const std::string& fmt = DNl10n::GetTipText(code, level);
 
-		if (oLevel < eLogLevel)
+		if (level < eLogLevel)
 		{
 			return;
 		}
 		
-		oResult = std::format("[{}] {} -> \n\t{}\n", 
+		std::string result = std::format("[{}] {} -> \n\t{}\n", 
 			GetNowTimeStr(), 
 			"", // olocation.function_name(),
 			fmt);
 
-		flush();
+		flush(level, result);
 	}
 	
 	/// @brief set logger type and Log file Init 
@@ -203,12 +178,50 @@ public:
 	}
 
 protected:
-	std::string oResult;
-	ELogLevel oLevel = ELogLevel_None;
-
-protected:
 	std::ofstream LogFile; 
 
 	ELogLevel eLogLevel = ELogLevel_Normal;
 };
 
+class LoggerPrintPid
+{
+public:
+	LoggerPrintPid()
+	{
+
+	}
+
+	~LoggerPrintPid() = default;
+
+	void Init(ELogLevel level, std::filesystem::path path)
+	{
+
+		logger.SetLoggerLevel(level, path);
+	}
+
+	template <typename... Args>
+    void Record(ELogLevel level, const std::format_string<Args...>& fmt, Args&&... args)
+	{
+		logger.Record(level, fmt, std::forward<Args>(args)...);
+	}
+
+	void Record(ELogLevel level, const std::string& fmt)
+	{
+		logger.Record(level, fmt);
+	}
+
+	template <typename... Args>
+	void Record(EL10nCode code, Args&&... args)
+	{
+		logger.Record(code, std::forward<Args>(args)...);
+	}
+
+	void Record(EL10nCode code)
+	{
+		logger.Record(code);
+	}
+
+	LoggerPrint logger;
+};
+
+export LoggerPrintPid SPidLogger;

@@ -21,7 +21,7 @@ export struct HotReloadDll
 		Platform::HotHandle hModule = Platform::LoadLibraryA(dllPath.string().c_str());
 		if (!hModule)
 		{
-			LoggerPrint()(EL10nCode_DllLoad, Platform::GetLastError());
+			// LoggerPrint()(EL10nCode_DllLoad, Platform::GetLastError());
 			return nullptr;
 		}
 
@@ -31,7 +31,7 @@ export struct HotReloadDll
 		void* hModule = dlopen(fullPath.c_str(), RTLD_LAZY);
 		if (!hModule)
 		{
-			LoggerPrint::Log(ELogLevel_Debug, dlerror());
+			SPidLogger.Record(ELogLevel_Debug, dlerror());
 			return nullptr;
 		}
 #endif
@@ -61,7 +61,7 @@ export struct HotReloadDll
 			}
 			catch (const std::exception& e)
 			{
-				LoggerPrint::Log(ELogLevel_Debug, "filesystem:{}", e.what());
+				// SPidLogger.Record(ELogLevel_Debug, "filesystem:{}", e.what());
 			}
 		}
 
@@ -73,13 +73,13 @@ export struct HotReloadDll
 	{
 		if (!std::filesystem::exists(sDllDir))
 		{
-			LoggerPrint()(EL10nCode_DllMenuPath);
+			//LoggerPrint()(EL10nCode_DllMenuPath);
 			return false;
 		}
 
 		if (!SDllName)
 		{
-			LoggerPrint()(EL10nCode_DllFileName);
+			//LoggerPrint()(EL10nCode_DllFileName);
 			return false;
 		}
 #ifdef _WIN32
@@ -97,7 +97,7 @@ export struct HotReloadDll
 		}
 		catch (const std::exception& e)
 		{
-			LoggerPrint::Log(ELogLevel_Debug, "{}", e.what());
+			// SPidLogger.Record(ELogLevel_Debug, "{}", e.what());
 			return false;
 		}
 #endif

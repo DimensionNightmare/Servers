@@ -9,7 +9,6 @@ import Config.Server;
 import ThirdParty.PbGen;
 import DNServer;
 import DllUtils;
-import std.compat;
 import Platform;
 import HotReloadDll;
 import ECSW;
@@ -50,7 +49,7 @@ public:
 		uint64_t bitFlagValue = bitFlag.to_ulong();
 		if (bitFlagValue == 0 || bitFlagValue >= (1 << static_cast<uint8_t>(EMServerType::Max)))
 		{
-			LoggerPrint::Log(ELogLevel_Error, "serverType Not Invalid! ");
+			SPidLogger.Record(ELogLevel_Error, "serverType Not Invalid! ");
 			return false;
 		}
 
@@ -62,7 +61,7 @@ public:
 
 		if(!std::filesystem::exists(iniFilePath))
 		{
-			LoggerPrint::Log(ELogLevel_Error, "ConfigIni Not Finded!");
+			SPidLogger.Record(ELogLevel_Error, "ConfigIni Not Finded!");
 			return false;
 		}
 
@@ -263,8 +262,10 @@ public:
 				break;
 			}
 			default:
-				LoggerPrint()(EL10nCode_SrvTypeNotVaild);
+			{
+				logger->Record(EL10nCode_SrvTypeNotVaild);
 				return false;
+			}
 		}
 
 		if (!pServer->Init())
@@ -284,13 +285,13 @@ public:
 
 		if (!OnRegHotReload())
 		{
-			LoggerPrint::Log(ELogLevel_Error, "program lunch OnRegHotReload error!");
+			logger->Record(ELogLevel_Error, "program lunch OnRegHotReload error!");
 			return false;
 		}
 
 		if (!pServer->Start())
 		{
-			LoggerPrint::Log(ELogLevel_Error, "program lunch Server Start error!");
+			logger->Record(ELogLevel_Error, "program lunch Server Start error!");
 			return false;
 		}
 
@@ -324,43 +325,10 @@ public:
 				DNl10n::PInstance->Init();
 			};
 
-		auto open = [](std::stringstream* ss)
-			{
-				std::string str;
-				std::string allStr = *LaunchConfig::GetParam("program") + " ";
-				while (*ss >> str)
-				{
-					allStr += str + " ";
-				}
-
-				std::cout << allStr << std::endl;
-
-#ifdef _WIN32
-				Platform::PROCESS_INFORMATION pinfo = {};
-				Platform::STARTUPINFOA startInfo = {};
-				memset(&startInfo, 0, sizeof(startInfo));
-				startInfo.cb = sizeof(startInfo);
-
-				
-				startInfo.dwFlags = 0x00000001; // STARTF_USESHOWWINDOW 0x00000001
-				startInfo.wShowWindow = 1; // SW_SHOWNORMAL 1
-				if (Platform::CreateProcessA(nullptr, allStr.data(), nullptr, nullptr, 0, 0x00000010, nullptr, nullptr, &startInfo, &pinfo)) // CREATE_NEW_CONSOLE 0x00000010
-#elif __unix__
-				if (0)
-#endif
-				{
-					std::cout << "success" << std::endl;
-				}
-				else
-				{
-					std::cout << "error:" << Platform::GetLastError() << std::endl;
-				}
-			};
-
 		mCmdHandle = {
 			#define one(func) {#func, func}
 			
-			one(pause), one(resume), one(reload), one(open),
+			one(pause), one(resume), one(reload),
 			one(reloadConfig)
 			
 			#undef one
@@ -377,7 +345,7 @@ public:
 			allCommands += k + "\n\t\t";
 		}
 
-		LoggerPrint::Log(ELogLevel_Normal, allCommands);
+		SPidLogger.Record(ELogLevel_Normal, allCommands);
 	}	
 
 	/// @brief exec command line

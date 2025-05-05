@@ -85,16 +85,178 @@ export int main(int argc, char** argv)
 
 		if (pos == std::string::npos)
 		{
-			LoggerPrint::Log(ELogLevel_Debug, "program lunch param error! Pos:{} ", i);
+			SPidLogger.Record(ELogLevel_Debug, "program lunch param error! Pos:{} ", i);
 			return 0;
 		}
 
 		launchParam.emplace(split.substr(0, pos), split.substr(pos + 1));
 	}
 
-	if (!launchParam.contains("svrType"))
+	/// @brief load ini config
+	ServerTypeBitFlag bitFlag;
+	std::unordered_map<std::string, std::unordered_map<std::string, std::string>> iniFileParam;
+
+	auto InitIniConfig = [&]()-> bool
+		{
+			if (!launchParam.contains("svrType"))
+			{
+				SPidLogger.Record(ELogLevel_Error, "lunch param svrType is null! ");
+				return false;
+			}
+
+			for(auto& serverType : StrSplit(launchParam["svrType"], ","))
+			{
+				bitFlag.set(stoi(serverType));
+			}
+	
+			launchParam.erase("svrType");
+	
+			uint64_t bitFlagValue = bitFlag.to_ulong();
+			if (bitFlagValue == 0 || bitFlagValue >= (1 << static_cast<uint8_t>(EMServerType::Max)))
+			{
+				SPidLogger.Record(ELogLevel_Error, "serverType Not Invalid! ");
+				return false;
+			}
+	
+	#ifndef NDEBUG
+			const char* iniFilePath = "./Config/ServerDebug.ini";
+	#else
+			const char* iniFilePath = "./Config/Server.ini";
+	#endif
+	
+			if(!std::filesystem::exists(iniFilePath))
+			{
+				SPidLogger.Record(ELogLevel_Error, "ConfigIni Not Finded!");
+				return false;
+			}
+	
+	#ifdef _WIN32
+			#define MAX_SECTION_NAME 512
+			char buffer[MAX_SECTION_NAME] = { 0 };
+			size_t bufferSize = sizeof(buffer);
+			Platform::GetPrivateProfileSectionNamesA(buffer, MAX_SECTION_NAME, iniFilePath);
+			char* current = buffer;
+			while (*current)
+			{
+				iniFileParam[current];
+				current += strlen(current) + 1;
+	
+				// if (iniFileParam.back().find_last_of("Server") != std::string::npos && iniFileParam.back() != serverName)
+				// {
+				// 	iniFileParam.pop_back();
+				// }
+			}
+	#elif __unix__
+			std::unordered_map<std::string, std::list<std::string>> sectionVal;
+	
+			auto GetINISectionNames = [&](const char* iniFilePath)
+				{
+					ifstream file(iniFilePath);
+					if (!file.is_open())
+					{
+						cerr << "Failed to open INI file: " << iniFilePath << std::endl;
+						return;
+					}
+	
+					std::string line;
+					while (getline(file, line))
+					{
+						if (line.empty())
+						{
+							continue;
+						}
+	
+						if (line[0] == '[')
+						{
+							size_t endPos = line.find_first_of("]");
+							if (endPos != std::string::npos)
+							{
+								std::string mainSection = line.substr(1, endPos - 1);
+								iniFileParam.emplace_back(mainSection);
+							}
+						}
+						else if (line[0] != ';')
+						{
+							sectionVal[iniFileParam.back()].emplace_back(line);
+						}
+					}
+	
+					file.close();
+				};
+	
+			GetINISectionNames(iniFilePath);
+	
+			auto iter = iniFileParam.begin();
+			while (iter != iniFileParam.end())
+			{
+				if ((*iter).find("Server") != std::string::npos && *iter != serverName)
+				{
+					sectionVal.erase(*iter);
+					iter = iniFileParam.erase(iter);
+				}
+				else
+				{
+					++iter;
+				}
+			}
+	#endif
+			auto handler = [&](std::unordered_map<std::string, std::string>& map, std::string& split)
+			{
+				size_t pos = split.find('=');
+				if (pos != std::string::npos)
+				{
+					std::string key = split.substr(0, pos);
+					// if (launchParam.contains(key))
+					// {
+					// 	return;
+					// }
+	
+					map.emplace(key, split.substr(pos + 1));
+				}
+			};
+			
+	
+			for (auto& [mainSection, sectionMap] : iniFileParam)
+			{
+				if (mainSection.find_last_of("Server") != std::string::npos)
+				{
+					sectionMap.emplace("svrName", mainSection);
+				}
+	
+	#ifdef _WIN32
+				Platform::GetPrivateProfileSectionA(mainSection.c_str(), buffer, MAX_SECTION_NAME, iniFilePath);
+				char* keyValuePair = buffer;
+				while (*keyValuePair)
+				{
+					std::string split(keyValuePair);
+					keyValuePair += strlen(keyValuePair) + 1;
+					handler(sectionMap, split);
+				}
+	#elif __unix__
+				for (const std::string& keyValuePair : sectionVal[mainSection])
+				{
+					std::string split(keyValuePair);
+					handler(split);
+				}
+	#endif
+			}
+	
+			// muti server only this valid.
+			if(bitFlag.count() > 1)
+			{
+				iniFileParam["Common"]["program"] = launchParam["program"];
+			}
+			else
+			{
+				launchParam.merge(iniFileParam["Common"]);
+				iniFileParam["Common"] = std::move(launchParam);
+			}
+	
+			return true;
+		};
+
+	if(InitIniConfig() == false)
 	{
-		LoggerPrint::Log(ELogLevel_Error, "lunch param svrType is null! ");
 		return 0;
 	}
 
@@ -106,7 +268,7 @@ export int main(int argc, char** argv)
 		return 0;
 	}
 	
-	LoggerPrint::Log(ELogLevel_Normal, "hello ~");
+	SPidLogger.Record(ELogLevel_Normal, "hello ~");
 
 #ifdef _WIN32
 
@@ -119,7 +281,7 @@ export int main(int argc, char** argv)
 				case 0:
 				case 1:
 				case 6:
-					LoggerPrint()(EL10nCode_CmdOpBreak);
+					SPidLogger.Record(EL10nCode_CmdOpBreak);
 					AppRun = false;
 					App = nullptr;
 					return true;
@@ -137,14 +299,14 @@ export int main(int argc, char** argv)
 
 	if (!Platform::SetConsoleCtrlHandler(CtrlHandler, true))
 	{
-		LoggerPrint()(EL10nCode_CmdCtl);
+		SPidLogger.Record(EL10nCode_CmdCtl);
 		App = nullptr;
 		return 0;
 	}
 
 	auto UnhandledHandler = [](_EXCEPTION_POINTERS* ExceptionInfo) -> long
 		{
-			LoggerPrint()(EL10nCode_UnhandledException);
+			SPidLogger.Record(EL10nCode_UnhandledException);
 
 			if(HotReloadDll* hotdll = App->GetHotDll())
 			{
@@ -160,7 +322,7 @@ export int main(int argc, char** argv)
 
 	if (!Platform::SetUnhandledExceptionFilter(UnhandledHandler))
 	{
-		LoggerPrint()(EL10nCode_UnhandledException);
+		SPidLogger.Record(EL10nCode_UnhandledException);
 		App = nullptr;
 		return 0;
 	}
@@ -168,7 +330,7 @@ export int main(int argc, char** argv)
 
 	auto CtrlHandler = [](int signal)
 		{
-			LoggerPrint()(EL10nCode_CmdOpBreak);
+			SPidLogger.Record(EL10nCode_CmdOpBreak);
 			AppRun = false;
 			App = nullptr;
 		};
@@ -176,7 +338,7 @@ export int main(int argc, char** argv)
 
 	auto UnhandledHandler = [](int signum, siginfo_t* info, void* context)
 		{
-			LoggerPrint()(EL10nCode_UnhandledException);
+			SPidLogger.Record(EL10nCode_UnhandledException);
 
 			AppRun = false;
 			App = nullptr;
@@ -196,7 +358,7 @@ export int main(int argc, char** argv)
 
 #endif
 
-	LoggerPrint::Log(ELogLevel_Normal, "Dimension Instance addr->(DimensionNightmare*){}", static_cast<void*>(App.get()));
+	SPidLogger.Record(ELogLevel_Normal, "Dimension Instance addr->(DimensionNightmare*){}", static_cast<void*>(App.get()));
 
 	auto InputEvent = std::async(std::launch::async, [&]()
 		{
@@ -232,6 +394,39 @@ export int main(int argc, char** argv)
 					}
 				};
 
+			auto open = [&]()
+				{
+					std::string str;
+					std::string allStr = *LaunchConfig::GetParam("program") + " ";
+					while (*ss >> str)
+					{
+						allStr += str + " ";
+					}
+
+					SPidLogger.Record(ELogLevel_Normal, "{}", allStr);
+
+#ifdef _WIN32
+					Platform::PROCESS_INFORMATION pinfo = {};
+					Platform::STARTUPINFOA startInfo = {};
+					memset(&startInfo, 0, sizeof(startInfo));
+					startInfo.cb = sizeof(startInfo);
+
+					
+					startInfo.dwFlags = 0x00000001; // STARTF_USESHOWWINDOW 0x00000001
+					startInfo.wShowWindow = 1; // SW_SHOWNORMAL 1
+					if (Platform::CreateProcessA(nullptr, allStr.data(), nullptr, nullptr, 0, 0x00000010, nullptr, nullptr, &startInfo, &pinfo)) // CREATE_NEW_CONSOLE 0x00000010
+#elif __unix__
+					if (0)
+#endif
+					{
+						SPidLogger.Record(ELogLevel_Normal, "success");
+					}
+					else
+					{
+						SPidLogger.Record(ELogLevel_Error, "error:{}", Platform::GetLastError());
+					}
+				};
+
 			std::unordered_map<std::string, std::function<void()>> cmdMap = 
 			{
 				#define one(func) {#func, func}
@@ -257,7 +452,7 @@ export int main(int argc, char** argv)
 					str.clear();
 					ss >> str;
 
-					std::cout << "<cmd " << str << ">\n";
+					SPidLogger.Record(ELogLevel_Normal, "<cmd {}>", str);
 
 					if (cmdMap.contains(str))
 					{
@@ -268,7 +463,7 @@ export int main(int argc, char** argv)
 						App->ExecCommand(&str, &ss);
 					}
 
-					std::cout << "<cmd down>\n";
+					SPidLogger.Record(ELogLevel_Normal, "<cmd down>");
 				}
 
 			}
@@ -283,7 +478,7 @@ export int main(int argc, char** argv)
 
 	Platform::Sleep(50);
 
-	LoggerPrint::Log(ELogLevel_Normal, "bye ~");
+	SPidLogger.Record(ELogLevel_Normal, "bye ~");
 
 	return 0;
 }
