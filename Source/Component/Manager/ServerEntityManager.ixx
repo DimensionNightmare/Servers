@@ -8,17 +8,16 @@ import DNServer;
 
 export class ServerEntityManager : public EntityManager<ServerEntity>
 {
-	
+protected:
+	friend class System;
+	/// @brief timer manager create
+	ServerEntityManager(System::Ptr system):EntityManager(system)
+	{
+		eComponentType = EMComponentType::ServerEntityManager;
+	}
 public:
-	ServerEntityManager() = default;
 
 	virtual ~ServerEntityManager() = default;
-
-	/// @brief 
-	virtual bool Init() override
-	{
-		return EntityManager::Init();
-	}
 
 	/// @brief 
 	virtual void TickMainFrame() override

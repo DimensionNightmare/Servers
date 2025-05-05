@@ -6,9 +6,6 @@ import L10nText;
 export import ThirdParty.PbGen;
 import ECSW;
 
-
-class LoggerPrintPid;
-
 class LogColor
 {
 public:
@@ -22,35 +19,39 @@ public:
 export class LoggerPrint : public System
 {
 protected:
+	
 	friend class World;
-	friend class LoggerPrintPid;
 	LoggerPrint(World::Ptr world):System(world)
 	{
 		eSystemType = EMSystemType::LoggerPrint;
-		pDNl10n = world->GetSystem<DNl10n>(EMSystemType::DNl10n);
 	}
-public:
-
 
 public:
 	using Ptr = std::shared_ptr<LoggerPrint>;
 	~LoggerPrint() = default;
 
-	bool Awake() override
+	bool Init()
 	{
-		if(std::string* value = GetWorld()->LuanchParam("LoggerLevel"))
+		std::string* value = GetWorld()->LaunchParam("LoggerLevel");
+		if(!value)
 		{
-			ELogLevel logLevel = ELogLevel_Debug;
-			ELogLevel_Parse(*value, &logLevel);
-			SetLoggerLevel(logLevel, std::nullopt);
+			return false;
 		}
 
-		if(std::string* value = GetWorld()->LuanchParam("program"))
+		ELogLevel logLevel = ELogLevel_Debug;
+		std::string strType = "ELogLevel_" + *value;
+		ELogLevel_Parse(strType, &logLevel);
+		SetLogger(logLevel);
+
+		value = GetWorld()->LaunchParam("program");
+		if(!value)
 		{
-			std::filesystem::path logFile = *value;
-			logFile = logFile.parent_path() / *GetWorld()->LuanchParam("svrName");
-			SetLoggerLevel(std::nullopt, logFile);
+			return false;
 		}
+		
+		std::filesystem::path logFile = *value;
+		logFile = logFile.parent_path() / *GetWorld()->LaunchParam("svrName");
+		SetLogger(logFile);
 
 		return true;
 	}
@@ -163,30 +164,89 @@ public:
 	}
 	
 	/// @brief set logger type and Log file Init 
-	void SetLoggerLevel(std::optional<ELogLevel> level = std::nullopt, std::optional<std::filesystem::path> path = std::nullopt)
+	void SetLogger(ELogLevel level)
 	{
-		if(level)
+		eLogLevel = level;
+	}
+
+	void SetLogger(const std::filesystem::path& path)
+	{
+		if(!LogFile.is_open())
 		{
-			eLogLevel = *level;
-		}
-		
-		if(!LogFile.is_open() && path)
-		{
-			if(!std::filesystem::exists(*path))
+			if(!std::filesystem::exists(path))
 			{
-				std::filesystem::create_directories(*path);
+				std::filesystem::create_directories(path);
 			}
-			LogFile = std::ofstream( std::format("{}/Output.log", path.value().string()), std::ios::app);
+			LogFile = std::ofstream( std::format("{}/Output.log", path.string()), std::ios::app);
 		}
 	}
+
+public:
+	DNl10n::Ptr pDNl10n;
 
 protected:
 	std::ofstream LogFile; 
 
 	ELogLevel eLogLevel = ELogLevel_Normal;
-
-	DNl10n::Ptr pDNl10n;
 };
+
+bool DNl10n::Init()
+{
+	LoggerPrint::Ptr logger = GetWorld()->GetSystem<LoggerPrint>(EMSystemType::LoggerPrint);
+	std::string* value = GetWorld()->LaunchParam("l10nDataPath");
+	if (!value)
+	{
+		logger->Record(ELogLevel_Error, "Launch Param l10nErrPath Error !");
+		return false;
+	}
+
+	mL10nCode.Clear();
+	std::ifstream input(*value, std::ios::in | std::ios::binary);
+	if (!input || !mL10nCode.ParseFromIstream(&input))
+	{
+		logger->Record(ELogLevel_Error, "load I10n Tip Config Error !");
+		return false;
+	}
+
+	mL10nCodeDll.clear();
+
+	for (auto& one : mL10nCode.data_map())
+	{
+		mL10nCodeDll[one.first] = &one.second;
+	}
+	
+	eType = EL10nType_zh_CN;
+	if (value = GetWorld()->LaunchParam("l10nLang"))
+	{	
+		std::string strType = "EL10nType_" + *value;
+		if(!EL10nType_Parse(strType, &eType))
+		{
+			logger->Record(ELogLevel_Error, "load I10n l10nLang Error !");
+			return false;
+		}
+	}
+
+	switch (eType)
+	{
+		case EL10nType_zh_CN:
+		{
+			pL10nTipFunc = &l10n::l10nCode::zh_cn;
+			break;
+		}
+		case EL10nType_en_US:
+		{
+			pL10nTipFunc = &l10n::l10nCode::en_us;
+			break;
+		}
+		default:
+			logger->Record(ELogLevel_Error, "load I10n Lang Type Error !");
+			return false;
+	}
+
+	logger->pDNl10n = std::static_pointer_cast<DNl10n>(shared_from_this());
+
+	return true;
+}
 
 class LoggerPrintPid
 {
@@ -204,19 +264,23 @@ public:
 		pWorld = nullptr;
 	}
 
-	void Init(std::optional<ELogLevel> level = std::nullopt, std::optional<std::filesystem::path> path = std::nullopt)
+	bool Init(ELogLevel level)
 	{
-		pLogger->SetLoggerLevel(level, path);
+		pLogger->SetLogger(level);
+		return true;
 	}
 
-	void Init(std::unordered_map<std::string, std::string> commonInfo)
+	bool Init(const std::filesystem::path& path)
+	{
+		pLogger->SetLogger(path);
+		return true;
+	}
+
+	bool Init(std::unordered_map<std::string, std::string> commonInfo)
 	{
 		pWorld->MoveLuanchConfigToSelf(std::move(commonInfo));
 		DNl10n::Ptr pL10n = pWorld->GetSystem<DNl10n>(EMSystemType::DNl10n);
-		if(const char* errInfo = pL10n->Init())
-		{
-			throw std::exception(errInfo);
-		}
+		return pL10n->Init();
 	}
 
 	template <typename... Args>

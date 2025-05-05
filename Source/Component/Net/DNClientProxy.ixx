@@ -21,9 +21,11 @@ export enum class EMRegistState : uint8_t
 export class DNClientProxy : public Component, public hv::TcpClient
 {
 protected:
-	friend class Entity;
-	DNClientProxy(Entity::Ptr entity):Component(entity)
+	friend class System;
+	DNClientProxy(System::Ptr system):Component(system)
 	{
+		eComponentType = EMComponentType::DNClientProxy;
+
 		pLoop = std::make_shared<hv::EventLoopThread>();
 	}
 public:
@@ -35,8 +37,18 @@ public:
 		mMapTimer.clear();
 	}
 
-	void Init()
+	bool Awake() override
 	{
+		World::Ptr world = GetOwner()->GetWorld();
+		std::string* ctlPort = world->LaunchParam("ctlPort");
+		std::string* ctlIp = world->LaunchParam("ctlIp");
+		if (!ctlPort || !ctlIp)
+		{
+			return false;
+		}
+		
+		createsocket(stoi(*ctlPort), ctlIp->c_str());
+		
 		hv::reconn_setting_t reconn;
 		reconn.min_delay = 1000;
 		reconn.max_delay = 10000;
@@ -51,6 +63,7 @@ public:
 		setting.length_field_offset = 0;
 		setUnpack(&setting);
 
+		return true;
 	}
 
 	void Start()

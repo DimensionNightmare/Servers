@@ -1,32 +1,23 @@
 module;
-export module ProxyEntityManager;
+export module RoomEntityManager;
 
-import ProxyEntity;
+import RoomEntity;
 import EntityManager;
 import Logger;
 
-export class ProxyEntityManager : public EntityManager<ProxyEntity>
+export class RoomEntityManager : public EntityManager<RoomEntity>
 {
 	
 public:
-	ProxyEntityManager() = default;
+	RoomEntityManager() = default;
+	~RoomEntityManager() = default;
 
-	virtual ~ProxyEntityManager() = default;
-
-	/// @brief 
-	virtual bool Init() override
-	{
-		return EntityManager::Init();
-	}
-
-	/// @brief 
 	virtual void TickMainFrame() override
 	{
 	}
-	
-public: // dll override
 
-	/// @brief 
+public:
+
 	void EntityCloseTimer(uint64_t timerID)
 	{
 		std::unique_lock<std::shared_mutex> ulock(oTimerMutex);
@@ -38,27 +29,28 @@ public: // dll override
 		uint32_t entityId = mMapTimer[timerID];
 		if (RemoveEntity(entityId))
 		{
-			SPidLogger.Record(ELogLevel_Debug, "destory proxy Timer entity");
+			SPidLogger.Record(ELogLevel_Debug, "EntityCloseTimer Room destory entity");
 		}
 
 	}
 
-	/// @brief 
 	uint64_t CheckEntityCloseTimer(uint32_t entityId)
 	{
-		uint64_t timerId = Timer()->setTimeout(10000, std::bind(&ProxyEntityManager::EntityCloseTimer, this, std::placeholders::_1));
+		uint64_t timerId = Timer()->setTimeout(10000, std::bind(&RoomEntityManager::EntityCloseTimer, this, std::placeholders::_1));
 
 		AddTimerRecord(timerId, entityId);
 
 		return timerId;
 	}
 
-	/// @brief 
 	bool RemoveEntity(uint32_t entityId)
 	{
 		if (mEntityMap.contains(entityId))
 		{
+			RoomEntity* entity = &mEntityMap[entityId];
 			std::unique_lock<std::shared_mutex> ulock(oMapMutex);
+
+			mEntityMapList[entity->MapID()].remove(entity);
 
 			mEntityMap.erase(entityId);
 			return true;
@@ -67,7 +59,11 @@ public: // dll override
 		return false;
 	}
 
-protected: // dll proxy
+protected:
+	/// @brief 
+	std::unordered_map<uint32_t, std::list<RoomEntity*>> mEntityMapList;
 
+	/// @brief 
+	std::atomic<uint32_t> iRoomGenId;
 
 };

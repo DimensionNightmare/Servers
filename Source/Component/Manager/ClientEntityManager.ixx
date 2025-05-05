@@ -24,12 +24,6 @@ public:
 		CheckSaveEntity(true);
 	}
 
-	/// @brief start timer manager
-	virtual bool Init() override
-	{
-		return EntityManager::Init();
-	}
-
 	/// @brief redisConnection pointer save
 	void InitSqlConn(const std::shared_ptr<sw::redis::Redis>& redisConn)
 	{

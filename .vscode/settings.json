@@ -14,7 +14,9 @@
 		"functional": "cpp",
 		"thread": "cpp",
 		"type_traits": "cpp",
-		"xmemory": "cpp"
+		"xmemory": "cpp",
+		"xstring": "cpp",
+		"utility": "cpp"
 	},
     "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
 	"C_Cpp.formatting": "vcFormat",

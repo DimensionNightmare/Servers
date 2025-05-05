@@ -2,9 +2,7 @@ module;
 
 export module DimensionNightmare;
 
-import L10nText;
 import Logger;
-import Config.Server;
 import ThirdParty.PbGen;
 import DNServer;
 import DllUtils;
@@ -16,7 +14,9 @@ import RoomEntityManager;
 import ServerEntityManager;
 import DNClientProxy;
 import DNServerProxy;
+import DNWebProxy;
 import StrUtils;
+import RdbProxy;
 
 export class DimensionNightmare
 {
@@ -37,20 +37,26 @@ public:
 	/// @brief load ini config
 	bool Init(ServerTypeBitFlag& bitFlag, std::unordered_map<std::string, std::unordered_map<std::string, std::string>>&& inIniFileParam)
 	{
-		auto iniFileParam = std::move(inIniFileParam);
 		// drop up
+		auto iniFileParam = std::move(inIniFileParam);
 	
 		for(auto& [serverEnum, serverName] : ServerTypeList)
 		{
 			// set global Launch config
 			if(bitFlag.test(serverEnum))
 			{
-				auto merge = iniFileParam["Common"];
-				merge.merge(iniFileParam[serverName]);
-				if(!InitServer(std::move(merge)))
+				auto mergeMap = iniFileParam["Common"];
+				mergeMap.merge(iniFileParam[serverName]);
+
+				World::Ptr world = std::make_shared<World>();
+				world->MoveLuanchConfigToSelf(std::move(mergeMap));
+
+				if(!InitServer(world))
 				{
 					return false;
 				}
+
+				oWorlds.push_back(world);
 			}
 		}
 
@@ -58,64 +64,69 @@ public:
 	}
 
 	/// @brief create server
-	bool InitServer(std::unordered_map<std::string, std::string>&& iniServerParam)
+	bool InitServer(World::Ptr world)
 	{
-
-		World::Ptr world = std::make_shared<World>();
-		oWorlds.push_back(world);
-
-		world->MoveLuanchConfigToSelf(std::move(iniServerParam));
-
+		// logger
 		LoggerPrint::Ptr logger = world->AddSystem<LoggerPrint>();
-		DNl10n::Ptr dnL10n = world->AddSystem<DNl10n>();
-
-		if(const char* errInfo = dnL10n->Init())
+		if(!logger->Init())
 		{
-			
+			return false;
+		}
+
+		// i10n
+		DNl10n::Ptr dnL10n = world->AddSystem<DNl10n>();
+		if(!dnL10n->Init())
+		{
 			return false;
 		}
 
 		DNServer::Ptr server = world->AddSystem<DNServer>();
 		
-		std::string* value = world->LuanchParam("svrName");
+		std::string* value = world->LaunchParam("svrName");
 		EMServerType serverType = EnumName<EMServerType>(*value);
+		value = world->LaunchParam("byCtl");
 
 		switch (serverType)
 		{
 			case EMServerType::ControlServer:
 			{
 				server->AddComponent<DNServerProxy>();
-				// pServer = std::make_unique<ControlServer>();
+				server->AddComponent<ServerEntityManager>();
 				break;
 			}
 			case EMServerType::GlobalServer:
 			{
-
-				// pServer = std::make_unique<GlobalServer>();
+				server->AddComponent<DNServerProxy>();
+				if(value)
+				{
+					server->AddComponent<DNClientProxy>();
+				}
+				server->AddComponent<ServerEntityManager>();
 				break;
 			}
 			case EMServerType::AuthServer:
 			{
-
-				// pServer = std::make_unique<AuthServer>();
+				server->AddComponent<DNWebProxy>();
+				if(value)
+				{
+					server->AddComponent<DNClientProxy>();
+				}
+				server->AddComponent<RdbProxy>();
 				break;
 			}
 			case EMServerType::GateServer:
 			{
 
-				// pServer = std::make_unique<GateServer>();
 				break;
 			}
 			case EMServerType::DatabaseServer:
 			{
 
-				// pServer = std::make_unique<DatabaseServer>();
 				break;
 			}
 			case EMServerType::LogicServer:
 			{
 
-				// pServer = std::make_unique<LogicServer>();
 				break;
 			}
 			default:
@@ -125,18 +136,18 @@ public:
 			}
 		}
 
-		if (!pServer->Init())
-		{
-			return false;
-		}
+		// if (!server->Init())
+		// {
+		// 	return false;
+		// }
 
 
-		pHotDll = std::make_unique<HotReloadDll>();
+		// pHotDll = world->AddSystem<HotReloadDll>();
 
-		if (!pHotDll->ReloadHandle())
-		{
-			return false;
-		}
+		// if (!pHotDll->ReloadHandle())
+		// {
+		// 	return false;
+		// }
 
 		InitCmdHandle();
 
@@ -179,7 +190,7 @@ public:
 
 		auto reloadConfig = [this](std::stringstream* ss = nullptr)
 			{
-				DNl10n::PInstance->Init();
+				// DNl10n::PInstance->Init();
 			};
 
 		mCmdHandle = {
@@ -275,28 +286,28 @@ public:
 
 #pragma region Export main space 
 
-#define REGIST_MAINSPACE_SIGN_FUNCTION(classname, methodname)\
-	using classname##_##methodname##_Sign = decltype(&classname::methodname);\
-	using classname##_##methodname##_Args = typename MemberFunctionArgs<classname##_##methodname##_Sign>::Arguments;\
-	__declspec(dllexport) auto classname##_##methodname(classname *obj, classname##_##methodname##_Args args)\
-	{\
-		return apply([&obj](auto &&...unpack) { return obj->methodname(std::forward<decltype(unpack)>(unpack)...); }, args);\
-	}
+// #define REGIST_MAINSPACE_SIGN_FUNCTION(classname, methodname)\
+// 	using classname##_##methodname##_Sign = decltype(&classname::methodname);\
+// 	using classname##_##methodname##_Args = typename MemberFunctionArgs<classname##_##methodname##_Sign>::Arguments;\
+// 	__declspec(dllexport) auto classname##_##methodname(classname *obj, classname##_##methodname##_Args args)\
+// 	{\
+// 		return apply([&obj](auto &&...unpack) { return obj->methodname(std::forward<decltype(unpack)>(unpack)...); }, args);\
+// 	}
 
-extern "C"
-{
-	REGIST_MAINSPACE_SIGN_FUNCTION(DNl10n, GetInstance);
-	REGIST_MAINSPACE_SIGN_FUNCTION(LaunchConfig, GetInstance);
+// extern "C"
+// {
+	// REGIST_MAINSPACE_SIGN_FUNCTION(DNl10n, GetInstance);
+	// REGIST_MAINSPACE_SIGN_FUNCTION(LaunchConfig, GetInstance);
 
-	REGIST_MAINSPACE_SIGN_FUNCTION(ProxyEntityManager, CheckEntityCloseTimer);
-	REGIST_MAINSPACE_SIGN_FUNCTION(RoomEntityManager, CheckEntityCloseTimer);
-	REGIST_MAINSPACE_SIGN_FUNCTION(ServerEntityManager, CheckEntityCloseTimer);
-	REGIST_MAINSPACE_SIGN_FUNCTION(DNClientProxy, InitConnectedChannel);
-	REGIST_MAINSPACE_SIGN_FUNCTION(DNClientProxy, CheckMessageTimeoutTimer);
-	REGIST_MAINSPACE_SIGN_FUNCTION(DNClientProxy, RedirectClient);
-	REGIST_MAINSPACE_SIGN_FUNCTION(DNServerProxy, InitConnectedChannel);
-	REGIST_MAINSPACE_SIGN_FUNCTION(DNServerProxy, CheckMessageTimeoutTimer);
-}
+	// REGIST_MAINSPACE_SIGN_FUNCTION(ProxyEntityManager, CheckEntityCloseTimer);
+	// REGIST_MAINSPACE_SIGN_FUNCTION(RoomEntityManager, CheckEntityCloseTimer);
+	// REGIST_MAINSPACE_SIGN_FUNCTION(ServerEntityManager, CheckEntityCloseTimer);
+	// REGIST_MAINSPACE_SIGN_FUNCTION(DNClientProxy, InitConnectedChannel);
+	// REGIST_MAINSPACE_SIGN_FUNCTION(DNClientProxy, CheckMessageTimeoutTimer);
+	// REGIST_MAINSPACE_SIGN_FUNCTION(DNClientProxy, RedirectClient);
+	// REGIST_MAINSPACE_SIGN_FUNCTION(DNServerProxy, InitConnectedChannel);
+	// REGIST_MAINSPACE_SIGN_FUNCTION(DNServerProxy, CheckMessageTimeoutTimer);
+// }
 
 
 #pragma endregion

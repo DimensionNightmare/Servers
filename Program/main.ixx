@@ -74,7 +74,7 @@ export int main(int argc, char** argv)
 #endif
 
 	{
-		SPidLogger.Init(ELogLevel_Debug, std::nullopt);
+		SPidLogger.Init(ELogLevel_Debug);
 
 		// lunch param
 		std::unordered_map<std::string, std::string> launchParam = {
@@ -274,9 +274,7 @@ export int main(int argc, char** argv)
 			return 0;
 		}
 		
-		DWORD pid = Platform::GetCurrentProcessId();
-
-		SPidLogger.Init(std::nullopt, execPath.parent_path() / std::format("PID_{}", pid));
+		SPidLogger.Init(execPath.parent_path() / std::format("PID_{}", Platform::GetCurrentProcessId()));
 	}
 
 	SPidLogger.Record(ELogLevel_Normal, "hello ~");

@@ -7,13 +7,14 @@ import ThirdParty.Libhv;
 export template<class TEntity = Entity>
 class EntityManager : public Component
 {
-	
-public:
+protected:
 	/// @brief timer manager create
-	EntityManager()
+	EntityManager(System::Ptr system):Component(system)
 	{
 		pLoop = std::make_shared<hv::EventLoopThread>();
 	}
+	
+public:
 
 	virtual ~EntityManager()
 	{
@@ -22,7 +23,7 @@ public:
 	}
 
 	/// @brief start timer manager
-	virtual bool Init()
+	virtual bool Start()
 	{
 		pLoop->start();
 		return true;

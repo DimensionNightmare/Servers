@@ -5,10 +5,28 @@ export module HotReloadDll;
 import std.compat;
 import Platform;
 import Logger;
-import Config.Server;
+import ECSW;
 
-export struct HotReloadDll
+export class HotReloadDll : public System
 {
+protected:
+	friend class World;
+	/// @brief
+	HotReloadDll(World::Ptr world):System(world)
+	{
+		eSystemType = EMSystemType::HotReloadDll;
+
+		sDllDir = std::filesystem::path(*GetWorld()->LaunchParam("program")).parent_path() / sDllDir;
+		sServerName = *GetWorld()->LaunchParam("svrName");
+	}
+public:
+
+	/// @brief
+	~HotReloadDll()
+	{
+		FreeHandle();
+	}
+
 	/// @brief load dll/so runtime library
 	Platform::HotHandle LoadHandle(std::filesystem::path dllPath)
 	{
@@ -112,19 +130,6 @@ export struct HotReloadDll
 		}
 
 		return false;
-	}
-
-	/// @brief
-	HotReloadDll()
-	{
-		sDllDir = std::filesystem::path(*LaunchConfig::GetParam("program")).parent_path() / sDllDir;
-		sServerName = *LaunchConfig::GetParam("svrName");
-	}
-
-	/// @brief
-	~HotReloadDll()
-	{
-		FreeHandle();
 	}
 
 	/// @brief get runtime lib funcpointer

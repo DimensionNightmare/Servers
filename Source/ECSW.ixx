@@ -17,6 +17,9 @@ export enum class EMComponentType : uint8_t
 {
 	None,
 	DNServerProxy,
+	ServerEntityManager,
+	DNClientProxy,
+	DNWebProxy,
 };
 
 export enum class EMSystemType : uint8_t
@@ -25,6 +28,7 @@ export enum class EMSystemType : uint8_t
 	LoggerPrint,
 	DNl10n,
 	DNServer,
+	HotReloadDll,
 };
 
 export enum class EMServerType : uint8_t
@@ -108,7 +112,7 @@ public:
 		pOwner = nullptr;
 	}
 
-	std::shared_ptr<Entity> GetOnwer(){ return pOwner; }
+	std::shared_ptr<Entity> GetOwner(){ return pOwner; }
 public:
 
 	EMComponentType GetComponentType() { return eComponentType; }
@@ -124,6 +128,7 @@ protected: // dll proxy
 class Entity : public std::enable_shared_from_this<Entity>, public ECSModle
 {
 protected:
+	friend class System;
 	Entity(std::shared_ptr<World> world):
 		pWorld(world)
 	{
@@ -225,6 +230,29 @@ public:
 
 	EMSystemType GetSystemType() { return eSystemType; }
 
+	template<typename T>
+	std::shared_ptr<T> AddComponent()
+	{
+		static_assert(std::is_base_of_v<Component, T>, "T must inherit from component");
+		try
+		{
+			std::shared_ptr<T> component = std::shared_ptr<T>(new T(std::static_pointer_cast<System>(shared_from_this())));
+			if(!component->Awake())
+			{
+				component->Dispose();
+				return nullptr;
+			}
+			mComponents.emplace_back(component);
+			return component;
+		}
+		catch(const std::exception& e)
+		{
+			std::cerr << e.what() << '\n';
+		}
+		
+		return nullptr;
+	}
+
 protected:
 	
 	System(std::shared_ptr<World> world) 
@@ -255,7 +283,7 @@ public:
 		mLuanchConfig = std::move(config);
 	}
 
-	std::string* LuanchParam(const std::string& key)
+	std::string* LaunchParam(const std::string& key)
 	{
 		if(mLuanchConfig.count(key))
 		{

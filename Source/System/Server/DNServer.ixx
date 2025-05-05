@@ -1,8 +1,6 @@
 module;
 export module DNServer;
 
-import L10nText;
-import Config.Server;
 import ThirdParty.Libhv;
 import ECSW;
 
@@ -24,12 +22,7 @@ public:
 
 	virtual bool Awake() override
 	{
-		return Init();
-	}
-
-	virtual bool Init()
-	{
-		if (std::string* value = GetWorld()->LuanchParam("svrIndex"))
+		if (std::string* value = GetWorld()->LaunchParam("svrIndex"))
 		{
 			iServerId = stoi(*value);
 		}
@@ -39,7 +32,7 @@ public:
 
 	virtual void InitCmd( std::unordered_map<std::string, std::function<void(std::stringstream*)>>& cmdMap) 
 	{
-		
+
 	}
 
 	virtual bool Start(){ return true;}

@@ -11,13 +11,13 @@ import ECSW;
 export class DNServerProxy : public Component, public hv::TcpServer
 {
 protected:
-	friend class Entity;
-	DNServerProxy(Entity::Ptr entity):Component(entity)
+	friend class System;
+	DNServerProxy(System::Ptr system):Component(system)
 	{
 		eComponentType = EMComponentType::DNServerProxy;
 
 		pLoop = std::make_shared<hv::EventLoopThread>();
-		pLogger = entity->GetWorld()->GetSystem<LoggerPrint>(EMSystemType::LoggerPrint);
+		pLogger = GetOwner()->GetWorld()->GetSystem<LoggerPrint>(EMSystemType::LoggerPrint);
 	}
 
 public:
@@ -31,7 +31,7 @@ public:
 
 	bool Awake() override
 	{
-		std::string* inport = GetOnwer()->GetWorld()->LuanchParam("port");
+		std::string* inport = GetOwner()->GetWorld()->LaunchParam("port");
 		if (!inport)
 		{
 			pLogger->Record(EL10nCode_SrvNeedIPPort);

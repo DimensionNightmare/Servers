@@ -51,7 +51,7 @@ auto make_wrapper(F&& f) requires (!NoArgCallable<F>) {
 
 export namespace Platform
 {
-	using HotHandle = ::HMODULE;
+	using HotHandle = ::HMODULE;	
 	using FuncHandle = ::FARPROC;
 	using ::LoadLibraryA;
 	using ::FreeLibrary;

@@ -1,0 +1,67 @@
+module;
+export module ProxyEntityManager;
+
+import ProxyEntity;
+import EntityManager;
+import Logger;
+
+export class ProxyEntityManager : public EntityManager<ProxyEntity>
+{
+	
+public:
+	ProxyEntityManager() = default;
+
+	virtual ~ProxyEntityManager() = default;
+
+	/// @brief 
+	virtual void TickMainFrame() override
+	{
+	}
+	
+public: // dll override
+
+	/// @brief 
+	void EntityCloseTimer(uint64_t timerID)
+	{
+		std::unique_lock<std::shared_mutex> ulock(oTimerMutex);
+		if (!mMapTimer.contains(timerID))
+		{
+			return;
+		}
+
+		uint32_t entityId = mMapTimer[timerID];
+		if (RemoveEntity(entityId))
+		{
+			SPidLogger.Record(ELogLevel_Debug, "destory proxy Timer entity");
+		}
+
+	}
+
+	/// @brief 
+	uint64_t CheckEntityCloseTimer(uint32_t entityId)
+	{
+		uint64_t timerId = Timer()->setTimeout(10000, std::bind(&ProxyEntityManager::EntityCloseTimer, this, std::placeholders::_1));
+
+		AddTimerRecord(timerId, entityId);
+
+		return timerId;
+	}
+
+	/// @brief 
+	bool RemoveEntity(uint32_t entityId)
+	{
+		if (mEntityMap.contains(entityId))
+		{
+			std::unique_lock<std::shared_mutex> ulock(oMapMutex);
+
+			mEntityMap.erase(entityId);
+			return true;
+		}
+
+		return false;
+	}
+
+protected: // dll proxy
+
+
+};
