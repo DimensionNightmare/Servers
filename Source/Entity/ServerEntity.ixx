@@ -11,18 +11,24 @@ export enum class EMServerEntityFlag : uint16_t
 	Max,
 };
 
+using ServerEntityBitFlag = std::bitset<static_cast<uint16_t>(EMServerEntityFlag::Max)>;
+
 /// @brief this is server proxy entity
 export class ServerEntity : public NetEntity
 {
-	
+protected:
+	ServerEntity(World::Ptr world):NetEntity(world)
+	{
+
+	}
 public:
 
-	ServerEntity() :NetEntity(0)
+	ServerEntity():NetEntity(nullptr)
 	{
 		eEntityType = EMEntityType::Server;
 	}
 
-	ServerEntity(uint32_t id, EMServerType serverType) :NetEntity(id)
+	ServerEntity(uint32_t id, EMServerType serverType):NetEntity(nullptr)
 	{
 		eEntityType = EMEntityType::Server;
 		emServerType = serverType;
@@ -78,6 +84,6 @@ protected: // dll proxy
 	// be regist node need
 	std::unordered_map<EMServerType, std::list<ServerEntity*>> mMapLink;
 
-	std::bitset<static_cast<uint16_t>(EMServerEntityFlag::Max)> oFlags;
+	ServerEntityBitFlag oFlags;
 
 };

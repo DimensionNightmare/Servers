@@ -2,9 +2,9 @@ module;
 
 export module MODULE_MAIN;
 
+import std.compat;
 import DimensionNightmare;
 import Logger;
-import std.compat;
 import Platform;
 
 enum class EMLunchType : uint8_t
@@ -85,7 +85,7 @@ export int main(int argc, char** argv)
 
 		if (pos == std::string::npos)
 		{
-			LoggerPrint()(ELogLevel_Debug, "program lunch param error! Pos:{} ", i);
+			LoggerPrint::Log(ELogLevel_Debug, "program lunch param error! Pos:{} ", i);
 			return 0;
 		}
 
@@ -94,36 +94,19 @@ export int main(int argc, char** argv)
 
 	if (!launchParam.contains("svrType"))
 	{
-		LoggerPrint()(ELogLevel_Error, "lunch param svrType is null! ");
+		LoggerPrint::Log(ELogLevel_Error, "lunch param svrType is null! ");
 		return 0;
 	}
 
 	App = std::make_unique<DimensionNightmare>();
 	
-	if (!App->Init(launchParam))
+	if (!App->Init(std::move(launchParam)))
 	{
 		App = nullptr;
 		return 0;
 	}
-
-	ELogLevel logLevel = ELogLevel_Debug;
-
-	if(launchParam.contains("LoggerLevel") && ELogLevel_Parse(launchParam["LoggerLevel"], &logLevel))
-	{
-		
-	}
-
-	LoggerPrint::SetLoggerLevel(logLevel, execPath.parent_path() / launchParam["svrName"]);
-
-	Libhv::hvlog_disable();
-
-	LoggerPrint()(ELogLevel_Normal, "hello ~");
-
-	if (!App->InitServer())
-	{
-		App = nullptr;
-		return 0;
-	}
+	
+	LoggerPrint::Log(ELogLevel_Normal, "hello ~");
 
 #ifdef _WIN32
 
@@ -213,7 +196,7 @@ export int main(int argc, char** argv)
 
 #endif
 
-	LoggerPrint()(ELogLevel_Normal, "Dimension Instance addr->(DimensionNightmare*){}", static_cast<void*>(App.get()));
+	LoggerPrint::Log(ELogLevel_Normal, "Dimension Instance addr->(DimensionNightmare*){}", static_cast<void*>(App.get()));
 
 	auto InputEvent = std::async(std::launch::async, [&]()
 		{
@@ -300,7 +283,7 @@ export int main(int argc, char** argv)
 
 	Platform::Sleep(50);
 
-	LoggerPrint()(ELogLevel_Normal, "bye ~");
+	LoggerPrint::Log(ELogLevel_Normal, "bye ~");
 
 	return 0;
 }

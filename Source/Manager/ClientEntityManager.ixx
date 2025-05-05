@@ -99,7 +99,7 @@ public: // dll override
 			if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
 			{
 				response.set_state_code(10);
-				LoggerPrint()(ELogLevel_Debug, "requst timeout! ");
+				LoggerPrint::Log(ELogLevel_Debug, "requst timeout! ");
 			}
 		}
 
@@ -107,7 +107,7 @@ public: // dll override
 		{
 			BytesToHexString(entity_data);
 			mDbFailure[entityId] = entity_data;
-			LoggerPrint()(ELogLevel_Debug, "Save Db Entity Error id = {}, state_code = {}! ", entityId, code);
+			LoggerPrint::Log(ELogLevel_Debug, "Save Db Entity Error id = {}, state_code = {}! ", entityId, code);
 			co_return;
 		}
 
@@ -133,7 +133,7 @@ public: // dll override
 					uint32_t entityId = entity.ID();
 					if (!entity.GetDbEntity())
 					{
-						LoggerPrint()(ELogLevel_Debug, "SaveEntity not pb Data:{}", entityId);
+						LoggerPrint::Log(ELogLevel_Debug, "SaveEntity not pb Data:{}", entityId);
 						return;
 					}
 
@@ -152,7 +152,7 @@ public: // dll override
 		{
 			if (!entity.GetDbEntity())
 			{
-				LoggerPrint()(ELogLevel_Debug, "SaveEntity not pb Data:{}", ID);
+				LoggerPrint::Log(ELogLevel_Debug, "SaveEntity not pb Data:{}", ID);
 				continue;
 			}
 

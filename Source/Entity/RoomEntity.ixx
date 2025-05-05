@@ -1,21 +1,25 @@
 module;
 export module RoomEntity;
 
+
 import NetEntity;
-import std.compat;
 
 /// @brief room mean set/team/... client collection.
 export class RoomEntity : public NetEntity
 {
-	
+protected:
+	RoomEntity(World::Ptr world):NetEntity(world)
+	{
+
+	}
 public:
 
-	RoomEntity() : NetEntity(0)
+	RoomEntity():NetEntity(nullptr)
 	{
 		eEntityType = EMEntityType::Room;
 	}
 
-	RoomEntity(uint32_t id) : NetEntity(id)
+	RoomEntity(uint32_t id):NetEntity(nullptr)
 	{
 		eEntityType = EMEntityType::Room;
 	}

@@ -1,9 +1,9 @@
 module;
 export module ClientEntity;
 
-import Entity;
+import ECSW;
 import ThirdParty.PbGen;
-import std.compat;
+
 
 export enum class EMClientEntityFlag : uint16_t
 {
@@ -14,18 +14,20 @@ export enum class EMClientEntityFlag : uint16_t
 	Max,
 };
 
+using ClientEntityBitFlag = std::bitset<static_cast<uint16_t>(EMClientEntityFlag::Max)>;
+
 export class ClientEntity : public Entity
 {
-
-public:
-	/// @brief not id's entity
-	ClientEntity() : Entity(0)
+protected:
+	ClientEntity(World::Ptr world):Entity(world)
 	{
-		eEntityType = EMEntityType::Client;
+
 	}
 
+public:
+
 	/// @brief mean set cliententityid
-	ClientEntity(uint32_t id) : Entity(id)
+	ClientEntity(uint32_t id):Entity(nullptr)
 	{
 		eEntityType = EMEntityType::Client;
 		pDbEntity->set_account_id(id);
@@ -52,7 +54,7 @@ protected: // dll proxy
 
 	uint32_t iRecordRoomId = 0;
 
-	std::bitset<static_cast<uint16_t>(EMClientEntityFlag::Max)> oFlags;
+	ClientEntityBitFlag oFlags;
 
 	/// @brief db entity
 	std::unique_ptr<GDb::Player> pDbEntity = std::make_unique<GDb::Player>();

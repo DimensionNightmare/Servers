@@ -7,22 +7,51 @@ import Logger;
 import ThirdParty.Libhv;
 import ThirdParty.PbGen;
 import std.compat;
+import ECSW;
 
-export class DNServerProxy : public hv::TcpServer
+export class DNServerProxy : public Component, public hv::TcpServer
 {
-
-public:
-
-	DNServerProxy()
+protected:
+	friend class Entity;
+	DNServerProxy(Entity::Ptr entity):Component(entity)
 	{
+		eComponentType = EMComponentType::DNServerProxy;
+
 		pLoop = std::make_shared<hv::EventLoopThread>();
 	}
+
+public:
 
 	~DNServerProxy()
 	{
 		pLoop = nullptr;
 		mMsgList.clear();
 		mMapTimer.clear();
+	}
+
+	bool Awake() override
+	{
+		std::string* port = GetOnwer()->GetWorld()->LuanchParam("port");
+		if (!port)
+		{
+			LoggerPrint()(EL10nCode_SrvNeedIPPort);
+			// return false;
+			return false;
+		}
+
+		int listenfd = createsocket(stoi(*port), "0.0.0.0");
+		if (listenfd < 0)
+		{
+			LoggerPrint()(EL10nCode_CreateSocket);
+			// return false;
+			return false;
+		}
+
+		Init();
+
+		LoggerPrint()(EL10nCode_SrvListenOn, *port, listenfd);
+
+		return true;
 	}
 
 	void Init()
@@ -122,7 +151,7 @@ public: // dll override
 				if (!channel->context())
 				{
 					channel->close();
-					LoggerPrint()(ELogLevel_Debug, "ChannelTimeoutTimer server destory entity\n");
+					LoggerPrint::Log(ELogLevel_Debug, "ChannelTimeoutTimer server destory entity\n");
 				}
 			}
 		}
@@ -142,6 +171,7 @@ public: // dll override
 		size_t timerId = Timer()->setTimeout(5000, std::bind(&DNServerProxy::ChannelTimeoutTimer, this, std::placeholders::_1));
 		AddTimerRecord(timerId, channel->id());
 	}
+	
 	uint64_t CheckMessageTimeoutTimer(uint32_t breakTime, uint32_t msgId)
 	{
 		uint64_t timerId = Timer()->setTimeout(breakTime, std::bind(&DNServerProxy::MessageTimeoutTimer, this, std::placeholders::_1));

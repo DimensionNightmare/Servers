@@ -12,7 +12,10 @@ export enum class EMDNTaskFlag : uint16_t
 	PaserError,
 	TimeCost,
 	Max,
+
 };
+
+using DNTaskBitFlag = std::bitset<static_cast<uint16_t>(EMDNTaskFlag::Max)>;
 
 export template <typename T>
 struct DNTask
@@ -138,7 +141,7 @@ private:
 
 	HandleType tHandle;
 
-	std::bitset<static_cast<uint16_t>(EMDNTaskFlag::Max)> oFlags;
+	DNTaskBitFlag oFlags;
 
 	size_t iTimerId = 0;
 

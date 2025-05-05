@@ -39,28 +39,21 @@ public:
 			pqxx::connection check(*value);
 			pqxx::nontransaction checkTxn(check);
 
-			std::list<std::string> dbNames;
 			if (std::string* names = LaunchConfig::GetParam("dbnames"))
 			{
-				size_t start = 0;
-				size_t end = names->find(",");
-				std::string name;
-				while (end != std::string::npos)
-				{
-					name = names->substr(start, end - start);
-					EnumName<EMSqlDbNameEnum>(name);
-
-					dbNames.emplace_back(name);
-					start = end + 1;
-					end = names->find(",", start);
-				}
-
-				name = names->substr(start);
-				EnumName<EMSqlDbNameEnum>(name);
-				dbNames.emplace_back(name);
-
+				std::vector<std::string> dbNames = StrSplit(*names, ",");
+				
 				for (std::string& dbName : dbNames)
 				{
+					try
+					{
+						EnumName<EMSqlDbNameEnum>(dbName); // check vaild
+					}
+					catch(...)
+					{
+						return false;
+					}
+
 					if (!checkTxn.query_value<bool>(std::format("SELECT EXISTS (SELECT 1 FROM pg_database WHERE datname = '{}');", dbName)))
 					{
 						checkTxn.exec(std::format("CREATE DATABASE \"{}\";", dbName));

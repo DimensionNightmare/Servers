@@ -8,6 +8,7 @@ import ThirdParty.Libhv;
 import ThirdParty.PbGen;
 import MessagePack;
 import std.compat;
+import ECSW;
 
 #define NABS(n) ((n) < 0 ? (n) : -(n))
 
@@ -18,15 +19,15 @@ export enum class EMRegistState : uint8_t
 	Registed,
 };
 
-export class DNClientProxy : public hv::TcpClient
+export class DNClientProxy : public Component, public hv::TcpClient
 {
-
-public:
-
-	DNClientProxy()
+protected:
+	friend class Entity;
+	DNClientProxy(Entity::Ptr entity):Component(entity)
 	{
 		pLoop = std::make_shared<hv::EventLoopThread>();
 	}
+public:
 
 	~DNClientProxy()
 	{
@@ -157,7 +158,7 @@ public: // dll override
 
 	void RedirectClient(uint16_t port, std::string ip)
 	{
-		LoggerPrint()(ELogLevel_Debug, "reclient to {}:{}", ip, port);
+		LoggerPrint::Log(ELogLevel_Debug, "reclient to {}:{}", ip, port);
 
 		eRegistState = EMRegistState::None;
 		closesocket();

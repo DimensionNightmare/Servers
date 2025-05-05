@@ -2,12 +2,6 @@ module;
 
 export module DimensionNightmare;
 
-import ControlServer;
-import GlobalServer;
-import AuthServer;
-import GateServer;
-import DatabaseServer;
-import LogicServer;
 import StrUtils;
 import L10nText;
 import Logger;
@@ -17,155 +11,13 @@ import DNServer;
 import DllUtils;
 import std.compat;
 import Platform;
-
-export struct HotReloadDll
-{
-	/// @brief load dll/so runtime library
-	Platform::HotHandle LoadHandle(std::filesystem::path dllPath)
-	{
-#ifdef _WIN32
-		dllPath = dllPath.append(SDllName);
-	#ifdef NDEBUG
-		SetEnvironmentVariableA("PATH", "./Bin;%PATH%");
-	#endif
-
-		Platform::HotHandle hModule = Platform::LoadLibraryA(dllPath.string().c_str());
-		if (!hModule)
-		{
-			LoggerPrint()(EL10nCode_DllLoad, Platform::GetLastError());
-			return nullptr;
-		}
-
-#elif __unix__
-		std::string fullPath = filesystem::current_path().append(sDllDir).string();
-		fullPath = std::format("{}/lib{}.so", fullPath, SDllName);
-		void* hModule = dlopen(fullPath.c_str(), RTLD_LAZY);
-		if (!hModule)
-		{
-			LoggerPrint()(ELogLevel_Debug, dlerror());
-			return nullptr;
-		}
-#endif
-
-
-		return hModule;
-	}
-
-	/// @brief unload dll/so runtime library
-	void FreeHandle()
-	{
-		if (oLibHandle)
-		{
-#ifdef _WIN32
-			Platform::FreeLibrary(oLibHandle);
-#elif __unix__
-			dlclose(oLibHandle);
-#endif
-			oLibHandle = nullptr;
-		}
-
-		if (isNormalFree && !sDllDirRand.empty())
-		{
-			try
-			{
-				std::filesystem::remove_all(sDllDirRand.c_str());
-			}
-			catch (const std::exception& e)
-			{
-				LoggerPrint()(ELogLevel_Debug, "filesystem:{}", e.what());
-			}
-		}
-
-		sDllDirRand.clear();
-	}
-
-	/// @brief reload dll/so runtime library
-	bool ReloadHandle()
-	{
-		if (!std::filesystem::exists(sDllDir))
-		{
-			LoggerPrint()(EL10nCode_DllMenuPath);
-			return false;
-		}
-
-		if (!SDllName)
-		{
-			LoggerPrint()(EL10nCode_DllFileName);
-			return false;
-		}
-#ifdef _WIN32
-
-		std::random_device rd;
-		std::mt19937 gen(rd());
-		std::uniform_int_distribution<int>  u(10000, 99999);
-
-		int randNum = u(gen);
-		std::filesystem::path newDllDir = sDllDir.parent_path() / std::format("{}/Runtime_{}", sServerName, randNum);
-		try
-		{
-			std::filesystem::create_directories(newDllDir);
-			std::filesystem::copy(sDllDir /* / SDllName*/, newDllDir, std::filesystem::copy_options::recursive);
-		}
-		catch (const std::exception& e)
-		{
-			LoggerPrint()(ELogLevel_Debug, "{}", e.what());
-			return false;
-		}
-#endif
-		Platform::HotHandle hModule = LoadHandle(newDllDir);
-		if (hModule)
-		{
-			FreeHandle();
-			oLibHandle = hModule;
-			sDllDirRand = newDllDir;
-			Platform::SetConsoleTitleA(std::format("{}_{}", sServerName, randNum).c_str());
-			return true;
-		}
-
-		return false;
-	}
-
-	/// @brief
-	HotReloadDll()
-	{
-		sDllDir = std::filesystem::path(*LaunchConfig::GetParam("program")).parent_path() / sDllDir;
-		sServerName = *LaunchConfig::GetParam("svrName");
-	}
-
-	/// @brief
-	~HotReloadDll()
-	{
-		FreeHandle();
-	}
-
-	/// @brief get runtime lib funcpointer
-	Platform::FuncHandle GetFuncPtr(const char* funcName)
-	{
-#ifdef _WIN32
-		return Platform::GetProcAddress(oLibHandle, funcName);
-#elif __unix__
-		return dlsym(oLibHandle, funcName);
-#endif
-		return nullptr;
-	}
-
-public:
-	/// @brief runtime library floder name
-	std::filesystem::path sDllDir = "Runtime";
-
-	/// @brief runtime library file name
-	inline static const char* SDllName = "HotReload.dll";
-
-	std::filesystem::path sDllDirRand;
-
-	/// @brief runtime library loaded pointer
-	Platform::HotHandle oLibHandle = nullptr;
-
-	/// @brief nomal exit or exception exit
-	bool isNormalFree = true;
-
-	std::string sServerName;
-};
+import HotReloadDll;
+import ECSW;
+import ProxyEntityManager;
+import RoomEntityManager;
+import ServerEntityManager;
+import DNClientProxy;
+import DNServerProxy;
 
 export class DimensionNightmare
 {
@@ -181,22 +33,26 @@ public:
 	{
 		pServer = nullptr;
 		pHotDll = nullptr;
-		pDNl10n = nullptr;
-		pLaunchConfig = nullptr;
 	}
 
 	/// @brief load ini config
-	bool Init(std::unordered_map<std::string, std::string>& launchParam)
+	bool Init(std::unordered_map<std::string, std::string>&& launchParam)
 	{
-		EMServerType serverType = (EMServerType)stoi(launchParam["svrType"]);
-		if (serverType <= EMServerType::None || serverType >= EMServerType::Max)
+		ServerTypeBitFlag bitFlag;
+		
+		for(auto& serverType : StrSplit(launchParam["svrType"], ","))
 		{
-			LoggerPrint()(ELogLevel_Error, "serverType Not Invalid! ");
-			return false;
+			bitFlag.set(stoi(serverType));
 		}
 
-		std::string_view serverName = EnumName(serverType);
-		launchParam.emplace("svrName", serverName);
+		launchParam.erase("svrType");
+
+		uint64_t bitFlagValue = bitFlag.to_ulong();
+		if (bitFlagValue == 0 || bitFlagValue >= (1 << static_cast<uint8_t>(EMServerType::Max)))
+		{
+			LoggerPrint::Log(ELogLevel_Error, "serverType Not Invalid! ");
+			return false;
+		}
 
 #ifndef NDEBUG
 		const char* iniFilePath = "./Config/ServerDebug.ini";
@@ -206,13 +62,12 @@ public:
 
 		if(!std::filesystem::exists(iniFilePath))
 		{
-			LoggerPrint()(ELogLevel_Error, "ConfigIni Not Finded!");
+			LoggerPrint::Log(ELogLevel_Error, "ConfigIni Not Finded!");
 			return false;
 		}
 
 		// get ini Config
-
-		std::vector<std::string> sectionNames;
+		std::unordered_map<std::string, std::unordered_map<std::string, std::string>> sectionNames;
 
 #ifdef _WIN32
 		#define MAX_SECTION_NAME 512
@@ -222,13 +77,13 @@ public:
 		char* current = buffer;
 		while (*current)
 		{
-			sectionNames.emplace_back(current);
+			sectionNames[current];
 			current += strlen(current) + 1;
 
-			if (sectionNames.back().find_last_of("Server") != std::string::npos && sectionNames.back() != serverName)
-			{
-				sectionNames.pop_back();
-			}
+			// if (sectionNames.back().find_last_of("Server") != std::string::npos && sectionNames.back() != serverName)
+			// {
+			// 	sectionNames.pop_back();
+			// }
 		}
 #elif __unix__
 		std::unordered_map<std::string, std::list<std::string>> sectionVal;
@@ -284,24 +139,29 @@ public:
 			}
 		}
 #endif
-		auto handler = [&](std::string& split)
+		auto handler = [&](std::unordered_map<std::string, std::string>& map, std::string& split)
 		{
 			size_t pos = split.find('=');
 			if (pos != std::string::npos)
 			{
 				std::string key = split.substr(0, pos);
-				if (launchParam.contains(key))
-				{
-					return;
-				}
+				// if (launchParam.contains(key))
+				// {
+				// 	return;
+				// }
 
-				launchParam.emplace(key, split.substr(pos + 1));
+				map.emplace(key, split.substr(pos + 1));
 			}
 		};
 		
 
-		for (const std::string& sectionName : sectionNames)
+		for (auto& [sectionName, sectionMap] : sectionNames)
 		{
+			if (sectionName.find_last_of("Server") != std::string::npos)
+			{
+				sectionMap.emplace("svrName", sectionName);
+			}
+
 #ifdef _WIN32
 			Platform::GetPrivateProfileSectionA(sectionName.c_str(), buffer, MAX_SECTION_NAME, iniFilePath);
 			char* keyValuePair = buffer;
@@ -309,7 +169,7 @@ public:
 			{
 				std::string split(keyValuePair);
 				keyValuePair += strlen(keyValuePair) + 1;
-				handler(split);
+				handler(sectionMap, split);
 			}
 #elif __unix__
 			for (const std::string& keyValuePair : sectionVal[sectionName])
@@ -320,51 +180,88 @@ public:
 #endif
 		}
 
-		// set global Launch config  
-		pLaunchConfig = std::make_shared<LaunchConfig>();
-		pLaunchConfig->SetLuanchConfig(launchParam);
-		LaunchConfig::PInstance = pLaunchConfig;
+		// muti server only this valid.
+		if(bitFlag.count() > 1)
+		{
+			sectionNames["Common"]["program"] = launchParam["program"];
+		}
+		else
+		{
+			launchParam.merge(sectionNames["Common"]);
+			sectionNames["Common"] = std::move(launchParam);
+		}
+
+		for(auto& [serverEnum, serverName] : ServerTypeList)
+		{
+			// set global Launch config
+			if(bitFlag.test(serverEnum))
+			{
+				auto merge = sectionNames["Common"];
+				merge.merge(sectionNames[serverName]);
+				if(!InitServer(std::move(merge)))
+				{
+					return false;
+				}
+			}
+		}
 
 		return true;
 	}
 
 	/// @brief create server
-	bool InitServer()
+	bool InitServer(std::unordered_map<std::string, std::string>&& launchParam)
 	{
-		// I10n Config
-		pDNl10n = std::make_shared<DNl10n>();
 
-		if (const char* codeStr = pDNl10n->Init())
-		{
-			LoggerPrint()(ELogLevel_Error, codeStr);
-			return false;
-		}
+		World::Ptr world = std::make_shared<World>();
+		oWorlds.push_back(world);
 
-		DNl10n::PInstance = pDNl10n;
+		world->MoveLuanchConfigToSelf(std::move(launchParam));
 
-		std::string* value = LaunchConfig::GetParam("svrType");
-		EMServerType serverType = (EMServerType)stoi(*value);
+		LoggerPrint::Ptr logger = world->AddSystem<LoggerPrint>();
+		world->AddSystem<DNl10n>();
+		DNServer::Ptr server = world->AddSystem<DNServer>();
+		
+		std::string* value = world->LuanchParam("svrName");
+		EMServerType serverType = EnumName<EMServerType>(*value);
 
 		switch (serverType)
 		{
 			case EMServerType::ControlServer:
-				pServer = std::make_unique<ControlServer>();
+			{
+				server->AddComponent<DNServerProxy>();
+				// pServer = std::make_unique<ControlServer>();
 				break;
+			}
 			case EMServerType::GlobalServer:
-				pServer = std::make_unique<GlobalServer>();
+			{
+
+				// pServer = std::make_unique<GlobalServer>();
 				break;
+			}
 			case EMServerType::AuthServer:
-				pServer = std::make_unique<AuthServer>();
+			{
+
+				// pServer = std::make_unique<AuthServer>();
 				break;
+			}
 			case EMServerType::GateServer:
-				pServer = std::make_unique<GateServer>();
+			{
+
+				// pServer = std::make_unique<GateServer>();
 				break;
+			}
 			case EMServerType::DatabaseServer:
-				pServer = std::make_unique<DatabaseServer>();
+			{
+
+				// pServer = std::make_unique<DatabaseServer>();
 				break;
+			}
 			case EMServerType::LogicServer:
-				pServer = std::make_unique<LogicServer>();
+			{
+
+				// pServer = std::make_unique<LogicServer>();
 				break;
+			}
 			default:
 				LoggerPrint()(EL10nCode_SrvTypeNotVaild);
 				return false;
@@ -387,13 +284,13 @@ public:
 
 		if (!OnRegHotReload())
 		{
-			LoggerPrint()(ELogLevel_Error, "program lunch OnRegHotReload error!");
+			LoggerPrint::Log(ELogLevel_Error, "program lunch OnRegHotReload error!");
 			return false;
 		}
 
 		if (!pServer->Start())
 		{
-			LoggerPrint()(ELogLevel_Error, "program lunch Server Start error!");
+			LoggerPrint::Log(ELogLevel_Error, "program lunch Server Start error!");
 			return false;
 		}
 
@@ -456,7 +353,7 @@ public:
 				}
 				else
 				{
-					std::cout << "error:" << GetLastError() << std::endl;
+					std::cout << "error:" << Platform::GetLastError() << std::endl;
 				}
 			};
 
@@ -480,7 +377,7 @@ public:
 			allCommands += k + "\n\t\t";
 		}
 
-		LoggerPrint()(ELogLevel_Normal, allCommands);
+		LoggerPrint::Log(ELogLevel_Normal, allCommands);
 	}	
 
 	/// @brief exec command line
@@ -542,9 +439,7 @@ private:
 	/// @brief server service pointer
 	std::unique_ptr<DNServer> pServer;
 
-	std::shared_ptr<DNl10n> pDNl10n;
-
-	std::shared_ptr<LaunchConfig> pLaunchConfig;
+	std::vector<World::Ptr> oWorlds;
 
 	/// @brief command line std::function mapping
 	std::unordered_map<std::string, std::function<void(std::stringstream*)>> mCmdHandle;

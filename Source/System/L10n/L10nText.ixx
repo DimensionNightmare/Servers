@@ -6,21 +6,37 @@ import ThirdParty.PbGen;
 import StrUtils;
 import DllUtils;
 import std.compat;
+import ECSW;
 
 #define FUNCPLACE(func) #func, func
 
-export class DNl10n
+export class DNl10n : public System
 {
-public:
-	
-	DNl10n()
+protected:
+	DNl10n(std::shared_ptr<World> world) 
+		: System(world)
 	{
-		
+		eSystemType = EMSystemType::DNl10n;
 	}
+
+	friend class World;
+public:
+	using Ptr = std::shared_ptr<DNl10n>;
 	
 	virtual ~DNl10n()
 	{
 		mL10nCodeDll.clear();
+	}
+
+	bool Awake() override
+	{
+		if (const char* codeStr = Init())
+		{
+			// LoggerPrint::Log(ELogLevel_Error, codeStr);
+			return false;
+		}
+
+		return true;
 	}
 
 	/// PB's map find key need same runtimespace.
@@ -28,7 +44,7 @@ public:
 	/// absl\hash\internal\hash.h kSeed
 	const char* Init()
 	{
-		std::string* value = LaunchConfig::GetParam("l10nDataPath");
+		std::string* value = GetWorld()->LuanchParam("l10nDataPath");
 		if (!value)
 		{
 			// LoggerPrint(ELogLevel_Debug)( "Launch Param l10nErrPath Error !");
@@ -51,7 +67,7 @@ public:
 		}
 		
 		eType = EL10nType_zh_CN;
-		value = LaunchConfig::GetParam("l10nLang");
+		value =  GetWorld()->LuanchParam("l10nLang");
 		if (!value && !EL10nType_Parse(*value, &eType))
 		{	
 			

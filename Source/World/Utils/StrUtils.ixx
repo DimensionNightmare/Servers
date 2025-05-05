@@ -312,3 +312,16 @@ export size_t DoStringHash(const std::string& str)
 		return std::hash<std::string>{}(str);
 #endif
 }
+
+export std::vector<std::string> StrSplit(const std::string& s, const std::string& delimiter)
+{
+    std::vector<std::string> tokens;
+    size_t start = 0, end = s.find(delimiter);
+    while (end != std::string::npos) {
+        tokens.push_back(s.substr(start, end - start));
+        start = end + delimiter.length();
+        end = s.find(delimiter, start);
+    }
+    tokens.push_back(s.substr(start));
+    return tokens;
+}

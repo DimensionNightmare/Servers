@@ -1,12 +1,11 @@
 module;
 export module EntityManager;
 
-import Entity;
+import ECSW;
 import ThirdParty.Libhv;
-import std.compat;
 
 export template<class TEntity = Entity>
-class EntityManager
+class EntityManager : public Component
 {
 	
 public:

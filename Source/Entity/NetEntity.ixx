@@ -1,18 +1,20 @@
 module;
 export module NetEntity;
 
-import Entity;
+import ECSW;
 import ThirdParty.Libhv;
-import std.compat;
+
 
 export class NetEntity : public Entity
 {
 	
 protected:
 	//dont new this class
-	NetEntity(uint32_t id) : Entity(id)
+	NetEntity(World::Ptr world) :Entity(world)
 	{
 	}
+
+
 
 public:
 	virtual ~NetEntity()

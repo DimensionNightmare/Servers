@@ -11,5 +11,5 @@ export void MessagePackAndSend(uint32_t msgId, EMMsgDeal deal, const std::string
 	MessagePack(msgId, deal, pbName, data);
 	channel->write(data);
 
-	LoggerPrint()(ELogLevel_Debug, "{} Send type={} With Mid:{}, Mess:{}", channel->peeraddr().c_str(), (int)deal, msgId, pbName);
+	LoggerPrint::Log(ELogLevel_Debug, "{} Send type={} With Mid:{}, Mess:{}", channel->peeraddr().c_str(), (int)deal, msgId, pbName);
 }
