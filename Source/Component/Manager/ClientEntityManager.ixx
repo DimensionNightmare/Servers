@@ -2,7 +2,6 @@ module;
 export module ClientEntityManager;
 
 import ClientEntity;
-import DNServer;
 import EntityManager;
 import Logger;
 import DNClientProxy;
@@ -16,8 +15,14 @@ import ThirdParty.RedisPP;
 export class ClientEntityManager : public EntityManager<ClientEntity>
 {
 	
+protected:
+	friend class System;
+	/// @brief timer manager create
+	ClientEntityManager(System::Ptr system):EntityManager(system)
+	{
+		eComponentType = EMComponentType::ClientEntityManager;
+	}
 public:
-	ClientEntityManager() = default;
 
 	virtual ~ClientEntityManager()
 	{

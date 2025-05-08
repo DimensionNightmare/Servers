@@ -12,6 +12,7 @@ import ECSW;
 import ProxyEntityManager;
 import RoomEntityManager;
 import ServerEntityManager;
+import ClientEntityManager;
 import DNClientProxy;
 import DNServerProxy;
 import DNWebProxy;
@@ -80,11 +81,13 @@ public:
 			return false;
 		}
 
-		DNServer::Ptr server = world->AddSystem<DNServer>();
 		
 		std::string* value = world->LaunchParam("svrName");
 		EMServerType serverType = EnumName<EMServerType>(*value);
 		value = world->LaunchParam("byCtl");
+
+		DNServer::Ptr server = world->AddSystem<DNServer>();
+		server->SetServerType(serverType);
 
 		switch (serverType)
 		{
@@ -116,17 +119,23 @@ public:
 			}
 			case EMServerType::GateServer:
 			{
-
+				server->AddComponent<DNServerProxy>();
+				server->AddComponent<DNClientProxy>();
+				server->AddComponent<ServerEntityManager>();
+				server->AddComponent<ProxyEntityManager>();
 				break;
 			}
 			case EMServerType::DatabaseServer:
 			{
-
+				server->AddComponent<DNClientProxy>();
 				break;
 			}
 			case EMServerType::LogicServer:
 			{
-
+				server->AddComponent<DNServerProxy>();
+				server->AddComponent<DNClientProxy>();
+				server->AddComponent<RoomEntityManager>();
+				server->AddComponent<ClientEntityManager>();
 				break;
 			}
 			default:
@@ -149,19 +158,19 @@ public:
 		// 	return false;
 		// }
 
-		InitCmdHandle();
+		// InitCmdHandle();
 
-		if (!OnRegHotReload())
-		{
-			logger->Record(ELogLevel_Error, "program lunch OnRegHotReload error!");
-			return false;
-		}
+		// if (!OnRegHotReload())
+		// {
+		// 	logger->Record(ELogLevel_Error, "program lunch OnRegHotReload error!");
+		// 	return false;
+		// }
 
-		if (!pServer->Start())
-		{
-			logger->Record(ELogLevel_Error, "program lunch Server Start error!");
-			return false;
-		}
+		// if (!pServer->Start())
+		// {
+		// 	logger->Record(ELogLevel_Error, "program lunch Server Start error!");
+		// 	return false;
+		// }
 
 		return true;
 	}
@@ -201,11 +210,6 @@ public:
 			
 			#undef one
 		};
-
-		if (pServer)
-		{
-			pServer->InitCmd(mCmdHandle);
-		}
 
 		std::string allCommands = "Commands: \n\t\t";
 		for (auto& [k, v] : mCmdHandle)
@@ -265,7 +269,7 @@ public:
 		return false;
 	}
 
-	void TickMainFrame() { pServer->TickMainFrame(); }
+	void TickMainFrame() {  }
 
 	HotReloadDll* GetHotDll() { return pHotDll.get();}
 private:

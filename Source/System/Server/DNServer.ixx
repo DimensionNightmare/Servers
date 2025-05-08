@@ -30,26 +30,21 @@ public:
 		return true;
 	}
 
-	virtual void InitCmd( std::unordered_map<std::string, std::function<void(std::stringstream*)>>& cmdMap) 
-	{
+	void Start()	{ 	eServerEvent.Broadcast(EMEventType::ServerStart	); }
 
-	}
+	void Stop() 	{ 	eServerEvent.Broadcast(EMEventType::ServerStop	); }
 
-	virtual bool Start(){ return true;}
+	void Pause()	{ 	eServerEvent.Broadcast(EMEventType::ServerPause	); }
 
-	virtual bool Stop(){ return true;}
-
-	virtual void Pause(){}
-
-	virtual void Resume(){}
+	void Resume()	{ 	eServerEvent.Broadcast(EMEventType::ServerResume); }
 
 	EMServerType GetServerType() { return emServerType; }
 
+	void SetServerType(EMServerType type) { emServerType = type; }
+
 	uint32_t& ServerId() { return iServerId; }
 
-	virtual void LoopEvent(std::function<void(hv::EventLoopPtr)> func){}
-
-	virtual void TickMainFrame(){}
+	Event& GetEvent(){return eServerEvent;}
 
 public: // dll override
 
@@ -60,4 +55,6 @@ protected:
 	uint32_t iServerId = 0;
 
 	std::mutex oTaskMutex;
+
+	Event eServerEvent;
 };

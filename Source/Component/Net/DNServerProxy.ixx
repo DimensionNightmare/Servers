@@ -7,6 +7,7 @@ import Logger;
 import ThirdParty.Libhv;
 import ThirdParty.PbGen;
 import ECSW;
+import DNServer;
 
 export class DNServerProxy : public Component, public hv::TcpServer
 {
@@ -71,6 +72,11 @@ public:
 		setThreadNum(4);
 
 		pLogger->Record(EL10nCode_SrvListenOn, port, listenfd);
+
+		DNServer::Ptr server = std::static_pointer_cast<DNServer>(GetOwner());
+		Event& event = server->GetEvent();
+
+		event.AddEvent<DNServerProxy>(EMEventType::ServerStart, shared_from_this(), &DNServerProxy::Start);
 
 		return true;
 	}

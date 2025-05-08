@@ -7,9 +7,14 @@ import Logger;
 
 export class RoomEntityManager : public EntityManager<RoomEntity>
 {
-	
+protected:
+	friend class System;
+	/// @brief timer manager create
+	RoomEntityManager(System::Ptr system):EntityManager(system)
+	{
+		eComponentType = EMComponentType::RoomEntityManager;
+	}
 public:
-	RoomEntityManager() = default;
 	~RoomEntityManager() = default;
 
 	virtual void TickMainFrame() override

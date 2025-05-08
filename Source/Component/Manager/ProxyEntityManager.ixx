@@ -7,9 +7,14 @@ import Logger;
 
 export class ProxyEntityManager : public EntityManager<ProxyEntity>
 {
-	
+protected:
+	friend class System;
+	/// @brief timer manager create
+	ProxyEntityManager(System::Ptr system):EntityManager(system)
+	{
+		eComponentType = EMComponentType::ProxyEntityManager;
+	}
 public:
-	ProxyEntityManager() = default;
 
 	virtual ~ProxyEntityManager() = default;
 

@@ -20,6 +20,9 @@ export enum class EMComponentType : uint8_t
 	ServerEntityManager,
 	DNClientProxy,
 	DNWebProxy,
+	RoomEntityManager,
+	ProxyEntityManager,
+	ClientEntityManager,
 };
 
 export enum class EMSystemType : uint8_t
@@ -60,6 +63,15 @@ export std::array<std::pair<uint8_t, std::string>, 7> ServerTypeList = {{
 	#undef one
 }};
 
+export enum class EMEventType : uint8_t
+{
+	None = 0			,
+	ServerStart			,
+	ServerStop			,
+	ServerPause			,
+	ServerResume		,
+};
+
 class World;
 
 // normal data normal get/set
@@ -88,7 +100,7 @@ protected:
 	bool bIsDisposed = false;
 };
 
-class Component : public ECSModle
+class Component : public std::enable_shared_from_this<Component>, public ECSModle
 {
 protected:
 	friend class Entity;
@@ -299,12 +311,75 @@ private:
 	std::vector<std::shared_ptr<System>> mSystemMap;
 };
 
+class Event
+{
+public:
+	Event() = default;
+	~Event() = default;
+
+	struct ICallback {
+        virtual ~ICallback() = default;
+        virtual void invoke() = 0;
+    };
+
+    template<typename T, typename Callback>
+    struct CallbackWrapper : ICallback {
+        std::shared_ptr<T> entity;
+        Callback callback;
+        
+        void invoke() override {
+            if (entity && !entity->IsDispose()) {
+                (entity.get()->*callback)();
+            }
+        }
+    };
+
+	template<typename T, typename Callback>
+	uint32_t AddEvent(EMEventType type, std::shared_ptr<T> entity, Callback&& callback)
+	{
+		uint32_t eventId = iEventGenId++;
+		// auto lumbdaFunc = [entity, callback = std::forward<Callback>(callback)](){ 
+		// 	if(entity && !entity->IsDispose())
+		// 	{
+		// 		// (std::static_pointer_cast<T>(entity.get())->*callback)(); 
+		// 		T* derived = dynamic_cast<T*>(entity.get());
+		// 		(derived->*callback)();
+		// 	}
+		// };
+		// mEventIdMap[eventId] = std::make_pair(type, lumbdaFunc);
+
+		auto wrapper = std::make_unique<CallbackWrapper<T, Callback>>(
+            std::move(entity), std::forward<Callback>(callback));
+        mEventIdMap[eventId] = std::make_pair(type, std::move(wrapper));
+
+		mEventCollection[type].push_back(eventId);
+		return eventId;
+	}
+
+	void Broadcast(EMEventType type)
+	{
+		for(uint32_t eventId : mEventCollection[type]) 
+		{
+			auto& [type, func] = mEventIdMap[eventId];
+			// func();
+			func->invoke();
+		}
+	}
+
+private:
+	std::atomic<uint32_t> iEventGenId;
+	// std::unordered_map<uint32_t, std::pair<EMEventType, std::function<void()> > > mEventIdMap;
+	std::unordered_map<uint32_t, std::pair<EMEventType, std::unique_ptr<ICallback>>> mEventIdMap;
+	std::unordered_map<EMEventType, std::vector<uint32_t>> mEventCollection;
+};
+
 export 
 {
 	class Entity;
 	class Component;
 	class World;
 	class System;
+	class Event;
 }
 
 // void Entity::Dispose()
