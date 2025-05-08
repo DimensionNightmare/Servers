@@ -77,7 +77,7 @@ public: // dll override
 	{
 		if (mEntityMap.contains(entityId))
 		{
-			ServerEntity* entity = &mEntityMap[entityId];
+			ServerEntity::Ptr entity = mEntityMap[entityId];
 			std::unique_lock<std::shared_mutex> ulock(oMapMutex);
 
 			mEntityMapList[entity->GetServerType()].remove(entity);

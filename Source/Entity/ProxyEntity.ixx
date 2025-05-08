@@ -10,20 +10,10 @@ export class ProxyEntity : public NetEntity
 protected:
 	ProxyEntity(World::Ptr world):NetEntity(world)
 	{
-
+		eEntityType = EMEntityType::Proxy;
 	}
 public:
-
-	ProxyEntity():NetEntity(nullptr)
-	{
-		eEntityType = EMEntityType::Proxy;
-	}
-
-	ProxyEntity(uint32_t id):NetEntity(nullptr)
-	{
-		eEntityType = EMEntityType::Proxy;
-	}
-
+	using Ptr = std::shared_ptr<ProxyEntity>;
 	virtual ~ProxyEntity()
 	{
 	}

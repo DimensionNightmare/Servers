@@ -14,7 +14,7 @@ protected:
 	DNl10n(std::shared_ptr<World> world) 
 		: System(world)
 	{
-		eSystemType = EMSystemType::DNl10n;
+		emSystemType = EMSystemType::DNl10n;
 	}
 
 	friend class World;

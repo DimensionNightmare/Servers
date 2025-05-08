@@ -3,8 +3,8 @@ export module Logger;
 
 import StrUtils;
 import L10nText;
-export import ThirdParty.PbGen;
 import ECSW;
+export import ThirdParty.PbGen;
 
 class LogColor
 {
@@ -23,7 +23,7 @@ protected:
 	friend class World;
 	LoggerPrint(World::Ptr world):System(world)
 	{
-		eSystemType = EMSystemType::LoggerPrint;
+		emSystemType = EMSystemType::LoggerPrint;
 	}
 
 public:

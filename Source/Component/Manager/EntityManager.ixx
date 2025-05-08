@@ -1,7 +1,7 @@
 module;
 export module EntityManager;
 
-import ECSW;
+export import ECSW;
 import ThirdParty.Libhv;
 
 export template<class TEntity = Entity>
@@ -44,7 +44,7 @@ public: // dll override
 	
 protected: // dll proxy
 
-	std::unordered_map<uint32_t, TEntity> mEntityMap;
+	std::unordered_map<uint32_t, std::shared_ptr<TEntity>> mEntityMap;
 	/// @brief mEntityMap Mutex
 	std::shared_mutex oMapMutex;
 	//

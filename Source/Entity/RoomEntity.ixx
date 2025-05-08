@@ -10,19 +10,10 @@ export class RoomEntity : public NetEntity
 protected:
 	RoomEntity(World::Ptr world):NetEntity(world)
 	{
-
+		eEntityType = EMEntityType::Room;
 	}
 public:
-
-	RoomEntity():NetEntity(nullptr)
-	{
-		eEntityType = EMEntityType::Room;
-	}
-
-	RoomEntity(uint32_t id):NetEntity(nullptr)
-	{
-		eEntityType = EMEntityType::Room;
-	}
+	using Ptr = std::shared_ptr<RoomEntity>;
 
 	virtual ~RoomEntity() = default;
 

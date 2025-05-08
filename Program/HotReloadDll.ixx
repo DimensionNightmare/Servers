@@ -5,7 +5,7 @@ export module HotReloadDll;
 import std.compat;
 import Platform;
 import Logger;
-import ECSW;
+import System;
 
 export class HotReloadDll : public System
 {
@@ -14,7 +14,7 @@ protected:
 	/// @brief
 	HotReloadDll(World::Ptr world):System(world)
 	{
-		eSystemType = EMSystemType::HotReloadDll;
+		emSystemType = System::HotReloadDll;
 
 		sDllDir = std::filesystem::path(*GetWorld()->LaunchParam("program")).parent_path() / sDllDir;
 		sServerName = *GetWorld()->LaunchParam("svrName");

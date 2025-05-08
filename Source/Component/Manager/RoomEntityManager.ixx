@@ -52,7 +52,7 @@ public:
 	{
 		if (mEntityMap.contains(entityId))
 		{
-			RoomEntity* entity = &mEntityMap[entityId];
+			RoomEntity::Ptr entity = mEntityMap[entityId];
 			std::unique_lock<std::shared_mutex> ulock(oMapMutex);
 
 			mEntityMapList[entity->MapID()].remove(entity);
@@ -66,7 +66,7 @@ public:
 
 protected:
 	/// @brief 
-	std::unordered_map<uint32_t, std::list<RoomEntity*>> mEntityMapList;
+	std::unordered_map<uint32_t, std::list<RoomEntity::Ptr>> mEntityMapList;
 
 	/// @brief 
 	std::atomic<uint32_t> iRoomGenId;

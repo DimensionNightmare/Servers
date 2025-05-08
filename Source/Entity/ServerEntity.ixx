@@ -19,21 +19,10 @@ export class ServerEntity : public NetEntity
 protected:
 	ServerEntity(World::Ptr world):NetEntity(world)
 	{
-
+		eEntityType = EMEntityType::Server;
 	}
 public:
-
-	ServerEntity():NetEntity(nullptr)
-	{
-		eEntityType = EMEntityType::Server;
-	}
-
-	ServerEntity(uint32_t id, EMServerType serverType):NetEntity(nullptr)
-	{
-		eEntityType = EMEntityType::Server;
-		emServerType = serverType;
-	}
-
+	using Ptr = std::shared_ptr<ServerEntity>;
 	virtual ~ServerEntity()
 	{
 		pLink = nullptr;

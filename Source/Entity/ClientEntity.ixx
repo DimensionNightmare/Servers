@@ -21,18 +21,11 @@ export class ClientEntity : public Entity
 protected:
 	ClientEntity(World::Ptr world):Entity(world)
 	{
-
+		eEntityType = EMEntityType::Client;
 	}
 
 public:
-
-	/// @brief mean set cliententityid
-	ClientEntity(uint32_t id):Entity(nullptr)
-	{
-		eEntityType = EMEntityType::Client;
-		pDbEntity->set_account_id(id);
-	}
-
+	using Ptr = std::shared_ptr<ClientEntity>;
 	virtual ~ClientEntity()
 	{
 		pDbEntity = nullptr;

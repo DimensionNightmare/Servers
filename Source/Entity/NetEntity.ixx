@@ -4,7 +4,6 @@ export module NetEntity;
 import ECSW;
 import ThirdParty.Libhv;
 
-
 export class NetEntity : public Entity
 {
 	
@@ -12,6 +11,7 @@ protected:
 	//dont new this class
 	NetEntity(World::Ptr world) :Entity(world)
 	{
+		
 	}
 
 

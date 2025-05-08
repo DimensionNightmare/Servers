@@ -1,20 +1,56 @@
 module;
 export module DNServer;
 
-import ThirdParty.Libhv;
 import ECSW;
+import ThirdParty.Libhv;
+
+export enum class EMServerType : uint8_t
+{
+	None = 0			,
+	ControlServer 		,
+	GlobalServer 		,
+	AuthServer 			,
+
+	GateServer 			,
+	DatabaseServer 		,
+	LogicServer 		,
+
+	DedicatedServer 	,
+	Max					,
+};
+
+export using ServerTypeBitFlag = std::bitset<static_cast<uint8_t>(EMServerType::Max)>;
+
+export std::array<std::pair<uint8_t, std::string>, 7> ServerTypeList = {{
+	#define one(name) {static_cast<uint8_t>(EMServerType::name), #name}
+	one(ControlServer),
+	one(GlobalServer),
+	one(AuthServer),
+	one(GateServer),
+	one(DatabaseServer),
+	one(LogicServer),
+	one(DedicatedServer),
+	#undef one
+}};
+
 
 export class DNServer : public System
 {
+public:
+	using Ptr = std::shared_ptr<DNServer>;
+
+	
+protected:
 	friend class World;
 	DNServer(World::Ptr world):System(world)
 	{
-		eSystemType = EMSystemType::DNServer;
+		emSystemType = EMSystemType::DNServer;
+		emServerType = EMServerType::None;
 
 		Libhv::hvlog_disable();
 	}
 public:
-	using Ptr = std::shared_ptr<DNServer>;
+	
 
 	virtual ~DNServer()
 	{
@@ -30,21 +66,19 @@ public:
 		return true;
 	}
 
-	void Start()	{ 	eServerEvent.Broadcast(EMEventType::ServerStart	); }
+	void Start()	{ 	Broadcast(EMEventType::ServerStart	); }
 
-	void Stop() 	{ 	eServerEvent.Broadcast(EMEventType::ServerStop	); }
+	void Stop() 	{ 	Broadcast(EMEventType::ServerStop	); }
 
-	void Pause()	{ 	eServerEvent.Broadcast(EMEventType::ServerPause	); }
+	void Pause()	{ 	Broadcast(EMEventType::ServerPause	); }
 
-	void Resume()	{ 	eServerEvent.Broadcast(EMEventType::ServerResume); }
+	void Resume()	{ 	Broadcast(EMEventType::ServerResume); }
 
 	EMServerType GetServerType() { return emServerType; }
 
 	void SetServerType(EMServerType type) { emServerType = type; }
 
 	uint32_t& ServerId() { return iServerId; }
-
-	Event& GetEvent(){return eServerEvent;}
 
 public: // dll override
 
@@ -55,6 +89,4 @@ protected:
 	uint32_t iServerId = 0;
 
 	std::mutex oTaskMutex;
-
-	Event eServerEvent;
 };

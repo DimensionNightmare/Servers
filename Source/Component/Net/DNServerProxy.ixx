@@ -73,10 +73,7 @@ public:
 
 		pLogger->Record(EL10nCode_SrvListenOn, port, listenfd);
 
-		DNServer::Ptr server = std::static_pointer_cast<DNServer>(GetOwner());
-		Event& event = server->GetEvent();
-
-		event.AddEvent<DNServerProxy>(EMEventType::ServerStart, shared_from_this(), &DNServerProxy::Start);
+		GetOwner()->AddEvent(EMEventType::ServerStart, GetSelf<DNServerProxy>(), &DNServerProxy::Start);
 
 		return true;
 	}

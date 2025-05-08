@@ -10,6 +10,7 @@ import FuncHelper;
 import StrUtils;
 import ThirdParty.PbGen;
 import ThirdParty.RedisPP;
+import DNServer;
 
 /// @brief manager client proxys
 export class ClientEntityManager : public EntityManager<ClientEntity>
@@ -48,7 +49,7 @@ public:
 
 public: // dll override
 	/// @brief save entity data to database. this is task.
-	DNTaskVoid SaveEntity(ClientEntity& entity, bool offline = false)
+	DNTaskVoid SaveEntity(ClientEntity::Ptr entity, bool offline = false)
 	{
 		uint32_t entityId = entity.ID();
 
@@ -149,7 +150,7 @@ public: // dll override
 
 		for (auto& [ID, entity] : mEntityMap)
 		{
-			if (!entity.GetDbEntity())
+			if (!entity->GetDbEntity())
 			{
 				SPidLogger.Record(ELogLevel_Debug, "SaveEntity not pb Data:{}", ID);
 				continue;
@@ -161,9 +162,9 @@ public: // dll override
 				continue;
 			}
 
-			if (entity.HasFlag(EMClientEntityFlag::DBModify))
+			if (entity->HasFlag(EMClientEntityFlag::DBModify))
 			{
-				entity.ClearFlag(EMClientEntityFlag::DBModify);
+				entity->ClearFlag(EMClientEntityFlag::DBModify);
 
 				dealFunc(entity, shutdown);
 			}
