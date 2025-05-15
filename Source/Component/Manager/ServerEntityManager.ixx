@@ -11,13 +11,18 @@ export class ServerEntityManager : public EntityManager<ServerEntity>
 protected:
 	friend class System;
 	/// @brief timer manager create
-	ServerEntityManager(System::Ptr system):EntityManager(system)
+	ServerEntityManager(System::WPtr system):EntityManager(system)
 	{
 		eComponentType = EMComponentType::ServerEntityManager;
 	}
 public:
 
 	virtual ~ServerEntityManager() = default;
+
+	virtual void Dispose() override
+	{
+		EntityManager::Dispose();
+	}
 
 	/// @brief 
 	virtual void TickMainFrame() override
@@ -37,16 +42,16 @@ public: // dll override
 
 		uint32_t entityId = mMapTimer[timerID];
 
-		if(ServerEntity* rm = GetEntity(entityId))
+		if(ServerEntity::Ptr rm = GetEntity(entityId))
 		{
-			if(ServerEntity* link = rm->LinkNode())
+			if(ServerEntity::Ptr link = rm->LinkNode())
 			{
 				link->GetMapLinkNode(rm->GetServerType()).remove(rm);
 			}
 
 			RemoveEntity(entityId);
 			
-			SPidLogger.Record(ELogLevel_Debug, "EntityCloseTimer server destory entity");
+			GetLogger()->Record(ELogLevel_Debug, "EntityCloseTimer server destory entity");
 			
 		}
 	}
@@ -62,12 +67,12 @@ public: // dll override
 	}
 
 	/// @brief 
-	ServerEntity* GetEntity(uint32_t entityId)
+	ServerEntity::Ptr GetEntity(uint32_t entityId)
 	{
 		std::unique_lock<std::shared_mutex> ulock(oMapMutex);
 		if (mEntityMap.contains(entityId))
 		{
-			return &mEntityMap[entityId];
+			return mEntityMap[entityId];
 		}
 		return nullptr;
 	}
@@ -82,7 +87,7 @@ public: // dll override
 
 			mEntityMapList[entity->GetServerType()].remove(entity);
 
-			if (ServerEntity* owner = entity->LinkNode())
+			if (ServerEntity::Ptr owner = entity->LinkNode())
 			{
 				owner->ClearFlag(EMServerEntityFlag::Locked);
 			}
@@ -96,7 +101,7 @@ public: // dll override
 
 protected: // dll proxy
 	/// @brief 
-	std::unordered_map<EMServerType, std::list<ServerEntity*> > mEntityMapList;
+	std::unordered_map<EMServerType, std::list<ServerEntity::Ptr> > mEntityMapList;
 	
 	// server pull server
 	std::atomic<uint32_t> iServerGenId;

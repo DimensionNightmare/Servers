@@ -8,7 +8,7 @@ import NetEntity;
 export class RoomEntity : public NetEntity
 {
 protected:
-	RoomEntity(World::Ptr world):NetEntity(world)
+	RoomEntity(World::WPtr world):NetEntity(world)
 	{
 		eEntityType = EMEntityType::Room;
 	}

@@ -25,10 +25,10 @@ namespace GlobalMessage
 
 		// if has db not need origin
 		GlobalServerHelper* dnServer = GetGlobalServer();
-		std::list<ServerEntity*> serverList = dnServer->GetServerEntityManager()->GetEntitysByType(EMServerType::GateServer);
+		std::list<ServerEntity::Ptr> serverList = dnServer->GetServerEntityManager()->GetEntitysByType(EMServerType::GateServer);
 
-		std::list<ServerEntity*> tempList;
-		for (ServerEntity* server : serverList)
+		std::list<ServerEntity::Ptr> tempList;
+		for (ServerEntity::Ptr server : serverList)
 		{
 			if (server->HasFlag(EMServerEntityFlag::Locked))
 			{
@@ -36,19 +36,19 @@ namespace GlobalMessage
 			}
 		}
 
-		tempList.sort([](ServerEntity* lhs, ServerEntity* rhs) { return lhs->ConnNum() < rhs->ConnNum(); });
+		tempList.sort([](ServerEntity::Ptr lhs, ServerEntity::Ptr rhs) { return lhs->ConnNum() < rhs->ConnNum(); });
 
 
 		std::string binData;
 		if (tempList.empty())
 		{
 			response.set_state_code(4);
-			LoggerPrint()(ELogLevel_Debug, "not exist GateServer");
+			SPidLogger.Record(ELogLevel_Debug, "not exist GateServer");
 		}
 		else
 		{
-			ServerEntity* entity = tempList.front();
-			LoggerPrint()(ELogLevel_Debug, "send to GateServer : {}", entity->ID());
+			ServerEntity::Ptr entity = tempList.front();
+			SPidLogger.Record(ELogLevel_Debug, "send to GateServer : {}", entity->ID());
 
 			entity->ConnNum()++;
 
@@ -72,7 +72,7 @@ namespace GlobalMessage
 			co_await dataChannel;
 			if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
 			{
-				LoggerPrint()(ELogLevel_Debug, "requst timeout! ");
+				SPidLogger.Record(ELogLevel_Debug, "requst timeout! ");
 				response.set_state_code(5);
 
 				entity->ConnNum()--;
@@ -85,7 +85,7 @@ namespace GlobalMessage
 
 			
 
-			LoggerPrint()(ELogLevel_Debug, response.DebugString());
+			SPidLogger.Record(ELogLevel_Debug, response.DebugString());
 		}
 
 		response.SerializeToString(&binData);

@@ -23,15 +23,15 @@ namespace LogicMessage
 		LogicServerHelper* dnServer = GetLogicServer();
 		ClientEntityManagerHelper* entityMan = dnServer->GetClientEntityManager();
 
-		ClientEntity* entity = entityMan->GetEntity(request.account_id());
+		ClientEntity::Ptr entity = entityMan->GetEntity(request.account_id());
 		if (!entity)
 		{
-			LoggerPrint()(ELogLevel_Debug, "Client Entity Kick Not Exist !");
+			SPidLogger.Record(ELogLevel_Debug, "Client Entity Kick Not Exist !");
 			return;
 		}
 
 		RoomEntityManagerHelper* roomEntityMan = dnServer->GetRoomEntityManager();
-		RoomEntity* roomEntity = roomEntityMan->GetEntity(entity->RecordRoomId());
+		RoomEntity::Ptr roomEntity = roomEntityMan->GetEntity(entity->RecordRoomId());
 
 		// cache
 		if (roomEntity)
@@ -42,7 +42,7 @@ namespace LogicMessage
 		}
 		else
 		{
-			LoggerPrint()(ELogLevel_Debug, "Client Entity Kick Server Not Exist !");
+			SPidLogger.Record(ELogLevel_Debug, "Client Entity Kick Server Not Exist !");
 		}
 
 		// close entity save data
@@ -62,27 +62,27 @@ namespace LogicMessage
 		LogicServerHelper* dnServer = GetLogicServer();
 		ClientEntityManagerHelper* entityMan = dnServer->GetClientEntityManager();
 
-		ClientEntity* entity = entityMan->AddEntity(request.account_id());
+		ClientEntity::Ptr entity = entityMan->AddEntity(request.account_id());
 		if (entity)
 		{
-			LoggerPrint()(ELogLevel_Debug, "AddEntity Client!");
+			SPidLogger.Record(ELogLevel_Debug, "AddEntity Client!");
 
 			// msg will destroy. MessageHandle not will waiting.
 			co_await entityMan->LoadEntityData(entity, nullptr, nullptr);
 
 			if (!entity->HasFlag(EMClientEntityFlag::DBInited))
 			{
-				LoggerPrint()(ELogLevel_Debug, "AddEntity Client but not from db!");
+				SPidLogger.Record(ELogLevel_Debug, "AddEntity Client but not from db!");
 			}
 		}
 		else
 		{
-			LoggerPrint()(ELogLevel_Debug, "AddEntity Exist Client!");
+			SPidLogger.Record(ELogLevel_Debug, "AddEntity Exist Client!");
 			entity = entityMan->GetEntity(request.account_id());
 		}
 
 		RoomEntityManagerHelper* roomEntityMan = dnServer->GetRoomEntityManager();
-		RoomEntity* roomEntity = nullptr;
+		RoomEntity::Ptr roomEntity = nullptr;
 
 		// cache
 		if (uint32_t roomId = entity->RecordRoomId())
@@ -111,11 +111,11 @@ namespace LogicMessage
 				mapRecord->mutable_cur_point()->set_map_id(mapId);
 			}
 
-			std::list<RoomEntity*> roomEntityList = roomEntityMan->GetEntitysByMapId(mapId);
+			std::list<RoomEntity::Ptr> roomEntityList = roomEntityMan->GetEntitysByMapId(mapId);
 			if (roomEntityList.empty())
 			{
 				response.set_state_code(5);
-				LoggerPrint()(ELogLevel_Debug, "not ds Server");
+				SPidLogger.Record(ELogLevel_Debug, "not ds Server");
 			}
 			else
 			{
@@ -150,7 +150,7 @@ namespace LogicMessage
 
 			if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
 			{
-				LoggerPrint()(ELogLevel_Debug, "requst timeout! ");
+				SPidLogger.Record(ELogLevel_Debug, "requst timeout! ");
 				response.set_state_code(6);
 			}
 			else
@@ -163,7 +163,7 @@ namespace LogicMessage
 
 		}
 
-		LoggerPrint()(ELogLevel_Debug, "ds:{}", response.DebugString());
+		SPidLogger.Record(ELogLevel_Debug, "ds:{}", response.DebugString());
 
 		// pack data
 		response.SerializeToString(&binData);

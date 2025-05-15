@@ -10,10 +10,11 @@ export class RoomEntityManagerHelper : public RoomEntityManager
 
 private:
 
-	RoomEntityManagerHelper() {}
+	RoomEntityManagerHelper() = delete;
+	// RoomEntityManagerHelper(System::WPtr):RoomEntityManager(nullptr) {}
 public:
 
-	RoomEntity* AddEntity(uint32_t entityId, uint32_t mapId)
+	RoomEntity::Ptr AddEntity(uint32_t entityId, uint32_t mapId)
 	{
 		if (!mEntityMap.contains(entityId))
 		{
@@ -23,7 +24,7 @@ public:
 				std::forward_as_tuple(entityId),
 				std::forward_as_tuple(entityId));
 
-			RoomEntity* entity = &mEntityMap[entityId];
+			RoomEntity::Ptr entity = mEntityMap[entityId];
 
 			entity->MapID() = mapId;
 
@@ -38,13 +39,13 @@ public:
 	{
 		if (mEntityMap.contains(entityId))
 		{
-			RoomEntity* entity = &mEntityMap[entityId];
+			RoomEntity::Ptr entity = mEntityMap[entityId];
 
 			std::unique_lock<std::shared_mutex> ulock(oMapMutex);
 
 			mEntityMapList[entity->MapID()].remove(entity);
 
-			LoggerPrint()(ELogLevel_Debug, "offline destory entity");
+			SPidLogger.Record(ELogLevel_Debug, "offline destory entity");
 			mEntityMap.erase(entityId);
 			return true;
 		}
@@ -52,7 +53,7 @@ public:
 		return false;
 	}
 
-	void MountEntity(RoomEntity* entity)
+	void MountEntity(RoomEntity::Ptr entity)
 	{
 		std::unique_lock<std::shared_mutex> ulock(oMapMutex);
 		if (mEntityMap.contains(entity->ID()))
@@ -61,24 +62,24 @@ public:
 		}
 	}
 
-	void UnMountEntity(RoomEntity* entity)
+	void UnMountEntity(RoomEntity::Ptr entity)
 	{
 		std::unique_lock<std::shared_mutex> ulock(oMapMutex);
 		mEntityMapList[entity->MapID()].remove(entity);
 	}
 
-	RoomEntity* GetEntity(uint32_t entityId)
+	RoomEntity::Ptr GetEntity(uint32_t entityId)
 	{
 		std::shared_lock<std::shared_mutex> lock(oMapMutex);
 		if (mEntityMap.contains(entityId))
 		{
-			return &mEntityMap[entityId];
+			return mEntityMap[entityId];
 		}
 		// allow return empty
 		return nullptr;
 	}
 
-	const std::list<RoomEntity*>& GetEntitysByMapId(uint32_t mapId)
+	const std::list<RoomEntity::Ptr>& GetEntitysByMapId(uint32_t mapId)
 	{
 		std::shared_lock<std::shared_mutex> lock(oMapMutex);
 		return mEntityMapList[mapId];

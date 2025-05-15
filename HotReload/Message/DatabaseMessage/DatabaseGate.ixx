@@ -82,7 +82,7 @@ namespace DatabaseMessage
 					}
 					catch (const std::exception& e)
 					{
-						LoggerPrint()(ELogLevel_Debug, e.what());
+						SPidLogger.Record(ELogLevel_Debug, e.what());
 						response.set_state_code(5);
 					}
 
@@ -152,7 +152,7 @@ namespace DatabaseMessage
 					}
 					catch (const std::exception& e)
 					{
-						LoggerPrint()(ELogLevel_Debug, e.what());
+						SPidLogger.Record(ELogLevel_Debug, e.what());
 						response.set_state_code(5);
 					}
 

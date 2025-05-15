@@ -14,13 +14,12 @@ namespace GlobalMessage
 {
 
 	// client request
-	export DNTaskVoid Evt_ReqRegistSrv()
+	export DNTaskVoid Evt_ReqRegistSrv(DNServer::WPtr dnServer)
 	{
-		GlobalServerHelper* dnServer = GetGlobalServer();
 		DNClientProxyHelper* client = dnServer->GetCSock();
 		DNServerProxyHelper* server = dnServer->GetSSock();
 		
-		LoggerPrint()(ELogLevel_Debug, "Client:{}, port:{}", client->remote_host, client->remote_port);
+		SPidLogger.Record(ELogLevel_Debug, "Client:{}, port:{}", client->remote_host, client->remote_port);
 		
 		client->EMRegistState() = EMRegistState::Registing;
 
@@ -56,21 +55,21 @@ namespace GlobalMessage
 			co_await dataChannel;
 			if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
 			{
-				LoggerPrint()(ELogLevel_Debug, "requst timeout! ");
+				SPidLogger.Record(ELogLevel_Debug, "requst timeout! ");
 			}
 
 		}
 
 		if (response.success())
 		{
-			LoggerPrint()(ELogLevel_Debug, "regist Server success! Rec index:{}", response.server_id());
+			SPidLogger.Record(ELogLevel_Debug, "regist Server success! Rec index:{}", response.server_id());
 			client->EMRegistState() = EMRegistState::Registed;
 			client->RegistType() = response.server_type();
 			dnServer->ServerId() = response.server_id();
 		}
 		else
 		{
-			LoggerPrint()(ELogLevel_Debug, "regist Server error!  ");
+			SPidLogger.Record(ELogLevel_Debug, "regist Server error!  ");
 			// dnServer->IsRun() = false; //exit application
 			client->EMRegistState() = EMRegistState::None;
 		}
@@ -88,7 +87,7 @@ namespace GlobalMessage
 			return;
 		}
 		
-		LoggerPrint()(ELogLevel_Debug, "ip Reqregist: {}, {}", channel->peeraddr(), request.server_type());
+		SPidLogger.Record(ELogLevel_Debug, "ip Reqregist: {}, {}", channel->peeraddr(), request.server_type());
 
 		GMsg::COM_ResRegistSrv response;
 
@@ -105,7 +104,7 @@ namespace GlobalMessage
 		}
 
 		//exist?
-		else if (ServerEntity* entity = channel->getContext<ServerEntity>())
+		else if (ServerEntity::Ptr entity = channel->getContext<ServerEntity>())
 		{
 			response.set_success(false);
 		}
@@ -113,7 +112,7 @@ namespace GlobalMessage
 		// take task to regist !
 		else if (uint32_t serverId = request.server_id())
 		{
-			if (ServerEntity* entity = entityMan->GetEntity(serverId))
+			if (ServerEntity::Ptr entity = entityMan->GetEntity(serverId))
 			{
 				// wait destroy`s destroy
 				if (uint64_t timerId = entity->TimerId())
@@ -157,7 +156,7 @@ namespace GlobalMessage
 
 		}
 
-		else if (ServerEntity* entity = entityMan->AddEntity(entityMan->GenServerId(), regType))
+		else if (ServerEntity::Ptr entity = entityMan->AddEntity(entityMan->GenServerId(), regType))
 		{
 			size_t pos = ipPort.find(":");
 			entity->ServerIp() = ipPort.substr(0, pos);

@@ -85,6 +85,14 @@ export std::string GetNowTimeStr()
 	return std::format("{:%Y-%m-%d %H:%M:%S}", currentZone);
 }
 
+export std::string GetNowTimeMiniStr()
+{
+	using namespace std::chrono;
+	static zoned_time<seconds> currentZone(current_zone());
+    currentZone = floor<seconds>(system_clock::now()); 
+	return std::format("{:%Y-%m-%d_%H-%M-%S}", currentZone);
+}
+
 export double StringToTimestamp(const std::string& datetimeStr)
 {
 

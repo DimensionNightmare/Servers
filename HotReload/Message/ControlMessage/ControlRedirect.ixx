@@ -21,13 +21,13 @@ namespace ControlMessage
 		}
 		GMsg::g2A_ResAuthAccount response;
 
-		ServerEntity* entity = nullptr;
-		const std::list<ServerEntity*>& serverList = GetControlServer()->GetServerEntityManager()->GetEntitysByType(EMServerType::GlobalServer);
+		ServerEntity::Ptr entity = nullptr;
+		const std::list<ServerEntity::Ptr>& serverList = GetControlServer()->GetServerEntityManager()->GetEntitysByType(EMServerType::GlobalServer);
 
-		// std::erase_if(serverList, [](ServerEntity* itor){return itor ? itor->TimerId() : true; });
-		// serverList.sort([](ServerEntity* lhs, ServerEntity* rhs){return lhs->ConnNum() < rhs->ConnNum(); });
+		// std::erase_if(serverList, [](ServerEntity::Ptr itor){return itor ? itor->TimerId() : true; });
+		// serverList.sort([](ServerEntity::Ptr lhs, ServerEntity::Ptr rhs){return lhs->ConnNum() < rhs->ConnNum(); });
 
-		for (ServerEntity* server : serverList)
+		for (ServerEntity::Ptr server : serverList)
 		{
 			if (server->TimerId())
 			{
@@ -74,7 +74,7 @@ namespace ControlMessage
 			co_await dataChannel;
 			if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
 			{
-				LoggerPrint()(ELogLevel_Debug, "requst timeout! ");
+				SPidLogger.Record(ELogLevel_Debug, "requst timeout! ");
 				response.set_state_code(3);
 			}
 

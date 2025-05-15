@@ -17,7 +17,7 @@ using ServerEntityBitFlag = std::bitset<static_cast<uint16_t>(EMServerEntityFlag
 export class ServerEntity : public NetEntity
 {
 protected:
-	ServerEntity(World::Ptr world):NetEntity(world)
+	ServerEntity(World::WPtr world):NetEntity(world)
 	{
 		eEntityType = EMEntityType::Server;
 	}
@@ -34,7 +34,7 @@ public: // dll override
 	EMServerType GetServerType() { return emServerType; }
 
 	/// @brief this server father node
-	ServerEntity*& LinkNode() { return pLink; }
+	ServerEntity::Ptr LinkNode() { return pLink; }
 
 	bool HasFlag(EMServerEntityFlag flag) { return oFlags.test(uint16_t(flag)); }
 	void SetFlag(EMServerEntityFlag flag) { oFlags.set(uint16_t(flag)); }
@@ -59,7 +59,7 @@ public: // dll override
 	}
 
 	/// @brief this server childs get
-	std::list<ServerEntity*>& GetMapLinkNode(EMServerType type) { return mMapLink[type]; }
+	std::list<ServerEntity::Ptr>& GetMapLinkNode(EMServerType type) { return mMapLink[type]; }
 
 protected: // dll proxy
 	EMServerType emServerType = EMServerType::None;
@@ -69,9 +69,9 @@ protected: // dll proxy
 	uint32_t IConnNum = 0;
 
 	// regist node need
-	ServerEntity* pLink = nullptr;
+	ServerEntity::Ptr pLink = nullptr;
 	// be regist node need
-	std::unordered_map<EMServerType, std::list<ServerEntity*>> mMapLink;
+	std::unordered_map<EMServerType, std::list<ServerEntity::Ptr>> mMapLink;
 
 	ServerEntityBitFlag oFlags;
 

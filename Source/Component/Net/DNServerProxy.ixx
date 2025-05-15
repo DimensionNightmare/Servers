@@ -13,11 +13,11 @@ export class DNServerProxy : public Component, public hv::TcpServer
 {
 protected:
 	friend class System;
-	DNServerProxy(System::Ptr system):Component(system)
+	DNServerProxy(System::WPtr system):Component(system)
 	{
 		eComponentType = EMComponentType::DNServerProxy;
 
-		pLoop = std::make_shared<hv::EventLoopThread>();
+		pLoop = std::make_unique<hv::EventLoopThread>();
 		pLogger = GetOwner()->GetWorld()->GetSystem<LoggerPrint>(EMSystemType::LoggerPrint);
 	}
 
@@ -25,25 +25,36 @@ public:
 
 	~DNServerProxy()
 	{
-		pLoop = nullptr;
-		mMsgList.clear();
-		mMapTimer.clear();
+		
 	}
 
 	bool Awake() override
 	{
-		std::string* inport = GetOwner()->GetWorld()->LaunchParam("port");
-		if (!inport)
-		{
-			pLogger->Record(EL10nCode_SrvNeedIPPort);
-			// return false;
-			return false;
-		}
+		int16_t port = 0;
 
-		int listenfd = createsocket(stoi(*inport), "0.0.0.0");
+		switch(GetOwner<DNServer>()->GetServerType())
+		{
+			case EMServerType::ControlServer:
+			case EMServerType::GlobalServer:
+			case EMServerType::AuthServer:
+			{
+				std::string* inport = GetOwner()->GetWorld()->LaunchParam("port");
+				if (!inport)
+				{
+					GetLogger()->Record(EL10nCode_SrvNeedIPPort);
+					// return false;
+					return false;
+				}
+
+				port = stoi(*inport);
+			}
+		}
+		
+
+		int listenfd = createsocket(port, "0.0.0.0");
 		if (listenfd < 0)
 		{
-			pLogger->Record(EL10nCode_CreateSocket);
+			GetLogger()->Record(EL10nCode_CreateSocket);
 			// return false;
 			return false;
 		}
@@ -55,7 +66,7 @@ public:
 			int addrLen = sizeof(addr);
 			if (getsockname(listenfd, reinterpret_cast<struct sockaddr*>(&addr), &addrLen) < 0)
 			{
-				pLogger->Record(EL10nCode_GetSocketName);
+				GetLogger()->Record(EL10nCode_GetSocketName);
 				return false;
 			}
 
@@ -71,9 +82,9 @@ public:
 		setUnpack(&setting);
 		setThreadNum(4);
 
-		pLogger->Record(EL10nCode_SrvListenOn, port, listenfd);
+		GetLogger()->Record(EL10nCode_SrvListenOn, port, listenfd);
 
-		GetOwner()->AddEvent(EMEventType::ServerStart, GetSelf<DNServerProxy>(), &DNServerProxy::Start);
+		GetOwner()->AddEvent(EMEventType::ServerStart, GetSelfW<DNServerProxy>(), &DNServerProxy::Start);
 
 		return true;
 	}
@@ -90,6 +101,17 @@ public:
 		pLoop->stop(true);
 		stop(true);
 	}
+
+	virtual void Dispose() override
+	{
+		Component::Dispose();
+
+		pLoop = nullptr;
+		mMsgList.clear();
+		mMapTimer.clear();
+	}
+
+	LoggerPrint::Ptr GetLogger(){ return pLogger.lock(); }
 
 public: // dll override
 
@@ -149,7 +171,7 @@ public: // dll override
 				if (!channel->context())
 				{
 					channel->close();
-					SPidLogger.Record(ELogLevel_Debug, "ChannelTimeoutTimer server destory entity\n");
+					GetLogger()->Record(ELogLevel_Debug, "ChannelTimeoutTimer server destory entity\n");
 				}
 			}
 		}
@@ -179,7 +201,7 @@ public: // dll override
 	}
 public:
 	// cant init in tcpclient this class
-	std::shared_ptr<hv::EventLoopThread> pLoop;
+	std::unique_ptr<hv::EventLoopThread> pLoop;
 
 protected:
 	// only oddnumber
@@ -193,5 +215,5 @@ protected:
 
 	std::shared_mutex oTimerMutex;
 
-	LoggerPrint::Ptr pLogger;
+	LoggerPrint::WPtr pLogger;
 };

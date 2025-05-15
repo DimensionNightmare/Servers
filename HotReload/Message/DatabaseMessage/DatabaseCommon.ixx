@@ -16,12 +16,11 @@ namespace DatabaseMessage
 {
 
 	// client request
-	export DNTaskVoid Evt_ReqRegistSrv()
+	export DNTaskVoid Evt_ReqRegistSrv(DNServer::WPtr dnServer)
 	{
-		DatabaseServerHelper* dnServer = GetDatabaseServer();
 		DNClientProxyHelper* client = dnServer->GetCSock();
 		
-		LoggerPrint()(ELogLevel_Debug, "Client:{}, port:{}", client->remote_host, client->remote_port);
+		SPidLogger.Record(ELogLevel_Debug, "Client:{}, port:{}", client->remote_host, client->remote_port);
 		
 		client->EMRegistState() = EMRegistState::Registing;
 
@@ -56,21 +55,21 @@ namespace DatabaseMessage
 			co_await dataChannel;
 			if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
 			{
-				LoggerPrint()(ELogLevel_Debug, "requst timeout! ");
+				SPidLogger.Record(ELogLevel_Debug, "requst timeout! ");
 			}
 
 		}
 
 		if (response.success())
 		{
-			LoggerPrint()(ELogLevel_Debug, "regist Server success! Rec index:{}", response.server_id());
+			SPidLogger.Record(ELogLevel_Debug, "regist Server success! Rec index:{}", response.server_id());
 			client->EMRegistState() = EMRegistState::Registed;
 			client->RegistType() = response.server_type();
 			dnServer->ServerId() = response.server_id();
 		}
 		else
 		{
-			LoggerPrint()(ELogLevel_Debug, "regist Server error!  ");
+			SPidLogger.Record(ELogLevel_Debug, "regist Server error!  ");
 			// dnServer->IsRun() = false; //exit application
 			client->EMRegistState() = EMRegistState::None;
 		}

@@ -10,14 +10,10 @@ import AuthServerInit;
 import GateServerInit;
 import DatabaseServerInit;
 import LogicServerInit;
-import DNClientProxyHelper;
-import Logger;
-import Config.Server;
 import ThirdParty.Libhv;
 import ThirdParty.PbGen;
-import StrUtils;
-import Platform;
-import std.compat;
+import ThirdParty.Platform;
+import ECSW;
 
 #ifdef _WIN32
 	#ifdef HOTRELOAD_BUILD
@@ -65,44 +61,33 @@ extern "C"
 	}
 #endif
 
-	HOTRELOAD int InitHotReload(DNServer* server)
+	HOTRELOAD int InitHotReload(World* world)
 	{
 		Libhv::hvlog_disable();
 
-		EMServerType servertype = server->GetServerType();
-		std::string_view serverName = EnumName(servertype);
-		if(std::string* value = LaunchConfig::GetParam("program"))
-		{
-			std::filesystem::path envPath = std::filesystem::path(*value).parent_path().append(serverName);
-			ELogLevel logLevel = ELogLevel_Debug;
-			value = LaunchConfig::GetParam("LoggerLevel");
-			if(value && ELogLevel_Parse(*value, &logLevel))
-			{
-				
-			}
-			LoggerPrint::SetLoggerLevel(logLevel, envPath);
-		}
-
+		DNServer::Ptr dnServer = world->GetSystem<DNServer>(EMSystemType::DNServer).lock();
+		
 		bool isDeal = false;
-		switch (servertype)
+		
+		switch (dnServer->GetServerType())
 		{
 			case EMServerType::ControlServer:
-				isDeal = HandleControlServerInit(server);
+				isDeal = HandleControlServerInit(dnServer);
 				break;
 			case EMServerType::GlobalServer:
-				isDeal = HandleGlobalServerInit(server);
+				isDeal = HandleGlobalServerInit(dnServer);
 				break;
 			case EMServerType::AuthServer:
-				isDeal = HandleAuthServerInit(server);
+				isDeal = HandleAuthServerInit(dnServer);
 				break;
 			case EMServerType::GateServer:
-				isDeal = HandleGateServerInit(server);
+				isDeal = HandleGateServerInit(dnServer);
 				break;
 			case EMServerType::DatabaseServer:
-				isDeal = HandleDatabaseServerInit(server);
+				isDeal = HandleDatabaseServerInit(dnServer);
 				break;
 			case EMServerType::LogicServer:
-				isDeal = HandleLogicServerInit(server);
+				isDeal = HandleLogicServerInit(dnServer);
 				break;
 			default:
 				break;
@@ -111,29 +96,30 @@ extern "C"
 		return isDeal;
 	}
 
-	HOTRELOAD int ShutdownHotReload(DNServer* server)
+	HOTRELOAD int ShutdownHotReload(World* world)
 	{
-		EMServerType servertype = server->GetServerType();
+		DNServer::Ptr dnServer = world->GetSystem<DNServer>(EMSystemType::DNServer).lock();
+
 		bool isDeal = false;
 		switch (servertype)
 		{
 			case EMServerType::ControlServer:
-				isDeal = HandleControlServerShutdown(server);
+				isDeal = HandleControlServerShutdown(dnServer);
 				break;
 			case EMServerType::GlobalServer:
-				isDeal = HandleGlobalServerShutdown(server);
+				isDeal = HandleGlobalServerShutdown(dnServer);
 				break;
 			case EMServerType::AuthServer:
-				isDeal = HandleAuthServerShutdown(server);
+				isDeal = HandleAuthServerShutdown(dnServer);
 				break;
 			case EMServerType::GateServer:
-				isDeal = HandleGateServerShutdown(server);
+				isDeal = HandleGateServerShutdown(dnServer);
 				break;
 			case EMServerType::DatabaseServer:
-				isDeal = HandleDatabaseServerShutdown(server);
+				isDeal = HandleDatabaseServerShutdown(dnServer);
 				break;
 			case EMServerType::LogicServer:
-				isDeal = HandleLogicServerShutdown(server);
+				isDeal = HandleLogicServerShutdown(dnServer);
 				break;
 			default:
 				break;

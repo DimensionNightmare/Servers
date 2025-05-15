@@ -1,7 +1,6 @@
 module;
 export module AuthServerInit;
 
-import AuthServerHelper;
 import FuncHelper;
 import AuthMessage;
 import DNTask;
@@ -16,64 +15,67 @@ import std.compat;
 
 #define FUNCPLACE(func) #func, func
 
-export int HandleAuthServerInit(DNServer* server)
+export int HandleAuthServerInit(DNServer::Ptr dnServer)
 {
-	SetAuthServer(static_cast<AuthServer*>(server));
-
-	AuthServerHelper* serverProxy = GetAuthServer();
-
-	if (DNWebProxyHelper* serverSock = serverProxy->GetSSock())
+	if (DNWebProxy::Ptr proxy = dnServer->GetComponent<DNWebProxy>(EMComponentType::DNWebProxy))
 	{
 		hv::HttpService* service = new hv::HttpService();
 
 		AuthMessageHandle::RegApiHandle(service);
 
-		serverSock->registerHttpService(service);
+		proxy->registerHttpService(service);
 	}
 
-	if (DNClientProxyHelper* clientSock = serverProxy->GetCSock())
+	if (DNClientProxy::Ptr proxy = dnServer->GetComponent<DNClientProxy>(EMComponentType::DNClientProxy))
 	{
-		clientSock->onConnection = nullptr;
-		clientSock->onMessage = nullptr;
-
-		auto onConnection = [clientSock](const hv::SocketChannelPtr& channel)
+		DNClientProxy::WPtr clientProxy = proxy->GetSelfW<DNClientProxy>();
+		
+		proxy->onConnection = [clientProxy](const hv::SocketChannelPtr& channel)
 			{
+				DNClientProxy::Ptr proxy = clientProxy.lock();
+
+				if(!proxy){ return ;}
+
 				const std::string& peeraddr = channel->peeraddr();
 
 				if (channel->isConnected())
 				{
-					LoggerPrint()(EL10nCode_CliConnOn, peeraddr, channel->fd(), channel->id());
-					clientSock->SetRegistEvent(&AuthMessage::Evt_ReqRegistSrv);
-					TickMainSpaceDll(clientSock, FUNCPLACE(&DNClientProxy::InitConnectedChannel),  channel);
+					proxy->GetLogger()->Record(EL10nCode_CliConnOn, peeraddr, channel->fd(), channel->id());
+					proxy->SetRegistEvent(&AuthMessage::Evt_ReqRegistSrv);
+					TickMainSpaceDll(proxy, FUNCPLACE(&DNClientProxy::InitConnectedChannel),  channel);
 				}
 				else
 				{
-					LoggerPrint()(EL10nCode_CliConnOff, peeraddr, channel->fd(), channel->id());
-					if (clientSock->EMRegistState() == EMRegistState::Registed)
+					proxy->GetLogger()->Record(EL10nCode_CliConnOff, peeraddr, channel->fd(), channel->id());
+
+					if (proxy->EMRegistState() == EMRegistState::Registed)
 					{
-						clientSock->EMRegistState() = EMRegistState::None;
+						proxy->EMRegistState() = EMRegistState::None;
 					}
 
-					clientSock->RegistType() = 0;
+					proxy->RegistType() = 0;
 				}
 
-				if (clientSock->isReconnect())
+				if (proxy->isReconnect())
 				{
 
 				}
 			};
 
-		auto onMessage = [clientSock](const hv::SocketChannelPtr& channel, hv::Buffer* buf)
+		proxy->onMessage = [clientProxy](const hv::SocketChannelPtr& channel, hv::Buffer* buf)
 			{
+				DNClientProxy::Ptr proxy = clientProxy.lock();
+
+				if(!proxy){ return ;}
 				
 				MessagePacket packet;
 				memcpy(&packet, buf->data(), MessagePacket::PackLenth);
 
-				LoggerPrint()(ELogLevel_Debug, "c {} Recv type={} With Mid:{}", channel->peeraddr(), static_cast<int>(packet.dealType), packet.msgId);
+				proxy->GetLogger()->Record(ELogLevel_Debug, "c {} Recv type={} With Mid:{}", channel->peeraddr(), static_cast<int>(packet.dealType), packet.msgId);
 
 				if(packet.pkgLenth > 2 * 1024)
 				{
-					LoggerPrint()(ELogLevel_Debug, "Recv byte len limit={}", packet.pkgLenth);
+					proxy->GetLogger()->Record(ELogLevel_Debug, "Recv byte len limit={}", packet.pkgLenth);
 					return;
 				}
 
@@ -81,9 +83,9 @@ export int HandleAuthServerInit(DNServer* server)
 
 				if (packet.dealType == EMMsgDeal::Res)
 				{
-					if (DNTask<Message*>* task = clientSock->GetMsg(packet.msgId)) //client sock request
+					if (DNTask<Message*>* task = proxy->GetMsg(packet.msgId)) //client sock request
 					{
-						clientSock->DelMsg(packet.msgId);
+						proxy->DelMsg(packet.msgId);
 						task->Resume();
 
 						if (Message* message = task->GetResult())
@@ -98,42 +100,39 @@ export int HandleAuthServerInit(DNServer* server)
 					}
 					else
 					{
-						LoggerPrint()(EL10nCode_MsgFind);
+						proxy->GetLogger()->Record(EL10nCode_MsgFind);
 					}
 				}
 				else
 				{
-					LoggerPrint()(EL10nCode_MsgDealType);
+					proxy->GetLogger()->Record(EL10nCode_MsgDealType);
 				}
 			};
 
-		clientSock->onConnection = onConnection;
-		clientSock->onMessage = onMessage;
 	}
-
-	return serverProxy->InitDatabase();
+	
+	return true;
 }
 
-export int HandleAuthServerShutdown(DNServer* server)
+export int HandleAuthServerShutdown(DNServer::Ptr server)
 {
-	AuthServerHelper* serverProxy = GetAuthServer();
-
-	if (DNClientProxyHelper* clientSock = serverProxy->GetCSock())
+	
+	if (DNClientProxy::Ptr proxy = dnServer->GetComponent<DNClientProxy>(EMComponentType::DNClientProxy))
 	{
-		clientSock->onConnection = nullptr;
-		clientSock->onMessage = nullptr;
-		clientSock->SetRegistEvent(nullptr);
+		proxy->onConnection = nullptr;
+		proxy->onMessage = nullptr;
+		proxy->SetRegistEvent(nullptr);
 
 		// web use clientMsg
-		clientSock->MsgMapClear();
+		proxy->MsgMapClear();
 	}
 
-	if (DNWebProxyHelper* serverSock = serverProxy->GetSSock())
+	if (DNWebProxy::Ptr proxy = dnServer->GetComponent<DNWebProxy>(EMComponentType::DNWebProxy))
 	{
-		if (serverSock->service != nullptr)
+		if (proxy->service)
 		{
-			hv::HttpService* temp = serverSock->service;
-			serverSock->service = nullptr;
+			hv::HttpService* temp = proxy->service;
+			proxy->service = nullptr;
 			delete temp;
 		}
 	}

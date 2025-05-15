@@ -19,7 +19,7 @@ export class ClientEntityManager : public EntityManager<ClientEntity>
 protected:
 	friend class System;
 	/// @brief timer manager create
-	ClientEntityManager(System::Ptr system):EntityManager(system)
+	ClientEntityManager(System::WPtr system):EntityManager(system)
 	{
 		eComponentType = EMComponentType::ClientEntityManager;
 	}
@@ -27,6 +27,13 @@ public:
 
 	virtual ~ClientEntityManager()
 	{
+		
+	}
+
+	virtual void Dispose() override
+	{
+		EntityManager::Dispose();
+
 		CheckSaveEntity(true);
 	}
 
@@ -37,7 +44,7 @@ public:
 	}
 
 	/// @brief server self pointer save. mean connected father node success.
-	void InitSqlConn(DNClientProxy* sockClient)
+	void InitSqlConn(DNClientProxy::Ptr& sockClient)
 	{
 		pSqlClient = sockClient;
 	}
@@ -51,9 +58,9 @@ public: // dll override
 	/// @brief save entity data to database. this is task.
 	DNTaskVoid SaveEntity(ClientEntity::Ptr entity, bool offline = false)
 	{
-		uint32_t entityId = entity.ID();
+		uint64_t entityId = entity->ID();
 
-		GDb::Player dbEntity = *entity.GetDbEntity();
+		GDb::Player dbEntity = *entity->GetDbEntity();
 
 		// change maprecord
 		if(offline)
@@ -99,7 +106,7 @@ public: // dll override
 			if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
 			{
 				response.set_state_code(10);
-				SPidLogger.Record(ELogLevel_Debug, "requst timeout! ");
+				GetLogger()->Record(ELogLevel_Debug, "requst timeout! ");
 			}
 		}
 
@@ -107,7 +114,7 @@ public: // dll override
 		{
 			BytesToHexString(entity_data);
 			mDbFailure[entityId] = entity_data;
-			SPidLogger.Record(ELogLevel_Debug, "Save Db Entity Error id = {}, state_code = {}! ", entityId, code);
+			GetLogger()->Record(ELogLevel_Debug, "Save Db Entity Error id = {}, state_code = {}! ", entityId, code);
 			co_return;
 		}
 
@@ -123,21 +130,21 @@ public: // dll override
 	void CheckSaveEntity(bool shutdown = false)
 	{
 
-		std::function<void(ClientEntity&, bool)> dealFunc = nullptr;
+		std::function<void(ClientEntity::Ptr, bool)> dealFunc = nullptr;
 
 		if (!pSqlClient || pSqlClient->RegistType() != uint8_t(EMServerType::GateServer) || !pNoSqlProxy)
 		{
-			dealFunc = [this](ClientEntity& entity, bool offline)
+			dealFunc = [this](ClientEntity::Ptr entity, bool offline)
 				{
 					std::string binData;
-					uint32_t entityId = entity.ID();
-					if (!entity.GetDbEntity())
+					uint64_t entityId = entity->ID();
+					if (!entity->GetDbEntity())
 					{
-						SPidLogger.Record(ELogLevel_Debug, "SaveEntity not pb Data:{}", entityId);
+						GetLogger()->Record(ELogLevel_Debug, "SaveEntity not pb Data:{}", entityId);
 						return;
 					}
 
-					entity.GetDbEntity()->SerializeToString(&binData);
+					entity->GetDbEntity()->SerializeToString(&binData);
 
 					BytesToHexString(binData);
 					mDbFailure[entityId] = binData;
@@ -152,7 +159,7 @@ public: // dll override
 		{
 			if (!entity->GetDbEntity())
 			{
-				SPidLogger.Record(ELogLevel_Debug, "SaveEntity not pb Data:{}", ID);
+				GetLogger()->Record(ELogLevel_Debug, "SaveEntity not pb Data:{}", ID);
 				continue;
 			}
 
@@ -173,9 +180,9 @@ public: // dll override
 
 protected: // dll proxy
 	std::shared_ptr<sw::redis::Redis> pNoSqlProxy;
-	DNClientProxy* pSqlClient;
+	DNClientProxy::Ptr pSqlClient;
 
 	/// @brief if save error. bin data will record to this.
-	std::unordered_map<uint32_t, std::string> mDbFailure;
+	std::unordered_map<uint64_t, std::string> mDbFailure;
 	
 };

@@ -29,7 +29,7 @@ namespace ControlMessage
 
 		EMServerType regType = (EMServerType)request.server_type();
 
-		LoggerPrint()(ELogLevel_Debug, "ip Reqregist: {}, {}", channel->peeraddr(), request.server_type());
+		SPidLogger.Record(ELogLevel_Debug, "ip Reqregist: {}, {}", channel->peeraddr(), request.server_type());
 
 		const std::string& ipPort = channel->localaddr();
 
@@ -39,12 +39,12 @@ namespace ControlMessage
 		}
 
 		//exist?
-		else if (ServerEntity* entity = channel->getContext<ServerEntity>())
+		else if (ServerEntity::Ptr entity = channel->getContext<ServerEntity>())
 		{
 			response.set_success(false);
 		}
 
-		else if (ServerEntity* entity = entityMan->AddEntity(entityMan->GenServerId(), regType))
+		else if (ServerEntity::Ptr entity = entityMan->AddEntity(entityMan->GenServerId(), regType))
 		{
 			size_t pos = ipPort.find(":");
 			entity->ServerIp() = ipPort.substr(0, pos);

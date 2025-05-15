@@ -3,7 +3,6 @@ export module AuthMessage:AuthCommon;
 
 import DNTask;
 import FuncHelper;
-import AuthServerHelper;
 import Logger;
 import ThirdParty.PbGen;
 import DNClientProxyHelper;
@@ -12,26 +11,35 @@ namespace AuthMessage
 {
 
 	// client request
-	export DNTaskVoid Evt_ReqRegistSrv()
+	export DNTaskVoid Evt_ReqRegistSrv(DNServer::WPtr dnServer)
 	{
-		AuthServerHelper* dnServer = GetAuthServer();
-		DNClientProxyHelper* client = dnServer->GetCSock();
-		DNWebProxyHelper* server = dnServer->GetSSock();
-		uint32_t msgId = client->GetMsgId();
+		DNServer::Ptr server = dnServer.lock();
 
-		LoggerPrint()(ELogLevel_Debug, "Client:{}, port:{}", client->remote_host, client->remote_port);
+		if(!server) { co_return; }
+
+		DNClientProxyHelper::Ptr clientProxy = server->GetComponent<DNClientProxyHelper>(EMComponentType::DNClientProxy);
+
+		if(!clientProxy) { co_return ;}
 		
-		client->EMRegistState() = EMRegistState::Registing;
+		uint32_t msgId = clientProxy->GetMsgId();
+
+		clientProxy->GetLogger()->Record(ELogLevel_Debug, "Client:{}, port:{}", clientProxy->remote_host, clientProxy->remote_port);
+		
+		clientProxy->EMRegistState() = EMRegistState::Registing;
 
 		GMsg::COM_ReqRegistSrv request;
-		request.set_server_type((int)dnServer->GetServerType());
+		request.set_server_type((int)server->GetServerType());
 
-		if (uint32_t serverIndex = dnServer->ServerId())
+		if (uint32_t serverIndex = server->ServerId())
 		{
 			request.set_server_id(serverIndex);
 		}
 
-		request.set_server_port(server->port);
+		if(DNWebProxyHelper::Ptr serverProxy = server->GetComponent<DNWebProxyHelper>(EMComponentType::DNWebProxy))
+		{
+			request.set_server_port(serverProxy->port);
+		}
+
 
 		// pack data
 		std::string binData;
@@ -47,30 +55,30 @@ namespace AuthMessage
 				};
 			auto dataChannel = taskGen(&response);
 			
-			uint32_t msgId = client->GetMsgId();
-			client->AddMsg(msgId, &dataChannel);
-			MessagePackAndSend(msgId, EMMsgDeal::Req, request.GetDescriptor()->full_name(), binData, client->GetChannel());
+			uint32_t msgId = clientProxy->GetMsgId();
+			clientProxy->AddMsg(msgId, &dataChannel);
+			MessagePackAndSend(msgId, EMMsgDeal::Req, request.GetDescriptor()->full_name(), binData, clientProxy->GetChannel());
 
 			co_await dataChannel;
 			if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
 			{
-				LoggerPrint()(ELogLevel_Debug, "requst timeout! ");
+				clientProxy->GetLogger()->Record(ELogLevel_Debug, "requst timeout! ");
 			}
 
 		}
 
 		if (response.success())
 		{
-			LoggerPrint()(ELogLevel_Debug, "regist Server success! Rec index:{}", response.server_id());
-			client->EMRegistState() = EMRegistState::Registed;
-			client->RegistType() = response.server_type();
-			dnServer->ServerId() = response.server_id();
+			clientProxy->GetLogger()->Record(ELogLevel_Debug, "regist Server success! Rec index:{}", response.server_id());
+			clientProxy->EMRegistState() = EMRegistState::Registed;
+			clientProxy->RegistType() = response.server_type();
+			server->ServerId() = response.server_id();
 		}
 		else
 		{
-			LoggerPrint()(ELogLevel_Debug, "regist Server error!  ");
-			// dnServer->IsRun() = false; //exit application
-			client->EMRegistState() = EMRegistState::None;
+			clientProxy->GetLogger()->Record(ELogLevel_Debug, "regist Server error!  ");
+			// server->IsRun() = false; //exit application
+			clientProxy->EMRegistState() = EMRegistState::None;
 		}
 
 		co_return;

@@ -24,7 +24,7 @@ namespace GlobalMessage
 
 		GlobalServerHelper* dnServer = GetGlobalServer();
 		ServerEntityManagerHelper* entityMan = dnServer->GetServerEntityManager();
-		if (ServerEntity* entity = entityMan->GetEntity(request.server_id()))
+		if (ServerEntity::Ptr entity = entityMan->GetEntity(request.server_id()))
 		{
 			if (request.is_regist())
 			{
@@ -36,12 +36,12 @@ namespace GlobalMessage
 			}
 			else
 			{
-				ServerEntity* owner = channel->getContext<ServerEntity>();
+				ServerEntity::Ptr owner = channel->getContext<ServerEntity>();
 				// remove and unlock
 				owner->GetMapLinkNode(entity->GetServerType()).remove(entity);
 				owner->ClearFlag(EMServerEntityFlag::Locked);
 
-				LoggerPrint()(ELogLevel_Debug, "Global get notify release gate lock!");
+				SPidLogger.Record(ELogLevel_Debug, "Global get notify release gate lock!");
 
 				entityMan->RemoveEntity(request.server_id());
 				dnServer->UpdateServerGroup();
@@ -60,13 +60,13 @@ namespace GlobalMessage
 		GlobalServerHelper* dnServer = GetGlobalServer();
 		ServerEntityManagerHelper* entityMan = dnServer->GetServerEntityManager();
 
-		ServerEntity* entity = entityMan->GetEntity(request.server_id());
+		ServerEntity::Ptr entity = entityMan->GetEntity(request.server_id());
 
 		for (int i = 0; i < request.childs_size(); i++)
 		{
 			const GMsg::COM_ReqRegistSrv& child = request.childs(i);
 			EMServerType childType = (EMServerType)child.server_type();
-			ServerEntity* servChild = entityMan->AddEntity(child.server_id(), childType);
+			ServerEntity::Ptr servChild = entityMan->AddEntity(child.server_id(), childType);
 			entity->SetMapLinkNode(childType, servChild);
 		}
 	}

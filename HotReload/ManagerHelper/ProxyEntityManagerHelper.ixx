@@ -13,7 +13,7 @@ private:
 	ProxyEntityManagerHelper() = delete;
 public:
 
-	ProxyEntity* AddEntity(uint32_t entityId)
+	ProxyEntity::Ptr AddEntity(uint32_t entityId)
 	{
 		if (!mEntityMap.contains(entityId))
 		{
@@ -22,7 +22,7 @@ public:
 				std::forward_as_tuple(entityId),
 				std::forward_as_tuple(entityId));
 
-			return &mEntityMap[entityId];
+			return mEntityMap[entityId];
 		}
 
 		return nullptr;
@@ -34,7 +34,7 @@ public:
 		{
 			std::unique_lock<std::shared_mutex> ulock(oMapMutex);
 
-			LoggerPrint()(ELogLevel_Debug, "destory Proxy entity");
+			SPidLogger.Record(ELogLevel_Debug, "destory Proxy entity");
 			mEntityMap.erase(entityId);
 			return true;
 		}
@@ -42,12 +42,12 @@ public:
 		return false;
 	}
 
-	ProxyEntity* GetEntity(uint32_t entityId)
+	ProxyEntity::Ptr GetEntity(uint32_t entityId)
 	{
 		std::shared_lock<std::shared_mutex> lock(oMapMutex);
 		if (mEntityMap.contains(entityId))
 		{
-			return &mEntityMap[entityId];
+			return mEntityMap[entityId];
 		}
 		// allow return empty
 		return nullptr;

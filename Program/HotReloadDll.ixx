@@ -5,25 +5,37 @@ export module HotReloadDll;
 import std.compat;
 import Platform;
 import Logger;
-import System;
+import ECSW;
 
 export class HotReloadDll : public System
 {
 protected:
 	friend class World;
 	/// @brief
-	HotReloadDll(World::Ptr world):System(world)
+	HotReloadDll(World::WPtr world):System(world)
 	{
-		emSystemType = System::HotReloadDll;
+		World::Ptr pWorld = GetWorld();
+		
+		emSystemType = EMSystemType::HotReloadDll;
 
-		sDllDir = std::filesystem::path(*GetWorld()->LaunchParam("program")).parent_path() / sDllDir;
-		sServerName = *GetWorld()->LaunchParam("svrName");
+		sDllDir = std::filesystem::path(*pWorld->LaunchParam("program")).parent_path() / sDllDir;
+		sServerName = *pWorld->LaunchParam("svrName");
+
+		pLogger = pWorld->GetSystem<LoggerPrint>(EMSystemType::LoggerPrint);
 	}
 public:
+	using Ptr = std::shared_ptr<HotReloadDll>;
 
 	/// @brief
 	~HotReloadDll()
 	{
+		
+	}
+
+	void Dispose() override
+	{
+		System::Dispose();
+		
 		FreeHandle();
 	}
 
@@ -33,7 +45,7 @@ public:
 #ifdef _WIN32
 		dllPath = dllPath.append(SDllName);
 	#ifdef NDEBUG
-		SetEnvironmentVariableA("PATH", "./Bin;%PATH%");
+		// SetEnvironmentVariableA("PATH", "./Bin;%PATH%");
 	#endif
 
 		Platform::HotHandle hModule = Platform::LoadLibraryA(dllPath.string().c_str());
@@ -49,7 +61,7 @@ public:
 		void* hModule = dlopen(fullPath.c_str(), RTLD_LAZY);
 		if (!hModule)
 		{
-			SPidLogger.Record(ELogLevel_Debug, dlerror());
+			GetLogger()->Record(ELogLevel_Debug, dlerror());
 			return nullptr;
 		}
 #endif
@@ -79,7 +91,7 @@ public:
 			}
 			catch (const std::exception& e)
 			{
-				// SPidLogger.Record(ELogLevel_Debug, "filesystem:{}", e.what());
+				GetLogger->Record(ELogLevel_Debug, "filesystem:{}", e.what());
 			}
 		}
 
@@ -91,13 +103,13 @@ public:
 	{
 		if (!std::filesystem::exists(sDllDir))
 		{
-			//LoggerPrint()(EL10nCode_DllMenuPath);
+			GetLogger->Record(EL10nCode_DllMenuPath);
 			return false;
 		}
 
 		if (!SDllName)
 		{
-			//LoggerPrint()(EL10nCode_DllFileName);
+			GetLogger->Record(EL10nCode_DllFileName);
 			return false;
 		}
 #ifdef _WIN32
@@ -115,7 +127,7 @@ public:
 		}
 		catch (const std::exception& e)
 		{
-			// SPidLogger.Record(ELogLevel_Debug, "{}", e.what());
+			GetLogger->Record(ELogLevel_Debug, "{}", e.what());
 			return false;
 		}
 #endif
@@ -143,7 +155,21 @@ public:
 		return nullptr;
 	}
 
-public:
+	std::filesystem::path GetDllPath()
+	{
+		return sDllDirRand;
+	}
+
+	void SetExcptionState()
+	{
+		isNormalFree = false;
+	}
+
+protected:
+
+	LoggerPrint::Ptr GetLogger(){ return pLogger.lock(); }
+
+protected:
 	/// @brief runtime library floder name
 	std::filesystem::path sDllDir = "Runtime";
 
@@ -159,4 +185,6 @@ public:
 	bool isNormalFree = true;
 
 	std::string sServerName;
+
+	LoggerPrint::WPtr pLogger;
 };

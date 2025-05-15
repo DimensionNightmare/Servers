@@ -24,7 +24,7 @@ namespace GateMessage
 
 		GateServerHelper* dnServer = GetGateServer();
 		ServerEntityManagerHelper* entityMan = dnServer->GetServerEntityManager();
-		const std::list<ServerEntity*>& dbServers = entityMan->GetEntitysByType(EMServerType::DatabaseServer);
+		const std::list<ServerEntity::Ptr>& dbServers = entityMan->GetEntitysByType(EMServerType::DatabaseServer);
 
 		std::string binData;
 		if (dbServers.empty())
@@ -33,7 +33,7 @@ namespace GateMessage
 		}
 		else
 		{
-			ServerEntity* entity = dbServers.front();
+			ServerEntity::Ptr entity = dbServers.front();
 
 			// data alloc
 			auto taskGen = [](Message* msg) -> DNTask<Message*>
@@ -51,7 +51,7 @@ namespace GateMessage
 			co_await dataChannel;
 			if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
 			{
-				LoggerPrint()(ELogLevel_Debug, "requst timeout! ");
+				SPidLogger.Record(ELogLevel_Debug, "requst timeout! ");
 				response.set_state_code(2);
 			}
 			
@@ -75,7 +75,7 @@ namespace GateMessage
 
 		GateServerHelper* dnServer = GetGateServer();
 		ServerEntityManagerHelper* entityMan = dnServer->GetServerEntityManager();
-		const std::list<ServerEntity*>& dbServers = entityMan->GetEntitysByType(EMServerType::DatabaseServer);
+		const std::list<ServerEntity::Ptr>& dbServers = entityMan->GetEntitysByType(EMServerType::DatabaseServer);
 
 		std::string binData;
 		if (dbServers.empty())
@@ -84,7 +84,7 @@ namespace GateMessage
 		}
 		else
 		{
-			ServerEntity* entity = dbServers.front();
+			ServerEntity::Ptr entity = dbServers.front();
 
 			// pack data
 			binData = binMsg;
@@ -105,7 +105,7 @@ namespace GateMessage
 			co_await dataChannel;
 			if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
 			{
-				LoggerPrint()(ELogLevel_Debug, "requst timeout! ");
+				SPidLogger.Record(ELogLevel_Debug, "requst timeout! ");
 				response.set_state_code(2);
 			}
 			

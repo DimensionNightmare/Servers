@@ -28,6 +28,8 @@ module;
 #endif
 export module Platform;
 
+import std.compat;
+
 template <typename F>
 concept NoArgCallable = requires(F f) {
     { std::invoke(f) } -> std::same_as<void>;
@@ -77,6 +79,46 @@ export namespace Platform
 	using ::MiniDumpWriteDump;
 	using ::SetConsoleCtrlHandler;
 	using ::SetEnvironmentVariableA;
+}
+
+export namespace Platform
+{
+	std::string GetStackTrace()
+	{
+		HANDLE process = GetCurrentProcess();
+		SymInitialize(process, NULL, TRUE);
+
+		void* stack[128];
+		unsigned short frames = CaptureStackBackTrace(0, 128, stack, NULL);
+
+		std::ostringstream oss;
+		SYMBOL_INFO* symbol = (SYMBOL_INFO*)malloc(sizeof(SYMBOL_INFO) + 256 * sizeof(char));
+		symbol->MaxNameLen = 255;
+		symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
+
+		IMAGEHLP_LINE64 line;
+		line.SizeOfStruct = sizeof(IMAGEHLP_LINE64);
+		DWORD displacement;
+
+		for (unsigned int i = 0; i < frames; i++)
+		{
+			DWORD64 address = (DWORD64)(stack[i]);
+			SymFromAddr(process, address, 0, symbol);
+			if (SymGetLineFromAddr64(process, address, &displacement, &line))
+			{
+				oss << "#" << i << " " << symbol->Name << " ("
+					<< line.FileName << ":" << line.LineNumber << ")" << std::endl;
+			}
+			else
+			{
+				oss << "#" << i << " " << symbol->Name << " (0x" << (void*)address << ")" << std::endl;
+			}
+		}
+
+		free(symbol);
+		SymCleanup(process);
+		return oss.str();
+	}
 }
 
 #endif

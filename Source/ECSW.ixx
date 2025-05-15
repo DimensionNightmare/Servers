@@ -1,7 +1,10 @@
 module;
+
 export module ECSW;
 
 export import std.compat;
+import Platform;
+import NumUtils;
 
 #pragma region EnumType
 
@@ -12,6 +15,7 @@ export enum EMEventType : uint8_t
 	ServerStop			,
 	ServerPause			,
 	ServerResume		,
+	AppStart			,
 };
 
 export enum class EMComponentType : uint8_t
@@ -24,6 +28,8 @@ export enum class EMComponentType : uint8_t
 	RoomEntityManager,
 	ProxyEntityManager,
 	ClientEntityManager,
+	MdbProxy,
+	RdbProxy
 };
 
 export enum class EMEntityType : uint8_t
@@ -52,74 +58,96 @@ class World;
 
 #pragma region Event
 
-class Event
+export class Event
 {
 public:
-	Event() = default;
-	~Event() = default;
-
 	template<typename T, typename Callback>
-	uint32_t AddEvent(EMEventType type, std::shared_ptr<T> entity, Callback&& callback)
+	void AddEvent(EMEventType type, std::weak_ptr<T> entity, Callback&& callback)
 	{
-		uint32_t eventId = iEventGenId++;
-		auto lumbdaFunc = [entity, callback = std::forward<Callback>(callback)](){ 
-			if(entity && !entity->IsDispose())
+		uint64_t objId = entity.lock()->ID();
+
+		auto lumbdaFunc = [entity, callback](){ 
+			if(auto origin = entity.lock())
 			{
-				(entity.get()->*callback)();
+				(origin.get()->*callback)();
 			}
 		};
-		mEventIdMap[eventId] = std::make_pair(type, lumbdaFunc);
 
-		mEventCollection[type].push_back(eventId);
-		return eventId;
+		mEventIdMap[objId][type] = lumbdaFunc;
+
+		mEventCollection[type][objId] = objId;
 	}
 
 	void Broadcast(EMEventType type)
 	{
-		for(uint32_t eventId : mEventCollection[type]) 
+		for(auto& [objId,_] : mEventCollection[type]) 
 		{
-			auto& [type, func] = mEventIdMap[eventId];
-			func();
+			mEventIdMap[objId][type]();
+		}
+	}
+
+	void RemoveEvent(uint64_t objId)
+	{
+		auto it = mEventIdMap.find(objId);
+		if(it != mEventIdMap.end())
+		{
+			for(auto& [type, _] : it->second)
+			{
+				mEventCollection[type].erase(objId);
+			}
+
+			mEventIdMap.erase(it);
 		}
 	}
 
 private:
-	std::atomic<uint32_t> iEventGenId;
-	std::unordered_map<uint32_t, std::pair<EMEventType, std::function<void()> > > mEventIdMap;
-	std::unordered_map<EMEventType, std::vector<uint32_t>> mEventCollection;
+	std::unordered_map<uint64_t, std::unordered_map<EMEventType, std::function<void()> > > mEventIdMap;
+	std::unordered_map<EMEventType, std::unordered_map<uint64_t,uint64_t>> mEventCollection;
 };
+
+export Event GEvent;
 
 #pragma endregion
 
 
 #pragma region Object
 
-class Object : public std::enable_shared_from_this<Object>, public Event
+export class Object : public std::enable_shared_from_this<Object>, public Event
 {
 public:
 	using Ptr = std::shared_ptr<Object>;
 
 	virtual ~Object()
 	{
-		bIsDisposed = true;
+		if(!bIsDisposed)
+		{
+			// throw std::runtime_error("Object not disposed! Please check code!");
+			std::cerr << "Object not disposed! Please check code!\n" << Platform::GetStackTrace() << std::endl;
+		}
 	}
 	
 public: // dll override
 
-	uint32_t ID() { return iId; }
+	uint64_t ID() { return iId; }
 
-	virtual void Dispose() = 0;
+	virtual void Dispose()
+	{
+		bIsDisposed = true;
+	}
 
 	virtual bool Awake(){ return true;}
 
 	template<typename T>
 	std::shared_ptr<T> GetSelf() { return std::static_pointer_cast<T>(shared_from_this()); }
 
+	template<typename T>
+	std::weak_ptr<T> GetSelfW() { return std::weak_ptr<T>(GetSelf<T>()); }
+
 	bool IsDispose() { return bIsDisposed; }
 	
-private:
+protected:
 
-	uint32_t iId = 0;
+	uint64_t iId = SFIdGenerator.nextId();
 
 	bool bIsDisposed = false;
 };
@@ -134,7 +162,7 @@ export class Component : public Object
 {
 protected:
 	friend class Entity;
-	Component(std::shared_ptr<Entity> owner):
+	Component(std::weak_ptr<Entity> owner):
 		pOwner(owner)
 	{
 
@@ -147,12 +175,15 @@ public:
 	{
 	}
 
-	void Dispose()
+	virtual void Dispose()
 	{
-		pOwner = nullptr;
+		Object::Dispose();
 	}
 
-	std::shared_ptr<Entity> GetOwner(){ return pOwner; }
+	std::shared_ptr<Entity> GetOwner(){ return pOwner.lock(); }
+
+	template<typename T>
+	std::shared_ptr<T> GetOwner(){ return std::static_pointer_cast<T>(GetOwner()); }
 public:
 
 	EMComponentType GetComponentType() { return eComponentType; }
@@ -161,7 +192,7 @@ protected: // dll proxy
 
 	EMComponentType eComponentType = EMComponentType::None;
 
-	std::shared_ptr<Entity> pOwner;
+	std::weak_ptr<Entity> pOwner;
 };
 
 #pragma endregion
@@ -171,7 +202,7 @@ protected: // dll proxy
 export class Entity : public Object
 {
 protected:
-	Entity(std::shared_ptr<World> world):
+	Entity(std::weak_ptr<World> world):
 		pWorld(world)
 	{
 
@@ -180,40 +211,40 @@ protected:
 public:
 	using Ptr = std::shared_ptr<Entity>;
 
-	virtual ~Entity(){}
+	virtual ~Entity()
+	{
+		
+	}
 	
 public: // dll override
-
-	uint32_t ID() { return iId; }
 
 	/// @brief entity type total enum
 	EMEntityType GetEntityType() { return eEntityType; }
 
-	std::shared_ptr<World> GetWorld(){ return pWorld; }
+	std::shared_ptr<World> GetWorld(){ return pWorld.lock(); }
 
 	template<typename T>
 	std::shared_ptr<T> GetComponent(EMComponentType type)
 	{
-		for (auto& component : mComponents)
+		auto it = mComponents.find(type);
+		if (it != mComponents.end())
 		{
-			if (component->GetComponentType() == type)
-			{
-				return std::dynamic_pointer_cast<T>(component);
-			}
+			return std::static_pointer_cast<T>(it->second);
 		}
+		
 		return nullptr;
 	}
 
-	virtual void Dispose()
+	virtual void Dispose() override
 	{
-		for (auto& component : mComponents)
+		Object::Dispose();
+
+		for (auto& [type, component] : mComponents)
 		{
 			component->Dispose();
 		}
 
 		mComponents.clear();
-
-		pWorld = nullptr;
 	}
 
 	template<typename T>
@@ -228,7 +259,7 @@ public: // dll override
 				component->Dispose();
 				return nullptr;
 			}
-			mComponents.emplace_back(component);
+			mComponents.emplace(component->GetComponentType(), component);
 			return component;
 		}
 		catch(const std::exception& e)
@@ -242,21 +273,28 @@ public: // dll override
 	template<typename T>
 	std::shared_ptr<T> GetSelf()
 	{
-		std::static_pointer_cast<T>(shared_from_this());
+		return std::static_pointer_cast<T>(shared_from_this());
+	}
+
+	void RemoveComponent(EMComponentType type)
+	{
+		auto it = mComponents.find(type);
+		if (it == mComponents.end())
+		{
+			return;
+		}
+
+		Event::RemoveEvent(it->second->ID());
+		mComponents.erase(type);
 	}
 	
 protected: // dll proxy
 
 	EMEntityType eEntityType = EMEntityType::None;
 
-private:
+	std::weak_ptr<World> pWorld;
 
-	std::shared_ptr<World> pWorld;
-
-
-	uint32_t iId = 0;
-
-	std::vector<std::shared_ptr<Component>> mComponents;
+	std::unordered_map<EMComponentType, std::shared_ptr<Component>> mComponents;
 };
 
 
@@ -266,17 +304,26 @@ private:
 
 export class System : public Entity
 {
-    friend class World;
+protected:
+	friend class World;
+	
+	System(std::weak_ptr<World> world) 
+		: Entity(world)
+	{
+	}
+
+    
 public:
 	using Ptr = std::shared_ptr<System>;
+	using WPtr = std::weak_ptr<System>;
 
 	virtual ~System()
 	{
 	}
 
-	void Dispose()
+	virtual void Dispose() override
 	{
-		
+		Entity::Dispose();
 	}
 
 	EMSystemType GetSystemType() { return emSystemType; }
@@ -287,13 +334,13 @@ public:
 		static_assert(std::is_base_of_v<Component, T>, "T must inherit from component");
 		try
 		{
-			std::shared_ptr<T> component = std::shared_ptr<T>(new T(GetSelf<System>()));
+			std::shared_ptr<T> component = std::shared_ptr<T>(new T(GetSelfW<System>()));
 			if(!component->Awake())
 			{
 				component->Dispose();
 				return nullptr;
 			}
-			mComponents.emplace_back(component);
+			mComponents.emplace(component->GetComponentType(), component);
 			return component;
 		}
 		catch(const std::exception& e)
@@ -305,11 +352,6 @@ public:
 	}
 
 protected:
-	
-	System(std::shared_ptr<World> world) 
-		: Entity(world)
-	{
-	}
 
 	EMSystemType emSystemType = EMSystemType::None;
 };
@@ -319,26 +361,30 @@ protected:
 
 #pragma region World
 
-export class World : public std::enable_shared_from_this<World>
+export class World : public Object
 {
 public:
 	using Ptr = std::shared_ptr<World>;
+	using WPtr = std::weak_ptr<World>;
 
-	virtual ~World() = default;
+	virtual ~World()
+	{
+
+	}
 
 	template<typename T = System>
-	std::shared_ptr<T> AddSystem()
+	std::weak_ptr<T> AddSystem()
 	{
 		static_assert(std::is_base_of_v<System, T>, "T must inherit from System");
 		try
 		{
-			std::shared_ptr<T> system = std::shared_ptr<T>(new T(shared_from_this()));
+			std::shared_ptr<T> system = std::shared_ptr<T>(new T(GetSelfW<World>()));
 			if(!system->Awake())
 			{
 				system->Dispose();
-				return nullptr;
+				return {};
 			}
-			mSystemMap.emplace_back(system);
+			mSystemMap.emplace(system->GetSystemType(), system);
 			return system;
 		}
 		catch(const std::exception& e)
@@ -346,21 +392,20 @@ public:
 			std::cerr << e.what() << '\n';
 		}
 		
-		return nullptr;
+		return {};
 	}
 
 	template<typename T = System>
-	std::shared_ptr<T> GetSystem(EMSystemType type)
+	std::weak_ptr<T> GetSystem(EMSystemType type)
 	{
 		static_assert(std::is_base_of_v<System, T>, "T must inherit from System");
 		try
 		{
-			for(auto& one : mSystemMap)
+			auto it = mSystemMap.find(type);
+			if (it != mSystemMap.end())
 			{
-				if(one->GetSystemType() == type)
-				{
-					return std::static_pointer_cast<T>(one);
-				}
+				auto ptr = std::static_pointer_cast<T>(it->second);
+				return ptr ? ptr : std::weak_ptr<T>{};
 			}
 		}
 		catch(const std::exception& e)
@@ -368,12 +413,14 @@ public:
 			std::cerr << e.what() << '\n';
 		}
 		
-		return nullptr;
+		return {};
 	}
 
 	void Dispose()
 	{
-		for (auto& system : mSystemMap)
+		Object::Dispose();
+		
+		for (auto& [_,system] : mSystemMap)
 		{
 			system->Dispose();
 		}
@@ -395,10 +442,21 @@ public:
 		return nullptr;
 	}
 
+	void RemoveBySystemSelf(EMSystemType type)
+	{
+		auto it = mSystemMap.find(type);
+		if (it == mSystemMap.end())
+		{
+			return;
+		}
+
+		mSystemMap.erase(it);
+	}
+
 private:
 	std::unordered_map<std::string, std::string> mLuanchConfig;
 
-	std::vector<std::shared_ptr<System>> mSystemMap;
+	std::unordered_map<EMSystemType, std::shared_ptr<System>> mSystemMap;
 };
 
 #pragma endregion

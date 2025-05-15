@@ -16,12 +16,11 @@ namespace LogicMessage
 {
 
 	// client request
-	export DNTaskVoid Evt_ReqRegistSrv()
+	export DNTaskVoid Evt_ReqRegistSrv(DNServer::WPtr dnServer)
 	{
-		LogicServerHelper* dnServer = GetLogicServer();
 		DNClientProxyHelper* client = dnServer->GetCSock();
 		
-		LoggerPrint()(ELogLevel_Debug, "Client:{}, port:{}", client->remote_host, client->remote_port);
+		SPidLogger.Record(ELogLevel_Debug, "Client:{}, port:{}", client->remote_host, client->remote_port);
 		
 		client->EMRegistState() = EMRegistState::Registing;
 
@@ -54,21 +53,21 @@ namespace LogicMessage
 			co_await dataChannel;
 			if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
 			{
-				LoggerPrint()(ELogLevel_Debug, "requst timeout! ");
+				SPidLogger.Record(ELogLevel_Debug, "requst timeout! ");
 			}
 
 		}
 
 		if (response.success())
 		{
-			LoggerPrint()(ELogLevel_Debug, "regist Server success! Rec index:{}", response.server_id());
+			SPidLogger.Record(ELogLevel_Debug, "regist Server success! Rec index:{}", response.server_id());
 			client->EMRegistState() = EMRegistState::Registed;
 			client->RegistType() = response.server_type();
 			dnServer->ServerId() = response.server_id();
 		}
 		else
 		{
-			LoggerPrint()(ELogLevel_Debug, "regist Server error!  ");
+			SPidLogger.Record(ELogLevel_Debug, "regist Server error!  ");
 			// dnServer->IsRun() = false; //exit application
 			client->EMRegistState() = EMRegistState::None;
 		}
@@ -85,7 +84,7 @@ namespace LogicMessage
 			return;
 		}
 		
-		LoggerPrint()(ELogLevel_Debug, "ip Reqregist: {}, {}", channel->peeraddr(), request.server_type());
+		SPidLogger.Record(ELogLevel_Debug, "ip Reqregist: {}, {}", channel->peeraddr(), request.server_type());
 
 		GMsg::COM_ResRegistSrv response;
 
@@ -101,14 +100,14 @@ namespace LogicMessage
 		}
 
 		//exist?
-		if (RoomEntity* entity = channel->getContext<RoomEntity>())
+		if (RoomEntity::Ptr entity = channel->getContext<RoomEntity>())
 		{
 			response.set_success(false);
 		}
 
 		else if (int serverId = request.server_id())
 		{
-			if (RoomEntity* entity = entityMan->GetEntity(serverId))
+			if (RoomEntity::Ptr entity = entityMan->GetEntity(serverId))
 			{
 				// wait destroy`s destroy
 				if (uint64_t timerId = entity->TimerId())
@@ -150,13 +149,13 @@ namespace LogicMessage
 			}
 		}
 
-		else if (RoomEntity* entity = entityMan->AddEntity(entityMan->GenRoomId(), request.map_id()))
+		else if (RoomEntity::Ptr entity = entityMan->AddEntity(entityMan->GenRoomId(), request.map_id()))
 		{
 			size_t pos = ipPort.find(":");
 			entity->ServerIp() = ipPort.substr(0, pos);
 			entity->ServerPort() = request.server_port();
 
-			LoggerPrint()(ELogLevel_Debug, "ds regist:{}:{}", entity->ServerIp(), entity->ServerPort());
+			SPidLogger.Record(ELogLevel_Debug, "ds regist:{}:{}", entity->ServerIp(), entity->ServerPort());
 
 			entity->SetSock(channel);
 

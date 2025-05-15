@@ -1,7 +1,6 @@
 module;
 export module GateServerInit;
 
-import GateServerHelper;
 import FuncHelper;
 import GateMessage;
 import NetEntity;
@@ -17,39 +16,38 @@ import std.compat;
 
 #define FUNCPLACE(func) #func, func
 
-export int HandleGateServerInit(DNServer* server)
+export int HandleGateServerInit(DNServer::Ptr dnServer)
 {
-	SetGateServer(static_cast<GateServer*>(server));
-
 	GateMessageHandle::RegMsgHandle();
 
-	GateServerHelper* serverProxy = GetGateServer();
-
-	if (DNServerProxyHelper* serverSock = serverProxy->GetSSock())
+	if (DNServerProxy::Ptr proxy = dnServer->GetComponent<DNServerProxy>(EMComponentType::DNServerProxy))
 	{
-		serverSock->onConnection = nullptr;
-		serverSock->onMessage = nullptr;
-
-		auto onConnection = [serverSock, serverProxy](const hv::SocketChannelPtr& channel)
+		DNServerProxy::WPtr serverProxy = proxy->GetSelfW<DNServerProxy>();
+	
+		proxy->onConnection = [serverProxy](const hv::SocketChannelPtr& channel)
 			{
+				DNServerProxy::Ptr proxy = serverProxy.lock();
+
+				if(!proxy){ return ;}
+
 				const std::string& peeraddr = channel->peeraddr();
 				if (channel->isConnected())
 				{
-					LoggerPrint()(EL10nCode_CliConnOn, peeraddr, channel->fd(), channel->id());
+					proxy->GetLogger()->Record(EL10nCode_CliConnOn, peeraddr, channel->fd(), channel->id());
 					TickMainSpaceDll(serverSock, FUNCPLACE(&DNServerProxy::InitConnectedChannel),  channel);
 				}
 				else
 				{
-					LoggerPrint()(EL10nCode_CliConnOff, peeraddr, channel->fd(), channel->id());
-					if (Entity* entity = channel->getContext<Entity>())
+					proxy->GetLogger()->Record(EL10nCode_CliConnOff, peeraddr, channel->fd(), channel->id());
+					if (Entity::Ptr entity = channel->getContext<Entity>())
 					{
 						switch (entity->GetEntityType())
 						{
 							case EMEntityType::Server:
-								serverProxy->ServerEntityCloseEvent(entity);
+								proxy->ServerEntityCloseEvent(entity);
 								break;
 							case EMEntityType::Proxy:
-								serverProxy->ProxyEntityCloseEvent(entity);
+								proxy->ProxyEntityCloseEvent(entity);
 								break;
 							default:
 								break;
@@ -60,16 +58,20 @@ export int HandleGateServerInit(DNServer* server)
 				}
 			};
 
-		auto onMessage = [serverSock](const hv::SocketChannelPtr& channel, hv::Buffer* buf)
+		proxy->onMessage = [serverProxy](const hv::SocketChannelPtr& channel, hv::Buffer* buf)
 			{
+				DNServerProxy::Ptr proxy = serverProxy.lock();
+
+				if(!proxy){ return ;}
+
 				MessagePacket packet;
 				memcpy(&packet, buf->data(), MessagePacket::PackLenth);
 
-				LoggerPrint()(ELogLevel_Debug, "s {} Recv type={} With Mid:{}", channel->peeraddr(), static_cast<int>(packet.dealType), packet.msgId);
+				proxy->GetLogger()->Record(ELogLevel_Debug, "s {} Recv type={} With Mid:{}", channel->peeraddr(), static_cast<int>(packet.dealType), packet.msgId);
 
 				if(packet.pkgLenth > 2 * 1024)
 				{
-					LoggerPrint()(ELogLevel_Debug, "Recv byte len limit={}", packet.pkgLenth);
+					proxy->GetLogger()->Record(ELogLevel_Debug, "Recv byte len limit={}", packet.pkgLenth);
 					return;
 				}
 
@@ -89,9 +91,9 @@ export int HandleGateServerInit(DNServer* server)
 				}
 				else if (packet.dealType == EMMsgDeal::Res)
 				{
-					if (DNTask<Message*>* task = serverSock->GetMsg(packet.msgId)) //client sock request
+					if (DNTask<Message*>* task = proxy->GetMsg(packet.msgId)) //client sock request
 					{
-						serverSock->DelMsg(packet.msgId);
+						proxy->DelMsg(packet.msgId);
 						task->Resume();
 
 						if (Message* message = task->GetResult())
@@ -107,61 +109,66 @@ export int HandleGateServerInit(DNServer* server)
 					}
 					else
 					{
-						LoggerPrint()(EL10nCode_MsgFind);
+						proxy->GetLogger()->Record(EL10nCode_MsgFind);
 					}
 				}
 				else
 				{
-					LoggerPrint()(EL10nCode_MsgDealType);
+					proxy->GetLogger()->Record(EL10nCode_MsgDealType);
 				}
 			};
 
-		serverSock->onConnection = onConnection;
-		serverSock->onMessage = onMessage;
 	}
 
-	if (DNClientProxyHelper* clientSock = serverProxy->GetCSock())
+	if (DNClientProxy::Ptr proxy = dnServer->GetComponent<DNClientProxy>(EMComponentType::DNClientProxy))
 	{
-		clientSock->onConnection = nullptr;
-		clientSock->onMessage = nullptr;
-
-		auto onConnection = [clientSock](const hv::SocketChannelPtr& channel)
+		DNClientProxy::WPtr clientProxy = proxy->GetSelfW<DNClientProxy>();
+		
+		proxy->onConnection = [clientProxy](const hv::SocketChannelPtr& channel)
 			{
+				DNClientProxy::Ptr proxy = clientProxy.lock();
+
+				if(!proxy){ return ;}
+
 				const std::string& peeraddr = channel->peeraddr();
 
 				if (channel->isConnected())
 				{
-					LoggerPrint()(EL10nCode_SrvConnOn, peeraddr, channel->fd(), channel->id());
-					clientSock->SetRegistEvent(&GateMessage::Evt_ReqRegistSrv);
-					TickMainSpaceDll(clientSock, FUNCPLACE(&DNClientProxy::InitConnectedChannel),  channel);
+					proxy->GetLogger()->Record(EL10nCode_SrvConnOn, peeraddr, channel->fd(), channel->id());
+					proxy->SetRegistEvent(&GateMessage::Evt_ReqRegistSrv);
+					TickMainSpaceDll(proxy, FUNCPLACE(&DNClientProxy::InitConnectedChannel),  channel);
 				}
 				else
 				{
-					LoggerPrint()(EL10nCode_SrvConnOff, peeraddr, channel->fd(), channel->id());
-					if (clientSock->EMRegistState() == EMRegistState::Registed)
+					proxy->GetLogger()->Record(EL10nCode_SrvConnOff, peeraddr, channel->fd(), channel->id());
+					if (proxy->EMRegistState() == EMRegistState::Registed)
 					{
-						clientSock->EMRegistState() = EMRegistState::None;
+						proxy->EMRegistState() = EMRegistState::None;
 					}
 
-					clientSock->RegistType() = 0;
+					proxy->RegistType() = 0;
 				}
 
-				if (clientSock->isReconnect())
+				if (proxy->isReconnect())
 				{
 
 				}
 			};
 
-		auto onMessage = [clientSock](const hv::SocketChannelPtr& channel, hv::Buffer* buf)
+		proxy->onMessage = [clientProxy](const hv::SocketChannelPtr& channel, hv::Buffer* buf)
 			{
+				DNClientProxy::Ptr proxy = clientProxy.lock();
+
+				if(!proxy){ return ;}
+
 				MessagePacket packet;
 				memcpy(&packet, buf->data(), MessagePacket::PackLenth);
 
-				LoggerPrint()(ELogLevel_Debug, "c {} Recv type={} With Mid:{}", channel->peeraddr(), static_cast<int>(packet.dealType), packet.msgId);
+				proxy->GetLogger()->Record(ELogLevel_Debug, "c {} Recv type={} With Mid:{}", channel->peeraddr(), static_cast<int>(packet.dealType), packet.msgId);
 
 				if(packet.pkgLenth > 2 * 1024)
 				{
-					LoggerPrint()(ELogLevel_Debug, "Recv byte len limit={}", packet.pkgLenth);
+					proxy->GetLogger()->Record(ELogLevel_Debug, "Recv byte len limit={}", packet.pkgLenth);
 					return;
 				}
 				
@@ -177,9 +184,9 @@ export int HandleGateServerInit(DNServer* server)
 				}
 				else if (packet.dealType == EMMsgDeal::Res)
 				{
-					if (DNTask<Message*>* task = clientSock->GetMsg(packet.msgId)) //client sock request
+					if (DNTask<Message*>* task = proxy->GetMsg(packet.msgId)) //client sock request
 					{
-						clientSock->DelMsg(packet.msgId);
+						proxy->DelMsg(packet.msgId);
 						task->Resume();
 
 						if (Message* message = task->GetResult())
@@ -195,41 +202,37 @@ export int HandleGateServerInit(DNServer* server)
 					}
 					else
 					{
-						LoggerPrint()(EL10nCode_MsgFind);
+						proxy->GetLogger()->Record(EL10nCode_MsgFind);
 					}
 				}
 				else
 				{
-					LoggerPrint()(EL10nCode_MsgDealType);
+					proxy->GetLogger()->Record(EL10nCode_MsgDealType);
 				}
 			};
 
-		clientSock->onConnection = onConnection;
-		clientSock->onMessage = onMessage;
 	}
 
 	return true;
 }
 
-export int HandleGateServerShutdown(DNServer* server)
+export int HandleGateServerShutdown(DNServer::Ptr server)
 {
-	GateServerHelper* serverProxy = GetGateServer();
-
-	if (DNServerProxyHelper* serverSock = serverProxy->GetSSock())
+	if (DNServerProxy::Ptr proxy = dnServer->GetComponent<DNServerProxy>(EMComponentType::DNServerProxy))
 	{
-		serverSock->onConnection = nullptr;
-		serverSock->onMessage = nullptr;
+		proxy->onConnection = nullptr;
+		proxy->onMessage = nullptr;
 
-		serverSock->MsgMapClear();
+		proxy->MsgMapClear();
 	}
 
-	if (DNClientProxyHelper* clientSock = serverProxy->GetCSock())
+	if (DNClientProxy::Ptr proxy = dnServer->GetComponent<DNClientProxy>(EMComponentType::DNClientProxy))
 	{
-		clientSock->onConnection = nullptr;
-		clientSock->onMessage = nullptr;
-		clientSock->SetRegistEvent(nullptr);
+		proxy->onConnection = nullptr;
+		proxy->onMessage = nullptr;
+		proxy->SetRegistEvent(nullptr);
 
-		clientSock->MsgMapClear();
+		proxy->MsgMapClear();
 	}
 
 	return true;

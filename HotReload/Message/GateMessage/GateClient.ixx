@@ -29,21 +29,21 @@ namespace GateMessage
 		GMsg::S2C_ResAuthToken response;
 		std::string binData;
 
-		ProxyEntity* entity = entityMan->GetEntity(request.account_id());
+		ProxyEntity::Ptr entity = entityMan->GetEntity(request.account_id());
 		if (!entity)
 		{
-			LoggerPrint()(ELogLevel_Debug, "noaccount {}!!", request.account_id());
+			SPidLogger.Record(ELogLevel_Debug, "noaccount {}!!", request.account_id());
 			response.set_state_code(1);
 		}
 		// if not match, timer will destory entity
 		else if (Md5Hash(entity->Token()) != request.token())
 		{
-			LoggerPrint()(ELogLevel_Debug, "not match!!");
+			SPidLogger.Record(ELogLevel_Debug, "not match!!");
 			response.set_state_code(2);
 		}
 		else
 		{
-			LoggerPrint()(ELogLevel_Debug, "match!!");
+			SPidLogger.Record(ELogLevel_Debug, "match!!");
 
 			channel->setContext(entity);
 			entity->SetSock(channel);
@@ -56,7 +56,7 @@ namespace GateMessage
 
 			//DS Server
 			ServerEntityManagerHelper* serverEntityMan = dnServer->GetServerEntityManager();
-			ServerEntity* serverEntity = nullptr;
+			ServerEntity::Ptr serverEntity = nullptr;
 
 			// <cache> server to load login data
 			if (uint32_t serverId = entity->RecordServerId())
@@ -67,10 +67,10 @@ namespace GateMessage
 			// pool
 			if (!serverEntity)
 			{
-				std::list<ServerEntity*> serverEntityList = serverEntityMan->GetEntitysByType(EMServerType::LogicServer);
+				std::list<ServerEntity::Ptr> serverEntityList = serverEntityMan->GetEntitysByType(EMServerType::LogicServer);
 				if (serverEntityList.empty())
 				{
-					LoggerPrint()(ELogLevel_Debug, "Msg_ReqAuthToken not LogicServer !!");
+					SPidLogger.Record(ELogLevel_Debug, "Msg_ReqAuthToken not LogicServer !!");
 					response.set_state_code(3);
 				}
 				else
@@ -102,7 +102,7 @@ namespace GateMessage
 				if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
 				{
 					response.set_state_code(4);
-					LoggerPrint()(ELogLevel_Debug, "requst timeout! ");
+					SPidLogger.Record(ELogLevel_Debug, "requst timeout! ");
 				}
 
 			}

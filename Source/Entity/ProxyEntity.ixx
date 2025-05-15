@@ -8,7 +8,7 @@ import NetEntity;
 export class ProxyEntity : public NetEntity
 {
 protected:
-	ProxyEntity(World::Ptr world):NetEntity(world)
+	ProxyEntity(World::WPtr world):NetEntity(world)
 	{
 		eEntityType = EMEntityType::Proxy;
 	}

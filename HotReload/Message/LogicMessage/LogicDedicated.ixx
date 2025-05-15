@@ -30,7 +30,7 @@ namespace LogicMessage
 		LogicServerHelper* dnServer = GetLogicServer();
 		ClientEntityManagerHelper* entityMan = dnServer->GetClientEntityManager();
 
-		ClientEntity* entity = entityMan->GetEntity(player.account_id());
+		ClientEntity::Ptr entity = entityMan->GetEntity(player.account_id());
 
 		if (!entity)
 		{
@@ -63,13 +63,13 @@ namespace LogicMessage
 		GDb::Player player;
 		if (!player.ParseFromString(request.entity_data()))
 		{
-			LoggerPrint()(ELogLevel_Debug, "Save data but parse error!");
+			SPidLogger.Record(ELogLevel_Debug, "Save data but parse error!");
 			return;
 		}
 
 		LogicServerHelper* dnServer = GetLogicServer();
 		ClientEntityManagerHelper* entityMan = dnServer->GetClientEntityManager();
-		ClientEntity* entity = entityMan->GetEntity(player.account_id());
+		ClientEntity::Ptr entity = entityMan->GetEntity(player.account_id());
 
 		if(!entity)
 		{
@@ -78,7 +78,7 @@ namespace LogicMessage
 
 		if (!entity)
 		{
-			LoggerPrint()(ELogLevel_Debug, "ReqSaveData not entity!");
+			SPidLogger.Record(ELogLevel_Debug, "ReqSaveData not entity!");
 			return;
 		}
 
@@ -93,7 +93,7 @@ namespace LogicMessage
 		}
 		else
 		{
-			LoggerPrint()(ELogLevel_Debug, "SaveData but dbEntity is null!");
+			SPidLogger.Record(ELogLevel_Debug, "SaveData but dbEntity is null!");
 		}
 
 	}

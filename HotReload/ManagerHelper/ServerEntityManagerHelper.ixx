@@ -13,7 +13,7 @@ private:
 	ServerEntityManagerHelper() {}
 public:
 
-	ServerEntity* AddEntity(uint32_t entityId, EMServerType regType)
+	ServerEntity::Ptr AddEntity(uint32_t entityId, EMServerType regType)
 	{
 		if (!mEntityMap.contains(entityId))
 		{
@@ -23,7 +23,7 @@ public:
 				std::forward_as_tuple(entityId),
 				std::forward_as_tuple(entityId, regType));
 
-			ServerEntity* entity = &mEntityMap[entityId];
+			ServerEntity::Ptr entity = mEntityMap[entityId];
 
 			mEntityMapList[regType].emplace_back(entity);
 			return entity;
@@ -36,13 +36,13 @@ public:
 	{
 		if (mEntityMap.contains(entityId))
 		{
-			ServerEntity* entity = &mEntityMap[entityId];
+			ServerEntity::Ptr entity = mEntityMap[entityId];
 
 			std::unique_lock<std::shared_mutex> ulock(oMapMutex);
 
 			mEntityMapList[entity->GetServerType()].remove(entity);
 
-			LoggerPrint()(ELogLevel_Debug, "offline destory entity");
+			SPidLogger.Record(ELogLevel_Debug, "offline destory entity");
 			mEntityMap.erase(entityId);
 			return true;
 		}
@@ -50,7 +50,7 @@ public:
 		return false;
 	}
 
-	void MountEntity(EMServerType type, ServerEntity* entity)
+	void MountEntity(EMServerType type, ServerEntity::Ptr entity)
 	{
 		std::unique_lock<std::shared_mutex> ulock(oMapMutex);
 		if (mEntityMap.contains(entity->ID()))
@@ -59,24 +59,24 @@ public:
 		}
 	}
 
-	void UnMountEntity(EMServerType type, ServerEntity* entity)
+	void UnMountEntity(EMServerType type, ServerEntity::Ptr entity)
 	{
 		std::unique_lock<std::shared_mutex> ulock(oMapMutex);
 		mEntityMapList[type].remove(entity);
 	}
 
-	ServerEntity* GetEntity(uint32_t entityId)
+	ServerEntity::Ptr GetEntity(uint32_t entityId)
 	{
 		std::shared_lock<std::shared_mutex> lock(oMapMutex);
 		if (mEntityMap.contains(entityId))
 		{
-			return &mEntityMap[entityId];
+			return mEntityMap[entityId];
 		}
 		// allow return empty
 		return nullptr;
 	}
 
-	const std::list<ServerEntity*>& GetEntitysByType(EMServerType type)
+	const std::list<ServerEntity::Ptr>& GetEntitysByType(EMServerType type)
 	{
 		std::shared_lock<std::shared_mutex> lock(oMapMutex);
 		return mEntityMapList[type];

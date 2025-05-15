@@ -18,7 +18,7 @@ private:
 	ClientEntityManagerHelper() = delete;
 public:
 
-	ClientEntity* AddEntity(uint32_t entityId)
+	ClientEntity::Ptr AddEntity(uint32_t entityId)
 	{
 		if (!mEntityMap.contains(entityId))
 		{
@@ -27,7 +27,7 @@ public:
 				std::forward_as_tuple(entityId),
 				std::forward_as_tuple(entityId));
 
-			ClientEntity* entity = &mEntityMap[entityId];
+			ClientEntity::Ptr entity = mEntityMap[entityId];
 
 			return entity;
 		}
@@ -42,7 +42,7 @@ public:
 		{
 			std::unique_lock<std::shared_mutex> ulock(oMapMutex);
 
-			LoggerPrint()(ELogLevel_Debug, "destory client entity");
+			SPidLogger.Record(ELogLevel_Debug, "destory client entity");
 			mEntityMap.erase(entityId);
 
 			return true;
@@ -51,18 +51,18 @@ public:
 		return false;
 	}
 
-	ClientEntity* GetEntity(uint32_t entityId)
+	ClientEntity::Ptr GetEntity(uint32_t entityId)
 	{
 		std::shared_lock<std::shared_mutex> lock(oMapMutex);
 		if (mEntityMap.contains(entityId))
 		{
-			return &mEntityMap[entityId];
+			return mEntityMap[entityId];
 		}
 		// allow return empty
 		return nullptr;
 	}
 
-	DNTaskVoid LoadEntityData(ClientEntity* entity, GMsg::d2L_ReqLoadEntityData* inRequest, GMsg::L2d_ResLoadEntityData* inResponse)
+	DNTaskVoid LoadEntityData(ClientEntity::Ptr entity, GMsg::d2L_ReqLoadEntityData* inRequest, GMsg::L2d_ResLoadEntityData* inResponse)
 	{
 		if (!pSqlClient || pSqlClient->RegistType() != uint8_t(EMServerType::GateServer) || !pNoSqlProxy)
 		{
@@ -73,7 +73,7 @@ public:
 
 		if (entity->HasFlag(EMClientEntityFlag::DBInited) || entity->HasFlag(EMClientEntityFlag::DBIniting))
 		{
-			LoggerPrint()(ELogLevel_Debug, "entity {} is DBIniting. return .", entity->ID());
+			SPidLogger.Record(ELogLevel_Debug, "entity {} is DBIniting. return .", entity->ID());
 			if (inResponse)
 			{
 				std::string* entity_data = inResponse->add_entity_data();
@@ -147,7 +147,7 @@ public:
 			if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
 			{
 				response.set_state_code(10);
-				LoggerPrint()(ELogLevel_Debug, "requst timeout! ");
+				SPidLogger.Record(ELogLevel_Debug, "requst timeout! ");
 			}
 		}
 
@@ -158,7 +158,7 @@ public:
 			binData = request.entity_data();
 			BytesToHexString(binData);
 			mDbFailure[entityId] = binData;
-			LoggerPrint()(ELogLevel_Debug, "Load Db Entity Error id = {}, state_code = {}! ", entityId, code);
+			SPidLogger.Record(ELogLevel_Debug, "Load Db Entity Error id = {}, state_code = {}! ", entityId, code);
 			co_return;
 		}
 
@@ -172,7 +172,7 @@ public:
 		}
 		else
 		{
-			LoggerPrint()(ELogLevel_Debug, "Load Db Entity mutiply data!");
+			SPidLogger.Record(ELogLevel_Debug, "Load Db Entity mutiply data!");
 			response.clear_entity_data();
 		}
 

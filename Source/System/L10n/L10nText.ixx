@@ -11,7 +11,7 @@ import ECSW;
 export class DNl10n : public System
 {
 protected:
-	DNl10n(std::shared_ptr<World> world) 
+	DNl10n(World::WPtr world) 
 		: System(world)
 	{
 		emSystemType = EMSystemType::DNl10n;
@@ -20,9 +20,16 @@ protected:
 	friend class World;
 public:
 	using Ptr = std::shared_ptr<DNl10n>;
+	using WPtr = std::weak_ptr<DNl10n>;
 	
 	virtual ~DNl10n()
 	{
+		
+	}
+
+	virtual void Dispose() override
+	{
+		System::Dispose();
 		mL10nCodeDll.clear();
 	}
 

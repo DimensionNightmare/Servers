@@ -70,7 +70,7 @@ export void ApiAuth(hv::HttpService* service)
 			}
 			catch (const std::exception& e)
 			{
-				LoggerPrint()(ELogLevel_Debug, e.what());
+				SPidLogger.Record(ELogLevel_Debug, e.what());
 				errData["code"] = http_status::HTTP_STATUS_BAD_REQUEST;
 				errData["message"] = "Server Error!!";
 				MSGSET(errData.dump());
@@ -183,7 +183,7 @@ export void ApiAuth(hv::HttpService* service)
 			}
 			catch (const std::exception& e)
 			{
-				LoggerPrint()(ELogLevel_Debug, e.what());
+				SPidLogger.Record(ELogLevel_Debug, e.what());
 				errData["code"] = http_status::HTTP_STATUS_BAD_REQUEST;
 				errData["message"] = "Regist Error!!";
 				MSGSET(errData.dump());
@@ -223,7 +223,7 @@ export void ApiAuth(hv::HttpService* service)
 			}
 			catch (const std::exception& e)
 			{
-				LoggerPrint()(ELogLevel_Debug, e.what());
+				SPidLogger.Record(ELogLevel_Debug, e.what());
 				errData["code"] = http_status::HTTP_STATUS_BAD_REQUEST;
 				errData["message"] = "Regist Error!!";
 				MSGSET(errData.dump());

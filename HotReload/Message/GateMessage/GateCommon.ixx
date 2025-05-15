@@ -22,21 +22,21 @@ namespace GateMessage
 
 		request.set_server_id(dnServer->ServerId());
 
-		auto AddChild = [&request](ServerEntity* serv)
+		auto AddChild = [&request](ServerEntity::Ptr serv)
 			{
 				GMsg::COM_ReqRegistSrv* child = request.add_childs();
 				child->set_server_id(serv->ID());
 				child->set_server_type((uint32_t)serv->GetServerType());
 			};
 
-		const std::list<ServerEntity*>& dbs = entityMan->GetEntitysByType(EMServerType::DatabaseServer);
-		for (ServerEntity* serv : dbs)
+		const std::list<ServerEntity::Ptr>& dbs = entityMan->GetEntitysByType(EMServerType::DatabaseServer);
+		for (ServerEntity::Ptr serv : dbs)
 		{
 			AddChild(serv);
 		}
 
-		const std::list<ServerEntity*>& logics = entityMan->GetEntitysByType(EMServerType::LogicServer);
-		for (ServerEntity* serv : logics)
+		const std::list<ServerEntity::Ptr>& logics = entityMan->GetEntitysByType(EMServerType::LogicServer);
+		for (ServerEntity::Ptr serv : logics)
 		{
 			AddChild(serv);
 		}
@@ -53,13 +53,12 @@ namespace GateMessage
 	}
 
 	// self request
-	export DNTaskVoid Evt_ReqRegistSrv()
+	export DNTaskVoid Evt_ReqRegistSrv(DNServer::WPtr dnServer)
 	{
-		GateServerHelper* dnServer = GetGateServer();
 		DNClientProxyHelper* client = dnServer->GetCSock();
 		DNServerProxy* server = dnServer->GetSSock();
 		
-		LoggerPrint()(ELogLevel_Debug, "Client:{}, port:{}", client->remote_host, client->remote_port);
+		SPidLogger.Record(ELogLevel_Debug, "Client:{}, port:{}", client->remote_host, client->remote_port);
 		
 		client->EMRegistState() = EMRegistState::Registing;
 
@@ -96,14 +95,14 @@ namespace GateMessage
 			co_await dataChannel;
 			if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
 			{
-				LoggerPrint()(ELogLevel_Debug, "requst timeout! ");
+				SPidLogger.Record(ELogLevel_Debug, "requst timeout! ");
 			}
 
 		}
 
 		if (response.success())
 		{
-			LoggerPrint()(ELogLevel_Debug, "regist Server success! Rec index:{}", response.server_id());
+			SPidLogger.Record(ELogLevel_Debug, "regist Server success! Rec index:{}", response.server_id());
 			client->EMRegistState() = EMRegistState::Registed;
 			client->RegistType() = response.server_type();
 			dnServer->ServerId() = response.server_id();
@@ -112,7 +111,7 @@ namespace GateMessage
 		}
 		else
 		{
-			LoggerPrint()(ELogLevel_Debug, "regist Server error!");
+			SPidLogger.Record(ELogLevel_Debug, "regist Server error!");
 			// dnServer->IsRun() = false; //exit application
 			client->EMRegistState() = EMRegistState::None;
 		}
@@ -129,7 +128,7 @@ namespace GateMessage
 			return;
 		}
 
-		LoggerPrint()(ELogLevel_Debug, "ip Reqregist: {}, {}", channel->peeraddr(), request.server_type());
+		SPidLogger.Record(ELogLevel_Debug, "ip Reqregist: {}, {}", channel->peeraddr(), request.server_type());
 
 		GMsg::COM_ResRegistSrv response;
 
@@ -147,12 +146,12 @@ namespace GateMessage
 		}
 
 		//exist?
-		if (ServerEntity* entity = channel->getContext<ServerEntity>())
+		if (ServerEntity::Ptr entity = channel->getContext<ServerEntity>())
 		{
 			response.set_success(false);
 		}
 
-		else if (ServerEntity* entity = entityMan->AddEntity(serverId, regType))
+		else if (ServerEntity::Ptr entity = entityMan->AddEntity(serverId, regType))
 		{
 			size_t pos = ipPort.find(":");
 			entity->ServerIp() = ipPort.substr(0, pos);

@@ -10,13 +10,18 @@ export class ProxyEntityManager : public EntityManager<ProxyEntity>
 protected:
 	friend class System;
 	/// @brief timer manager create
-	ProxyEntityManager(System::Ptr system):EntityManager(system)
+	ProxyEntityManager(System::WPtr system):EntityManager(system)
 	{
 		eComponentType = EMComponentType::ProxyEntityManager;
 	}
 public:
 
 	virtual ~ProxyEntityManager() = default;
+
+	virtual void Dispose() override
+	{
+		EntityManager::Dispose();
+	}
 
 	/// @brief 
 	virtual void TickMainFrame() override
@@ -37,7 +42,7 @@ public: // dll override
 		uint32_t entityId = mMapTimer[timerID];
 		if (RemoveEntity(entityId))
 		{
-			SPidLogger.Record(ELogLevel_Debug, "destory proxy Timer entity");
+			GetLogger()->Record(ELogLevel_Debug, "destory proxy Timer entity");
 		}
 
 	}

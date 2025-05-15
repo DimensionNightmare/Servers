@@ -9,7 +9,7 @@ export class NetEntity : public Entity
 	
 protected:
 	//dont new this class
-	NetEntity(World::Ptr world) :Entity(world)
+	NetEntity(World::WPtr world) :Entity(world)
 	{
 		
 	}
@@ -20,6 +20,11 @@ public:
 	virtual ~NetEntity()
 	{
 		pSock = nullptr;
+	}
+
+	virtual void Dispose() override
+	{
+		Entity::Dispose();
 	}
 
 public: // dll override

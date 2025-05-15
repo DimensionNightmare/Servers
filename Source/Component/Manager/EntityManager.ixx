@@ -3,23 +3,25 @@ export module EntityManager;
 
 export import ECSW;
 import ThirdParty.Libhv;
+import Logger;
 
 export template<class TEntity = Entity>
 class EntityManager : public Component
 {
 protected:
 	/// @brief timer manager create
-	EntityManager(System::Ptr system):Component(system)
+	EntityManager(System::WPtr system):Component(system)
 	{
-		pLoop = std::make_shared<hv::EventLoopThread>();
+		pLoop = std::make_unique<hv::EventLoopThread>();
+
+		pLogger = GetOwner()->GetWorld()->GetSystem<LoggerPrint>(EMSystemType::LoggerPrint);
 	}
 	
 public:
 
 	virtual ~EntityManager()
 	{
-		pLoop = nullptr;
-		mEntityMap.clear();
+		
 	}
 
 	/// @brief start timer manager
@@ -32,6 +34,22 @@ public:
 	/// @brief main loop func mount
 	virtual void TickMainFrame() = 0;
 
+	virtual void Dispose() override
+	{
+		Component::Dispose();
+
+		pLoop = nullptr;
+		for (auto& [id, entity] : mEntityMap)
+		{
+			entity->Dispose();
+		}
+		
+		mEntityMap.clear();
+	}
+
+protected:
+
+	LoggerPrint::Ptr GetLogger(){ return pLogger.lock(); }
 public: // dll override
 
 	const hv::EventLoopPtr& Timer() { return pLoop->loop(); }
@@ -52,6 +70,8 @@ protected: // dll proxy
 	/// @brief mMapTimer Mutex
 	std::shared_mutex oTimerMutex;
 
-	std::shared_ptr<hv::EventLoopThread> pLoop;
+	std::unique_ptr<hv::EventLoopThread> pLoop;
+
+	LoggerPrint::WPtr pLogger;
 
 };

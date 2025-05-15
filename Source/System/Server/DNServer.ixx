@@ -42,10 +42,9 @@ public:
 	
 protected:
 	friend class World;
-	DNServer(World::Ptr world):System(world)
+	DNServer(World::WPtr world):System(world)
 	{
 		emSystemType = EMSystemType::DNServer;
-		emServerType = EMServerType::None;
 
 		Libhv::hvlog_disable();
 	}
@@ -54,6 +53,11 @@ public:
 
 	virtual ~DNServer()
 	{
+	}
+
+	virtual void Dispose() override
+	{
+		System::Dispose();
 	}
 
 	virtual bool Awake() override
@@ -65,14 +69,6 @@ public:
 
 		return true;
 	}
-
-	void Start()	{ 	Broadcast(EMEventType::ServerStart	); }
-
-	void Stop() 	{ 	Broadcast(EMEventType::ServerStop	); }
-
-	void Pause()	{ 	Broadcast(EMEventType::ServerPause	); }
-
-	void Resume()	{ 	Broadcast(EMEventType::ServerResume); }
 
 	EMServerType GetServerType() { return emServerType; }
 

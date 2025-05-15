@@ -9,19 +9,24 @@ export class DNWebProxy : public Component, public hv::HttpServer
 {
 protected:
 	friend class System;
-	DNWebProxy(System::Ptr system):Component(system)
+	DNWebProxy(System::WPtr system):Component(system)
 	{
 		eComponentType = EMComponentType::DNWebProxy;
 	}
 public:
-	~DNWebProxy(){}
+	~DNWebProxy() = default;
+
+	virtual void Dispose() override
+	{
+		Component::Dispose();
+	}
 
 	bool Awake() override
 	{
-		World::Ptr world = GetOwner()->GetWorld();
+		World::Ptr pWorld = GetOwner()->GetWorld();
 
 		uint16_t port = 0;
-		std::string* value = world->LaunchParam("port");
+		std::string* value = pWorld->LaunchParam("port");
 		if (value)
 		{
 			port = stoi(*value);
@@ -31,8 +36,23 @@ public:
 		setPort(port);
 		setThreadNum(4);
 
-		LoggerPrint::Ptr pLogger = GetOwner()->GetWorld()->GetSystem<LoggerPrint>(EMSystemType::LoggerPrint);
+		LoggerPrint::Ptr pLogger = pWorld->GetSystem<LoggerPrint>(EMSystemType::LoggerPrint).lock();
 		pLogger->Record(EL10nCode_SrvListenOn, port, 0);
+
+		GetOwner()->AddEvent(EMEventType::ServerStart, GetSelfW<DNWebProxy>(), &DNWebProxy::Start);
+
+		hv::HttpService* service = new hv::HttpService();
+
+		service->POST("/Auth/User/LoginToken", [](const hv::HttpRequestPtr& req, const hv::HttpResponseWriterPtr& writer)
+		{
+			writer->Begin();
+			int a = 0;
+			int c = 3 / a;
+			writer->End();
+		});
+
+		registerHttpService(service);
+
 		return true;
 	}
 

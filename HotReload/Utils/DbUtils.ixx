@@ -440,7 +440,7 @@ public:
 			return false;
 		}
 
-		// LoggerPrint()(ELogLevel_Debug, sSqlStatement);
+		// SPidLogger.Record(ELogLevel_Debug, sSqlStatement);
 
 		pqxx::result result = pWork->exec(sSqlStatement);
 

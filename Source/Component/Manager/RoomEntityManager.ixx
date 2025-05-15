@@ -10,12 +10,17 @@ export class RoomEntityManager : public EntityManager<RoomEntity>
 protected:
 	friend class System;
 	/// @brief timer manager create
-	RoomEntityManager(System::Ptr system):EntityManager(system)
+	RoomEntityManager(System::WPtr system):EntityManager(system)
 	{
 		eComponentType = EMComponentType::RoomEntityManager;
 	}
 public:
 	~RoomEntityManager() = default;
+
+	virtual void Dispose() override
+	{
+		EntityManager::Dispose();
+	}
 
 	virtual void TickMainFrame() override
 	{
@@ -34,7 +39,7 @@ public:
 		uint32_t entityId = mMapTimer[timerID];
 		if (RemoveEntity(entityId))
 		{
-			SPidLogger.Record(ELogLevel_Debug, "EntityCloseTimer Room destory entity");
+			GetLogger()->Record(ELogLevel_Debug, "EntityCloseTimer Room destory entity");
 		}
 
 	}

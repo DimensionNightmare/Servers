@@ -22,13 +22,17 @@ export class DNClientProxy : public Component, public hv::TcpClient
 {
 protected:
 	friend class System;
-	DNClientProxy(System::Ptr system):Component(system)
+	DNClientProxy(System::WPtr system):Component(system)
 	{
 		eComponentType = EMComponentType::DNClientProxy;
 
-		pLoop = std::make_shared<hv::EventLoopThread>();
+		pLoop = std::make_unique<hv::EventLoopThread>();
+
+		pLogger = GetOwner()->GetWorld()->GetSystem<LoggerPrint>(EMSystemType::LoggerPrint);
 	}
 public:
+
+	using Ptr = std::shared_ptr<DNClientProxy>;
 
 	~DNClientProxy()
 	{
@@ -37,11 +41,16 @@ public:
 		mMapTimer.clear();
 	}
 
+	virtual void Dispose() override
+	{
+		Component::Dispose();
+	}
+
 	bool Awake() override
 	{
-		World::Ptr world = GetOwner()->GetWorld();
-		std::string* ctlPort = world->LaunchParam("ctlPort");
-		std::string* ctlIp = world->LaunchParam("ctlIp");
+		World::Ptr pWorld = GetOwner()->GetWorld();
+		std::string* ctlPort = pWorld->LaunchParam("ctlPort");
+		std::string* ctlIp = pWorld->LaunchParam("ctlIp");
 		if (!ctlPort || !ctlIp)
 		{
 			return false;
@@ -63,6 +72,8 @@ public:
 		setting.length_field_offset = 0;
 		setUnpack(&setting);
 
+		GetOwner()->AddEvent(EMEventType::ServerStart, GetSelfW<DNClientProxy>(), &DNClientProxy::Start);
+
 		return true;
 	}
 
@@ -77,6 +88,10 @@ public:
 		pLoop->stop(true);
 		stop(true);
 	}
+
+
+	LoggerPrint::Ptr GetLogger(){ return pLogger.lock(); }
+
 public: // dll override
 
 	void TickRegistEvent(size_t timerID)
@@ -170,7 +185,7 @@ public: // dll override
 
 	void RedirectClient(uint16_t port, std::string ip)
 	{
-		SPidLogger.Record(ELogLevel_Debug, "reclient to {}:{}", ip, port);
+		GetLogger()->Record(ELogLevel_Debug, "reclient to {}:{}", ip, port);
 
 		eRegistState = EMRegistState::None;
 		closesocket();
@@ -202,7 +217,7 @@ public: // dll override
 
 protected: // dll proxy
 
-	std::shared_ptr<hv::EventLoopThread> pLoop;
+	std::unique_ptr<hv::EventLoopThread> pLoop;
 
 	// only oddnumber
 	std::atomic<uint32_t> iMsgId;
@@ -223,4 +238,6 @@ protected: // dll proxy
 	std::shared_mutex oMsgMutex;
 
 	std::shared_mutex oTimerMutex;
+
+	LoggerPrint::WPtr pLogger;
 };

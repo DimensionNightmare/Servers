@@ -26,13 +26,13 @@ public:
 			}
 			catch (const std::exception& e)
 			{
-				LoggerPrint()(ELogLevel_Debug, e.what());
+				SPidLogger.Record(ELogLevel_Debug, e.what());
 			}
 
 		}
 		else
 		{
-			LoggerPrint()(EL10nCode_MsgHandleFind);
+			SPidLogger.Record(EL10nCode_MsgHandleFind);
 		}
 	}
 	
@@ -47,12 +47,12 @@ public:
 			}
 			catch (const std::exception& e)
 			{
-				LoggerPrint()(ELogLevel_Debug, e.what());
+				SPidLogger.Record(ELogLevel_Debug, e.what());
 			}
 		}
 		else
 		{
-			LoggerPrint()(EL10nCode_MsgHandleFind);
+			SPidLogger.Record(EL10nCode_MsgHandleFind);
 		}
 	}
 

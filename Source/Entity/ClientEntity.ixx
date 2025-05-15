@@ -19,7 +19,7 @@ using ClientEntityBitFlag = std::bitset<static_cast<uint16_t>(EMClientEntityFlag
 export class ClientEntity : public Entity
 {
 protected:
-	ClientEntity(World::Ptr world):Entity(world)
+	ClientEntity(World::WPtr world):Entity(world)
 	{
 		eEntityType = EMEntityType::Client;
 	}
@@ -29,6 +29,11 @@ public:
 	virtual ~ClientEntity()
 	{
 		pDbEntity = nullptr;
+	}
+
+	virtual void Dispose() override
+	{
+		Entity::Dispose();
 	}
 	
 public: // dll override

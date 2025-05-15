@@ -31,7 +31,7 @@ namespace GateMessage
 
 		GateServerHelper* dnServer = GetGateServer();
 		ProxyEntityManagerHelper* entityMan = dnServer->GetProxyEntityManager();
-		ProxyEntity* entity = entityMan->GetEntity(request.account_id());
+		ProxyEntity::Ptr entity = entityMan->GetEntity(request.account_id());
 		if (entity)
 		{
 			//exit
@@ -52,10 +52,10 @@ namespace GateMessage
 				//kick game
 				if (uint32_t serverId = entity->RecordServerId())
 				{
-					LoggerPrint()(ELogLevel_Debug, "Send Logic tick User->{}, server:{}", entity->ID(), entity->RecordServerId());
+					SPidLogger.Record(ELogLevel_Debug, "Send Logic tick User->{}, server:{}", entity->ID(), entity->RecordServerId());
 
 					ServerEntityManagerHelper* serverEntityMan = dnServer->GetServerEntityManager();
-					ServerEntity* serverEntity = serverEntityMan->GetEntity(serverId);
+					ServerEntity::Ptr serverEntity = serverEntityMan->GetEntity(serverId);
 
 					request.set_account_id(entity->ID());
 
@@ -87,7 +87,7 @@ namespace GateMessage
 			entity->TimerId() = TickMainSpaceDll(entityMan, FUNCPLACE(&ProxyEntityManager::CheckEntityCloseTimer), entity->ID());
 		}
 
-		LoggerPrint()(ELogLevel_Debug, "ReqUserToken User: {}!!", request.account_id());
+		SPidLogger.Record(ELogLevel_Debug, "ReqUserToken User: {}!!", request.account_id());
 
 		response.SerializeToString(&binData);
 		MessagePackAndSend(msgId, EMMsgDeal::Res, "", binData, channel);

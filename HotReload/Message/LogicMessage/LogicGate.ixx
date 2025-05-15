@@ -21,15 +21,15 @@ namespace LogicMessage
 		LogicServerHelper* dnServer = GetLogicServer();
 		ClientEntityManagerHelper* entityMan = dnServer->GetClientEntityManager();
 
-		if (ClientEntity* entity = entityMan->GetEntity(request.entity_id()))
+		if (ClientEntity::Ptr entity = entityMan->GetEntity(request.entity_id()))
 		{
-			LoggerPrint()(ELogLevel_Debug, "Recv Client {} Disconnect !!", entity->ID());
+			SPidLogger.Record(ELogLevel_Debug, "Recv Client {} Disconnect !!", entity->ID());
 
 			entityMan->SaveEntity(*entity, true);
 			entityMan->RemoveEntity(entity->ID());
 			return;
 		}
 
-		LoggerPrint()(ELogLevel_Debug, "Recv Client {} Disconnect but not Exist!!", request.entity_id());
+		SPidLogger.Record(ELogLevel_Debug, "Recv Client {} Disconnect but not Exist!!", request.entity_id());
 	}
 }

@@ -21,18 +21,28 @@ export class LoggerPrint : public System
 protected:
 	
 	friend class World;
-	LoggerPrint(World::Ptr world):System(world)
+	LoggerPrint(World::WPtr world):System(world)
 	{
 		emSystemType = EMSystemType::LoggerPrint;
 	}
 
 public:
 	using Ptr = std::shared_ptr<LoggerPrint>;
-	~LoggerPrint() = default;
+	using WPtr = std::weak_ptr<LoggerPrint>;
+	~LoggerPrint()
+	{
+
+	}
+
+	virtual void Dispose() override
+	{
+		System::Dispose();
+	}
 
 	bool Init()
 	{
-		std::string* value = GetWorld()->LaunchParam("LoggerLevel");
+		World::Ptr pWorld = GetWorld();
+		std::string* value = pWorld->LaunchParam("LoggerLevel");
 		if(!value)
 		{
 			return false;
@@ -43,14 +53,14 @@ public:
 		ELogLevel_Parse(strType, &logLevel);
 		SetLogger(logLevel);
 
-		value = GetWorld()->LaunchParam("program");
+		value = pWorld->LaunchParam("program");
 		if(!value)
 		{
 			return false;
 		}
 		
 		std::filesystem::path logFile = *value;
-		logFile = logFile.parent_path() / *GetWorld()->LaunchParam("svrName");
+		logFile = logFile.parent_path() / *pWorld->LaunchParam("svrName");
 		SetLogger(logFile);
 
 		return true;
@@ -123,7 +133,7 @@ public:
 	void Record(EL10nCode code, Args&&... args)
 	{
 		ELogLevel level;
-		const std::string& fmt = pDNl10n->GetTipText(code, level);
+		const std::string& fmt = pDNl10n.lock()->GetTipText(code, level);
 
 		if (level < eLogLevel)
 		{
@@ -148,7 +158,7 @@ public:
 	void Record(EL10nCode code)
 	{
 		ELogLevel level;
-		const std::string& fmt = pDNl10n->GetTipText(code, level);
+		const std::string& fmt = pDNl10n.lock()->GetTipText(code, level);
 
 		if (level < eLogLevel)
 		{
@@ -182,7 +192,7 @@ public:
 	}
 
 public:
-	DNl10n::Ptr pDNl10n;
+	DNl10n::WPtr pDNl10n;
 
 protected:
 	std::ofstream LogFile; 
@@ -192,11 +202,13 @@ protected:
 
 bool DNl10n::Init()
 {
-	LoggerPrint::Ptr logger = GetWorld()->GetSystem<LoggerPrint>(EMSystemType::LoggerPrint);
-	std::string* value = GetWorld()->LaunchParam("l10nDataPath");
+	World::Ptr pWorld = GetWorld();
+
+	LoggerPrint::Ptr pLogger = pWorld->GetSystem<LoggerPrint>(EMSystemType::LoggerPrint).lock();
+	std::string* value = pWorld->LaunchParam("l10nDataPath");
 	if (!value)
 	{
-		logger->Record(ELogLevel_Error, "Launch Param l10nErrPath Error !");
+		pLogger->Record(ELogLevel_Error, "Launch Param l10nErrPath Error !");
 		return false;
 	}
 
@@ -204,7 +216,7 @@ bool DNl10n::Init()
 	std::ifstream input(*value, std::ios::in | std::ios::binary);
 	if (!input || !mL10nCode.ParseFromIstream(&input))
 	{
-		logger->Record(ELogLevel_Error, "load I10n Tip Config Error !");
+		pLogger->Record(ELogLevel_Error, "load I10n Tip Config Error !");
 		return false;
 	}
 
@@ -216,12 +228,12 @@ bool DNl10n::Init()
 	}
 	
 	eType = EL10nType_zh_CN;
-	if (value = GetWorld()->LaunchParam("l10nLang"))
+	if (value = pWorld->LaunchParam("l10nLang"))
 	{	
 		std::string strType = "EL10nType_" + *value;
 		if(!EL10nType_Parse(strType, &eType))
 		{
-			logger->Record(ELogLevel_Error, "load I10n l10nLang Error !");
+			pLogger->Record(ELogLevel_Error, "load I10n l10nLang Error !");
 			return false;
 		}
 	}
@@ -239,11 +251,11 @@ bool DNl10n::Init()
 			break;
 		}
 		default:
-			logger->Record(ELogLevel_Error, "load I10n Lang Type Error !");
+			pLogger->Record(ELogLevel_Error, "load I10n Lang Type Error !");
 			return false;
 	}
 
-	logger->pDNl10n = std::static_pointer_cast<DNl10n>(shared_from_this());
+	pLogger->pDNl10n = std::static_pointer_cast<DNl10n>(shared_from_this());
 
 	return true;
 }
@@ -255,7 +267,7 @@ public:
 	{
 		pWorld = std::make_shared<World>();
 		pWorld->AddSystem<DNl10n>();
-		pLogger = pWorld->AddSystem<LoggerPrint>();
+		pLogger = pWorld->AddSystem<LoggerPrint>().lock();
 	}
 
 	~LoggerPrintPid()
@@ -279,7 +291,7 @@ public:
 	bool Init(std::unordered_map<std::string, std::string> commonInfo)
 	{
 		pWorld->MoveLuanchConfigToSelf(std::move(commonInfo));
-		DNl10n::Ptr pL10n = pWorld->GetSystem<DNl10n>(EMSystemType::DNl10n);
+		DNl10n::Ptr pL10n = pWorld->GetSystem<DNl10n>(EMSystemType::DNl10n).lock();
 		return pL10n->Init();
 	}
 
