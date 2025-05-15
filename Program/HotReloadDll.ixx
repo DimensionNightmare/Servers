@@ -21,7 +21,7 @@ protected:
 		sDllDir = std::filesystem::path(*pWorld->LaunchParam("program")).parent_path() / sDllDir;
 		sServerName = *pWorld->LaunchParam("svrName");
 
-		pLogger = pWorld->GetSystem<LoggerPrint>(EMSystemType::LoggerPrint);
+		pLogger = pWorld->GetSystemW<LoggerPrint>(EMSystemType::LoggerPrint);
 	}
 public:
 	using Ptr = std::shared_ptr<HotReloadDll>;
@@ -91,7 +91,7 @@ public:
 			}
 			catch (const std::exception& e)
 			{
-				GetLogger->Record(ELogLevel_Debug, "filesystem:{}", e.what());
+				GetLogger()->Record(ELogLevel_Debug, "filesystem:{}", e.what());
 			}
 		}
 
@@ -103,13 +103,13 @@ public:
 	{
 		if (!std::filesystem::exists(sDllDir))
 		{
-			GetLogger->Record(EL10nCode_DllMenuPath);
+			GetLogger()->Record(EL10nCode_DllMenuPath);
 			return false;
 		}
 
 		if (!SDllName)
 		{
-			GetLogger->Record(EL10nCode_DllFileName);
+			GetLogger()->Record(EL10nCode_DllFileName);
 			return false;
 		}
 #ifdef _WIN32
@@ -127,7 +127,7 @@ public:
 		}
 		catch (const std::exception& e)
 		{
-			GetLogger->Record(ELogLevel_Debug, "{}", e.what());
+			GetLogger()->Record(ELogLevel_Debug, "{}", e.what());
 			return false;
 		}
 #endif
@@ -167,7 +167,7 @@ public:
 
 protected:
 
-	LoggerPrint::Ptr GetLogger(){ return pLogger.lock(); }
+	LoggerPrint::Ptr GetLogger(){ return pLogger.expired() ? nullptr : pLogger.lock(); }
 
 protected:
 	/// @brief runtime library floder name

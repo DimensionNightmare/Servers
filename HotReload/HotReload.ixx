@@ -65,7 +65,7 @@ extern "C"
 	{
 		Libhv::hvlog_disable();
 
-		DNServer::Ptr dnServer = world->GetSystem<DNServer>(EMSystemType::DNServer).lock();
+		DNServer::Ptr dnServer = world->GetSystem<DNServer>(EMSystemType::DNServer);
 		
 		bool isDeal = false;
 		
@@ -98,7 +98,7 @@ extern "C"
 
 	HOTRELOAD int ShutdownHotReload(World* world)
 	{
-		DNServer::Ptr dnServer = world->GetSystem<DNServer>(EMSystemType::DNServer).lock();
+		DNServer::Ptr dnServer = world->GetSystem<DNServer>(EMSystemType::DNServer);
 
 		bool isDeal = false;
 		switch (servertype)

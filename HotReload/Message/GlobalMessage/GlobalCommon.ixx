@@ -3,7 +3,6 @@ export module GlobalMessage:GlobalCommon;
 
 import DNTask;
 import FuncHelper;
-import GlobalServerHelper;
 import Logger;
 import ThirdParty.Libhv;
 import ThirdParty.PbGen;
@@ -16,23 +15,30 @@ namespace GlobalMessage
 	// client request
 	export DNTaskVoid Evt_ReqRegistSrv(DNServer::WPtr dnServer)
 	{
-		DNClientProxyHelper* client = dnServer->GetCSock();
-		DNServerProxyHelper* server = dnServer->GetSSock();
+		DNServer::Ptr server = dnServer.lock();
+		if (!server)
+		{
+			co_return;
+		}
+
+		DNClientProxyHelper::Ptr clientProxy = server->GetComponent<DNClientProxyHelper>(EMComponent::DNClientProxy);
+
+		DNServerProxyHelper::Ptr serverProxy = server->GetComponent<DNServerProxyHelper>(EMComponent::DNServerProxy);
 		
-		SPidLogger.Record(ELogLevel_Debug, "Client:{}, port:{}", client->remote_host, client->remote_port);
+		SPidLogger.Record(ELogLevel_Debug, "Client:{}, port:{}", clientProxy->remote_host, clientProxy->remote_port);
 		
-		client->EMRegistState() = EMRegistState::Registing;
+		clientProxy->EMRegistState() = EMRegistState::Registing;
 
 		GMsg::COM_ReqRegistSrv request;
 
-		request.set_server_type((int)dnServer->GetServerType());
+		request.set_server_type((int)server->GetServerType());
 
-		if (uint32_t serverId = dnServer->ServerId())
+		if (uint32_t serverId = server->ServerId())
 		{
 			request.set_server_id(serverId);
 		}
 
-		request.set_server_port(server->port);
+		request.set_server_port(serverProxy->port);
 
 		// pack data
 		std::string binData;
@@ -48,9 +54,9 @@ namespace GlobalMessage
 				};
 			auto dataChannel = taskGen(&response);
 			
-			uint32_t msgId = client->GetMsgId();
-			client->AddMsg(msgId, &dataChannel);
-			MessagePackAndSend(msgId, EMMsgDeal::Req, request.GetDescriptor()->full_name(), binData, client->GetChannel());
+			uint32_t msgId = clientProxy->GetMsgId();
+			clientProxy->AddMsg(msgId, &dataChannel);
+			MessagePackAndSend(msgId, EMMsgDeal::Req, request.GetDescriptor()->full_name(), binData, clientProxy->GetChannel());
 			
 			co_await dataChannel;
 			if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
@@ -63,15 +69,15 @@ namespace GlobalMessage
 		if (response.success())
 		{
 			SPidLogger.Record(ELogLevel_Debug, "regist Server success! Rec index:{}", response.server_id());
-			client->EMRegistState() = EMRegistState::Registed;
-			client->RegistType() = response.server_type();
-			dnServer->ServerId() = response.server_id();
+			clientProxy->EMRegistState() = EMRegistState::Registed;
+			clientProxy->RegistType() = response.server_type();
+			server->ServerId() = response.server_id();
 		}
 		else
 		{
 			SPidLogger.Record(ELogLevel_Debug, "regist Server error!  ");
 			// dnServer->IsRun() = false; //exit application
-			client->EMRegistState() = EMRegistState::None;
+			clientProxy->EMRegistState() = EMRegistState::None;
 		}
 
 
@@ -79,7 +85,7 @@ namespace GlobalMessage
 	}
 
 	// client request
-	export void Msg_ReqRegistSrv(hv::SocketChannelPtr channel, uint32_t msgId, std::string binMsg)
+	export void Msg_ReqRegistSrv(DNSocketProxy::Ptr channel, uint32_t msgId, std::string binMsg)
 	{
 		GMsg::COM_ReqRegistSrv request;
 		if(!request.ParseFromString(binMsg))
@@ -91,8 +97,11 @@ namespace GlobalMessage
 
 		GMsg::COM_ResRegistSrv response;
 
-		GlobalServerHelper* dnServer = GetGlobalServer();
-		ServerEntityManagerHelper* entityMan = dnServer->GetServerEntityManager();
+		DNServer::Ptr dnServer = channel->GetWorld()->GetSystem<DNServer>();
+	
+		ServerEntityManagerHelper::Ptr entityMan = dnServer
+			->GetComponent<ServerEntityManagerHelper>(EMComponent::ServerEntityManager);
+
 
 		EMServerType regType = (EMServerType)request.server_type();
 
@@ -122,7 +131,7 @@ namespace GlobalMessage
 				}
 
 				// already connect
-				if (const hv::SocketChannelPtr& sock = entity->GetSock())
+				if (const DNSocketProxy::Ptr& sock = entity->GetSock())
 				{
 					response.set_success(false);
 				}
@@ -182,7 +191,7 @@ namespace GlobalMessage
 
 	}
 
-	export void Exe_RetHeartbeat(hv::SocketChannelPtr channel, std::string binMsg)
+	export void Exe_RetHeartbeat(DNSocketProxy::Ptr channel, std::string binMsg)
 	{
 		GMsg::COM_RetHeartbeat request;
 		if(!request.ParseFromString(binMsg))

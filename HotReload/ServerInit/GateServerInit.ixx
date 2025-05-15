@@ -3,7 +3,6 @@ export module GateServerInit;
 
 import FuncHelper;
 import GateMessage;
-import NetEntity;
 import DNTask;
 import Logger;
 import DllUtils;
@@ -24,7 +23,7 @@ export int HandleGateServerInit(DNServer::Ptr dnServer)
 	{
 		DNServerProxy::WPtr serverProxy = proxy->GetSelfW<DNServerProxy>();
 	
-		proxy->onConnection = [serverProxy](const hv::SocketChannelPtr& channel)
+		proxy->onConnection = [serverProxy](const DNSocketProxy::Ptr& channel)
 			{
 				DNServerProxy::Ptr proxy = serverProxy.lock();
 
@@ -34,6 +33,9 @@ export int HandleGateServerInit(DNServer::Ptr dnServer)
 				if (channel->isConnected())
 				{
 					proxy->GetLogger()->Record(EL10nCode_CliConnOn, peeraddr, channel->fd(), channel->id());
+
+					channel->SetWorld(proxy->GetWorld());
+
 					TickMainSpaceDll(serverSock, FUNCPLACE(&DNServerProxy::InitConnectedChannel),  channel);
 				}
 				else
@@ -58,7 +60,7 @@ export int HandleGateServerInit(DNServer::Ptr dnServer)
 				}
 			};
 
-		proxy->onMessage = [serverProxy](const hv::SocketChannelPtr& channel, hv::Buffer* buf)
+		proxy->onMessage = [serverProxy](const DNSocketProxy::Ptr& channel, hv::Buffer* buf)
 			{
 				DNServerProxy::Ptr proxy = serverProxy.lock();
 
@@ -124,7 +126,7 @@ export int HandleGateServerInit(DNServer::Ptr dnServer)
 	{
 		DNClientProxy::WPtr clientProxy = proxy->GetSelfW<DNClientProxy>();
 		
-		proxy->onConnection = [clientProxy](const hv::SocketChannelPtr& channel)
+		proxy->onConnection = [clientProxy](const DNSocketProxy::Ptr& channel)
 			{
 				DNClientProxy::Ptr proxy = clientProxy.lock();
 
@@ -135,6 +137,9 @@ export int HandleGateServerInit(DNServer::Ptr dnServer)
 				if (channel->isConnected())
 				{
 					proxy->GetLogger()->Record(EL10nCode_SrvConnOn, peeraddr, channel->fd(), channel->id());
+
+					channel->SetWorld(proxy->GetWorld());
+					
 					proxy->SetRegistEvent(&GateMessage::Evt_ReqRegistSrv);
 					TickMainSpaceDll(proxy, FUNCPLACE(&DNClientProxy::InitConnectedChannel),  channel);
 				}
@@ -155,7 +160,7 @@ export int HandleGateServerInit(DNServer::Ptr dnServer)
 				}
 			};
 
-		proxy->onMessage = [clientProxy](const hv::SocketChannelPtr& channel, hv::Buffer* buf)
+		proxy->onMessage = [clientProxy](const DNSocketProxy::Ptr& channel, hv::Buffer* buf)
 			{
 				DNClientProxy::Ptr proxy = clientProxy.lock();
 

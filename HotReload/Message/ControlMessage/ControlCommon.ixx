@@ -3,7 +3,6 @@ export module ControlMessage:ControlCommon;
 
 import DNTask;
 import FuncHelper;
-import ControlServerHelper;
 import ThirdParty.Libhv;
 import ThirdParty.PbGen;
 import Logger;
@@ -14,7 +13,7 @@ namespace ControlMessage
 {
 
 	// client request
-	export void Msg_ReqRegistSrv(hv::SocketChannelPtr channel, uint32_t msgId, std::string binMsg)
+	export void Msg_ReqRegistSrv(DNSocketProxy::Ptr channel, uint32_t msgId, std::string binMsg)
 	{
 		GMsg::COM_ReqRegistSrv request;
 		if(!request.ParseFromString(binMsg))
@@ -64,7 +63,7 @@ namespace ControlMessage
 		MessagePackAndSend(msgId, EMMsgDeal::Res, "", binData, channel);
 	}
 
-	export void Exe_RetHeartbeat(hv::SocketChannelPtr channel, std::string binMsg)
+	export void Exe_RetHeartbeat(DNSocketProxy::Ptr channel, std::string binMsg)
 	{
 		GMsg::COM_RetHeartbeat request;
 		if(!request.ParseFromString(binMsg))

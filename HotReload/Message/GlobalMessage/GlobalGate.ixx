@@ -3,7 +3,6 @@ export module GlobalMessage:GlobalGate;
 
 import DNTask;
 import FuncHelper;
-import GlobalServerHelper;
 import ThirdParty.Libhv;
 import ThirdParty.PbGen;
 import Logger;
@@ -14,7 +13,7 @@ import std.compat;
 namespace GlobalMessage
 {
 
-	export void Exe_RetRegistSrv(hv::SocketChannelPtr channel, std::string binMsg)
+	export void Exe_RetRegistSrv(DNSocketProxy::Ptr channel, std::string binMsg)
 	{
 		GMsg::g2G_RetRegistSrv request;
 		if(!request.ParseFromString(binMsg))
@@ -49,7 +48,7 @@ namespace GlobalMessage
 		}
 	}
 
-	export void Exe_RetRegistChild(hv::SocketChannelPtr channel, std::string binMsg)
+	export void Exe_RetRegistChild(DNSocketProxy::Ptr channel, std::string binMsg)
 	{
 		GMsg::g2G_RetRegistChild request;
 		if(!request.ParseFromString(binMsg))

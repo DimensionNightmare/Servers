@@ -3,7 +3,6 @@ export module LogicMessage:LogicDedicated;
 
 import DNTask;
 import FuncHelper;
-import LogicServerHelper;
 import Logger;
 import ThirdParty.Libhv;
 import ThirdParty.PbGen;
@@ -12,7 +11,7 @@ import std.compat;
 
 namespace LogicMessage
 {
-	export DNTaskVoid Msg_ReqLoadEntityData(hv::SocketChannelPtr channel, uint32_t msgId, std::string binMsg)
+	export DNTaskVoid Msg_ReqLoadEntityData(DNSocketProxy::Ptr channel, uint32_t msgId, std::string binMsg)
 	{
 		GMsg::d2L_ReqLoadEntityData request;
 		if(!request.ParseFromString(binMsg))
@@ -52,7 +51,7 @@ namespace LogicMessage
 		co_return;
 	}
 
-	export void Msg_ReqSaveEntityData(hv::SocketChannelPtr channel, std::string binMsg)
+	export void Msg_ReqSaveEntityData(DNSocketProxy::Ptr channel, std::string binMsg)
 	{
 		GMsg::d2L_ReqSaveEntityData request;
 		if(!request.ParseFromString(binMsg))

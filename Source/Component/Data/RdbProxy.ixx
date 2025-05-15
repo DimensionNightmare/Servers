@@ -13,7 +13,7 @@ protected:
 	{
 		eComponentType = EMComponentType::RdbProxy;
 
-		pLogger = GetOwner()->GetWorld()->GetSystem<LoggerPrint>(EMSystemType::LoggerPrint);
+		pLogger = GetOwner()->GetWorld()->GetSystemW<LoggerPrint>(EMSystemType::LoggerPrint);
 	}
 
 	bool Awake()
@@ -46,7 +46,7 @@ protected:
 		Component::Dispose();
 	}
 
-	LoggerPrint::Ptr GetLogger(){ return pLogger.lock(); }
+	LoggerPrint::Ptr GetLogger(){ return pLogger.expired() ? nullptr : pLogger.lock(); }
 
 public:
 	~RdbProxy() = default;

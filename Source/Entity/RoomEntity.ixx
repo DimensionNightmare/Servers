@@ -1,14 +1,13 @@
 module;
 export module RoomEntity;
 
-
-import NetEntity;
+import ECSW;
 
 /// @brief room mean set/team/... client collection.
-export class RoomEntity : public NetEntity
+export class RoomEntity : public Entity
 {
 protected:
-	RoomEntity(World::WPtr world):NetEntity(world)
+	RoomEntity(World::WPtr world):Entity(world)
 	{
 		eEntityType = EMEntityType::Room;
 	}

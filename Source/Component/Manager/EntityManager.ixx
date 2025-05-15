@@ -14,7 +14,7 @@ protected:
 	{
 		pLoop = std::make_unique<hv::EventLoopThread>();
 
-		pLogger = GetOwner()->GetWorld()->GetSystem<LoggerPrint>(EMSystemType::LoggerPrint);
+		pLogger = GetOwner()->GetWorld()->GetSystemW<LoggerPrint>(EMSystemType::LoggerPrint);
 	}
 	
 public:
@@ -49,10 +49,10 @@ public:
 
 protected:
 
-	LoggerPrint::Ptr GetLogger(){ return pLogger.lock(); }
+	LoggerPrint::Ptr GetLogger(){ return pLogger.expired() ? nullptr : pLogger.lock(); }
 public: // dll override
 
-	const hv::EventLoopPtr& Timer() { return pLoop->loop(); }
+	const auto& Timer() { return pLoop->loop(); }
 
 	void AddTimerRecord(size_t timerId, uint32_t id)
 	{

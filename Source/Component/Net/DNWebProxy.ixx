@@ -36,7 +36,7 @@ public:
 		setPort(port);
 		setThreadNum(4);
 
-		LoggerPrint::Ptr pLogger = pWorld->GetSystem<LoggerPrint>(EMSystemType::LoggerPrint).lock();
+		LoggerPrint::Ptr pLogger = pWorld->GetSystem<LoggerPrint>(EMSystemType::LoggerPrint);
 		pLogger->Record(EL10nCode_SrvListenOn, port, 0);
 
 		GetOwner()->AddEvent(EMEventType::ServerStart, GetSelfW<DNWebProxy>(), &DNWebProxy::Start);

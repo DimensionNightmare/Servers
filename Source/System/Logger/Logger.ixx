@@ -133,7 +133,7 @@ public:
 	void Record(EL10nCode code, Args&&... args)
 	{
 		ELogLevel level;
-		const std::string& fmt = pDNl10n.lock()->GetTipText(code, level);
+		const std::string& fmt = GetDNl10n()->GetTipText(code, level);
 
 		if (level < eLogLevel)
 		{
@@ -158,7 +158,7 @@ public:
 	void Record(EL10nCode code)
 	{
 		ELogLevel level;
-		const std::string& fmt = pDNl10n.lock()->GetTipText(code, level);
+		const std::string& fmt = GetDNl10n()->GetTipText(code, level);
 
 		if (level < eLogLevel)
 		{
@@ -191,10 +191,13 @@ public:
 		}
 	}
 
-public:
+	DNl10n::Ptr GetDNl10n() { return pDNl10n.expired() ? nullptr : pDNl10n.lock(); }
+
+	void SetDNl10n(DNl10n::WPtr l10n){ pDNl10n = l10n; }
+	
+protected:
 	DNl10n::WPtr pDNl10n;
 
-protected:
 	std::ofstream LogFile; 
 
 	ELogLevel eLogLevel = ELogLevel_Normal;
@@ -204,7 +207,7 @@ bool DNl10n::Init()
 {
 	World::Ptr pWorld = GetWorld();
 
-	LoggerPrint::Ptr pLogger = pWorld->GetSystem<LoggerPrint>(EMSystemType::LoggerPrint).lock();
+	LoggerPrint::Ptr pLogger = pWorld->GetSystem<LoggerPrint>(EMSystemType::LoggerPrint);
 	std::string* value = pWorld->LaunchParam("l10nDataPath");
 	if (!value)
 	{
@@ -255,7 +258,7 @@ bool DNl10n::Init()
 			return false;
 	}
 
-	pLogger->pDNl10n = std::static_pointer_cast<DNl10n>(shared_from_this());
+	pLogger->SetDNl10n(GetSelfW<DNl10n>());
 
 	return true;
 }
@@ -267,7 +270,7 @@ public:
 	{
 		pWorld = std::make_shared<World>();
 		pWorld->AddSystem<DNl10n>();
-		pLogger = pWorld->AddSystem<LoggerPrint>().lock();
+		pLogger = pWorld->AddSystem<LoggerPrint>();
 	}
 
 	~LoggerPrintPid()
@@ -278,48 +281,50 @@ public:
 
 	bool Init(ELogLevel level)
 	{
-		pLogger->SetLogger(level);
+		GetLogger()->SetLogger(level);
 		return true;
 	}
 
 	bool Init(const std::filesystem::path& path)
 	{
-		pLogger->SetLogger(path);
+		GetLogger()->SetLogger(path);
 		return true;
 	}
 
 	bool Init(std::unordered_map<std::string, std::string> commonInfo)
 	{
 		pWorld->MoveLuanchConfigToSelf(std::move(commonInfo));
-		DNl10n::Ptr pL10n = pWorld->GetSystem<DNl10n>(EMSystemType::DNl10n).lock();
+		DNl10n::Ptr pL10n = pWorld->GetSystem<DNl10n>(EMSystemType::DNl10n);
 		return pL10n->Init();
 	}
 
 	template <typename... Args>
     void Record(ELogLevel level, const std::format_string<Args...>& fmt, Args&&... args)
 	{
-		pLogger->Record(level, fmt, std::forward<Args>(args)...);
+		GetLogger()->Record(level, fmt, std::forward<Args>(args)...);
 	}
 
 	void Record(ELogLevel level, const std::string& fmt)
 	{
-		pLogger->Record(level, fmt);
+		GetLogger()->Record(level, fmt);
 	}
 
 	template <typename... Args>
 	void Record(EL10nCode code, Args&&... args)
 	{
-		pLogger->Record(code, std::forward<Args>(args)...);
+		GetLogger()->Record(code, std::forward<Args>(args)...);
 	}
 
 	void Record(EL10nCode code)
 	{
-		pLogger->Record(code);
+		GetLogger()->Record(code);
 	}
+
+	LoggerPrint::Ptr GetLogger() { return pLogger.expired() ? nullptr : pLogger.lock(); }
 
 private:
 	World::Ptr pWorld;
-	LoggerPrint::Ptr pLogger;
+	LoggerPrint::WPtr pLogger;
 };
 
 export LoggerPrintPid SPidLogger;

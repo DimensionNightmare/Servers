@@ -23,7 +23,7 @@ export int HandleControlServerInit(DNServer::Ptr server)
 	{
 		DNServerProxy::WPtr serverProxy = proxy->GetSelfW<DNServerProxy>();
 	
-		proxy->onConnection = [serverProxy](const hv::SocketChannelPtr& channel)
+		proxy->onConnection = [serverProxy](const DNSocketProxy::Ptr& channel)
 			{
 				DNServerProxy::Ptr proxy = serverProxy.lock();
 
@@ -33,6 +33,9 @@ export int HandleControlServerInit(DNServer::Ptr server)
 				if (channel->isConnected())
 				{
 					proxy->GetLogger()->Record(EL10nCode_CliConnOn, peeraddr, channel->fd(), channel->id());
+
+					channel->SetWorld(proxy->GetWorld());
+					
 					TickMainSpaceDll(proxy, FUNCPLACE(&DNServerProxy::InitConnectedChannel),  channel);
 				}
 				else
@@ -50,7 +53,7 @@ export int HandleControlServerInit(DNServer::Ptr server)
 				}
 			};
 
-		proxy->onMessage = [serverProxy](const hv::SocketChannelPtr& channel, hv::Buffer* buf)
+		proxy->onMessage = [serverProxy](const DNSocketProxy::Ptr& channel, hv::Buffer* buf)
 			{
 				DNServerProxy::Ptr proxy = serverProxy.lock();
 

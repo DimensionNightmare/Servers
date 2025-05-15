@@ -3,16 +3,17 @@ export module ControlMessage:ControlRedirect;
 
 import DNTask;
 import FuncHelper;
-import ControlServerHelper;
 import Logger;
 import ThirdParty.Libhv;
 import ThirdParty.PbGen;
 import ServerEntity;
 import std.compat;
+import DNSocketProxy;
+import ServerEntityManagerHelper;
 
 namespace ControlMessage
 {
-	export DNTaskVoid Msg_ReqAuthAccount(hv::SocketChannelPtr channel, uint32_t msgId, std::string binMsg)
+	export DNTaskVoid Msg_ReqAuthAccount(DNSocketProxy::Ptr channel, uint32_t msgId, std::string binMsg)
 	{
 		GMsg::A2g_ReqAuthAccount request;
 		if(!request.ParseFromString(binMsg))
@@ -22,7 +23,12 @@ namespace ControlMessage
 		GMsg::g2A_ResAuthAccount response;
 
 		ServerEntity::Ptr entity = nullptr;
-		const std::list<ServerEntity::Ptr>& serverList = GetControlServer()->GetServerEntityManager()->GetEntitysByType(EMServerType::GlobalServer);
+
+		ServerEntityManagerHelper::Ptr component = channel->GetWorld()
+				->GetSystem<DNServer>(EMSystemType::DNServer)
+				->GetComponent<ServerEntityManagerHelper>(EMComponentType::ServerEntityManager);
+
+		const std::list<ServerEntity::Ptr>& serverList = component->GetEntitysByType(EMServerType::GlobalServer);
 
 		// std::erase_if(serverList, [](ServerEntity::Ptr itor){return itor ? itor->TimerId() : true; });
 		// serverList.sort([](ServerEntity::Ptr lhs, ServerEntity::Ptr rhs){return lhs->ConnNum() < rhs->ConnNum(); });

@@ -1,7 +1,6 @@
 module;
 export module GateMessage:GateClient;
 
-import GateServerHelper;
 import DNTask;
 import StrUtils;
 import FuncHelper;
@@ -15,7 +14,7 @@ namespace GateMessage
 {
 
 	// client request
-	export DNTaskVoid Msg_ReqAuthToken(hv::SocketChannelPtr channel, uint32_t msgId, std::string binMsg)
+	export DNTaskVoid Msg_ReqAuthToken(DNSocketProxy::Ptr channel, uint32_t msgId, std::string binMsg)
 	{
 		GMsg::C2S_ReqAuthToken request;
 		if(!request.ParseFromString(binMsg))

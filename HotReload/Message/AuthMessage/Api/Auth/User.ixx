@@ -1,7 +1,6 @@
 module;
 export module ApiManager:ApiAuth;
 
-import AuthServerHelper;
 import DNTask;
 import FuncHelper;
 import DllUtils;
@@ -11,6 +10,7 @@ import ThirdParty.Libhv;
 import ThirdParty.PbGen;
 import ThirdParty.Libpqxx;
 import std.compat;
+import DNServer;
 
 using namespace std::chrono;
 

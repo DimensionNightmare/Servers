@@ -3,12 +3,12 @@ export module DatabaseMessage:DatabaseCommon;
 
 import DNTask;
 import FuncHelper;
-import DatabaseServerHelper;
 import Logger;
 import DllUtils;
 import ThirdParty.Libhv;
 import ThirdParty.PbGen;
 import DNClientProxyHelper;
+import DNServer;
 
 #define FUNCPLACE(func) #func, func
 
@@ -77,7 +77,7 @@ namespace DatabaseMessage
 		co_return;
 	}
 
-	export void Exe_RetChangeCtlSrv(hv::SocketChannelPtr channel, std::string binMsg)
+	export void Exe_RetChangeCtlSrv(DNSocketProxy::Ptr channel, std::string binMsg)
 	{
 		GMsg::COM_RetChangeCtlSrv request;
 		if(!request.ParseFromString(binMsg))

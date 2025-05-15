@@ -8,8 +8,9 @@ import ThirdParty.Libhv;
 import ThirdParty.PbGen;
 import ECSW;
 import DNServer;
+export import DNSocketProxy;
 
-export class DNServerProxy : public Component, public hv::TcpServer
+export class DNServerProxy : public Component, public hv::TcpServerTmpl<DNSocketProxy>
 {
 protected:
 	friend class System;
@@ -18,7 +19,7 @@ protected:
 		eComponentType = EMComponentType::DNServerProxy;
 
 		pLoop = std::make_unique<hv::EventLoopThread>();
-		pLogger = GetOwner()->GetWorld()->GetSystem<LoggerPrint>(EMSystemType::LoggerPrint);
+		pLogger = GetOwner()->GetWorld()->GetSystemW<LoggerPrint>(EMSystemType::LoggerPrint);
 	}
 
 public:
@@ -32,7 +33,9 @@ public:
 	{
 		int16_t port = 0;
 
-		switch(GetOwner<DNServer>()->GetServerType())
+		DNServer::Ptr server = GetOwner<DNServer>();
+
+		switch(server->GetServerType())
 		{
 			case EMServerType::ControlServer:
 			case EMServerType::GlobalServer:
@@ -84,7 +87,7 @@ public:
 
 		GetLogger()->Record(EL10nCode_SrvListenOn, port, listenfd);
 
-		GetOwner()->AddEvent(EMEventType::ServerStart, GetSelfW<DNServerProxy>(), &DNServerProxy::Start);
+		server->AddEvent(EMEventType::ServerStart, GetSelfW<DNServerProxy>(), &DNServerProxy::Start);
 
 		return true;
 	}
@@ -92,8 +95,12 @@ public:
 	void Start()
 	{
 		pLoop->start();
-		// start();
-		Libhv::Run(this);
+
+		// first split self to base pointer
+		auto base_ptr = static_cast<hv::TcpServerTmpl<DNSocketProxy>*>(this);
+		// then cast to template<>
+		Libhv::Run(reinterpret_cast<hv::TcpServerTmpl<>*>(base_ptr));
+
 	}
 
 	void End()
@@ -111,11 +118,11 @@ public:
 		mMapTimer.clear();
 	}
 
-	LoggerPrint::Ptr GetLogger(){ return pLogger.lock(); }
+	LoggerPrint::Ptr GetLogger(){ return pLogger.expired() ? nullptr : pLogger.lock(); }
 
 public: // dll override
 
-	void InitConnectedChannel(const hv::SocketChannelPtr& channel)
+	void InitConnectedChannel(const DNSocketProxy::Ptr& channel)
 	{
 		// if not regist
 		CheckChannelByTimer(channel);
@@ -178,7 +185,7 @@ public: // dll override
 
 	}
 
-	const hv::EventLoopPtr& Timer() { return pLoop->loop(); }
+	const auto& Timer() { return pLoop->loop(); }
 
 	void AddTimerRecord(size_t timerId, uint32_t id)
 	{
@@ -186,7 +193,7 @@ public: // dll override
 		mMapTimer.emplace(timerId, id);
 	}
 
-	void CheckChannelByTimer(hv::SocketChannelPtr channel)
+	void CheckChannelByTimer(DNSocketProxy::Ptr channel)
 	{
 		size_t timerId = Timer()->setTimeout(5000, std::bind(&DNServerProxy::ChannelTimeoutTimer, this, std::placeholders::_1));
 		AddTimerRecord(timerId, channel->id());

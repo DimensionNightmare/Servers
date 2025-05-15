@@ -15,7 +15,7 @@ export class ControlMessageHandle
 
 public:
 
-	static void MsgHandle(const hv::SocketChannelPtr& channel, uint32_t msgId, size_t msgHashId, const std::string& msgData)
+	static void MsgHandle(const DNSocketProxy::Ptr& channel, uint32_t msgId, size_t msgHashId, const std::string& msgData)
 	{
 		if (MHandleMap.contains(msgHashId))
 		{
@@ -35,7 +35,7 @@ public:
 		}
 	}
 
-	static void MsgRetHandle(const hv::SocketChannelPtr& channel, size_t msgHashId, const std::string& msgData)
+	static void MsgRetHandle(const DNSocketProxy::Ptr& channel, size_t msgHashId, const std::string& msgData)
 	{
 		if (MHandleRetMap.contains(msgHashId))
 		{
@@ -56,7 +56,7 @@ public:
 		}
 	}
 
-	static void MsgRedirectHandle(const hv::SocketChannelPtr& channel, uint32_t msgId, size_t msgHashId, const std::string& msgData)
+	static void MsgRedirectHandle(const DNSocketProxy::Ptr& channel, uint32_t msgId, size_t msgHashId, const std::string& msgData)
 	{
 		if (MHandleRedirectMap.contains(msgHashId))
 		{
@@ -91,9 +91,9 @@ public:
 	}
 public:
 
-	inline static std::unordered_map<size_t, std::pair<const Message*, std::function<void(hv::SocketChannelPtr, uint32_t, std::string)>>> MHandleMap;
+	inline static std::unordered_map<size_t, std::pair<const Message*, std::function<void(DNSocketProxy::Ptr, uint32_t, std::string)>>> MHandleMap;
 
-	inline static std::unordered_map<size_t, std::pair<const Message*, std::function<void(hv::SocketChannelPtr, std::string)>>> MHandleRetMap;
+	inline static std::unordered_map<size_t, std::pair<const Message*, std::function<void(DNSocketProxy::Ptr, std::string)>>> MHandleRetMap;
 
-	inline static std::unordered_map<size_t, std::pair<const Message*, std::function<void(hv::SocketChannelPtr, uint32_t, std::string)>>> MHandleRedirectMap;
+	inline static std::unordered_map<size_t, std::pair<const Message*, std::function<void(DNSocketProxy::Ptr, uint32_t, std::string)>>> MHandleRedirectMap;
 };

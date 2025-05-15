@@ -59,11 +59,9 @@ export namespace hv
 	using hv::HttpServer;
 	using hv::EventLoop;
 	using hv::EventLoopThreadPool;
-	using hv::TcpClient;
-	using hv::TcpServer;
 
-	using SocketChannelPtr = std::shared_ptr<hv::SocketChannel>;
-	using EventLoopPtr = std::shared_ptr<hv::EventLoop>;
+	using hv::TcpClientTmpl;
+	using hv::TcpServerTmpl;
 }
 
 export namespace Libhv
@@ -72,9 +70,9 @@ export namespace Libhv
 
 	void hvlog_disable() { hlog_disable(); }
 
-	void Run(hv::TcpClient* obj) { obj->start(); }
+	void Run(hv::TcpClientTmpl<>* obj) { obj->start(); }
 
-	void Run(hv::TcpServer* obj) { obj->start(); }
+	void Run(hv::TcpServerTmpl<>* obj) { obj->start(); }
 
 }
 

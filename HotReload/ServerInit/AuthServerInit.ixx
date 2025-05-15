@@ -30,7 +30,7 @@ export int HandleAuthServerInit(DNServer::Ptr dnServer)
 	{
 		DNClientProxy::WPtr clientProxy = proxy->GetSelfW<DNClientProxy>();
 		
-		proxy->onConnection = [clientProxy](const hv::SocketChannelPtr& channel)
+		proxy->onConnection = [clientProxy](const DNSocketProxy::Ptr& channel)
 			{
 				DNClientProxy::Ptr proxy = clientProxy.lock();
 
@@ -41,6 +41,9 @@ export int HandleAuthServerInit(DNServer::Ptr dnServer)
 				if (channel->isConnected())
 				{
 					proxy->GetLogger()->Record(EL10nCode_CliConnOn, peeraddr, channel->fd(), channel->id());
+
+					channel->SetWorld(proxy->GetWorld());
+
 					proxy->SetRegistEvent(&AuthMessage::Evt_ReqRegistSrv);
 					TickMainSpaceDll(proxy, FUNCPLACE(&DNClientProxy::InitConnectedChannel),  channel);
 				}
@@ -62,7 +65,7 @@ export int HandleAuthServerInit(DNServer::Ptr dnServer)
 				}
 			};
 
-		proxy->onMessage = [clientProxy](const hv::SocketChannelPtr& channel, hv::Buffer* buf)
+		proxy->onMessage = [clientProxy](const DNSocketProxy::Ptr& channel, hv::Buffer* buf)
 			{
 				DNClientProxy::Ptr proxy = clientProxy.lock();
 

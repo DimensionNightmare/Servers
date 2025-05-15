@@ -2,7 +2,6 @@ module;
 export module GateMessage:GateRedirect;
 
 import FuncHelper;
-import GateServerHelper;
 import Logger;
 import DNTask;
 import ThirdParty.Libhv;
@@ -13,7 +12,7 @@ import std.compat;
 namespace GateMessage
 {
 
-	export DNTaskVoid Exe_ReqLoadData(hv::SocketChannelPtr channel, uint32_t msgId, std::string binMsg)
+	export DNTaskVoid Exe_ReqLoadData(DNSocketProxy::Ptr channel, uint32_t msgId, std::string binMsg)
 	{
 		GMsg::L2D_ReqLoadData request;
 		if(!request.ParseFromString(binMsg))
@@ -64,7 +63,7 @@ namespace GateMessage
 		co_return;
 	}
 
-	export DNTaskVoid Exe_ReqSaveData(hv::SocketChannelPtr channel, uint32_t msgId, std::string binMsg)
+	export DNTaskVoid Exe_ReqSaveData(DNSocketProxy::Ptr channel, uint32_t msgId, std::string binMsg)
 	{
 		GMsg::L2D_ReqSaveData request;
 		if(!request.ParseFromString(binMsg))

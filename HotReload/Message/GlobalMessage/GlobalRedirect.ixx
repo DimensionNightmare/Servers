@@ -3,7 +3,6 @@ export module GlobalMessage:GlobalRedirect;
 
 import DNTask;
 import FuncHelper;
-import GlobalServerHelper;
 import Logger;
 import ThirdParty.Libhv;
 import ThirdParty.PbGen;
@@ -14,7 +13,7 @@ import std.compat;
 namespace GlobalMessage
 {
 
-	export DNTaskVoid Msg_ReqAuthAccount(hv::SocketChannelPtr channel, uint32_t msgId, std::string binMsg)
+	export DNTaskVoid Msg_ReqAuthAccount(DNSocketProxy::Ptr channel, uint32_t msgId, std::string binMsg)
 	{
 		GMsg::A2g_ReqAuthAccount request;
 		if(!request.ParseFromString(binMsg))

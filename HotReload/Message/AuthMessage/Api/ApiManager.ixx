@@ -1,7 +1,6 @@
 module;
 export module ApiManager;
 
-import AuthServerHelper;
 import :ApiAuth;
 import ThirdParty.Libhv;
 

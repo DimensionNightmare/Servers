@@ -12,6 +12,7 @@ private:
 
 	ServerEntityManagerHelper() {}
 public:
+	using Ptr = std::shared_ptr<ServerEntityManagerHelper>;
 
 	ServerEntity::Ptr AddEntity(uint32_t entityId, EMServerType regType)
 	{

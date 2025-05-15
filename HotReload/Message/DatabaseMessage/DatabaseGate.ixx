@@ -2,7 +2,6 @@ module;
 export module DatabaseMessage:DatabaseGate;
 
 import FuncHelper;
-import DatabaseServerHelper;
 import Logger;
 import DbUtils;
 import FuncHelper;
@@ -10,11 +9,13 @@ import ThirdParty.Libhv;
 import ThirdParty.PbGen;
 import ThirdParty.Libpqxx;
 import std.compat;
+import DNSocketProxy;
+import DNServer;
 
 namespace DatabaseMessage
 {
 
-	export void Exe_ReqLoadData(hv::SocketChannelPtr channel, uint32_t msgId, std::string binMsg)
+	export void Exe_ReqLoadData(DNSocketProxy::Ptr channel, uint32_t msgId, std::string binMsg)
 	{
 		GMsg::L2D_ReqLoadData request;
 		if(!request.ParseFromString(binMsg))
@@ -110,7 +111,7 @@ namespace DatabaseMessage
 		MessagePackAndSend(msgId, EMMsgDeal::Res, "", binData, channel);
 	}
 
-	export void Exe_ReqSaveData(hv::SocketChannelPtr channel, uint32_t msgId, std::string binMsg)
+	export void Exe_ReqSaveData(DNSocketProxy::Ptr channel, uint32_t msgId, std::string binMsg)
 	{
 		GMsg::L2D_ReqSaveData request;
 		if(!request.ParseFromString(binMsg))

@@ -1,7 +1,6 @@
 module;
 export module LogicMessage:LogicGate;
 
-import LogicServerHelper;
 import Logger;
 import ThirdParty.Libhv;
 import ThirdParty.PbGen;
@@ -10,7 +9,7 @@ import std.compat;
 
 namespace LogicMessage
 {
-	export void Exe_RetProxyOffline(hv::SocketChannelPtr channel, std::string binMsg)
+	export void Exe_RetProxyOffline(DNSocketProxy::Ptr channel, std::string binMsg)
 	{
 		GMsg::g2L_RetProxyOffline request;
 		if(!request.ParseFromString(binMsg))

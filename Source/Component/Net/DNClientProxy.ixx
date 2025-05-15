@@ -8,6 +8,7 @@ import ThirdParty.Libhv;
 import ThirdParty.PbGen;
 import MessagePack;
 import ECSW;
+export import DNSocketProxy;
 
 #define NABS(n) ((n) < 0 ? (n) : -(n))
 
@@ -18,7 +19,7 @@ export enum class EMRegistState : uint8_t
 	Registed,
 };
 
-export class DNClientProxy : public Component, public hv::TcpClient
+export class DNClientProxy : public Component, public hv::TcpClientTmpl<DNSocketProxy>
 {
 protected:
 	friend class System;
@@ -28,7 +29,7 @@ protected:
 
 		pLoop = std::make_unique<hv::EventLoopThread>();
 
-		pLogger = GetOwner()->GetWorld()->GetSystem<LoggerPrint>(EMSystemType::LoggerPrint);
+		pLogger = GetOwner()->GetWorld()->GetSystemW<LoggerPrint>(EMSystemType::LoggerPrint);
 	}
 public:
 
@@ -80,7 +81,11 @@ public:
 	void Start()
 	{
 		pLoop->start();
-		Libhv::Run(this);
+
+		// first split self to base pointer
+		auto base_ptr = static_cast<hv::TcpClientTmpl<DNSocketProxy>*>(this);
+		// then cast to template<>
+		Libhv::Run(reinterpret_cast<hv::TcpClientTmpl<>*>(base_ptr));
 	}
 
 	void End()
@@ -90,7 +95,7 @@ public:
 	}
 
 
-	LoggerPrint::Ptr GetLogger(){ return pLogger.lock(); }
+	LoggerPrint::Ptr GetLogger(){ return pLogger.expired() ? nullptr : pLogger.lock(); }
 
 public: // dll override
 
@@ -152,7 +157,7 @@ public: // dll override
 		return timerId;
 	}
 
-	const hv::EventLoopPtr& Timer() { return pLoop->loop(); }
+	const auto& Timer() { return pLoop->loop(); }
 
 	void AddTimerRecord(size_t timerId, uint32_t id)
 	{
@@ -173,7 +178,7 @@ public: // dll override
 		MessagePackAndSend(0, EMMsgDeal::Ret, request.GetDescriptor()->full_name(), binData, GetChannel());
 	}
 
-	void InitConnectedChannel(const hv::SocketChannelPtr& chanhel)
+	void InitConnectedChannel(const DNSocketProxy::Ptr& chanhel)
 	{
 		// chanhel->setHeartbeat(4000, std::bind(&DNClientProxy::TickHeartbeat, this));
 		// channel->setWriteTimeout(12000);
@@ -192,8 +197,11 @@ public: // dll override
 		Timer()->setTimeout(500, [=](uint64_t)
 		{
 			createsocket(port, ip.c_str());
-			// start();
-			Libhv::Run(this);
+
+			// first split self to base pointer
+			auto base_ptr = static_cast<hv::TcpClientTmpl<DNSocketProxy>*>(this);
+			// then cast to template<>
+			Libhv::Run(reinterpret_cast<hv::TcpClientTmpl<>*>(base_ptr));
 		});
 	}
 
@@ -213,7 +221,7 @@ public: // dll override
 
 	uint32_t GetMsgId() { return ++iMsgId; }
 
-	const hv::SocketChannelPtr& GetChannel() { return channel; }
+	const DNSocketProxy::Ptr& GetChannel() { return channel; }
 
 protected: // dll proxy
 

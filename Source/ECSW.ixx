@@ -35,7 +35,6 @@ export enum class EMComponentType : uint8_t
 export enum class EMEntityType : uint8_t
 {
 	None,
-	// NetEntity, virtual
 	Server,
 	Proxy,
 	Client,
@@ -180,7 +179,7 @@ public:
 		Object::Dispose();
 	}
 
-	std::shared_ptr<Entity> GetOwner(){ return pOwner.lock(); }
+	std::shared_ptr<Entity> GetOwner(){ return pOwner.expired() ? nullptr : pOwner.lock(); }
 
 	template<typename T>
 	std::shared_ptr<T> GetOwner(){ return std::static_pointer_cast<T>(GetOwner()); }
@@ -221,7 +220,7 @@ public: // dll override
 	/// @brief entity type total enum
 	EMEntityType GetEntityType() { return eEntityType; }
 
-	std::shared_ptr<World> GetWorld(){ return pWorld.lock(); }
+	std::shared_ptr<World> GetWorld(){ return pWorld.expired() ? nullptr : pWorld.lock(); }
 
 	template<typename T>
 	std::shared_ptr<T> GetComponent(EMComponentType type)
@@ -373,7 +372,7 @@ public:
 	}
 
 	template<typename T = System>
-	std::weak_ptr<T> AddSystem()
+	std::shared_ptr<T> AddSystem()
 	{
 		static_assert(std::is_base_of_v<System, T>, "T must inherit from System");
 		try
@@ -382,8 +381,9 @@ public:
 			if(!system->Awake())
 			{
 				system->Dispose();
-				return {};
+				return nullptr;
 			}
+
 			mSystemMap.emplace(system->GetSystemType(), system);
 			return system;
 		}
@@ -392,11 +392,11 @@ public:
 			std::cerr << e.what() << '\n';
 		}
 		
-		return {};
+		return nullptr;
 	}
 
 	template<typename T = System>
-	std::weak_ptr<T> GetSystem(EMSystemType type)
+	std::weak_ptr<T> GetSystemW(EMSystemType type)
 	{
 		static_assert(std::is_base_of_v<System, T>, "T must inherit from System");
 		try
@@ -414,6 +414,26 @@ public:
 		}
 		
 		return {};
+	}
+
+	template<typename T = System>
+	std::shared_ptr<T> GetSystem(EMSystemType type)
+	{
+		static_assert(std::is_base_of_v<System, T>, "T must inherit from System");
+		try
+		{
+			auto it = mSystemMap.find(type);
+			if (it != mSystemMap.end())
+			{
+				return std::static_pointer_cast<T>(it->second);
+			}
+		}
+		catch(const std::exception& e)
+		{
+			std::cerr << e.what() << '\n';
+		}
+		
+		return nullptr;
 	}
 
 	void Dispose()

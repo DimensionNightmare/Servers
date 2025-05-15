@@ -1,7 +1,8 @@
 module;
 export module ServerEntity;
 
-import NetEntity;
+import ECSW;
+
 import DNServer;
 import std.compat;
 
@@ -14,10 +15,10 @@ export enum class EMServerEntityFlag : uint16_t
 using ServerEntityBitFlag = std::bitset<static_cast<uint16_t>(EMServerEntityFlag::Max)>;
 
 /// @brief this is server proxy entity
-export class ServerEntity : public NetEntity
+export class ServerEntity : public Entity
 {
 protected:
-	ServerEntity(World::WPtr world):NetEntity(world)
+	ServerEntity(World::WPtr world):Entity(world)
 	{
 		eEntityType = EMEntityType::Server;
 	}

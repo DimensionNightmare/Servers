@@ -1,14 +1,13 @@
 module;
 export module ProxyEntity;
 
-import NetEntity;
-
+import ECSW;
 
 /// @brief this is client proxy entity
-export class ProxyEntity : public NetEntity
+export class ProxyEntity : public Entity
 {
 protected:
-	ProxyEntity(World::WPtr world):NetEntity(world)
+	ProxyEntity(World::WPtr world):Entity(world)
 	{
 		eEntityType = EMEntityType::Proxy;
 	}

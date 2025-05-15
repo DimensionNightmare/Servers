@@ -3,12 +3,12 @@ export module LogicMessage:LogicCommon;
 
 import DNTask;
 import FuncHelper;
-import LogicServerHelper;
 import Logger;
 import DllUtils;
 import ThirdParty.Libhv;
 import ThirdParty.PbGen;
 import DNClientProxyHelper;
+import DNServer;
 
 #define FUNCPLACE(func) #func, func
 
@@ -76,7 +76,7 @@ namespace LogicMessage
 	}
 
 	// client request
-	export void Msg_ReqRegistSrv(hv::SocketChannelPtr channel, uint32_t msgId, std::string binMsg)
+	export void Msg_ReqRegistSrv(DNSocketProxy::Ptr channel, uint32_t msgId, std::string binMsg)
 	{
 		GMsg::d2L_ReqRegistSrv request;
 		if(!request.ParseFromString(binMsg))
@@ -117,7 +117,7 @@ namespace LogicMessage
 				}
 
 				// already connect
-				if (const hv::SocketChannelPtr& sock = entity->GetSock())
+				if (const DNSocketProxy::Ptr& sock = entity->GetSock())
 				{
 					response.set_success(false);
 				}
@@ -172,7 +172,7 @@ namespace LogicMessage
 		MessagePackAndSend(msgId, EMMsgDeal::Res, "", binData, channel);
 	}
 
-	export void Exe_RetChangeCtlSrv(hv::SocketChannelPtr channel, std::string binMsg)
+	export void Exe_RetChangeCtlSrv(DNSocketProxy::Ptr channel, std::string binMsg)
 	{
 		GMsg::COM_RetChangeCtlSrv request;
 		if(!request.ParseFromString(binMsg))
@@ -185,7 +185,7 @@ namespace LogicMessage
 		TickMainSpaceDll(client, FUNCPLACE(&DNClientProxy::RedirectClient),  request.server_port(), request.server_ip());
 	}
 
-	export void Exe_RetHeartbeat(hv::SocketChannelPtr channel, std::string binMsg)
+	export void Exe_RetHeartbeat(DNSocketProxy::Ptr channel, std::string binMsg)
 	{
 		GMsg::COM_RetHeartbeat request;
 		if(!request.ParseFromString(binMsg))

@@ -2,7 +2,6 @@ module;
 export module GateMessage:GateGlobal;
 
 import FuncHelper;
-import GateServerHelper;
 import StrUtils;
 import Logger;
 import DllUtils;
@@ -16,7 +15,7 @@ import std.compat;
 namespace GateMessage
 {
 
-	export void Exe_ReqUserToken(hv::SocketChannelPtr channel, uint32_t msgId, std::string binMsg)
+	export void Exe_ReqUserToken(DNSocketProxy::Ptr channel, uint32_t msgId, std::string binMsg)
 	{
 		GMsg::A2g_ReqAuthAccount request;
 		
@@ -35,7 +34,7 @@ namespace GateMessage
 		if (entity)
 		{
 			//exit
-			if (const hv::SocketChannelPtr& online = entity->GetSock())
+			if (const DNSocketProxy::Ptr& online = entity->GetSock())
 			{
 				// kick channel
 				GMsg::S2C_RetAccountReplace request;

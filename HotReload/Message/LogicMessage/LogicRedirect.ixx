@@ -3,7 +3,6 @@ export module LogicMessage:LogicRedirect;
 
 import DNTask;
 import FuncHelper;
-import LogicServerHelper;
 import Logger;
 import ThirdParty.Libhv;
 import ThirdParty.PbGen;
@@ -12,7 +11,7 @@ import std.compat;
 
 namespace LogicMessage
 {
-	export void Exe_RetAccountReplace(hv::SocketChannelPtr channel, uint32_t msgId, std::string binMsg)
+	export void Exe_RetAccountReplace(DNSocketProxy::Ptr channel, uint32_t msgId, std::string binMsg)
 	{
 		GMsg::S2C_RetAccountReplace request;
 		if(!request.ParseFromString(binMsg))
@@ -50,7 +49,7 @@ namespace LogicMessage
 	}
 
 	// client request
-	export DNTaskVoid Msg_ReqClientLogin(hv::SocketChannelPtr channel, uint32_t msgId, std::string binMsg)
+	export DNTaskVoid Msg_ReqClientLogin(DNSocketProxy::Ptr channel, uint32_t msgId, std::string binMsg)
 	{
 		GMsg::C2S_ReqAuthToken request;
 		if(!request.ParseFromString(binMsg))

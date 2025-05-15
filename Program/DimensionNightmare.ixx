@@ -275,14 +275,14 @@ public:
 	{
 		
 		// logger
-		LoggerPrint::Ptr pLogger = world->AddSystem<LoggerPrint>().lock();
+		LoggerPrint::Ptr pLogger = world->AddSystem<LoggerPrint>();
 		if(!pLogger->Init())
 		{
 			return false;
 		}
 
 		// i10n
-		DNl10n::Ptr dnL10n = world->AddSystem<DNl10n>().lock();
+		DNl10n::Ptr dnL10n = world->AddSystem<DNl10n>();
 		if(!dnL10n->Init())
 		{
 			return false;
@@ -292,7 +292,7 @@ public:
 		std::string* value = world->LaunchParam("svrName");
 		EMServerType serverType = EnumName<EMServerType>(*value);
 
-		DNServer::Ptr server = world->AddSystem<DNServer>().lock();
+		DNServer::Ptr server = world->AddSystem<DNServer>();
 		server->SetServerType(serverType);
 
 		value = world->LaunchParam("byCtl");
@@ -353,7 +353,7 @@ public:
 			}
 		}
 
-		HotReloadDll::Ptr pHotDll = world->AddSystem<HotReloadDll>().lock();
+		HotReloadDll::Ptr pHotDll = world->AddSystem<HotReloadDll>();
 
 		// if (!pHotDll->ReloadHandle())
 		// {

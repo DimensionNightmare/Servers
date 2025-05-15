@@ -5,8 +5,9 @@ import MessagePack;
 import ThirdParty.Libhv;
 import Logger;
 import std.compat;
+import DNSocketProxy;
 
-export void MessagePackAndSend(uint32_t msgId, EMMsgDeal deal, const std::string& pbName, std::string& data, const hv::SocketChannelPtr& channel)
+export void MessagePackAndSend(uint32_t msgId, EMMsgDeal deal, const std::string& pbName, std::string& data, const DNSocketProxy::Ptr& channel)
 {
 	MessagePack(msgId, deal, pbName, data);
 	channel->write(data);
