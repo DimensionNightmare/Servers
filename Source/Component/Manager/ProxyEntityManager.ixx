@@ -39,7 +39,7 @@ public: // dll override
 			return;
 		}
 
-		uint32_t entityId = mMapTimer[timerID];
+		uint64_t entityId = mMapTimer[timerID];
 		if (RemoveEntity(entityId))
 		{
 			GetLogger()->Record(ELogLevel_Debug, "destory proxy Timer entity");
@@ -48,7 +48,7 @@ public: // dll override
 	}
 
 	/// @brief 
-	uint64_t CheckEntityCloseTimer(uint32_t entityId)
+	uint64_t CheckEntityCloseTimer(uint64_t entityId)
 	{
 		uint64_t timerId = Timer()->setTimeout(10000, std::bind(&ProxyEntityManager::EntityCloseTimer, this, std::placeholders::_1));
 
@@ -58,7 +58,7 @@ public: // dll override
 	}
 
 	/// @brief 
-	bool RemoveEntity(uint32_t entityId)
+	bool RemoveEntity(uint64_t entityId)
 	{
 		if (mEntityMap.contains(entityId))
 		{

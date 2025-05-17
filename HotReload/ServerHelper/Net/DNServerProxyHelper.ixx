@@ -13,8 +13,19 @@ export class DNServerProxyHelper : public DNServerProxy
 	
 private:
 
-	DNServerProxyHelper() = delete;;
+	DNServerProxyHelper() = delete;
+	~DNServerProxyHelper() = default;
+
+	DNServerProxyHelper(const DNServerProxyHelper&) = delete;
+	void operator=(const DNServerProxyHelper&) = delete;
+
+	DNServerProxyHelper(DNServerProxyHelper&&) = delete;
+	DNServerProxyHelper& operator=(DNServerProxyHelper&&) = delete;
+
+	void* operator new(size_t) = delete;
+    void operator delete(void*) = delete;
 public:
+	using Ptr = std::shared_ptr<DNServerProxyHelper>;
 
 	uint32_t GetMsgId() { return ++iMsgId; }
 

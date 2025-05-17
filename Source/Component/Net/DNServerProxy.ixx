@@ -23,6 +23,8 @@ protected:
 	}
 
 public:
+	using Ptr = std::shared_ptr<DNServerProxy>;
+	using WPtr = std::weak_ptr<DNServerProxy>;
 
 	~DNServerProxy()
 	{
@@ -173,12 +175,12 @@ public: // dll override
 		}
 
 		{
-			if (TSocketChannelPtr channel = getChannelById(id))
+			if (DNSocketProxy::Ptr channel = getChannelById(id))
 			{
 				if (!channel->context())
 				{
-					channel->close();
 					GetLogger()->Record(ELogLevel_Debug, "ChannelTimeoutTimer server destory entity\n");
+					channel->close();
 				}
 			}
 		}
@@ -193,7 +195,7 @@ public: // dll override
 		mMapTimer.emplace(timerId, id);
 	}
 
-	void CheckChannelByTimer(DNSocketProxy::Ptr channel)
+	void CheckChannelByTimer(const DNSocketProxy::Ptr& channel)
 	{
 		size_t timerId = Timer()->setTimeout(5000, std::bind(&DNServerProxy::ChannelTimeoutTimer, this, std::placeholders::_1));
 		AddTimerRecord(timerId, channel->id());

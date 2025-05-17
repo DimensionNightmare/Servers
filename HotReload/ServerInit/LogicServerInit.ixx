@@ -12,12 +12,17 @@ import DNServer;
 import MessagePack;
 import DNServerProxyHelper;
 import std.compat;
+import DNServerProxy;
+import RoomEntity;
+import LogicServerHelper;
 
 #define FUNCPLACE(func) #func, func
 
-export int HandleLogicServerInit(DNServer::Ptr dnServer)
+export int HandleLogicServerInit(const World::Ptr& world)
 {
 	LogicMessageHandle::RegMsgHandle();
+
+	LogicServerHelper::Ptr dnServer = world->GetSystem<LogicServerHelper>(EMSystemType::DNServer);
 
 	if (DNServerProxy::Ptr proxy = dnServer->GetComponent<DNServerProxy>(EMComponentType::DNServerProxy))
 	{
@@ -34,16 +39,18 @@ export int HandleLogicServerInit(DNServer::Ptr dnServer)
 				{
 					proxy->GetLogger()->Record(EL10nCode_CliConnOn, peeraddr, channel->fd(), channel->id());
 
-					channel->SetWorld(proxy->GetWorld());
+					// channel->SetWorld(proxy->GetOwner()->GetWorld());
 				}
 				else
 				{
+					// channel->SetWorld(nullptr);
+
 					proxy->GetLogger()->Record(EL10nCode_CliConnOff, peeraddr, channel->fd(), channel->id());
-					if (RoomEntity::Ptr entity = channel->getContext<RoomEntity>())
+					if (RoomEntity::Ptr entity = channel->getContextPtr<RoomEntity>())
 					{
-						RoomEntityManagerHelper* entityMan = proxy->GetRoomEntityManager();
+						RoomEntityManagerHelper::Ptr entityMan = proxy->GetOwner<LogicServerHelper>()->GetRoomEntityManager();
 						entityMan->RemoveEntity(entity->ID());
-						channel->setContext(nullptr);
+						channel->setContextPtr(nullptr);
 					}
 				}
 			};
@@ -81,9 +88,11 @@ export int HandleLogicServerInit(DNServer::Ptr dnServer)
 				}
 				else if (packet.dealType == EMMsgDeal::Res)
 				{
-					if (DNTask<Message*>* task = proxy->GetMsg(packet.msgId)) //client sock request
+					DNServerProxyHelper::Ptr proxyHelper = proxy->GetSelf<DNServerProxyHelper>();
+
+					if (DNTask<Message*>* task = proxyHelper->GetMsg(packet.msgId)) //client sock request
 					{
-						proxy->DelMsg(packet.msgId);
+						proxyHelper->DelMsg(packet.msgId);
 						task->Resume();
 
 						if (Message* message = task->GetResult())
@@ -124,47 +133,65 @@ export int HandleLogicServerInit(DNServer::Ptr dnServer)
 
 				const std::string& peeraddr = channel->peeraddr();
 
+				DNClientProxyHelper::Ptr proxyHelper = proxy->GetSelf<DNClientProxyHelper>();
+
 				if (channel->isConnected())
 				{
 					proxy->GetLogger()->Record(EL10nCode_SrvConnOn, peeraddr, channel->fd(), channel->id());
-
-					channel->SetWorld(proxy->GetWorld());
 					
-					proxy->SetRegistEvent(&LogicMessage::Evt_ReqRegistSrv);
-					TickMainSpaceDll(proxy, FUNCPLACE(&DNClientProxy::InitConnectedChannel),  channel);
+					proxyHelper->SetRegistEvent(&LogicMessage::Evt_ReqRegistSrv);
+					TickMainSpaceDll(proxy.get(), FUNCPLACE(&DNClientProxy::InitConnectedChannel),  channel);
 
-					serverProxy->GetClientEntityManager()->InitSqlConn(proxy);
+					proxyHelper->GetOwner<LogicServerHelper>()->GetClientEntityManager()->InitSqlConn(proxy);
 				}
 				else
 				{
 					proxy->GetLogger()->Record(EL10nCode_SrvConnOff, peeraddr, channel->fd(), channel->id());
 
-					std::string origin = std::format("{}:{}", proxy->GetCtlIp(), proxy->GetCtlPort());
-					if (clientSock->EMRegistState() == EMRegistState::Registed || peeraddr != origin)
+					std::string originIp;
+					if(std::string* param = proxy->GetOwner()->GetWorld()->LaunchParam("ctlIp"))
 					{
-						clientSock->EMRegistState() = EMRegistState::None;
+						originIp = *param;
+					}
 
-						if (clientSock->isConnected())
+					std::string originPort;
+					if(std::string* param = proxy->GetOwner()->GetWorld()->LaunchParam("ctlPort"))
+					{
+						originPort = *param;
+					}
+
+					std::string origin = std::format("{}:{}", originIp, originPort);
+					if (proxyHelper->EMRegistState() == EMRegistState::Registed || peeraddr != origin)
+					{
+						proxyHelper->EMRegistState() = EMRegistState::None;
+
+						if (proxyHelper->isConnected())
 						{
-							clientSock->Timer()->setTimeout(200, [=](uint64_t timerID)
+							proxy->GetLogger()->Record(ELogLevel_Debug, "orgin not match peeraddr {} reclient ~", origin);
+							proxyHelper->Timer()->setTimeout(200, [clientProxy, originIp, originPort](uint64_t timerID)
 								{
-									proxy->GetLogger()->Record(ELogLevel_Debug, "orgin not match peeraddr {} reclient ~", origin);
-									TickMainSpaceDll(clientSock, FUNCPLACE(&DNClientProxy::RedirectClient),  proxy->GetCtlPort(), proxy->GetCtlIp());
+									DNClientProxy::Ptr proxy = clientProxy.lock();
+									if(!proxy){ return ;}
+									TickMainSpaceDll(proxy.get(), FUNCPLACE(&DNClientProxy::RedirectClient),  std::stoi(originPort), originIp);
 
 								});
 						}
 					}
 
-					clientSock->RegistType() = 0;
+					proxyHelper->RegistType() = 0;
 				}
 
-				if (clientSock->isReconnect())
+				if (proxy->isReconnect())
 				{
 				}
 			};
 
 		proxy->onMessage = [clientProxy](const DNSocketProxy::Ptr& channel, hv::Buffer* buf)
 			{
+				DNClientProxy::Ptr proxy = clientProxy.lock();
+
+				if(!proxy){ return ;}
+
 				MessagePacket packet;
 				memcpy(&packet, buf->data(), MessagePacket::PackLenth);
 
@@ -192,9 +219,11 @@ export int HandleLogicServerInit(DNServer::Ptr dnServer)
 				}
 				else if (packet.dealType == EMMsgDeal::Res)
 				{
-					if (DNTask<Message*>* task = proxy->GetMsg(packet.msgId)) //client sock request
+					DNClientProxyHelper::Ptr proxyHelper = proxy->GetSelf<DNClientProxyHelper>();
+
+					if (DNTask<Message*>* task = proxyHelper->GetMsg(packet.msgId)) //client sock request
 					{
-						proxy->DelMsg(packet.msgId);
+						proxyHelper->DelMsg(packet.msgId);
 						task->Resume();
 
 						if (Message* message = task->GetResult())
@@ -224,29 +253,25 @@ export int HandleLogicServerInit(DNServer::Ptr dnServer)
 	return true;
 }
 
-export int HandleLogicServerShutdown(DNServer::Ptr server)
+export int HandleLogicServerShutdown(const World::Ptr& world)
 {
-	if (DNServerProxy::Ptr proxy = dnServer->GetComponent<DNServerProxy>(EMComponentType::DNServerProxy))
+	LogicServerHelper::Ptr dnServer = world->GetSystem<LogicServerHelper>(EMSystemType::DNServer);
+
+	if (DNServerProxyHelper::Ptr proxy = dnServer->GetServerProxy())
 	{
 		proxy->onConnection = nullptr;
 		proxy->onMessage = nullptr;
 
 		proxy->MsgMapClear();
-		proxy->ClearNosqlProxy();
 	}
 
-	if (DNClientProxy::Ptr proxy = dnServer->GetComponent<DNClientProxy>(EMComponentType::DNClientProxy))
+	if (DNClientProxyHelper::Ptr proxy = dnServer->GetClientProxy())
 	{
 		proxy->onConnection = nullptr;
 		proxy->onMessage = nullptr;
 		proxy->SetRegistEvent(nullptr);
 
 		proxy->MsgMapClear();
-	}
-
-	if (ClientEntityManager::Ptr proxy = dnServer->GetComponent<ClientEntityManager>(ClientEntityManager))
-	{
-		proxy->ClearNosqlProxy();
 	}
 
 	return true;

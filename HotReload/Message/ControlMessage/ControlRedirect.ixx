@@ -10,10 +10,11 @@ import ServerEntity;
 import std.compat;
 import DNSocketProxy;
 import ServerEntityManagerHelper;
+import ControlServerHelper;
 
 namespace ControlMessage
 {
-	export DNTaskVoid Msg_ReqAuthAccount(DNSocketProxy::Ptr channel, uint32_t msgId, std::string binMsg)
+	export DNTaskVoid Msg_ReqAuthAccount(const DNSocketProxy::Ptr& channel, uint32_t msgId, std::string binMsg)
 	{
 		GMsg::A2g_ReqAuthAccount request;
 		if(!request.ParseFromString(binMsg))
@@ -22,18 +23,24 @@ namespace ControlMessage
 		}
 		GMsg::g2A_ResAuthAccount response;
 
+		FinalExecute final([&response, msgId, channel](){
+			std::string binData;
+			response.SerializeToString(&binData);
+			MessagePackAndSend(msgId, EMMsgDeal::Res, "", binData, channel);
+		});
+
 		ServerEntity::Ptr entity = nullptr;
 
-		ServerEntityManagerHelper::Ptr component = channel->GetWorld()
-				->GetSystem<DNServer>(EMSystemType::DNServer)
-				->GetComponent<ServerEntityManagerHelper>(EMComponentType::ServerEntityManager);
+		ControlServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<ControlServerHelper>(EMSystemType::DNServer);
 
-		const std::list<ServerEntity::Ptr>& serverList = component->GetEntitysByType(EMServerType::GlobalServer);
+		ServerEntityManagerHelper::Ptr manager = dnServer->GetServerEntityManager();
+
+		const std::list<ServerEntity::Ptr>& serverList = manager->GetEntitysByType(EMServerType::GlobalServer);
 
 		// std::erase_if(serverList, [](ServerEntity::Ptr itor){return itor ? itor->TimerId() : true; });
 		// serverList.sort([](ServerEntity::Ptr lhs, ServerEntity::Ptr rhs){return lhs->ConnNum() < rhs->ConnNum(); });
 
-		for (ServerEntity::Ptr server : serverList)
+		for (const ServerEntity::Ptr& server : serverList)
 		{
 			if (server->TimerId())
 			{
@@ -52,8 +59,6 @@ namespace ControlMessage
 			}
 		}
 
-		std::string binData;
-
 		if (!entity)
 		{
 			response.set_state_code(2);
@@ -69,26 +74,22 @@ namespace ControlMessage
 			auto dataChannel = taskGen(&response);
 			// wait data parse
 
-			DNServerProxyHelper* server = GetControlServer()->GetSSock();
+			DNServerProxyHelper::Ptr proxy = dnServer->GetServerProxy();
 
-			uint32_t msgId = server->GetMsgId();
-			server->AddMsg(msgId, &dataChannel, 9000);
+			uint32_t msgId = proxy->GetMsgId();
+			proxy->AddMsg(msgId, &dataChannel, 9000);
 
-			binData = binMsg;
-			MessagePackAndSend(msgId, EMMsgDeal::Redir, request.GetDescriptor()->full_name(), binData, entity->GetSock());
+			MessagePackAndSend(msgId, EMMsgDeal::Redir, request.GetDescriptor()->full_name(), binMsg, entity->GetSock());
 
 			co_await dataChannel;
 			if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
 			{
-				SPidLogger.Record(ELogLevel_Debug, "requst timeout! ");
+				dnServer->GetLogger()->Record(ELogLevel_Debug, "requst timeout! ");
 				response.set_state_code(3);
 			}
 
 		}
 
-		response.SerializeToString(&binData);
-
-		MessagePackAndSend(msgId, EMMsgDeal::Res, "", binData, channel);
 		co_return;
 	}
 }

@@ -5,7 +5,7 @@ export module MODULE_MAIN;
 import std.compat;
 import DimensionNightmare;
 import Logger;
-import Platform;
+import ThirdParty.Platform;
 import StrUtils;
 import ECSW;
 
@@ -54,17 +54,17 @@ export int main(int argc, char** argv)
 		launchParam.emplace(split.substr(0, pos), split.substr(pos + 1));
 	}
 
-	App = std::make_unique<DimensionNightmare>();
+	static std::filesystem::path pidWorkPath = execPath.parent_path() / std::format("PID_LOG/PID_{}", Platform::GetCurrentProcessId());
+
+	SPidLogger.Init(pidWorkPath);
+
+	App = std::make_shared<DimensionNightmare>();
 	
 	if (!App->Init(std::move(launchParam)))
 	{
 		App = nullptr;
 		return 0;
 	}
-	
-	static std::filesystem::path pidWorkPath = execPath.parent_path() / std::format("PID_LOG/PID_{}_{}", GetNowTimeMiniStr(), Platform::GetCurrentProcessId());
-
-	SPidLogger.Init(pidWorkPath);
 	
 	SPidLogger.Record(ELogLevel_Normal, "hello ~");
 
@@ -200,7 +200,7 @@ export int main(int argc, char** argv)
 						allStr += str + " ";
 					}
 
-					SPidLogger.Record(ELogLevel_Normal, "{}", allStr);
+					SPidLogger.Record(ELogLevel_Normal, allStr);
 
 #ifdef _WIN32
 					Platform::PROCESS_INFORMATION pinfo = {};

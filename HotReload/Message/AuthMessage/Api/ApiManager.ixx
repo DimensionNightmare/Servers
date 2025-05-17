@@ -3,10 +3,12 @@ export module ApiManager;
 
 import :ApiAuth;
 import ThirdParty.Libhv;
+import AuthServerHelper;
+import DNServer;
 
-export void ApiInit(hv::HttpService* service)
+export void ApiInit(DNServer::WPtr server, hv::HttpService* service)
 {
-	service->preprocessor = [](const hv::HttpContextPtr& ctx) -> int
+	service->preprocessor = [server](const hv::HttpContextPtr& ctx) -> int
 		{
 			static bool pass = 0;
 
@@ -15,11 +17,14 @@ export void ApiInit(hv::HttpService* service)
 				return pass;
 			}
 
-			AuthServerHelper* authServer = GetAuthServer();
+			DNServer::Ptr serverTemp = server.lock();
+			if(!serverTemp) { return !pass; }
+
 
 			nlohmann::json errData;
 
-			if (authServer->GetCSock()->EMRegistState() != EMRegistState::Registed)
+			AuthServerHelper::Ptr dnServer = serverTemp->GetSelf<AuthServerHelper>();
+			if (dnServer->GetClientProxy()->EMRegistState() != EMRegistState::Registed)
 			{
 				errData["code"] = http_status::HTTP_STATUS_BAD_REQUEST;
 				errData["message"] = "Server Disconnect!";
@@ -30,5 +35,5 @@ export void ApiInit(hv::HttpService* service)
 			return pass;
 		};
 
-	ApiAuth(service);
+	ApiAuth(server, service);
 }

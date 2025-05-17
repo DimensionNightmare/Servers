@@ -3,7 +3,7 @@ module;
 export module ECSW;
 
 export import std.compat;
-import Platform;
+import ThirdParty.Platform;
 import NumUtils;
 
 #pragma region EnumType
@@ -269,12 +269,6 @@ public: // dll override
 		return nullptr;
 	}
 
-	template<typename T>
-	std::shared_ptr<T> GetSelf()
-	{
-		return std::static_pointer_cast<T>(shared_from_this());
-	}
-
 	void RemoveComponent(EMComponentType type)
 	{
 		auto it = mComponents.find(type);
@@ -370,6 +364,11 @@ public:
 	{
 
 	}
+	
+	void AddSystem(System::Ptr system)
+	{
+		mSystemMap.emplace(system->GetSystemType(), system);
+	}
 
 	template<typename T = System>
 	std::shared_ptr<T> AddSystem()
@@ -436,6 +435,19 @@ public:
 		return nullptr;
 	}
 
+	std::shared_ptr<System> RemoveSystem(EMSystemType type)
+	{
+		auto it = mSystemMap.find(type);
+		if (it == mSystemMap.end())
+		{
+			return nullptr;
+		}
+
+		auto system = it->second;
+		mSystemMap.erase(it);
+		return system;
+	}
+
 	void Dispose()
 	{
 		Object::Dispose();
@@ -450,6 +462,11 @@ public:
 	void MoveLuanchConfigToSelf(std::unordered_map<std::string, std::string>&& config)
 	{
 		mLuanchConfig = std::move(config);
+	}
+
+	void MoveLuanchConfigToSelf(std::unordered_map<std::string, std::string>& config)
+	{
+		mLuanchConfig = config;
 	}
 
 	std::string* LaunchParam(const std::string& key)

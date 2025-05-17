@@ -54,7 +54,7 @@ public: // dll override
 
 	const auto& Timer() { return pLoop->loop(); }
 
-	void AddTimerRecord(size_t timerId, uint32_t id)
+	void AddTimerRecord(size_t timerId, uint64_t id)
 	{
 		std::unique_lock<std::shared_mutex> ulock(oTimerMutex);
 		mMapTimer.emplace(timerId, id);
@@ -62,11 +62,11 @@ public: // dll override
 	
 protected: // dll proxy
 
-	std::unordered_map<uint32_t, std::shared_ptr<TEntity>> mEntityMap;
+	std::unordered_map<uint64_t, std::shared_ptr<TEntity>> mEntityMap;
 	/// @brief mEntityMap Mutex
 	std::shared_mutex oMapMutex;
 	//
-	std::unordered_map<uint64_t, uint32_t> mMapTimer;
+	std::unordered_map<uint64_t, uint64_t> mMapTimer;
 	/// @brief mMapTimer Mutex
 	std::shared_mutex oTimerMutex;
 

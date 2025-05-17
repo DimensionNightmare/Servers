@@ -9,11 +9,13 @@ import ThirdParty.PbGen;
 import ServerEntity;
 import ServerEntityManagerHelper;
 import std.compat;
+import DNSocketProxy;
+import GlobalServerHelper;
 
 namespace GlobalMessage
 {
 
-	export DNTaskVoid Msg_ReqAuthAccount(DNSocketProxy::Ptr channel, uint32_t msgId, std::string binMsg)
+	export DNTaskVoid Msg_ReqAuthAccount(const DNSocketProxy::Ptr& channel, uint32_t msgId, std::string binMsg)
 	{
 		GMsg::A2g_ReqAuthAccount request;
 		if(!request.ParseFromString(binMsg))
@@ -22,8 +24,14 @@ namespace GlobalMessage
 		}
 		GMsg::g2A_ResAuthAccount response;
 
+		FinalExecute final([&response, msgId, channel](){
+			std::string binData;
+			response.SerializeToString(&binData);
+			MessagePackAndSend(msgId, EMMsgDeal::Res, "", binData, channel);
+		});
+
 		// if has db not need origin
-		GlobalServerHelper* dnServer = GetGlobalServer();
+		GlobalServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<GlobalServerHelper>(EMSystemType::DNServer);
 		std::list<ServerEntity::Ptr> serverList = dnServer->GetServerEntityManager()->GetEntitysByType(EMServerType::GateServer);
 
 		std::list<ServerEntity::Ptr> tempList;
@@ -42,12 +50,12 @@ namespace GlobalMessage
 		if (tempList.empty())
 		{
 			response.set_state_code(4);
-			SPidLogger.Record(ELogLevel_Debug, "not exist GateServer");
+			dnServer->GetLogger()->Record(ELogLevel_Debug, "not exist GateServer");
 		}
 		else
 		{
 			ServerEntity::Ptr entity = tempList.front();
-			SPidLogger.Record(ELogLevel_Debug, "send to GateServer : {}", entity->ID());
+			dnServer->GetLogger()->Record(ELogLevel_Debug, "send to GateServer : {}", entity->ID());
 
 			entity->ConnNum()++;
 
@@ -61,17 +69,17 @@ namespace GlobalMessage
 				};
 			auto dataChannel = taskGen(&response);
 
-			DNServerProxyHelper* server = dnServer->GetSSock();
-			uint32_t msgId = server->GetMsgId();
+			DNServerProxyHelper::Ptr serverProxy = dnServer->GetServerProxy();
+			uint32_t msgId = serverProxy->GetMsgId();
 
-			server->AddMsg(msgId, &dataChannel, 8000);
+			serverProxy->AddMsg(msgId, &dataChannel, 8000);
 			
 			MessagePackAndSend(msgId, EMMsgDeal::Req, request.GetDescriptor()->full_name(), binData, entity->GetSock());
 
 			co_await dataChannel;
 			if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
 			{
-				SPidLogger.Record(ELogLevel_Debug, "requst timeout! ");
+				dnServer->GetLogger()->Record(ELogLevel_Debug, "requst timeout! ");
 				response.set_state_code(5);
 
 				entity->ConnNum()--;
@@ -84,12 +92,8 @@ namespace GlobalMessage
 
 			
 
-			SPidLogger.Record(ELogLevel_Debug, response.DebugString());
+			dnServer->GetLogger()->Record(ELogLevel_Debug, response.DebugString());
 		}
-
-		response.SerializeToString(&binData);
-
-		MessagePackAndSend(msgId, EMMsgDeal::Res, "", binData, channel);
 
 		co_return;
 	}

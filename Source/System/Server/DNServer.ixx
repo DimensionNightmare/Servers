@@ -3,6 +3,7 @@ export module DNServer;
 
 import ECSW;
 import ThirdParty.Libhv;
+import Logger;
 
 export enum class EMServerType : uint8_t
 {
@@ -38,13 +39,15 @@ export class DNServer : public System
 {
 public:
 	using Ptr = std::shared_ptr<DNServer>;
-
+	using WPtr = std::weak_ptr<DNServer>;
 	
 protected:
 	friend class World;
 	DNServer(World::WPtr world):System(world)
 	{
 		emSystemType = EMSystemType::DNServer;
+
+		pLogger = GetWorld()->GetSystemW<LoggerPrint>(EMSystemType::LoggerPrint);
 
 		Libhv::hvlog_disable();
 	}
@@ -76,6 +79,7 @@ public:
 
 	uint32_t& ServerId() { return iServerId; }
 
+	LoggerPrint::Ptr GetLogger() { return pLogger.expired() ? nullptr : pLogger.lock(); }
 public: // dll override
 
 protected:
@@ -85,4 +89,6 @@ protected:
 	uint32_t iServerId = 0;
 
 	std::mutex oTaskMutex;
+
+	LoggerPrint::WPtr pLogger;
 };

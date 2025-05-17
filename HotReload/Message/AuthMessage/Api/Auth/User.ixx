@@ -11,14 +11,15 @@ import ThirdParty.PbGen;
 import ThirdParty.Libpqxx;
 import std.compat;
 import DNServer;
+import AuthServerHelper;
 
 using namespace std::chrono;
 
 #define MSGSET writer->response->SetBody
 
-export void ApiAuth(hv::HttpService* service)
+export void ApiAuth(DNServer::WPtr server, hv::HttpService* service)
 {
-	service->POST("/Auth/User/LoginToken", [](const hv::HttpRequestPtr& req, const hv::HttpResponseWriterPtr& writer)
+	service->POST("/Auth/User/LoginToken", [server](const hv::HttpRequestPtr& req, const hv::HttpResponseWriterPtr& writer)
 		{
 			writer->Begin();
 			nlohmann::json errData;
@@ -40,10 +41,24 @@ export void ApiAuth(hv::HttpService* service)
 			accInfo.set_auth_name(authName);
 			accInfo.set_auth_string(authString);
 
+			DNServer::Ptr serverTemp = server.lock();
+			if (!serverTemp)
+			{
+				errData["code"] = http_status::HTTP_STATUS_BAD_REQUEST;
+				errData["message"] = "Server Disconnect!";
+				MSGSET(errData.dump());
+				writer->End();
+				return;
+			}
+
+			AuthServerHelper::Ptr dnServer = serverTemp->GetSelf<AuthServerHelper>();
+
 			try
 			{
-				AuthServerHelper* authServer = GetAuthServer();
-				pqxx::read_transaction query(*authServer->SqlProxy());
+				
+				std::shared_ptr<pqxx::connection> connection = dnServer->GetRdbProxy()->GetConnection(static_cast<uint16_t>(EMSqlDbNameEnum::Account));
+
+				pqxx::read_transaction query(*connection);
 				DbSqlHelper<GDb::Account> accounts(&query);
 
 				#define DBSelectOne(obj, name) .SelectOne(#name, [&obj]() { return obj.name(); })
@@ -70,7 +85,7 @@ export void ApiAuth(hv::HttpService* service)
 			}
 			catch (const std::exception& e)
 			{
-				SPidLogger.Record(ELogLevel_Debug, e.what());
+				dnServer->GetLogger()->Record(ELogLevel_Debug, e.what());
 				errData["code"] = http_status::HTTP_STATUS_BAD_REQUEST;
 				errData["message"] = "Server Error!!";
 				MSGSET(errData.dump());
@@ -78,7 +93,7 @@ export void ApiAuth(hv::HttpService* service)
 				return;
 			}
 
-			auto taskGen = [](GDb::Account accInfo, hv::HttpResponseWriterPtr writer) -> DNTaskVoid
+			auto taskGen = [dnServer](GDb::Account accInfo, hv::HttpResponseWriterPtr writer) -> DNTaskVoid
 				{
 					// HttpResponseWriterPtr writer = writer;	//sharedptr ref count ++
 					GMsg::A2g_ReqAuthAccount request;
@@ -87,8 +102,7 @@ export void ApiAuth(hv::HttpService* service)
 
 					GMsg::g2A_ResAuthAccount response;
 
-					AuthServerHelper* authServer = GetAuthServer();
-					DNClientProxyHelper* client = authServer->GetCSock();
+					DNClientProxyHelper::Ptr clientProxy = dnServer->GetClientProxy();
 
 					// pack data
 					std::string binData;
@@ -106,9 +120,9 @@ export void ApiAuth(hv::HttpService* service)
 
 						auto dataChannel = taskGen(&response);
 						
-						uint32_t msgId = client->GetMsgId();
-						client->AddMsg(msgId, &dataChannel);
-						MessagePackAndSend(msgId, EMMsgDeal::Redir, request.GetDescriptor()->full_name(), binData, client->GetChannel());
+						uint32_t msgId = clientProxy->GetMsgId();
+						clientProxy->AddMsg(msgId, &dataChannel);
+						MessagePackAndSend(msgId, EMMsgDeal::Redir, request.GetDescriptor()->full_name(), binData, clientProxy->GetChannel());
 						
 						co_await dataChannel;
 						if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
@@ -138,7 +152,7 @@ export void ApiAuth(hv::HttpService* service)
 			taskGen(accInfo, writer);
 		});
 
-	service->POST("/Auth/User/RegistUser", [](const hv::HttpRequestPtr& req, const hv::HttpResponseWriterPtr& writer)
+	service->POST("/Auth/User/RegistUser", [server](const hv::HttpRequestPtr& req, const hv::HttpResponseWriterPtr& writer)
 		{
 			nlohmann::json errData;
 
@@ -155,15 +169,28 @@ export void ApiAuth(hv::HttpService* service)
 				return;
 			}
 
-			AuthServerHelper* authServer = GetAuthServer();
 
 			GDb::Account accInfo;
 			accInfo.set_auth_name(authName);
 			accInfo.set_auth_string(authString);
 
+			DNServer::Ptr serverTemp = server.lock();
+			if (!serverTemp)
+			{
+				errData["code"] = http_status::HTTP_STATUS_BAD_REQUEST;
+				errData["message"] = "Server Disconnect!";
+				MSGSET(errData.dump());
+				writer->End();
+				return;
+			}
+
+			AuthServerHelper::Ptr dnServer = serverTemp->GetSelf<AuthServerHelper>();
+
 			try
 			{
-				pqxx::read_transaction query(*authServer->SqlProxy());
+				std::shared_ptr<pqxx::connection> connection = dnServer->GetRdbProxy()->GetConnection(static_cast<uint16_t>(EMSqlDbNameEnum::Account));
+				
+				pqxx::read_transaction query(*connection);
 				DbSqlHelper<GDb::Account> accounts(&query);
 
 				accounts
@@ -183,7 +210,7 @@ export void ApiAuth(hv::HttpService* service)
 			}
 			catch (const std::exception& e)
 			{
-				SPidLogger.Record(ELogLevel_Debug, e.what());
+				dnServer->GetLogger()->Record(ELogLevel_Debug, e.what());
 				errData["code"] = http_status::HTTP_STATUS_BAD_REQUEST;
 				errData["message"] = "Regist Error!!";
 				MSGSET(errData.dump());
@@ -200,8 +227,9 @@ export void ApiAuth(hv::HttpService* service)
 
 			try
 			{
+				std::shared_ptr<pqxx::connection> connection = dnServer->GetRdbProxy()->GetConnection(static_cast<uint16_t>(EMSqlDbNameEnum::Account));
 
-				pqxx::work query(*authServer->SqlProxy());
+				pqxx::work query(*connection);
 				DbSqlHelper<GDb::Account> accounts(&query);
 
 				accounts.InitEntity(accInfo).Insert().Commit();
@@ -223,7 +251,7 @@ export void ApiAuth(hv::HttpService* service)
 			}
 			catch (const std::exception& e)
 			{
-				SPidLogger.Record(ELogLevel_Debug, e.what());
+				dnServer->GetLogger()->Record(ELogLevel_Debug, e.what());
 				errData["code"] = http_status::HTTP_STATUS_BAD_REQUEST;
 				errData["message"] = "Regist Error!!";
 				MSGSET(errData.dump());
@@ -233,7 +261,7 @@ export void ApiAuth(hv::HttpService* service)
 		});
 
 
-	service->POST("/Auth/Test/DB", [](const hv::HttpRequestPtr& req, const hv::HttpResponseWriterPtr& writer)
+	service->POST("/Auth/Test/DB", [server](const hv::HttpRequestPtr& req, const hv::HttpResponseWriterPtr& writer)
 		{
 
 		});

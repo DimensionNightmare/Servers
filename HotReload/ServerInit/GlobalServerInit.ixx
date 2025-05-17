@@ -12,12 +12,18 @@ import DNServer;
 import DNServerProxyHelper;
 import MessagePack;
 import std.compat;
+import DNServerProxy;
+import ServerEntity;
+import ServerEntityManagerHelper;
+import GlobalServerHelper;
 
 #define FUNCPLACE(func) #func, func
 
-export int HandleGlobalServerInit(DNServer::Ptr dnServer)
+export int HandleGlobalServerInit(const World::Ptr& world)
 {
 	GlobalMessageHandle::RegMsgHandle();
+
+	GlobalServerHelper::Ptr dnServer = world->GetSystem<GlobalServerHelper>(EMSystemType::DNServer);
 
 	if (DNServerProxy::Ptr proxy = dnServer->GetComponent<DNServerProxy>(EMComponentType::DNServerProxy))
 	{
@@ -34,19 +40,23 @@ export int HandleGlobalServerInit(DNServer::Ptr dnServer)
 				{
 					proxy->GetLogger()->Record(EL10nCode_CliConnOn, peeraddr, channel->fd(), channel->id());
 
-					channel->SetWorld(proxy->GetWorld());
+					// channel->SetWorld(proxy->GetOwner()->GetWorld());
 
-					TickMainSpaceDll(serverSock, FUNCPLACE(&DNServerProxy::InitConnectedChannel),  channel);
+					DNServerProxy::Ptr serverProxy = proxy->GetOwner()->GetComponent<DNServerProxy>(EMComponentType::DNServerProxy);
+
+					TickMainSpaceDll(serverProxy.get(), FUNCPLACE(&DNServerProxy::InitConnectedChannel),  channel);
 				}
 				else
 				{
+					// channel->SetWorld(nullptr);
+
 					proxy->GetLogger()->Record(EL10nCode_CliConnOff, peeraddr, channel->fd(), channel->id());
 
-					if (ServerEntity::Ptr entity = channel->getContext<ServerEntity>())
+					if (ServerEntity::Ptr entity = channel->getContextPtr<ServerEntity>())
 					{
-						ServerEntityManagerHelper* entityMan = serverProxy->GetServerEntityManager();
+						ServerEntityManagerHelper::Ptr entityMan = proxy->GetOwner<GlobalServerHelper>()->GetServerEntityManager();
 						entityMan->RemoveEntity(entity->ID());
-						channel->setContext(nullptr);
+						channel->setContextPtr(nullptr);
 					}
 				}
 			};
@@ -84,9 +94,11 @@ export int HandleGlobalServerInit(DNServer::Ptr dnServer)
 				}
 				else if (packet.dealType == EMMsgDeal::Res)
 				{
-					if (DNTask<Message*>* task = serverSock->GetMsg(packet.msgId)) //client sock request
+					DNServerProxyHelper::Ptr proxyHelper = proxy->GetSelf<DNServerProxyHelper>();
+
+					if (DNTask<Message*>* task = proxyHelper->GetMsg(packet.msgId)) //client sock request
 					{
-						serverSock->DelMsg(packet.msgId);
+						proxyHelper->DelMsg(packet.msgId);
 						task->Resume();
 
 						if (Message* message = task->GetResult())
@@ -123,29 +135,30 @@ export int HandleGlobalServerInit(DNServer::Ptr dnServer)
 
 				if(!proxy){ return ;}
 
+				DNClientProxyHelper::Ptr proxyHelper = proxy->GetSelf<DNClientProxyHelper>();
+
 				const std::string& peeraddr = channel->peeraddr();
 
 				if (channel->isConnected())
 				{
 					proxy->GetLogger()->Record(EL10nCode_SrvConnOn, peeraddr, channel->fd(), channel->id());
-					
-					channel->SetWorld(proxy->GetWorld());
 
-					clientSock->SetRegistEvent(&GlobalMessage::Evt_ReqRegistSrv);
-					TickMainSpaceDll(clientSock, FUNCPLACE(&DNClientProxy::InitConnectedChannel),  channel);
+					proxyHelper->SetRegistEvent(&GlobalMessage::Evt_ReqRegistSrv);
+
+					TickMainSpaceDll(proxy.get(), FUNCPLACE(&DNClientProxy::InitConnectedChannel),  channel);
 				}
 				else
 				{
 					proxy->GetLogger()->Record(EL10nCode_SrvConnOff, peeraddr, channel->fd(), channel->id());
-					if (clientSock->EMRegistState() == EMRegistState::Registed)
+					if (proxyHelper->EMRegistState() == EMRegistState::Registed)
 					{
-						clientSock->EMRegistState() = EMRegistState::None;
+						proxyHelper->EMRegistState() = EMRegistState::None;
 					}
 
-					clientSock->RegistType() = 0;
+					proxyHelper->RegistType() = 0;
 				}
 
-				if (clientSock->isReconnect())
+				if (proxyHelper->isReconnect())
 				{
 
 				}
@@ -180,9 +193,11 @@ export int HandleGlobalServerInit(DNServer::Ptr dnServer)
 				}
 				else if (packet.dealType == EMMsgDeal::Res)
 				{
-					if (DNTask<Message*>* task = clientSock->GetMsg(packet.msgId)) //client sock request
+					DNClientProxyHelper::Ptr proxyHelper = proxy->GetSelf<DNClientProxyHelper>();
+
+					if (DNTask<Message*>* task = proxyHelper->GetMsg(packet.msgId)) //client sock request
 					{
-						clientSock->DelMsg(packet.msgId);
+						proxyHelper->DelMsg(packet.msgId);
 						task->Resume();
 
 						if (Message* message = task->GetResult())
@@ -213,11 +228,11 @@ export int HandleGlobalServerInit(DNServer::Ptr dnServer)
 
 }
 
-export int HandleGlobalServerShutdown(DNServer::Ptr server)
+export int HandleGlobalServerShutdown(const World::Ptr& world)
 {
-	GlobalServerHelper* serverProxy = GetGlobalServer();
+	GlobalServerHelper::Ptr dnServer = world->GetSystem<GlobalServerHelper>(EMSystemType::DNServer);
 
-	if (DNServerProxyHelper* serverSock = serverProxy->GetSSock())
+	if (DNServerProxyHelper::Ptr serverSock = dnServer->GetServerProxy())
 	{
 		serverSock->onConnection = nullptr;
 		serverSock->onMessage = nullptr;
@@ -225,7 +240,7 @@ export int HandleGlobalServerShutdown(DNServer::Ptr server)
 		serverSock->MsgMapClear();
 	}
 
-	if (DNClientProxyHelper* clientSock = serverProxy->GetCSock())
+	if (DNClientProxyHelper::Ptr clientSock = dnServer->GetClientProxy())
 	{
 		clientSock->onConnection = nullptr;
 		clientSock->onMessage = nullptr;

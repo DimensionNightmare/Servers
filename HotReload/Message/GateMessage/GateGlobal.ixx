@@ -9,13 +9,16 @@ import ThirdParty.Libhv;
 import ThirdParty.PbGen;
 import ProxyEntityManagerHelper;
 import std.compat;
+import DNSocketProxy;
+import ServerEntity;
+import GateServerHelper;
 
 #define FUNCPLACE(func) #func, func
 
 namespace GateMessage
 {
 
-	export void Exe_ReqUserToken(DNSocketProxy::Ptr channel, uint32_t msgId, std::string binMsg)
+	export void Exe_ReqUserToken(const DNSocketProxy::Ptr& channel, uint32_t msgId, std::string binMsg)
 	{
 		GMsg::A2g_ReqAuthAccount request;
 		
@@ -28,8 +31,8 @@ namespace GateMessage
 
 		std::string binData;
 
-		GateServerHelper* dnServer = GetGateServer();
-		ProxyEntityManagerHelper* entityMan = dnServer->GetProxyEntityManager();
+		GateServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<GateServerHelper>(EMSystemType::DNServer);
+		ProxyEntityManagerHelper::Ptr entityMan = dnServer->GetProxyEntityManager();
 		ProxyEntity::Ptr entity = entityMan->GetEntity(request.account_id());
 		if (entity)
 		{
@@ -44,7 +47,7 @@ namespace GateMessage
 				MessagePackAndSend(0, EMMsgDeal::Ret, request.GetDescriptor()->full_name(), binData, online);
 
 				//kick socket
-				online->setContext(nullptr);
+				online->setContextPtr(nullptr);
 				online->close();
 
 
@@ -53,7 +56,7 @@ namespace GateMessage
 				{
 					SPidLogger.Record(ELogLevel_Debug, "Send Logic tick User->{}, server:{}", entity->ID(), entity->RecordServerId());
 
-					ServerEntityManagerHelper* serverEntityMan = dnServer->GetServerEntityManager();
+					ServerEntityManagerHelper::Ptr serverEntityMan = dnServer->GetServerEntityManager();
 					ServerEntity::Ptr serverEntity = serverEntityMan->GetEntity(serverId);
 
 					request.set_account_id(entity->ID());
@@ -83,7 +86,7 @@ namespace GateMessage
 		// entity or token expired
 		if (!entity->TimerId())
 		{
-			entity->TimerId() = TickMainSpaceDll(entityMan, FUNCPLACE(&ProxyEntityManager::CheckEntityCloseTimer), entity->ID());
+			entity->TimerId() = TickMainSpaceDll(entityMan.get(), FUNCPLACE(&ProxyEntityManager::CheckEntityCloseTimer), entity->ID());
 		}
 
 		SPidLogger.Record(ELogLevel_Debug, "ReqUserToken User: {}!!", request.account_id());

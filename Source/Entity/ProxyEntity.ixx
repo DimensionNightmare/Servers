@@ -2,6 +2,7 @@ module;
 export module ProxyEntity;
 
 import ECSW;
+import DNSocketProxy;
 
 /// @brief this is client proxy entity
 export class ProxyEntity : public Entity
@@ -17,6 +18,16 @@ public:
 	{
 	}
 
+	/// @brief the this close timedown destroy timerid.
+	/// @brief authenticate,shutdown and reconnect waiting.
+	uint64_t& TimerId() { return iCloseTimerId; }
+
+	/// @brief net socket set
+	const DNSocketProxy::Ptr& GetSock() { return pSock; }
+
+	/// @brief net socket get
+	void SetSock(const DNSocketProxy::Ptr& sock) { pSock = sock; }
+
 public: // dll override
 	/// @brief authenticate token
 	std::string& Token() { return sToken; }
@@ -25,13 +36,17 @@ public: // dll override
 	int64_t& ExpireTime() { return iExpireTime; }
 
 	/// @brief alread connected serverid 
-	uint32_t& RecordServerId() { return iRecordServerId; }
+	uint64_t& RecordServerId() { return iRecordServerId; }
 
 protected: // dll proxy
-	uint32_t iRecordServerId = 0;
+	uint64_t iRecordServerId = 0;
 
 	std::string sToken;
 
 	int64_t iExpireTime = 0;
+
+	uint64_t iCloseTimerId = 0;
+
+	DNSocketProxy::Ptr pSock;
 
 };

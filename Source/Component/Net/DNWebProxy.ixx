@@ -14,6 +14,8 @@ protected:
 		eComponentType = EMComponentType::DNWebProxy;
 	}
 public:
+	using Ptr = std::shared_ptr<DNWebProxy>;
+	using WPtr = std::weak_ptr<DNWebProxy>;
 	~DNWebProxy() = default;
 
 	virtual void Dispose() override

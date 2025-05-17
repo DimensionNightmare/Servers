@@ -10,8 +10,8 @@
 // #undef REPEATED
 #include "google/protobuf/util/json_util.h"
 
-#include "GCfg/GCfg.pb.h"
-#include "GDef/GDef.pb.h"
+// #include "GCfg/GCfg.pb.h"
+// #include "GDef/GDef.pb.h"
 #include "Common/Common.pb.h"
 
 #if 0
@@ -30,7 +30,7 @@ import std.compat;
 using namespace hv;
 using namespace std;
 // using namespace sw::redis;
-using namespace GDb;
+// using namespace GDb;
 using namespace google::protobuf;
 
 #define TIMERSTART(tag) auto tag##_start = chrono::system_clock::now(),tag##_end = tag##_start
@@ -676,19 +676,16 @@ std::string GetNowTimeStr()
 	return std::format("{:%Y-%m-%d %H:%M:%S}", currentZone);
 }
 
-static int aa = 0;
-
 struct LoggerPrint
 {
 	LoggerPrint(const std::source_location& location = std::source_location::current())
 		:olocation(location)
     {	
-		aa += hv_rand(1, 2);
+		
 	}
 
 	~LoggerPrint()
 	{
-		aa -= hv_rand(1, 2);
 		if (oResult.empty())
 		{
 			return;
@@ -786,6 +783,69 @@ protected:
 	inline static std::unordered_map<std::string, std::string> LocCache;
 };
 
+class A
+{
+	public:
+		A(){ std::cout << "A" << std::endl; }
+		virtual ~A(){ std::cout << "~A" << std::endl; }
+
+		void msg()
+		{
+			std::cout << "A MSG " << i << std::endl;
+		}
+
+		int i = 0;
+};
+
+class B
+{
+	public:
+		B(){ std::cout << "B" << std::endl; }
+		virtual ~B(){ std::cout << "~B" << std::endl; }
+
+		void msg()
+		{
+			std::cout << "B MSG " << i << std::endl;
+		}
+
+		int i = 1;
+};
+
+class FinalExecute
+{
+public:
+	FinalExecute(std::function<void()> func):mFunc(func)
+	{
+
+	}
+
+	~FinalExecute()
+	{
+		mFunc();
+	}
+
+private:
+	std::function<void()> mFunc;
+};
+
+void Func()
+{
+	A a;
+
+	FinalExecute fe([&a](){
+		a.msg();
+	});
+
+	a.i = 100;
+
+	throw std::runtime_error("error");
+}
+
+std::weak_ptr<A> GetWA(std::weak_ptr<A> a)
+{
+	return a;
+}
+
 int main()
 {
 	// LoggerPrint::SetLoggerLevel(ELogLevel_Debug, "D:/Project/DimensionNightmare/Servers");
@@ -801,28 +861,19 @@ int main()
 
 	// DURATION_ms(Time);
 
-	struct CompareByLength {
-		bool operator()(const std::string& a, const std::string& b) const {
-			if (a.size() != b.size()) {
-				return a.size() < b.size(); // 长度升序
-			}
-			return a < b; // 长度相同则按字典序
-		}
-	};
-
-	std::set<std::string, CompareByLength> strset;
-
-
-	strset.emplace("aaaaaaaaaaaaaaaaaa");
-	strset.emplace("xxxx");
-	strset.emplace("ccccccccccccc");
-	strset.emplace("vvvvvvvvvvvvvvvvvvv");
-	strset.emplace("1");
-
-	for(auto& one : strset)
+	try
 	{
-		// std::cout << one << std::end;
+		std::shared_ptr<A> a = std::make_shared<A>();
+		std::weak_ptr<A> wa = a;
+		wa = GetWA(a);
+		Func();
 	}
+	catch(const std::exception& e)
+	{
+		std::cerr << e.what() << '\n';
+	}
+	
+	return 0;
 }
 
 #endif

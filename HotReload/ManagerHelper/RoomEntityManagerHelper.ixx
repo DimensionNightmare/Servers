@@ -11,18 +11,28 @@ export class RoomEntityManagerHelper : public RoomEntityManager
 private:
 
 	RoomEntityManagerHelper() = delete;
-	// RoomEntityManagerHelper(System::WPtr):RoomEntityManager(nullptr) {}
-public:
+	~RoomEntityManagerHelper() = default;
 
-	RoomEntity::Ptr AddEntity(uint32_t entityId, uint32_t mapId)
+	RoomEntityManagerHelper(const RoomEntityManagerHelper&) = delete;
+	void operator=(const RoomEntityManagerHelper&) = delete;
+
+	RoomEntityManagerHelper(RoomEntityManagerHelper&&) = delete;
+	RoomEntityManagerHelper& operator=(RoomEntityManagerHelper&&) = delete;
+
+	void* operator new(size_t) = delete;
+    void operator delete(void*) = delete;
+public:
+	using Ptr = std::shared_ptr<RoomEntityManagerHelper>;
+
+	RoomEntity::Ptr AddEntity(uint64_t entityId, uint32_t mapId)
 	{
 		if (!mEntityMap.contains(entityId))
 		{
 			std::unique_lock<std::shared_mutex> ulock(oMapMutex);
 
-			mEntityMap.emplace(std::piecewise_construct,
-				std::forward_as_tuple(entityId),
-				std::forward_as_tuple(entityId));
+			// mEntityMap.emplace(std::piecewise_construct,
+			// 	std::forward_as_tuple(entityId),
+			// 	std::forward_as_tuple(entityId));
 
 			RoomEntity::Ptr entity = mEntityMap[entityId];
 
@@ -35,7 +45,7 @@ public:
 		return nullptr;
 	}
 
-	bool RemoveEntity(uint32_t entityId)
+	bool RemoveEntity(uint64_t entityId)
 	{
 		if (mEntityMap.contains(entityId))
 		{
@@ -68,7 +78,7 @@ public:
 		mEntityMapList[entity->MapID()].remove(entity);
 	}
 
-	RoomEntity::Ptr GetEntity(uint32_t entityId)
+	RoomEntity::Ptr GetEntity(uint64_t entityId)
 	{
 		std::shared_lock<std::shared_mutex> lock(oMapMutex);
 		if (mEntityMap.contains(entityId))
@@ -79,13 +89,13 @@ public:
 		return nullptr;
 	}
 
-	const std::list<RoomEntity::Ptr>& GetEntitysByMapId(uint32_t mapId)
+	const std::list<RoomEntity::Ptr>& GetEntitysByMapId(uint64_t mapId)
 	{
 		std::shared_lock<std::shared_mutex> lock(oMapMutex);
 		return mEntityMapList[mapId];
 	}
 
-	[[nodiscard]] uint32_t GenRoomId()
+	[[nodiscard]] uint64_t GenRoomId()
 	{
 		return ++iRoomGenId;
 	}

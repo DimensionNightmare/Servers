@@ -61,7 +61,7 @@ extern "C"
 	}
 #endif
 
-	HOTRELOAD int InitHotReload(World* world)
+	HOTRELOAD int InitHotReload(const World::Ptr& world)
 	{
 		Libhv::hvlog_disable();
 
@@ -72,22 +72,22 @@ extern "C"
 		switch (dnServer->GetServerType())
 		{
 			case EMServerType::ControlServer:
-				isDeal = HandleControlServerInit(dnServer);
+				isDeal = HandleControlServerInit(world);
 				break;
 			case EMServerType::GlobalServer:
-				isDeal = HandleGlobalServerInit(dnServer);
+				isDeal = HandleGlobalServerInit(world);
 				break;
 			case EMServerType::AuthServer:
-				isDeal = HandleAuthServerInit(dnServer);
+				isDeal = HandleAuthServerInit(world);
 				break;
 			case EMServerType::GateServer:
-				isDeal = HandleGateServerInit(dnServer);
+				isDeal = HandleGateServerInit(world);
 				break;
 			case EMServerType::DatabaseServer:
-				isDeal = HandleDatabaseServerInit(dnServer);
+				isDeal = HandleDatabaseServerInit(world);
 				break;
 			case EMServerType::LogicServer:
-				isDeal = HandleLogicServerInit(dnServer);
+				isDeal = HandleLogicServerInit(world);
 				break;
 			default:
 				break;
@@ -96,30 +96,30 @@ extern "C"
 		return isDeal;
 	}
 
-	HOTRELOAD int ShutdownHotReload(World* world)
+	HOTRELOAD int ShutdownHotReload(const World::Ptr& world)
 	{
 		DNServer::Ptr dnServer = world->GetSystem<DNServer>(EMSystemType::DNServer);
 
 		bool isDeal = false;
-		switch (servertype)
+		switch (dnServer->GetServerType())
 		{
 			case EMServerType::ControlServer:
-				isDeal = HandleControlServerShutdown(dnServer);
+				isDeal = HandleControlServerShutdown(world);
 				break;
 			case EMServerType::GlobalServer:
-				isDeal = HandleGlobalServerShutdown(dnServer);
+				isDeal = HandleGlobalServerShutdown(world);
 				break;
 			case EMServerType::AuthServer:
-				isDeal = HandleAuthServerShutdown(dnServer);
+				isDeal = HandleAuthServerShutdown(world);
 				break;
 			case EMServerType::GateServer:
-				isDeal = HandleGateServerShutdown(dnServer);
+				isDeal = HandleGateServerShutdown(world);
 				break;
 			case EMServerType::DatabaseServer:
-				isDeal = HandleDatabaseServerShutdown(dnServer);
+				isDeal = HandleDatabaseServerShutdown(world);
 				break;
 			case EMServerType::LogicServer:
-				isDeal = HandleLogicServerShutdown(dnServer);
+				isDeal = HandleLogicServerShutdown(world);
 				break;
 			default:
 				break;

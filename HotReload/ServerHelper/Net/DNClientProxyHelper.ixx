@@ -15,11 +15,23 @@ export class DNClientProxyHelper : public DNClientProxy
 private:
 
 	DNClientProxyHelper() = delete;
+	~DNClientProxyHelper() = default;
+
+	DNClientProxyHelper(const DNClientProxyHelper&) = delete;
+	void operator=(const DNClientProxyHelper&) = delete;
+
+	DNClientProxyHelper(DNClientProxyHelper&&) = delete;
+	DNClientProxyHelper& operator=(DNClientProxyHelper&&) = delete;
+
+	void* operator new(size_t) = delete;
+    void operator delete(void*) = delete;
 public:
+	using Ptr = std::shared_ptr<DNClientProxyHelper>;
+
 	// regist to controlserver
 	EMRegistState& EMRegistState() { return eRegistState; }
 
-	void SetRegistEvent(std::function<void()> event)
+	void SetRegistEvent(std::function<void(const DNServer::Ptr& server)> event)
 	{
 		pRegistEvent = event;
 	}

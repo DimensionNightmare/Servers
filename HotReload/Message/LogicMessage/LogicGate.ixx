@@ -6,10 +6,12 @@ import ThirdParty.Libhv;
 import ThirdParty.PbGen;
 import ClientEntityManagerHelper;
 import std.compat;
+import DNSocketProxy;
+import LogicServerHelper;
 
 namespace LogicMessage
 {
-	export void Exe_RetProxyOffline(DNSocketProxy::Ptr channel, std::string binMsg)
+	export void Exe_RetProxyOffline(const DNSocketProxy::Ptr& channel, std::string binMsg)
 	{
 		GMsg::g2L_RetProxyOffline request;
 		if(!request.ParseFromString(binMsg))
@@ -17,18 +19,18 @@ namespace LogicMessage
 			return;
 		}
 
-		LogicServerHelper* dnServer = GetLogicServer();
-		ClientEntityManagerHelper* entityMan = dnServer->GetClientEntityManager();
+		LogicServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<LogicServerHelper>(EMSystemType::DNServer);
+		ClientEntityManagerHelper::Ptr entityMan = dnServer->GetClientEntityManager();
 
 		if (ClientEntity::Ptr entity = entityMan->GetEntity(request.entity_id()))
 		{
-			SPidLogger.Record(ELogLevel_Debug, "Recv Client {} Disconnect !!", entity->ID());
+			dnServer->GetLogger()->Record(ELogLevel_Debug, "Recv Client {} Disconnect !!", entity->ID());
 
-			entityMan->SaveEntity(*entity, true);
+			entityMan->SaveEntity(entity, true);
 			entityMan->RemoveEntity(entity->ID());
 			return;
 		}
 
-		SPidLogger.Record(ELogLevel_Debug, "Recv Client {} Disconnect but not Exist!!", request.entity_id());
+		dnServer->GetLogger()->Record(ELogLevel_Debug, "Recv Client {} Disconnect but not Exist!!", request.entity_id());
 	}
 }

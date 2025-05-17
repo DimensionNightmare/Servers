@@ -9,6 +9,7 @@ import ThirdParty.Libhv;
 import ThirdParty.PbGen;
 import DNClientProxyHelper;
 import DNServer;
+import DatabaseServerHelper;
 
 #define FUNCPLACE(func) #func, func
 
@@ -16,13 +17,15 @@ namespace DatabaseMessage
 {
 
 	// client request
-	export DNTaskVoid Evt_ReqRegistSrv(DNServer::WPtr dnServer)
+	export DNTaskVoid Evt_ReqRegistSrv(const DNServer::Ptr& server)
 	{
-		DNClientProxyHelper* client = dnServer->GetCSock();
+		DatabaseServerHelper::Ptr dnServer = server->GetSelf<DatabaseServerHelper>();
+
+		DNClientProxyHelper::Ptr clientProxy = dnServer->GetClientProxy();
 		
-		SPidLogger.Record(ELogLevel_Debug, "Client:{}, port:{}", client->remote_host, client->remote_port);
+		dnServer->GetLogger()->Record(ELogLevel_Debug, "Client:{}, port:{}", clientProxy->remote_host, clientProxy->remote_port);
 		
-		client->EMRegistState() = EMRegistState::Registing;
+		clientProxy->EMRegistState() = EMRegistState::Registing;
 
 		GMsg::COM_ReqRegistSrv request;
 
@@ -32,11 +35,6 @@ namespace DatabaseMessage
 		{
 			request.set_server_id(serverIndex);
 		}
-
-		// pack data
-		std::string binData;
-		request.SerializeToString(&binData);
-		
 
 		// data alloc
 		GMsg::COM_ResRegistSrv response;
@@ -48,45 +46,50 @@ namespace DatabaseMessage
 				};
 			auto dataChannel = taskGen(&response);
 
-			uint32_t msgId = client->GetMsgId();
-			client->AddMsg(msgId, &dataChannel);
-			MessagePackAndSend(msgId, EMMsgDeal::Req, request.GetDescriptor()->full_name(), binData, client->GetChannel());
+			uint32_t msgId = clientProxy->GetMsgId();
+			clientProxy->AddMsg(msgId, &dataChannel);
+			// pack data
+			std::string binData;
+			request.SerializeToString(&binData);
+			MessagePackAndSend(msgId, EMMsgDeal::Req, request.GetDescriptor()->full_name(), binData, clientProxy->GetChannel());
 
 			co_await dataChannel;
 			if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
 			{
-				SPidLogger.Record(ELogLevel_Debug, "requst timeout! ");
+				dnServer->GetLogger()->Record(ELogLevel_Debug, "requst timeout! ");
 			}
 
 		}
 
 		if (response.success())
 		{
-			SPidLogger.Record(ELogLevel_Debug, "regist Server success! Rec index:{}", response.server_id());
-			client->EMRegistState() = EMRegistState::Registed;
-			client->RegistType() = response.server_type();
+			dnServer->GetLogger()->Record(ELogLevel_Debug, "regist Server success! Rec index:{}", response.server_id());
+			clientProxy->EMRegistState() = EMRegistState::Registed;
+			clientProxy->RegistType() = response.server_type();
 			dnServer->ServerId() = response.server_id();
 		}
 		else
 		{
-			SPidLogger.Record(ELogLevel_Debug, "regist Server error!  ");
+			dnServer->GetLogger()->Record(ELogLevel_Debug, "regist Server error!  ");
 			// dnServer->IsRun() = false; //exit application
-			client->EMRegistState() = EMRegistState::None;
+			clientProxy->EMRegistState() = EMRegistState::None;
 		}
 
 		co_return;
 	}
 
-	export void Exe_RetChangeCtlSrv(DNSocketProxy::Ptr channel, std::string binMsg)
+	export void Exe_RetChangeCtlSrv(const DNSocketProxy::Ptr& channel, std::string binMsg)
 	{
 		GMsg::COM_RetChangeCtlSrv request;
 		if(!request.ParseFromString(binMsg))
 		{
 			return;
 		}
-		DatabaseServerHelper* dnServer = GetDatabaseServer();
-		DNClientProxyHelper* client = dnServer->GetCSock();
 
-		TickMainSpaceDll(client, FUNCPLACE(&DNClientProxy::RedirectClient), request.server_port(), request.server_ip());
+		DNServer::Ptr dnServer = channel->GetWorld()->GetSystem<DNServer>(EMSystemType::DNServer);
+
+		DNClientProxy::Ptr clientProxy = dnServer->GetComponent<DNClientProxy>(EMComponentType::DNClientProxy);
+
+		TickMainSpaceDll(clientProxy.get(), FUNCPLACE(&DNClientProxy::RedirectClient), request.server_port(), request.server_ip());
 	}
 }

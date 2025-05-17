@@ -26,7 +26,7 @@ module;
 	#include <fcntl.h>
 	#include <sys/stat.h>
 #endif
-export module Platform;
+export module ThirdParty.Platform;
 
 import std.compat;
 

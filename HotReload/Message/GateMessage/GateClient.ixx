@@ -9,12 +9,15 @@ import ThirdParty.Libhv;
 import ThirdParty.PbGen;
 import ProxyEntityManagerHelper;
 import std.compat;
+import DNSocketProxy;
+import ServerEntity;
+import GateServerHelper;
 
 namespace GateMessage
 {
 
 	// client request
-	export DNTaskVoid Msg_ReqAuthToken(DNSocketProxy::Ptr channel, uint32_t msgId, std::string binMsg)
+	export DNTaskVoid Msg_ReqAuthToken(const DNSocketProxy::Ptr& channel, uint32_t msgId, std::string binMsg)
 	{
 		GMsg::C2S_ReqAuthToken request;
 		if(!request.ParseFromString(binMsg))
@@ -22,29 +25,35 @@ namespace GateMessage
 			co_return;
 		}
 
-		GateServerHelper* dnServer = GetGateServer();
-		ProxyEntityManagerHelper* entityMan = dnServer->GetProxyEntityManager();
+		GateServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<GateServerHelper>(EMSystemType::DNServer);
+		ProxyEntityManagerHelper::Ptr entityMan = dnServer->GetProxyEntityManager();
 
 		GMsg::S2C_ResAuthToken response;
-		std::string binData;
+
+		FinalExecute final([&response, msgId, channel](){
+			std::string binData;
+			response.SerializeToString(&binData);
+			MessagePackAndSend(msgId, EMMsgDeal::Res, "", binData, channel);
+		});
+		
 
 		ProxyEntity::Ptr entity = entityMan->GetEntity(request.account_id());
 		if (!entity)
 		{
-			SPidLogger.Record(ELogLevel_Debug, "noaccount {}!!", request.account_id());
+			dnServer->GetLogger()->Record(ELogLevel_Debug, "noaccount {}!!", request.account_id());
 			response.set_state_code(1);
 		}
 		// if not match, timer will destory entity
 		else if (Md5Hash(entity->Token()) != request.token())
 		{
-			SPidLogger.Record(ELogLevel_Debug, "not match!!");
+			dnServer->GetLogger()->Record(ELogLevel_Debug, "not match!!");
 			response.set_state_code(2);
 		}
 		else
 		{
-			SPidLogger.Record(ELogLevel_Debug, "match!!");
+			dnServer->GetLogger()->Record(ELogLevel_Debug, "match!!");
 
-			channel->setContext(entity);
+			channel->setContextPtr(entity);
 			entity->SetSock(channel);
 
 			if (uint64_t timerId = entity->TimerId())
@@ -54,7 +63,7 @@ namespace GateMessage
 			}
 
 			//DS Server
-			ServerEntityManagerHelper* serverEntityMan = dnServer->GetServerEntityManager();
+			ServerEntityManagerHelper::Ptr serverEntityMan = dnServer->GetServerEntityManager();
 			ServerEntity::Ptr serverEntity = nullptr;
 
 			// <cache> server to load login data
@@ -69,7 +78,7 @@ namespace GateMessage
 				std::list<ServerEntity::Ptr> serverEntityList = serverEntityMan->GetEntitysByType(EMServerType::LogicServer);
 				if (serverEntityList.empty())
 				{
-					SPidLogger.Record(ELogLevel_Debug, "Msg_ReqAuthToken not LogicServer !!");
+					dnServer->GetLogger()->Record(ELogLevel_Debug, "Msg_ReqAuthToken not LogicServer !!");
 					response.set_state_code(3);
 				}
 				else
@@ -89,28 +98,22 @@ namespace GateMessage
 					};
 				auto dataChannel = taskGen(&response);
 
-				DNServerProxyHelper* server = dnServer->GetSSock();
+				DNServerProxyHelper::Ptr server = dnServer->GetServerProxy();
 				uint32_t msgId = server->GetMsgId();
 				server->AddMsg(msgId, &dataChannel, 9000);
 
-				binData = binMsg;
-
-				MessagePackAndSend(msgId, EMMsgDeal::Redir, request.GetDescriptor()->full_name(), binData, serverEntity->GetSock());
+				MessagePackAndSend(msgId, EMMsgDeal::Redir, request.GetDescriptor()->full_name(), binMsg, serverEntity->GetSock());
 				
 				co_await dataChannel;
 				if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
 				{
 					response.set_state_code(4);
-					SPidLogger.Record(ELogLevel_Debug, "requst timeout! ");
+					dnServer->GetLogger()->Record(ELogLevel_Debug, "requst timeout! ");
 				}
 
 			}
 
 		}
-
-		response.SerializeToString(&binData);
-
-		MessagePackAndSend(msgId, EMMsgDeal::Res, "", binData, channel);
 
 		co_return;
 	}

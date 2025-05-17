@@ -68,7 +68,7 @@ public:
 	}
 public:
 
-	inline static std::unordered_map<size_t, std::pair<const Message*, std::function<void(DNSocketProxy::Ptr, uint32_t, std::string)>>> MHandleMap;
+	inline static std::unordered_map<size_t, std::pair<const Message*, std::function<void(const DNSocketProxy::Ptr&, uint32_t, std::string)>>> MHandleMap;
 
-	inline static std::unordered_map<size_t, std::pair<const Message*, std::function<void(DNSocketProxy::Ptr, std::string)>>> MHandleRetMap;
+	inline static std::unordered_map<size_t, std::pair<const Message*, std::function<void(const DNSocketProxy::Ptr&, std::string)>>> MHandleRetMap;
 };

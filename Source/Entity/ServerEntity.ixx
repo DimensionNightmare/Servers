@@ -5,6 +5,7 @@ import ECSW;
 
 import DNServer;
 import std.compat;
+import DNSocketProxy;
 
 export enum class EMServerEntityFlag : uint16_t
 {
@@ -49,7 +50,7 @@ public: // dll override
 	uint32_t& ConnNum() { return IConnNum; }
 
 	/// @brief this server child add
-	void SetMapLinkNode(EMServerType type, ServerEntity* node)
+	void SetMapLinkNode(EMServerType type, const ServerEntity::Ptr& node)
 	{
 		if (type <= EMServerType::None || type >= EMServerType::Max)
 		{
@@ -61,6 +62,16 @@ public: // dll override
 
 	/// @brief this server childs get
 	std::list<ServerEntity::Ptr>& GetMapLinkNode(EMServerType type) { return mMapLink[type]; }
+
+	/// @brief the this close timedown destroy timerid.
+	/// @brief authenticate,shutdown and reconnect waiting.
+	uint64_t& TimerId() { return iCloseTimerId; }
+
+	/// @brief net socket set
+	const DNSocketProxy::Ptr& GetSock() { return pSock; }
+
+	/// @brief net socket get
+	void SetSock(const DNSocketProxy::Ptr& sock) { pSock = sock; }
 
 protected: // dll proxy
 	EMServerType emServerType = EMServerType::None;
@@ -76,4 +87,7 @@ protected: // dll proxy
 
 	ServerEntityBitFlag oFlags;
 
+	uint64_t iCloseTimerId = 0;
+
+	DNSocketProxy::Ptr pSock;
 };

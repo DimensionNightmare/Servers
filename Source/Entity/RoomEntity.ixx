@@ -2,6 +2,7 @@ module;
 export module RoomEntity;
 
 import ECSW;
+import DNSocketProxy;
 
 /// @brief room mean set/team/... client collection.
 export class RoomEntity : public Entity
@@ -24,6 +25,16 @@ public:
 
 	uint32_t& ConnNum() { return IConnNum; }
 
+	/// @brief the this close timedown destroy timerid.
+	/// @brief authenticate,shutdown and reconnect waiting.
+	uint64_t& TimerId() { return iCloseTimerId; }
+
+	/// @brief net socket set
+	const DNSocketProxy::Ptr& GetSock() { return pSock; }
+
+	/// @brief net socket get
+	void SetSock(const DNSocketProxy::Ptr& sock) { pSock = sock; }
+
 public: // dll override
 
 protected: // dll proxy
@@ -35,5 +46,9 @@ protected: // dll proxy
 	uint16_t iServPort = 0;
 
 	uint32_t IConnNum = 0;
+
+	uint64_t iCloseTimerId = 0;
+
+	DNSocketProxy::Ptr pSock;
 	
 };

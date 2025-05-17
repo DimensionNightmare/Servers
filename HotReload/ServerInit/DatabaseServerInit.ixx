@@ -12,12 +12,15 @@ import DNServer;
 import DNClientProxyHelper;
 import MessagePack;
 import std.compat;
+import DNClientProxy;
 
 #define FUNCPLACE(func) #func, func
 
-export int HandleDatabaseServerInit(DNServer::Ptr dnServer)
+export int HandleDatabaseServerInit(const World::Ptr& world)
 {
 	DatabaseMessageHandle::RegMsgHandle();
+
+	DatabaseServerHelper::Ptr dnServer = world->GetSystem<DatabaseServerHelper>(EMSystemType::DNServer);
 
 	if (DNClientProxy::Ptr proxy = dnServer->GetComponent<DNClientProxy>(EMComponentType::DNClientProxy))
 	{
@@ -31,30 +34,46 @@ export int HandleDatabaseServerInit(DNServer::Ptr dnServer)
 
 				const std::string& peeraddr = channel->peeraddr();
 
+				DNClientProxyHelper::Ptr proxyHelper = proxy->GetSelf<DNClientProxyHelper>();
+
 				if (channel->isConnected())
 				{
 					proxy->GetLogger()->Record(EL10nCode_SrvConnOn, peeraddr, channel->fd(), channel->id());
-
-					channel->SetWorld(proxy->GetWorld());
 					
-					proxy->SetRegistEvent(&DatabaseMessage::Evt_ReqRegistSrv);
-					TickMainSpaceDll(proxy, FUNCPLACE(&DNClientProxy::InitConnectedChannel),  channel);
+					proxyHelper->SetRegistEvent(&DatabaseMessage::Evt_ReqRegistSrv);
+					TickMainSpaceDll(proxy.get(), FUNCPLACE(&DNClientProxy::InitConnectedChannel),  channel);
 				}
 				else
 				{
 					proxy->GetLogger()->Record(EL10nCode_SrvConnOff, peeraddr, channel->fd(), channel->id());
 
-					std::string origin = std::format("{}:{}", proxy->GetCtlIp(), proxy->GetCtlPort());
-					if (proxy->EMRegistState() == EMRegistState::Registed || peeraddr != origin)
+					std::string originIp;
+					if(std::string* param = proxy->GetOwner()->GetWorld()->LaunchParam("ctlIp"))
 					{
-						proxy->EMRegistState() = EMRegistState::None;
+						originIp = *param;
+					}
+
+					std::string originPort;
+					if(std::string* param = proxy->GetOwner()->GetWorld()->LaunchParam("ctlPort"))
+					{
+						originPort = *param;
+					}
+
+					std::string origin = std::format("{}:{}", originIp, originPort);
+
+					if (proxyHelper->EMRegistState() == EMRegistState::Registed || peeraddr != origin)
+					{
+						proxyHelper->EMRegistState() = EMRegistState::None;
 
 						if (proxy->isConnected())
 						{
-							proxy->Timer()->setTimeout(200, [=](uint64_t timerID)
+							proxy->GetLogger()->Record(ELogLevel_Debug, "orgin not match peeraddr {} reclient ~", origin);
+
+							proxy->Timer()->setTimeout(200, [clientProxy, originIp, originPort](uint64_t timerID)
 								{
-									proxy->GetLogger()->Record(ELogLevel_Debug, "orgin not match peeraddr {} reclient ~", origin);
-									TickMainSpaceDll(proxy, FUNCPLACE(&DNClientProxy::RedirectClient),  serverProxy->GetCtlPort(), serverProxy->GetCtlIp());
+									DNClientProxy::Ptr proxy = clientProxy.lock();
+									if(!proxy){ return ;}
+									TickMainSpaceDll(proxy.get(), FUNCPLACE(&DNClientProxy::RedirectClient),  std::stoi(originPort), originIp);
 								});
 						}
 					}
@@ -96,9 +115,11 @@ export int HandleDatabaseServerInit(DNServer::Ptr dnServer)
 				}
 				else if (packet.dealType == EMMsgDeal::Res)
 				{
-					if (DNTask<Message*>* task = proxy->GetMsg(packet.msgId)) // client sock request
+					DNClientProxyHelper::Ptr proxyHelper = proxy->GetSelf<DNClientProxyHelper>();
+
+					if (DNTask<Message*>* task = proxyHelper->GetMsg(packet.msgId)) // client sock request
 					{
-						proxy->DelMsg(packet.msgId);
+						proxyHelper->DelMsg(packet.msgId);
 						task->Resume();
 
 						if (Message* message = task->GetResult())
@@ -127,10 +148,11 @@ export int HandleDatabaseServerInit(DNServer::Ptr dnServer)
 	return true;
 }
 
-export int HandleDatabaseServerShutdown(DNServer::Ptr server)
+export int HandleDatabaseServerShutdown(const World::Ptr& world)
 {
-
-	if (DNClientProxy::Ptr proxy = dnServer->GetComponent<DNClientProxy>(EMComponentType::DNClientProxy))
+	DatabaseServerHelper::Ptr dnServer = world->GetSystem<DatabaseServerHelper>(EMSystemType::DNServer);
+	
+	if (DNClientProxyHelper::Ptr proxy = dnServer->GetComponent<DNClientProxyHelper>(EMComponentType::DNClientProxy))
 	{
 		proxy->onConnection = nullptr;
 		proxy->onMessage = nullptr;

@@ -36,7 +36,7 @@ public:
 			return;
 		}
 
-		uint32_t entityId = mMapTimer[timerID];
+		uint64_t entityId = mMapTimer[timerID];
 		if (RemoveEntity(entityId))
 		{
 			GetLogger()->Record(ELogLevel_Debug, "EntityCloseTimer Room destory entity");
@@ -44,7 +44,7 @@ public:
 
 	}
 
-	uint64_t CheckEntityCloseTimer(uint32_t entityId)
+	uint64_t CheckEntityCloseTimer(uint64_t entityId)
 	{
 		uint64_t timerId = Timer()->setTimeout(10000, std::bind(&RoomEntityManager::EntityCloseTimer, this, std::placeholders::_1));
 
@@ -53,7 +53,7 @@ public:
 		return timerId;
 	}
 
-	bool RemoveEntity(uint32_t entityId)
+	bool RemoveEntity(uint64_t entityId)
 	{
 		if (mEntityMap.contains(entityId))
 		{
@@ -71,9 +71,9 @@ public:
 
 protected:
 	/// @brief 
-	std::unordered_map<uint32_t, std::list<RoomEntity::Ptr>> mEntityMapList;
+	std::unordered_map<uint64_t, std::list<RoomEntity::Ptr>> mEntityMapList;
 
 	/// @brief 
-	std::atomic<uint32_t> iRoomGenId;
+	std::atomic<uint64_t> iRoomGenId;
 
 };

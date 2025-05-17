@@ -8,10 +8,13 @@ import ThirdParty.Libhv;
 import ThirdParty.PbGen;
 import ClientEntityManagerHelper;
 import std.compat;
+import DNSocketProxy;
+import RoomEntity;
+import LogicServerHelper;
 
 namespace LogicMessage
 {
-	export void Exe_RetAccountReplace(DNSocketProxy::Ptr channel, uint32_t msgId, std::string binMsg)
+	export void Exe_RetAccountReplace(const DNSocketProxy::Ptr& channel, uint32_t msgId, std::string binMsg)
 	{
 		GMsg::S2C_RetAccountReplace request;
 		if(!request.ParseFromString(binMsg))
@@ -19,17 +22,17 @@ namespace LogicMessage
 			return;
 		}
 
-		LogicServerHelper* dnServer = GetLogicServer();
-		ClientEntityManagerHelper* entityMan = dnServer->GetClientEntityManager();
+		LogicServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<LogicServerHelper>(EMSystemType::DNServer);
+		ClientEntityManagerHelper::Ptr entityMan = dnServer->GetClientEntityManager();
 
 		ClientEntity::Ptr entity = entityMan->GetEntity(request.account_id());
 		if (!entity)
 		{
-			SPidLogger.Record(ELogLevel_Debug, "Client Entity Kick Not Exist !");
+			dnServer->GetLogger()->Record(ELogLevel_Debug, "Client Entity Kick Not Exist !");
 			return;
 		}
 
-		RoomEntityManagerHelper* roomEntityMan = dnServer->GetRoomEntityManager();
+		RoomEntityManagerHelper::Ptr roomEntityMan = dnServer->GetRoomEntityManager();
 		RoomEntity::Ptr roomEntity = roomEntityMan->GetEntity(entity->RecordRoomId());
 
 		// cache
@@ -41,7 +44,7 @@ namespace LogicMessage
 		}
 		else
 		{
-			SPidLogger.Record(ELogLevel_Debug, "Client Entity Kick Server Not Exist !");
+			dnServer->GetLogger()->Record(ELogLevel_Debug, "Client Entity Kick Server Not Exist !");
 		}
 
 		// close entity save data
@@ -49,7 +52,7 @@ namespace LogicMessage
 	}
 
 	// client request
-	export DNTaskVoid Msg_ReqClientLogin(DNSocketProxy::Ptr channel, uint32_t msgId, std::string binMsg)
+	export DNTaskVoid Msg_ReqClientLogin(const DNSocketProxy::Ptr& channel, uint32_t msgId, std::string binMsg)
 	{
 		GMsg::C2S_ReqAuthToken request;
 		if(!request.ParseFromString(binMsg))
@@ -58,29 +61,35 @@ namespace LogicMessage
 		}
 		GMsg::S2C_ResAuthToken response;
 
-		LogicServerHelper* dnServer = GetLogicServer();
-		ClientEntityManagerHelper* entityMan = dnServer->GetClientEntityManager();
+		FinalExecute final([&response, msgId, channel](){
+			std::string binData;
+			response.SerializeToString(&binData);
+			MessagePackAndSend(msgId, EMMsgDeal::Res, "", binData, channel);
+		});
+
+		LogicServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<LogicServerHelper>(EMSystemType::DNServer);
+		ClientEntityManagerHelper::Ptr entityMan = dnServer->GetClientEntityManager();
 
 		ClientEntity::Ptr entity = entityMan->AddEntity(request.account_id());
 		if (entity)
 		{
-			SPidLogger.Record(ELogLevel_Debug, "AddEntity Client!");
+			dnServer->GetLogger()->Record(ELogLevel_Debug, "AddEntity Client!");
 
 			// msg will destroy. MessageHandle not will waiting.
 			co_await entityMan->LoadEntityData(entity, nullptr, nullptr);
 
 			if (!entity->HasFlag(EMClientEntityFlag::DBInited))
 			{
-				SPidLogger.Record(ELogLevel_Debug, "AddEntity Client but not from db!");
+				dnServer->GetLogger()->Record(ELogLevel_Debug, "AddEntity Client but not from db!");
 			}
 		}
 		else
 		{
-			SPidLogger.Record(ELogLevel_Debug, "AddEntity Exist Client!");
+			dnServer->GetLogger()->Record(ELogLevel_Debug, "AddEntity Exist Client!");
 			entity = entityMan->GetEntity(request.account_id());
 		}
 
-		RoomEntityManagerHelper* roomEntityMan = dnServer->GetRoomEntityManager();
+		RoomEntityManagerHelper::Ptr roomEntityMan = dnServer->GetRoomEntityManager();
 		RoomEntity::Ptr roomEntity = nullptr;
 
 		// cache
@@ -114,7 +123,7 @@ namespace LogicMessage
 			if (roomEntityList.empty())
 			{
 				response.set_state_code(5);
-				SPidLogger.Record(ELogLevel_Debug, "not ds Server");
+				dnServer->GetLogger()->Record(ELogLevel_Debug, "not ds Server");
 			}
 			else
 			{
@@ -123,33 +132,28 @@ namespace LogicMessage
 			
 		}
 
-		std::string binData;
-
 		// req token
 		if (roomEntity)
 		{
-			binData = binMsg;
-
-			
 			auto taskGen = [](Message* msg) -> DNTask<Message*>
 				{
 					co_return msg;
 				};
 			auto dataChannel = taskGen(&response);
 
-			DNServerProxyHelper* server = dnServer->GetSSock();
+			DNServerProxyHelper::Ptr server = dnServer->GetServerProxy();
 			uint32_t msgId = server->GetMsgId();
 
 			// wait data parse
 			server->AddMsg(msgId, &dataChannel, 8000);
 
-			MessagePackAndSend(msgId, EMMsgDeal::Req, request.GetDescriptor()->full_name(), binData, roomEntity->GetSock());
+			MessagePackAndSend(msgId, EMMsgDeal::Req, request.GetDescriptor()->full_name(), binMsg, roomEntity->GetSock());
 
 			co_await dataChannel;
 
 			if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
 			{
-				SPidLogger.Record(ELogLevel_Debug, "requst timeout! ");
+				dnServer->GetLogger()->Record(ELogLevel_Debug, "requst timeout! ");
 				response.set_state_code(6);
 			}
 			else
@@ -162,11 +166,7 @@ namespace LogicMessage
 
 		}
 
-		SPidLogger.Record(ELogLevel_Debug, "ds:{}", response.DebugString());
-
-		// pack data
-		response.SerializeToString(&binData);
-		MessagePackAndSend(msgId, EMMsgDeal::Res, "", binData, channel);
+		dnServer->GetLogger()->Record(ELogLevel_Debug, "ds:{}", response.DebugString());
 
 		co_return;
 	}

@@ -3,7 +3,7 @@ module;
 export module HotReloadDll;
 
 import std.compat;
-import Platform;
+import ThirdParty.Platform;
 import Logger;
 import ECSW;
 
@@ -19,7 +19,16 @@ protected:
 		emSystemType = EMSystemType::HotReloadDll;
 
 		sDllDir = std::filesystem::path(*pWorld->LaunchParam("program")).parent_path() / sDllDir;
-		sServerName = *pWorld->LaunchParam("svrName");
+
+		if(std::string* value = pWorld->LaunchParam("svrName"))
+		{
+			sServerName = *value;
+		}
+		else
+		{
+			sServerName = std::format("PID_LOG/PID_{}", Platform::GetCurrentProcessId());
+		}
+		
 
 		pLogger = pWorld->GetSystemW<LoggerPrint>(EMSystemType::LoggerPrint);
 	}
@@ -29,14 +38,12 @@ public:
 	/// @brief
 	~HotReloadDll()
 	{
-		
+		FreeHandle();
 	}
 
 	void Dispose() override
 	{
 		System::Dispose();
-		
-		FreeHandle();
 	}
 
 	/// @brief load dll/so runtime library
@@ -127,7 +134,7 @@ public:
 		}
 		catch (const std::exception& e)
 		{
-			GetLogger()->Record(ELogLevel_Debug, "{}", e.what());
+			GetLogger()->Record(ELogLevel_Debug, e.what());
 			return false;
 		}
 #endif
@@ -144,17 +151,6 @@ public:
 		return false;
 	}
 
-	/// @brief get runtime lib funcpointer
-	Platform::FuncHandle GetFuncPtr(const char* funcName)
-	{
-#ifdef _WIN32
-		return Platform::GetProcAddress(oLibHandle, funcName);
-#elif __unix__
-		return dlsym(oLibHandle, funcName);
-#endif
-		return nullptr;
-	}
-
 	std::filesystem::path GetDllPath()
 	{
 		return sDllDirRand;
@@ -165,7 +161,49 @@ public:
 		isNormalFree = false;
 	}
 
+	/// @brief exec runtime lib func
+	bool OnRegHotReload(World::Ptr world)
+	{
+		if (void* funtPtr = GetFuncPtr("InitHotReload"))
+		{
+			using funcSign = int (*)(World::Ptr);
+			if (funcSign func = reinterpret_cast<funcSign>(funtPtr))
+			{
+				return func(world) == int(true);
+			}
+		}
+
+		return false;
+	}
+
+	/// @brief exec runtime lib func
+	bool OnUnregHotReload(World::Ptr world)
+	{
+		// launch error pHotDll is Null
+		if (void* funtPtr = GetFuncPtr("ShutdownHotReload"))
+		{
+			using funcSign = int (*)(World::Ptr);
+			if (funcSign func = reinterpret_cast<funcSign>(funtPtr))
+			{
+				return func(world) == int(true);
+			}
+		}
+
+		return false;
+	}
+
 protected:
+
+	/// @brief get runtime lib funcpointer
+	Platform::FuncHandle GetFuncPtr(const char* funcName)
+	{
+#ifdef _WIN32
+		return Platform::GetProcAddress(oLibHandle, funcName);
+#elif __unix__
+		return dlsym(oLibHandle, funcName);
+#endif
+		return nullptr;
+	}
 
 	LoggerPrint::Ptr GetLogger(){ return pLogger.expired() ? nullptr : pLogger.lock(); }
 

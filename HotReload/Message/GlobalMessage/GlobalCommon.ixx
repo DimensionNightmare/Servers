@@ -8,24 +8,25 @@ import ThirdParty.Libhv;
 import ThirdParty.PbGen;
 import DNClientProxyHelper;
 import DNServerProxyHelper;
+import DNSocketProxy;
+import DNServer;
+import ServerEntity;
+import ServerEntityManagerHelper;
+import GlobalServerHelper;
 
 namespace GlobalMessage
 {
 
 	// client request
-	export DNTaskVoid Evt_ReqRegistSrv(DNServer::WPtr dnServer)
+	export DNTaskVoid Evt_ReqRegistSrv(const DNServer::Ptr& server)
 	{
-		DNServer::Ptr server = dnServer.lock();
-		if (!server)
-		{
-			co_return;
-		}
+		GlobalServerHelper::Ptr dnServer = server->GetSelf<GlobalServerHelper>();
 
-		DNClientProxyHelper::Ptr clientProxy = server->GetComponent<DNClientProxyHelper>(EMComponent::DNClientProxy);
+		DNClientProxyHelper::Ptr clientProxy = dnServer->GetClientProxy();
 
-		DNServerProxyHelper::Ptr serverProxy = server->GetComponent<DNServerProxyHelper>(EMComponent::DNServerProxy);
+		DNServerProxyHelper::Ptr serverProxy = dnServer->GetServerProxy();
 		
-		SPidLogger.Record(ELogLevel_Debug, "Client:{}, port:{}", clientProxy->remote_host, clientProxy->remote_port);
+		dnServer->GetLogger()->Record(ELogLevel_Debug, "Client:{}, port:{}", clientProxy->remote_host, clientProxy->remote_port);
 		
 		clientProxy->EMRegistState() = EMRegistState::Registing;
 
@@ -61,21 +62,21 @@ namespace GlobalMessage
 			co_await dataChannel;
 			if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
 			{
-				SPidLogger.Record(ELogLevel_Debug, "requst timeout! ");
+				dnServer->GetLogger()->Record(ELogLevel_Debug, "requst timeout! ");
 			}
 
 		}
 
 		if (response.success())
 		{
-			SPidLogger.Record(ELogLevel_Debug, "regist Server success! Rec index:{}", response.server_id());
+			dnServer->GetLogger()->Record(ELogLevel_Debug, "regist Server success! Rec index:{}", response.server_id());
 			clientProxy->EMRegistState() = EMRegistState::Registed;
 			clientProxy->RegistType() = response.server_type();
 			server->ServerId() = response.server_id();
 		}
 		else
 		{
-			SPidLogger.Record(ELogLevel_Debug, "regist Server error!  ");
+			dnServer->GetLogger()->Record(ELogLevel_Debug, "regist Server error!  ");
 			// dnServer->IsRun() = false; //exit application
 			clientProxy->EMRegistState() = EMRegistState::None;
 		}
@@ -85,22 +86,28 @@ namespace GlobalMessage
 	}
 
 	// client request
-	export void Msg_ReqRegistSrv(DNSocketProxy::Ptr channel, uint32_t msgId, std::string binMsg)
+	export void Msg_ReqRegistSrv(const DNSocketProxy::Ptr& channel, uint32_t msgId, std::string binMsg)
 	{
 		GMsg::COM_ReqRegistSrv request;
 		if(!request.ParseFromString(binMsg))
 		{
 			return;
 		}
+
+		GlobalServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<GlobalServerHelper>(EMSystemType::DNServer);
 		
-		SPidLogger.Record(ELogLevel_Debug, "ip Reqregist: {}, {}", channel->peeraddr(), request.server_type());
+		dnServer->GetLogger()->Record(ELogLevel_Debug, "ip Reqregist: {}, {}", channel->peeraddr(), request.server_type());
 
 		GMsg::COM_ResRegistSrv response;
 
-		DNServer::Ptr dnServer = channel->GetWorld()->GetSystem<DNServer>();
-	
+		FinalExecute final([&response, msgId, channel](){
+			std::string binData;
+			response.SerializeToString(&binData);
+			MessagePackAndSend(msgId, EMMsgDeal::Res, "", binData, channel);
+		});
+
 		ServerEntityManagerHelper::Ptr entityMan = dnServer
-			->GetComponent<ServerEntityManagerHelper>(EMComponent::ServerEntityManager);
+			->GetComponent<ServerEntityManagerHelper>(EMComponentType::ServerEntityManager);
 
 
 		EMServerType regType = (EMServerType)request.server_type();
@@ -113,7 +120,7 @@ namespace GlobalMessage
 		}
 
 		//exist?
-		else if (ServerEntity::Ptr entity = channel->getContext<ServerEntity>())
+		else if (ServerEntity::Ptr entity = channel->getContextPtr<ServerEntity>())
 		{
 			response.set_success(false);
 		}
@@ -139,7 +146,7 @@ namespace GlobalMessage
 				{
 					entity->LinkNode() = nullptr;
 					entity->SetSock(channel);
-					channel->setContext(entity);
+					channel->setContextPtr(entity);
 
 					response.set_success(true);
 
@@ -156,7 +163,7 @@ namespace GlobalMessage
 				entity = entityMan->AddEntity(serverId, regType);
 				entity->SetSock(channel);
 
-				channel->setContext(entity);
+				channel->setContextPtr(entity);
 
 				size_t pos = ipPort.find(":");
 				entity->ServerIp() = ipPort.substr(0, pos);
@@ -172,17 +179,12 @@ namespace GlobalMessage
 			entity->ServerPort() = request.server_port();
 			entity->SetSock(channel);
 
-			channel->setContext(entity);
+			channel->setContextPtr(entity);
 
 			response.set_success(true);
 			response.set_server_id(entity->ID());
 			response.set_server_type((uint8_t(dnServer->GetServerType())));
 		}
-
-		std::string binData;
-		response.SerializeToString(&binData);
-
-		MessagePackAndSend(msgId, EMMsgDeal::Res, "", binData, channel);
 
 		if (response.success())
 		{
@@ -191,7 +193,7 @@ namespace GlobalMessage
 
 	}
 
-	export void Exe_RetHeartbeat(DNSocketProxy::Ptr channel, std::string binMsg)
+	export void Exe_RetHeartbeat(const DNSocketProxy::Ptr& channel, std::string binMsg)
 	{
 		GMsg::COM_RetHeartbeat request;
 		if(!request.ParseFromString(binMsg))

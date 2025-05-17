@@ -2,7 +2,7 @@ module;
 export module DllUtils;
 
 import std;
-import Platform;
+import ThirdParty.Platform;
 
 template<typename T>
 struct MemberFunctionReturnType;

@@ -11,11 +11,12 @@ import ThirdParty.Libpqxx;
 import std.compat;
 import DNSocketProxy;
 import DNServer;
+import DatabaseServerHelper;
 
 namespace DatabaseMessage
 {
 
-	export void Exe_ReqLoadData(DNSocketProxy::Ptr channel, uint32_t msgId, std::string binMsg)
+	export void Exe_ReqLoadData(const DNSocketProxy::Ptr& channel, uint32_t msgId, std::string binMsg)
 	{
 		GMsg::L2D_ReqLoadData request;
 		if(!request.ParseFromString(binMsg))
@@ -24,17 +25,21 @@ namespace DatabaseMessage
 		}
 		GMsg::D2L_ResLoadData response;
 
-		DatabaseServerHelper* dnServer = GetDatabaseServer();
+		FinalExecute final([&response, msgId, channel](){
+			std::string binData;
+			response.SerializeToString(&binData);
+			MessagePackAndSend(msgId, EMMsgDeal::Res, "", binData, channel);
+		});
 
-		std::string binData;
+		DatabaseServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<DatabaseServerHelper>(EMSystemType::DNServer);
 
-		if (pqxx::connection* conn = dnServer->GetSqlProxy(EMSqlDbNameEnum::Nightmare))
+		if (auto connection = dnServer->GetRdbProxy()->GetConnection(static_cast<uint16_t>(EMSqlDbNameEnum::Nightmare)))
 		{
 			auto dealFunc = [&](Message* findMsg)
 				{
 					findMsg->ParseFromString(request.entity_data());
 
-					pqxx::work txn(*conn);
+					pqxx::work txn(*connection);
 					DbSqlHelper dbHelper(&txn, findMsg);
 
 					auto query = [&]()
@@ -83,7 +88,7 @@ namespace DatabaseMessage
 					}
 					catch (const std::exception& e)
 					{
-						SPidLogger.Record(ELogLevel_Debug, e.what());
+						dnServer->GetLogger()->Record(ELogLevel_Debug, e.what());
 						response.set_state_code(5);
 					}
 
@@ -105,13 +110,9 @@ namespace DatabaseMessage
 		{
 			response.set_state_code(3);
 		}
-
-		response.SerializeToString(&binData);
-
-		MessagePackAndSend(msgId, EMMsgDeal::Res, "", binData, channel);
 	}
 
-	export void Exe_ReqSaveData(DNSocketProxy::Ptr channel, uint32_t msgId, std::string binMsg)
+	export void Exe_ReqSaveData(const DNSocketProxy::Ptr& channel, uint32_t msgId, std::string binMsg)
 	{
 		GMsg::L2D_ReqSaveData request;
 		if(!request.ParseFromString(binMsg))
@@ -120,17 +121,23 @@ namespace DatabaseMessage
 		}
 		GMsg::D2L_ResSaveData response;
 
-		DatabaseServerHelper* dnServer = GetDatabaseServer();
+		FinalExecute final([&response, msgId, channel](){
+			std::string binData;
+			response.SerializeToString(&binData);
+			MessagePackAndSend(msgId, EMMsgDeal::Res, "", binData, channel);
+		});
+
+		DatabaseServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<DatabaseServerHelper>(EMSystemType::DNServer);
 
 		std::string binData;
 
-		if (pqxx::connection* conn = dnServer->GetSqlProxy(EMSqlDbNameEnum::Nightmare))
+		if (auto connection = dnServer->GetRdbProxy()->GetConnection(static_cast<uint16_t>(EMSqlDbNameEnum::Nightmare)))
 		{
 			auto dealFunc = [&](Message* findMsg)
 				{
 					findMsg->ParseFromString(request.entity_data());
 
-					pqxx::work txn(*conn);
+					pqxx::work txn(*connection);
 					DbSqlHelper dbHelper(&txn, findMsg);
 
 					dbHelper
@@ -153,7 +160,7 @@ namespace DatabaseMessage
 					}
 					catch (const std::exception& e)
 					{
-						SPidLogger.Record(ELogLevel_Debug, e.what());
+						dnServer->GetLogger()->Record(ELogLevel_Debug, e.what());
 						response.set_state_code(5);
 					}
 
@@ -176,8 +183,5 @@ namespace DatabaseMessage
 			response.set_state_code(3);
 		}
 
-		response.SerializeToString(&binData);
-
-		MessagePackAndSend(msgId, EMMsgDeal::Res, "", binData, channel);
 	}
 }

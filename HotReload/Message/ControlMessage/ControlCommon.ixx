@@ -8,12 +8,15 @@ import ThirdParty.PbGen;
 import Logger;
 import ServerEntityManagerHelper;
 import std.compat;
+import DNSocketProxy;
+import DNServer;
+import ControlServerHelper;
 
 namespace ControlMessage
 {
 
 	// client request
-	export void Msg_ReqRegistSrv(DNSocketProxy::Ptr channel, uint32_t msgId, std::string binMsg)
+	export void Msg_ReqRegistSrv(const DNSocketProxy::Ptr& channel, uint32_t msgId, std::string binMsg)
 	{
 		GMsg::COM_ReqRegistSrv request;
 		if(!request.ParseFromString(binMsg))
@@ -23,14 +26,21 @@ namespace ControlMessage
 
 		GMsg::COM_ResRegistSrv response;
 
-		ControlServerHelper* dnServer = GetControlServer();
-		ServerEntityManagerHelper* entityMan = dnServer->GetServerEntityManager();
+		FinalExecute final([&response, msgId, channel](){
+			std::string binData;
+			response.SerializeToString(&binData);
+			MessagePackAndSend(msgId, EMMsgDeal::Res, "", binData, channel);
+		});
 
-		EMServerType regType = (EMServerType)request.server_type();
+		ControlServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<ControlServerHelper>(EMSystemType::DNServer);
 
-		SPidLogger.Record(ELogLevel_Debug, "ip Reqregist: {}, {}", channel->peeraddr(), request.server_type());
+		ServerEntityManagerHelper::Ptr entityMan = dnServer->GetServerEntityManager();
+
+		dnServer->GetLogger()->Record(ELogLevel_Debug, "ip Reqregist: {}, {}", channel->peeraddr(), request.server_type());
 
 		const std::string& ipPort = channel->localaddr();
+
+		EMServerType regType = (EMServerType)request.server_type();
 
 		if (regType < EMServerType::GlobalServer || regType > EMServerType::AuthServer || ipPort.empty())
 		{
@@ -38,7 +48,7 @@ namespace ControlMessage
 		}
 
 		//exist?
-		else if (ServerEntity::Ptr entity = channel->getContext<ServerEntity>())
+		else if (ServerEntity::Ptr entity = channel->getContextPtr<ServerEntity>())
 		{
 			response.set_success(false);
 		}
@@ -50,20 +60,17 @@ namespace ControlMessage
 			entity->ServerPort() = request.server_port();
 			entity->SetSock(channel);
 
-			channel->setContext(entity);
+			channel->setContextPtr(entity);
 
 			response.set_success(true);
 			response.set_server_id(entity->ID());
 			response.set_server_type((uint8_t(dnServer->GetServerType())));
 		}
 
-		std::string binData;
-		response.SerializeToString(&binData);
-
-		MessagePackAndSend(msgId, EMMsgDeal::Res, "", binData, channel);
+		
 	}
 
-	export void Exe_RetHeartbeat(DNSocketProxy::Ptr channel, std::string binMsg)
+	export void Exe_RetHeartbeat(const DNSocketProxy::Ptr& channel, std::string binMsg)
 	{
 		GMsg::COM_RetHeartbeat request;
 		if(!request.ParseFromString(binMsg))

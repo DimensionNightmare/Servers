@@ -8,11 +8,13 @@ import ThirdParty.Libhv;
 import ThirdParty.PbGen;
 import ServerEntityManagerHelper;
 import std.compat;
+import DNSocketProxy;
+import GateServerHelper;
 
 namespace GateMessage
 {
 
-	export DNTaskVoid Exe_ReqLoadData(DNSocketProxy::Ptr channel, uint32_t msgId, std::string binMsg)
+	export DNTaskVoid Exe_ReqLoadData(const DNSocketProxy::Ptr& channel, uint32_t msgId, std::string binMsg)
 	{
 		GMsg::L2D_ReqLoadData request;
 		if(!request.ParseFromString(binMsg))
@@ -21,8 +23,14 @@ namespace GateMessage
 		}
 		GMsg::D2L_ResLoadData response;
 
-		GateServerHelper* dnServer = GetGateServer();
-		ServerEntityManagerHelper* entityMan = dnServer->GetServerEntityManager();
+		FinalExecute final([&response, msgId, channel](){
+			std::string binData;
+			response.SerializeToString(&binData);
+			MessagePackAndSend(msgId, EMMsgDeal::Res, "", binData, channel);
+		});
+
+		GateServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<GateServerHelper>(EMSystemType::DNServer);
+		ServerEntityManagerHelper::Ptr entityMan = dnServer->GetServerEntityManager();
 		const std::list<ServerEntity::Ptr>& dbServers = entityMan->GetEntitysByType(EMServerType::DatabaseServer);
 
 		std::string binData;
@@ -41,29 +49,25 @@ namespace GateMessage
 				};
 			auto dataChannel = taskGen(&response);
 
-			DNServerProxyHelper* server = dnServer->GetSSock();
-			uint32_t msgId = server->GetMsgId();
-			server->AddMsg(msgId, &dataChannel, 8000);
+			DNServerProxyHelper::Ptr serverProxy = dnServer->GetServerProxy();
+			uint32_t msgId = serverProxy->GetMsgId();
+			serverProxy->AddMsg(msgId, &dataChannel, 8000);
 
 			MessagePackAndSend(msgId, EMMsgDeal::Req, request.GetDescriptor()->full_name(), binData, entity->GetSock());
 
 			co_await dataChannel;
 			if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
 			{
-				SPidLogger.Record(ELogLevel_Debug, "requst timeout! ");
+				dnServer->GetLogger()->Record(ELogLevel_Debug, "requst timeout! ");
 				response.set_state_code(2);
 			}
 			
-
 		}
-
-		response.SerializeToString(&binData);
-		MessagePackAndSend(msgId, EMMsgDeal::Res, "", binData, channel);
 
 		co_return;
 	}
 
-	export DNTaskVoid Exe_ReqSaveData(DNSocketProxy::Ptr channel, uint32_t msgId, std::string binMsg)
+	export DNTaskVoid Exe_ReqSaveData(const DNSocketProxy::Ptr& channel, uint32_t msgId, std::string binMsg)
 	{
 		GMsg::L2D_ReqSaveData request;
 		if(!request.ParseFromString(binMsg))
@@ -72,8 +76,8 @@ namespace GateMessage
 		}
 		GMsg::D2L_ResSaveData response;
 
-		GateServerHelper* dnServer = GetGateServer();
-		ServerEntityManagerHelper* entityMan = dnServer->GetServerEntityManager();
+		GateServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<GateServerHelper>(EMSystemType::DNServer);
+		ServerEntityManagerHelper::Ptr entityMan = dnServer->GetServerEntityManager();
 		const std::list<ServerEntity::Ptr>& dbServers = entityMan->GetEntitysByType(EMServerType::DatabaseServer);
 
 		std::string binData;
@@ -95,7 +99,7 @@ namespace GateMessage
 				};
 			auto dataChannel = taskGen(&response);
 
-			DNServerProxyHelper* server = dnServer->GetSSock();
+			DNServerProxyHelper::Ptr server = dnServer->GetServerProxy();
 			uint32_t msgId = server->GetMsgId();
 			server->AddMsg(msgId, &dataChannel, 8000);
 
@@ -104,7 +108,7 @@ namespace GateMessage
 			co_await dataChannel;
 			if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
 			{
-				SPidLogger.Record(ELogLevel_Debug, "requst timeout! ");
+				dnServer->GetLogger()->Record(ELogLevel_Debug, "requst timeout! ");
 				response.set_state_code(2);
 			}
 			

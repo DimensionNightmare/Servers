@@ -12,16 +12,22 @@ import DNServer;
 import DNWebProxyHelper;
 import MessagePack;
 import std.compat;
+import DNWebProxy;
+import DNClientProxy;
+import DNClientProxyHelper;
+import DNServerProxyHelper;
 
 #define FUNCPLACE(func) #func, func
 
-export int HandleAuthServerInit(DNServer::Ptr dnServer)
+export int HandleAuthServerInit(const World::Ptr& world)
 {
+	AuthServerHelper::Ptr dnServer = world->GetSystem<DNServer>(EMSystemType::DNServer);
+
 	if (DNWebProxy::Ptr proxy = dnServer->GetComponent<DNWebProxy>(EMComponentType::DNWebProxy))
 	{
 		hv::HttpService* service = new hv::HttpService();
 
-		AuthMessageHandle::RegApiHandle(service);
+		AuthMessageHandle::RegApiHandle(dnServer->GetSelfW<DNServer>(), service);
 
 		proxy->registerHttpService(service);
 	}
@@ -38,22 +44,22 @@ export int HandleAuthServerInit(DNServer::Ptr dnServer)
 
 				const std::string& peeraddr = channel->peeraddr();
 
+				DNClientProxyHelper::Ptr proxyHelper = proxy->GetSelf<DNClientProxyHelper>();
+
 				if (channel->isConnected())
 				{
 					proxy->GetLogger()->Record(EL10nCode_CliConnOn, peeraddr, channel->fd(), channel->id());
 
-					channel->SetWorld(proxy->GetWorld());
-
-					proxy->SetRegistEvent(&AuthMessage::Evt_ReqRegistSrv);
-					TickMainSpaceDll(proxy, FUNCPLACE(&DNClientProxy::InitConnectedChannel),  channel);
+					proxyHelper->SetRegistEvent(&AuthMessage::Evt_ReqRegistSrv);
+					TickMainSpaceDll(proxy.get(), FUNCPLACE(&DNClientProxy::InitConnectedChannel),  channel);
 				}
 				else
 				{
 					proxy->GetLogger()->Record(EL10nCode_CliConnOff, peeraddr, channel->fd(), channel->id());
 
-					if (proxy->EMRegistState() == EMRegistState::Registed)
+					if (proxyHelper->EMRegistState() == EMRegistState::Registed)
 					{
-						proxy->EMRegistState() = EMRegistState::None;
+						proxyHelper->EMRegistState() = EMRegistState::None;
 					}
 
 					proxy->RegistType() = 0;
@@ -86,9 +92,11 @@ export int HandleAuthServerInit(DNServer::Ptr dnServer)
 
 				if (packet.dealType == EMMsgDeal::Res)
 				{
-					if (DNTask<Message*>* task = proxy->GetMsg(packet.msgId)) //client sock request
+					DNServerProxyHelper::Ptr proxyHelper = proxy->GetSelf<DNServerProxyHelper>();
+
+					if (DNTask<Message*>* task = proxyHelper->GetMsg(packet.msgId)) //client sock request
 					{
-						proxy->DelMsg(packet.msgId);
+						proxyHelper->DelMsg(packet.msgId);
 						task->Resume();
 
 						if (Message* message = task->GetResult())
@@ -117,10 +125,11 @@ export int HandleAuthServerInit(DNServer::Ptr dnServer)
 	return true;
 }
 
-export int HandleAuthServerShutdown(DNServer::Ptr server)
+export int HandleAuthServerShutdown(const World::Ptr& world)
 {
+	AuthServerHelper::Ptr dnServer = world->GetSystem<DNServer>(EMSystemType::DNServer);
 	
-	if (DNClientProxy::Ptr proxy = dnServer->GetComponent<DNClientProxy>(EMComponentType::DNClientProxy))
+	if (DNClientProxyHelper::Ptr proxy = dnServer->GetComponent<DNClientProxyHelper>(EMComponentType::DNClientProxy))
 	{
 		proxy->onConnection = nullptr;
 		proxy->onMessage = nullptr;

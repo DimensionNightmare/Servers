@@ -8,10 +8,12 @@ import ThirdParty.Libhv;
 import ThirdParty.PbGen;
 import ClientEntityManagerHelper;
 import std.compat;
+import DNSocketProxy;
+import LogicServerHelper;
 
 namespace LogicMessage
 {
-	export DNTaskVoid Msg_ReqLoadEntityData(DNSocketProxy::Ptr channel, uint32_t msgId, std::string binMsg)
+	export DNTaskVoid Msg_ReqLoadEntityData(const DNSocketProxy::Ptr& channel, uint32_t msgId, std::string binMsg)
 	{
 		GMsg::d2L_ReqLoadEntityData request;
 		if(!request.ParseFromString(binMsg))
@@ -20,14 +22,20 @@ namespace LogicMessage
 		}
 		GMsg::L2d_ResLoadEntityData response;
 
+		FinalExecute final([&response, msgId, channel](){
+			std::string binData;
+			response.SerializeToString(&binData);
+			MessagePackAndSend(msgId, EMMsgDeal::Res, "", binData, channel);
+		});
+
 		GDb::Player player;
 		if (!player.ParseFromString(request.entity_data()))
 		{
 			co_return;
 		}
 
-		LogicServerHelper* dnServer = GetLogicServer();
-		ClientEntityManagerHelper* entityMan = dnServer->GetClientEntityManager();
+		LogicServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<LogicServerHelper>(EMSystemType::DNServer);
+		ClientEntityManagerHelper::Ptr entityMan = dnServer->GetClientEntityManager();
 
 		ClientEntity::Ptr entity = entityMan->GetEntity(player.account_id());
 
@@ -44,14 +52,10 @@ namespace LogicMessage
 
 		}
 
-		std::string binData;
-		response.SerializeToString(&binData);
-		MessagePackAndSend(msgId, EMMsgDeal::Res, "", binData, channel);
-
 		co_return;
 	}
 
-	export void Msg_ReqSaveEntityData(DNSocketProxy::Ptr channel, std::string binMsg)
+	export void Msg_ReqSaveEntityData(const DNSocketProxy::Ptr& channel, std::string binMsg)
 	{
 		GMsg::d2L_ReqSaveEntityData request;
 		if(!request.ParseFromString(binMsg))
@@ -60,14 +64,17 @@ namespace LogicMessage
 		}
 
 		GDb::Player player;
+		
+		LogicServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<LogicServerHelper>(EMSystemType::DNServer);
+
 		if (!player.ParseFromString(request.entity_data()))
 		{
-			SPidLogger.Record(ELogLevel_Debug, "Save data but parse error!");
+			dnServer->GetLogger()->Record(ELogLevel_Debug, "Save data but parse error!");
 			return;
 		}
 
-		LogicServerHelper* dnServer = GetLogicServer();
-		ClientEntityManagerHelper* entityMan = dnServer->GetClientEntityManager();
+		
+		ClientEntityManagerHelper::Ptr entityMan = dnServer->GetClientEntityManager();
 		ClientEntity::Ptr entity = entityMan->GetEntity(player.account_id());
 
 		if(!entity)
@@ -77,7 +84,7 @@ namespace LogicMessage
 
 		if (!entity)
 		{
-			SPidLogger.Record(ELogLevel_Debug, "ReqSaveData not entity!");
+			dnServer->GetLogger()->Record(ELogLevel_Debug, "ReqSaveData not entity!");
 			return;
 		}
 
@@ -92,7 +99,7 @@ namespace LogicMessage
 		}
 		else
 		{
-			SPidLogger.Record(ELogLevel_Debug, "SaveData but dbEntity is null!");
+			dnServer->GetLogger()->Record(ELogLevel_Debug, "SaveData but dbEntity is null!");
 		}
 
 	}

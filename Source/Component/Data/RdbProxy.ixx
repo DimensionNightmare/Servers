@@ -5,6 +5,12 @@ import ECSW;
 import ThirdParty.Libpqxx;
 import Logger;
 
+export enum class EMSqlDbNameEnum : uint16_t
+{
+	Account,
+	Nightmare,
+};
+
 export class RdbProxy : public Component
 {
 protected:
@@ -16,34 +22,26 @@ protected:
 		pLogger = GetOwner()->GetWorld()->GetSystemW<LoggerPrint>(EMSystemType::LoggerPrint);
 	}
 
-	bool Awake()
-	{
-		
-		World::Ptr pWorld = GetOwner()->GetWorld();
-
-		try
-		{
-			//"postgresql://root@localhost"
-			std::string* value = pWorld->LaunchParam("connection");
-
-			std::string* dbName = pWorld->LaunchParam("dbname");
-
-			pMdbProxy = std::make_unique<pqxx::connection>(std::format("{} dbname = {}", *value, *dbName));
-
-		}
-		catch (const std::exception& e)
-		{
-			GetLogger()->Record(ELogLevel_Debug, "{}", e.what());
-			return false;
-		}
-
-		
-		return true;
-	}
+public:
+	using Ptr = std::shared_ptr<RdbProxy>;
 
 	virtual void Dispose() override
 	{
 		Component::Dispose();
+	}
+
+	void AddConnection(uint16_t dbName, std::shared_ptr<pqxx::connection>&& connection)
+	{
+		pMdbProxys.emplace(dbName, std::move(connection));
+	}
+
+	std::shared_ptr<pqxx::connection> GetConnection(uint16_t dbName)
+	{
+		if (pMdbProxys.contains(dbName))
+		{
+			return pMdbProxys[dbName];
+		}
+		return nullptr;
 	}
 
 	LoggerPrint::Ptr GetLogger(){ return pLogger.expired() ? nullptr : pLogger.lock(); }
@@ -52,7 +50,7 @@ public:
 	~RdbProxy() = default;
 
 protected:
-	std::unique_ptr<pqxx::connection> pMdbProxy;
+	std::unordered_map<uint16_t, std::shared_ptr<pqxx::connection>> pMdbProxys;
 
 	LoggerPrint::WPtr pLogger;
 };

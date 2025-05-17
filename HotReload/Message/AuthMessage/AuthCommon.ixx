@@ -7,24 +7,21 @@ import Logger;
 import ThirdParty.PbGen;
 import DNClientProxyHelper;
 import DNServer;
+import AuthServerHelper;
 
 namespace AuthMessage
 {
 
 	// client request
-	export DNTaskVoid Evt_ReqRegistSrv(DNServer::WPtr dnServer)
+	export DNTaskVoid Evt_ReqRegistSrv(const DNServer::Ptr& server)
 	{
-		DNServer::Ptr server = dnServer.lock();
+		AuthServerHelper::Ptr dnServer = server->GetSelf<AuthServerHelper>();
 
-		if(!server) { co_return; }
+		DNClientProxyHelper::Ptr clientProxy = dnServer->GetClientProxy();
 
-		DNClientProxyHelper::Ptr clientProxy = server->GetComponent<DNClientProxyHelper>(EMComponentType::DNClientProxy);
-
-		if(!clientProxy) { co_return ;}
-		
 		uint32_t msgId = clientProxy->GetMsgId();
 
-		clientProxy->GetLogger()->Record(ELogLevel_Debug, "Client:{}, port:{}", clientProxy->remote_host, clientProxy->remote_port);
+		dnServer->GetLogger()->Record(ELogLevel_Debug, "Client:{}, port:{}", clientProxy->remote_host, clientProxy->remote_port);
 		
 		clientProxy->EMRegistState() = EMRegistState::Registing;
 
@@ -63,21 +60,21 @@ namespace AuthMessage
 			co_await dataChannel;
 			if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
 			{
-				clientProxy->GetLogger()->Record(ELogLevel_Debug, "requst timeout! ");
+				dnServer->GetLogger()->Record(ELogLevel_Debug, "requst timeout! ");
 			}
 
 		}
 
 		if (response.success())
 		{
-			clientProxy->GetLogger()->Record(ELogLevel_Debug, "regist Server success! Rec index:{}", response.server_id());
+			dnServer->GetLogger()->Record(ELogLevel_Debug, "regist Server success! Rec index:{}", response.server_id());
 			clientProxy->EMRegistState() = EMRegistState::Registed;
 			clientProxy->RegistType() = response.server_type();
-			server->ServerId() = response.server_id();
+			dnServer->ServerId() = response.server_id();
 		}
 		else
 		{
-			clientProxy->GetLogger()->Record(ELogLevel_Debug, "regist Server error!  ");
+			dnServer->GetLogger()->Record(ELogLevel_Debug, "regist Server error!  ");
 			// server->IsRun() = false; //exit application
 			clientProxy->EMRegistState() = EMRegistState::None;
 		}

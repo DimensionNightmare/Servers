@@ -16,16 +16,27 @@ export class ClientEntityManagerHelper : public ClientEntityManager
 private:
 
 	ClientEntityManagerHelper() = delete;
-public:
+	~ClientEntityManagerHelper() = default;
 
-	ClientEntity::Ptr AddEntity(uint32_t entityId)
+	ClientEntityManagerHelper(const ClientEntityManagerHelper&) = delete;
+	void operator=(const ClientEntityManagerHelper&) = delete;
+
+	ClientEntityManagerHelper(ClientEntityManagerHelper&&) = delete;
+	ClientEntityManagerHelper& operator=(ClientEntityManagerHelper&&) = delete;
+
+	void* operator new(size_t) = delete;
+    void operator delete(void*) = delete;
+public:
+	using Ptr = std::shared_ptr<ClientEntityManagerHelper>;
+
+	ClientEntity::Ptr AddEntity(uint64_t entityId)
 	{
 		if (!mEntityMap.contains(entityId))
 		{
 			std::unique_lock<std::shared_mutex> ulock(oMapMutex);
-			mEntityMap.emplace(std::piecewise_construct,
-				std::forward_as_tuple(entityId),
-				std::forward_as_tuple(entityId));
+			// mEntityMap.emplace(std::piecewise_construct,
+			// 	std::forward_as_tuple(entityId),
+			// 	std::forward_as_tuple(entityId));
 
 			ClientEntity::Ptr entity = mEntityMap[entityId];
 
@@ -35,7 +46,7 @@ public:
 		return nullptr;
 	}
 
-	bool RemoveEntity(uint32_t entityId)
+	bool RemoveEntity(uint64_t entityId)
 	{
 
 		if (mEntityMap.contains(entityId))
@@ -51,7 +62,7 @@ public:
 		return false;
 	}
 
-	ClientEntity::Ptr GetEntity(uint32_t entityId)
+	ClientEntity::Ptr GetEntity(uint64_t entityId)
 	{
 		std::shared_lock<std::shared_mutex> lock(oMapMutex);
 		if (mEntityMap.contains(entityId))
@@ -83,7 +94,7 @@ public:
 		}
 
 		std::string table_name = dbEntity->GetDescriptor()->full_name();
-		uint32_t entityId = entity->ID();
+		uint64_t entityId = entity->ID();
 		std::string keyName = std::format("{}_{}", table_name, entityId);
 
 		// nosql
@@ -190,6 +201,4 @@ public:
 
 		co_return;
 	}
-
-	void ClearNosqlProxy() { pNoSqlProxy = nullptr; }
 };

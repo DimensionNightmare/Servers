@@ -9,11 +9,13 @@ import Logger;
 import DNClientProxyHelper;
 import ServerEntityManagerHelper;
 import std.compat;
+import DNSocketProxy;
+import GlobalServerHelper;
 
 namespace GlobalMessage
 {
 
-	export void Exe_RetRegistSrv(DNSocketProxy::Ptr channel, std::string binMsg)
+	export void Exe_RetRegistSrv(const DNSocketProxy::Ptr& channel, std::string binMsg)
 	{
 		GMsg::g2G_RetRegistSrv request;
 		if(!request.ParseFromString(binMsg))
@@ -21,8 +23,8 @@ namespace GlobalMessage
 			return;
 		}
 
-		GlobalServerHelper* dnServer = GetGlobalServer();
-		ServerEntityManagerHelper* entityMan = dnServer->GetServerEntityManager();
+		GlobalServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<GlobalServerHelper>(EMSystemType::DNServer);
+		ServerEntityManagerHelper::Ptr entityMan = dnServer->GetServerEntityManager();
 		if (ServerEntity::Ptr entity = entityMan->GetEntity(request.server_id()))
 		{
 			if (request.is_regist())
@@ -35,7 +37,7 @@ namespace GlobalMessage
 			}
 			else
 			{
-				ServerEntity::Ptr owner = channel->getContext<ServerEntity>();
+				ServerEntity::Ptr owner = channel->getContextPtr<ServerEntity>();
 				// remove and unlock
 				owner->GetMapLinkNode(entity->GetServerType()).remove(entity);
 				owner->ClearFlag(EMServerEntityFlag::Locked);
@@ -48,7 +50,7 @@ namespace GlobalMessage
 		}
 	}
 
-	export void Exe_RetRegistChild(DNSocketProxy::Ptr channel, std::string binMsg)
+	export void Exe_RetRegistChild(const DNSocketProxy::Ptr& channel, std::string binMsg)
 	{
 		GMsg::g2G_RetRegistChild request;
 		if(!request.ParseFromString(binMsg))
@@ -56,8 +58,8 @@ namespace GlobalMessage
 			return;
 		}
 
-		GlobalServerHelper* dnServer = GetGlobalServer();
-		ServerEntityManagerHelper* entityMan = dnServer->GetServerEntityManager();
+		GlobalServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<GlobalServerHelper>(EMSystemType::DNServer);
+		ServerEntityManagerHelper::Ptr entityMan = dnServer->GetServerEntityManager();
 
 		ServerEntity::Ptr entity = entityMan->GetEntity(request.server_id());
 

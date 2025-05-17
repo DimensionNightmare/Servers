@@ -10,19 +10,29 @@ export class ServerEntityManagerHelper : public ServerEntityManager
 
 private:
 
-	ServerEntityManagerHelper() {}
+	ServerEntityManagerHelper() = delete;
+	~ServerEntityManagerHelper() = default;
+
+	ServerEntityManagerHelper(const ServerEntityManagerHelper&) = delete;
+	void operator=(const ServerEntityManagerHelper&) = delete;
+
+	ServerEntityManagerHelper(ServerEntityManagerHelper&&) = delete;
+	ServerEntityManagerHelper& operator=(ServerEntityManagerHelper&&) = delete;
+
+	void* operator new(size_t) = delete;
+    void operator delete(void*) = delete;
 public:
 	using Ptr = std::shared_ptr<ServerEntityManagerHelper>;
 
-	ServerEntity::Ptr AddEntity(uint32_t entityId, EMServerType regType)
+	ServerEntity::Ptr AddEntity(uint64_t entityId, EMServerType regType)
 	{
 		if (!mEntityMap.contains(entityId))
 		{
 			std::unique_lock<std::shared_mutex> ulock(oMapMutex);
 
-			mEntityMap.emplace(std::piecewise_construct,
-				std::forward_as_tuple(entityId),
-				std::forward_as_tuple(entityId, regType));
+			// mEntityMap.emplace(std::piecewise_construct,
+			// 	std::forward_as_tuple(entityId),
+			// 	std::forward_as_tuple(entityId, regType));
 
 			ServerEntity::Ptr entity = mEntityMap[entityId];
 
@@ -33,7 +43,7 @@ public:
 		return nullptr;
 	}
 
-	bool RemoveEntity(uint32_t entityId)
+	bool RemoveEntity(uint64_t entityId)
 	{
 		if (mEntityMap.contains(entityId))
 		{
@@ -66,7 +76,7 @@ public:
 		mEntityMapList[type].remove(entity);
 	}
 
-	ServerEntity::Ptr GetEntity(uint32_t entityId)
+	ServerEntity::Ptr GetEntity(uint64_t entityId)
 	{
 		std::shared_lock<std::shared_mutex> lock(oMapMutex);
 		if (mEntityMap.contains(entityId))
@@ -83,7 +93,7 @@ public:
 		return mEntityMapList[type];
 	}
 
-	[[nodiscard]] uint32_t GenServerId()
+	[[nodiscard]] uint64_t GenServerId()
 	{
 		return ++iServerGenId;
 	}

@@ -8,7 +8,8 @@ import ThirdParty.Libhv;
 import ThirdParty.PbGen;
 import MessagePack;
 import ECSW;
-export import DNSocketProxy;
+import DNSocketProxy;
+import DNServer;
 
 #define NABS(n) ((n) < 0 ? (n) : -(n))
 
@@ -34,6 +35,7 @@ protected:
 public:
 
 	using Ptr = std::shared_ptr<DNClientProxy>;
+	using WPtr = std::weak_ptr<DNClientProxy>;
 
 	~DNClientProxy()
 	{
@@ -110,7 +112,7 @@ public: // dll override
 		{
 			if (pRegistEvent)
 			{
-				pRegistEvent();
+				pRegistEvent(GetOwner<DNServer>());
 			}
 			else
 			{
@@ -241,7 +243,7 @@ protected: // dll proxy
 
 	uint8_t iRegistType = 0;
 
-	std::function<void()> pRegistEvent;
+	std::function<void(const DNServer::Ptr& server)> pRegistEvent;
 
 	std::shared_mutex oMsgMutex;
 
