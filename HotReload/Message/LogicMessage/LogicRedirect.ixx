@@ -11,10 +11,11 @@ import std.compat;
 import DNSocketProxy;
 import RoomEntity;
 import LogicServerHelper;
+import ECSW;
 
 namespace LogicMessage
 {
-	export void Exe_RetAccountReplace(const DNSocketProxy::Ptr& channel, uint32_t msgId, std::string binMsg)
+	export void Exe_RetAccountReplace(const World::Ptr& world, const DNSocketProxy::Ptr& channel, uint32_t msgId, std::string binMsg)
 	{
 		GMsg::S2C_RetAccountReplace request;
 		if(!request.ParseFromString(binMsg))
@@ -22,7 +23,7 @@ namespace LogicMessage
 			return;
 		}
 
-		LogicServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<LogicServerHelper>(EMSystemType::DNServer);
+		LogicServerHelper::Ptr dnServer = world->GetSystem<LogicServerHelper>(EMSystemType::DNServer);
 		ClientEntityManagerHelper::Ptr entityMan = dnServer->GetClientEntityManager();
 
 		ClientEntity::Ptr entity = entityMan->GetEntity(request.account_id());
@@ -52,7 +53,7 @@ namespace LogicMessage
 	}
 
 	// client request
-	export DNTaskVoid Msg_ReqClientLogin(const DNSocketProxy::Ptr& channel, uint32_t msgId, std::string binMsg)
+	export DNTaskVoid Msg_ReqClientLogin(const World::Ptr& world, const DNSocketProxy::Ptr& channel, uint32_t msgId, std::string binMsg)
 	{
 		GMsg::C2S_ReqAuthToken request;
 		if(!request.ParseFromString(binMsg))
@@ -67,7 +68,7 @@ namespace LogicMessage
 			MessagePackAndSend(msgId, EMMsgDeal::Res, "", binData, channel);
 		});
 
-		LogicServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<LogicServerHelper>(EMSystemType::DNServer);
+		LogicServerHelper::Ptr dnServer = world->GetSystem<LogicServerHelper>(EMSystemType::DNServer);
 		ClientEntityManagerHelper::Ptr entityMan = dnServer->GetClientEntityManager();
 
 		ClientEntity::Ptr entity = entityMan->AddEntity(request.account_id());
@@ -93,7 +94,7 @@ namespace LogicMessage
 		RoomEntity::Ptr roomEntity = nullptr;
 
 		// cache
-		if (uint32_t roomId = entity->RecordRoomId())
+		if (uint64_t roomId = entity->RecordRoomId())
 		{
 			roomEntity = roomEntityMan->GetEntity(roomId);
 		}
@@ -101,7 +102,7 @@ namespace LogicMessage
 		//pool
 		if (!roomEntity)
 		{
-			uint32_t mapId = 0;
+			uint64_t mapId = 0;
 			// from db
 			if(entity->GetDbEntity()->has_map_info())
 			{
@@ -158,7 +159,7 @@ namespace LogicMessage
 			}
 			else
 			{
-				entity->RecordRoomId() = roomEntity->ID();
+				entity->SetRecordRoomId(roomEntity->ID());
 				//combin
 				response.set_server_ip(roomEntity->ServerIp());
 				response.set_server_port(roomEntity->ServerPort());

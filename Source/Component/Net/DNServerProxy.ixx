@@ -64,6 +64,8 @@ public:
 			return false;
 		}
 
+		this->port = port;
+
 		// if not set port mean need get port by self 
 		if (!port && listenfd > 0)
 		{
@@ -75,7 +77,7 @@ public:
 				return false;
 			}
 
-			port = ntohs(addr.sin_port);
+			this->port = ntohs(addr.sin_port);
 		}
 
 		unpack_setting_t setting;
@@ -177,7 +179,7 @@ public: // dll override
 		{
 			if (DNSocketProxy::Ptr channel = getChannelById(id))
 			{
-				if (!channel->context())
+				if (!channel->contextPtr())
 				{
 					GetLogger()->Record(ELogLevel_Debug, "ChannelTimeoutTimer server destory entity\n");
 					channel->close();

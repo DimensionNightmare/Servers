@@ -13,12 +13,15 @@ import DNClientProxyHelper;
 import MessagePack;
 import std.compat;
 import DNClientProxy;
+import ECSW;
+import DatabaseServerHelper;
 
 #define FUNCPLACE(func) #func, func
 
 export int HandleDatabaseServerInit(const World::Ptr& world)
 {
-	DatabaseMessageHandle::RegMsgHandle();
+	static DatabaseMessageHandle MsgHandle;
+	MsgHandle.RegMsgHandle();
 
 	DatabaseServerHelper::Ptr dnServer = world->GetSystem<DatabaseServerHelper>(EMSystemType::DNServer);
 
@@ -61,9 +64,9 @@ export int HandleDatabaseServerInit(const World::Ptr& world)
 
 					std::string origin = std::format("{}:{}", originIp, originPort);
 
-					if (proxyHelper->EMRegistState() == EMRegistState::Registed || peeraddr != origin)
+					if (proxyHelper->GetRegistState() == EMRegistState::Registed || peeraddr != origin)
 					{
-						proxyHelper->EMRegistState() = EMRegistState::None;
+						proxyHelper->SetRegistState(EMRegistState::None);
 
 						if (proxy->isConnected())
 						{
@@ -78,7 +81,7 @@ export int HandleDatabaseServerInit(const World::Ptr& world)
 						}
 					}
 
-					proxy->RegistType() = 0;
+					proxy->SetRegistType(0);
 				}
 
 				if (proxy->isReconnect())
@@ -86,7 +89,7 @@ export int HandleDatabaseServerInit(const World::Ptr& world)
 				}
 			};
 
-		proxy->onMessage = [clientProxy](const DNSocketProxy::Ptr& channel, hv::Buffer* buf)
+		proxy->onMessage = [clientProxy, world](const DNSocketProxy::Ptr& channel, hv::Buffer* buf)
 			{
 				DNClientProxy::Ptr proxy = clientProxy.lock();
 
@@ -107,11 +110,11 @@ export int HandleDatabaseServerInit(const World::Ptr& world)
 
 				if (packet.dealType == EMMsgDeal::Req)
 				{
-					DatabaseMessageHandle::MsgHandle(channel, packet.msgId, packet.msgHashId, msgData);
+					MsgHandle.MsgHandle(world, channel, packet.msgId, packet.msgHashId, msgData);
 				}
 				else if (packet.dealType == EMMsgDeal::Ret)
 				{
-					DatabaseMessageHandle::MsgRetHandle(channel, packet.msgHashId, msgData);
+					MsgHandle.MsgRetHandle(world, channel, packet.msgHashId, msgData);
 				}
 				else if (packet.dealType == EMMsgDeal::Res)
 				{
@@ -129,7 +132,7 @@ export int HandleDatabaseServerInit(const World::Ptr& world)
 								task->SetFlag(EMDNTaskFlag::PaserError);
 							}
 						}
-
+						
 						task->CallResume();
 					}
 					else
@@ -145,7 +148,7 @@ export int HandleDatabaseServerInit(const World::Ptr& world)
 
 	}
 
-	return true;
+	return dnServer->InitDatabase();
 }
 
 export int HandleDatabaseServerShutdown(const World::Ptr& world)

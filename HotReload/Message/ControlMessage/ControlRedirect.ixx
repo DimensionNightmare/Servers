@@ -11,10 +11,11 @@ import std.compat;
 import DNSocketProxy;
 import ServerEntityManagerHelper;
 import ControlServerHelper;
+import ECSW;
 
 namespace ControlMessage
 {
-	export DNTaskVoid Msg_ReqAuthAccount(const DNSocketProxy::Ptr& channel, uint32_t msgId, std::string binMsg)
+	export DNTaskVoid Msg_ReqAuthAccount(const World::Ptr& world, const DNSocketProxy::Ptr& channel, uint32_t msgId, std::string binMsg)
 	{
 		GMsg::A2g_ReqAuthAccount request;
 		if(!request.ParseFromString(binMsg))
@@ -31,7 +32,7 @@ namespace ControlMessage
 
 		ServerEntity::Ptr entity = nullptr;
 
-		ControlServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<ControlServerHelper>(EMSystemType::DNServer);
+		ControlServerHelper::Ptr dnServer = world->GetSystem<ControlServerHelper>(EMSystemType::DNServer);
 
 		ServerEntityManagerHelper::Ptr manager = dnServer->GetServerEntityManager();
 

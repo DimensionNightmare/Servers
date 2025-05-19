@@ -24,7 +24,7 @@ export void ApiInit(DNServer::WPtr server, hv::HttpService* service)
 			nlohmann::json errData;
 
 			AuthServerHelper::Ptr dnServer = serverTemp->GetSelf<AuthServerHelper>();
-			if (dnServer->GetClientProxy()->EMRegistState() != EMRegistState::Registed)
+			if (dnServer->GetClientProxy()->GetRegistState() != EMRegistState::Registed)
 			{
 				errData["code"] = http_status::HTTP_STATUS_BAD_REQUEST;
 				errData["message"] = "Server Disconnect!";

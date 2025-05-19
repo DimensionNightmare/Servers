@@ -19,6 +19,7 @@ using ClientEntityBitFlag = std::bitset<static_cast<uint16_t>(EMClientEntityFlag
 export class ClientEntity : public Entity
 {
 protected:
+	friend class ClientEntityManagerHelper;
 	ClientEntity(World::WPtr world):Entity(world)
 	{
 		eEntityType = EMEntityType::Client;
@@ -39,7 +40,8 @@ public:
 public: // dll override
 
 	/// @brief get roomid
-	uint32_t& RecordRoomId() { return iRecordRoomId; }
+	uint64_t RecordRoomId() { return iRecordRoomId; }
+	void SetRecordRoomId(uint64_t roomId) { iRecordRoomId = roomId; }
 
 	bool HasFlag(EMClientEntityFlag flag) { return oFlags.test(uint16_t(flag)); }
 	void SetFlag(EMClientEntityFlag flag) { oFlags.set(uint16_t(flag)); }
@@ -50,7 +52,7 @@ public: // dll override
 
 protected: // dll proxy
 
-	uint32_t iRecordRoomId = 0;
+	uint64_t iRecordRoomId = 0;
 
 	ClientEntityBitFlag oFlags;
 

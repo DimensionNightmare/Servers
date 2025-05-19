@@ -13,6 +13,7 @@ import DNServer;
 import ServerEntity;
 import ServerEntityManagerHelper;
 import GlobalServerHelper;
+import ECSW;
 
 namespace GlobalMessage
 {
@@ -28,7 +29,7 @@ namespace GlobalMessage
 		
 		dnServer->GetLogger()->Record(ELogLevel_Debug, "Client:{}, port:{}", clientProxy->remote_host, clientProxy->remote_port);
 		
-		clientProxy->EMRegistState() = EMRegistState::Registing;
+		clientProxy->SetRegistState(EMRegistState::Registing);
 
 		GMsg::COM_ReqRegistSrv request;
 
@@ -70,15 +71,15 @@ namespace GlobalMessage
 		if (response.success())
 		{
 			dnServer->GetLogger()->Record(ELogLevel_Debug, "regist Server success! Rec index:{}", response.server_id());
-			clientProxy->EMRegistState() = EMRegistState::Registed;
-			clientProxy->RegistType() = response.server_type();
-			server->ServerId() = response.server_id();
+			clientProxy->SetRegistState(EMRegistState::Registed);
+			clientProxy->SetRegistType(response.server_type());
+			dnServer->SetServerId(response.server_id());
 		}
 		else
 		{
 			dnServer->GetLogger()->Record(ELogLevel_Debug, "regist Server error!  ");
 			// dnServer->IsRun() = false; //exit application
-			clientProxy->EMRegistState() = EMRegistState::None;
+			clientProxy->SetRegistState(EMRegistState::None);
 		}
 
 
@@ -86,7 +87,7 @@ namespace GlobalMessage
 	}
 
 	// client request
-	export void Msg_ReqRegistSrv(const DNSocketProxy::Ptr& channel, uint32_t msgId, std::string binMsg)
+	export void Msg_ReqRegistSrv(const World::Ptr& world, const DNSocketProxy::Ptr& channel, uint32_t msgId, std::string binMsg)
 	{
 		GMsg::COM_ReqRegistSrv request;
 		if(!request.ParseFromString(binMsg))
@@ -94,16 +95,21 @@ namespace GlobalMessage
 			return;
 		}
 
-		GlobalServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<GlobalServerHelper>(EMSystemType::DNServer);
+		GlobalServerHelper::Ptr dnServer = world->GetSystem<GlobalServerHelper>(EMSystemType::DNServer);
 		
 		dnServer->GetLogger()->Record(ELogLevel_Debug, "ip Reqregist: {}, {}", channel->peeraddr(), request.server_type());
 
 		GMsg::COM_ResRegistSrv response;
 
-		FinalExecute final([&response, msgId, channel](){
+		FinalExecute final([&response, msgId, channel, &dnServer](){
 			std::string binData;
 			response.SerializeToString(&binData);
 			MessagePackAndSend(msgId, EMMsgDeal::Res, "", binData, channel);
+
+			if (response.success())
+			{
+				dnServer->UpdateServerGroup();
+			}
 		});
 
 		ServerEntityManagerHelper::Ptr entityMan = dnServer
@@ -133,7 +139,7 @@ namespace GlobalMessage
 				// wait destroy`s destroy
 				if (uint64_t timerId = entity->TimerId())
 				{
-					entity->TimerId() = 0;
+					entity->SetTimerId(0);
 					entityMan->Timer()->killTimer(timerId);
 				}
 
@@ -166,8 +172,8 @@ namespace GlobalMessage
 				channel->setContextPtr(entity);
 
 				size_t pos = ipPort.find(":");
-				entity->ServerIp() = ipPort.substr(0, pos);
-				entity->ServerPort() = request.server_port();
+				entity->SetServerIp(ipPort.substr(0, pos));
+				entity->SetServerPort(request.server_port());
 			}
 
 		}
@@ -175,8 +181,8 @@ namespace GlobalMessage
 		else if (ServerEntity::Ptr entity = entityMan->AddEntity(entityMan->GenServerId(), regType))
 		{
 			size_t pos = ipPort.find(":");
-			entity->ServerIp() = ipPort.substr(0, pos);
-			entity->ServerPort() = request.server_port();
+			entity->SetServerIp(ipPort.substr(0, pos));
+			entity->SetServerPort(request.server_port());
 			entity->SetSock(channel);
 
 			channel->setContextPtr(entity);
@@ -186,14 +192,9 @@ namespace GlobalMessage
 			response.set_server_type((uint8_t(dnServer->GetServerType())));
 		}
 
-		if (response.success())
-		{
-			dnServer->UpdateServerGroup();
-		}
-
 	}
 
-	export void Exe_RetHeartbeat(const DNSocketProxy::Ptr& channel, std::string binMsg)
+	export void Exe_RetHeartbeat(const World::Ptr& world, const DNSocketProxy::Ptr& channel, std::string binMsg)
 	{
 		GMsg::COM_RetHeartbeat request;
 		if(!request.ParseFromString(binMsg))

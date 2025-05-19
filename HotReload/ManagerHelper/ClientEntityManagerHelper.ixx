@@ -34,9 +34,8 @@ public:
 		if (!mEntityMap.contains(entityId))
 		{
 			std::unique_lock<std::shared_mutex> ulock(oMapMutex);
-			// mEntityMap.emplace(std::piecewise_construct,
-			// 	std::forward_as_tuple(entityId),
-			// 	std::forward_as_tuple(entityId));
+
+			mEntityMap[entityId] = std::shared_ptr<ClientEntity>(new ClientEntity(GetOwner()->GetWorldW()));
 
 			ClientEntity::Ptr entity = mEntityMap[entityId];
 

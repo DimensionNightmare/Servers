@@ -12,13 +12,14 @@ import std.compat;
 import DNSocketProxy;
 import ServerEntity;
 import GateServerHelper;
+import ECSW;
 
 #define FUNCPLACE(func) #func, func
 
 namespace GateMessage
 {
 
-	export void Exe_ReqUserToken(const DNSocketProxy::Ptr& channel, uint32_t msgId, std::string binMsg)
+	export void Exe_ReqUserToken(const World::Ptr& world, const DNSocketProxy::Ptr& channel, uint32_t msgId, std::string binMsg)
 	{
 		GMsg::A2g_ReqAuthAccount request;
 		
@@ -31,7 +32,7 @@ namespace GateMessage
 
 		std::string binData;
 
-		GateServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<GateServerHelper>(EMSystemType::DNServer);
+		GateServerHelper::Ptr dnServer = world->GetSystem<GateServerHelper>(EMSystemType::DNServer);
 		ProxyEntityManagerHelper::Ptr entityMan = dnServer->GetProxyEntityManager();
 		ProxyEntity::Ptr entity = entityMan->GetEntity(request.account_id());
 		if (entity)
@@ -52,7 +53,7 @@ namespace GateMessage
 
 
 				//kick game
-				if (uint32_t serverId = entity->RecordServerId())
+				if (uint64_t serverId = entity->RecordServerId())
 				{
 					SPidLogger.Record(ELogLevel_Debug, "Send Logic tick User->{}, server:{}", entity->ID(), entity->RecordServerId());
 
@@ -72,12 +73,11 @@ namespace GateMessage
 		{
 			entity = entityMan->AddEntity(request.account_id());
 
-			std::string& token = entity->Token();
-			token = GetNowTimeStr();
-			token = Md5Hash(token);
+			std::string token = Md5Hash(GetNowTimeStr());
+			entity->SetToken(token);
+			
 
-			entity->ExpireTime() = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-			entity->ExpireTime() += 30;
+			entity->SetExpireTime(std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count() + 30);
 		}
 
 		response.set_token(entity->Token());
@@ -86,7 +86,7 @@ namespace GateMessage
 		// entity or token expired
 		if (!entity->TimerId())
 		{
-			entity->TimerId() = TickMainSpaceDll(entityMan.get(), FUNCPLACE(&ProxyEntityManager::CheckEntityCloseTimer), entity->ID());
+			entity->SetTimerId(TickMainSpaceDll(entityMan.get(), FUNCPLACE(&ProxyEntityManager::CheckEntityCloseTimer), entity->ID()));
 		}
 
 		SPidLogger.Record(ELogLevel_Debug, "ReqUserToken User: {}!!", request.account_id());

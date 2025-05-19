@@ -219,7 +219,8 @@ public: // dll override
 		return true;
 	}
 
-	uint8_t& RegistType() { return iRegistType; }
+	uint8_t RegistType() { return iRegistType; }
+	void SetRegistType(uint8_t type) { iRegistType = type; }
 
 	uint32_t GetMsgId() { return ++iMsgId; }
 

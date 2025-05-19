@@ -146,11 +146,11 @@ export namespace PbGen
 			case e_unique:
 				return options.GetExtension(ext_unique);
 			case e_len_limit:
-				return options.GetExtension(ext_datetime);
-			case e_autogen:
 				return options.GetExtension(ext_len_limit);
-			case e_datetime:
+			case e_autogen:
 				return options.GetExtension(ext_autogen);
+			case e_datetime:
+				return options.GetExtension(ext_datetime);
 			default:
 				throw std::invalid_argument("Invalid extension type.");
 		}

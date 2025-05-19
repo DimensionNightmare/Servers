@@ -377,15 +377,13 @@ public:
 			}
 		}
 
-		pHotDll->OnRegHotReload(world);
+		if (!pHotDll->OnRegHotReload(world))
+		{
+			pLogger->Record(ELogLevel_Error, "program lunch OnRegHotReload error!");
+			return false;
+		}
 
-		// InitCmdHandle();
-
-		// if (!OnRegHotReload())
-		// {
-		// 	pLogger->Record(ELogLevel_Error, "program lunch OnRegHotReload error!");
-		// 	return false;
-		// }
+		InitCmdHandle();
 
 		server->Broadcast(EMEventType::ServerStart);
 

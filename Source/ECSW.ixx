@@ -129,6 +129,8 @@ public: // dll override
 
 	uint64_t ID() { return iId; }
 
+	void SetID(uint64_t id) { iId = id; }
+
 	virtual void Dispose()
 	{
 		bIsDisposed = true;
@@ -221,6 +223,8 @@ public: // dll override
 	EMEntityType GetEntityType() { return eEntityType; }
 
 	std::shared_ptr<World> GetWorld(){ return pWorld.expired() ? nullptr : pWorld.lock(); }
+
+	std::weak_ptr<World> GetWorldW(){ return pWorld; }
 
 	template<typename T>
 	std::shared_ptr<T> GetComponent(EMComponentType type)

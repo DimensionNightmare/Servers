@@ -30,9 +30,7 @@ public:
 		{
 			std::unique_lock<std::shared_mutex> ulock(oMapMutex);
 
-			// mEntityMap.emplace(std::piecewise_construct,
-			// 	std::forward_as_tuple(entityId),
-			// 	std::forward_as_tuple(entityId, regType));
+			mEntityMap[entityId] = std::shared_ptr<ServerEntity>(new ServerEntity(GetOwner()->GetWorldW()));
 
 			ServerEntity::Ptr entity = mEntityMap[entityId];
 

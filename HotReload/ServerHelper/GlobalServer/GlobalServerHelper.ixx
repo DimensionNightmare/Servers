@@ -68,7 +68,7 @@ public:
 
 			request.SerializeToString(&binData);
 			// timer destory
-			entity->TimerId() = TickMainSpaceDll(entityMan.get(), FUNCPLACE(&ServerEntityManager::CheckEntityCloseTimer), entity->ID());
+			entity->SetTimerId(TickMainSpaceDll(entityMan.get(), FUNCPLACE(&ServerEntityManager::CheckEntityCloseTimer), entity->ID()));
 			MessagePackAndSend(0, EMMsgDeal::Ret, request.GetDescriptor()->full_name(), binData, channel);
 			entity->SetSock(nullptr);
 		};

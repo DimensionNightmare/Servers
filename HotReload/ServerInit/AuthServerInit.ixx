@@ -16,18 +16,22 @@ import DNWebProxy;
 import DNClientProxy;
 import DNClientProxyHelper;
 import DNServerProxyHelper;
+import ECSW;
+import AuthServerHelper;
 
 #define FUNCPLACE(func) #func, func
 
 export int HandleAuthServerInit(const World::Ptr& world)
 {
-	AuthServerHelper::Ptr dnServer = world->GetSystem<DNServer>(EMSystemType::DNServer);
+	static AuthMessageHandle MsgHandle;
+
+	AuthServerHelper::Ptr dnServer = world->GetSystem<AuthServerHelper>(EMSystemType::DNServer);
 
 	if (DNWebProxy::Ptr proxy = dnServer->GetComponent<DNWebProxy>(EMComponentType::DNWebProxy))
 	{
 		hv::HttpService* service = new hv::HttpService();
 
-		AuthMessageHandle::RegApiHandle(dnServer->GetSelfW<DNServer>(), service);
+		MsgHandle.RegApiHandle(dnServer->GetSelfW<DNServer>(), service);
 
 		proxy->registerHttpService(service);
 	}
@@ -57,12 +61,12 @@ export int HandleAuthServerInit(const World::Ptr& world)
 				{
 					proxy->GetLogger()->Record(EL10nCode_CliConnOff, peeraddr, channel->fd(), channel->id());
 
-					if (proxyHelper->EMRegistState() == EMRegistState::Registed)
+					if (proxyHelper->GetRegistState() == EMRegistState::Registed)
 					{
-						proxyHelper->EMRegistState() = EMRegistState::None;
+						proxyHelper->SetRegistState(EMRegistState::None);
 					}
 
-					proxy->RegistType() = 0;
+					proxy->SetRegistType(0);
 				}
 
 				if (proxy->isReconnect())
@@ -92,7 +96,7 @@ export int HandleAuthServerInit(const World::Ptr& world)
 
 				if (packet.dealType == EMMsgDeal::Res)
 				{
-					DNServerProxyHelper::Ptr proxyHelper = proxy->GetSelf<DNServerProxyHelper>();
+					DNClientProxyHelper::Ptr proxyHelper = proxy->GetSelf<DNClientProxyHelper>();
 
 					if (DNTask<Message*>* task = proxyHelper->GetMsg(packet.msgId)) //client sock request
 					{
@@ -122,12 +126,13 @@ export int HandleAuthServerInit(const World::Ptr& world)
 
 	}
 	
-	return true;
+
+	return dnServer->InitDatabase();
 }
 
 export int HandleAuthServerShutdown(const World::Ptr& world)
 {
-	AuthServerHelper::Ptr dnServer = world->GetSystem<DNServer>(EMSystemType::DNServer);
+	AuthServerHelper::Ptr dnServer = world->GetSystem<AuthServerHelper>(EMSystemType::DNServer);
 	
 	if (DNClientProxyHelper::Ptr proxy = dnServer->GetComponent<DNClientProxyHelper>(EMComponentType::DNClientProxy))
 	{

@@ -23,9 +23,9 @@ namespace DatabaseMessage
 
 		DNClientProxyHelper::Ptr clientProxy = dnServer->GetClientProxy();
 		
-		dnServer->GetLogger()->Record(ELogLevel_Debug, "Client:{}, port:{}", clientProxy->remote_host, clientProxy->remote_port);
+		dnServer->GetLogger()->Record(ELogLevel_Debug, "database req regist Client:{}, port:{}", clientProxy->remote_host, clientProxy->remote_port);
 		
-		clientProxy->EMRegistState() = EMRegistState::Registing;
+		clientProxy->SetRegistState(EMRegistState::Registing);
 
 		GMsg::COM_ReqRegistSrv request;
 
@@ -64,21 +64,21 @@ namespace DatabaseMessage
 		if (response.success())
 		{
 			dnServer->GetLogger()->Record(ELogLevel_Debug, "regist Server success! Rec index:{}", response.server_id());
-			clientProxy->EMRegistState() = EMRegistState::Registed;
-			clientProxy->RegistType() = response.server_type();
-			dnServer->ServerId() = response.server_id();
+			clientProxy->SetRegistState(EMRegistState::Registed);
+			clientProxy->SetRegistType(response.server_type());
+			dnServer->SetServerId(response.server_id());
 		}
 		else
 		{
 			dnServer->GetLogger()->Record(ELogLevel_Debug, "regist Server error!  ");
 			// dnServer->IsRun() = false; //exit application
-			clientProxy->EMRegistState() = EMRegistState::None;
+			clientProxy->SetRegistState(EMRegistState::None);
 		}
 
 		co_return;
 	}
 
-	export void Exe_RetChangeCtlSrv(const DNSocketProxy::Ptr& channel, std::string binMsg)
+	export void Exe_RetChangeCtlSrv(const World::Ptr& world, const DNSocketProxy::Ptr& channel, std::string binMsg)
 	{
 		GMsg::COM_RetChangeCtlSrv request;
 		if(!request.ParseFromString(binMsg))
@@ -86,7 +86,7 @@ namespace DatabaseMessage
 			return;
 		}
 
-		DNServer::Ptr dnServer = channel->GetWorld()->GetSystem<DNServer>(EMSystemType::DNServer);
+		DNServer::Ptr dnServer = world->GetSystem<DNServer>(EMSystemType::DNServer);
 
 		DNClientProxy::Ptr clientProxy = dnServer->GetComponent<DNClientProxy>(EMComponentType::DNClientProxy);
 

@@ -12,12 +12,13 @@ import std.compat;
 import DNSocketProxy;
 import ServerEntity;
 import GateServerHelper;
+import ECSW;
 
 namespace GateMessage
 {
 
 	// client request
-	export DNTaskVoid Msg_ReqAuthToken(const DNSocketProxy::Ptr& channel, uint32_t msgId, std::string binMsg)
+	export DNTaskVoid Msg_ReqAuthToken(const World::Ptr& world, const DNSocketProxy::Ptr& channel, uint32_t msgId, std::string binMsg)
 	{
 		GMsg::C2S_ReqAuthToken request;
 		if(!request.ParseFromString(binMsg))
@@ -25,7 +26,7 @@ namespace GateMessage
 			co_return;
 		}
 
-		GateServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<GateServerHelper>(EMSystemType::DNServer);
+		GateServerHelper::Ptr dnServer = world->GetSystem<GateServerHelper>(EMSystemType::DNServer);
 		ProxyEntityManagerHelper::Ptr entityMan = dnServer->GetProxyEntityManager();
 
 		GMsg::S2C_ResAuthToken response;
@@ -58,7 +59,7 @@ namespace GateMessage
 
 			if (uint64_t timerId = entity->TimerId())
 			{
-				entity->TimerId() = 0;
+				entity->SetTimerId(0);
 				entityMan->Timer()->killTimer(timerId);
 			}
 
@@ -67,7 +68,7 @@ namespace GateMessage
 			ServerEntity::Ptr serverEntity = nullptr;
 
 			// <cache> server to load login data
-			if (uint32_t serverId = entity->RecordServerId())
+			if (uint64_t serverId = entity->RecordServerId())
 			{
 				serverEntity = serverEntityMan->GetEntity(serverId);
 			}
@@ -90,7 +91,7 @@ namespace GateMessage
 			//req dedicatedServer Info to Login ds.
 			if (serverEntity)
 			{
-				entity->RecordServerId() = serverEntity->ID();
+				entity->SetRecordServerId(serverEntity->ID());
 
 				auto taskGen = [](Message* msg) -> DNTask<Message*>
 					{

@@ -11,11 +11,12 @@ import ServerEntityManagerHelper;
 import std.compat;
 import DNSocketProxy;
 import GlobalServerHelper;
+import ECSW;
 
 namespace GlobalMessage
 {
 
-	export void Exe_RetRegistSrv(const DNSocketProxy::Ptr& channel, std::string binMsg)
+	export void Exe_RetRegistSrv(const World::Ptr& world, const DNSocketProxy::Ptr& channel, std::string binMsg)
 	{
 		GMsg::g2G_RetRegistSrv request;
 		if(!request.ParseFromString(binMsg))
@@ -23,7 +24,7 @@ namespace GlobalMessage
 			return;
 		}
 
-		GlobalServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<GlobalServerHelper>(EMSystemType::DNServer);
+		GlobalServerHelper::Ptr dnServer = world->GetSystem<GlobalServerHelper>(EMSystemType::DNServer);
 		ServerEntityManagerHelper::Ptr entityMan = dnServer->GetServerEntityManager();
 		if (ServerEntity::Ptr entity = entityMan->GetEntity(request.server_id()))
 		{
@@ -31,7 +32,7 @@ namespace GlobalMessage
 			{
 				if (uint64_t timerId = entity->TimerId())
 				{
-					entity->TimerId() = 0;
+					entity->SetTimerId(0);
 					entityMan->Timer()->killTimer(timerId);
 				}
 			}
@@ -50,7 +51,7 @@ namespace GlobalMessage
 		}
 	}
 
-	export void Exe_RetRegistChild(const DNSocketProxy::Ptr& channel, std::string binMsg)
+	export void Exe_RetRegistChild(const World::Ptr& world, const DNSocketProxy::Ptr& channel, std::string binMsg)
 	{
 		GMsg::g2G_RetRegistChild request;
 		if(!request.ParseFromString(binMsg))
@@ -58,7 +59,7 @@ namespace GlobalMessage
 			return;
 		}
 
-		GlobalServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<GlobalServerHelper>(EMSystemType::DNServer);
+		GlobalServerHelper::Ptr dnServer = world->GetSystem<GlobalServerHelper>(EMSystemType::DNServer);
 		ServerEntityManagerHelper::Ptr entityMan = dnServer->GetServerEntityManager();
 
 		ServerEntity::Ptr entity = entityMan->GetEntity(request.server_id());

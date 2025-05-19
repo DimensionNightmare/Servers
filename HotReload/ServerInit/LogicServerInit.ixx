@@ -15,12 +15,14 @@ import std.compat;
 import DNServerProxy;
 import RoomEntity;
 import LogicServerHelper;
+import ECSW;
 
 #define FUNCPLACE(func) #func, func
 
 export int HandleLogicServerInit(const World::Ptr& world)
 {
-	LogicMessageHandle::RegMsgHandle();
+	static LogicMessageHandle MsgHandle;
+	MsgHandle.RegMsgHandle();
 
 	LogicServerHelper::Ptr dnServer = world->GetSystem<LogicServerHelper>(EMSystemType::DNServer);
 
@@ -55,7 +57,7 @@ export int HandleLogicServerInit(const World::Ptr& world)
 				}
 			};
 
-		proxy->onMessage = [serverProxy](const DNSocketProxy::Ptr& channel, hv::Buffer* buf)
+		proxy->onMessage = [serverProxy, world](const DNSocketProxy::Ptr& channel, hv::Buffer* buf)
 			{
 				DNServerProxy::Ptr proxy = serverProxy.lock();
 
@@ -76,15 +78,15 @@ export int HandleLogicServerInit(const World::Ptr& world)
 
 				if (packet.dealType == EMMsgDeal::Req)
 				{
-					LogicMessageHandle::MsgHandle(channel, packet.msgId, packet.msgHashId, msgData);
+					MsgHandle.MsgHandle(world, channel, packet.msgId, packet.msgHashId, msgData);
 				}
 				else if (packet.dealType == EMMsgDeal::Ret)
 				{
-					LogicMessageHandle::MsgRetHandle(channel, packet.msgHashId, msgData);
+					MsgHandle.MsgRetHandle(world, channel, packet.msgHashId, msgData);
 				}
 				else if (packet.dealType == EMMsgDeal::Redir)
 				{
-					LogicMessageHandle::MsgRedirectHandle(channel, packet.msgId, packet.msgHashId, msgData);
+					MsgHandle.MsgRedirectHandle(world, channel, packet.msgId, packet.msgHashId, msgData);
 				}
 				else if (packet.dealType == EMMsgDeal::Res)
 				{
@@ -161,9 +163,9 @@ export int HandleLogicServerInit(const World::Ptr& world)
 					}
 
 					std::string origin = std::format("{}:{}", originIp, originPort);
-					if (proxyHelper->EMRegistState() == EMRegistState::Registed || peeraddr != origin)
+					if (proxyHelper->GetRegistState() == EMRegistState::Registed || peeraddr != origin)
 					{
-						proxyHelper->EMRegistState() = EMRegistState::None;
+						proxyHelper->SetRegistState(EMRegistState::None);
 
 						if (proxyHelper->isConnected())
 						{
@@ -178,7 +180,7 @@ export int HandleLogicServerInit(const World::Ptr& world)
 						}
 					}
 
-					proxyHelper->RegistType() = 0;
+					proxyHelper->SetRegistType(0);
 				}
 
 				if (proxy->isReconnect())
@@ -186,7 +188,7 @@ export int HandleLogicServerInit(const World::Ptr& world)
 				}
 			};
 
-		proxy->onMessage = [clientProxy](const DNSocketProxy::Ptr& channel, hv::Buffer* buf)
+		proxy->onMessage = [clientProxy, world](const DNSocketProxy::Ptr& channel, hv::Buffer* buf)
 			{
 				DNClientProxy::Ptr proxy = clientProxy.lock();
 
@@ -207,15 +209,15 @@ export int HandleLogicServerInit(const World::Ptr& world)
 
 				if (packet.dealType == EMMsgDeal::Req)
 				{
-					LogicMessageHandle::MsgHandle(channel, packet.msgId, packet.msgHashId, msgData);
+					MsgHandle.MsgHandle(world, channel, packet.msgId, packet.msgHashId, msgData);
 				}
 				else if (packet.dealType == EMMsgDeal::Ret)
 				{
-					LogicMessageHandle::MsgRetHandle(channel, packet.msgHashId, msgData);
+					MsgHandle.MsgRetHandle(world, channel, packet.msgHashId, msgData);
 				}
 				else if (packet.dealType == EMMsgDeal::Redir)
 				{
-					LogicMessageHandle::MsgRedirectHandle(channel, packet.msgId, packet.msgHashId, msgData);
+					MsgHandle.MsgRedirectHandle(world, channel, packet.msgId, packet.msgHashId, msgData);
 				}
 				else if (packet.dealType == EMMsgDeal::Res)
 				{

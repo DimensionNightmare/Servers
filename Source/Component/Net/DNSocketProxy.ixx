@@ -4,23 +4,6 @@ export module DNSocketProxy;
 import ThirdParty.Libhv;
 import ECSW;
 
-export class FinalExecute
-{
-public:
-	FinalExecute(std::function<void()> func):mFunc(func)
-	{
-
-	}
-
-	~FinalExecute()
-	{
-		mFunc();
-	}
-
-private:
-	std::function<void()> mFunc;
-};
-
 export class DNSocketProxy : public hv::SocketChannel
 {
 public:

@@ -200,7 +200,7 @@ protected:
 
 	std::ofstream LogFile; 
 
-	ELogLevel eLogLevel = ELogLevel_Normal;
+	ELogLevel eLogLevel = ELogLevel_Debug;
 };
 
 bool DNl10n::Init()

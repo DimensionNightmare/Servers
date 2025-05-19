@@ -53,10 +53,10 @@ public:
 	void ProxyEntityCloseEvent(Entity::Ptr entity)
 	{
 		ProxyEntityManagerHelper::Ptr entityMan = GetProxyEntityManager();
-		uint32_t entityId = entity->ID();
+		uint64_t entityId = entity->ID();
 
 		ServerEntity::Ptr serverEntity = nullptr;
-		if (uint32_t serverId = entity->GetSelf<ProxyEntity>()->RecordServerId())
+		if (uint64_t serverId = entity->GetSelf<ProxyEntity>()->RecordServerId())
 		{
 			serverEntity = GetServerEntityManager()->GetEntity(serverId);
 		}

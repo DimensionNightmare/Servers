@@ -17,14 +17,16 @@ import ServerEntity;
 import DNSocketProxy;
 import ServerEntityManagerHelper;
 import ControlServerHelper;
+import ECSW;
 
 #define FUNCPLACE(func) #func, func
 
 export int HandleControlServerInit(const World::Ptr& world)
 {
-	ControlMessageHandle::RegMsgHandle();
+	static ControlMessageHandle MsgHandle;
+	MsgHandle.RegMsgHandle();
 
-	ControlServerHelper::Ptr dnServer = world->GetSystem<DNServer>(EMSystemType::DNServer);
+	ControlServerHelper::Ptr dnServer = world->GetSystem<ControlServerHelper>(EMSystemType::DNServer);
 
 	if (DNServerProxy::Ptr proxy = dnServer->GetComponent<DNServerProxy>(EMComponentType::DNServerProxy))
 	{
@@ -62,7 +64,7 @@ export int HandleControlServerInit(const World::Ptr& world)
 				}
 			};
 
-		proxy->onMessage = [serverProxy](const DNSocketProxy::Ptr& channel, hv::Buffer* buf)
+		proxy->onMessage = [serverProxy, world](const DNSocketProxy::Ptr& channel, hv::Buffer* buf)
 			{
 				DNServerProxy::Ptr proxy = serverProxy.lock();
 
@@ -83,15 +85,15 @@ export int HandleControlServerInit(const World::Ptr& world)
 
 				if (packet.dealType == EMMsgDeal::Req)
 				{
-					ControlMessageHandle::MsgHandle(channel, packet.msgId, packet.msgHashId, msgData);
+					MsgHandle.MsgHandle(world, channel, packet.msgId, packet.msgHashId, msgData);
 				}
 				else if (packet.dealType == EMMsgDeal::Ret)
 				{
-					ControlMessageHandle::MsgRetHandle(channel, packet.msgHashId, msgData);
+					MsgHandle.MsgRetHandle(world, channel, packet.msgHashId, msgData);
 				}
 				else if (packet.dealType == EMMsgDeal::Redir)
 				{
-					ControlMessageHandle::MsgRedirectHandle(channel, packet.msgId, packet.msgHashId, msgData);
+					MsgHandle.MsgRedirectHandle(world, channel, packet.msgId, packet.msgHashId, msgData);
 				}
 				else if (packet.dealType == EMMsgDeal::Res)
 				{
@@ -131,7 +133,7 @@ export int HandleControlServerInit(const World::Ptr& world)
 
 export int HandleControlServerShutdown(const World::Ptr& world)
 {
-	ControlServerHelper::Ptr dnServer = world->GetSystem<DNServer>(EMSystemType::DNServer);
+	ControlServerHelper::Ptr dnServer = world->GetSystem<ControlServerHelper>(EMSystemType::DNServer);
 	
 	if (DNServerProxyHelper::Ptr proxy = dnServer->GetComponent<DNServerProxyHelper>(EMComponentType::DNServerProxy))
 	{

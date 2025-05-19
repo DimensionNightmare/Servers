@@ -19,6 +19,7 @@ using ServerEntityBitFlag = std::bitset<static_cast<uint16_t>(EMServerEntityFlag
 export class ServerEntity : public Entity
 {
 protected:
+	friend class ServerEntityManagerHelper;
 	ServerEntity(World::WPtr world):Entity(world)
 	{
 		eEntityType = EMEntityType::Server;
@@ -42,12 +43,15 @@ public: // dll override
 	void SetFlag(EMServerEntityFlag flag) { oFlags.set(uint16_t(flag)); }
 	void ClearFlag(EMServerEntityFlag flag) { oFlags.reset(uint16_t(flag)); }
 
-	std::string& ServerIp() { return sServIp; }
+	std::string ServerIp() { return sServIp; }
+	void SetServerIp(const std::string& ip) { sServIp = ip; }
 
-	uint16_t& ServerPort() { return iServPort; }
+	uint16_t ServerPort() { return iServPort; }
+	void SetServerPort(uint16_t port) { iServPort = port; }
 
 	/// @brief this server connected clients num
-	uint32_t& ConnNum() { return IConnNum; }
+	uint32_t ConnNum() { return IConnNum; }
+	void SetConnNum(int div) { IConnNum += div; }
 
 	/// @brief this server child add
 	void SetMapLinkNode(EMServerType type, const ServerEntity::Ptr& node)
@@ -65,7 +69,8 @@ public: // dll override
 
 	/// @brief the this close timedown destroy timerid.
 	/// @brief authenticate,shutdown and reconnect waiting.
-	uint64_t& TimerId() { return iCloseTimerId; }
+	uint64_t TimerId() { return iCloseTimerId; }
+	void SetTimerId(uint64_t timerId) { iCloseTimerId = timerId; }
 
 	/// @brief net socket set
 	const DNSocketProxy::Ptr& GetSock() { return pSock; }

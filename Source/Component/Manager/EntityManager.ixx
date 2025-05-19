@@ -24,6 +24,12 @@ public:
 		
 	}
 
+	virtual bool Awake() override
+	{
+		GetOwner()->AddEvent(EMEventType::ServerStart, GetSelfW<EntityManager>(), &EntityManager::Start);
+		return true;
+	}
+
 	/// @brief start timer manager
 	virtual bool Start()
 	{
@@ -54,7 +60,7 @@ public: // dll override
 
 	const auto& Timer() { return pLoop->loop(); }
 
-	void AddTimerRecord(size_t timerId, uint64_t id)
+	void AddTimerRecord(uint64_t timerId, uint64_t id)
 	{
 		std::unique_lock<std::shared_mutex> ulock(oTimerMutex);
 		mMapTimer.emplace(timerId, id);

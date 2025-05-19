@@ -30,13 +30,11 @@ public:
 		{
 			std::unique_lock<std::shared_mutex> ulock(oMapMutex);
 
-			// mEntityMap.emplace(std::piecewise_construct,
-			// 	std::forward_as_tuple(entityId),
-			// 	std::forward_as_tuple(entityId));
+			mEntityMap[entityId] = std::shared_ptr<RoomEntity>(new RoomEntity(GetOwner()->GetWorldW()));
 
 			RoomEntity::Ptr entity = mEntityMap[entityId];
 
-			entity->MapID() = mapId;
+			entity->SetMapID(mapId);
 
 			mEntityMapList[mapId].emplace_back(entity);
 			return entity;

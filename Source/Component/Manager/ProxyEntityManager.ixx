@@ -63,7 +63,8 @@ public: // dll override
 		if (mEntityMap.contains(entityId))
 		{
 			std::unique_lock<std::shared_mutex> ulock(oMapMutex);
-
+			ProxyEntity::Ptr entity = mEntityMap[entityId];
+			entity->Dispose();
 			mEntityMap.erase(entityId);
 			return true;
 		}

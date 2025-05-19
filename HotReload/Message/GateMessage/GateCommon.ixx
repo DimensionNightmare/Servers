@@ -63,13 +63,13 @@ namespace GateMessage
 		
 		dnServer->GetLogger()->Record(ELogLevel_Debug, "Client:{}, port:{}", clientProxy->remote_host, clientProxy->remote_port);
 		
-		clientProxy->EMRegistState() = EMRegistState::Registing;
+		clientProxy->SetRegistState(EMRegistState::Registing);
 
 		GMsg::COM_ReqRegistSrv request;
 
 		request.set_server_type((int)dnServer->GetServerType());
 
-		if (uint32_t serverId = dnServer->ServerId())
+		if (uint64_t serverId = dnServer->ServerId())
 		{
 			request.set_server_id(serverId);
 		}
@@ -106,24 +106,24 @@ namespace GateMessage
 		if (response.success())
 		{
 			dnServer->GetLogger()->Record(ELogLevel_Debug, "regist Server success! Rec index:{}", response.server_id());
-			clientProxy->EMRegistState() = EMRegistState::Registed;
-			clientProxy->RegistType() = response.server_type();
-			dnServer->ServerId() = response.server_id();
+			clientProxy->SetRegistState(EMRegistState::Registed);
+			clientProxy->SetRegistType(response.server_type());
+			dnServer->SetServerId(response.server_id());
 
-			Evt_RetRegistChild(server);
+			Evt_RetRegistChild(dnServer);
 		}
 		else
 		{
 			dnServer->GetLogger()->Record(ELogLevel_Debug, "regist Server error!");
 			// dnServer->IsRun() = false; //exit application
-			clientProxy->EMRegistState() = EMRegistState::None;
+			clientProxy->SetRegistState(EMRegistState::None);
 		}
 
 		co_return;
 	}
 
 	// client request
-	export void Msg_ReqRegistSrv(const DNSocketProxy::Ptr& channel, uint32_t msgId, std::string binMsg)
+	export void Msg_ReqRegistSrv(const World::Ptr& world, const DNSocketProxy::Ptr& channel, uint32_t msgId, std::string binMsg)
 	{
 		GMsg::COM_ReqRegistSrv request;
 		if(!request.ParseFromString(binMsg))
@@ -131,7 +131,7 @@ namespace GateMessage
 			return;
 		}
 
-		GateServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<GateServerHelper>(EMSystemType::DNServer);
+		GateServerHelper::Ptr dnServer = world->GetSystem<GateServerHelper>(EMSystemType::DNServer);
 		ServerEntityManagerHelper::Ptr entityMan = dnServer->GetServerEntityManager();
 
 		dnServer->GetLogger()->Record(ELogLevel_Debug, "ip Reqregist: {}, {}", channel->peeraddr(), request.server_type());
@@ -146,7 +146,7 @@ namespace GateMessage
 
 		
 		EMServerType regType = (EMServerType)request.server_type();
-		uint32_t serverId = request.server_id();
+		uint64_t serverId = request.server_id();
 
 		const std::string& ipPort = channel->localaddr();
 
@@ -164,15 +164,15 @@ namespace GateMessage
 		else if (ServerEntity::Ptr entity = entityMan->AddEntity(serverId, regType))
 		{
 			size_t pos = ipPort.find(":");
-			entity->ServerIp() = ipPort.substr(0, pos);
-			entity->ServerPort() = request.server_port();
+			entity->SetServerIp(ipPort.substr(0, pos));
+			entity->SetServerPort(request.server_port());
 			entity->SetSock(channel);
 
 			channel->setContextPtr(entity);
 
 			response.set_success(true);
 			response.set_server_id(entity->ID());
-			response.set_server_type((uint8_t(dnServer->GetServerType())));
+			response.set_server_type(static_cast<uint8_t>(dnServer->GetServerType()));
 		}
 		else
 		{
@@ -195,7 +195,7 @@ namespace GateMessage
 		}
 	}
 
-	export void Exe_RetHeartbeat(const DNSocketProxy::Ptr& channel, std::string binMsg)
+	export void Exe_RetHeartbeat(const World::Ptr& world, const DNSocketProxy::Ptr& channel, std::string binMsg)
 	{
 		GMsg::COM_RetHeartbeat request;
 		if(!request.ParseFromString(binMsg))

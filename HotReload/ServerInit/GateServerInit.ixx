@@ -14,12 +14,14 @@ import DNServerProxyHelper;
 import std.compat;
 import DNServerProxy;
 import GateServerHelper;
+import ECSW;
 
 #define FUNCPLACE(func) #func, func
 
 export int HandleGateServerInit(const World::Ptr& world)
 {
-	GateMessageHandle::RegMsgHandle();
+	static GateMessageHandle MsgHandle;
+	MsgHandle.RegMsgHandle();
 
 	GateServerHelper::Ptr dnServer = world->GetSystem<GateServerHelper>(EMSystemType::DNServer);
 
@@ -69,7 +71,7 @@ export int HandleGateServerInit(const World::Ptr& world)
 				}
 			};
 
-		proxy->onMessage = [serverProxy](const DNSocketProxy::Ptr& channel, hv::Buffer* buf)
+		proxy->onMessage = [serverProxy, world](const DNSocketProxy::Ptr& channel, hv::Buffer* buf)
 			{
 				DNServerProxy::Ptr proxy = serverProxy.lock();
 
@@ -90,15 +92,15 @@ export int HandleGateServerInit(const World::Ptr& world)
 
 				if (packet.dealType == EMMsgDeal::Req)
 				{
-					GateMessageHandle::MsgHandle(channel, packet.msgId, packet.msgHashId, msgData);
+					MsgHandle.MsgHandle(world, channel, packet.msgId, packet.msgHashId, msgData);
 				}
 				else if (packet.dealType == EMMsgDeal::Ret)
 				{
-					GateMessageHandle::MsgRetHandle(channel, packet.msgHashId, msgData);
+					MsgHandle.MsgRetHandle(world, channel, packet.msgHashId, msgData);
 				}
 				else if (packet.dealType == EMMsgDeal::Redir)
 				{
-					GateMessageHandle::MsgRedirectHandle(channel, packet.msgId, packet.msgHashId, msgData);
+					MsgHandle.MsgRedirectHandle(world, channel, packet.msgId, packet.msgHashId, msgData);
 				}
 				else if (packet.dealType == EMMsgDeal::Res)
 				{
@@ -157,12 +159,12 @@ export int HandleGateServerInit(const World::Ptr& world)
 				else
 				{
 					proxy->GetLogger()->Record(EL10nCode_SrvConnOff, peeraddr, channel->fd(), channel->id());
-					if (proxyHelper->EMRegistState() == EMRegistState::Registed)
+					if (proxyHelper->GetRegistState() == EMRegistState::Registed)
 					{
-						proxyHelper->EMRegistState() = EMRegistState::None;
+						proxyHelper->SetRegistState(EMRegistState::None);
 					}
 
-					proxy->RegistType() = 0;
+					proxy->SetRegistType(0);
 				}
 
 				if (proxy->isReconnect())
@@ -171,7 +173,7 @@ export int HandleGateServerInit(const World::Ptr& world)
 				}
 			};
 
-		proxy->onMessage = [clientProxy](const DNSocketProxy::Ptr& channel, hv::Buffer* buf)
+		proxy->onMessage = [clientProxy, world](const DNSocketProxy::Ptr& channel, hv::Buffer* buf)
 			{
 				DNClientProxy::Ptr proxy = clientProxy.lock();
 
@@ -192,11 +194,11 @@ export int HandleGateServerInit(const World::Ptr& world)
 
 				if (packet.dealType == EMMsgDeal::Req)
 				{
-					GateMessageHandle::MsgHandle(channel, packet.msgId, packet.msgHashId, msgData);
+					MsgHandle.MsgHandle(world, channel, packet.msgId, packet.msgHashId, msgData);
 				}
 				else if (packet.dealType == EMMsgDeal::Redir)
 				{
-					GateMessageHandle::MsgRedirectHandle(channel, packet.msgId, packet.msgHashId, msgData);
+					MsgHandle.MsgRedirectHandle(world, channel, packet.msgId, packet.msgHashId, msgData);
 				}
 				else if (packet.dealType == EMMsgDeal::Res)
 				{

@@ -29,7 +29,8 @@ public:
 	using Ptr = std::shared_ptr<DNClientProxyHelper>;
 
 	// regist to controlserver
-	EMRegistState& EMRegistState() { return eRegistState; }
+	EMRegistState GetRegistState() { return eRegistState; }
+	void SetRegistState(EMRegistState state) { eRegistState = state; }
 
 	void SetRegistEvent(std::function<void(const DNServer::Ptr& server)> event)
 	{

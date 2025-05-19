@@ -74,10 +74,10 @@ public:
 	}
 
 	EMServerType GetServerType() { return emServerType; }
-
 	void SetServerType(EMServerType type) { emServerType = type; }
 
-	uint32_t& ServerId() { return iServerId; }
+	uint64_t ServerId() { return iServerId; }
+	void SetServerId(uint64_t id) { iServerId = id; }
 
 	LoggerPrint::Ptr GetLogger() { return pLogger.expired() ? nullptr : pLogger.lock(); }
 public: // dll override
@@ -86,7 +86,7 @@ protected:
 
 	EMServerType emServerType = EMServerType::None;
 
-	uint32_t iServerId = 0;
+	uint64_t iServerId = 0;
 
 	std::mutex oTaskMutex;
 

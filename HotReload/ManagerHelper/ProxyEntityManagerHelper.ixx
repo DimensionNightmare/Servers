@@ -24,14 +24,13 @@ private:
 public:
 	using Ptr = std::shared_ptr<ProxyEntityManagerHelper>;
 
-	ProxyEntity::Ptr AddEntity(uint32_t entityId)
+	ProxyEntity::Ptr AddEntity(uint64_t entityId)
 	{
 		if (!mEntityMap.contains(entityId))
 		{
 			std::unique_lock<std::shared_mutex> ulock(oMapMutex);
-			// mEntityMap.emplace(std::piecewise_construct,
-			// 	std::forward_as_tuple(entityId),
-			// 	std::forward_as_tuple(entityId));
+			mEntityMap[entityId] = std::shared_ptr<ProxyEntity>(new ProxyEntity(GetOwner()->GetWorldW()));
+			mEntityMap[entityId]->SetID(entityId);
 
 			return mEntityMap[entityId];
 		}
@@ -53,7 +52,7 @@ public:
 		return false;
 	}
 
-	ProxyEntity::Ptr GetEntity(uint32_t entityId)
+	ProxyEntity::Ptr GetEntity(uint64_t entityId)
 	{
 		std::shared_lock<std::shared_mutex> lock(oMapMutex);
 		if (mEntityMap.contains(entityId))

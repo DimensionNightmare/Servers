@@ -40,7 +40,7 @@ public: // dll override
 			return;
 		}
 
-		uint32_t entityId = mMapTimer[timerID];
+		uint64_t entityId = mMapTimer[timerID];
 
 		if(ServerEntity::Ptr rm = GetEntity(entityId))
 		{

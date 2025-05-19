@@ -12,11 +12,12 @@ import std.compat;
 import DNSocketProxy;
 import DNServer;
 import DatabaseServerHelper;
+import ECSW;
 
 namespace DatabaseMessage
 {
 
-	export void Exe_ReqLoadData(const DNSocketProxy::Ptr& channel, uint32_t msgId, std::string binMsg)
+	export void Exe_ReqLoadData(const World::Ptr& world, const DNSocketProxy::Ptr& channel, uint32_t msgId, std::string binMsg)
 	{
 		GMsg::L2D_ReqLoadData request;
 		if(!request.ParseFromString(binMsg))
@@ -31,7 +32,7 @@ namespace DatabaseMessage
 			MessagePackAndSend(msgId, EMMsgDeal::Res, "", binData, channel);
 		});
 
-		DatabaseServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<DatabaseServerHelper>(EMSystemType::DNServer);
+		DatabaseServerHelper::Ptr dnServer = world->GetSystem<DatabaseServerHelper>(EMSystemType::DNServer);
 
 		if (auto connection = dnServer->GetRdbProxy()->GetConnection(static_cast<uint16_t>(EMSqlDbNameEnum::Nightmare)))
 		{
@@ -112,7 +113,7 @@ namespace DatabaseMessage
 		}
 	}
 
-	export void Exe_ReqSaveData(const DNSocketProxy::Ptr& channel, uint32_t msgId, std::string binMsg)
+	export void Exe_ReqSaveData(const World::Ptr& world, const DNSocketProxy::Ptr& channel, uint32_t msgId, std::string binMsg)
 	{
 		GMsg::L2D_ReqSaveData request;
 		if(!request.ParseFromString(binMsg))
@@ -127,7 +128,7 @@ namespace DatabaseMessage
 			MessagePackAndSend(msgId, EMMsgDeal::Res, "", binData, channel);
 		});
 
-		DatabaseServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<DatabaseServerHelper>(EMSystemType::DNServer);
+		DatabaseServerHelper::Ptr dnServer = world->GetSystem<DatabaseServerHelper>(EMSystemType::DNServer);
 
 		std::string binData;
 

@@ -7,6 +7,25 @@ import Logger;
 import std.compat;
 import DNSocketProxy;
 
+
+
+export class FinalExecute
+{
+public:
+	FinalExecute(std::function<void()> func):mFunc(func)
+	{
+
+	}
+
+	~FinalExecute()
+	{
+		mFunc();
+	}
+
+private:
+	std::function<void()> mFunc;
+};
+
 export void MessagePackAndSend(uint32_t msgId, EMMsgDeal deal, const std::string& pbName, std::string& data, const DNSocketProxy::Ptr& channel)
 {
 	MessagePack(msgId, deal, pbName, data);

@@ -23,12 +23,12 @@ namespace AuthMessage
 
 		dnServer->GetLogger()->Record(ELogLevel_Debug, "Client:{}, port:{}", clientProxy->remote_host, clientProxy->remote_port);
 		
-		clientProxy->EMRegistState() = EMRegistState::Registing;
+		clientProxy->SetRegistState(EMRegistState::Registing);
 
 		GMsg::COM_ReqRegistSrv request;
 		request.set_server_type((int)server->GetServerType());
 
-		if (uint32_t serverIndex = server->ServerId())
+		if (uint64_t serverIndex = server->ServerId())
 		{
 			request.set_server_id(serverIndex);
 		}
@@ -68,15 +68,15 @@ namespace AuthMessage
 		if (response.success())
 		{
 			dnServer->GetLogger()->Record(ELogLevel_Debug, "regist Server success! Rec index:{}", response.server_id());
-			clientProxy->EMRegistState() = EMRegistState::Registed;
-			clientProxy->RegistType() = response.server_type();
-			dnServer->ServerId() = response.server_id();
+			clientProxy->SetRegistState(EMRegistState::Registed);
+			clientProxy->SetRegistType(response.server_type());
+			dnServer->SetServerId(response.server_id());
 		}
 		else
 		{
 			dnServer->GetLogger()->Record(ELogLevel_Debug, "regist Server error!  ");
 			// server->IsRun() = false; //exit application
-			clientProxy->EMRegistState() = EMRegistState::None;
+			clientProxy->SetRegistState(EMRegistState::None);
 		}
 
 		co_return;

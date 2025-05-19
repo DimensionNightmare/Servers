@@ -11,11 +11,12 @@ import ServerEntityManagerHelper;
 import std.compat;
 import DNSocketProxy;
 import GlobalServerHelper;
+import ECSW;
 
 namespace GlobalMessage
 {
 
-	export DNTaskVoid Msg_ReqAuthAccount(const DNSocketProxy::Ptr& channel, uint32_t msgId, std::string binMsg)
+	export DNTaskVoid Msg_ReqAuthAccount(const World::Ptr& world, const DNSocketProxy::Ptr& channel, uint32_t msgId, std::string binMsg)
 	{
 		GMsg::A2g_ReqAuthAccount request;
 		if(!request.ParseFromString(binMsg))
@@ -31,7 +32,7 @@ namespace GlobalMessage
 		});
 
 		// if has db not need origin
-		GlobalServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<GlobalServerHelper>(EMSystemType::DNServer);
+		GlobalServerHelper::Ptr dnServer = world->GetSystem<GlobalServerHelper>(EMSystemType::DNServer);
 		std::list<ServerEntity::Ptr> serverList = dnServer->GetServerEntityManager()->GetEntitysByType(EMServerType::GateServer);
 
 		std::list<ServerEntity::Ptr> tempList;
@@ -57,7 +58,7 @@ namespace GlobalMessage
 			ServerEntity::Ptr entity = tempList.front();
 			dnServer->GetLogger()->Record(ELogLevel_Debug, "send to GateServer : {}", entity->ID());
 
-			entity->ConnNum()++;
+			entity->SetConnNum(1);
 
 			// pack data
 			binData = binMsg;
@@ -82,7 +83,7 @@ namespace GlobalMessage
 				dnServer->GetLogger()->Record(ELogLevel_Debug, "requst timeout! ");
 				response.set_state_code(5);
 
-				entity->ConnNum()--;
+				entity->SetConnNum(-1);
 			}
 			else
 			{
