@@ -1,7 +1,7 @@
 module;
 export module LogicServerHelper;
 
-export import DNServer;
+import DNServer;
 import DNClientProxyHelper;
 import DNServerProxyHelper;
 import RoomEntityManagerHelper;

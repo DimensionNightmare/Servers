@@ -1,7 +1,7 @@
 module;
 export module AuthServerHelper;
 
-export import DNServer;
+import DNServer;
 import DNClientProxyHelper;
 import DNWebProxyHelper;
 import DbUtils;

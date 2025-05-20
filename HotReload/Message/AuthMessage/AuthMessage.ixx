@@ -8,7 +8,6 @@ import ThirdParty.PbGen;
 import Logger;
 import std.compat;
 import StrUtils;
-import DNSocketProxy;
 import MessageRegister;
 
 export class AuthMessageHandle : public MessageRegister

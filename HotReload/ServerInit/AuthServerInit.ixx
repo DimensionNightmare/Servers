@@ -19,11 +19,13 @@ import DNServerProxyHelper;
 import ECSW;
 import AuthServerHelper;
 
-#define FUNCPLACE(func) #func, func
+#define FUNCPLACE(class, func) &class::func, #class"_"#func
 
 export int HandleAuthServerInit(const World::Ptr& world)
 {
 	static AuthMessageHandle MsgHandle;
+
+	static World* pWorld = world.get();
 
 	AuthServerHelper::Ptr dnServer = world->GetSystem<AuthServerHelper>(EMSystemType::DNServer);
 
@@ -40,7 +42,7 @@ export int HandleAuthServerInit(const World::Ptr& world)
 	{
 		DNClientProxy::WPtr clientProxy = proxy->GetSelfW<DNClientProxy>();
 		
-		proxy->onConnection = [clientProxy](const DNSocketProxy::Ptr& channel)
+		proxy->onConnection = [clientProxy](const DNSocketChannel::Ptr& channel)
 			{
 				DNClientProxy::Ptr proxy = clientProxy.lock();
 
@@ -54,8 +56,10 @@ export int HandleAuthServerInit(const World::Ptr& world)
 				{
 					proxy->GetLogger()->Record(EL10nCode_CliConnOn, peeraddr, channel->fd(), channel->id());
 
+					channel->SetWorld(pWorld);
+
 					proxyHelper->SetRegistEvent(&AuthMessage::Evt_ReqRegistSrv);
-					TickMainSpaceDll(proxy.get(), FUNCPLACE(&DNClientProxy::InitConnectedChannel),  channel);
+					TickMainSpaceDll(proxy.get(), FUNCPLACE(DNClientProxy,InitConnectedChannel),  channel);
 				}
 				else
 				{
@@ -75,32 +79,31 @@ export int HandleAuthServerInit(const World::Ptr& world)
 				}
 			};
 
-		proxy->onMessage = [clientProxy](const DNSocketProxy::Ptr& channel, hv::Buffer* buf)
+		proxy->onMessage = [clientProxy](const DNSocketChannel::Ptr& channel, hv::Buffer* buf)
 			{
 				DNClientProxy::Ptr proxy = clientProxy.lock();
 
 				if(!proxy){ return ;}
 				
-				MessagePacket packet;
-				memcpy(&packet, buf->data(), MessagePacket::PackLenth);
+				MessagePacket* packet = MessagePacket::From(buf->data());
 
-				proxy->GetLogger()->Record(ELogLevel_Debug, "c {} Recv type={} With Mid:{}", channel->peeraddr(), static_cast<int>(packet.dealType), packet.msgId);
+				proxy->GetLogger()->Record(ELogLevel_Debug, "c {} Recv type={} With Mid:{}", channel->peeraddr(), static_cast<int>(packet->dealType), packet->msgId);
 
-				if(packet.pkgLenth > 2 * 1024)
+				if(packet->pkgLenth > 2 * 1024)
 				{
-					proxy->GetLogger()->Record(ELogLevel_Debug, "Recv byte len limit={}", packet.pkgLenth);
+					proxy->GetLogger()->Record(ELogLevel_Debug, "Recv byte len limit={}", packet->pkgLenth);
 					return;
 				}
 
-				std::string msgData(buf->base + MessagePacket::PackLenth, packet.pkgLenth);
+				std::string msgData(packet->MsgBegin(), packet->pkgLenth);
 
-				if (packet.dealType == EMMsgDeal::Res)
+				if (packet->dealType == EMMsgDeal::Res)
 				{
 					DNClientProxyHelper::Ptr proxyHelper = proxy->GetSelf<DNClientProxyHelper>();
 
-					if (DNTask<Message*>* task = proxyHelper->GetMsg(packet.msgId)) //client sock request
+					if (DNTask<Message*>* task = proxyHelper->GetMsg(packet->msgId)) //client sock request
 					{
-						proxyHelper->DelMsg(packet.msgId);
+						proxyHelper->DelMsg(packet->msgId);
 						task->Resume();
 
 						if (Message* message = task->GetResult())

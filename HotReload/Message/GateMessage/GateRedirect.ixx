@@ -8,14 +8,13 @@ import ThirdParty.Libhv;
 import ThirdParty.PbGen;
 import ServerEntityManagerHelper;
 import std.compat;
-import DNSocketProxy;
 import GateServerHelper;
 import ECSW;
 
 namespace GateMessage
 {
 
-	export DNTaskVoid Exe_ReqLoadData(const World::Ptr& world, const DNSocketProxy::Ptr& channel, uint32_t msgId, std::string binMsg)
+	export DNTaskVoid Exe_ReqLoadData(const DNSocketChannel::Ptr& channel, uint32_t msgId, const std::string& binMsg)
 	{
 		GMsg::L2D_ReqLoadData request;
 		if(!request.ParseFromString(binMsg))
@@ -27,10 +26,10 @@ namespace GateMessage
 		FinalExecute final([&response, msgId, channel](){
 			std::string binData;
 			response.SerializeToString(&binData);
-			MessagePackAndSend(msgId, EMMsgDeal::Res, "", binData, channel);
+			MessagePackAndSend(msgId, EMMsgDeal::Res, binData, channel);
 		});
 
-		GateServerHelper::Ptr dnServer = world->GetSystem<GateServerHelper>(EMSystemType::DNServer);
+		GateServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<GateServerHelper>(EMSystemType::DNServer);
 		ServerEntityManagerHelper::Ptr entityMan = dnServer->GetServerEntityManager();
 		const std::list<ServerEntity::Ptr>& dbServers = entityMan->GetEntitysByType(EMServerType::DatabaseServer);
 
@@ -54,7 +53,7 @@ namespace GateMessage
 			uint32_t msgId = serverProxy->GetMsgId();
 			serverProxy->AddMsg(msgId, &dataChannel, 8000);
 
-			MessagePackAndSend(msgId, EMMsgDeal::Req, request.GetDescriptor()->full_name(), binData, entity->GetSock());
+			MessagePackAndSend(msgId, EMMsgDeal::Req, request.GetDescriptor()->full_name(), binData, entity->GetChannel());
 
 			co_await dataChannel;
 			if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
@@ -68,7 +67,7 @@ namespace GateMessage
 		co_return;
 	}
 
-	export DNTaskVoid Exe_ReqSaveData(const World::Ptr& world, const DNSocketProxy::Ptr& channel, uint32_t msgId, std::string binMsg)
+	export DNTaskVoid Exe_ReqSaveData(const DNSocketChannel::Ptr& channel, uint32_t msgId, const std::string& binMsg)
 	{
 		GMsg::L2D_ReqSaveData request;
 		if(!request.ParseFromString(binMsg))
@@ -77,7 +76,7 @@ namespace GateMessage
 		}
 		GMsg::D2L_ResSaveData response;
 
-		GateServerHelper::Ptr dnServer = world->GetSystem<GateServerHelper>(EMSystemType::DNServer);
+		GateServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<GateServerHelper>(EMSystemType::DNServer);
 		ServerEntityManagerHelper::Ptr entityMan = dnServer->GetServerEntityManager();
 		const std::list<ServerEntity::Ptr>& dbServers = entityMan->GetEntitysByType(EMServerType::DatabaseServer);
 
@@ -104,7 +103,7 @@ namespace GateMessage
 			uint32_t msgId = server->GetMsgId();
 			server->AddMsg(msgId, &dataChannel, 8000);
 
-			MessagePackAndSend(msgId, EMMsgDeal::Req, request.GetDescriptor()->full_name(), binData, entity->GetSock());
+			MessagePackAndSend(msgId, EMMsgDeal::Req, request.GetDescriptor()->full_name(), binData, entity->GetChannel());
 
 			co_await dataChannel;
 			if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
@@ -116,7 +115,7 @@ namespace GateMessage
 		}
 
 		response.SerializeToString(&binData);
-		MessagePackAndSend(msgId, EMMsgDeal::Res, "", binData, channel);
+		MessagePackAndSend(msgId, EMMsgDeal::Res, binData, channel);
 
 		co_return;
 	}

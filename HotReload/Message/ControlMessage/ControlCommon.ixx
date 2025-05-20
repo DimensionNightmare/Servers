@@ -8,7 +8,6 @@ import ThirdParty.PbGen;
 import Logger;
 import ServerEntityManagerHelper;
 import std.compat;
-import DNSocketProxy;
 import DNServer;
 import ControlServerHelper;
 import ECSW;
@@ -17,7 +16,7 @@ namespace ControlMessage
 {
 
 	// client request
-	export void Msg_ReqRegistSrv(const World::Ptr& world, const DNSocketProxy::Ptr& channel, uint32_t msgId, std::string binMsg)
+	export void Msg_ReqRegistSrv(const DNSocketChannel::Ptr& channel, uint32_t msgId, const std::string& binMsg)
 	{
 		GMsg::COM_ReqRegistSrv request;
 		if(!request.ParseFromString(binMsg))
@@ -30,10 +29,10 @@ namespace ControlMessage
 		FinalExecute final([&response, msgId, channel](){
 			std::string binData;
 			response.SerializeToString(&binData);
-			MessagePackAndSend(msgId, EMMsgDeal::Res, "", binData, channel);
+			MessagePackAndSend(msgId, EMMsgDeal::Res, binData, channel);
 		});
 
-		ControlServerHelper::Ptr dnServer = world->GetSystem<ControlServerHelper>(EMSystemType::DNServer);
+		ControlServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<ControlServerHelper>(EMSystemType::DNServer);
 
 		ServerEntityManagerHelper::Ptr entityMan = dnServer->GetServerEntityManager();
 
@@ -59,7 +58,7 @@ namespace ControlMessage
 			size_t pos = ipPort.find(":");
 			entity->SetServerIp(ipPort.substr(0, pos));
 			entity->SetServerPort(request.server_port());
-			entity->SetSock(channel);
+			entity->SetChannel(channel);
 
 			channel->setContextPtr(entity);
 
@@ -71,7 +70,7 @@ namespace ControlMessage
 		
 	}
 
-	export void Exe_RetHeartbeat(const World::Ptr& world, const DNSocketProxy::Ptr& channel, std::string binMsg)
+	export void Exe_RetHeartbeat(const DNSocketChannel::Ptr& channel, const std::string& binMsg)
 	{
 		GMsg::COM_RetHeartbeat request;
 		if(!request.ParseFromString(binMsg))

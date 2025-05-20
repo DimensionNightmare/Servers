@@ -67,7 +67,7 @@ public:
 			GMsg::g2L_RetProxyOffline request;
 			request.set_entity_id(entityId);
 			request.SerializeToString(&binData);
-			MessagePackAndSend(0, EMMsgDeal::Ret, request.GetDescriptor()->full_name(), binData, serverEntity->GetSock());
+			MessagePackAndSend(0, EMMsgDeal::Ret, request.GetDescriptor()->full_name(), binData, serverEntity->GetChannel());
 		}
 
 		entityMan->RemoveEntity(entityId);

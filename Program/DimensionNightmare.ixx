@@ -18,6 +18,7 @@ import DNServerProxy;
 import DNWebProxy;
 import StrUtils;
 import RdbProxy;
+import MdbProxy;
 
 export void WriteDumpFile(std::filesystem::path fileName, _EXCEPTION_POINTERS* ExceptionInfo = nullptr)
 {
@@ -328,11 +329,11 @@ public:
 			case EMServerType::AuthServer:
 			{
 				server->AddComponent<DNWebProxy>();
+				server->AddComponent<RdbProxy>();
 				if(value)
 				{
 					server->AddComponent<DNClientProxy>();
 				}
-				server->AddComponent<RdbProxy>();
 				break;
 			}
 			case EMServerType::GateServer:
@@ -346,10 +347,12 @@ public:
 			case EMServerType::DatabaseServer:
 			{
 				server->AddComponent<DNClientProxy>();
+				server->AddComponent<RdbProxy>();
 				break;
 			}
 			case EMServerType::LogicServer:
 			{
+				server->AddComponent<MdbProxy>();
 				server->AddComponent<DNServerProxy>();
 				server->AddComponent<DNClientProxy>();
 				server->AddComponent<RoomEntityManager>();
@@ -475,13 +478,19 @@ public:
 
 #pragma region Export main space 
 
-#define REGIST_MAINSPACE_SIGN_FUNCTION(classname, methodname)\
-	using classname##_##methodname##_Sign = decltype(&classname::methodname);\
-	using classname##_##methodname##_Args = typename MemberFunctionArgs<classname##_##methodname##_Sign>::Arguments;\
-	__declspec(dllexport) auto classname##_##methodname(classname *obj, classname##_##methodname##_Args args)\
-	{\
-		return apply([&obj](auto &&...unpack) { return obj->methodname(std::forward<decltype(unpack)>(unpack)...); }, args);\
-	}
+// #define REGIST_MAINSPACE_SIGN_FUNCTION(classname, methodname)\
+// 	__declspec(dllexport) auto classname##_##methodname(classname *obj, MemberFunctionArgs<decltype(&classname::methodname)>::Arguments args)\
+// 	{\
+// 		return apply([&obj](auto &&...unpack) { return obj->methodname(std::forward<decltype(unpack)>(unpack)...); }, args);\
+// 	}
+
+#define REGIST_MAINSPACE_SIGN_FUNCTION(Class, Method) 																		\
+    __declspec(dllexport) auto Class##_##Method(Class* obj, MemberFunctionArgs<decltype(&Class::Method)>::Arguments args)	\
+    {																														\
+		return std::apply([obj](auto&&... args) {																			\
+            return std::invoke(&Class::Method, obj, std::forward<decltype(args)>(args)...);									\
+        }, args);																											\
+    }
 
 extern "C"
 {

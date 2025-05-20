@@ -1,7 +1,7 @@
 module;
 export module ControlServerHelper;
 
-export import DNServer;
+import DNServer;
 import DNServerProxyHelper;
 import ServerEntityManagerHelper;
 

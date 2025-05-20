@@ -441,26 +441,23 @@ public:
 		}
 
 		// SPidLogger.Record(ELogLevel_Debug, sSqlStatement);
-
-		pqxx::result result = pWork->exec(sSqlStatement);
-
-		if (eType == EMSqlOpType::Query)
+		try
 		{
-			if (!iQueryCount)
-			{
-				PaserQuery(result);
-			}
-			else
-			{
-				iQueryCount = result[0][0].as<uint32_t>();
-			}
-
-			iLimitCount = 0;
+			pqxx::result result = pWork->exec(sSqlStatement);
+			SetResult(result);
 		}
+		catch (const std::exception& e)
+		{
+			SPidLogger.Record(ELogLevel_Debug, e.what());
+			bExecResult = false;
+		}
+		
+		iLimitCount = 0;
+		iExecResultCount = 0;
+		eType = EMSqlOpType::None;
+		mEles.clear();
 
-		SetResult(result.affected_rows());
-
-		return true;
+		return bExecResult;
 	}
 
 	// create table
@@ -990,31 +987,46 @@ private:
 		return true;
 	}
 
-	void SetResult(int affectedRows)
+	void SetResult(pqxx::result& result)
 	{
 		switch (eType)
 		{
+			case EMSqlOpType::Query:
+			{
+				bExecResult = true;
+
+				if (!iQueryCount)
+				{
+					PaserQuery(result);
+				}
+				else
+				{
+					iQueryCount = result[0][0].as<uint32_t>();
+				}
+	
+				break;
+			}
 			case EMSqlOpType::Update:
 			case EMSqlOpType::Delete:
-			case EMSqlOpType::Query:
 			case EMSqlOpType::UpdateTable:
 			{
-				bExecResult = affectedRows > 0;
+				bExecResult = true;
 				break;
 			}
 			case EMSqlOpType::Insert:
+			{
+				bExecResult = result.affected_rows() == iExecResultCount;
+				break;
+			}
 			case EMSqlOpType::CreateTable:
 			{
-				bExecResult = affectedRows == iExecResultCount;
+				bExecResult = true;
 				break;
 			}
 			default:
 				throw std::invalid_argument("Please Imp SetResult Case!");
 		}
 
-		iExecResultCount = 0;
-		eType = EMSqlOpType::None;
-		mEles.clear();
 	}
 
 	void BuildSqlStatement()

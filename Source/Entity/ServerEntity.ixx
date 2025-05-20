@@ -5,7 +5,7 @@ import ECSW;
 
 import DNServer;
 import std.compat;
-import DNSocketProxy;
+import ThirdParty.Libhv;
 
 export enum class EMServerEntityFlag : uint16_t
 {
@@ -37,7 +37,8 @@ public: // dll override
 	EMServerType GetServerType() { return emServerType; }
 
 	/// @brief this server father node
-	ServerEntity::Ptr LinkNode() { return pLink; }
+	const ServerEntity::Ptr& LinkNode() { return pLink; }
+	void SetLinkNode(const ServerEntity::Ptr& node) { pLink = node; }
 
 	bool HasFlag(EMServerEntityFlag flag) { return oFlags.test(uint16_t(flag)); }
 	void SetFlag(EMServerEntityFlag flag) { oFlags.set(uint16_t(flag)); }
@@ -73,10 +74,10 @@ public: // dll override
 	void SetTimerId(uint64_t timerId) { iCloseTimerId = timerId; }
 
 	/// @brief net socket set
-	const DNSocketProxy::Ptr& GetSock() { return pSock; }
+	const DNSocketChannel::Ptr& GetChannel() { return pChannel; }
 
 	/// @brief net socket get
-	void SetSock(const DNSocketProxy::Ptr& sock) { pSock = sock; }
+	void SetChannel(const DNSocketChannel::Ptr& channel) { pChannel = channel; }
 
 protected: // dll proxy
 	EMServerType emServerType = EMServerType::None;
@@ -94,5 +95,5 @@ protected: // dll proxy
 
 	uint64_t iCloseTimerId = 0;
 
-	DNSocketProxy::Ptr pSock;
+	DNSocketChannel::Ptr pChannel;
 };

@@ -1,7 +1,7 @@
 module;
 export module DatabaseServerHelper;
 
-export import DNServer;
+import DNServer;
 import DNClientProxyHelper;
 import ServerEntityManagerHelper;
 import Logger;

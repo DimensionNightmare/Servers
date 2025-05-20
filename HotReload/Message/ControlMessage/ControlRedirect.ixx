@@ -8,14 +8,13 @@ import ThirdParty.Libhv;
 import ThirdParty.PbGen;
 import ServerEntity;
 import std.compat;
-import DNSocketProxy;
 import ServerEntityManagerHelper;
 import ControlServerHelper;
 import ECSW;
 
 namespace ControlMessage
 {
-	export DNTaskVoid Msg_ReqAuthAccount(const World::Ptr& world, const DNSocketProxy::Ptr& channel, uint32_t msgId, std::string binMsg)
+	export DNTaskVoid Msg_ReqAuthAccount(const DNSocketChannel::Ptr& channel, uint32_t msgId, const std::string& binMsg)
 	{
 		GMsg::A2g_ReqAuthAccount request;
 		if(!request.ParseFromString(binMsg))
@@ -27,12 +26,12 @@ namespace ControlMessage
 		FinalExecute final([&response, msgId, channel](){
 			std::string binData;
 			response.SerializeToString(&binData);
-			MessagePackAndSend(msgId, EMMsgDeal::Res, "", binData, channel);
+			MessagePackAndSend(msgId, EMMsgDeal::Res, binData, channel);
 		});
 
 		ServerEntity::Ptr entity = nullptr;
 
-		ControlServerHelper::Ptr dnServer = world->GetSystem<ControlServerHelper>(EMSystemType::DNServer);
+		ControlServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<ControlServerHelper>(EMSystemType::DNServer);
 
 		ServerEntityManagerHelper::Ptr manager = dnServer->GetServerEntityManager();
 
@@ -80,7 +79,7 @@ namespace ControlMessage
 			uint32_t msgId = proxy->GetMsgId();
 			proxy->AddMsg(msgId, &dataChannel, 9000);
 
-			MessagePackAndSend(msgId, EMMsgDeal::Redir, request.GetDescriptor()->full_name(), binMsg, entity->GetSock());
+			MessagePackAndSend(msgId, EMMsgDeal::Redir, request.GetDescriptor()->full_name(), binMsg, entity->GetChannel());
 
 			co_await dataChannel;
 			if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))

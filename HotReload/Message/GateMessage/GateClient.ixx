@@ -9,7 +9,6 @@ import ThirdParty.Libhv;
 import ThirdParty.PbGen;
 import ProxyEntityManagerHelper;
 import std.compat;
-import DNSocketProxy;
 import ServerEntity;
 import GateServerHelper;
 import ECSW;
@@ -18,7 +17,7 @@ namespace GateMessage
 {
 
 	// client request
-	export DNTaskVoid Msg_ReqAuthToken(const World::Ptr& world, const DNSocketProxy::Ptr& channel, uint32_t msgId, std::string binMsg)
+	export DNTaskVoid Msg_ReqAuthToken(const DNSocketChannel::Ptr& channel, uint32_t msgId, const std::string& binMsg)
 	{
 		GMsg::C2S_ReqAuthToken request;
 		if(!request.ParseFromString(binMsg))
@@ -26,7 +25,7 @@ namespace GateMessage
 			co_return;
 		}
 
-		GateServerHelper::Ptr dnServer = world->GetSystem<GateServerHelper>(EMSystemType::DNServer);
+		GateServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<GateServerHelper>(EMSystemType::DNServer);
 		ProxyEntityManagerHelper::Ptr entityMan = dnServer->GetProxyEntityManager();
 
 		GMsg::S2C_ResAuthToken response;
@@ -34,7 +33,7 @@ namespace GateMessage
 		FinalExecute final([&response, msgId, channel](){
 			std::string binData;
 			response.SerializeToString(&binData);
-			MessagePackAndSend(msgId, EMMsgDeal::Res, "", binData, channel);
+			MessagePackAndSend(msgId, EMMsgDeal::Res, binData, channel);
 		});
 		
 
@@ -55,7 +54,7 @@ namespace GateMessage
 			dnServer->GetLogger()->Record(ELogLevel_Debug, "match!!");
 
 			channel->setContextPtr(entity);
-			entity->SetSock(channel);
+			entity->SetChannel(channel);
 
 			if (uint64_t timerId = entity->TimerId())
 			{
@@ -103,7 +102,7 @@ namespace GateMessage
 				uint32_t msgId = server->GetMsgId();
 				server->AddMsg(msgId, &dataChannel, 9000);
 
-				MessagePackAndSend(msgId, EMMsgDeal::Redir, request.GetDescriptor()->full_name(), binMsg, serverEntity->GetSock());
+				MessagePackAndSend(msgId, EMMsgDeal::Redir, request.GetDescriptor()->full_name(), binMsg, serverEntity->GetChannel());
 				
 				co_await dataChannel;
 				if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))

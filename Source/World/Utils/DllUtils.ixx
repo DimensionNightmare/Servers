@@ -31,29 +31,27 @@ struct MemberFunctionArgs<R(Class::*)(Args...)>
 	using Arguments = std::tuple<Args...>;
 };
 
-export template <typename Method, typename... Args>
-auto TickMainSpaceDll(void* obj, const char* classmethod, Method method, Args... args)
+std::unordered_map<std::string, void*> DllMapCache;
+
+export template <typename Class, typename Method, typename... Args>
+auto TickMainSpaceDll(Class* obj, Method method, const char* classmethod, Args... args)
 {
-	using FuncSignature = decltype(method);
-	using ArgsTuple = typename MemberFunctionArgs<FuncSignature>::Arguments;
+	using ArgsTuple = typename MemberFunctionArgs<decltype(method)>::Arguments;
 	using RetType = typename MemberFunctionReturnType<Method>::RetType;
-	typedef RetType(*MethodSign)(void*, ArgsTuple);
+	typedef RetType(*MethodSign)(Class*, ArgsTuple);
 
-	std::string methodName = std::regex_replace(++classmethod, std::regex(R"(::)"), "_");
-
+	// std::string methodName = std::regex_replace(++classmethod, std::regex(R"(::)"), "_");
 	// std::cout << typeid(RetType).name() << std::endl;
 
-	static std::unordered_map<std::string, void*> cache;
-
-	if (auto it = cache.find(methodName);it != cache.end())
+	if (auto it = DllMapCache.find(classmethod);it != DllMapCache.end())
 	{
 		MethodSign pFuncTyped = reinterpret_cast<MethodSign>(it->second);
 		return pFuncTyped(obj, std::make_tuple(std::forward<Args>(args)...));
 	}
 
-	if (Platform::FuncHandle pFunc = Platform::GetProcAddress(nullptr, methodName.c_str()))
+	if (Platform::FuncHandle pFunc = Platform::GetProcAddress(nullptr, classmethod))
 	{
-		cache[methodName] = pFunc;
+		DllMapCache[classmethod] = pFunc;
 		MethodSign pFuncTyped = reinterpret_cast<MethodSign>(pFunc);
 		return pFuncTyped(obj, std::forward_as_tuple(std::forward<Args>(args)...));
 	}

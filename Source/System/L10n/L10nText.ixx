@@ -6,7 +6,7 @@ import StrUtils;
 import DllUtils;
 import ECSW;
 
-#define FUNCPLACE(func) #func, func
+#define FUNCPLACE(class, func) &class::func, #class"_"#func
 
 export class DNl10n : public System
 {

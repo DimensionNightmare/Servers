@@ -9,17 +9,16 @@ import ThirdParty.Libhv;
 import ThirdParty.PbGen;
 import ProxyEntityManagerHelper;
 import std.compat;
-import DNSocketProxy;
 import ServerEntity;
 import GateServerHelper;
 import ECSW;
 
-#define FUNCPLACE(func) #func, func
+#define FUNCPLACE(class, func) &class::func, #class"_"#func
 
 namespace GateMessage
 {
 
-	export void Exe_ReqUserToken(const World::Ptr& world, const DNSocketProxy::Ptr& channel, uint32_t msgId, std::string binMsg)
+	export void Exe_ReqUserToken(const DNSocketChannel::Ptr& channel, uint32_t msgId, const std::string& binMsg)
 	{
 		GMsg::A2g_ReqAuthAccount request;
 		
@@ -32,13 +31,13 @@ namespace GateMessage
 
 		std::string binData;
 
-		GateServerHelper::Ptr dnServer = world->GetSystem<GateServerHelper>(EMSystemType::DNServer);
+		GateServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<GateServerHelper>(EMSystemType::DNServer);
 		ProxyEntityManagerHelper::Ptr entityMan = dnServer->GetProxyEntityManager();
 		ProxyEntity::Ptr entity = entityMan->GetEntity(request.account_id());
 		if (entity)
 		{
 			//exit
-			if (const DNSocketProxy::Ptr& online = entity->GetSock())
+			if (const DNSocketChannel::Ptr& online = entity->GetChannel())
 			{
 				// kick channel
 				GMsg::S2C_RetAccountReplace request;
@@ -48,7 +47,7 @@ namespace GateMessage
 				MessagePackAndSend(0, EMMsgDeal::Ret, request.GetDescriptor()->full_name(), binData, online);
 
 				//kick socket
-				online->setContextPtr(nullptr);
+				online->deleteContextPtr();
 				online->close();
 
 
@@ -63,7 +62,7 @@ namespace GateMessage
 					request.set_account_id(entity->ID());
 
 					request.SerializeToString(&binData);
-					MessagePackAndSend(0, EMMsgDeal::Redir, request.GetDescriptor()->full_name(), binData, serverEntity->GetSock());
+					MessagePackAndSend(0, EMMsgDeal::Redir, request.GetDescriptor()->full_name(), binData, serverEntity->GetChannel());
 				}
 
 			}
@@ -86,13 +85,13 @@ namespace GateMessage
 		// entity or token expired
 		if (!entity->TimerId())
 		{
-			entity->SetTimerId(TickMainSpaceDll(entityMan.get(), FUNCPLACE(&ProxyEntityManager::CheckEntityCloseTimer), entity->ID()));
+			entity->SetTimerId(TickMainSpaceDll(entityMan.get(), FUNCPLACE(ProxyEntityManager,CheckEntityCloseTimer), entity->ID()));
 		}
 
 		SPidLogger.Record(ELogLevel_Debug, "ReqUserToken User: {}!!", request.account_id());
 
 		response.SerializeToString(&binData);
-		MessagePackAndSend(msgId, EMMsgDeal::Res, "", binData, channel);
+		MessagePackAndSend(msgId, EMMsgDeal::Res, binData, channel);
 	}
 
 }

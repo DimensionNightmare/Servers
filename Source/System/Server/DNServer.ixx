@@ -30,7 +30,6 @@ export std::array<std::pair<uint8_t, std::string>, 7> ServerTypeList = {{
 	one(GateServer),
 	one(DatabaseServer),
 	one(LogicServer),
-	one(DedicatedServer),
 	#undef one
 }};
 

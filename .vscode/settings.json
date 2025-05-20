@@ -1,23 +1,4 @@
 {
-    "files.associations": {
-		"*.sqlbook": "sql",
-		"*.ndjson": "jsonl",
-		"*.dbclient-js": "javascript",
-		"CMakeLists.txt": "makefile",
-		"*.ixx": "cpp",
-		"filesystem": "cpp",
-		"optional": "cpp",
-		"memory": "cpp",
-		"*.inc": "cpp",
-		"list": "cpp",
-		"xhash": "cpp",
-		"functional": "cpp",
-		"thread": "cpp",
-		"type_traits": "cpp",
-		"xmemory": "cpp",
-		"xstring": "cpp",
-		"utility": "cpp"
-	},
     "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
 	"C_Cpp.formatting": "vcFormat",
     "C_Cpp.vcFormat.indent.lambdaBracesWhenParameter": true,
@@ -52,5 +33,6 @@
     "cmake.allowCommentsInPresetsFile": true,
 	"C_Cpp.default.compileCommands": [
 		"${workspaceRoot}/out/build/compile_commands.json",
-	]
+	],
+	"C_Cpp.autoAddFileAssociations": false
 }

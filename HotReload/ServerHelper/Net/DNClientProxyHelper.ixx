@@ -7,7 +7,7 @@ import DllUtils;
 import ThirdParty.Libhv;
 import ThirdParty.PbGen;
 
-#define FUNCPLACE(func) #func, func
+#define FUNCPLACE(class, func) &class::func, #class"_"#func
 
 export class DNClientProxyHelper : public DNClientProxy
 {
@@ -55,7 +55,7 @@ public:
 		// timeout
 		if (breakTime > 0)
 		{
-			task->TimerId() = TickMainSpaceDll(this, FUNCPLACE(&DNClientProxy::CheckMessageTimeoutTimer),  breakTime, msgId);
+			task->TimerId() = TickMainSpaceDll(this, FUNCPLACE(DNClientProxy,CheckMessageTimeoutTimer),  breakTime, msgId);
 		}
 		return true;
 	}

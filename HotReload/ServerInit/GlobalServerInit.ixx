@@ -18,12 +18,14 @@ import ServerEntityManagerHelper;
 import GlobalServerHelper;
 import ECSW;
 
-#define FUNCPLACE(func) #func, func
+#define FUNCPLACE(class, func) &class::func, #class"_"#func
 
 export int HandleGlobalServerInit(const World::Ptr& world)
 {
 	static GlobalMessageHandle MsgHandle;
 	MsgHandle.RegMsgHandle();
+
+	static World* pWorld = world.get();
 
 	GlobalServerHelper::Ptr dnServer = world->GetSystem<GlobalServerHelper>(EMSystemType::DNServer);
 
@@ -31,7 +33,7 @@ export int HandleGlobalServerInit(const World::Ptr& world)
 	{
 		DNServerProxy::WPtr serverProxy = proxy->GetSelfW<DNServerProxy>();
 
-		proxy->onConnection = [serverProxy](const DNSocketProxy::Ptr& channel)
+		proxy->onConnection = [serverProxy](const DNSocketChannel::Ptr& channel)
 			{
 				DNServerProxy::Ptr proxy = serverProxy.lock();
 
@@ -42,11 +44,11 @@ export int HandleGlobalServerInit(const World::Ptr& world)
 				{
 					proxy->GetLogger()->Record(EL10nCode_CliConnOn, peeraddr, channel->fd(), channel->id());
 
-					// channel->SetWorld(proxy->GetOwner()->GetWorld());
+					channel->SetWorld(pWorld);
 
 					DNServerProxy::Ptr serverProxy = proxy->GetOwner()->GetComponent<DNServerProxy>(EMComponentType::DNServerProxy);
 
-					TickMainSpaceDll(serverProxy.get(), FUNCPLACE(&DNServerProxy::InitConnectedChannel),  channel);
+					TickMainSpaceDll(serverProxy.get(), FUNCPLACE(DNServerProxy,InitConnectedChannel),  channel);
 				}
 				else
 				{
@@ -58,49 +60,48 @@ export int HandleGlobalServerInit(const World::Ptr& world)
 					{
 						ServerEntityManagerHelper::Ptr entityMan = proxy->GetOwner<GlobalServerHelper>()->GetServerEntityManager();
 						entityMan->RemoveEntity(entity->ID());
-						channel->setContextPtr(nullptr);
+						channel->deleteContextPtr();
 					}
 				}
 			};
 
-		proxy->onMessage = [serverProxy, world](const DNSocketProxy::Ptr& channel, hv::Buffer* buf)
+		proxy->onMessage = [serverProxy](const DNSocketChannel::Ptr& channel, hv::Buffer* buf)
 			{
 				DNServerProxy::Ptr proxy = serverProxy.lock();
 
 				if(!proxy){ return ;}
 
-				MessagePacket packet;
-				memcpy(&packet, buf->data(), MessagePacket::PackLenth);
+				MessagePacket* packet = MessagePacket::From(buf->data());
 
-				proxy->GetLogger()->Record(ELogLevel_Debug, "s {} Recv type={} With Mid:{}", channel->peeraddr(), static_cast<int>(packet.dealType), packet.msgId);
+				proxy->GetLogger()->Record(ELogLevel_Debug, "s {} Recv type={} With Mid:{}", channel->peeraddr(), static_cast<int>(packet->dealType), packet->msgId);
 
-				if(packet.pkgLenth > 2 * 1024)
+				if(packet->pkgLenth > 2 * 1024)
 				{
-					proxy->GetLogger()->Record(ELogLevel_Debug, "Recv byte len limit={}", packet.pkgLenth);
+					proxy->GetLogger()->Record(ELogLevel_Debug, "Recv byte len limit={}", packet->pkgLenth);
 					return;
 				}
 
-				std::string msgData(buf->base + MessagePacket::PackLenth, packet.pkgLenth);
+				std::string msgData(packet->MsgBegin(), packet->pkgLenth);
 
-				if (packet.dealType == EMMsgDeal::Req)
+				if (packet->dealType == EMMsgDeal::Req)
 				{
-					MsgHandle.MsgHandle(world, channel, packet.msgId, packet.msgHashId, msgData);
+					MsgHandle.MsgHandle(channel, packet->msgId, packet->msgHashId, msgData);
 				}
-				else if (packet.dealType == EMMsgDeal::Ret)
+				else if (packet->dealType == EMMsgDeal::Ret)
 				{
-					MsgHandle.MsgRetHandle(world, channel, packet.msgHashId, msgData);
+					MsgHandle.MsgRetHandle(channel, packet->msgHashId, msgData);
 				}
-				else if (packet.dealType == EMMsgDeal::Redir)
+				else if (packet->dealType == EMMsgDeal::Redir)
 				{
-					MsgHandle.MsgRedirectHandle(world, channel, packet.msgId, packet.msgHashId, msgData);
+					MsgHandle.MsgRedirectHandle(channel, packet->msgId, packet->msgHashId, msgData);
 				}
-				else if (packet.dealType == EMMsgDeal::Res)
+				else if (packet->dealType == EMMsgDeal::Res)
 				{
 					DNServerProxyHelper::Ptr proxyHelper = proxy->GetSelf<DNServerProxyHelper>();
 
-					if (DNTask<Message*>* task = proxyHelper->GetMsg(packet.msgId)) //client sock request
+					if (DNTask<Message*>* task = proxyHelper->GetMsg(packet->msgId)) //client sock request
 					{
-						proxyHelper->DelMsg(packet.msgId);
+						proxyHelper->DelMsg(packet->msgId);
 						task->Resume();
 
 						if (Message* message = task->GetResult())
@@ -131,7 +132,7 @@ export int HandleGlobalServerInit(const World::Ptr& world)
 	{
 		DNClientProxy::WPtr clientProxy = proxy->GetSelfW<DNClientProxy>();
 		
-		proxy->onConnection = [clientProxy](const DNSocketProxy::Ptr& channel)
+		proxy->onConnection = [clientProxy](const DNSocketChannel::Ptr& channel)
 			{
 				DNClientProxy::Ptr proxy = clientProxy.lock();
 
@@ -145,9 +146,11 @@ export int HandleGlobalServerInit(const World::Ptr& world)
 				{
 					proxy->GetLogger()->Record(EL10nCode_SrvConnOn, peeraddr, channel->fd(), channel->id());
 
+					channel->SetWorld(pWorld);
+
 					proxyHelper->SetRegistEvent(&GlobalMessage::Evt_ReqRegistSrv);
 
-					TickMainSpaceDll(proxy.get(), FUNCPLACE(&DNClientProxy::InitConnectedChannel),  channel);
+					TickMainSpaceDll(proxy.get(), FUNCPLACE(DNClientProxy,InitConnectedChannel),  channel);
 				}
 				else
 				{
@@ -166,40 +169,39 @@ export int HandleGlobalServerInit(const World::Ptr& world)
 				}
 			};
 
-		proxy->onMessage = [clientProxy, world](const DNSocketProxy::Ptr& channel, hv::Buffer* buf)
+		proxy->onMessage = [clientProxy](const DNSocketChannel::Ptr& channel, hv::Buffer* buf)
 			{
 				DNClientProxy::Ptr proxy = clientProxy.lock();
 
 				if(!proxy){ return ;}
 
-				MessagePacket packet;
-				memcpy(&packet, buf->data(), MessagePacket::PackLenth);
+				MessagePacket* packet = MessagePacket::From(buf->data());
 
-				proxy->GetLogger()->Record(ELogLevel_Debug, "c {} Recv type={} With Mid:{}", channel->peeraddr(), static_cast<int>(packet.dealType), packet.msgId);
+				proxy->GetLogger()->Record(ELogLevel_Debug, "c {} Recv type={} With Mid:{}", channel->peeraddr(), static_cast<int>(packet->dealType), packet->msgId);
 
-				if(packet.pkgLenth > 2 * 1024)
+				if(packet->pkgLenth > 2 * 1024)
 				{
-					proxy->GetLogger()->Record(ELogLevel_Debug, "Recv byte len limit={}", packet.pkgLenth);
+					proxy->GetLogger()->Record(ELogLevel_Debug, "Recv byte len limit={}", packet->pkgLenth);
 					return;
 				}
 				
-				std::string msgData(buf->base + MessagePacket::PackLenth, packet.pkgLenth);
+				std::string msgData(packet->MsgBegin(), packet->pkgLenth);
 
-				if (packet.dealType == EMMsgDeal::Req)
+				if (packet->dealType == EMMsgDeal::Req)
 				{
-					MsgHandle.MsgHandle(world, channel, packet.msgId, packet.msgHashId, msgData);
+					MsgHandle.MsgHandle(channel, packet->msgId, packet->msgHashId, msgData);
 				}
-				else if (packet.dealType == EMMsgDeal::Redir)
+				else if (packet->dealType == EMMsgDeal::Redir)
 				{
-					MsgHandle.MsgRedirectHandle(world, channel, packet.msgId, packet.msgHashId, msgData);
+					MsgHandle.MsgRedirectHandle(channel, packet->msgId, packet->msgHashId, msgData);
 				}
-				else if (packet.dealType == EMMsgDeal::Res)
+				else if (packet->dealType == EMMsgDeal::Res)
 				{
 					DNClientProxyHelper::Ptr proxyHelper = proxy->GetSelf<DNClientProxyHelper>();
 
-					if (DNTask<Message*>* task = proxyHelper->GetMsg(packet.msgId)) //client sock request
+					if (DNTask<Message*>* task = proxyHelper->GetMsg(packet->msgId)) //client sock request
 					{
-						proxyHelper->DelMsg(packet.msgId);
+						proxyHelper->DelMsg(packet->msgId);
 						task->Resume();
 
 						if (Message* message = task->GetResult())

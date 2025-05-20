@@ -1,7 +1,7 @@
 module;
 export module GlobalServerHelper;
 
-export import DNServer;
+import DNServer;
 import DNClientProxyHelper;
 import DNServerProxyHelper;
 import ServerEntityManagerHelper;
@@ -11,7 +11,7 @@ import Logger;
 import ThirdParty.Libhv;
 import ThirdParty.PbGen;
 
-#define FUNCPLACE(func) #func, func
+#define FUNCPLACE(class, func) &class::func, #class"_"#func
 
 export class GlobalServerHelper : public DNServer
 {
@@ -55,12 +55,12 @@ public:
 		GMsg::COM_RetChangeCtlSrv request;
 		std::string binData;
 
-		auto registControl = [&](ServerEntity::Ptr beEntity, ServerEntity::Ptr entity)
+		auto registControl = [&](const ServerEntity::Ptr& beEntity, const ServerEntity::Ptr& entity)
 		{
-			const DNSocketProxy::Ptr& channel = entity->GetSock();
-			entity->LinkNode() = beEntity;
+			const DNSocketChannel::Ptr& channel = entity->GetChannel();
+			entity->SetLinkNode(beEntity);
 
-			channel->setContextPtr(nullptr);
+			channel->deleteContextPtr();
 
 			// sendData
 			request.set_server_ip(beEntity->ServerIp());
@@ -68,9 +68,9 @@ public:
 
 			request.SerializeToString(&binData);
 			// timer destory
-			entity->SetTimerId(TickMainSpaceDll(entityMan.get(), FUNCPLACE(&ServerEntityManager::CheckEntityCloseTimer), entity->ID()));
+			entity->SetTimerId(TickMainSpaceDll(entityMan.get(), FUNCPLACE(ServerEntityManager,CheckEntityCloseTimer), entity->ID()));
 			MessagePackAndSend(0, EMMsgDeal::Ret, request.GetDescriptor()->full_name(), binData, channel);
-			entity->SetSock(nullptr);
+			entity->SetChannel(nullptr);
 		};
 
 		for (ServerEntity::Ptr gate : gates)

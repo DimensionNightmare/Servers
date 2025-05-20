@@ -11,7 +11,7 @@ import DNClientProxyHelper;
 import DNServer;
 import DatabaseServerHelper;
 
-#define FUNCPLACE(func) #func, func
+#define FUNCPLACE(class, func) &class::func, #class"_"#func
 
 namespace DatabaseMessage
 {
@@ -31,7 +31,7 @@ namespace DatabaseMessage
 
 		request.set_server_type((int)dnServer->GetServerType());
 
-		if (uint32_t serverIndex = dnServer->ServerId())
+		if (uint64_t serverIndex = dnServer->ServerId())
 		{
 			request.set_server_id(serverIndex);
 		}
@@ -78,7 +78,7 @@ namespace DatabaseMessage
 		co_return;
 	}
 
-	export void Exe_RetChangeCtlSrv(const World::Ptr& world, const DNSocketProxy::Ptr& channel, std::string binMsg)
+	export void Exe_RetChangeCtlSrv(const DNSocketChannel::Ptr& channel, const std::string& binMsg)
 	{
 		GMsg::COM_RetChangeCtlSrv request;
 		if(!request.ParseFromString(binMsg))
@@ -86,10 +86,10 @@ namespace DatabaseMessage
 			return;
 		}
 
-		DNServer::Ptr dnServer = world->GetSystem<DNServer>(EMSystemType::DNServer);
+		DNServer::Ptr dnServer = channel->GetWorld()->GetSystem<DNServer>(EMSystemType::DNServer);
 
 		DNClientProxy::Ptr clientProxy = dnServer->GetComponent<DNClientProxy>(EMComponentType::DNClientProxy);
 
-		TickMainSpaceDll(clientProxy.get(), FUNCPLACE(&DNClientProxy::RedirectClient), request.server_port(), request.server_ip());
+		TickMainSpaceDll(clientProxy.get(), FUNCPLACE(DNClientProxy,RedirectClient), request.server_port(), request.server_ip());
 	}
 }

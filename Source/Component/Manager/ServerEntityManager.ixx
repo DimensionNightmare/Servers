@@ -44,7 +44,7 @@ public: // dll override
 
 		if(ServerEntity::Ptr rm = GetEntity(entityId))
 		{
-			if(ServerEntity::Ptr link = rm->LinkNode())
+			if(const ServerEntity::Ptr& link = rm->LinkNode())
 			{
 				link->GetMapLinkNode(rm->GetServerType()).remove(rm);
 			}
@@ -87,7 +87,7 @@ public: // dll override
 
 			mEntityMapList[entity->GetServerType()].remove(entity);
 
-			if (ServerEntity::Ptr owner = entity->LinkNode())
+			if (const ServerEntity::Ptr& owner = entity->LinkNode())
 			{
 				owner->ClearFlag(EMServerEntityFlag::Locked);
 			}

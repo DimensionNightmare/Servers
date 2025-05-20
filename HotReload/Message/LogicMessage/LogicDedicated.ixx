@@ -8,13 +8,12 @@ import ThirdParty.Libhv;
 import ThirdParty.PbGen;
 import ClientEntityManagerHelper;
 import std.compat;
-import DNSocketProxy;
 import LogicServerHelper;
 import ECSW;
 
 namespace LogicMessage
 {
-	export DNTaskVoid Msg_ReqLoadEntityData(const World::Ptr& world, const DNSocketProxy::Ptr& channel, uint32_t msgId, std::string binMsg)
+	export DNTaskVoid Msg_ReqLoadEntityData(const DNSocketChannel::Ptr& channel, uint32_t msgId, const std::string& binMsg)
 	{
 		GMsg::d2L_ReqLoadEntityData request;
 		if(!request.ParseFromString(binMsg))
@@ -26,7 +25,7 @@ namespace LogicMessage
 		FinalExecute final([&response, msgId, channel](){
 			std::string binData;
 			response.SerializeToString(&binData);
-			MessagePackAndSend(msgId, EMMsgDeal::Res, "", binData, channel);
+			MessagePackAndSend(msgId, EMMsgDeal::Res, binData, channel);
 		});
 
 		GDb::Player player;
@@ -35,7 +34,7 @@ namespace LogicMessage
 			co_return;
 		}
 
-		LogicServerHelper::Ptr dnServer = world->GetSystem<LogicServerHelper>(EMSystemType::DNServer);
+		LogicServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<LogicServerHelper>(EMSystemType::DNServer);
 		ClientEntityManagerHelper::Ptr entityMan = dnServer->GetClientEntityManager();
 
 		ClientEntity::Ptr entity = entityMan->GetEntity(player.account_id());
@@ -56,7 +55,7 @@ namespace LogicMessage
 		co_return;
 	}
 
-	export void Msg_ReqSaveEntityData(const World::Ptr& world, const DNSocketProxy::Ptr& channel, std::string binMsg)
+	export void Msg_ReqSaveEntityData(const DNSocketChannel::Ptr& channel, const std::string& binMsg)
 	{
 		GMsg::d2L_ReqSaveEntityData request;
 		if(!request.ParseFromString(binMsg))
@@ -66,7 +65,7 @@ namespace LogicMessage
 
 		GDb::Player player;
 		
-		LogicServerHelper::Ptr dnServer = world->GetSystem<LogicServerHelper>(EMSystemType::DNServer);
+		LogicServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<LogicServerHelper>(EMSystemType::DNServer);
 
 		if (!player.ParseFromString(request.entity_data()))
 		{

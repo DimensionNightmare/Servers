@@ -1,7 +1,7 @@
 module;
 export module EntityManager;
 
-export import ECSW;
+import ECSW;
 import ThirdParty.Libhv;
 import Logger;
 

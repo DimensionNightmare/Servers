@@ -16,12 +16,14 @@ import DNClientProxy;
 import ECSW;
 import DatabaseServerHelper;
 
-#define FUNCPLACE(func) #func, func
+#define FUNCPLACE(class, func) &class::func, #class"_"#func
 
 export int HandleDatabaseServerInit(const World::Ptr& world)
 {
 	static DatabaseMessageHandle MsgHandle;
 	MsgHandle.RegMsgHandle();
+
+	static World* pWorld = world.get();
 
 	DatabaseServerHelper::Ptr dnServer = world->GetSystem<DatabaseServerHelper>(EMSystemType::DNServer);
 
@@ -29,7 +31,7 @@ export int HandleDatabaseServerInit(const World::Ptr& world)
 	{
 		DNClientProxy::WPtr clientProxy = proxy->GetSelfW<DNClientProxy>();
 		
-		proxy->onConnection = [clientProxy](const DNSocketProxy::Ptr& channel)
+		proxy->onConnection = [clientProxy](const DNSocketChannel::Ptr& channel)
 			{
 				DNClientProxy::Ptr proxy = clientProxy.lock();
 
@@ -42,9 +44,11 @@ export int HandleDatabaseServerInit(const World::Ptr& world)
 				if (channel->isConnected())
 				{
 					proxy->GetLogger()->Record(EL10nCode_SrvConnOn, peeraddr, channel->fd(), channel->id());
+
+					channel->SetWorld(pWorld);
 					
 					proxyHelper->SetRegistEvent(&DatabaseMessage::Evt_ReqRegistSrv);
-					TickMainSpaceDll(proxy.get(), FUNCPLACE(&DNClientProxy::InitConnectedChannel),  channel);
+					TickMainSpaceDll(proxy.get(), FUNCPLACE(DNClientProxy,InitConnectedChannel),  channel);
 				}
 				else
 				{
@@ -76,7 +80,7 @@ export int HandleDatabaseServerInit(const World::Ptr& world)
 								{
 									DNClientProxy::Ptr proxy = clientProxy.lock();
 									if(!proxy){ return ;}
-									TickMainSpaceDll(proxy.get(), FUNCPLACE(&DNClientProxy::RedirectClient),  std::stoi(originPort), originIp);
+									TickMainSpaceDll(proxy.get(), FUNCPLACE(DNClientProxy,RedirectClient),  std::stoi(originPort), originIp);
 								});
 						}
 					}
@@ -89,40 +93,39 @@ export int HandleDatabaseServerInit(const World::Ptr& world)
 				}
 			};
 
-		proxy->onMessage = [clientProxy, world](const DNSocketProxy::Ptr& channel, hv::Buffer* buf)
+		proxy->onMessage = [clientProxy](const DNSocketChannel::Ptr& channel, hv::Buffer* buf)
 			{
 				DNClientProxy::Ptr proxy = clientProxy.lock();
 
 				if(!proxy){ return ;}
 
-				MessagePacket packet;
-				memcpy(&packet, buf->data(), MessagePacket::PackLenth);
+				MessagePacket* packet = MessagePacket::From(buf->data());
 
-				proxy->GetLogger()->Record(ELogLevel_Debug, "c {} Recv type={} With Mid:{}", channel->peeraddr(), static_cast<int>(packet.dealType), packet.msgId);
+				proxy->GetLogger()->Record(ELogLevel_Debug, "c {} Recv type={} With Mid:{}", channel->peeraddr(), static_cast<int>(packet->dealType), packet->msgId);
 
-				if(packet.pkgLenth > 2 * 1024)
+				if(packet->pkgLenth > 2 * 1024)
 				{
-					proxy->GetLogger()->Record(ELogLevel_Debug, "Recv byte len limit={}", packet.pkgLenth);
+					proxy->GetLogger()->Record(ELogLevel_Debug, "Recv byte len limit={}", packet->pkgLenth);
 					return;
 				}
 				
-				std::string msgData(buf->base + MessagePacket::PackLenth, packet.pkgLenth);
+				std::string msgData(packet->MsgBegin(), packet->pkgLenth);
 
-				if (packet.dealType == EMMsgDeal::Req)
+				if (packet->dealType == EMMsgDeal::Req)
 				{
-					MsgHandle.MsgHandle(world, channel, packet.msgId, packet.msgHashId, msgData);
+					MsgHandle.MsgHandle(channel, packet->msgId, packet->msgHashId, msgData);
 				}
-				else if (packet.dealType == EMMsgDeal::Ret)
+				else if (packet->dealType == EMMsgDeal::Ret)
 				{
-					MsgHandle.MsgRetHandle(world, channel, packet.msgHashId, msgData);
+					MsgHandle.MsgRetHandle(channel, packet->msgHashId, msgData);
 				}
-				else if (packet.dealType == EMMsgDeal::Res)
+				else if (packet->dealType == EMMsgDeal::Res)
 				{
 					DNClientProxyHelper::Ptr proxyHelper = proxy->GetSelf<DNClientProxyHelper>();
 
-					if (DNTask<Message*>* task = proxyHelper->GetMsg(packet.msgId)) // client sock request
+					if (DNTask<Message*>* task = proxyHelper->GetMsg(packet->msgId)) // client sock request
 					{
-						proxyHelper->DelMsg(packet.msgId);
+						proxyHelper->DelMsg(packet->msgId);
 						task->Resume();
 
 						if (Message* message = task->GetResult())

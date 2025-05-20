@@ -6,7 +6,7 @@ import DNTask;
 import DllUtils;
 import ThirdParty.PbGen;
 
-#define FUNCPLACE(func) #func, func
+#define FUNCPLACE(class, func) &class::func, #class"_"#func
 
 export class DNServerProxyHelper : public DNServerProxy
 {
@@ -35,7 +35,7 @@ public:
 		mMsgList.emplace(msgId, task);
 		if (breakTime > 0)
 		{
-			task->TimerId() = TickMainSpaceDll(this, FUNCPLACE(&DNServerProxy::CheckMessageTimeoutTimer),  breakTime, msgId);
+			task->TimerId() = TickMainSpaceDll(this, FUNCPLACE(DNServerProxy,CheckMessageTimeoutTimer),  breakTime, msgId);
 		}
 		return true;
 	}

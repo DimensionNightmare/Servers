@@ -1,5 +1,4 @@
 module;
-
 export module MODULE_MAIN;
 
 import std.compat;
@@ -26,6 +25,7 @@ export int main(int argc, char** argv)
 
 #ifdef _WIN32
 	system("chcp 65001");
+	Platform::SetDebugFlag();
 // 	SetCurrentDirectoryA(execPath.parent_path().string().c_str());
 // #elif __unix__
 // 	chdir(execPath.parent_path().string().c_str());
@@ -139,8 +139,7 @@ export int main(int argc, char** argv)
 			exit(signum);
 		};
 
-	struct sigaction sa;
-	memset(&sa, 0, sizeof(sa));
+	struct sigaction sa{};
 	sa.sa_sigaction = UnhandledHandler;
 	sigemptyset(&sa.sa_mask);
 	sa.sa_flags = SA_SIGINFO;
@@ -203,9 +202,8 @@ export int main(int argc, char** argv)
 					SPidLogger.Record(ELogLevel_Normal, allStr);
 
 #ifdef _WIN32
-					Platform::PROCESS_INFORMATION pinfo = {};
-					Platform::STARTUPINFOA startInfo = {};
-					memset(&startInfo, 0, sizeof(startInfo));
+					Platform::PROCESS_INFORMATION pinfo{};
+					Platform::STARTUPINFOA startInfo{};
 					startInfo.cb = sizeof(startInfo);
 
 					

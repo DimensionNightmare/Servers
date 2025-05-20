@@ -2,7 +2,7 @@ module;
 export module ProxyEntity;
 
 import ECSW;
-import DNSocketProxy;
+import ThirdParty.Libhv;
 
 /// @brief this is client proxy entity
 export class ProxyEntity : public Entity
@@ -25,10 +25,10 @@ public:
 	void SetTimerId(uint64_t timerId) { iCloseTimerId = timerId; }
 
 	/// @brief net socket set
-	const DNSocketProxy::Ptr& GetSock() { return pSock; }
+	const DNSocketChannel::Ptr& GetChannel() { return pChannel; }
 
 	/// @brief net socket get
-	void SetSock(const DNSocketProxy::Ptr& sock) { pSock = sock; }
+	void SetChannel(const DNSocketChannel::Ptr& channel) { pChannel = channel; }
 
 public: // dll override
 	/// @brief authenticate token
@@ -52,6 +52,6 @@ protected: // dll proxy
 
 	uint64_t iCloseTimerId = 0;
 
-	DNSocketProxy::Ptr pSock;
+	DNSocketChannel::Ptr pChannel;
 
 };

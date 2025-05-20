@@ -8,14 +8,13 @@ import ThirdParty.Libhv;
 import ThirdParty.PbGen;
 import ClientEntityManagerHelper;
 import std.compat;
-import DNSocketProxy;
 import RoomEntity;
 import LogicServerHelper;
 import ECSW;
 
 namespace LogicMessage
 {
-	export void Exe_RetAccountReplace(const World::Ptr& world, const DNSocketProxy::Ptr& channel, uint32_t msgId, std::string binMsg)
+	export void Exe_RetAccountReplace(const DNSocketChannel::Ptr& channel, uint32_t msgId, const std::string& binMsg)
 	{
 		GMsg::S2C_RetAccountReplace request;
 		if(!request.ParseFromString(binMsg))
@@ -23,7 +22,7 @@ namespace LogicMessage
 			return;
 		}
 
-		LogicServerHelper::Ptr dnServer = world->GetSystem<LogicServerHelper>(EMSystemType::DNServer);
+		LogicServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<LogicServerHelper>(EMSystemType::DNServer);
 		ClientEntityManagerHelper::Ptr entityMan = dnServer->GetClientEntityManager();
 
 		ClientEntity::Ptr entity = entityMan->GetEntity(request.account_id());
@@ -41,7 +40,7 @@ namespace LogicMessage
 		{
 			std::string binData = binMsg;
 
-			MessagePackAndSend(0, EMMsgDeal::Ret, request.GetDescriptor()->full_name(), binData, roomEntity->GetSock());
+			MessagePackAndSend(0, EMMsgDeal::Ret, request.GetDescriptor()->full_name(), binData, roomEntity->GetChannel());
 		}
 		else
 		{
@@ -53,7 +52,7 @@ namespace LogicMessage
 	}
 
 	// client request
-	export DNTaskVoid Msg_ReqClientLogin(const World::Ptr& world, const DNSocketProxy::Ptr& channel, uint32_t msgId, std::string binMsg)
+	export DNTaskVoid Msg_ReqClientLogin(const DNSocketChannel::Ptr& channel, uint32_t msgId, const std::string& binMsg)
 	{
 		GMsg::C2S_ReqAuthToken request;
 		if(!request.ParseFromString(binMsg))
@@ -65,10 +64,10 @@ namespace LogicMessage
 		FinalExecute final([&response, msgId, channel](){
 			std::string binData;
 			response.SerializeToString(&binData);
-			MessagePackAndSend(msgId, EMMsgDeal::Res, "", binData, channel);
+			MessagePackAndSend(msgId, EMMsgDeal::Res, binData, channel);
 		});
 
-		LogicServerHelper::Ptr dnServer = world->GetSystem<LogicServerHelper>(EMSystemType::DNServer);
+		LogicServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<LogicServerHelper>(EMSystemType::DNServer);
 		ClientEntityManagerHelper::Ptr entityMan = dnServer->GetClientEntityManager();
 
 		ClientEntity::Ptr entity = entityMan->AddEntity(request.account_id());
@@ -148,7 +147,7 @@ namespace LogicMessage
 			// wait data parse
 			server->AddMsg(msgId, &dataChannel, 8000);
 
-			MessagePackAndSend(msgId, EMMsgDeal::Req, request.GetDescriptor()->full_name(), binMsg, roomEntity->GetSock());
+			MessagePackAndSend(msgId, EMMsgDeal::Req, request.GetDescriptor()->full_name(), binMsg, roomEntity->GetChannel());
 
 			co_await dataChannel;
 

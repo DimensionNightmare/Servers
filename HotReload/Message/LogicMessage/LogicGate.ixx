@@ -6,13 +6,12 @@ import ThirdParty.Libhv;
 import ThirdParty.PbGen;
 import ClientEntityManagerHelper;
 import std.compat;
-import DNSocketProxy;
 import LogicServerHelper;
 import ECSW;
 
 namespace LogicMessage
 {
-	export void Exe_RetProxyOffline(const World::Ptr& world, const DNSocketProxy::Ptr& channel, std::string binMsg)
+	export void Exe_RetProxyOffline(const DNSocketChannel::Ptr& channel, const std::string& binMsg)
 	{
 		GMsg::g2L_RetProxyOffline request;
 		if(!request.ParseFromString(binMsg))
@@ -20,7 +19,7 @@ namespace LogicMessage
 			return;
 		}
 
-		LogicServerHelper::Ptr dnServer = world->GetSystem<LogicServerHelper>(EMSystemType::DNServer);
+		LogicServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<LogicServerHelper>(EMSystemType::DNServer);
 		ClientEntityManagerHelper::Ptr entityMan = dnServer->GetClientEntityManager();
 
 		if (ClientEntity::Ptr entity = entityMan->GetEntity(request.entity_id()))

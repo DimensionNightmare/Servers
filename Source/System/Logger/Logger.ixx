@@ -4,7 +4,7 @@ export module Logger;
 import StrUtils;
 import L10nText;
 import ECSW;
-export import ThirdParty.PbGen;
+import ThirdParty.PbGen;
 
 class LogColor
 {

@@ -18,6 +18,7 @@ module;
 	// #include <handleapi.h>
 	#include <windows.h>
 	#include <dbghelp.h>
+	#include <crtdbg.h>
 	#pragma comment(lib, "dbghelp.lib")
 #elif __unix__
 	#include <dlfcn.h>
@@ -79,6 +80,11 @@ export namespace Platform
 	using ::MiniDumpWriteDump;
 	using ::SetConsoleCtrlHandler;
 	using ::SetEnvironmentVariableA;
+
+	using ::sockaddr_in;
+	using ::sockaddr;
+	using ::ntohs;
+	using ::getsockname;
 }
 
 export namespace Platform
@@ -118,6 +124,15 @@ export namespace Platform
 		free(symbol);
 		SymCleanup(process);
 		return oss.str();
+	}
+
+	void SetDebugFlag()
+	{
+		// _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+		// _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_DEBUG);
+		// _CrtSetReportMode(_CRT_ERROR, _CRTDBG_MODE_DEBUG);
+		// _CrtSetReportMode(_CRT_ASSERT, _CRTDBG_MODE_DEBUG);
+
 	}
 }
 

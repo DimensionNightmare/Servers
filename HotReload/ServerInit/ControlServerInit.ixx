@@ -14,17 +14,18 @@ import MessagePack;
 import std.compat;
 import DNServerProxy;
 import ServerEntity;
-import DNSocketProxy;
 import ServerEntityManagerHelper;
 import ControlServerHelper;
 import ECSW;
 
-#define FUNCPLACE(func) #func, func
+#define FUNCPLACE(class, func) &class::func, #class"_"#func
 
 export int HandleControlServerInit(const World::Ptr& world)
 {
 	static ControlMessageHandle MsgHandle;
 	MsgHandle.RegMsgHandle();
+
+	static World* pWorld = world.get();
 
 	ControlServerHelper::Ptr dnServer = world->GetSystem<ControlServerHelper>(EMSystemType::DNServer);
 
@@ -32,7 +33,7 @@ export int HandleControlServerInit(const World::Ptr& world)
 	{
 		DNServerProxy::WPtr serverProxy = proxy->GetSelfW<DNServerProxy>();
 	
-		proxy->onConnection = [serverProxy](const DNSocketProxy::Ptr& channel)
+		proxy->onConnection = [serverProxy](const DNSocketChannel::Ptr& channel)
 			{
 				DNServerProxy::Ptr proxy = serverProxy.lock();
 
@@ -43,65 +44,62 @@ export int HandleControlServerInit(const World::Ptr& world)
 				{
 					proxy->GetLogger()->Record(EL10nCode_CliConnOn, peeraddr, channel->fd(), channel->id());
 
-					// channel->SetWorld(proxy->GetOwner()->GetWorld());
+					channel->SetWorld(pWorld);
 					
-					TickMainSpaceDll(proxy.get(), FUNCPLACE(&DNServerProxy::InitConnectedChannel),  channel);
+					TickMainSpaceDll(proxy.get(), FUNCPLACE(DNServerProxy,InitConnectedChannel),  channel);
 				}
 				else
 				{
 					proxy->GetLogger()->Record(EL10nCode_CliConnOff, peeraddr, channel->fd(), channel->id());
-
-					// channel->SetWorld(nullptr);
 
 					// not used
 					if (ServerEntity::Ptr entity = channel->getContextPtr<ServerEntity>())
 					{
 						ServerEntityManagerHelper::Ptr entityMan = proxy->GetOwner<ControlServerHelper>()->GetServerEntityManager();
 						entityMan->RemoveEntity(entity->ID());
-						channel->setContextPtr(nullptr);
+						channel->deleteContextPtr();
 					}
 
 				}
 			};
 
-		proxy->onMessage = [serverProxy, world](const DNSocketProxy::Ptr& channel, hv::Buffer* buf)
+		proxy->onMessage = [serverProxy](const DNSocketChannel::Ptr& channel, hv::Buffer* buf)
 			{
 				DNServerProxy::Ptr proxy = serverProxy.lock();
 
 				if(!proxy){ return ;}
 				
-				MessagePacket packet;
-				memcpy(&packet, buf->data(), MessagePacket::PackLenth);
+				MessagePacket* packet = MessagePacket::From(buf->data());
 
-				proxy->GetLogger()->Record(ELogLevel_Debug, "s {} Recv type={} With Mid:{}", channel->peeraddr(), static_cast<int>(packet.dealType), packet.msgId);
+				proxy->GetLogger()->Record(ELogLevel_Debug, "s {} Recv type={} With Mid:{}", channel->peeraddr(), static_cast<int>(packet->dealType), packet->msgId);
 
-				if(packet.pkgLenth > 2 * 1024)
+				if(packet->pkgLenth > 2 * 1024)
 				{
-					proxy->GetLogger()->Record(ELogLevel_Debug, "Recv byte len limit={}", packet.pkgLenth);
+					proxy->GetLogger()->Record(ELogLevel_Debug, "Recv byte len limit={}", packet->pkgLenth);
 					return;
 				}
 				
-				std::string msgData(buf->base + MessagePacket::PackLenth, packet.pkgLenth);
+				std::string msgData(packet->MsgBegin(), packet->pkgLenth);
 
-				if (packet.dealType == EMMsgDeal::Req)
+				if (packet->dealType == EMMsgDeal::Req)
 				{
-					MsgHandle.MsgHandle(world, channel, packet.msgId, packet.msgHashId, msgData);
+					MsgHandle.MsgHandle(channel, packet->msgId, packet->msgHashId, msgData);
 				}
-				else if (packet.dealType == EMMsgDeal::Ret)
+				else if (packet->dealType == EMMsgDeal::Ret)
 				{
-					MsgHandle.MsgRetHandle(world, channel, packet.msgHashId, msgData);
+					MsgHandle.MsgRetHandle(channel, packet->msgHashId, msgData);
 				}
-				else if (packet.dealType == EMMsgDeal::Redir)
+				else if (packet->dealType == EMMsgDeal::Redir)
 				{
-					MsgHandle.MsgRedirectHandle(world, channel, packet.msgId, packet.msgHashId, msgData);
+					MsgHandle.MsgRedirectHandle(channel, packet->msgId, packet->msgHashId, msgData);
 				}
-				else if (packet.dealType == EMMsgDeal::Res)
+				else if (packet->dealType == EMMsgDeal::Res)
 				{
 					DNServerProxyHelper::Ptr proxyHelper = proxy->GetSelf<DNServerProxyHelper>();
 
-					if (DNTask<Message*>* task = proxyHelper->GetMsg(packet.msgId)) //client sock request
+					if (DNTask<Message*>* task = proxyHelper->GetMsg(packet->msgId)) //client sock request
 					{
-						proxyHelper->DelMsg(packet.msgId);
+						proxyHelper->DelMsg(packet->msgId);
 						task->Resume();
 
 						if (Message* message = task->GetResult())

@@ -8,6 +8,8 @@ module;
 #include "hv/json.hpp"
 export module ThirdParty.Libhv;
 
+import ECSW;
+
 template <typename F>
 concept NoArgCallable = requires(F f) {
     { std::invoke(f) } -> std::same_as<void>;
@@ -27,42 +29,54 @@ auto make_wrapper(F&& f) requires (!NoArgCallable<F>) {
     };
 }
 
-export
-{
-	using ::sockaddr_in;
-	using ::sockaddr;
-	using ::getsockname;
-	using ::ntohs;
-	using ::sockaddr_u;
-}
-
 export namespace hv
 {
 	using ::HttpRequestPtr;
-	using ::HttpResponsePtr;
 	using ::HttpResponseWriterPtr;
 	using ::HttpContextPtr;
-	using ::http_ctx_handler;
 	using ::http_status;
 	
-	using ::hio_t;
-	using ::hssl_ctx_opt_t;
 	using ::unpack_setting_t;
-	using ::hevent_t;
 	using ::reconn_setting_t;
-	using ::logger_set_file;
 
 	using hv::HttpService;
 	using hv::Buffer;
 	using hv::EventLoopThread;
-	using hv::SocketChannel;
 	using hv::HttpServer;
-	using hv::EventLoop;
 	using hv::EventLoopThreadPool;
 
 	using hv::TcpClientTmpl;
 	using hv::TcpServerTmpl;
 }
+
+export class DNSocketChannel : public hv::SocketChannel
+{
+public:
+	using Ptr = std::shared_ptr<DNSocketChannel>;
+	using WPtr = std::weak_ptr<DNSocketChannel>;
+
+	virtual ~DNSocketChannel()
+	{
+		
+	}
+
+	DNSocketChannel(hio_t* io) : SocketChannel(io)
+	{
+		
+	}
+
+
+	void SetWorld(World* world) 
+	{
+		pWorld = world;
+	}
+
+	World* GetWorld() { return pWorld; }
+
+protected:
+
+	World* pWorld;
+};
 
 export namespace Libhv
 {
@@ -70,9 +84,9 @@ export namespace Libhv
 
 	void hvlog_disable() { hlog_disable(); }
 
-	void Run(hv::TcpClientTmpl<>* obj) { obj->start(); }
+	void Run(hv::TcpClientTmpl<DNSocketChannel>* obj) { obj->start(); }
 
-	void Run(hv::TcpServerTmpl<>* obj) { obj->start(); }
+	void Run(hv::TcpServerTmpl<DNSocketChannel>* obj) { obj->start(); }
 
 }
 

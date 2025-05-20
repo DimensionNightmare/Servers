@@ -8,7 +8,6 @@ import ThirdParty.Libhv;
 import ThirdParty.PbGen;
 import MessagePack;
 import ECSW;
-import DNSocketProxy;
 import DNServer;
 
 #define NABS(n) ((n) < 0 ? (n) : -(n))
@@ -20,15 +19,15 @@ export enum class EMRegistState : uint8_t
 	Registed,
 };
 
-export class DNClientProxy : public Component, public hv::TcpClientTmpl<DNSocketProxy>
+export class DNClientProxy : public Component, public hv::TcpClientTmpl<DNSocketChannel>
 {
 protected:
 	friend class System;
-	DNClientProxy(System::WPtr system):Component(system)
+	DNClientProxy(System::WPtr system):Component(system),TcpClientTmpl(nullptr)
 	{
 		eComponentType = EMComponentType::DNClientProxy;
 
-		pLoop = std::make_unique<hv::EventLoopThread>();
+		pLoop = std::make_unique<EventLoopThread>();
 
 		pLogger = GetOwner()->GetWorld()->GetSystemW<LoggerPrint>(EMSystemType::LoggerPrint);
 	}
@@ -61,13 +60,13 @@ public:
 		
 		createsocket(stoi(*ctlPort), ctlIp->c_str());
 		
-		hv::reconn_setting_t reconn;
+		reconn_setting_t reconn;
 		reconn.min_delay = 1000;
 		reconn.max_delay = 10000;
 		reconn.delay_policy = 2;
 		setReconnect(&reconn);
 
-		hv::unpack_setting_t setting;
+		unpack_setting_t setting;
 		setting.mode = unpack_mode_e::UNPACK_BY_LENGTH_FIELD;
 		setting.length_field_coding = unpack_coding_e::ENCODE_BY_BIG_ENDIAN;
 		setting.body_offset = MessagePacket::PackLenth;
@@ -85,9 +84,9 @@ public:
 		pLoop->start();
 
 		// first split self to base pointer
-		auto base_ptr = static_cast<hv::TcpClientTmpl<DNSocketProxy>*>(this);
+		auto base_ptr = static_cast<TcpClientTmpl<DNSocketChannel>*>(this);
 		// then cast to template<>
-		Libhv::Run(reinterpret_cast<hv::TcpClientTmpl<>*>(base_ptr));
+		Libhv::Run(base_ptr);
 	}
 
 	void End()
@@ -180,7 +179,7 @@ public: // dll override
 		MessagePackAndSend(0, EMMsgDeal::Ret, request.GetDescriptor()->full_name(), binData, GetChannel());
 	}
 
-	void InitConnectedChannel(const DNSocketProxy::Ptr& chanhel)
+	void InitConnectedChannel(const DNSocketChannel::Ptr& chanhel)
 	{
 		// chanhel->setHeartbeat(4000, std::bind(&DNClientProxy::TickHeartbeat, this));
 		// channel->setWriteTimeout(12000);
@@ -190,7 +189,7 @@ public: // dll override
 		}
 	}
 
-	void RedirectClient(uint16_t port, std::string ip)
+	void RedirectClient(uint16_t port, const std::string& ip)
 	{
 		GetLogger()->Record(ELogLevel_Debug, "reclient to {}:{}", ip, port);
 
@@ -201,9 +200,9 @@ public: // dll override
 			createsocket(port, ip.c_str());
 
 			// first split self to base pointer
-			auto base_ptr = static_cast<hv::TcpClientTmpl<DNSocketProxy>*>(this);
+			auto base_ptr = static_cast<TcpClientTmpl<DNSocketChannel>*>(this);
 			// then cast to template<>
-			Libhv::Run(reinterpret_cast<hv::TcpClientTmpl<>*>(base_ptr));
+			Libhv::Run(base_ptr);
 		});
 	}
 
@@ -224,11 +223,11 @@ public: // dll override
 
 	uint32_t GetMsgId() { return ++iMsgId; }
 
-	const DNSocketProxy::Ptr& GetChannel() { return channel; }
+	const DNSocketChannel::Ptr& GetChannel() { return channel; }
 
 protected: // dll proxy
 
-	std::unique_ptr<hv::EventLoopThread> pLoop;
+	std::unique_ptr<EventLoopThread> pLoop;
 
 	// only oddnumber
 	std::atomic<uint32_t> iMsgId;
