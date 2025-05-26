@@ -2,7 +2,7 @@ module;
 
 export module ECSW;
 
-export import std.compat;
+import std.compat;
 import ThirdParty.Platform;
 import NumUtils;
 

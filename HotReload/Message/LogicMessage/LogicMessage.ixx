@@ -5,11 +5,8 @@ export import :LogicCommon;
 import :LogicGate;
 import :LogicRedirect;
 import :LogicDedicated;
-import Logger;
-import ThirdParty.Libhv;
-import ThirdParty.PbGen;
-import StrUtils;
 import MessageRegister;
+import StrUtils;
 
 export class LogicMessageHandle : public MessageRegister
 {

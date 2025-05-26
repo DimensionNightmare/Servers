@@ -1,16 +1,10 @@
 module;
 export module LogicMessage:LogicRedirect;
 
-import DNTask;
-import FuncHelper;
-import Logger;
-import ThirdParty.Libhv;
-import ThirdParty.PbGen;
-import ClientEntityManagerHelper;
-import std.compat;
-import RoomEntity;
 import LogicServerHelper;
-import ECSW;
+import ThirdParty.PbGen;
+import ThirdParty.Libhv;
+import FuncHelper;
 
 namespace LogicMessage
 {
@@ -76,11 +70,15 @@ namespace LogicMessage
 			dnServer->GetLogger()->Record(ELogLevel_Debug, "AddEntity Client!");
 
 			// msg will destroy. MessageHandle not will waiting.
-			co_await entityMan->LoadEntityData(entity, nullptr, nullptr);
+			co_await entityMan->LoadEntityData(entity->GetSelf<ClientEntityHelper>(), nullptr, nullptr);
 
 			if (!entity->HasFlag(EMClientEntityFlag::DBInited))
 			{
 				dnServer->GetLogger()->Record(ELogLevel_Debug, "AddEntity Client but not from db!");
+			}
+			else if(entity->GetDbEntity() == nullptr)
+			{
+				response.set_new_account(true);
 			}
 		}
 		else

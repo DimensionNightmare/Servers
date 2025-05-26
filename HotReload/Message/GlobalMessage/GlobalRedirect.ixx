@@ -1,16 +1,11 @@
 module;
 export module GlobalMessage:GlobalRedirect;
 
-import DNTask;
 import FuncHelper;
-import Logger;
-import ThirdParty.Libhv;
-import ThirdParty.PbGen;
-import ServerEntity;
-import ServerEntityManagerHelper;
-import std.compat;
 import GlobalServerHelper;
-import ECSW;
+import ThirdParty.PbGen;
+import ThirdParty.Libhv;
+import DNTask;
 
 namespace GlobalMessage
 {

@@ -1,15 +1,11 @@
 module;
 export module DatabaseMessage:DatabaseCommon;
 
-import DNTask;
-import FuncHelper;
-import Logger;
 import DllUtils;
-import ThirdParty.Libhv;
-import ThirdParty.PbGen;
-import DNClientProxyHelper;
-import DNServer;
+import FuncHelper;
 import DatabaseServerHelper;
+import DNServer;
+import DNTask;
 
 #define FUNCPLACE(class, func) &class::func, #class"_"#func
 
@@ -65,6 +61,7 @@ namespace DatabaseMessage
 		if (response.error_code() == EL10nCode_None)
 		{
 			clientProxy->SetRegistState(EMRegistState::Registed);
+			clientProxy->SetRegistType(response.ret_server_type());
 		}
 		else
 		{

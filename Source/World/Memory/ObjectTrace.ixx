@@ -1,7 +1,6 @@
 module;
 export module ObjectTrace;
 
-import std.compat;
 
 // void* operator new(size_t size)
 // {

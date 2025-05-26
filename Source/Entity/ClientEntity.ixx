@@ -1,9 +1,10 @@
 module;
 export module ClientEntity;
 
+import BitFlag;
 import ECSW;
 import ThirdParty.PbGen;
-import BitFlag;
+import std.compat;
 
 export enum class EMClientEntityFlag : uint16_t
 {
@@ -17,7 +18,7 @@ export enum class EMClientEntityFlag : uint16_t
 export class ClientEntity : public Entity, public BitFlag<EMClientEntityFlag>
 {
 protected:
-	friend class ClientEntityManagerHelper;
+	friend class ClientEntityManager;
 	ClientEntity(World::WPtr world):Entity(world)
 	{
 		eEntityType = EMEntityType::Client;

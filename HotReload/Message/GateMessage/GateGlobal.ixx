@@ -1,17 +1,12 @@
 module;
 export module GateMessage:GateGlobal;
 
-import FuncHelper;
-import StrUtils;
-import Logger;
 import DllUtils;
-import ThirdParty.Libhv;
-import ThirdParty.PbGen;
-import ProxyEntityManagerHelper;
-import std.compat;
-import ServerEntity;
 import GateServerHelper;
-import ECSW;
+import ThirdParty.PbGen;
+import StrUtils;
+import ThirdParty.Libhv;
+import FuncHelper;
 
 #define FUNCPLACE(class, func) &class::func, #class"_"#func
 
@@ -54,7 +49,7 @@ namespace GateMessage
 				//kick game
 				if (uint64_t serverId = entity->RecordServerId())
 				{
-					SPidLogger.Record(ELogLevel_Debug, "Send Logic tick User->{}, server:{}", entity->ID(), entity->RecordServerId());
+					channel->GetWorld()->GetSystem<LoggerPrint>(EMSystemType::LoggerPrint)->Record(ELogLevel_Debug, "Send Logic tick User->{}, server:{}", entity->ID(), entity->RecordServerId());
 
 					ServerEntityManagerHelper::Ptr serverEntityMan = dnServer->GetServerEntityManager();
 					if(ServerEntity::Ptr serverEntity = serverEntityMan->GetEntity(serverId))
@@ -90,7 +85,7 @@ namespace GateMessage
 			entity->SetTimerId(TickMainSpaceDll(entityMan.get(), FUNCPLACE(ProxyEntityManager,CheckEntityCloseTimer), entity->ID()));
 		}
 
-		SPidLogger.Record(ELogLevel_Debug, "ReqUserToken User: {}!!", request.account_id());
+		channel->GetWorld()->GetSystem<LoggerPrint>(EMSystemType::LoggerPrint)->Record(ELogLevel_Debug, "ReqUserToken User: {}!!", request.account_id());
 
 		response.SerializeToString(&binData);
 		MessagePackAndSend(msgId, EMMsgDeal::Res, binData, channel);

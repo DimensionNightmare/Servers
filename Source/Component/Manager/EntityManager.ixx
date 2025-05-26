@@ -1,9 +1,9 @@
 module;
 export module EntityManager;
 
+import Logger;
 import ECSW;
 import ThirdParty.Libhv;
-import Logger;
 
 export template<class TEntity = Entity>
 class EntityManager : public Component

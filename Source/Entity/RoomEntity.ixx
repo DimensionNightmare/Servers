@@ -2,13 +2,14 @@ module;
 export module RoomEntity;
 
 import ECSW;
+import std.compat;
 import ThirdParty.Libhv;
 
 /// @brief room mean set/team/... client collection.
 export class RoomEntity : public Entity
 {
 protected:
-	friend class RoomEntityManagerHelper;
+	friend class RoomEntityManager;
 	RoomEntity(World::WPtr world):Entity(world)
 	{
 		eEntityType = EMEntityType::Room;

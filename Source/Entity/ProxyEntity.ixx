@@ -2,13 +2,14 @@ module;
 export module ProxyEntity;
 
 import ECSW;
+import std.compat;
 import ThirdParty.Libhv;
 
 /// @brief this is client proxy entity
 export class ProxyEntity : public Entity
 {
 protected:
-	friend class ProxyEntityManagerHelper;
+	friend class ProxyEntityManager;
 	ProxyEntity(World::WPtr world):Entity(world)
 	{
 		eEntityType = EMEntityType::Proxy;

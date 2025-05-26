@@ -3,11 +3,8 @@ export module ControlMessage;
 
 import :ControlCommon;
 import :ControlRedirect;
-import Logger;
-import ThirdParty.Libhv;
-import ThirdParty.PbGen;
-import StrUtils;
 import MessageRegister;
+import StrUtils;
 
 export class ControlMessageHandle : public MessageRegister
 {

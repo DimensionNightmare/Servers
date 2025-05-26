@@ -1,17 +1,11 @@
 module;
 export module LogicMessage:LogicCommon;
 
-import DNTask;
-import FuncHelper;
-import Logger;
 import DllUtils;
-import ThirdParty.Libhv;
-import ThirdParty.PbGen;
-import DNClientProxyHelper;
-import DNServer;
-import RoomEntity;
+import FuncHelper;
 import LogicServerHelper;
-import ECSW;
+import DNServer;
+import DNTask;
 
 #define FUNCPLACE(class, func) &class::func, #class"_"#func
 
@@ -67,6 +61,7 @@ namespace LogicMessage
 		if (response.error_code() == EL10nCode_None)
 		{
 			clientProxy->SetRegistState(EMRegistState::Registed);
+			clientProxy->SetRegistType(response.ret_server_type());
 		}
 		else
 		{
@@ -143,6 +138,8 @@ namespace LogicMessage
 
 					// Re-enroll
 					entityMan->MountEntity(entity);
+
+					response.set_ret_server_type(static_cast<uint8_t>(dnServer->GetServerType()));
 				}
 			}
 			else
@@ -162,6 +159,8 @@ namespace LogicMessage
 			entity->SetChannel(channel);
 
 			channel->setContextPtr(entity);
+
+			response.set_ret_server_type(static_cast<uint8_t>(dnServer->GetServerType()));
 		}
 
 	}

@@ -18,4 +18,14 @@ private:
 
 	void* operator new(size_t) = delete;
     void operator delete(void*) = delete;
+
+public:
+	using Ptr = std::shared_ptr<ClientEntityHelper>;
+	
+
+	void SetDbEntity(const std::string& data)
+	{
+		pDbEntity = std::make_shared<GDb::Player>();
+		pDbEntity->ParseFromString(data);
+	}
 };

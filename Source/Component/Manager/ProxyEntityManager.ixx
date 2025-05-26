@@ -3,7 +3,6 @@ export module ProxyEntityManager;
 
 import ProxyEntity;
 import EntityManager;
-import Logger;
 
 export class ProxyEntityManager : public EntityManager<ProxyEntity>
 {
@@ -70,6 +69,15 @@ public: // dll override
 		}
 
 		return false;
+	}
+
+	void AddEntity(uint64_t entityId)
+	{
+		ProxyEntity::Ptr entity = std::shared_ptr<ProxyEntity>(new ProxyEntity(GetOwner()->GetWorldW()));
+		entity->SetID(entityId);
+
+		std::unique_lock<std::shared_mutex> ulock(oMapMutex);
+		mEntityMap[entityId] = entity;
 	}
 
 protected: // dll proxy

@@ -1,15 +1,12 @@
 module;
 export module GlobalServerHelper;
 
-import DNServer;
 import DNClientProxyHelper;
 import DNServerProxyHelper;
 import ServerEntityManagerHelper;
-import FuncHelper;
 import DllUtils;
-import Logger;
-import ThirdParty.Libhv;
-import ThirdParty.PbGen;
+import FuncHelper;
+import DNServer;
 
 #define FUNCPLACE(class, func) &class::func, #class"_"#func
 
@@ -42,22 +39,26 @@ public:
 	{
 		ServerEntityManagerHelper::Ptr entityMan = GetServerEntityManager();
 
-		std::list<ServerEntity::Ptr> gates = entityMan->GetEntitysByType(EMServerType::GateServer);
+		std::list<ServerEntity::Ptr>& gates = entityMan->GetEntitysByType(EMServerType::GateServer);
 		if (gates.empty())
 		{
 			return;
 		}
 
-		std::list<ServerEntity::Ptr> dbs = entityMan->GetEntitysByType(EMServerType::DatabaseServer);
-		std::list<ServerEntity::Ptr> logics = entityMan->GetEntitysByType(EMServerType::LogicServer);
+		std::list<ServerEntity::Ptr>& dbs = entityMan->GetEntitysByType(EMServerType::DatabaseServer);
+		std::list<ServerEntity::Ptr>& logics = entityMan->GetEntitysByType(EMServerType::LogicServer);
 
 		// alloc gate
 		GMsg::COM_RetChangeCtlSrv request;
 		std::string binData;
 
-		auto registControl = [&](const ServerEntity::Ptr& beEntity, const ServerEntity::Ptr& entity)
+		auto registControl = [&](const ServerEntity::Ptr& beEntity, const ServerEntity::Ptr& entity) ->bool
 		{
 			const DNSocketChannel::Ptr& channel = entity->GetChannel();
+			if(!channel)
+			{
+				return false;
+			}
 			entity->SetLinkNode(beEntity);
 
 			channel->deleteContextPtr();
@@ -71,6 +72,8 @@ public:
 			entity->SetTimerId(TickMainSpaceDll(entityMan.get(), FUNCPLACE(ServerEntityManager,CheckEntityCloseTimer), entity->ID()));
 			MessagePackAndSend(0, EMMsgDeal::Ret, request.GetDescriptor()->full_name(), binData, channel);
 			entity->SetChannel(nullptr);
+
+			return true;
 		};
 
 		for (ServerEntity::Ptr gate : gates)
@@ -86,18 +89,22 @@ public:
 			{
 				ServerEntity::Ptr ele = dbs.front();
 				// dbs.pop_front();
-				registControl(gate, ele);
-				entityMan->UnMountEntity(ele->GetServerType(), ele);
-				gatesDb.emplace_back(ele);
+				if(registControl(gate, ele))
+				{
+					entityMan->UnMountEntity(ele->GetServerType(), ele);
+					gatesDb.emplace_back(ele);
+				}
 			}
 
 			if (!logics.empty() && gatesLogic.size() < 1)
 			{
 				ServerEntity::Ptr ele = logics.front();
 				// logics.pop_front();
-				registControl(gate, ele);
-				entityMan->UnMountEntity(ele->GetServerType(), ele);
-				gatesLogic.emplace_back(ele);
+				if(registControl(gate, ele))
+				{
+					entityMan->UnMountEntity(ele->GetServerType(), ele);
+					gatesLogic.emplace_back(ele);
+				}
 			}
 
 			if (gatesDb.size() && gatesLogic.size())

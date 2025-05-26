@@ -1,9 +1,9 @@
 module;
 export module MdbProxy;
 
-import ECSW;
 import ThirdParty.RedisPP;
-
+import ECSW;
+import std.compat;
 
 export class MdbProxy : public Component
 {
@@ -36,6 +36,11 @@ public:
 			return pMdbProxys[0];
 		}
 		return nullptr;
+	}
+
+	void ClearConnections()
+	{
+		pMdbProxys.clear();
 	}
 
 protected:

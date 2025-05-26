@@ -2,9 +2,7 @@ module;
 export module DNServerProxyHelper;
 
 import DNServerProxy;
-import DNTask;
 import DllUtils;
-import ThirdParty.PbGen;
 
 #define FUNCPLACE(class, func) &class::func, #class"_"#func
 

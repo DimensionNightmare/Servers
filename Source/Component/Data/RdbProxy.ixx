@@ -1,9 +1,10 @@
 module;
 export module RdbProxy;
 
-import ECSW;
 import ThirdParty.Libpqxx;
 import Logger;
+import ECSW;
+import std.compat;
 
 export enum class EMSqlDbNameEnum : uint16_t
 {

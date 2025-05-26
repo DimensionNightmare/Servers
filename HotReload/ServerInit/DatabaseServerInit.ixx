@@ -1,20 +1,11 @@
 module;
 export module DatabaseServerInit;
 
-import FuncHelper;
 import DatabaseMessage;
-import DNTask;
-import Logger;
 import DllUtils;
-import ThirdParty.Libhv;
-import ThirdParty.PbGen;
-import DNServer;
-import DNClientProxyHelper;
 import MessagePack;
-import std.compat;
-import DNClientProxy;
-import ECSW;
 import DatabaseServerHelper;
+import ECSW;
 
 #define FUNCPLACE(class, func) &class::func, #class"_"#func
 
@@ -23,7 +14,7 @@ export int HandleDatabaseServerInit(const World::Ptr& world)
 	static DatabaseMessageHandle MsgHandle;
 	MsgHandle.RegMsgHandle();
 
-	static World* pWorld = world.get();
+	World::WPtr pWorld = world->GetSelfW<World>();
 
 	DatabaseServerHelper::Ptr dnServer = world->GetSystem<DatabaseServerHelper>(EMSystemType::DNServer);
 
@@ -31,7 +22,7 @@ export int HandleDatabaseServerInit(const World::Ptr& world)
 	{
 		DNClientProxy::WPtr clientProxy = proxy->GetSelfW<DNClientProxy>();
 		
-		proxy->onConnection = [clientProxy](const DNSocketChannel::Ptr& channel)
+		proxy->onConnection = [clientProxy,pWorld](const DNSocketChannel::Ptr& channel)
 			{
 				DNClientProxy::Ptr proxy = clientProxy.lock();
 

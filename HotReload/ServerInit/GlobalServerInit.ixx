@@ -1,20 +1,10 @@
 module;
 export module GlobalServerInit;
 
-import FuncHelper;
 import GlobalMessage;
-import DNTask;
-import Logger;
 import DllUtils;
-import ThirdParty.Libhv;
-import ThirdParty.PbGen;
-import DNServer;
-import DNServerProxyHelper;
+
 import MessagePack;
-import std.compat;
-import DNServerProxy;
-import ServerEntity;
-import ServerEntityManagerHelper;
 import GlobalServerHelper;
 import ECSW;
 
@@ -25,7 +15,7 @@ export int HandleGlobalServerInit(const World::Ptr& world)
 	static GlobalMessageHandle MsgHandle;
 	MsgHandle.RegMsgHandle();
 
-	static World* pWorld = world.get();
+	World::WPtr pWorld = world->GetSelfW<World>();
 
 	GlobalServerHelper::Ptr dnServer = world->GetSystem<GlobalServerHelper>(EMSystemType::DNServer);
 
@@ -33,7 +23,7 @@ export int HandleGlobalServerInit(const World::Ptr& world)
 	{
 		DNServerProxy::WPtr serverProxy = proxy->GetSelfW<DNServerProxy>();
 
-		proxy->onConnection = [serverProxy](const DNSocketChannel::Ptr& channel)
+		proxy->onConnection = [serverProxy,pWorld](const DNSocketChannel::Ptr& channel)
 			{
 				DNServerProxy::Ptr proxy = serverProxy.lock();
 
@@ -52,8 +42,6 @@ export int HandleGlobalServerInit(const World::Ptr& world)
 				}
 				else
 				{
-					// channel->SetWorld(nullptr);
-
 					proxy->GetLogger()->Record(EL10nCode_CliConnOff, peeraddr, channel->fd(), channel->id());
 
 					if (ServerEntity::Ptr entity = channel->getContextPtr<ServerEntity>())
@@ -132,7 +120,7 @@ export int HandleGlobalServerInit(const World::Ptr& world)
 	{
 		DNClientProxy::WPtr clientProxy = proxy->GetSelfW<DNClientProxy>();
 		
-		proxy->onConnection = [clientProxy](const DNSocketChannel::Ptr& channel)
+		proxy->onConnection = [clientProxy,pWorld](const DNSocketChannel::Ptr& channel)
 			{
 				DNClientProxy::Ptr proxy = clientProxy.lock();
 

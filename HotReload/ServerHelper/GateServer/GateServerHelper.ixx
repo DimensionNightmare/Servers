@@ -7,7 +7,6 @@ import DNServerProxyHelper;
 import ServerEntityManagerHelper;
 import ProxyEntityManagerHelper;
 import FuncHelper;
-import ThirdParty.PbGen;
 
 export class GateServerHelper : public DNServer
 {

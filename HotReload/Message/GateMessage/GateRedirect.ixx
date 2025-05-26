@@ -1,15 +1,11 @@
 module;
 export module GateMessage:GateRedirect;
 
-import FuncHelper;
-import Logger;
-import DNTask;
-import ThirdParty.Libhv;
-import ThirdParty.PbGen;
-import ServerEntityManagerHelper;
-import std.compat;
 import GateServerHelper;
-import ECSW;
+import ThirdParty.PbGen;
+import ThirdParty.Libhv;
+import FuncHelper;
+import DNTask;
 
 namespace GateMessage
 {
@@ -33,7 +29,6 @@ namespace GateMessage
 		ServerEntityManagerHelper::Ptr entityMan = dnServer->GetServerEntityManager();
 		const std::list<ServerEntity::Ptr>& dbServers = entityMan->GetEntitysByType(EMServerType::DatabaseServer);
 
-		std::string binData;
 		if (dbServers.empty())
 		{
 			response.set_error_code(EL10nCode_NotExistDBServer);
@@ -53,7 +48,7 @@ namespace GateMessage
 			uint32_t msgId = serverProxy->GetMsgId();
 			serverProxy->AddMsg(msgId, &dataChannel, 8000);
 
-			MessagePackAndSend(msgId, EMMsgDeal::Req, request.GetDescriptor()->full_name(), binData, entity->GetChannel());
+			MessagePackAndSend(msgId, EMMsgDeal::Req, request.GetDescriptor()->full_name(), binMsg, entity->GetChannel());
 
 			co_await dataChannel;
 			if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
@@ -74,12 +69,16 @@ namespace GateMessage
 			co_return;
 		}
 		GMsg::D2L_ResSaveData response;
+		FinalExecute final([&response, msgId, channel](){
+			std::string binData;
+			response.SerializeToString(&binData);
+			MessagePackAndSend(msgId, EMMsgDeal::Res, binData, channel);
+		});
 
 		GateServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<GateServerHelper>(EMSystemType::DNServer);
 		ServerEntityManagerHelper::Ptr entityMan = dnServer->GetServerEntityManager();
 		const std::list<ServerEntity::Ptr>& dbServers = entityMan->GetEntitysByType(EMServerType::DatabaseServer);
 
-		std::string binData;
 		if (dbServers.empty())
 		{
 			response.set_error_code(EL10nCode_NotExistDBServer);
@@ -87,9 +86,6 @@ namespace GateMessage
 		else
 		{
 			ServerEntity::Ptr entity = dbServers.front();
-
-			// pack data
-			binData = binMsg;
 
 			// data alloc
 			auto taskGen = [](Message* msg) -> DNTask<Message*>
@@ -102,7 +98,7 @@ namespace GateMessage
 			uint32_t msgId = server->GetMsgId();
 			server->AddMsg(msgId, &dataChannel, 8000);
 
-			MessagePackAndSend(msgId, EMMsgDeal::Req, request.GetDescriptor()->full_name(), binData, entity->GetChannel());
+			MessagePackAndSend(msgId, EMMsgDeal::Req, request.GetDescriptor()->full_name(), binMsg, entity->GetChannel());
 
 			co_await dataChannel;
 			if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
@@ -112,9 +108,6 @@ namespace GateMessage
 			}
 			
 		}
-
-		response.SerializeToString(&binData);
-		MessagePackAndSend(msgId, EMMsgDeal::Res, binData, channel);
 
 		co_return;
 	}

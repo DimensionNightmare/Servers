@@ -3,14 +3,10 @@ export module ClientEntityManager;
 
 import ClientEntity;
 import EntityManager;
-import Logger;
 import DNClientProxy;
-import DNTask;
 import FuncHelper;
 import StrUtils;
-import ThirdParty.PbGen;
-import ThirdParty.RedisPP;
-import DNServer;
+import MdbProxy;
 
 /// @brief manager client proxys
 export class ClientEntityManager : public EntityManager<ClientEntity>
@@ -37,12 +33,6 @@ public:
 		CheckSaveEntity(true);
 	}
 
-	/// @brief redisConnection pointer save
-	void InitSqlConn(const std::shared_ptr<sw::redis::Redis>& redisConn)
-	{
-		pNoSqlProxy = redisConn;
-	}
-
 	/// @brief server self pointer save. mean connected father node success.
 	void InitSqlConn(DNClientProxy::Ptr& sockClient)
 	{
@@ -60,6 +50,11 @@ public: // dll override
 	{
 		uint64_t entityId = entity->ID();
 
+		if(!entity->HasFlag(EMClientEntityFlag::DBInited))
+		{
+			co_return;
+		}
+		
 		GDb::PlayerPtr dbEntity = entity->GetDbEntity();
 
 		// change maprecord
@@ -118,8 +113,12 @@ public: // dll override
 		}
 
 		// nosql
-		std::string keyName = std::format("{}_{}", table_name, entityId);
-		pNoSqlProxy->set(keyName, entity_data);
+		MdbProxy::Ptr dbProxy = GetOwner()->GetComponent<MdbProxy>(EMComponentType::MdbProxy);
+		if(auto connection = dbProxy->GetConnection())
+		{
+			std::string keyName = std::format("{}_{}", table_name, entityId);
+			connection->set(keyName, entity_data);
+		}
 
 		mDbFailure.erase(entityId);
 		co_return;
@@ -131,7 +130,7 @@ public: // dll override
 
 		std::function<void(ClientEntity::Ptr, bool)> dealFunc = nullptr;
 
-		if (!pSqlClient || pSqlClient->RegistType() != uint8_t(EMServerType::GateServer) || !pNoSqlProxy)
+		if (!pSqlClient || pSqlClient->RegistType() != uint8_t(EMServerType::GateServer))
 		{
 			dealFunc = [this](ClientEntity::Ptr entity, bool offline)
 				{
@@ -177,8 +176,16 @@ public: // dll override
 		}
 	}
 
+	void AddEntity(uint64_t entityId)
+	{
+		ClientEntity::Ptr entity = std::shared_ptr<ClientEntity>(new ClientEntity(GetOwner()->GetWorldW()));
+		entity->SetID(entityId);
+
+		std::unique_lock<std::shared_mutex> ulock(oMapMutex);
+		mEntityMap[entityId] = entity;
+	}
+
 protected: // dll proxy
-	std::shared_ptr<sw::redis::Redis> pNoSqlProxy;
 	DNClientProxy::Ptr pSqlClient;
 
 	/// @brief if save error. bin data will record to this.

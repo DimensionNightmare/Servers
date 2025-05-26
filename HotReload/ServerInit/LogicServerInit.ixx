@@ -1,19 +1,9 @@
 module;
 export module LogicServerInit;
 
-import FuncHelper;
 import LogicMessage;
-import DNTask;
-import Logger;
 import DllUtils;
-import ThirdParty.Libhv;
-import ThirdParty.PbGen;
-import DNServer;
 import MessagePack;
-import DNServerProxyHelper;
-import std.compat;
-import DNServerProxy;
-import RoomEntity;
 import LogicServerHelper;
 import ECSW;
 
@@ -24,7 +14,7 @@ export int HandleLogicServerInit(const World::Ptr& world)
 	static LogicMessageHandle MsgHandle;
 	MsgHandle.RegMsgHandle();
 
-	static World* pWorld = world.get();
+	World::WPtr pWorld = world->GetSelfW<World>();
 
 	LogicServerHelper::Ptr dnServer = world->GetSystem<LogicServerHelper>(EMSystemType::DNServer);
 
@@ -32,7 +22,7 @@ export int HandleLogicServerInit(const World::Ptr& world)
 	{
 		DNServerProxy::WPtr serverProxy = proxy->GetSelfW<DNServerProxy>();
 		
-		proxy->onConnection = [serverProxy](const DNSocketChannel::Ptr& channel)
+		proxy->onConnection = [serverProxy,pWorld](const DNSocketChannel::Ptr& channel)
 			{
 				DNServerProxy::Ptr proxy = serverProxy.lock();
 
@@ -47,8 +37,6 @@ export int HandleLogicServerInit(const World::Ptr& world)
 				}
 				else
 				{
-					// channel->SetWorld(nullptr);
-
 					proxy->GetLogger()->Record(EL10nCode_CliConnOff, peeraddr, channel->fd(), channel->id());
 					if (RoomEntity::Ptr entity = channel->getContextPtr<RoomEntity>())
 					{
@@ -128,7 +116,7 @@ export int HandleLogicServerInit(const World::Ptr& world)
 		DNClientProxy::WPtr clientProxy = proxy->GetSelfW<DNClientProxy>();
 
 		//client will re_create please check
-		proxy->onConnection = [clientProxy](const DNSocketChannel::Ptr& channel)
+		proxy->onConnection = [clientProxy,pWorld](const DNSocketChannel::Ptr& channel)
 			{
 				DNClientProxy::Ptr proxy = clientProxy.lock();
 
@@ -276,6 +264,11 @@ export int HandleLogicServerShutdown(const World::Ptr& world)
 		proxy->SetRegistEvent(nullptr);
 
 		proxy->MsgMapClear();
+	}
+
+	if(auto mdbProxy = dnServer->GetMdbProxy())
+	{
+		mdbProxy->ClearConnections();
 	}
 
 	return true;

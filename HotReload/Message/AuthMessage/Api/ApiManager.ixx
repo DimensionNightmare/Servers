@@ -2,9 +2,7 @@ module;
 export module ApiManager;
 
 import :ApiAuth;
-import ThirdParty.Libhv;
 import AuthServerHelper;
-import DNServer;
 
 export void ApiInit(DNServer::WPtr server, hv::HttpService* service)
 {

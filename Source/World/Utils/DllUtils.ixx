@@ -34,19 +34,16 @@ struct MemberFunctionArgs<R(Class::*)(Args...)>
 std::unordered_map<std::string, void*> DllMapCache;
 
 export template <typename Class, typename Method, typename... Args>
-auto TickMainSpaceDll(Class* obj, Method method, const char* classmethod, Args... args)
+auto TickMainSpaceDll(Class* obj, Method method, const char* classmethod, Args&&... args)
 {
 	using ArgsTuple = typename MemberFunctionArgs<decltype(method)>::Arguments;
 	using RetType = typename MemberFunctionReturnType<Method>::RetType;
 	typedef RetType(*MethodSign)(Class*, ArgsTuple);
-
-	// std::string methodName = std::regex_replace(++classmethod, std::regex(R"(::)"), "_");
-	// std::cout << typeid(RetType).name() << std::endl;
-
+	
 	if (auto it = DllMapCache.find(classmethod);it != DllMapCache.end())
 	{
 		MethodSign pFuncTyped = reinterpret_cast<MethodSign>(it->second);
-		return pFuncTyped(obj, std::make_tuple(std::forward<Args>(args)...));
+		return pFuncTyped(obj, std::forward_as_tuple(std::forward<Args>(args)...));
 	}
 
 	if (Platform::FuncHandle pFunc = Platform::GetProcAddress(nullptr, classmethod))

@@ -2,8 +2,10 @@ module;
 export module RoomEntityManagerHelper;
 
 import RoomEntityManager;
-import RoomEntityHelper;
-import Logger;
+import DllUtils;
+
+#define FUNCPLACE(class, func) &class::func, #class"_"#func
+
 
 export class RoomEntityManagerHelper : public RoomEntityManager
 {
@@ -28,12 +30,10 @@ public:
 	{
 		if (!mEntityMap.contains(entityId))
 		{
-			RoomEntity::Ptr entity = std::shared_ptr<RoomEntity>(new RoomEntity(GetOwner()->GetWorldW()));
+			TickMainSpaceDll(this, FUNCPLACE(RoomEntityManager,AddEntity), entityId);
+			RoomEntity::Ptr entity = mEntityMap[entityId];
+
 			entity->SetMapID(mapId);
-
-
-			std::unique_lock<std::shared_mutex> ulock(oMapMutex);
-			mEntityMap[entityId] = entity;
 			mEntityMapList[mapId].emplace_back(entity);
 			return entity;
 		}
@@ -45,8 +45,9 @@ public:
 	{
 		if (mEntityMap.contains(entityId))
 		{
-			SPidLogger.Record(ELogLevel_Debug, "offline destory entity");
-			RoomEntity::Ptr entity = mEntityMap[entityId];
+			GetLogger()->Record(ELogLevel_Debug, "offline destory entity");
+			RoomEntity::Ptr& entity = mEntityMap[entityId];
+			entity->Dispose();
 
 			std::unique_lock<std::shared_mutex> ulock(oMapMutex);
 			mEntityMapList[entity->MapID()].remove(entity);

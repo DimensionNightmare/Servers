@@ -1,14 +1,14 @@
 module;
 export module DNServerProxy;
 
-import DNTask;
 import MessagePack;
-import Logger;
-import ThirdParty.Libhv;
-import ThirdParty.PbGen;
 import ThirdParty.Platform;
 import ECSW;
+import Logger;
+import std.compat;
+import DNTask;
 import DNServer;
+import ThirdParty.Libhv;
 
 export class DNServerProxy : public Component, public hv::TcpServerTmpl<DNSocketChannel>
 {
@@ -154,8 +154,11 @@ public: // dll override
 				std::unique_lock<std::shared_mutex> ulock(oMsgMutex);
 				DNTask<Message*>* task = mMsgList[id];
 				mMsgList.erase(id);
-				task->SetFlag(EMDNTaskFlag::Timeout);
-				task->CallResume();
+				if(task)
+				{
+					task->SetFlag(EMDNTaskFlag::Timeout);
+					task->CallResume();
+				}
 			}
 		}
 

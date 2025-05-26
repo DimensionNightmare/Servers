@@ -2,13 +2,10 @@ module;
 
 export module DimensionNightmare;
 
-import Logger;
-import ThirdParty.PbGen;
 import DNServer;
 import DllUtils;
 import ThirdParty.Platform;
 import HotReloadDll;
-import ECSW;
 import ProxyEntityManager;
 import RoomEntityManager;
 import ServerEntityManager;
@@ -20,6 +17,8 @@ import StrUtils;
 import RdbProxy;
 import MdbProxy;
 import BitFlag;
+import std.compat;
+import ECSW;
 
 export void WriteDumpFile(std::filesystem::path fileName, _EXCEPTION_POINTERS* ExceptionInfo = nullptr)
 {
@@ -414,7 +413,12 @@ public:
 				{
 					World::Ptr firstWorld = oWorlds[0];
 					HotReloadDll::Ptr pHotDll = firstWorld->GetSystem<HotReloadDll>(EMSystemType::HotReloadDll);
-					if(pHotDll->ReloadHandle())
+					if(pHotDll->ReloadHandle([&](){
+						for(auto& world : oWorlds)
+						{
+							pHotDll->OnUnregHotReload(world);
+						}
+					}))
 					{
 						for(auto& world : oWorlds)
 						{
@@ -507,11 +511,20 @@ public:
 extern "C"
 {
 	REGIST_MAINSPACE_SIGN_FUNCTION(ProxyEntityManager, CheckEntityCloseTimer);
+	REGIST_MAINSPACE_SIGN_FUNCTION(ProxyEntityManager, AddEntity);
+	
 	REGIST_MAINSPACE_SIGN_FUNCTION(RoomEntityManager, CheckEntityCloseTimer);
+	REGIST_MAINSPACE_SIGN_FUNCTION(RoomEntityManager, AddEntity);
+
 	REGIST_MAINSPACE_SIGN_FUNCTION(ServerEntityManager, CheckEntityCloseTimer);
+	REGIST_MAINSPACE_SIGN_FUNCTION(ServerEntityManager, AddEntity);
+
+	REGIST_MAINSPACE_SIGN_FUNCTION(ClientEntityManager, AddEntity);
+
 	REGIST_MAINSPACE_SIGN_FUNCTION(DNClientProxy, InitConnectedChannel);
 	REGIST_MAINSPACE_SIGN_FUNCTION(DNClientProxy, CheckMessageTimeoutTimer);
 	REGIST_MAINSPACE_SIGN_FUNCTION(DNClientProxy, RedirectClient);
+
 	REGIST_MAINSPACE_SIGN_FUNCTION(DNServerProxy, InitConnectedChannel);
 	REGIST_MAINSPACE_SIGN_FUNCTION(DNServerProxy, CheckMessageTimeoutTimer);
 }

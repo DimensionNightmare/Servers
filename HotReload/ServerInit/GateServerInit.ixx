@@ -1,18 +1,9 @@
 module;
 export module GateServerInit;
 
-import FuncHelper;
 import GateMessage;
-import DNTask;
-import Logger;
 import DllUtils;
-import ThirdParty.Libhv;
-import ThirdParty.PbGen;
-import DNServer;
 import MessagePack;
-import DNServerProxyHelper;
-import std.compat;
-import DNServerProxy;
 import GateServerHelper;
 import ECSW;
 
@@ -23,7 +14,7 @@ export int HandleGateServerInit(const World::Ptr& world)
 	static GateMessageHandle MsgHandle;
 	MsgHandle.RegMsgHandle();
 
-	static World* pWorld = world.get();
+	World::WPtr pWorld = world->GetSelfW<World>();
 
 	GateServerHelper::Ptr dnServer = world->GetSystem<GateServerHelper>(EMSystemType::DNServer);
 
@@ -31,7 +22,7 @@ export int HandleGateServerInit(const World::Ptr& world)
 	{
 		DNServerProxy::WPtr serverProxy = proxy->GetSelfW<DNServerProxy>();
 	
-		proxy->onConnection = [serverProxy](const DNSocketChannel::Ptr& channel)
+		proxy->onConnection = [serverProxy,pWorld](const DNSocketChannel::Ptr& channel)
 			{
 				DNServerProxy::Ptr proxy = serverProxy.lock();
 
@@ -50,8 +41,6 @@ export int HandleGateServerInit(const World::Ptr& world)
 				}
 				else
 				{
-					// channel->SetWorld(nullptr);
-
 					proxy->GetLogger()->Record(EL10nCode_CliConnOff, peeraddr, channel->fd(), channel->id());
 					if (Entity::Ptr entity = channel->getContextPtr<Entity>())
 					{
@@ -141,7 +130,7 @@ export int HandleGateServerInit(const World::Ptr& world)
 	{
 		DNClientProxy::WPtr clientProxy = proxy->GetSelfW<DNClientProxy>();
 		
-		proxy->onConnection = [clientProxy](const DNSocketChannel::Ptr& channel)
+		proxy->onConnection = [clientProxy,pWorld](const DNSocketChannel::Ptr& channel)
 			{
 				DNClientProxy::Ptr proxy = clientProxy.lock();
 

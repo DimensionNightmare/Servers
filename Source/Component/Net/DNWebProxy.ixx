@@ -1,9 +1,10 @@
 module;
 export module DNWebProxy;
 
-import ThirdParty.Libhv;
-import ECSW;
 import Logger;
+import ECSW;
+import std.compat;
+import ThirdParty.Libhv;
 
 export class DNWebProxy : public Component, public hv::HttpServer
 {
@@ -16,7 +17,10 @@ protected:
 public:
 	using Ptr = std::shared_ptr<DNWebProxy>;
 	using WPtr = std::weak_ptr<DNWebProxy>;
-	~DNWebProxy() = default;
+	~DNWebProxy()
+	{
+
+	}
 
 	virtual void Dispose() override
 	{
@@ -43,17 +47,7 @@ public:
 
 		GetOwner()->AddEvent(EMEventType::ServerStart, GetSelfW<DNWebProxy>(), &DNWebProxy::Start);
 
-		hv::HttpService* service = new hv::HttpService();
-
-		service->POST("/Auth/User/LoginToken", [](const hv::HttpRequestPtr& req, const hv::HttpResponseWriterPtr& writer)
-		{
-			writer->Begin();
-			int a = 0;
-			int c = 3 / a;
-			writer->End();
-		});
-
-		registerHttpService(service);
+		service = new hv::HttpService();
 
 		return true;
 	}

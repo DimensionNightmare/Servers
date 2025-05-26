@@ -5,10 +5,6 @@ export import :GateCommon;
 import :GateGlobal;
 import :GateClient;
 import :GateRedirect;
-import Logger;
-import ThirdParty.Libhv;
-import ThirdParty.PbGen;
-import StrUtils;
 import MessageRegister;
 
 export class GateMessageHandle : public MessageRegister

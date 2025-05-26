@@ -66,16 +66,16 @@ public:
 	}
 
 
-	void SetWorld(World* world) 
+	void SetWorld(World::WPtr world) 
 	{
 		pWorld = world;
 	}
 
-	World* GetWorld() { return pWorld; }
+	World::Ptr GetWorld() { return pWorld.lock(); }
 
 protected:
 
-	World* pWorld;
+	World::WPtr pWorld;
 };
 
 export namespace Libhv

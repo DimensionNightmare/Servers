@@ -5,6 +5,7 @@ import StrUtils;
 import L10nText;
 import ECSW;
 import ThirdParty.PbGen;
+import std.compat;
 
 class LogColor
 {
@@ -60,8 +61,13 @@ public:
 		}
 		
 		std::filesystem::path logFile = *value;
-		logFile = logFile.parent_path() / *pWorld->LaunchParam("svrName");
+
+		value = pWorld->LaunchParam("svrName");
+
+		logFile = logFile.parent_path() / *value;
 		SetLogger(logFile);
+
+		sTitle = *value;
 
 		return true;
 	}
@@ -108,7 +114,7 @@ public:
 
 		std::string result = std::format("[{}] {} -> \n\t{}\n", 
 			GetNowTimeStr(), 
-			"", // olocation.function_name(),
+			sTitle, // olocation.function_name(),
 			std::format(fmt, std::forward<Args>(args)...));
 		
 		flush(level, result);
@@ -123,7 +129,7 @@ public:
 
 		std::string result = std::format("[{}] {} -> \n\t{}\n", 
 			GetNowTimeStr(), 
-			"", //olocation.function_name(), 
+			sTitle, //olocation.function_name(), 
 			fmt);
 
 		flush(level, result);
@@ -149,7 +155,7 @@ public:
 		
 		std::string result = std::format("[{}] {} -> \n\t{}\n", 
 			GetNowTimeStr(), 
-			"", // olocation.function_name(), 
+			sTitle, // olocation.function_name(), 
 			std::vformat(fmt, format_args));
 		
 		flush(level, result);
@@ -167,7 +173,7 @@ public:
 		
 		std::string result = std::format("[{}] {} -> \n\t{}\n", 
 			GetNowTimeStr(), 
-			"", // olocation.function_name(),
+			sTitle, // olocation.function_name(),
 			fmt);
 
 		flush(level, result);
@@ -199,6 +205,8 @@ protected:
 	DNl10n::WPtr pDNl10n;
 
 	std::ofstream LogFile; 
+
+	std::string sTitle;
 
 	ELogLevel eLogLevel = ELogLevel_Debug;
 };

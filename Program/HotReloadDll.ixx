@@ -2,10 +2,10 @@ module;
 
 export module HotReloadDll;
 
-import std.compat;
 import ThirdParty.Platform;
-import Logger;
+import std.compat;
 import ECSW;
+import Logger;
 
 export class HotReloadDll : public System
 {
@@ -106,7 +106,7 @@ public:
 	}
 
 	/// @brief reload dll/so runtime library
-	bool ReloadHandle()
+	bool ReloadHandle(std::function<void()> ReloadPre = nullptr)
 	{
 		if (!std::filesystem::exists(sDllDir))
 		{
@@ -141,6 +141,11 @@ public:
 		Platform::HotHandle hModule = LoadHandle(newDllDir);
 		if (hModule)
 		{
+			if(ReloadPre)
+			{
+				ReloadPre();
+			}
+
 			FreeHandle();
 			oLibHandle = hModule;
 			sDllDirRand = newDllDir;

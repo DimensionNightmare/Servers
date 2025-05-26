@@ -1,17 +1,12 @@
 module;
 export module DatabaseMessage:DatabaseGate;
 
-import FuncHelper;
-import Logger;
 import DbUtils;
-import FuncHelper;
-import ThirdParty.Libhv;
-import ThirdParty.PbGen;
-import ThirdParty.Libpqxx;
-import std.compat;
-import DNServer;
 import DatabaseServerHelper;
-import ECSW;
+import ThirdParty.PbGen;
+import ThirdParty.Libhv;
+import FuncHelper;
+import std.compat;
 
 namespace DatabaseMessage
 {

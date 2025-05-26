@@ -1,13 +1,10 @@
 module;
 export module AuthMessage:AuthCommon;
 
-import DNTask;
-import FuncHelper;
-import Logger;
-import ThirdParty.PbGen;
-import DNClientProxyHelper;
-import DNServer;
 import AuthServerHelper;
+import DNServer;
+import FuncHelper;
+import DNTask;
 
 namespace AuthMessage
 {
@@ -69,6 +66,7 @@ namespace AuthMessage
 		if (response.error_code() == EL10nCode_None)
 		{
 			clientProxy->SetRegistState(EMRegistState::Registed);
+			clientProxy->SetRegistType(response.ret_server_type());
 		}
 		else
 		{

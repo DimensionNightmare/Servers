@@ -1,12 +1,11 @@
 module;
 export module ServerEntity;
 
-import ECSW;
-
-import DNServer;
-import std.compat;
-import ThirdParty.Libhv;
 import BitFlag;
+import ECSW;
+import std.compat;
+import DNServer;
+import ThirdParty.Libhv;
 
 export enum class EMServerEntityFlag : uint16_t
 {
@@ -18,7 +17,7 @@ export enum class EMServerEntityFlag : uint16_t
 export class ServerEntity : public Entity, public BitFlag<EMServerEntityFlag>
 {
 protected:
-	friend class ServerEntityManagerHelper;
+	friend class ServerEntityManager;
 	ServerEntity(World::WPtr world):Entity(world)
 	{
 		eEntityType = EMEntityType::Server;

@@ -1,17 +1,12 @@
 module;
 export module GateMessage:GateClient;
 
-import DNTask;
-import StrUtils;
-import FuncHelper;
-import Logger;
-import ThirdParty.Libhv;
-import ThirdParty.PbGen;
-import ProxyEntityManagerHelper;
-import std.compat;
-import ServerEntity;
 import GateServerHelper;
-import ECSW;
+import ThirdParty.PbGen;
+import StrUtils;
+import ThirdParty.Libhv;
+import FuncHelper;
+import DNTask;
 
 namespace GateMessage
 {
@@ -53,14 +48,15 @@ namespace GateMessage
 		{
 			dnServer->GetLogger()->Record(ELogLevel_Debug, "match!!");
 
-			channel->setContextPtr(entity);
-			entity->SetChannel(channel);
-
 			if (uint64_t timerId = entity->TimerId())
 			{
 				entity->SetTimerId(0);
 				entityMan->Timer()->killTimer(timerId);
 			}
+			
+			channel->setContextPtr(entity);
+			entity->SetChannel(channel);
+
 
 			//DS Server
 			ServerEntityManagerHelper::Ptr serverEntityMan = dnServer->GetServerEntityManager();

@@ -3,17 +3,17 @@ module;
 
 export module HotReload;
 
-import DNServer;
 import GlobalServerInit;
 import ControlServerInit;
 import AuthServerInit;
 import GateServerInit;
 import DatabaseServerInit;
 import LogicServerInit;
-import ThirdParty.Libhv;
-import ThirdParty.PbGen;
 import ThirdParty.Platform;
 import ECSW;
+import DNServer;
+import ThirdParty.Libhv;
+import std.compat;
 
 #ifdef _WIN32
 	#ifdef HOTRELOAD_BUILD

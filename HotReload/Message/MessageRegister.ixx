@@ -2,11 +2,9 @@ module;
 
 export module MessageRegister;
 
-import ThirdParty.Libhv;
-import std.compat;
 import Logger;
 import ThirdParty.PbGen;
-import ECSW;
+import ThirdParty.Libhv;
 
 export class MessageRegister
 {
@@ -24,12 +22,18 @@ public:
 			}
 			catch (const std::exception& e)
 			{
-				SPidLogger.Record(ELogLevel_Debug, e.what());
+				if(World::Ptr pworld = channel->GetWorld())
+				{
+					pworld->GetSystem<LoggerPrint>(EMSystemType::LoggerPrint)->Record(ELogLevel_Debug, e.what());
+				}
 			}
 		}
 		else
 		{
-			SPidLogger.Record(EL10nCode_MsgHandleFind);
+			if(World::Ptr pworld = channel->GetWorld())
+			{
+				pworld->GetSystem<LoggerPrint>(EMSystemType::LoggerPrint)->Record(EL10nCode_MsgHandleFind);
+			}
 		}
 	}
 
@@ -44,12 +48,18 @@ public:
 			}
 			catch (const std::exception& e)
 			{
-				SPidLogger.Record(ELogLevel_Debug, e.what());
+				if(World::Ptr pworld = channel->GetWorld())
+				{
+					pworld->GetSystem<LoggerPrint>(EMSystemType::LoggerPrint)->Record(ELogLevel_Debug, e.what());
+				}
 			}
 		}
 		else
 		{
-			SPidLogger.Record(EL10nCode_MsgHandleFind);
+			if(World::Ptr pworld = channel->GetWorld())
+			{
+				pworld->GetSystem<LoggerPrint>(EMSystemType::LoggerPrint)->Record(EL10nCode_MsgHandleFind);
+			}
 		}
 	}
 
@@ -64,12 +74,18 @@ public:
 			}
 			catch (const std::exception& e)
 			{
-				SPidLogger.Record(ELogLevel_Debug, e.what());
+				if(World::Ptr pworld = channel->GetWorld())
+				{
+					pworld->GetSystem<LoggerPrint>(EMSystemType::LoggerPrint)->Record(ELogLevel_Debug, e.what());
+				}
 			}
 		}
 		else
 		{
-			SPidLogger.Record(EL10nCode_MsgHandleFind);
+			if(World::Ptr pworld = channel->GetWorld())
+			{
+				pworld->GetSystem<LoggerPrint>(EMSystemType::LoggerPrint)->Record(EL10nCode_MsgHandleFind);
+			}
 		}
 	}
 

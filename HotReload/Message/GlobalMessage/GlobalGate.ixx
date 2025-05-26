@@ -1,16 +1,9 @@
 module;
 export module GlobalMessage:GlobalGate;
 
-import DNTask;
-import FuncHelper;
-import ThirdParty.Libhv;
-import ThirdParty.PbGen;
-import Logger;
-import DNClientProxyHelper;
-import ServerEntityManagerHelper;
-import std.compat;
 import GlobalServerHelper;
-import ECSW;
+import ThirdParty.PbGen;
+import ThirdParty.Libhv;
 
 namespace GlobalMessage
 {
@@ -42,7 +35,7 @@ namespace GlobalMessage
 				owner->GetMapLinkNode(entity->GetServerType()).remove(entity);
 				owner->ClearFlag(EMServerEntityFlag::Locked);
 
-				SPidLogger.Record(ELogLevel_Debug, "Global get notify release gate lock!");
+				channel->GetWorld()->GetSystem<LoggerPrint>(EMSystemType::LoggerPrint)->Record(ELogLevel_Debug, "Global get notify release gate lock!");
 
 				entityMan->RemoveEntity(request.server_id());
 				dnServer->UpdateServerGroup();

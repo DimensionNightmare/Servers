@@ -1,18 +1,10 @@
 module;
 export module GlobalMessage:GlobalCommon;
 
-import DNTask;
 import FuncHelper;
-import Logger;
-import ThirdParty.Libhv;
-import ThirdParty.PbGen;
-import DNClientProxyHelper;
-import DNServerProxyHelper;
-import DNServer;
-import ServerEntity;
-import ServerEntityManagerHelper;
 import GlobalServerHelper;
-import ECSW;
+import DNServer;
+import DNTask;
 
 namespace GlobalMessage
 {
@@ -71,6 +63,7 @@ namespace GlobalMessage
 		if (response.error_code() == EL10nCode_None)
 		{
 			clientProxy->SetRegistState(EMRegistState::Registed);
+			clientProxy->SetRegistType(response.ret_server_type());
 		}
 		else
 		{
@@ -157,6 +150,8 @@ namespace GlobalMessage
 
 					// Re-enroll
 					entityMan->MountEntity(regType, entity);
+
+					response.set_ret_server_type(static_cast<uint8_t>(dnServer->GetServerType()));
 				}
 			}
 			else
@@ -174,6 +169,8 @@ namespace GlobalMessage
 			entity->SetChannel(channel);
 
 			channel->setContextPtr(entity);
+
+			response.set_ret_server_type(static_cast<uint8_t>(dnServer->GetServerType()));
 		}
 		else
 		{

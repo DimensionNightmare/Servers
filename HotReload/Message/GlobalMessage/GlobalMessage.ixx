@@ -5,12 +5,8 @@ export import :GlobalCommon;
 import :GlobalControl;
 import :GlobalGate;
 import :GlobalRedirect;
-import Logger;
-import ThirdParty.Libhv;
-import ThirdParty.PbGen;
-import StrUtils;
 import MessageRegister;
-import ECSW;
+import StrUtils;
 
 export class GlobalMessageHandle : public MessageRegister
 {

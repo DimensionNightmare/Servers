@@ -1,14 +1,8 @@
 module;
 export module GateMessage:GateCommon;
 
-import DNTask;
-import FuncHelper;
-import Logger;
-import ThirdParty.Libhv;
-import ThirdParty.PbGen;
-import ServerEntityManagerHelper;
-import DNClientProxy;
 import GateServerHelper;
+import FuncHelper;
 
 namespace GateMessage
 {
@@ -107,6 +101,7 @@ namespace GateMessage
 		if (response.error_code() == EL10nCode_None)
 		{
 			clientProxy->SetRegistState(EMRegistState::Registed);
+			clientProxy->SetRegistType(response.ret_server_type());
 
 			Evt_RetRegistChild(dnServer);
 		}
@@ -167,6 +162,8 @@ namespace GateMessage
 			entity->SetChannel(channel);
 
 			channel->setContextPtr(entity);
+
+			response.set_ret_server_type(static_cast<uint8_t>(dnServer->GetServerType()));
 		}
 		else
 		{

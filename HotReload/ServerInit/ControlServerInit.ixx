@@ -1,20 +1,9 @@
 module;
 export module ControlServerInit;
 
-import FuncHelper;
 import ControlMessage;
-import DNTask;
-import Logger;
 import DllUtils;
-import ThirdParty.Libhv;
-import ThirdParty.PbGen;
-import DNServer;
-import DNServerProxyHelper;
 import MessagePack;
-import std.compat;
-import DNServerProxy;
-import ServerEntity;
-import ServerEntityManagerHelper;
 import ControlServerHelper;
 import ECSW;
 
@@ -25,7 +14,7 @@ export int HandleControlServerInit(const World::Ptr& world)
 	static ControlMessageHandle MsgHandle;
 	MsgHandle.RegMsgHandle();
 
-	static World* pWorld = world.get();
+	World::WPtr pWorld = world->GetSelfW<World>();
 
 	ControlServerHelper::Ptr dnServer = world->GetSystem<ControlServerHelper>(EMSystemType::DNServer);
 
@@ -33,7 +22,7 @@ export int HandleControlServerInit(const World::Ptr& world)
 	{
 		DNServerProxy::WPtr serverProxy = proxy->GetSelfW<DNServerProxy>();
 	
-		proxy->onConnection = [serverProxy](const DNSocketChannel::Ptr& channel)
+		proxy->onConnection = [serverProxy,pWorld](const DNSocketChannel::Ptr& channel)
 			{
 				DNServerProxy::Ptr proxy = serverProxy.lock();
 

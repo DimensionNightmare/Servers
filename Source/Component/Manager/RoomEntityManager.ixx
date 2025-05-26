@@ -3,7 +3,6 @@ export module RoomEntityManager;
 
 import RoomEntity;
 import EntityManager;
-import Logger;
 
 export class RoomEntityManager : public EntityManager<RoomEntity>
 {
@@ -67,6 +66,15 @@ public:
 		}
 
 		return false;
+	}
+
+	void AddEntity(uint64_t entityId)
+	{
+		RoomEntity::Ptr entity = std::shared_ptr<RoomEntity>(new RoomEntity(GetOwner()->GetWorldW()));
+		entity->SetID(entityId);
+
+		std::unique_lock<std::shared_mutex> ulock(oMapMutex);
+		mEntityMap[entityId] = entity;
 	}
 
 protected:

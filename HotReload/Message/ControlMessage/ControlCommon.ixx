@@ -1,16 +1,10 @@
 module;
 export module ControlMessage:ControlCommon;
 
-import DNTask;
-import FuncHelper;
-import ThirdParty.Libhv;
-import ThirdParty.PbGen;
-import Logger;
-import ServerEntityManagerHelper;
-import std.compat;
-import DNServer;
 import ControlServerHelper;
-import ECSW;
+import ThirdParty.PbGen;
+import ThirdParty.Libhv;
+import FuncHelper;
 
 namespace ControlMessage
 {
@@ -61,6 +55,8 @@ namespace ControlMessage
 			entity->SetChannel(channel);
 
 			channel->setContextPtr(entity);
+
+			response.set_ret_server_type(static_cast<uint8_t>(dnServer->GetServerType()));
 		}
 
 		

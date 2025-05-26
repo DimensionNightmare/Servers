@@ -1,10 +1,8 @@
 module;
 export module L10nText;
 
-import ThirdParty.PbGen;
-import StrUtils;
-import DllUtils;
 import ECSW;
+import ThirdParty.PbGen;
 
 #define FUNCPLACE(class, func) &class::func, #class"_"#func
 

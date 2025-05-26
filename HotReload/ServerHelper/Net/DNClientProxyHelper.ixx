@@ -2,10 +2,7 @@ module;
 export module DNClientProxyHelper;
 
 import DNClientProxy;
-import DNTask;
 import DllUtils;
-import ThirdParty.Libhv;
-import ThirdParty.PbGen;
 
 #define FUNCPLACE(class, func) &class::func, #class"_"#func
 

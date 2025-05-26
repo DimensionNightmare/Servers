@@ -1,11 +1,11 @@
 module;
 export module DbUtils;
 
-import StrUtils;
-import Logger;
 import ThirdParty.PbGen;
 import ThirdParty.Libpqxx;
+import StrUtils;
 import std.compat;
+import Logger;
 
 using namespace std::chrono;
 
@@ -440,7 +440,7 @@ public:
 			return false;
 		}
 
-		// SPidLogger.Record(ELogLevel_Debug, sSqlStatement);
+		SPidLogger.Record(ELogLevel_Debug, sSqlStatement);
 		try
 		{
 			pqxx::result result = pWork->exec(sSqlStatement);

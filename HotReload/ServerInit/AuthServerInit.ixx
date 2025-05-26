@@ -1,23 +1,12 @@
 module;
 export module AuthServerInit;
 
-import FuncHelper;
 import AuthMessage;
-import DNTask;
-import Logger;
 import DllUtils;
-import ThirdParty.Libhv;
-import ThirdParty.PbGen;
-import DNServer;
 import DNWebProxyHelper;
 import MessagePack;
-import std.compat;
-import DNWebProxy;
-import DNClientProxy;
-import DNClientProxyHelper;
-import DNServerProxyHelper;
-import ECSW;
 import AuthServerHelper;
+import ECSW;
 
 #define FUNCPLACE(class, func) &class::func, #class"_"#func
 
@@ -25,24 +14,20 @@ export int HandleAuthServerInit(const World::Ptr& world)
 {
 	static AuthMessageHandle MsgHandle;
 
-	static World* pWorld = world.get();
+	World::WPtr pWorld = world->GetSelfW<World>();
 
 	AuthServerHelper::Ptr dnServer = world->GetSystem<AuthServerHelper>(EMSystemType::DNServer);
 
 	if (DNWebProxy::Ptr proxy = dnServer->GetComponent<DNWebProxy>(EMComponentType::DNWebProxy))
 	{
-		hv::HttpService* service = new hv::HttpService();
-
-		MsgHandle.RegApiHandle(dnServer->GetSelfW<DNServer>(), service);
-
-		proxy->registerHttpService(service);
+		MsgHandle.RegApiHandle(dnServer->GetSelfW<DNServer>(), proxy->service);
 	}
 
 	if (DNClientProxy::Ptr proxy = dnServer->GetComponent<DNClientProxy>(EMComponentType::DNClientProxy))
 	{
 		DNClientProxy::WPtr clientProxy = proxy->GetSelfW<DNClientProxy>();
 		
-		proxy->onConnection = [clientProxy](const DNSocketChannel::Ptr& channel)
+		proxy->onConnection = [clientProxy,pWorld](const DNSocketChannel::Ptr& channel)
 			{
 				DNClientProxy::Ptr proxy = clientProxy.lock();
 
@@ -149,11 +134,9 @@ export int HandleAuthServerShutdown(const World::Ptr& world)
 
 	if (DNWebProxy::Ptr proxy = dnServer->GetComponent<DNWebProxy>(EMComponentType::DNWebProxy))
 	{
-		if (proxy->service)
+		if(proxy->service)
 		{
-			hv::HttpService* temp = proxy->service;
-			proxy->service = nullptr;
-			delete temp;
+			*(proxy->service) = {};
 		}
 	}
 

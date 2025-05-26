@@ -2,8 +2,9 @@ module;
 export module ServerEntityManagerHelper;
 
 import ServerEntityManager;
-import ServerEntityHelper;
-import Logger;
+import DllUtils;
+
+#define FUNCPLACE(class, func) &class::func, #class"_"#func
 
 export class ServerEntityManagerHelper : public ServerEntityManager
 {
@@ -28,12 +29,10 @@ public:
 	{
 		if (!mEntityMap.contains(entityId))
 		{
-			ServerEntity::Ptr entity = std::shared_ptr<ServerEntity>(new ServerEntity(GetOwner()->GetWorldW()));
-			entity->SetServerType(regType);
-			entity->SetID(entityId);
+			ServerEntity::Ptr entity;
+			TickMainSpaceDll(this, FUNCPLACE(ServerEntityManager,AddEntity), entityId, std::ref(entity));
 
-			std::unique_lock<std::shared_mutex> ulock(oMapMutex);
-			mEntityMap[entityId] = entity;
+			entity->SetServerType(regType);
 			mEntityMapList[regType].emplace_back(entity);
 			return entity;
 		}
@@ -45,8 +44,8 @@ public:
 	{
 		if (mEntityMap.contains(entityId))
 		{
-			SPidLogger.Record(ELogLevel_Debug, "offline destory entity");
-			ServerEntity::Ptr entity = mEntityMap[entityId];
+			GetLogger()->Record(ELogLevel_Debug, "offline destory entity");
+			ServerEntity::Ptr& entity = mEntityMap[entityId];
 			entity->Dispose();
 
 			std::unique_lock<std::shared_mutex> ulock(oMapMutex);
@@ -84,7 +83,7 @@ public:
 		return nullptr;
 	}
 
-	const std::list<ServerEntity::Ptr>& GetEntitysByType(EMServerType type)
+	std::list<ServerEntity::Ptr>& GetEntitysByType(EMServerType type)
 	{
 		std::shared_lock<std::shared_mutex> lock(oMapMutex);
 		return mEntityMapList[type];

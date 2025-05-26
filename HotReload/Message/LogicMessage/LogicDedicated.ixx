@@ -1,15 +1,11 @@
 module;
 export module LogicMessage:LogicDedicated;
 
-import DNTask;
-import FuncHelper;
-import Logger;
-import ThirdParty.Libhv;
-import ThirdParty.PbGen;
-import ClientEntityManagerHelper;
-import std.compat;
 import LogicServerHelper;
-import ECSW;
+import ThirdParty.PbGen;
+import ThirdParty.Libhv;
+import FuncHelper;
+import DNTask;
 
 namespace LogicMessage
 {
@@ -46,9 +42,7 @@ namespace LogicMessage
 		else
 		{
 			
-			co_await entityMan->LoadEntityData(entity, &request, &response);
-			std::string* entity_data = response.add_entity_data();
-			entity->GetDbEntity()->SerializeToString(entity_data);
+			co_await entityMan->LoadEntityData(entity->GetSelf<ClientEntityHelper>(), &request, &response);
 
 		}
 

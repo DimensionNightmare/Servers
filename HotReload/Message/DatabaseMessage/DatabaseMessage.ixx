@@ -3,11 +3,9 @@ export module DatabaseMessage;
 
 export import :DatabaseCommon;
 import :DatabaseGate;
-import Logger;
-import ThirdParty.Libhv;
-import ThirdParty.PbGen;
-import StrUtils;
+
 import MessageRegister;
+import StrUtils;
 
 export class DatabaseMessageHandle : public MessageRegister
 {

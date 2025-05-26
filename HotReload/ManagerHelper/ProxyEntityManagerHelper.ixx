@@ -1,9 +1,10 @@
 module;
 export module ProxyEntityManagerHelper;
 
-import ProxyEntityHelper;
 import ProxyEntityManager;
-import Logger;
+import DllUtils;
+
+#define FUNCPLACE(class, func) &class::func, #class"_"#func
 
 export class ProxyEntityManagerHelper : public ProxyEntityManager
 {
@@ -28,11 +29,10 @@ public:
 	{
 		if (!mEntityMap.contains(entityId))
 		{
-			ProxyEntity::Ptr entity = std::shared_ptr<ProxyEntity>(new ProxyEntity(GetOwner()->GetWorldW()));
-			entity->SetID(entityId);
+			TickMainSpaceDll(this, FUNCPLACE(ProxyEntityManager,AddEntity), entityId);
 
-			std::unique_lock<std::shared_mutex> ulock(oMapMutex);
-			mEntityMap[entityId] = entity;
+			ProxyEntity::Ptr entity = mEntityMap[entityId];
+			
 			return entity;
 		}
 
@@ -43,8 +43,8 @@ public:
 	{
 		if (mEntityMap.contains(entityId))
 		{
-			SPidLogger.Record(ELogLevel_Debug, "destory Proxy entity");
-			ProxyEntity::Ptr entity = mEntityMap[entityId];
+			GetLogger()->Record(ELogLevel_Debug, "destory Proxy entity");
+			ProxyEntity::Ptr& entity = mEntityMap[entityId];
 			entity->Dispose();
 
 			std::unique_lock<std::shared_mutex> ulock(oMapMutex);

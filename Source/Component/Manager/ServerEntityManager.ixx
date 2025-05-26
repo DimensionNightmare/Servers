@@ -3,8 +3,6 @@ export module ServerEntityManager;
 
 import ServerEntity;
 import EntityManager;
-import Logger;
-import DNServer;
 
 export class ServerEntityManager : public EntityManager<ServerEntity>
 {
@@ -89,6 +87,8 @@ public: // dll override
 				owner->ClearFlag(EMServerEntityFlag::Locked);
 			}
 
+			entity->Dispose();
+
 			std::unique_lock<std::shared_mutex> ulock(oMapMutex);
 			mEntityMapList[entity->GetServerType()].remove(entity);
 			mEntityMap.erase(entityId);
@@ -96,6 +96,15 @@ public: // dll override
 		}
 
 		return false;
+	}
+
+	void AddEntity(uint64_t entityId, ServerEntity::Ptr& entity)
+	{
+		entity = std::shared_ptr<ServerEntity>(new ServerEntity(GetOwner()->GetWorldW()));
+		entity->SetID(entityId);
+
+		std::unique_lock<std::shared_mutex> ulock(oMapMutex);
+		mEntityMap[entityId] = entity;
 	}
 
 protected: // dll proxy
