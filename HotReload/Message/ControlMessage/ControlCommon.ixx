@@ -44,16 +44,16 @@ namespace ControlMessage
 
 		if (regType < EMServerType::GlobalServer || regType > EMServerType::AuthServer || ipPort.empty())
 		{
-			response.set_success(false);
+			response.set_error_code(EL10nCode_RegistServerTypeError);
 		}
 
 		//exist?
 		else if (ServerEntity::Ptr entity = channel->getContextPtr<ServerEntity>())
 		{
-			response.set_success(false);
+			response.set_error_code(EL10nCode_RegistServerChannelExist);
 		}
 
-		else if (ServerEntity::Ptr entity = entityMan->AddEntity(entityMan->GenServerId(), regType))
+		else if (ServerEntity::Ptr entity = entityMan->AddEntity(request.server_id(), regType))
 		{
 			size_t pos = ipPort.find(":");
 			entity->SetServerIp(ipPort.substr(0, pos));
@@ -61,10 +61,6 @@ namespace ControlMessage
 			entity->SetChannel(channel);
 
 			channel->setContextPtr(entity);
-
-			response.set_success(true);
-			response.set_server_id(entity->ID());
-			response.set_server_type(static_cast<uint8_t>(dnServer->GetServerType()));
 		}
 
 		

@@ -33,12 +33,11 @@ public:
 	{
 		if (!mEntityMap.contains(entityId))
 		{
+			ClientEntity::Ptr entity = std::shared_ptr<ClientEntity>(new ClientEntity(GetOwner()->GetWorldW()));
+			
+
 			std::unique_lock<std::shared_mutex> ulock(oMapMutex);
-
-			mEntityMap[entityId] = std::shared_ptr<ClientEntity>(new ClientEntity(GetOwner()->GetWorldW()));
-
-			ClientEntity::Ptr entity = mEntityMap[entityId];
-
+			mEntityMap[entityId] = entity;
 			return entity;
 		}
 
@@ -50,11 +49,11 @@ public:
 
 		if (mEntityMap.contains(entityId))
 		{
-			std::unique_lock<std::shared_mutex> ulock(oMapMutex);
-
 			SPidLogger.Record(ELogLevel_Debug, "destory client entity");
-			mEntityMap.erase(entityId);
 
+
+			std::unique_lock<std::shared_mutex> ulock(oMapMutex);
+			mEntityMap.erase(entityId);
 			return true;
 		}
 
@@ -74,12 +73,12 @@ public:
 
 	DNTaskVoid LoadEntityData(ClientEntity::Ptr entity, GMsg::d2L_ReqLoadEntityData* inRequest, GMsg::L2d_ResLoadEntityData* inResponse)
 	{
-		if (!pSqlClient || pSqlClient->RegistType() != uint8_t(EMServerType::GateServer) || !pNoSqlProxy)
+		if (!pSqlClient || !pNoSqlProxy || pSqlClient->RegistType() != static_cast<uint8_t>(EMServerType::GateServer))
 		{
 			co_return;
 		}
 
-		GDb::Player* dbEntity = entity->GetDbEntity();
+		GDb::PlayerPtr dbEntity = entity->GetDbEntity();
 
 		if (entity->HasFlag(EMClientEntityFlag::DBInited) || entity->HasFlag(EMClientEntityFlag::DBIniting))
 		{
@@ -156,19 +155,18 @@ public:
 			co_await dataChannel;
 			if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
 			{
-				response.set_state_code(10);
-				SPidLogger.Record(ELogLevel_Debug, "requst timeout! ");
+				response.set_error_code(EL10nCode_CRdbReqTimeout);
 			}
 		}
 
-		if (int code = response.state_code())
+		if (response.error_code() != EL10nCode_None)
 		{
 			entity->ClearFlag(EMClientEntityFlag::DBIniting);
 
 			binData = request.entity_data();
 			BytesToHexString(binData);
 			mDbFailure[entityId] = binData;
-			SPidLogger.Record(ELogLevel_Debug, "Load Db Entity Error id = {}, state_code = {}! ", entityId, code);
+			SPidLogger.Record(ELogLevel_Debug, "Load Db Entity Error id = {}, error_code = {}! ", entityId, static_cast<int>(response.error_code()));
 			co_return;
 		}
 
@@ -190,7 +188,7 @@ public:
 
 		if (inResponse)
 		{
-			inResponse->set_state_code(response.state_code());
+			inResponse->set_error_code(response.error_code());
 			for (int i = 0; i < response.entity_data_size(); i++)
 			{
 				std::string* bytes = inResponse->add_entity_data();

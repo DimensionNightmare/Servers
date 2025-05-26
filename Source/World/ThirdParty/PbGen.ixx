@@ -126,6 +126,10 @@ export namespace GDb
 	using GDb::Account;
 	using GDb::Player;
 	using GDb::SingleTon;
+
+	using AccountPtr = std::shared_ptr<GDb::Account>;
+	using PlayerPtr = std::shared_ptr<GDb::Player>;
+	using SingleTonPtr = std::shared_ptr<GDb::SingleTon>;
 }
 
 export namespace PbGen

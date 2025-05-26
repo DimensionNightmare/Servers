@@ -28,11 +28,12 @@ public:
 	{
 		if (!mEntityMap.contains(entityId))
 		{
-			std::unique_lock<std::shared_mutex> ulock(oMapMutex);
-			mEntityMap[entityId] = std::shared_ptr<ProxyEntity>(new ProxyEntity(GetOwner()->GetWorldW()));
-			mEntityMap[entityId]->SetID(entityId);
+			ProxyEntity::Ptr entity = std::shared_ptr<ProxyEntity>(new ProxyEntity(GetOwner()->GetWorldW()));
+			entity->SetID(entityId);
 
-			return mEntityMap[entityId];
+			std::unique_lock<std::shared_mutex> ulock(oMapMutex);
+			mEntityMap[entityId] = entity;
+			return entity;
 		}
 
 		return nullptr;
@@ -42,9 +43,11 @@ public:
 	{
 		if (mEntityMap.contains(entityId))
 		{
-			std::unique_lock<std::shared_mutex> ulock(oMapMutex);
-
 			SPidLogger.Record(ELogLevel_Debug, "destory Proxy entity");
+			ProxyEntity::Ptr entity = mEntityMap[entityId];
+			entity->Dispose();
+
+			std::unique_lock<std::shared_mutex> ulock(oMapMutex);
 			mEntityMap.erase(entityId);
 			return true;
 		}

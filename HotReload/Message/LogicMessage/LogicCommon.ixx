@@ -31,11 +31,12 @@ namespace LogicMessage
 
 		GMsg::COM_ReqRegistSrv request;
 
+		request.set_server_id(dnServer->ID());
 		request.set_server_type((int)dnServer->GetServerType());
 
-		if (uint64_t serverIndex = dnServer->ServerId())
+		if (dnServer->IsPullServer())
 		{
-			request.set_server_id(serverIndex);
+			request.set_is_pull(true);
 		}
 
 		// pack data
@@ -58,21 +59,18 @@ namespace LogicMessage
 			co_await dataChannel;
 			if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
 			{
-				dnServer->GetLogger()->Record(ELogLevel_Debug, "requst timeout! ");
+				response.set_error_code(EL10nCode_ReqRegistTimeout);
 			}
 
 		}
 
-		if (response.success())
+		if (response.error_code() == EL10nCode_None)
 		{
-			dnServer->GetLogger()->Record(ELogLevel_Debug, "regist Server success! Rec index:{}", response.server_id());
 			clientProxy->SetRegistState(EMRegistState::Registed);
-			clientProxy->SetRegistType(response.server_type());
-			dnServer->SetServerId(response.server_id());
 		}
 		else
 		{
-			dnServer->GetLogger()->Record(ELogLevel_Debug, "regist Server error!  ");
+			dnServer->GetLogger()->Record(response.error_code());
 			// dnServer->IsRun() = false; //exit application
 			clientProxy->SetRegistState(EMRegistState::None);
 		}
@@ -108,18 +106,18 @@ namespace LogicMessage
 
 		if (regType != EMServerType::DedicatedServer || ipPort.empty())
 		{
-			response.set_success(false);
+			response.set_error_code(EL10nCode_RegistServerTypeError);
 		}
 
 		//exist?
 		if (RoomEntity::Ptr entity = channel->getContextPtr<RoomEntity>())
 		{
-			response.set_success(false);
+			response.set_error_code(EL10nCode_RegistServerChannelExist);
 		}
 
-		else if (int serverId = request.server_id())
+		else if (request.is_pull())
 		{
-			if (RoomEntity::Ptr entity = entityMan->GetEntity(serverId))
+			if (RoomEntity::Ptr entity = entityMan->GetEntity(request.server_id()))
 			{
 				// wait destroy`s destroy
 				if (uint64_t timerId = entity->TimerId())
@@ -131,14 +129,17 @@ namespace LogicMessage
 				// already connect
 				if (const DNSocketChannel::Ptr& sock = entity->GetChannel())
 				{
-					response.set_success(false);
+					response.set_error_code(EL10nCode_PullServerReqRegistAlready);
 				}
 				else
 				{
 					entity->SetChannel(channel);
 					channel->setContextPtr(entity);
+					// entity->SetLinkNode(nullptr);
 
-					response.set_success(true);
+					size_t pos = ipPort.find(":");
+					entity->SetServerIp(ipPort.substr(0, pos));
+					entity->SetServerPort(request.server_port());
 
 					// Re-enroll
 					entityMan->MountEntity(entity);
@@ -146,18 +147,7 @@ namespace LogicMessage
 			}
 			else
 			{
-				response.set_success(true);
-				response.set_server_id(serverId);
-				response.set_server_type((uint8_t(dnServer->GetServerType())));
-
-				entity = entityMan->AddEntity(serverId, request.map_id());
-				entity->SetChannel(channel);
-
-				channel->setContextPtr(entity);
-
-				size_t pos = ipPort.find(":");
-				entity->SetServerIp(ipPort.substr(0, pos));
-				entity->SetServerPort(request.server_port());
+				response.set_error_code(EL10nCode_PullServerTimeout);
 			}
 		}
 
@@ -172,10 +162,6 @@ namespace LogicMessage
 			entity->SetChannel(channel);
 
 			channel->setContextPtr(entity);
-
-			response.set_success(true);
-			response.set_server_id(entity->ID());
-			response.set_server_type((uint8_t(dnServer->GetServerType())));
 		}
 
 	}

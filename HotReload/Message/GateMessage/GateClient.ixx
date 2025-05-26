@@ -41,13 +41,13 @@ namespace GateMessage
 		if (!entity)
 		{
 			dnServer->GetLogger()->Record(ELogLevel_Debug, "noaccount {}!!", request.account_id());
-			response.set_state_code(1);
+			response.set_error_code(EL10nCode_NoneProxyEntity);
 		}
 		// if not match, timer will destory entity
 		else if (Md5Hash(entity->Token()) != request.token())
 		{
 			dnServer->GetLogger()->Record(ELogLevel_Debug, "not match!!");
-			response.set_state_code(2);
+			response.set_error_code(EL10nCode_LoginTokenNotMatch);
 		}
 		else
 		{
@@ -79,7 +79,7 @@ namespace GateMessage
 				if (serverEntityList.empty())
 				{
 					dnServer->GetLogger()->Record(ELogLevel_Debug, "Msg_ReqAuthToken not LogicServer !!");
-					response.set_state_code(3);
+					response.set_error_code(EL10nCode_NotExistLogicServer);
 				}
 				else
 				{
@@ -107,8 +107,7 @@ namespace GateMessage
 				co_await dataChannel;
 				if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
 				{
-					response.set_state_code(4);
-					dnServer->GetLogger()->Record(ELogLevel_Debug, "requst timeout! ");
+					response.set_error_code(EL10nCode_SGateReqTimeout);
 				}
 
 			}

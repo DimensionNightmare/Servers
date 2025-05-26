@@ -83,15 +83,14 @@ public: // dll override
 		if (mEntityMap.contains(entityId))
 		{
 			ServerEntity::Ptr entity = mEntityMap[entityId];
-			std::unique_lock<std::shared_mutex> ulock(oMapMutex);
-
-			mEntityMapList[entity->GetServerType()].remove(entity);
 
 			if (const ServerEntity::Ptr& owner = entity->LinkNode())
 			{
 				owner->ClearFlag(EMServerEntityFlag::Locked);
 			}
 
+			std::unique_lock<std::shared_mutex> ulock(oMapMutex);
+			mEntityMapList[entity->GetServerType()].remove(entity);
 			mEntityMap.erase(entityId);
 			return true;
 		}
@@ -102,8 +101,4 @@ public: // dll override
 protected: // dll proxy
 	/// @brief 
 	std::unordered_map<EMServerType, std::list<ServerEntity::Ptr> > mEntityMapList;
-	
-	// server pull server
-	std::atomic<uint64_t> iServerGenId;
-
 };

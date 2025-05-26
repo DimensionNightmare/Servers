@@ -2,7 +2,7 @@ module;
 export module DNTask;
 
 import std.compat;
-import ThirdParty.PbGen;
+import BitFlag;
 
 using namespace std::chrono;
 
@@ -15,10 +15,8 @@ export enum class EMDNTaskFlag : uint16_t
 
 };
 
-using DNTaskBitFlag = std::bitset<static_cast<uint16_t>(EMDNTaskFlag::Max)>;
-
 export template <typename T>
-struct DNTask
+struct DNTask : public BitFlag<EMDNTaskFlag>
 {
 	struct promise_type;
 	using HandleType = std::coroutine_handle<promise_type>;
@@ -132,16 +130,12 @@ struct DNTask
 		}
 	}
 public:
-	bool HasFlag(EMDNTaskFlag flag) { return oFlags.test(uint16_t(flag)); }
-	void SetFlag(EMDNTaskFlag flag) { oFlags.set(uint16_t(flag)); }
-	void ClearFlag(EMDNTaskFlag flag) { oFlags.reset(uint16_t(flag)); }
 
 	size_t& TimerId() { return iTimerId; }
+
 private:
 
 	HandleType tHandle;
-
-	DNTaskBitFlag oFlags;
 
 	size_t iTimerId = 0;
 

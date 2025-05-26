@@ -60,14 +60,14 @@ public: // dll override
 	{
 		uint64_t entityId = entity->ID();
 
-		GDb::Player dbEntity = *entity->GetDbEntity();
+		GDb::PlayerPtr dbEntity = entity->GetDbEntity();
 
 		// change maprecord
 		if(offline)
 		{
-			GDef_MapPointRecord* mapInfo = dbEntity.mutable_map_info();
+			GDef_MapPointRecord* mapInfo = dbEntity->mutable_map_info();
 			GDef_MapPoint* cur_point = mapInfo->mutable_cur_point();
-			GDef_Vector3* property_location = dbEntity.mutable_property_entity()->mutable_location();
+			GDef_Vector3* property_location = dbEntity->mutable_property_entity()->mutable_location();
 			*cur_point->mutable_point() = *property_location;
 			property_location->Clear();
 
@@ -77,11 +77,11 @@ public: // dll override
 		}
 
 		std::string entity_data;
-		dbEntity.SerializeToString(&entity_data);
+		dbEntity->SerializeToString(&entity_data);
 
 		// sql
 		GMsg::L2D_ReqSaveData request;
-		std::string table_name = dbEntity.GetDescriptor()->full_name();
+		std::string table_name = dbEntity->GetDescriptor()->full_name();
 		request.set_table_name(table_name);
 		request.set_key_name(ClientEntity::SKeyName);
 		request.set_entity_data(entity_data);
@@ -105,16 +105,15 @@ public: // dll override
 			co_await dataChannel;
 			if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
 			{
-				response.set_state_code(10);
-				GetLogger()->Record(ELogLevel_Debug, "requst timeout! ");
+				response.set_error_code(EL10nCode_CRdbReqTimeout);
 			}
 		}
 
-		if (int code = response.state_code())
+		if (response.error_code() != EL10nCode_None)
 		{
 			BytesToHexString(entity_data);
 			mDbFailure[entityId] = entity_data;
-			GetLogger()->Record(ELogLevel_Debug, "Save Db Entity Error id = {}, state_code = {}! ", entityId, code);
+			GetLogger()->Record(ELogLevel_Debug, "Save Db Entity Error id = {}, error_code = {}! ", entityId, static_cast<int>(response.error_code()));
 			co_return;
 		}
 

@@ -129,7 +129,7 @@ export void ApiAuth(DNServer::WPtr server, hv::HttpService* service)
 						{
 							retData["code"] = HTTP_STATUS_REQUEST_TIMEOUT;
 
-							response.set_state_code(1);
+							response.set_error_code(EL10nCode_SAuthReqTimeout);
 						}
 						else
 						{

@@ -254,7 +254,7 @@ export int HandleLogicServerInit(const World::Ptr& world)
 
 	}
 
-	return true;
+	return dnServer->InitDatabase();
 }
 
 export int HandleLogicServerShutdown(const World::Ptr& world)

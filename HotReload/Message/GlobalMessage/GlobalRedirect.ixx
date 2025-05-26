@@ -49,8 +49,7 @@ namespace GlobalMessage
 		std::string binData;
 		if (tempList.empty())
 		{
-			response.set_state_code(4);
-			dnServer->GetLogger()->Record(ELogLevel_Debug, "not exist GateServer");
+			response.set_error_code(EL10nCode_NotExistGateServer);
 		}
 		else
 		{
@@ -79,15 +78,18 @@ namespace GlobalMessage
 			co_await dataChannel;
 			if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
 			{
-				dnServer->GetLogger()->Record(ELogLevel_Debug, "requst timeout! ");
-				response.set_state_code(5);
+				response.set_error_code(EL10nCode_SGlobalReqTimeout);
 
-				entity->SetConnNum(-1);
 			}
-			else
+
+			if(response.error_code() == EL10nCode_None)
 			{
 				response.set_server_ip(entity->ServerIp());
 				response.set_server_port(entity->ServerPort());
+			}
+			else
+			{
+				entity->SetConnNum(-1);
 			}
 
 			

@@ -19,6 +19,7 @@ import DNWebProxy;
 import StrUtils;
 import RdbProxy;
 import MdbProxy;
+import BitFlag;
 
 export void WriteDumpFile(std::filesystem::path fileName, _EXCEPTION_POINTERS* ExceptionInfo = nullptr)
 {
@@ -84,7 +85,7 @@ public:
 	bool Init(std::unordered_map<std::string, std::string>&& launchParam)
 	{
 		/// @brief load ini config
-		ServerTypeBitFlag bitServerOpenFlag;
+		BitFlag<EMServerType> bitServerOpenFlag;
 		std::unordered_map<std::string, std::unordered_map<std::string, std::string>> iniFileParam;
 
 #pragma region LuanchConfig
@@ -97,12 +98,12 @@ public:
 
 		for(auto& serverType : StrSplit(launchParam["svrType"], ","))
 		{
-			bitServerOpenFlag.set(stoi(serverType));
+			bitServerOpenFlag.SetFlag(std::stoi(serverType));
 		}
 
 		launchParam.erase("svrType");
 
-		uint64_t bitFlagValue = bitServerOpenFlag.to_ulong();
+		uint64_t bitFlagValue = bitServerOpenFlag.GetAllFlagNum();
 		if (bitFlagValue == 0 || bitFlagValue >= (1 << static_cast<uint8_t>(EMServerType::Max)))
 		{
 			SPidLogger.Record(ELogLevel_Error, "serverType Not Invalid! ");
@@ -228,7 +229,7 @@ public:
 		HotReloadDll::Ptr pHotDll;
 
 		// muti server only this valid.
-		if(bitServerOpenFlag.count() > 1)
+		if(bitServerOpenFlag.GetAllFlagCount() > 1)
 		{
 			iniFileParam["Common"]["program"] = launchParam["program"];
 
@@ -253,7 +254,7 @@ public:
 		for(auto& [serverEnum, serverName] : ServerTypeList)
 		{
 			// set global Launch config
-			if(bitServerOpenFlag.test(serverEnum))
+			if(bitServerOpenFlag.HasFlag(serverEnum))
 			{
 				auto mergeMap = iniFileParam["Common"];
 				mergeMap.merge(iniFileParam[serverName]);
@@ -409,7 +410,18 @@ public:
 		auto reloadDll = [this, pause, resume](std::stringstream* ss = nullptr)
 			{
 				pause();
-				
+				if(oWorlds.size() > 1)
+				{
+					World::Ptr firstWorld = oWorlds[0];
+					HotReloadDll::Ptr pHotDll = firstWorld->GetSystem<HotReloadDll>(EMSystemType::HotReloadDll);
+					if(pHotDll->ReloadHandle())
+					{
+						for(auto& world : oWorlds)
+						{
+							pHotDll->OnRegHotReload(world);
+						}
+					}
+				}
 				resume();
 			};
 

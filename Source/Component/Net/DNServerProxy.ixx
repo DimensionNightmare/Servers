@@ -33,7 +33,7 @@ public:
 
 	bool Awake() override
 	{
-		int16_t port = 0;
+		int16_t inport = 0;
 
 		DNServer::Ptr server = GetOwner<DNServer>();
 
@@ -43,20 +43,20 @@ public:
 			case EMServerType::GlobalServer:
 			case EMServerType::AuthServer:
 			{
-				std::string* inport = GetOwner()->GetWorld()->LaunchParam("port");
-				if (!inport)
+				std::string* param = GetOwner()->GetWorld()->LaunchParam("port");
+				if (!param)
 				{
 					GetLogger()->Record(EL10nCode_SrvNeedIPPort);
 					// return false;
 					return false;
 				}
 
-				port = stoi(*inport);
+				inport = stoi(*param);
 			}
 		}
 		
 
-		int listenfd = createsocket(port, "0.0.0.0");
+		int listenfd = createsocket(inport, "0.0.0.0");
 		if (listenfd < 0)
 		{
 			GetLogger()->Record(EL10nCode_CreateSocket);
@@ -64,7 +64,7 @@ public:
 			return false;
 		}
 
-		this->port = port;
+		port = inport;
 
 		// if not set port mean need get port by self 
 		if (!port && listenfd > 0)
@@ -77,7 +77,7 @@ public:
 				return false;
 			}
 
-			this->port = Platform::ntohs(addr.sin_port);
+			port = Platform::ntohs(addr.sin_port);
 		}
 
 		unpack_setting_t setting;

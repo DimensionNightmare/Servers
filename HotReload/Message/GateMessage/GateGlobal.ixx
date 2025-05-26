@@ -57,12 +57,14 @@ namespace GateMessage
 					SPidLogger.Record(ELogLevel_Debug, "Send Logic tick User->{}, server:{}", entity->ID(), entity->RecordServerId());
 
 					ServerEntityManagerHelper::Ptr serverEntityMan = dnServer->GetServerEntityManager();
-					ServerEntity::Ptr serverEntity = serverEntityMan->GetEntity(serverId);
+					if(ServerEntity::Ptr serverEntity = serverEntityMan->GetEntity(serverId))
+					{
+						request.set_account_id(entity->ID());
 
-					request.set_account_id(entity->ID());
+						request.SerializeToString(&binData);
+						MessagePackAndSend(0, EMMsgDeal::Redir, request.GetDescriptor()->full_name(), binData, serverEntity->GetChannel());
+					}
 
-					request.SerializeToString(&binData);
-					MessagePackAndSend(0, EMMsgDeal::Redir, request.GetDescriptor()->full_name(), binData, serverEntity->GetChannel());
 				}
 
 			}

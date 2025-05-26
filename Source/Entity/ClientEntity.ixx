@@ -3,7 +3,7 @@ export module ClientEntity;
 
 import ECSW;
 import ThirdParty.PbGen;
-
+import BitFlag;
 
 export enum class EMClientEntityFlag : uint16_t
 {
@@ -14,9 +14,7 @@ export enum class EMClientEntityFlag : uint16_t
 	Max,
 };
 
-using ClientEntityBitFlag = std::bitset<static_cast<uint16_t>(EMClientEntityFlag::Max)>;
-
-export class ClientEntity : public Entity
+export class ClientEntity : public Entity, public BitFlag<EMClientEntityFlag>
 {
 protected:
 	friend class ClientEntityManagerHelper;
@@ -43,21 +41,15 @@ public: // dll override
 	uint64_t RecordRoomId() { return iRecordRoomId; }
 	void SetRecordRoomId(uint64_t roomId) { iRecordRoomId = roomId; }
 
-	bool HasFlag(EMClientEntityFlag flag) { return oFlags.test(uint16_t(flag)); }
-	void SetFlag(EMClientEntityFlag flag) { oFlags.set(uint16_t(flag)); }
-	void ClearFlag(EMClientEntityFlag flag) { oFlags.reset(uint16_t(flag)); }
-
 	/// @brief db entity get
-	GDb::Player* GetDbEntity() { return &*pDbEntity; }
+	GDb::PlayerPtr& GetDbEntity() { return pDbEntity; }
 
 protected: // dll proxy
 
 	uint64_t iRecordRoomId = 0;
 
-	ClientEntityBitFlag oFlags;
-
 	/// @brief db entity
-	std::unique_ptr<GDb::Player> pDbEntity = std::make_unique<GDb::Player>();
+	GDb::PlayerPtr pDbEntity;
 
 public:
 

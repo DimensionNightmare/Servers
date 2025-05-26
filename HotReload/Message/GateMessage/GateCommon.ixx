@@ -21,7 +21,7 @@ namespace GateMessage
 
 		GMsg::g2G_RetRegistChild request;
 
-		request.set_server_id(dnServer->ServerId());
+		request.set_server_id(dnServer->ID());
 
 		auto AddChild = [&request](ServerEntity::Ptr serv)
 			{
@@ -67,11 +67,12 @@ namespace GateMessage
 
 		GMsg::COM_ReqRegistSrv request;
 
+		request.set_server_id(dnServer->ID());
 		request.set_server_type((int)dnServer->GetServerType());
 
-		if (uint64_t serverId = dnServer->ServerId())
+		if (dnServer->IsPullServer())
 		{
-			request.set_server_id(serverId);
+			request.set_is_pull(true);
 		}
 
 		request.set_server_port(serverProxy->port);
@@ -98,23 +99,20 @@ namespace GateMessage
 			co_await dataChannel;
 			if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
 			{
-				dnServer->GetLogger()->Record(ELogLevel_Debug, "requst timeout! ");
+				response.set_error_code(EL10nCode_ReqRegistTimeout);
 			}
 
 		}
 
-		if (response.success())
+		if (response.error_code() == EL10nCode_None)
 		{
-			dnServer->GetLogger()->Record(ELogLevel_Debug, "regist Server success! Rec index:{}", response.server_id());
 			clientProxy->SetRegistState(EMRegistState::Registed);
-			clientProxy->SetRegistType(response.server_type());
-			dnServer->SetServerId(response.server_id());
 
 			Evt_RetRegistChild(dnServer);
 		}
 		else
 		{
-			dnServer->GetLogger()->Record(ELogLevel_Debug, "regist Server error!");
+			dnServer->GetLogger()->Record(response.error_code());
 			// dnServer->IsRun() = false; //exit application
 			clientProxy->SetRegistState(EMRegistState::None);
 		}
@@ -152,13 +150,13 @@ namespace GateMessage
 
 		if (regType < EMServerType::DatabaseServer || regType > EMServerType::LogicServer || ipPort.empty())
 		{
-			response.set_success(false);
+			response.set_error_code(EL10nCode_RegistServerTypeError);
 		}
 
 		//exist?
 		if (ServerEntity::Ptr entity = channel->getContextPtr<ServerEntity>())
 		{
-			response.set_success(false);
+			response.set_error_code(EL10nCode_RegistServerChannelExist);
 		}
 
 		else if (ServerEntity::Ptr entity = entityMan->AddEntity(serverId, regType))
@@ -169,17 +167,13 @@ namespace GateMessage
 			entity->SetChannel(channel);
 
 			channel->setContextPtr(entity);
-
-			response.set_success(true);
-			response.set_server_id(entity->ID());
-			response.set_server_type(static_cast<uint8_t>(dnServer->GetServerType()));
 		}
 		else
 		{
-			abort();
+			response.set_error_code(EL10nCode_UnkonwOpreator);
 		}
 
-		if (response.success())
+		if (response.error_code() == EL10nCode_None)
 		{
 			// up to Global
 			GMsg::g2G_RetRegistSrv request;

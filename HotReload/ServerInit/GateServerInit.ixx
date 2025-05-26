@@ -69,6 +69,7 @@ export int HandleGateServerInit(const World::Ptr& world)
 
 						}
 
+						channel->deleteContextPtr();
 					}
 				}
 			};

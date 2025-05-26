@@ -61,7 +61,7 @@ namespace ControlMessage
 
 		if (!entity)
 		{
-			response.set_state_code(2);
+			response.set_error_code(EL10nCode_NotExistGlobalServer);
 		}
 		else
 		{
@@ -84,8 +84,7 @@ namespace ControlMessage
 			co_await dataChannel;
 			if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
 			{
-				dnServer->GetLogger()->Record(ELogLevel_Debug, "requst timeout! ");
-				response.set_state_code(3);
+				response.set_error_code(EL10nCode_SControlReqTimeout);
 			}
 
 		}

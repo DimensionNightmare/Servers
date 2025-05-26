@@ -29,11 +29,12 @@ namespace DatabaseMessage
 
 		GMsg::COM_ReqRegistSrv request;
 
+		request.set_server_id(dnServer->ID());
 		request.set_server_type((int)dnServer->GetServerType());
 
-		if (uint64_t serverIndex = dnServer->ServerId())
+		if (dnServer->IsPullServer())
 		{
-			request.set_server_id(serverIndex);
+			request.set_is_pull(true);
 		}
 
 		// data alloc
@@ -56,21 +57,18 @@ namespace DatabaseMessage
 			co_await dataChannel;
 			if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
 			{
-				dnServer->GetLogger()->Record(ELogLevel_Debug, "requst timeout! ");
+				response.set_error_code(EL10nCode_ReqRegistTimeout);
 			}
 
 		}
 
-		if (response.success())
+		if (response.error_code() == EL10nCode_None)
 		{
-			dnServer->GetLogger()->Record(ELogLevel_Debug, "regist Server success! Rec index:{}", response.server_id());
 			clientProxy->SetRegistState(EMRegistState::Registed);
-			clientProxy->SetRegistType(response.server_type());
-			dnServer->SetServerId(response.server_id());
 		}
 		else
 		{
-			dnServer->GetLogger()->Record(ELogLevel_Debug, "regist Server error!  ");
+			dnServer->GetLogger()->Record(response.error_code());
 			// dnServer->IsRun() = false; //exit application
 			clientProxy->SetRegistState(EMRegistState::None);
 		}

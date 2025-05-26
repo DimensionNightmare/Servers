@@ -89,6 +89,7 @@ namespace LogicMessage
 			entity = entityMan->GetEntity(request.account_id());
 		}
 
+#if 0
 		RoomEntityManagerHelper::Ptr roomEntityMan = dnServer->GetRoomEntityManager();
 		RoomEntity::Ptr roomEntity = nullptr;
 
@@ -122,7 +123,7 @@ namespace LogicMessage
 			std::list<RoomEntity::Ptr> roomEntityList = roomEntityMan->GetEntitysByMapId(mapId);
 			if (roomEntityList.empty())
 			{
-				response.set_state_code(5);
+				response.set_error_code(5);
 				dnServer->GetLogger()->Record(ELogLevel_Debug, "not ds Server");
 			}
 			else
@@ -154,7 +155,7 @@ namespace LogicMessage
 			if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
 			{
 				dnServer->GetLogger()->Record(ELogLevel_Debug, "requst timeout! ");
-				response.set_state_code(6);
+				response.set_error_code(6);
 			}
 			else
 			{
@@ -167,6 +168,7 @@ namespace LogicMessage
 		}
 
 		dnServer->GetLogger()->Record(ELogLevel_Debug, "ds:{}", response.DebugString());
+#endif
 
 		co_return;
 	}

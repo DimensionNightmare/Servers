@@ -28,14 +28,12 @@ public:
 	{
 		if (!mEntityMap.contains(entityId))
 		{
-			std::unique_lock<std::shared_mutex> ulock(oMapMutex);
-
-			mEntityMap[entityId] = std::shared_ptr<RoomEntity>(new RoomEntity(GetOwner()->GetWorldW()));
-
-			RoomEntity::Ptr entity = mEntityMap[entityId];
-
+			RoomEntity::Ptr entity = std::shared_ptr<RoomEntity>(new RoomEntity(GetOwner()->GetWorldW()));
 			entity->SetMapID(mapId);
 
+
+			std::unique_lock<std::shared_mutex> ulock(oMapMutex);
+			mEntityMap[entityId] = entity;
 			mEntityMapList[mapId].emplace_back(entity);
 			return entity;
 		}
@@ -47,13 +45,11 @@ public:
 	{
 		if (mEntityMap.contains(entityId))
 		{
+			SPidLogger.Record(ELogLevel_Debug, "offline destory entity");
 			RoomEntity::Ptr entity = mEntityMap[entityId];
 
 			std::unique_lock<std::shared_mutex> ulock(oMapMutex);
-
 			mEntityMapList[entity->MapID()].remove(entity);
-
-			SPidLogger.Record(ELogLevel_Debug, "offline destory entity");
 			mEntityMap.erase(entityId);
 			return true;
 		}

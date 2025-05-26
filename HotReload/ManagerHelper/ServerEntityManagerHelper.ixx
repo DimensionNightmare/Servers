@@ -28,12 +28,12 @@ public:
 	{
 		if (!mEntityMap.contains(entityId))
 		{
+			ServerEntity::Ptr entity = std::shared_ptr<ServerEntity>(new ServerEntity(GetOwner()->GetWorldW()));
+			entity->SetServerType(regType);
+			entity->SetID(entityId);
+
 			std::unique_lock<std::shared_mutex> ulock(oMapMutex);
-
-			mEntityMap[entityId] = std::shared_ptr<ServerEntity>(new ServerEntity(GetOwner()->GetWorldW()));
-
-			ServerEntity::Ptr entity = mEntityMap[entityId];
-
+			mEntityMap[entityId] = entity;
 			mEntityMapList[regType].emplace_back(entity);
 			return entity;
 		}
@@ -45,13 +45,12 @@ public:
 	{
 		if (mEntityMap.contains(entityId))
 		{
+			SPidLogger.Record(ELogLevel_Debug, "offline destory entity");
 			ServerEntity::Ptr entity = mEntityMap[entityId];
+			entity->Dispose();
 
 			std::unique_lock<std::shared_mutex> ulock(oMapMutex);
-
 			mEntityMapList[entity->GetServerType()].remove(entity);
-
-			SPidLogger.Record(ELogLevel_Debug, "offline destory entity");
 			mEntityMap.erase(entityId);
 			return true;
 		}
@@ -89,10 +88,5 @@ public:
 	{
 		std::shared_lock<std::shared_mutex> lock(oMapMutex);
 		return mEntityMapList[type];
-	}
-
-	[[nodiscard]] uint64_t GenServerId()
-	{
-		return ++iServerGenId;
 	}
 };

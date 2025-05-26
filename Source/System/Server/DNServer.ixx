@@ -20,10 +20,8 @@ export enum class EMServerType : uint8_t
 	Max					,
 };
 
-export using ServerTypeBitFlag = std::bitset<static_cast<uint8_t>(EMServerType::Max)>;
-
-export std::array<std::pair<uint8_t, std::string>, 7> ServerTypeList = {{
-	#define one(name) {static_cast<uint8_t>(EMServerType::name), #name}
+export std::array<std::pair<EMServerType, std::string>, 7> ServerTypeList = {{
+	#define one(name) {EMServerType::name, #name}
 	one(ControlServer),
 	one(GlobalServer),
 	one(AuthServer),
@@ -66,7 +64,8 @@ public:
 	{
 		if (std::string* value = GetWorld()->LaunchParam("svrIndex"))
 		{
-			iServerId = stoi(*value);
+			bIsPull = true;
+			SetID(stol(*value));
 		}
 
 		return true;
@@ -75,17 +74,16 @@ public:
 	EMServerType GetServerType() { return emServerType; }
 	void SetServerType(EMServerType type) { emServerType = type; }
 
-	uint64_t ServerId() { return iServerId; }
-	void SetServerId(uint64_t id) { iServerId = id; }
-
 	LoggerPrint::Ptr GetLogger() { return pLogger.expired() ? nullptr : pLogger.lock(); }
+
+	bool IsPullServer() { return bIsPull;}
 public: // dll override
 
 protected:
 
 	EMServerType emServerType = EMServerType::None;
 
-	uint64_t iServerId = 0;
+	bool bIsPull = false;
 
 	std::mutex oTaskMutex;
 

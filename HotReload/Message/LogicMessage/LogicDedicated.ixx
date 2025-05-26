@@ -41,7 +41,7 @@ namespace LogicMessage
 
 		if (!entity)
 		{
-			response.set_state_code(1);
+			response.set_error_code(EL10nCode_NoneClientEntity);
 		}
 		else
 		{
@@ -88,7 +88,7 @@ namespace LogicMessage
 			return;
 		}
 
-		if (GDb::Player* dbEntity = entity->GetDbEntity())
+		if (GDb::PlayerPtr dbEntity = entity->GetDbEntity())
 		{
 			dbEntity->MergeFrom(player);
 			if (request.runtime_save())

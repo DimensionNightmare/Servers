@@ -89,26 +89,26 @@ namespace DatabaseMessage
 					catch (const std::exception& e)
 					{
 						dnServer->GetLogger()->Record(ELogLevel_Debug, e.what());
-						response.set_state_code(5);
+						response.set_error_code(EL10nCode_UnkonwOpreator);
 					}
 
 					delete message;
 				}
 				else
 				{
-					response.set_state_code(6);
+					response.set_error_code(EL10nCode_PBMessageNotGen);
 				}
 			}
 			else
 			{
-				response.set_state_code(4);
+				response.set_error_code(EL10nCode_PBMessageNotExist);
 
 			}
 
 		}
 		else
 		{
-			response.set_state_code(3);
+			response.set_error_code(EL10nCode_DBNotConnect);
 		}
 	}
 
@@ -161,26 +161,26 @@ namespace DatabaseMessage
 					catch (const std::exception& e)
 					{
 						dnServer->GetLogger()->Record(ELogLevel_Debug, e.what());
-						response.set_state_code(5);
+						response.set_error_code(EL10nCode_UnkonwOpreator);
 					}
 
 					delete message;
 				}
 				else
 				{
-					response.set_state_code(6);
+					response.set_error_code(EL10nCode_PBMessageNotGen);
 				}
 			}
 			else
 			{
-				response.set_state_code(4);
+				response.set_error_code(EL10nCode_PBMessageNotExist);
 
 			}
 
 		}
 		else
 		{
-			response.set_state_code(3);
+			response.set_error_code(EL10nCode_DBNotConnect);
 		}
 
 	}

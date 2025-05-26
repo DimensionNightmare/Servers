@@ -32,11 +32,12 @@ namespace GlobalMessage
 
 		GMsg::COM_ReqRegistSrv request;
 
-		request.set_server_type((int)server->GetServerType());
+		request.set_server_id(dnServer->ID());
+		request.set_server_type((int)dnServer->GetServerType());
 
-		if (uint64_t serverId = server->ServerId())
+		if (dnServer->IsPullServer())
 		{
-			request.set_server_id(serverId);
+			request.set_is_pull(true);
 		}
 
 		request.set_server_port(serverProxy->port);
@@ -62,21 +63,18 @@ namespace GlobalMessage
 			co_await dataChannel;
 			if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
 			{
-				dnServer->GetLogger()->Record(ELogLevel_Debug, "requst timeout! ");
+				response.set_error_code(EL10nCode_ReqRegistTimeout);
 			}
 
 		}
 
-		if (response.success())
+		if (response.error_code() == EL10nCode_None)
 		{
-			dnServer->GetLogger()->Record(ELogLevel_Debug, "regist Server success! Rec index:{}", response.server_id());
 			clientProxy->SetRegistState(EMRegistState::Registed);
-			clientProxy->SetRegistType(response.server_type());
-			dnServer->SetServerId(response.server_id());
 		}
 		else
 		{
-			dnServer->GetLogger()->Record(ELogLevel_Debug, "regist Server error!  ");
+			dnServer->GetLogger()->Record(response.error_code());
 			// dnServer->IsRun() = false; //exit application
 			clientProxy->SetRegistState(EMRegistState::None);
 		}
@@ -105,7 +103,7 @@ namespace GlobalMessage
 			response.SerializeToString(&binData);
 			MessagePackAndSend(msgId, EMMsgDeal::Res, binData, channel);
 
-			if (response.success())
+			if (response.error_code() == EL10nCode_None)
 			{
 				dnServer->UpdateServerGroup();
 			}
@@ -121,19 +119,19 @@ namespace GlobalMessage
 
 		if (regType < EMServerType::GateServer || regType > EMServerType::LogicServer || ipPort.empty())
 		{
-			response.set_success(false);
+			response.set_error_code(EL10nCode_RegistServerTypeError);
 		}
 
 		//exist?
 		else if (ServerEntity::Ptr entity = channel->getContextPtr<ServerEntity>())
 		{
-			response.set_success(false);
+			response.set_error_code(EL10nCode_RegistServerChannelExist);
 		}
 
 		// take task to regist !
-		else if (uint64_t serverId = request.server_id())
+		else if (request.is_pull())
 		{
-			if (ServerEntity::Ptr entity = entityMan->GetEntity(serverId))
+			if (ServerEntity::Ptr entity = entityMan->GetEntity(request.server_id()))
 			{
 				// wait destroy`s destroy
 				if (uint64_t timerId = entity->TimerId())
@@ -145,15 +143,17 @@ namespace GlobalMessage
 				// already connect
 				if (const DNSocketChannel::Ptr& sock = entity->GetChannel())
 				{
-					response.set_success(false);
+					response.set_error_code(EL10nCode_PullServerReqRegistAlready);
 				}
 				else
 				{
-					entity->SetLinkNode(nullptr);
 					entity->SetChannel(channel);
 					channel->setContextPtr(entity);
+					// entity->SetLinkNode(nullptr);
 
-					response.set_success(true);
+					size_t pos = ipPort.find(":");
+					entity->SetServerIp(ipPort.substr(0, pos));
+					entity->SetServerPort(request.server_port());
 
 					// Re-enroll
 					entityMan->MountEntity(regType, entity);
@@ -161,23 +161,12 @@ namespace GlobalMessage
 			}
 			else
 			{
-				response.set_success(true);
-				response.set_server_id(serverId);
-				response.set_server_type((uint8_t(dnServer->GetServerType())));
-
-				entity = entityMan->AddEntity(serverId, regType);
-				entity->SetChannel(channel);
-
-				channel->setContextPtr(entity);
-
-				size_t pos = ipPort.find(":");
-				entity->SetServerIp(ipPort.substr(0, pos));
-				entity->SetServerPort(request.server_port());
+				response.set_error_code(EL10nCode_PullServerTimeout);
 			}
 
 		}
 
-		else if (ServerEntity::Ptr entity = entityMan->AddEntity(entityMan->GenServerId(), regType))
+		else if (ServerEntity::Ptr entity = entityMan->AddEntity(request.server_id(), regType))
 		{
 			size_t pos = ipPort.find(":");
 			entity->SetServerIp(ipPort.substr(0, pos));
@@ -185,10 +174,10 @@ namespace GlobalMessage
 			entity->SetChannel(channel);
 
 			channel->setContextPtr(entity);
-
-			response.set_success(true);
-			response.set_server_id(entity->ID());
-			response.set_server_type((uint8_t(dnServer->GetServerType())));
+		}
+		else
+		{
+			response.set_error_code(EL10nCode_UnkonwOpreator);
 		}
 
 	}

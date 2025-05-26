@@ -62,6 +62,10 @@ namespace GlobalMessage
 		ServerEntityManagerHelper::Ptr entityMan = dnServer->GetServerEntityManager();
 
 		ServerEntity::Ptr entity = entityMan->GetEntity(request.server_id());
+		if(!entity)
+		{
+			return;
+		}
 
 		for (int i = 0; i < request.childs_size(); i++)
 		{
