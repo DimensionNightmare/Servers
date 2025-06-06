@@ -64,10 +64,13 @@ public:
 			return false;
 		}
 
-		port = inport;
-
+		
 		// if not set port mean need get port by self 
-		if (!port && listenfd > 0)
+		if (inport)
+		{
+			port = inport;
+		}
+		else
 		{
 			Platform::sockaddr_in addr;
 			int addrLen = sizeof(addr);
@@ -91,7 +94,7 @@ public:
 
 		GetLogger()->Record(EL10nCode_SrvListenOn, port, listenfd);
 
-		server->AddEvent(EMEventType::ServerStart, GetSelfW<DNServerProxy>(), &DNServerProxy::Start);
+		GetOwner()->GetWorld()->AddEvent(EMEventType::ServerStart, GetSelfW<DNServerProxy>(), &DNServerProxy::Start);
 
 		return true;
 	}

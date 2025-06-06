@@ -3,6 +3,7 @@ export module ServerEntityManager;
 
 import ServerEntity;
 import EntityManager;
+import DNServer;
 
 export class ServerEntityManager : public EntityManager<ServerEntity>
 {
@@ -27,8 +28,6 @@ public:
 	{
 	}
 
-public: // dll override
-
 	/// @brief 
 	void EntityCloseTimer(uint64_t timerID)
 	{
@@ -40,8 +39,9 @@ public: // dll override
 
 		uint64_t entityId = mMapTimer[timerID];
 
-		if(ServerEntity::Ptr rm = GetEntity(entityId))
+		if(mEntityMap.count(entityId))
 		{
+			ServerEntity::Ptr rm = mEntityMap[entityId];
 			if(const ServerEntity::Ptr& link = rm->LinkNode())
 			{
 				link->GetMapLinkNode(rm->GetServerType()).remove(rm);
@@ -64,16 +64,7 @@ public: // dll override
 		return timerId;
 	}
 
-	/// @brief 
-	ServerEntity::Ptr GetEntity(uint64_t entityId)
-	{
-		std::unique_lock<std::shared_mutex> ulock(oMapMutex);
-		if (mEntityMap.contains(entityId))
-		{
-			return mEntityMap[entityId];
-		}
-		return nullptr;
-	}
+public: // dll override
 
 	/// @brief 
 	bool RemoveEntity(uint64_t entityId)
@@ -98,13 +89,14 @@ public: // dll override
 		return false;
 	}
 
-	void AddEntity(uint64_t entityId, ServerEntity::Ptr& entity)
+	void AddEntity(uint64_t entityId, EMServerType regType)
 	{
-		entity = std::shared_ptr<ServerEntity>(new ServerEntity(GetOwner()->GetWorldW()));
+		ServerEntity::Ptr entity = std::shared_ptr<ServerEntity>(new ServerEntity(GetOwner()->GetWorldW()));
 		entity->SetID(entityId);
 
 		std::unique_lock<std::shared_mutex> ulock(oMapMutex);
 		mEntityMap[entityId] = entity;
+		mEntityMapList[regType].emplace_back(entity);
 	}
 
 protected: // dll proxy

@@ -1,5 +1,5 @@
 module;
-export module MODULE_MAIN;
+export module MAIN;
 
 import DimensionNightmare;
 import ThirdParty.Platform;
@@ -182,10 +182,7 @@ export int main(int argc, char** argv)
 					if(!fileName.empty())
 					{
 						fileName.append(".dmp");
-						// if(HotReloadDll* hotdll = App->GetHotDll())
-						// {
-						// 	WriteDumpFile(hotdll->GetDllPath() / fileName);
-						// }
+						WriteDumpFile(pidWorkPath / fileName);
 					}
 				};
 
@@ -197,7 +194,7 @@ export int main(int argc, char** argv)
 						allStr += str + " ";
 					}
 
-					SPidLogger.Record(ELogLevel_Normal, allStr);
+					SPidLogger.Record(ELogLevel_Normal, "{}", allStr);
 
 #ifdef _WIN32
 					Platform::PROCESS_INFORMATION pinfo{};

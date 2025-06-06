@@ -24,25 +24,6 @@ public:
 		Component::Dispose();
 	}
 
-	void AddConnection(std::shared_ptr<sw::redis::Redis>&& connection)
-	{
-		pMdbProxys.emplace(0, std::move(connection));
-	}
-
-	std::shared_ptr<sw::redis::Redis> GetConnection()
-	{
-		if (pMdbProxys.contains(0))
-		{
-			return pMdbProxys[0];
-		}
-		return nullptr;
-	}
-
-	void ClearConnections()
-	{
-		pMdbProxys.clear();
-	}
-
 protected:
 	std::unordered_map<uint16_t, std::shared_ptr<sw::redis::Redis>> pMdbProxys;
 };

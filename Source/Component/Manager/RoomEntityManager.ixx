@@ -25,8 +25,6 @@ public:
 	{
 	}
 
-public:
-
 	void EntityCloseTimer(uint64_t timerID)
 	{
 		std::unique_lock<std::shared_mutex> ulock(oTimerMutex);
@@ -52,15 +50,17 @@ public:
 		return timerId;
 	}
 
+public: // dll proxy
+
 	bool RemoveEntity(uint64_t entityId)
 	{
 		if (mEntityMap.contains(entityId))
 		{
 			RoomEntity::Ptr entity = mEntityMap[entityId];
+			entity->Dispose();
+			
 			std::unique_lock<std::shared_mutex> ulock(oMapMutex);
-
 			mEntityMapList[entity->MapID()].remove(entity);
-
 			mEntityMap.erase(entityId);
 			return true;
 		}
@@ -68,13 +68,14 @@ public:
 		return false;
 	}
 
-	void AddEntity(uint64_t entityId)
+	void AddEntity(uint64_t entityId, uint64_t mapId)
 	{
 		RoomEntity::Ptr entity = std::shared_ptr<RoomEntity>(new RoomEntity(GetOwner()->GetWorldW()));
 		entity->SetID(entityId);
 
 		std::unique_lock<std::shared_mutex> ulock(oMapMutex);
 		mEntityMap[entityId] = entity;
+		mEntityMapList[mapId].emplace_back(entity);
 	}
 
 protected:

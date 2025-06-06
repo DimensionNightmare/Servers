@@ -26,7 +26,7 @@ public:
 
 	virtual bool Awake() override
 	{
-		GetOwner()->AddEvent(EMEventType::ServerStart, GetSelfW<EntityManager>(), &EntityManager::Start);
+		GetOwner()->GetWorld()->AddEvent(EMEventType::ServerStart, GetSelfW<EntityManager>(), &EntityManager::Start);
 		return true;
 	}
 

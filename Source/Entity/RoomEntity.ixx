@@ -19,30 +19,9 @@ public:
 
 	virtual ~RoomEntity() = default;
 
-	uint32_t MapID() { return iMapId; }
-
-	void SetMapID(uint32_t mapId) { iMapId = mapId; }
-
-	std::string ServerIp() { return sServIp; }
-	void SetServerIp(const std::string& ip) { sServIp = ip; }
-
-	uint16_t ServerPort() { return iServPort; }
-	void SetServerPort(uint16_t port) { iServPort = port; }
-
-	uint32_t ConnNum() { return IConnNum; }
-
-	/// @brief the this close timedown destroy timerid.
-	/// @brief authenticate,shutdown and reconnect waiting.
-	uint64_t TimerId() { return iCloseTimerId; }
-	void SetTimerId(uint64_t timerId) { iCloseTimerId = timerId; }
-
-	/// @brief net socket set
-	const DNSocketChannel::Ptr& GetChannel() { return pChannel; }
-
-	/// @brief net socket get
-	void SetChannel(const DNSocketChannel::Ptr& channel) { pChannel = channel; }
-
 public: // dll override
+
+	uint32_t MapID() { return iMapId; }
 
 protected: // dll proxy
 

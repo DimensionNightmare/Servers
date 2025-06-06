@@ -113,11 +113,11 @@ export namespace Platform
 			if (SymGetLineFromAddr64(process, address, &displacement, &line))
 			{
 				oss << "#" << i << " " << symbol->Name << " ("
-					<< line.FileName << ":" << line.LineNumber << ")" << std::endl;
+					<< line.FileName << ":" << line.LineNumber << ")\n";
 			}
 			else
 			{
-				oss << "#" << i << " " << symbol->Name << " (0x" << (void*)address << ")" << std::endl;
+				oss << "#" << i << " " << symbol->Name << " (0x" << (void*)address << ")\n";
 			}
 		}
 

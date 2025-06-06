@@ -3,7 +3,6 @@ module;
 export module DimensionNightmare;
 
 import DNServer;
-import DllUtils;
 import ThirdParty.Platform;
 import HotReloadDll;
 import ProxyEntityManager;
@@ -225,21 +224,12 @@ public:
 
 #pragma endregion
 
-		HotReloadDll::Ptr pHotDll;
-
 		// muti server only this valid.
 		if(bitServerOpenFlag.GetAllFlagCount() > 1)
 		{
 			iniFileParam["Common"]["program"] = launchParam["program"];
 
 			MoveLuanchConfigToSelf(iniFileParam["Common"]);
-
-			pHotDll = AddSystem<HotReloadDll>();
-
-			if (!pHotDll->ReloadHandle())
-			{
-				return false;
-			}
 		}
 		else
 		{
@@ -249,6 +239,14 @@ public:
 
 
 		SPidLogger.Init(iniFileParam["Common"]);
+
+		
+		HotReloadDll::Ptr pHotDll = AddSystem<HotReloadDll>();
+
+		if (!pHotDll->ReloadHandle())
+		{
+			return false;
+		}
 	
 		for(auto& [serverEnum, serverName] : ServerTypeList)
 		{
@@ -266,6 +264,8 @@ public:
 					world->Dispose();
 					return false;
 				}
+
+				world->Broadcast(EMEventType::ServerStart);
 
 				oWorlds.push_back(world);
 			}
@@ -366,20 +366,6 @@ public:
 			}
 		}
 
-		if(pHotDll)
-		{
-			world->AddSystem(pHotDll);
-		}
-		else
-		{
-			pHotDll = world->AddSystem<HotReloadDll>();
-
-			if (!pHotDll->ReloadHandle())
-			{
-				return false;
-			}
-		}
-
 		if (!pHotDll->OnRegHotReload(world))
 		{
 			pLogger->Record(ELogLevel_Error, "program lunch OnRegHotReload error!");
@@ -388,20 +374,18 @@ public:
 
 		InitCmdHandle();
 
-		server->Broadcast(EMEventType::ServerStart);
-
 		return true;
 	}
 	
 	/// @brief init command line 
 	void InitCmdHandle()
 	{
-		auto pause = [this](std::stringstream* = nullptr)
+		auto pause = [](std::stringstream* = nullptr)
 			{
 				GEvent.Broadcast(EMEventType::ServerPause	);
 			};
 
-		auto resume = [this](std::stringstream* = nullptr)
+		auto resume = [](std::stringstream* = nullptr)
 			{
 				GEvent.Broadcast(EMEventType::ServerResume);
 			};
@@ -429,7 +413,7 @@ public:
 				resume();
 			};
 
-		auto reloadConfig = [this](std::stringstream* ss = nullptr)
+		auto reloadConfig = [this](std::stringstream* = nullptr)
 			{
 				// DNl10n::PInstance->Init();
 			};
@@ -449,7 +433,7 @@ public:
 			allCommands += k + "\n\t\t";
 		}
 
-		SPidLogger.Record(ELogLevel_Normal, allCommands);
+		SPidLogger.Record(ELogLevel_Normal, "{}", allCommands);
 	}	
 
 	/// @brief exec command line
@@ -494,11 +478,14 @@ public:
 
 #pragma region Export main space 
 
-// #define REGIST_MAINSPACE_SIGN_FUNCTION(classname, methodname)\
-// 	__declspec(dllexport) auto classname##_##methodname(classname *obj, MemberFunctionArgs<decltype(&classname::methodname)>::Arguments args)\
-// 	{\
-// 		return apply([&obj](auto &&...unpack) { return obj->methodname(std::forward<decltype(unpack)>(unpack)...); }, args);\
-// 	}
+template <typename Method>
+struct MemberFunctionArgs;
+
+template <typename R, typename Class, typename... Args>
+struct MemberFunctionArgs<R(Class::*)(Args...)>
+{
+	using Arguments = std::tuple<Args...>;
+};
 
 #define REGIST_MAINSPACE_SIGN_FUNCTION(Class, Method) 																		\
     __declspec(dllexport) auto Class##_##Method(Class* obj, MemberFunctionArgs<decltype(&Class::Method)>::Arguments args)	\

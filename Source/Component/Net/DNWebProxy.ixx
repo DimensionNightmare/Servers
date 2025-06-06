@@ -13,6 +13,8 @@ protected:
 	DNWebProxy(System::WPtr system):Component(system)
 	{
 		eComponentType = EMComponentType::DNWebProxy;
+
+		pLogger = GetOwner()->GetWorld()->GetSystemW<LoggerPrint>(EMSystemType::LoggerPrint);
 	}
 public:
 	using Ptr = std::shared_ptr<DNWebProxy>;
@@ -42,10 +44,9 @@ public:
 		setPort(port);
 		setThreadNum(4);
 
-		LoggerPrint::Ptr pLogger = pWorld->GetSystem<LoggerPrint>(EMSystemType::LoggerPrint);
-		pLogger->Record(EL10nCode_SrvListenOn, port, 0);
+		GetLogger()->Record(EL10nCode_SrvListenOn, port, 0);
 
-		GetOwner()->AddEvent(EMEventType::ServerStart, GetSelfW<DNWebProxy>(), &DNWebProxy::Start);
+		GetOwner()->GetWorld()->AddEvent(EMEventType::ServerStart, GetSelfW<DNWebProxy>(), &DNWebProxy::Start);
 
 		service = new hv::HttpService();
 
@@ -61,4 +62,11 @@ public:
 	{
 		stop();
 	}
+
+	LoggerPrint::Ptr GetLogger(){ return pLogger.expired() ? nullptr : pLogger.lock(); }
+
+protected:
+
+	LoggerPrint::WPtr pLogger;
+
 };

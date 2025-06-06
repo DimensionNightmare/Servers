@@ -4,7 +4,7 @@ export module Logger;
 import StrUtils;
 import L10nText;
 import ECSW;
-import ThirdParty.PbGen;
+import ThirdParty.Protobuf;
 import std.compat;
 
 class LogColor
@@ -72,38 +72,6 @@ public:
 		return true;
 	}
 
-	void flush(ELogLevel level, std::string& result)
-	{
-		if (result.empty())
-		{
-			return;
-		}
-
-		switch (level)
-		{
-			case ELogLevel_Normal:
-				std::cout << LogColor::BLUE << result << LogColor::RESET;
-				break;
-			case ELogLevel_Warning:
-				std::cout << LogColor::YELLOW << result << LogColor::RESET;
-				break;
-			case ELogLevel_Error:
-				std::cout << LogColor::RED << result << LogColor::RESET;
-				break;
-			case ELogLevel_Debug:
-				std::cout << result;
-				break;
-			default:
-				return;
-		}
-
-		if (LogFile.is_open())
-		{
-			LogFile << result;
-			LogFile.flush();
-		}
-	}
-
 	template <typename... Args>
     void Record(ELogLevel level, const std::format_string<Args...>& fmt, Args&&... args)
 	{
@@ -112,28 +80,9 @@ public:
 			return;
 		}
 
-		std::string result = std::format("[{}] {} -> \n\t{}\n", 
-			GetNowTimeStr(), 
-			sTitle, // olocation.function_name(),
-			std::format(fmt, std::forward<Args>(args)...));
-		
-		flush(level, result);
+		flush(level, std::format(fmt, std::forward<Args>(args)...));
 	}
 
-	void Record(ELogLevel level, const std::string& fmt)
-	{
-		if (level < eLogLevel)
-		{
-			return;
-		}
-
-		std::string result = std::format("[{}] {} -> \n\t{}\n", 
-			GetNowTimeStr(), 
-			sTitle, //olocation.function_name(), 
-			fmt);
-
-		flush(level, result);
-	}
 
 	template <typename... Args>
 	void Record(EL10nCode code, Args&&... args)
@@ -153,32 +102,10 @@ public:
             return std::make_format_args(args...);
         }, args_tuple);
 		
-		std::string result = std::format("[{}] {} -> \n\t{}\n", 
-			GetNowTimeStr(), 
-			sTitle, // olocation.function_name(), 
-			std::vformat(fmt, format_args));
-		
-		flush(level, result);
-	}
-
-	void Record(EL10nCode code)
-	{
-		ELogLevel level;
-		const std::string& fmt = GetDNl10n()->GetTipText(code, level);
-
-		if (level < eLogLevel)
-		{
-			return;
-		}
-		
-		std::string result = std::format("[{}] {} -> \n\t{}\n", 
-			GetNowTimeStr(), 
-			sTitle, // olocation.function_name(),
-			fmt);
-
-		flush(level, result);
-	}
 	
+		flush(level, std::vformat(fmt, format_args));
+	}
+
 	/// @brief set logger type and Log file Init 
 	void SetLogger(ELogLevel level)
 	{
@@ -200,7 +127,49 @@ public:
 	DNl10n::Ptr GetDNl10n() { return pDNl10n.expired() ? nullptr : pDNl10n.lock(); }
 
 	void SetDNl10n(DNl10n::WPtr l10n){ pDNl10n = l10n; }
+
+protected:
+
 	
+	void flush(ELogLevel level, std::string result)
+	{
+		if (result.empty())
+		{
+			return;
+		}
+
+		switch (level)
+		{
+			case ELogLevel_Normal:
+				result = std::format("[{}] {} -> \n\t{}{}{}\n", GetNowTimeStr(), sTitle, // olocation.function_name(),
+					LogColor::BLUE, result, LogColor::RESET);
+				break;
+			case ELogLevel_Warning:
+				result = std::format("[{}] {} -> \n\t{}{}{}\n", GetNowTimeStr(), sTitle, // olocation.function_name(),
+					LogColor::YELLOW, result, LogColor::RESET);
+				break;
+			case ELogLevel_Error:
+				result = std::format("[{}] {} -> \n\t{}{}{}\n", GetNowTimeStr(), sTitle, // olocation.function_name(),
+					LogColor::RED, result, LogColor::RESET);
+				break;
+			case ELogLevel_Debug:
+				result = std::format("[{}] {} -> \n\t{}\n", GetNowTimeStr(), sTitle, // olocation.function_name(),
+					result);
+					break;
+			default:
+				return;
+		}
+
+		std::cout << result;
+				
+		if (LogFile.is_open())
+		{
+			LogFile << result;
+			LogFile.flush();
+		}
+	}
+
+
 protected:
 	DNl10n::WPtr pDNl10n;
 
@@ -312,20 +281,10 @@ public:
 		GetLogger()->Record(level, fmt, std::forward<Args>(args)...);
 	}
 
-	void Record(ELogLevel level, const std::string& fmt)
-	{
-		GetLogger()->Record(level, fmt);
-	}
-
 	template <typename... Args>
 	void Record(EL10nCode code, Args&&... args)
 	{
 		GetLogger()->Record(code, std::forward<Args>(args)...);
-	}
-
-	void Record(EL10nCode code)
-	{
-		GetLogger()->Record(code);
 	}
 
 	LoggerPrint::Ptr GetLogger() { return pLogger.expired() ? nullptr : pLogger.lock(); }

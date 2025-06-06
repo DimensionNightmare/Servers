@@ -2,7 +2,7 @@ module;
 export module L10nText;
 
 import ECSW;
-import ThirdParty.PbGen;
+import ThirdParty.Protobuf;
 
 #define FUNCPLACE(class, func) &class::func, #class"_"#func
 

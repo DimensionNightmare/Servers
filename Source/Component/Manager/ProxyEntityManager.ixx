@@ -27,8 +27,6 @@ public:
 	{
 	}
 	
-public: // dll override
-
 	/// @brief 
 	void EntityCloseTimer(uint64_t timerID)
 	{
@@ -56,6 +54,8 @@ public: // dll override
 		return timerId;
 	}
 
+public: // dll proxy
+
 	/// @brief 
 	bool RemoveEntity(uint64_t entityId)
 	{
@@ -79,8 +79,5 @@ public: // dll override
 		std::unique_lock<std::shared_mutex> ulock(oMapMutex);
 		mEntityMap[entityId] = entity;
 	}
-
-protected: // dll proxy
-
 
 };

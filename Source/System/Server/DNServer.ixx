@@ -78,6 +78,7 @@ public:
 	LoggerPrint::Ptr GetLogger() { return pLogger.expired() ? nullptr : pLogger.lock(); }
 
 	bool IsPullServer() { return bIsPull;}
+	
 public: // dll override
 
 protected:

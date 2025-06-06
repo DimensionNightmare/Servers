@@ -1,7 +1,6 @@
 module;
 export module DNClientProxy;
 
-import FuncHelper;
 import MessagePack;
 import ECSW;
 import Logger;
@@ -74,7 +73,7 @@ public:
 		setting.length_field_offset = 0;
 		setUnpack(&setting);
 
-		GetOwner()->AddEvent(EMEventType::ServerStart, GetSelfW<DNClientProxy>(), &DNClientProxy::Start);
+		GetOwner()->GetWorld()->AddEvent(EMEventType::ServerStart, GetSelfW<DNClientProxy>(), &DNClientProxy::Start);
 
 		return true;
 	}
@@ -168,15 +167,15 @@ public: // dll override
 
 	void TickHeartbeat()
 	{
-		GMsg::COM_RetHeartbeat request;
-		request.Clear();
-		int64_t timespan = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-		request.set_timespan(timespan);
+		// GMsg::COM_RetHeartbeat request;
+		// request.Clear();
+		// int64_t timespan = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+		// request.set_timespan(timespan);
 
-		std::string binData;
-		request.SerializeToString(&binData);
+		// std::string binData;
+		// request.SerializeToString(&binData);
 
-		MessagePackAndSend(0, EMMsgDeal::Ret, request.GetDescriptor()->full_name(), binData, GetChannel());
+		// MessagePackAndSend(0, EMMsgDeal::Ret, request.GetDescriptor()->full_name(), binData, GetChannel());
 	}
 
 	void InitConnectedChannel(const DNSocketChannel::Ptr& chanhel)
@@ -206,25 +205,6 @@ public: // dll override
 		});
 	}
 
-	bool AddMsg(uint32_t msgId, DNTask<Message*>* task, uint32_t breakTime)
-	{
-		std::unique_lock<std::shared_mutex> ulock(oMsgMutex);
-		mMsgList.emplace(msgId, task);
-		// timeout
-		if (breakTime > 0)
-		{
-			task->TimerId() = CheckMessageTimeoutTimer(breakTime, msgId);
-		}
-		return true;
-	}
-
-	uint8_t RegistType() { return iRegistType; }
-	void SetRegistType(uint8_t type) { iRegistType = type; }
-
-	uint32_t GetMsgId() { return ++iMsgId; }
-
-	const DNSocketChannel::Ptr& GetChannel() { return channel; }
-
 protected: // dll proxy
 
 	std::unique_ptr<EventLoopThread> pLoop;
@@ -240,7 +220,8 @@ protected: // dll proxy
 
 	// status
 	EMRegistState eRegistState = EMRegistState::None;
-
+	
+	// callback regist to server‘s servertype
 	uint8_t iRegistType = 0;
 
 	std::function<void(const DNServer::Ptr& server)> pRegistEvent;

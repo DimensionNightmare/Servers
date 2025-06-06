@@ -134,7 +134,7 @@ public:
 		}
 		catch (const std::exception& e)
 		{
-			GetLogger()->Record(ELogLevel_Debug, e.what());
+			GetLogger()->Record(ELogLevel_Debug, "{}", e.what());
 			return false;
 		}
 #endif

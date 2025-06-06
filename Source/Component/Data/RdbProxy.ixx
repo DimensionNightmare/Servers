@@ -31,20 +31,6 @@ public:
 		Component::Dispose();
 	}
 
-	void AddConnection(uint16_t dbName, std::shared_ptr<pqxx::connection>&& connection)
-	{
-		pMdbProxys.emplace(dbName, std::move(connection));
-	}
-
-	std::shared_ptr<pqxx::connection> GetConnection(uint16_t dbName)
-	{
-		if (pMdbProxys.contains(dbName))
-		{
-			return pMdbProxys[dbName];
-		}
-		return nullptr;
-	}
-
 	LoggerPrint::Ptr GetLogger(){ return pLogger.expired() ? nullptr : pLogger.lock(); }
 
 public:

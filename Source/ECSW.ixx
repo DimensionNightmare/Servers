@@ -142,7 +142,7 @@ public: // dll override
 	std::shared_ptr<T> GetSelf() { return std::static_pointer_cast<T>(shared_from_this()); }
 
 	template<typename T>
-	std::weak_ptr<T> GetSelfW() { return std::weak_ptr<T>(GetSelf<T>()); }
+	std::weak_ptr<T> GetSelfW() { return GetSelf<T>(); }
 
 	bool IsDispose() { return bIsDisposed; }
 	
@@ -244,6 +244,7 @@ public: // dll override
 
 		for (auto& [type, component] : mComponents)
 		{
+			Event::RemoveEvent(component->ID());
 			component->Dispose();
 		}
 

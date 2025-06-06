@@ -30,50 +30,14 @@ public:
 		mMapLink.clear();
 	}
 	
-public: // dll override
-	/// 
-	EMServerType GetServerType() { return emServerType; }
-
-	void SetServerType(EMServerType type) { emServerType = type; }
-
 	/// @brief this server father node
 	const ServerEntity::Ptr& LinkNode() { return pLink; }
-	void SetLinkNode(const ServerEntity::Ptr& node) { pLink = node; }
-
-	std::string ServerIp() { return sServIp; }
-	void SetServerIp(const std::string& ip) { sServIp = ip; }
-
-	uint16_t ServerPort() { return iServPort; }
-	void SetServerPort(uint16_t port) { iServPort = port; }
-
-	/// @brief this server connected clients num
-	uint32_t ConnNum() { return IConnNum; }
-	void SetConnNum(int div) { IConnNum += div; }
-
-	/// @brief this server child add
-	void SetMapLinkNode(EMServerType type, const ServerEntity::Ptr& node)
-	{
-		if (type <= EMServerType::None || type >= EMServerType::Max)
-		{
-			return;
-		}
-
-		mMapLink[type].emplace_back(node);
-	}
 
 	/// @brief this server childs get
 	std::list<ServerEntity::Ptr>& GetMapLinkNode(EMServerType type) { return mMapLink[type]; }
-
-	/// @brief the this close timedown destroy timerid.
-	/// @brief authenticate,shutdown and reconnect waiting.
-	uint64_t TimerId() { return iCloseTimerId; }
-	void SetTimerId(uint64_t timerId) { iCloseTimerId = timerId; }
-
-	/// @brief net socket set
-	const DNSocketChannel::Ptr& GetChannel() { return pChannel; }
-
-	/// @brief net socket get
-	void SetChannel(const DNSocketChannel::Ptr& channel) { pChannel = channel; }
+	
+	/// 
+	EMServerType GetServerType() { return emServerType; }
 
 protected: // dll proxy
 	EMServerType emServerType = EMServerType::None;

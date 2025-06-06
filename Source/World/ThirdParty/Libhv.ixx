@@ -72,7 +72,6 @@ public:
 	}
 
 	World::Ptr GetWorld() { return pWorld.lock(); }
-
 protected:
 
 	World::WPtr pWorld;
