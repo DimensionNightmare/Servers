@@ -13,9 +13,14 @@ enum class EMLunchType : uint8_t
 };
 
 
-#define App DimensionNightmare::PInstance
-
 bool AppRun = false;
+#define App DimensionNightmare::PInstance
+#define CloseApp() 		\
+	{ 					\
+		App->Dispose(); \
+		App = nullptr; 	\
+	}
+
 
 export int main(int argc, char** argv)
 {
@@ -60,7 +65,7 @@ export int main(int argc, char** argv)
 	
 	if (!App->Init(std::move(launchParam)))
 	{
-		App = nullptr;
+		CloseApp();
 		return 0;
 	}
 	
@@ -78,15 +83,16 @@ export int main(int argc, char** argv)
 				case 1:
 				case 6:
 					SPidLogger.Record(EL10nCode_CmdOpBreak);
+					CloseApp();
 					AppRun = false;
-					App = nullptr;
 					return true;
 				case 2:
-					AppRun = false;
 					while(true)
 					{
-						App = nullptr;
+						CloseApp();
+						break;
 					}
+					AppRun = false;
 					return true;
 			}
 
@@ -96,7 +102,7 @@ export int main(int argc, char** argv)
 	if (!Platform::SetConsoleCtrlHandler(CtrlHandler, true))
 	{
 		SPidLogger.Record(EL10nCode_CmdCtl);
-		App = nullptr;
+		CloseApp();
 		return 0;
 	}
 
@@ -106,8 +112,8 @@ export int main(int argc, char** argv)
 
 			WriteDumpFile(pidWorkPath / "MiniDump.dmp", ExceptionInfo);
 
+			CloseApp();
 			AppRun = false;
-			App = nullptr;
 
 			return 0; // EXCEPTION_CONTINUE_SEARCH
 		};
@@ -124,7 +130,7 @@ export int main(int argc, char** argv)
 		{
 			SPidLogger.Record(EL10nCode_CmdOpBreak);
 			AppRun = false;
-			App = nullptr;
+			CloseApp();
 		};
 	signal(SIGINT, CtrlHandler);
 
@@ -133,7 +139,7 @@ export int main(int argc, char** argv)
 			SPidLogger.Record(EL10nCode_UnhandledException);
 
 			AppRun = false;
-			App = nullptr;
+			CloseApp();
 			exit(signum);
 		};
 
@@ -164,8 +170,8 @@ export int main(int argc, char** argv)
 
 			auto quit = [&]()
 				{
+					CloseApp();
 					AppRun = false;
-					App = nullptr;
 				};
 
 			auto abort = [&]()

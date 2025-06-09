@@ -21,5 +21,6 @@ private:
     void operator delete(void*) = delete;
 public:
 	using Ptr = std::shared_ptr<DNWebProxyHelper>;
+	using CVPtr = const Ptr&;
 	
 };

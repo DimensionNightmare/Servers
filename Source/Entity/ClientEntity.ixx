@@ -26,6 +26,7 @@ protected:
 
 public:
 	using Ptr = std::shared_ptr<ClientEntity>;
+	using CVPtr = const Ptr&;
 	virtual ~ClientEntity()
 	{
 		pDbEntity = nullptr;

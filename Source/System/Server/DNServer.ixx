@@ -37,6 +37,7 @@ export class DNServer : public System
 {
 public:
 	using Ptr = std::shared_ptr<DNServer>;
+	using CVPtr = const Ptr&;
 	using WPtr = std::weak_ptr<DNServer>;
 	
 protected:

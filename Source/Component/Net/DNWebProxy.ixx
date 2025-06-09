@@ -18,6 +18,7 @@ protected:
 	}
 public:
 	using Ptr = std::shared_ptr<DNWebProxy>;
+	using CVPtr = const Ptr&;
 	using WPtr = std::weak_ptr<DNWebProxy>;
 	~DNWebProxy()
 	{
@@ -26,12 +27,14 @@ public:
 
 	virtual void Dispose() override
 	{
+		End();
+		
 		Component::Dispose();
 	}
 
 	bool Awake() override
 	{
-		World::Ptr pWorld = GetOwner()->GetWorld();
+		World::CVPtr pWorld = GetOwner()->GetWorld();
 
 		uint16_t port = 0;
 		std::string* value = pWorld->LaunchParam("port");
@@ -42,13 +45,14 @@ public:
 
 		setHost("0.0.0.0");
 		setPort(port);
-		setThreadNum(4);
+		setThreadNum(1);
 
 		GetLogger()->Record(EL10nCode_SrvListenOn, port, 0);
 
 		GetOwner()->GetWorld()->AddEvent(EMEventType::ServerStart, GetSelfW<DNWebProxy>(), &DNWebProxy::Start);
 
 		service = new hv::HttpService();
+		service->Static("/", "./");
 
 		return true;
 	}

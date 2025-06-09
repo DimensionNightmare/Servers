@@ -25,6 +25,7 @@ protected:
 
 public:
 	using Ptr = std::shared_ptr<RdbProxy>;
+	using CVPtr = const Ptr&;
 
 	virtual void Dispose() override
 	{

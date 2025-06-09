@@ -24,6 +24,7 @@ private:
     void operator delete(void*) = delete;
 public:
 	using Ptr = std::shared_ptr<DNServerProxyHelper>;
+	using CVPtr = const Ptr&;
 
 	uint32_t GetMsgId() { return ++iMsgId; }
 

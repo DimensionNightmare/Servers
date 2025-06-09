@@ -24,6 +24,7 @@ private:
     void operator delete(void*) = delete;
 public:
 	using Ptr = std::shared_ptr<DNClientProxyHelper>;
+	using CVPtr = const Ptr&;
 
 	// regist to controlserver
 	EMRegistState GetRegistState() { return eRegistState; }
@@ -32,7 +33,7 @@ public:
 	uint8_t RegistType() { return iRegistType; }
 	void SetRegistType(uint8_t type) { iRegistType = type; }
 
-	void SetRegistEvent(std::function<void(const DNServer::Ptr& server)> event)
+	void SetRegistEvent(std::function<void(DNServer::CVPtr)> event)
 	{
 		pRegistEvent = event;
 	}
@@ -89,6 +90,6 @@ public:
 
 	uint32_t GetMsgId() { return ++iMsgId; }
 	
-	const DNSocketChannel::Ptr& GetChannel() { return channel; }
+	DNSocketChannel::CVPtr GetChannel() { return channel; }
 	
 };

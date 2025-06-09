@@ -115,6 +115,7 @@ export class Object : public std::enable_shared_from_this<Object>, public Event
 {
 public:
 	using Ptr = std::shared_ptr<Object>;
+	using CVPtr = const Ptr&;
 
 	virtual ~Object()
 	{
@@ -144,7 +145,7 @@ public: // dll override
 	template<typename T>
 	std::weak_ptr<T> GetSelfW() { return GetSelf<T>(); }
 
-	bool IsDispose() { return bIsDisposed; }
+	bool IsDisposed() { return bIsDisposed; }
 	
 protected:
 
@@ -170,13 +171,14 @@ protected:
 	}
 public:
 	using Ptr = std::shared_ptr<Component>;
+	using CVPtr = const Ptr&;
 
 	/// @brief this component owner
 	virtual ~Component()
 	{
 	}
 
-	virtual void Dispose()
+	virtual void Dispose() override
 	{
 		Object::Dispose();
 	}
@@ -211,6 +213,7 @@ protected:
 
 public:
 	using Ptr = std::shared_ptr<Entity>;
+	using CVPtr = const Ptr&;
 
 	virtual ~Entity()
 	{
@@ -229,6 +232,9 @@ public: // dll override
 	template<typename T>
 	std::shared_ptr<T> GetComponent(EMComponentType type)
 	{
+		// this while lock when dispose***
+		// std::unique_lock<std::shared_mutex> ulock(mComponentLock);
+		
 		auto it = mComponents.find(type);
 		if (it != mComponents.end())
 		{
@@ -242,11 +248,20 @@ public: // dll override
 	{
 		Object::Dispose();
 
-		for (auto& [type, component] : mComponents)
+		if(mComponents.empty())
 		{
-			Event::RemoveEvent(component->ID());
-			component->Dispose();
+			return;
 		}
+
+		std::unique_lock<std::shared_mutex> ulock(mComponentLock);
+
+		auto it = mComponents.end();
+		do {
+			--it;
+			it->second->Dispose();
+			it = mComponents.erase(it);
+			
+		} while (it != mComponents.begin());
 
 		mComponents.clear();
 	}
@@ -263,6 +278,7 @@ public: // dll override
 				component->Dispose();
 				return nullptr;
 			}
+			std::unique_lock<std::shared_mutex> ulock(mComponentLock);
 			mComponents.emplace(component->GetComponentType(), component);
 			return component;
 		}
@@ -276,6 +292,8 @@ public: // dll override
 
 	void RemoveComponent(EMComponentType type)
 	{
+		std::unique_lock<std::shared_mutex> ulock(mComponentLock);
+
 		auto it = mComponents.find(type);
 		if (it == mComponents.end())
 		{
@@ -293,6 +311,8 @@ protected: // dll proxy
 	std::weak_ptr<World> pWorld;
 
 	std::unordered_map<EMComponentType, std::shared_ptr<Component>> mComponents;
+
+	std::shared_mutex mComponentLock;
 };
 
 
@@ -313,6 +333,7 @@ protected:
     
 public:
 	using Ptr = std::shared_ptr<System>;
+	using CVPtr = const Ptr&;
 	using WPtr = std::weak_ptr<System>;
 
 	virtual ~System()
@@ -363,6 +384,7 @@ export class World : public Object
 {
 public:
 	using Ptr = std::shared_ptr<World>;
+	using CVPtr = const Ptr&;
 	using WPtr = std::weak_ptr<World>;
 
 	virtual ~World()
@@ -370,7 +392,7 @@ public:
 
 	}
 	
-	void AddSystem(System::Ptr system)
+	void AddSystem(System::CVPtr system)
 	{
 		mSystemMap.emplace(system->GetSystemType(), system);
 	}
@@ -453,14 +475,21 @@ public:
 		return system;
 	}
 
-	void Dispose()
+	virtual void Dispose() override
 	{
 		Object::Dispose();
 		
-		for (auto& [_,system] : mSystemMap)
+		if(mSystemMap.empty())
 		{
-			system->Dispose();
+			return;
 		}
+
+		auto it = mSystemMap.end();
+		do {
+			--it;
+			it->second->Dispose();
+		} while (it != mSystemMap.begin());
+
 		mSystemMap.clear();
 	}
 
@@ -496,9 +525,11 @@ public:
 	}
 
 private:
+
 	std::unordered_map<std::string, std::string> mLuanchConfig;
 
 	std::unordered_map<EMSystemType, std::shared_ptr<System>> mSystemMap;
+
 };
 
 #pragma endregion

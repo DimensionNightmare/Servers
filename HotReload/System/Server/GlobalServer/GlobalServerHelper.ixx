@@ -32,16 +32,42 @@ private:
     void operator delete(void*) = delete;
 public:
 	using Ptr = std::shared_ptr<GlobalServerHelper>;
+	using CVPtr = const Ptr&;
 
-	DNClientProxyHelper::Ptr GetClientProxy() { return GetComponent<DNClientProxyHelper>(EMComponentType::DNClientProxy); }
+	DNClientProxyHelper::Ptr GetClientProxy()
+	{ 
+		DNClientProxyHelper::Ptr proxy = GetComponent<DNClientProxyHelper>(EMComponentType::DNClientProxy);
+		if(!proxy || proxy->IsDisposed())
+		{
+			return nullptr;
+		}
+		return proxy;
+	}
 
-	DNServerProxyHelper::Ptr GetServerProxy() { return GetComponent<DNServerProxyHelper>(EMComponentType::DNServerProxy); }
+	DNServerProxyHelper::Ptr GetServerProxy() 
+	{
+		DNServerProxyHelper::Ptr proxy = GetComponent<DNServerProxyHelper>(EMComponentType::DNServerProxy);
+		if(!proxy || proxy->IsDisposed())
+		{
+			return nullptr;
+		}
+		return proxy;
+	}
 
-	ServerEntityManagerHelper::Ptr GetServerEntityManager() { return GetComponent<ServerEntityManagerHelper>(EMComponentType::ServerEntityManager); }
+	ServerEntityManagerHelper::Ptr GetServerEntityManager() 
+	{
+		ServerEntityManagerHelper::Ptr proxy = GetComponent<ServerEntityManagerHelper>(EMComponentType::ServerEntityManager);
+		if(!proxy || proxy->IsDisposed())
+		{
+			return nullptr;
+		}
+
+		return proxy;
+	}
 
 	void UpdateServerGroup()
 	{
-		ServerEntityManagerHelper::Ptr entityMan = GetServerEntityManager();
+		ServerEntityManagerHelper::CVPtr entityMan = GetServerEntityManager();
 
 		std::list<ServerEntity::Ptr>& gates = entityMan->GetEntitysByType(EMServerType::GateServer);
 		if (gates.empty())
@@ -56,11 +82,11 @@ public:
 		GMsg::COM_RetChangeCtlSrv request;
 		std::string binData;
 
-		auto registControl = [&](const ServerEntity::Ptr& beEntity, const ServerEntity::Ptr& entity) ->bool
+		auto registControl = [&](ServerEntity::Ptr& beEntity, ServerEntity::CVPtr entity) ->bool
 		{
-			ServerEntityHelper::Ptr entityHelper = entity->GetSelf<ServerEntityHelper>();
+			ServerEntityHelper::CVPtr entityHelper = entity->GetSelf<ServerEntityHelper>();
 
-			const DNSocketChannel::Ptr& channel = entityHelper->GetChannel();
+			DNSocketChannel::CVPtr channel = entityHelper->GetChannel();
 			if(!channel)
 			{
 				return false;
@@ -69,7 +95,7 @@ public:
 
 			channel->deleteContextPtr();
 
-			ServerEntityHelper::Ptr beEntityHelper = beEntity->GetSelf<ServerEntityHelper>();
+			ServerEntityHelper::CVPtr beEntityHelper = beEntity->GetSelf<ServerEntityHelper>();
 
 			// sendData
 			request.set_server_ip(beEntityHelper->ServerIp());
@@ -84,7 +110,7 @@ public:
 			return true;
 		};
 
-		for (ServerEntity::Ptr gate : gates)
+		for (ServerEntity::Ptr& gate : gates)
 		{
 			if (gate->HasFlag(EMServerEntityFlag::Locked))
 			{
@@ -95,7 +121,7 @@ public:
 			std::list<ServerEntity::Ptr>& gatesLogic = gate->GetMapLinkNode(EMServerType::LogicServer);
 			if (!dbs.empty() && gatesDb.size() < 1)
 			{
-				ServerEntity::Ptr ele = dbs.front();
+				ServerEntity::CVPtr ele = dbs.front();
 				// dbs.pop_front();
 				if(registControl(gate, ele))
 				{
@@ -106,7 +132,7 @@ public:
 
 			if (!logics.empty() && gatesLogic.size() < 1)
 			{
-				ServerEntity::Ptr ele = logics.front();
+				ServerEntity::CVPtr ele = logics.front();
 				// logics.pop_front();
 				if(registControl(gate, ele))
 				{
@@ -129,11 +155,11 @@ public:
 	{
 		msgHandle->RegMsgHandle();
 
-		if (DNServerProxy::Ptr proxy = GetComponent<DNServerProxy>(EMComponentType::DNServerProxy))
+		if (DNServerProxy::CVPtr proxy = GetComponent<DNServerProxy>(EMComponentType::DNServerProxy))
 		{
-			proxy->onConnection = [this](const DNSocketChannel::Ptr& channel)
+			proxy->onConnection = [this](DNSocketChannel::CVPtr channel)
 				{
-					DNServerProxyHelper::Ptr proxyHelper = GetServerProxy();
+					DNServerProxyHelper::CVPtr proxyHelper = GetServerProxy();
 
 					if(!proxyHelper){ return ;}
 
@@ -150,18 +176,18 @@ public:
 					{
 						GetLogger()->Record(EL10nCode_CliConnOff, peeraddr, channel->fd(), channel->id());
 
-						if (ServerEntity::Ptr entity = channel->getContextPtr<ServerEntity>())
+						if (ServerEntity::CVPtr entity = channel->getContextPtr<ServerEntity>())
 						{
-							ServerEntityManagerHelper::Ptr entityMan = GetServerEntityManager();
+							ServerEntityManagerHelper::CVPtr entityMan = GetServerEntityManager();
 							entityMan->RemoveEntity(entity->ID());
 							channel->deleteContextPtr();
 						}
 					}
 				};
 
-			proxy->onMessage = [this,msgHandle](const DNSocketChannel::Ptr& channel, hv::Buffer* buf)
+			proxy->onMessage = [this,msgHandle](DNSocketChannel::CVPtr channel, hv::Buffer* buf)
 				{
-					DNServerProxyHelper::Ptr proxyHelper = GetServerProxy();
+					DNServerProxyHelper::CVPtr proxyHelper = GetServerProxy();
 
 					if(!proxyHelper){ return ;}
 
@@ -220,11 +246,11 @@ public:
 
 		}
 
-		if (DNClientProxy::Ptr proxy = GetComponent<DNClientProxy>(EMComponentType::DNClientProxy))
+		if (DNClientProxy::CVPtr proxy = GetComponent<DNClientProxy>(EMComponentType::DNClientProxy))
 		{
-			proxy->onConnection = [this,msgHandle](const DNSocketChannel::Ptr& channel)
+			proxy->onConnection = [this,msgHandle](DNSocketChannel::CVPtr channel)
 				{
-					DNClientProxyHelper::Ptr proxyHelper = GetClientProxy();
+					DNClientProxyHelper::CVPtr proxyHelper = GetClientProxy();
 
 					if(!proxyHelper){ return ;}
 
@@ -257,9 +283,9 @@ public:
 					}
 				};
 
-			proxy->onMessage = [this,msgHandle](const DNSocketChannel::Ptr& channel, hv::Buffer* buf)
+			proxy->onMessage = [this,msgHandle](DNSocketChannel::CVPtr channel, hv::Buffer* buf)
 				{
-					DNClientProxyHelper::Ptr proxyHelper = GetClientProxy();
+					DNClientProxyHelper::CVPtr proxyHelper = GetClientProxy();
 
 					if(!proxyHelper){ return ;}
 
@@ -321,7 +347,7 @@ public:
 	int HandleServerShutdown()
 	{
 		
-		if (DNServerProxyHelper::Ptr serverSock = GetServerProxy())
+		if (DNServerProxyHelper::CVPtr serverSock = GetServerProxy())
 		{
 			serverSock->onConnection = nullptr;
 			serverSock->onMessage = nullptr;
@@ -329,7 +355,7 @@ public:
 			serverSock->MsgMapClear();
 		}
 
-		if (DNClientProxyHelper::Ptr clientSock = GetClientProxy())
+		if (DNClientProxyHelper::CVPtr clientSock = GetClientProxy())
 		{
 			clientSock->onConnection = nullptr;
 			clientSock->onMessage = nullptr;

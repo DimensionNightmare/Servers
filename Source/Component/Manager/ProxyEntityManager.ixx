@@ -62,7 +62,7 @@ public: // dll proxy
 		if (mEntityMap.contains(entityId))
 		{
 			std::unique_lock<std::shared_mutex> ulock(oMapMutex);
-			ProxyEntity::Ptr entity = mEntityMap[entityId];
+			ProxyEntity::CVPtr entity = mEntityMap[entityId];
 			entity->Dispose();
 			mEntityMap.erase(entityId);
 			return true;
@@ -73,7 +73,7 @@ public: // dll proxy
 
 	void AddEntity(uint64_t entityId)
 	{
-		ProxyEntity::Ptr entity = std::shared_ptr<ProxyEntity>(new ProxyEntity(GetOwner()->GetWorldW()));
+		ProxyEntity::CVPtr entity = std::shared_ptr<ProxyEntity>(new ProxyEntity(GetOwner()->GetWorldW()));
 		entity->SetID(entityId);
 
 		std::unique_lock<std::shared_mutex> ulock(oMapMutex);

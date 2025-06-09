@@ -95,7 +95,7 @@ export namespace Platform
 		SymInitialize(process, NULL, TRUE);
 
 		void* stack[128];
-		unsigned short frames = CaptureStackBackTrace(0, 128, stack, NULL);
+		unsigned short frames = CaptureStackBackTrace(1, 128, stack, NULL);
 
 		std::ostringstream oss;
 		SYMBOL_INFO* symbol = (SYMBOL_INFO*)malloc(sizeof(SYMBOL_INFO) + 256 * sizeof(char));

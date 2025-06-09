@@ -14,11 +14,11 @@ namespace DatabaseServerMessage
 {
 
 	// client request
-	export DNTaskVoid Evt_ReqRegistSrv(const DNServer::Ptr& server)
+	export DNTaskVoid Evt_ReqRegistSrv(DNServer::CVPtr server)
 	{
-		DatabaseServerHelper::Ptr dnServer = server->GetSelf<DatabaseServerHelper>();
+		DatabaseServerHelper::CVPtr dnServer = server->GetSelf<DatabaseServerHelper>();
 
-		DNClientProxyHelper::Ptr clientProxy = dnServer->GetClientProxy();
+		DNClientProxyHelper::CVPtr clientProxy = dnServer->GetClientProxy();
 		
 		dnServer->GetLogger()->Record(ELogLevel_Debug, "database req regist Client:{}, port:{}", clientProxy->remote_host, clientProxy->remote_port);
 		
@@ -74,7 +74,7 @@ namespace DatabaseServerMessage
 		co_return;
 	}
 
-	export void Exe_RetChangeCtlSrv(const DNSocketChannel::Ptr& channel, const std::string& binMsg)
+	export void Exe_RetChangeCtlSrv(DNSocketChannel::CVPtr channel, const std::string& binMsg)
 	{
 		GMsg::COM_RetChangeCtlSrv request;
 		if(!request.ParseFromString(binMsg))
@@ -82,9 +82,9 @@ namespace DatabaseServerMessage
 			return;
 		}
 
-		DatabaseServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<DatabaseServerHelper>(EMSystemType::DNServer);
+		DatabaseServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<DatabaseServerHelper>(EMSystemType::DNServer);
 
-		DNClientProxyHelper::Ptr clientProxy = dnServer->GetClientProxy();
+		DNClientProxyHelper::CVPtr clientProxy = dnServer->GetClientProxy();
 
 		TickMainSpaceDll(clientProxy.get(), FUNCPLACE(DNClientProxy,RedirectClient), request.server_port(), request.server_ip());
 	}

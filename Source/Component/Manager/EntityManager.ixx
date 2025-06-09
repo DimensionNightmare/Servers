@@ -42,8 +42,6 @@ public:
 
 	virtual void Dispose() override
 	{
-		Component::Dispose();
-
 		pLoop = nullptr;
 		for (auto& [id, entity] : mEntityMap)
 		{
@@ -51,6 +49,8 @@ public:
 		}
 		
 		mEntityMap.clear();
+
+		Component::Dispose();
 	}
 
 protected:

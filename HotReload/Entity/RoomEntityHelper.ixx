@@ -20,6 +20,7 @@ private:
     void operator delete(void*) = delete;
 public:
 	using Ptr = std::shared_ptr<RoomEntityHelper>;
+	using CVPtr = const Ptr&;
 
 	void SetMapID(uint32_t mapId) { iMapId = mapId; }
 
@@ -37,9 +38,9 @@ public:
 	void SetTimerId(uint64_t timerId) { iCloseTimerId = timerId; }
 
 	/// @brief net socket set
-	const DNSocketChannel::Ptr& GetChannel() { return pChannel; }
+	DNSocketChannel::CVPtr GetChannel() { return pChannel; }
 
 	/// @brief net socket get
-	void SetChannel(const DNSocketChannel::Ptr& channel) { pChannel = channel; }
+	void SetChannel(DNSocketChannel::CVPtr channel) { pChannel = channel; }
 
 };

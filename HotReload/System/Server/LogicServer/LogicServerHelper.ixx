@@ -33,24 +33,65 @@ private:
     void operator delete(void*) = delete;
 public:
 	using Ptr = std::shared_ptr<LogicServerHelper>;
+	using CVPtr = const Ptr&;
 
-	DNClientProxyHelper::Ptr GetClientProxy() { return GetComponent<DNClientProxyHelper>(EMComponentType::DNClientProxy); }
+	DNClientProxyHelper::Ptr GetClientProxy()
+	{ 
+		DNClientProxyHelper::Ptr proxy = GetComponent<DNClientProxyHelper>(EMComponentType::DNClientProxy);
+		if(!proxy || proxy->IsDisposed())
+		{
+			return nullptr;
+		}
+		return proxy;
+	}
 
-	DNServerProxyHelper::Ptr GetServerProxy() { return GetComponent<DNServerProxyHelper>(EMComponentType::DNServerProxy); }
+	DNServerProxyHelper::Ptr GetServerProxy() 
+	{
+		DNServerProxyHelper::Ptr proxy = GetComponent<DNServerProxyHelper>(EMComponentType::DNServerProxy);
+		if(!proxy || proxy->IsDisposed())
+		{
+			return nullptr;
+		}
+		return proxy;
+	}
 
-	RoomEntityManagerHelper::Ptr GetRoomEntityManager() { return GetComponent<RoomEntityManagerHelper>(EMComponentType::RoomEntityManager); }
+	RoomEntityManagerHelper::Ptr GetRoomEntityManager() 
+	{
+		RoomEntityManagerHelper::Ptr proxy = GetComponent<RoomEntityManagerHelper>(EMComponentType::RoomEntityManager);
+		if(!proxy || proxy->IsDisposed())
+		{
+			return nullptr;
+		}
+		return proxy;
+	}
 
-	ClientEntityManagerHelper::Ptr GetClientEntityManager() { return GetComponent<ClientEntityManagerHelper>(EMComponentType::ClientEntityManager); }
-
-	MdbProxyHelper::Ptr GetMdbProxy(){ return GetComponent<MdbProxyHelper>(EMComponentType::MdbProxy); }
+	ClientEntityManagerHelper::Ptr GetClientEntityManager() 
+	{
+		ClientEntityManagerHelper::Ptr proxy = GetComponent<ClientEntityManagerHelper>(EMComponentType::ClientEntityManager);
+		if(!proxy || proxy->IsDisposed())
+		{
+			return nullptr;
+		}
+		return proxy;
+	}
+	
+	MdbProxyHelper::Ptr GetMdbProxy() 
+	{
+		MdbProxyHelper::Ptr proxy = GetComponent<MdbProxyHelper>(EMComponentType::MdbProxy);
+		if(!proxy || proxy->IsDisposed())
+		{
+			return nullptr;
+		}
+		return proxy;
+	}
 
 	bool InitDatabase()
 	{
-		if(MdbProxyHelper::Ptr proxy = GetMdbProxy())
+		if(MdbProxyHelper::CVPtr proxy = GetMdbProxy())
 		{
 			try
 			{
-				World::Ptr pWorld = GetWorld();
+				World::CVPtr pWorld = GetWorld();
 
 				std::string* value = pWorld->LaunchParam("connection");
 
@@ -75,11 +116,11 @@ public:
 	{
 		msgHandle->RegMsgHandle();
 
-		if (DNServerProxyHelper::Ptr proxy = GetServerProxy())
+		if (DNServerProxyHelper::CVPtr proxy = GetServerProxy())
 		{
-			proxy->onConnection = [this](const DNSocketChannel::Ptr& channel)
+			proxy->onConnection = [this](DNSocketChannel::CVPtr channel)
 				{
-					DNServerProxyHelper::Ptr proxyHelper = GetServerProxy();
+					DNServerProxyHelper::CVPtr proxyHelper = GetServerProxy();
 
 					if(!proxyHelper){ return ;}
 
@@ -93,18 +134,18 @@ public:
 					else
 					{
 						GetLogger()->Record(EL10nCode_CliConnOff, peeraddr, channel->fd(), channel->id());
-						if (RoomEntity::Ptr entity = channel->getContextPtr<RoomEntity>())
+						if (RoomEntity::CVPtr entity = channel->getContextPtr<RoomEntity>())
 						{
-							RoomEntityManagerHelper::Ptr entityMan = GetRoomEntityManager();
+							RoomEntityManagerHelper::CVPtr entityMan = GetRoomEntityManager();
 							entityMan->RemoveEntity(entity->ID());
 							channel->deleteContextPtr();
 						}
 					}
 				};
 
-			proxy->onMessage = [this,msgHandle](const DNSocketChannel::Ptr& channel, hv::Buffer* buf)
+			proxy->onMessage = [this,msgHandle](DNSocketChannel::CVPtr channel, hv::Buffer* buf)
 				{
-					DNServerProxyHelper::Ptr proxyHelper = GetServerProxy();
+					DNServerProxyHelper::CVPtr proxyHelper = GetServerProxy();
 
 					if(!proxyHelper){ return ;}
 
@@ -164,12 +205,12 @@ public:
 		}
 
 
-		if (DNClientProxyHelper::Ptr proxy = GetClientProxy())
+		if (DNClientProxyHelper::CVPtr proxy = GetClientProxy())
 		{
 			//client will re_create please check
-			proxy->onConnection = [this,msgHandle](const DNSocketChannel::Ptr& channel)
+			proxy->onConnection = [this,msgHandle](DNSocketChannel::CVPtr channel)
 				{
-					DNClientProxyHelper::Ptr proxyHelper = GetClientProxy();
+					DNClientProxyHelper::CVPtr proxyHelper = GetClientProxy();
 
 					if(!proxyHelper){ return ;}
 
@@ -212,7 +253,7 @@ public:
 								GetLogger()->Record(ELogLevel_Debug, "orgin not match peeraddr {} reclient ~", origin);
 								proxyHelper->Timer()->setTimeout(200, [this, originIp, originPort](uint64_t timerID)
 									{
-										DNClientProxyHelper::Ptr proxyHelper = GetClientProxy();
+										DNClientProxyHelper::CVPtr proxyHelper = GetClientProxy();
 
 										if(!proxyHelper){ return ;}
 										TickMainSpaceDll(proxyHelper.get(), FUNCPLACE(DNClientProxy,RedirectClient),  std::stoi(originPort), originIp);
@@ -229,9 +270,9 @@ public:
 					}
 				};
 
-			proxy->onMessage = [this,msgHandle](const DNSocketChannel::Ptr& channel, hv::Buffer* buf)
+			proxy->onMessage = [this,msgHandle](DNSocketChannel::CVPtr channel, hv::Buffer* buf)
 				{
-					DNClientProxyHelper::Ptr proxyHelper = GetClientProxy();
+					DNClientProxyHelper::CVPtr proxyHelper = GetClientProxy();
 
 					if(!proxyHelper){ return ;}
 
@@ -295,7 +336,7 @@ public:
 
 	int HandleServerShutdown()
 	{
-		if (DNServerProxyHelper::Ptr proxy = GetServerProxy())
+		if (DNServerProxyHelper::CVPtr proxy = GetServerProxy())
 		{
 			proxy->onConnection = nullptr;
 			proxy->onMessage = nullptr;
@@ -303,7 +344,7 @@ public:
 			proxy->MsgMapClear();
 		}
 
-		if (DNClientProxyHelper::Ptr proxy = GetClientProxy())
+		if (DNClientProxyHelper::CVPtr proxy = GetClientProxy())
 		{
 			proxy->onConnection = nullptr;
 			proxy->onMessage = nullptr;
@@ -312,7 +353,7 @@ public:
 			proxy->MsgMapClear();
 		}
 
-		if(MdbProxyHelper::Ptr mdbProxy = GetMdbProxy())
+		if(MdbProxyHelper::CVPtr mdbProxy = GetMdbProxy())
 		{
 			mdbProxy->ClearConnections();
 		}

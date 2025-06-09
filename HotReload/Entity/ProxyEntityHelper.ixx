@@ -20,6 +20,7 @@ private:
     void operator delete(void*) = delete;
 public: // dll override
 	using Ptr = std::shared_ptr<ProxyEntityHelper>;
+	using CVPtr = const Ptr&;
 
 	/// @brief the this close timedown destroy timerid.
 	/// @brief authenticate,shutdown and reconnect waiting.
@@ -27,10 +28,10 @@ public: // dll override
 	void SetTimerId(uint64_t timerId) { iCloseTimerId = timerId; }
 
 	/// @brief net socket set
-	const DNSocketChannel::Ptr& GetChannel() { return pChannel; }
+	DNSocketChannel::CVPtr GetChannel() { return pChannel; }
 
 	/// @brief net socket get
-	void SetChannel(const DNSocketChannel::Ptr& channel) { pChannel = channel; }
+	void SetChannel(DNSocketChannel::CVPtr channel) { pChannel = channel; }
 
 	/// @brief authenticate token
 	std::string Token() { return sToken; }

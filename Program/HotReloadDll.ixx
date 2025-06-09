@@ -14,7 +14,7 @@ protected:
 	/// @brief
 	HotReloadDll(World::WPtr world):System(world)
 	{
-		World::Ptr pWorld = GetWorld();
+		World::CVPtr pWorld = GetWorld();
 		
 		emSystemType = EMSystemType::HotReloadDll;
 
@@ -34,6 +34,7 @@ protected:
 	}
 public:
 	using Ptr = std::shared_ptr<HotReloadDll>;
+	using CVPtr = const Ptr&;
 
 	/// @brief
 	~HotReloadDll()
@@ -41,7 +42,7 @@ public:
 		FreeHandle();
 	}
 
-	void Dispose() override
+	virtual void Dispose() override
 	{
 		System::Dispose();
 	}
@@ -58,7 +59,7 @@ public:
 		Platform::HotHandle hModule = Platform::LoadLibraryA(dllPath.string().c_str());
 		if (!hModule)
 		{
-			// LoggerPrint()(EL10nCode_DllLoad, Platform::GetLastError());
+			GetLogger()->Record(EL10nCode_DllLoad, Platform::GetLastError());
 			return nullptr;
 		}
 
@@ -167,11 +168,11 @@ public:
 	}
 
 	/// @brief exec runtime lib func
-	bool OnRegHotReload(World::Ptr world)
+	bool OnRegHotReload(World::CVPtr world)
 	{
 		if (void* funtPtr = GetFuncPtr("InitHotReload"))
 		{
-			using funcSign = int (*)(World::Ptr);
+			using funcSign = int (*)(World::CVPtr);
 			if (funcSign func = reinterpret_cast<funcSign>(funtPtr))
 			{
 				return func(world) == int(true);
@@ -182,12 +183,12 @@ public:
 	}
 
 	/// @brief exec runtime lib func
-	bool OnUnregHotReload(World::Ptr world)
+	bool OnUnregHotReload(World::CVPtr world)
 	{
 		// launch error pHotDll is Null
 		if (void* funtPtr = GetFuncPtr("ShutdownHotReload"))
 		{
-			using funcSign = int (*)(World::Ptr);
+			using funcSign = int (*)(World::CVPtr);
 			if (funcSign func = reinterpret_cast<funcSign>(funtPtr))
 			{
 				return func(world) == int(true);

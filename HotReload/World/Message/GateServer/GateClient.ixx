@@ -13,7 +13,7 @@ namespace GateServerMessage
 {
 
 	// client request
-	export DNTaskVoid Msg_ReqAuthToken(const DNSocketChannel::Ptr& channel, uint32_t msgId, const std::string& binMsg)
+	export DNTaskVoid Msg_ReqAuthToken(DNSocketChannel::CVPtr channel, uint32_t msgId, const std::string& binMsg)
 	{
 		GMsg::C2S_ReqAuthToken request;
 		if(!request.ParseFromString(binMsg))
@@ -21,8 +21,8 @@ namespace GateServerMessage
 			co_return;
 		}
 
-		GateServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<GateServerHelper>(EMSystemType::DNServer);
-		ProxyEntityManagerHelper::Ptr entityMan = dnServer->GetProxyEntityManager();
+		GateServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<GateServerHelper>(EMSystemType::DNServer);
+		ProxyEntityManagerHelper::CVPtr entityMan = dnServer->GetProxyEntityManager();
 
 		GMsg::S2C_ResAuthToken response;
 
@@ -33,7 +33,7 @@ namespace GateServerMessage
 		});
 		
 
-		ProxyEntityHelper::Ptr entity = entityMan->GetEntity(request.account_id());
+		ProxyEntityHelper::CVPtr entity = entityMan->GetEntity(request.account_id());
 		if (!entity)
 		{
 			dnServer->GetLogger()->Record(ELogLevel_Debug, "noaccount {}!!", request.account_id());

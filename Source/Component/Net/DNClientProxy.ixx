@@ -33,6 +33,7 @@ protected:
 public:
 
 	using Ptr = std::shared_ptr<DNClientProxy>;
+	using CVPtr = const Ptr&;
 	using WPtr = std::weak_ptr<DNClientProxy>;
 
 	~DNClientProxy()
@@ -44,12 +45,14 @@ public:
 
 	virtual void Dispose() override
 	{
+		End();
+
 		Component::Dispose();
 	}
 
 	bool Awake() override
 	{
-		World::Ptr pWorld = GetOwner()->GetWorld();
+		World::CVPtr pWorld = GetOwner()->GetWorld();
 		std::string* ctlPort = pWorld->LaunchParam("ctlPort");
 		std::string* ctlIp = pWorld->LaunchParam("ctlIp");
 		if (!ctlPort || !ctlIp)
@@ -178,7 +181,7 @@ public: // dll override
 		// MessagePackAndSend(0, EMMsgDeal::Ret, request.GetDescriptor()->full_name(), binData, GetChannel());
 	}
 
-	void InitConnectedChannel(const DNSocketChannel::Ptr& chanhel)
+	void InitConnectedChannel(DNSocketChannel::CVPtr chanhel)
 	{
 		// chanhel->setHeartbeat(4000, std::bind(&DNClientProxy::TickHeartbeat, this));
 		// channel->setWriteTimeout(12000);
@@ -224,7 +227,7 @@ protected: // dll proxy
 	// callback regist to server‘s servertype
 	uint8_t iRegistType = 0;
 
-	std::function<void(const DNServer::Ptr& server)> pRegistEvent;
+	std::function<void(DNServer::CVPtr)> pRegistEvent;
 
 	std::shared_mutex oMsgMutex;
 

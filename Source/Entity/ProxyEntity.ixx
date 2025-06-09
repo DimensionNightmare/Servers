@@ -16,6 +16,7 @@ protected:
 	}
 public:
 	using Ptr = std::shared_ptr<ProxyEntity>;
+	using CVPtr = const Ptr&;
 	virtual ~ProxyEntity()
 	{
 	}

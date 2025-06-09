@@ -11,7 +11,7 @@ namespace GlobalServerMessage
 {
 
 	// client request
-	export DNTaskVoid Evt_ReqRegistSrv(const DNServer::Ptr& server)
+	export DNTaskVoid Evt_ReqRegistSrv(DNServer::CVPtr server)
 	{
 		GlobalServerHelper::Ptr dnServer = server->GetSelf<GlobalServerHelper>();
 
@@ -78,7 +78,7 @@ namespace GlobalServerMessage
 	}
 
 	// client request
-	export void Msg_ReqRegistSrv(const DNSocketChannel::Ptr& channel, uint32_t msgId, const std::string& binMsg)
+	export void Msg_ReqRegistSrv(DNSocketChannel::CVPtr channel, uint32_t msgId, const std::string& binMsg)
 	{
 		GMsg::COM_ReqRegistSrv request;
 		if(!request.ParseFromString(binMsg))
@@ -117,7 +117,7 @@ namespace GlobalServerMessage
 		}
 
 		//exist?
-		else if (ServerEntity::Ptr entity = channel->getContextPtr<ServerEntity>())
+		else if (ServerEntity::CVPtr entity = channel->getContextPtr<ServerEntity>())
 		{
 			response.set_error_code(EL10nCode_RegistServerChannelExist);
 		}
@@ -125,7 +125,7 @@ namespace GlobalServerMessage
 		// take task to regist !
 		else if (request.is_pull())
 		{
-			if (ServerEntityHelper::Ptr entity = entityMan->GetEntity(request.server_id()))
+			if (ServerEntityHelper::CVPtr entity = entityMan->GetEntity(request.server_id()))
 			{
 				// wait destroy`s destroy
 				if (uint64_t timerId = entity->TimerId())
@@ -135,7 +135,7 @@ namespace GlobalServerMessage
 				}
 
 				// already connect
-				if (const DNSocketChannel::Ptr& sock = entity->GetChannel())
+				if (DNSocketChannel::CVPtr sock = entity->GetChannel())
 				{
 					response.set_error_code(EL10nCode_PullServerReqRegistAlready);
 				}
@@ -162,7 +162,7 @@ namespace GlobalServerMessage
 
 		}
 
-		else if (ServerEntityHelper::Ptr entity = entityMan->AddEntity(request.server_id(), regType))
+		else if (ServerEntityHelper::CVPtr entity = entityMan->AddEntity(request.server_id(), regType))
 		{
 			size_t pos = ipPort.find(":");
 			entity->SetServerIp(ipPort.substr(0, pos));
@@ -180,7 +180,7 @@ namespace GlobalServerMessage
 
 	}
 
-	export void Exe_RetHeartbeat(const DNSocketChannel::Ptr& channel, const std::string& binMsg)
+	export void Exe_RetHeartbeat(DNSocketChannel::CVPtr channel, const std::string& binMsg)
 	{
 		GMsg::COM_RetHeartbeat request;
 		if(!request.ParseFromString(binMsg))

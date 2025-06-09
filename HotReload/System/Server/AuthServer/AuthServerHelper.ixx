@@ -34,21 +34,46 @@ private:
     void operator delete(void*) = delete;
 public:
 	using Ptr = std::shared_ptr<AuthServerHelper>;
+	using CVPtr = const Ptr&;
 
-	DNClientProxyHelper::Ptr GetClientProxy() { return GetComponent<DNClientProxyHelper>(EMComponentType::DNClientProxy); }
+	DNClientProxyHelper::Ptr GetClientProxy()
+	{ 
+		DNClientProxyHelper::Ptr proxy = GetComponent<DNClientProxyHelper>(EMComponentType::DNClientProxy);
+		if(!proxy || proxy->IsDisposed())
+		{
+			return nullptr;
+		}
+		return proxy;
+	}
 
-	DNWebProxyHelper::Ptr GetWebProxy() { return GetComponent<DNWebProxyHelper>(EMComponentType::DNWebProxy); }
+	DNWebProxyHelper::Ptr GetWebProxy()
+	{ 
+		DNWebProxyHelper::Ptr proxy = GetComponent<DNWebProxyHelper>(EMComponentType::DNWebProxy);
+		if(!proxy || proxy->IsDisposed())
+		{
+			return nullptr;
+		}
+		return proxy;
+	}
 
-	RdbProxyHelper::Ptr GetRdbProxy(){ return GetComponent<RdbProxyHelper>(EMComponentType::RdbProxy); }
+	RdbProxyHelper::Ptr GetRdbProxy()
+	{ 
+		RdbProxyHelper::Ptr proxy = GetComponent<RdbProxyHelper>(EMComponentType::RdbProxy);
+		if(!proxy || proxy->IsDisposed())
+		{
+			return nullptr;
+		}
+		return proxy;
+	}
 
 	bool InitDatabase()
 	{
 		
-		if(RdbProxyHelper::Ptr proxy = GetRdbProxy())
+		if(RdbProxyHelper::CVPtr proxy = GetRdbProxy())
 		{
 			try
 			{
-				World::Ptr pWorld = GetWorld();
+				World::CVPtr pWorld = GetWorld();
 
 				//"postgresql://root@localhost"
 				std::string* value = pWorld->LaunchParam("connection");
@@ -73,18 +98,14 @@ public:
 
 	int HandleServerInit(MessageRegister* msgHandle)
 	{
-		msgHandle->RegMsgHandle();
 		
-		if (DNWebProxy::Ptr proxy = GetComponent<DNWebProxy>(EMComponentType::DNWebProxy))
-		{
-			// msgHandle->RegApiHandle(GetSelfW<DNServer>(), proxy->service);
-		}
+		msgHandle->RegApiHandle(GetSelf<DNServer>());
 
-		if (DNClientProxy::Ptr proxy = GetComponent<DNClientProxy>(EMComponentType::DNClientProxy))
+		if (DNClientProxy::CVPtr proxy = GetComponent<DNClientProxy>(EMComponentType::DNClientProxy))
 		{
-			proxy->onConnection = [this,msgHandle](const DNSocketChannel::Ptr& channel)
+			proxy->onConnection = [this,msgHandle](DNSocketChannel::CVPtr channel)
 				{
-					DNClientProxyHelper::Ptr proxyHelper = GetClientProxy();
+					DNClientProxyHelper::CVPtr proxyHelper = GetClientProxy();
 
 					if(!proxyHelper){ return ;}
 
@@ -117,9 +138,9 @@ public:
 					}
 				};
 
-			proxy->onMessage = [this](const DNSocketChannel::Ptr& channel, hv::Buffer* buf)
+			proxy->onMessage = [this](DNSocketChannel::CVPtr channel, hv::Buffer* buf)
 				{
-					DNClientProxyHelper::Ptr proxyHelper = GetClientProxy();
+					DNClientProxyHelper::CVPtr proxyHelper = GetClientProxy();
 
 					if(!proxyHelper){ return ;}
 					
@@ -171,7 +192,7 @@ public:
 
 	int HandleServerShutdown()
 	{
-		if (DNClientProxyHelper::Ptr proxy = GetClientProxy())
+		if (DNClientProxyHelper::CVPtr proxy = GetClientProxy())
 		{
 			proxy->onConnection = nullptr;
 			proxy->onMessage = nullptr;
@@ -181,7 +202,7 @@ public:
 			proxy->MsgMapClear();
 		}
 
-		if (DNWebProxyHelper::Ptr proxy = GetWebProxy())
+		if (DNWebProxyHelper::CVPtr proxy = GetWebProxy())
 		{
 			if(proxy->service)
 			{

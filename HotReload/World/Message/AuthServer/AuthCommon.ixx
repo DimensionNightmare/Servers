@@ -11,11 +11,11 @@ namespace AuthServerMessage
 {
 
 	// client request
-	export DNTaskVoid Evt_ReqRegistSrv(const DNServer::Ptr& server)
+	export DNTaskVoid Evt_ReqRegistSrv(DNServer::CVPtr server)
 	{
-		AuthServerHelper::Ptr dnServer = server->GetSelf<AuthServerHelper>();
+		AuthServerHelper::CVPtr dnServer = server->GetSelf<AuthServerHelper>();
 
-		DNClientProxyHelper::Ptr clientProxy = dnServer->GetClientProxy();
+		DNClientProxyHelper::CVPtr clientProxy = dnServer->GetClientProxy();
 
 		uint32_t msgId = clientProxy->GetMsgId();
 
@@ -32,7 +32,7 @@ namespace AuthServerMessage
 			request.set_is_pull(true);
 		}
 
-		if(DNWebProxyHelper::Ptr serverProxy = server->GetComponent<DNWebProxyHelper>(EMComponentType::DNWebProxy))
+		if(DNWebProxyHelper::CVPtr serverProxy = dnServer->GetWebProxy())
 		{
 			request.set_server_port(serverProxy->port);
 		}

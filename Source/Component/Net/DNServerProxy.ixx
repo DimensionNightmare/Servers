@@ -24,6 +24,7 @@ protected:
 
 public:
 	using Ptr = std::shared_ptr<DNServerProxy>;
+	using CVPtr = const Ptr&;
 	using WPtr = std::weak_ptr<DNServerProxy>;
 
 	~DNServerProxy()
@@ -35,9 +36,9 @@ public:
 	{
 		int16_t inport = 0;
 
-		DNServer::Ptr server = GetOwner<DNServer>();
+		DNServer::CVPtr dnServer = GetOwner<DNServer>();
 
-		switch(server->GetServerType())
+		switch(dnServer->GetServerType())
 		{
 			case EMServerType::ControlServer:
 			case EMServerType::GlobalServer:
@@ -90,7 +91,7 @@ public:
 		setting.length_field_bytes = 1;
 		setting.length_field_offset = 0;
 		setUnpack(&setting);
-		setThreadNum(4);
+		setThreadNum(1);
 
 		GetLogger()->Record(EL10nCode_SrvListenOn, port, listenfd);
 
@@ -117,6 +118,8 @@ public:
 
 	virtual void Dispose() override
 	{
+		End();
+
 		Component::Dispose();
 
 		pLoop = nullptr;
@@ -128,7 +131,7 @@ public:
 
 public: // dll override
 
-	void InitConnectedChannel(const DNSocketChannel::Ptr& channel)
+	void InitConnectedChannel(DNSocketChannel::CVPtr channel)
 	{
 		// if not regist
 		CheckChannelByTimer(channel);
@@ -182,11 +185,11 @@ public: // dll override
 		}
 
 		{
-			if (DNSocketChannel::Ptr channel = getChannelById(id))
+			if (DNSocketChannel::CVPtr channel = getChannelById(id))
 			{
 				if (!channel->contextPtr())
 				{
-					GetLogger()->Record(ELogLevel_Debug, "ChannelTimeoutTimer server destory entity\n");
+					GetLogger()->Record(ELogLevel_Debug, "ChannelTimeoutTimer dnServer destory entity\n");
 					channel->close();
 				}
 			}
@@ -202,7 +205,7 @@ public: // dll override
 		mMapTimer.emplace(timerId, id);
 	}
 
-	void CheckChannelByTimer(const DNSocketChannel::Ptr& channel)
+	void CheckChannelByTimer(DNSocketChannel::CVPtr channel)
 	{
 		size_t timerId = Timer()->setTimeout(5000, std::bind(&DNServerProxy::ChannelTimeoutTimer, this, std::placeholders::_1));
 		AddTimerRecord(timerId, channel->id());

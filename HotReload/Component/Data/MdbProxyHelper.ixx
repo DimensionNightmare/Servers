@@ -21,6 +21,7 @@ private:
 
 public:
 	using Ptr = std::shared_ptr<MdbProxyHelper>;
+	using CVPtr = const Ptr&;
 	
 	void AddConnection(std::shared_ptr<sw::redis::Redis>&& connection)
 	{

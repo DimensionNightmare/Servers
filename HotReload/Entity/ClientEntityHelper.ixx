@@ -22,6 +22,7 @@ private:
 
 public:
 	using Ptr = std::shared_ptr<ClientEntityHelper>;
+	using CVPtr = const Ptr&;
 	
 
 	void SetDbEntity(const std::string& data)

@@ -29,6 +29,7 @@ protected:
 
 public:
 	using Ptr = std::shared_ptr<LoggerPrint>;
+	using CVPtr = const Ptr&;
 	using WPtr = std::weak_ptr<LoggerPrint>;
 	~LoggerPrint()
 	{
@@ -42,7 +43,7 @@ public:
 
 	bool Init()
 	{
-		World::Ptr pWorld = GetWorld();
+		World::CVPtr pWorld = GetWorld();
 		std::string* value = pWorld->LaunchParam("LoggerLevel");
 		if(!value)
 		{
@@ -182,9 +183,9 @@ protected:
 
 bool DNl10n::Init()
 {
-	World::Ptr pWorld = GetWorld();
+	World::CVPtr pWorld = GetWorld();
 
-	LoggerPrint::Ptr pLogger = pWorld->GetSystem<LoggerPrint>(EMSystemType::LoggerPrint);
+	LoggerPrint::CVPtr pLogger = pWorld->GetSystem<LoggerPrint>(EMSystemType::LoggerPrint);
 	std::string* value = pWorld->LaunchParam("l10nDataPath");
 	if (!value)
 	{
@@ -271,7 +272,7 @@ public:
 	bool Init(std::unordered_map<std::string, std::string> commonInfo)
 	{
 		pWorld->MoveLuanchConfigToSelf(std::move(commonInfo));
-		DNl10n::Ptr pL10n = pWorld->GetSystem<DNl10n>(EMSystemType::DNl10n);
+		DNl10n::CVPtr pL10n = pWorld->GetSystem<DNl10n>(EMSystemType::DNl10n);
 		return pL10n->Init();
 	}
 

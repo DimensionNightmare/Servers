@@ -24,6 +24,7 @@ protected:
 	}
 public:
 	using Ptr = std::shared_ptr<ServerEntity>;
+	using CVPtr = const Ptr&;
 	virtual ~ServerEntity()
 	{
 		pLink = nullptr;
@@ -31,7 +32,7 @@ public:
 	}
 	
 	/// @brief this server father node
-	const ServerEntity::Ptr& LinkNode() { return pLink; }
+	ServerEntity::CVPtr LinkNode() { return pLink; }
 
 	/// @brief this server childs get
 	std::list<ServerEntity::Ptr>& GetMapLinkNode(EMServerType type) { return mMapLink[type]; }

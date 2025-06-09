@@ -25,6 +25,7 @@ private:
     void operator delete(void*) = delete;
 public:
 	using Ptr = std::shared_ptr<ProxyEntityManagerHelper>;
+	using CVPtr = const Ptr&;
 
 	ProxyEntityHelper::Ptr AddEntity(uint64_t entityId)
 	{

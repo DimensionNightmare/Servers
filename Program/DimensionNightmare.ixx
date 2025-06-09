@@ -76,7 +76,7 @@ public:
 	// need close main process
 	~DimensionNightmare()
 	{
-		Dispose();
+		// Dispose();
 	}
 
 	/// @brief load ini config
@@ -224,7 +224,7 @@ public:
 
 #pragma endregion
 
-		// muti server only this valid.
+		// muti dnServer only this valid.
 		if(bitServerOpenFlag.GetAllFlagCount() > 1)
 		{
 			iniFileParam["Common"]["program"] = launchParam["program"];
@@ -241,7 +241,7 @@ public:
 		SPidLogger.Init(iniFileParam["Common"]);
 
 		
-		HotReloadDll::Ptr pHotDll = AddSystem<HotReloadDll>();
+		HotReloadDll::CVPtr pHotDll = AddSystem<HotReloadDll>();
 
 		if (!pHotDll->ReloadHandle())
 		{
@@ -256,13 +256,13 @@ public:
 				auto mergeMap = iniFileParam["Common"];
 				mergeMap.merge(iniFileParam[serverName]);
 
-				World::Ptr world = std::make_shared<World>();
+				World::CVPtr world = std::make_shared<World>();
 				world->MoveLuanchConfigToSelf(std::move(mergeMap));
 
 				if(!InitServer(world, pHotDll))
 				{
 					world->Dispose();
-					return false;
+					continue;
 				}
 
 				world->Broadcast(EMEventType::ServerStart);
@@ -275,25 +275,25 @@ public:
 		MoveLuanchConfigToSelf(std::move(iniFileParam["Common"]));
 
 		// free manager
-		RemoveSystem(EMSystemType::HotReloadDll);
+		// RemoveSystem(EMSystemType::HotReloadDll);
 
 		return true;
 	}
 
-	/// @brief create server
+	/// @brief create dnServer
 	/// @param pHotDll if mutiServer, will own common
-	bool InitServer(World::Ptr world, HotReloadDll::Ptr pHotDll)
+	bool InitServer(World::CVPtr world, HotReloadDll::CVPtr pHotDll)
 	{
 		
 		// logger
-		LoggerPrint::Ptr pLogger = world->AddSystem<LoggerPrint>();
+		LoggerPrint::CVPtr pLogger = world->AddSystem<LoggerPrint>();
 		if(!pLogger->Init())
 		{
 			return false;
 		}
 
 		// i10n
-		DNl10n::Ptr dnL10n = world->AddSystem<DNl10n>();
+		DNl10n::CVPtr dnL10n = world->AddSystem<DNl10n>();
 		if(!dnL10n->Init())
 		{
 			return false;
@@ -303,8 +303,8 @@ public:
 		std::string* value = world->LaunchParam("svrName");
 		EMServerType serverType = EnumName<EMServerType>(*value);
 
-		DNServer::Ptr server = world->AddSystem<DNServer>();
-		server->SetServerType(serverType);
+		DNServer::CVPtr dnServer = world->AddSystem<DNServer>();
+		dnServer->SetServerType(serverType);
 
 		value = world->LaunchParam("byCtl");
 
@@ -312,51 +312,57 @@ public:
 		{
 			case EMServerType::ControlServer:
 			{
-				server->AddComponent<DNServerProxy>();
-				server->AddComponent<ServerEntityManager>();
+				dnServer->AddComponent<ServerEntityManager>();
+				//net
+				dnServer->AddComponent<DNServerProxy>();
 				break;
 			}
 			case EMServerType::GlobalServer:
 			{
-				server->AddComponent<DNServerProxy>();
+				dnServer->AddComponent<ServerEntityManager>();
+				//net
+				dnServer->AddComponent<DNServerProxy>();
 				if(value)
 				{
-					server->AddComponent<DNClientProxy>();
+					dnServer->AddComponent<DNClientProxy>();
 				}
-				server->AddComponent<ServerEntityManager>();
 				break;
 			}
 			case EMServerType::AuthServer:
 			{
-				server->AddComponent<DNWebProxy>();
-				server->AddComponent<RdbProxy>();
+				dnServer->AddComponent<DNWebProxy>();
+				dnServer->AddComponent<RdbProxy>();
+				//net
 				if(value)
 				{
-					server->AddComponent<DNClientProxy>();
+					dnServer->AddComponent<DNClientProxy>();
 				}
 				break;
 			}
 			case EMServerType::GateServer:
 			{
-				server->AddComponent<DNServerProxy>();
-				server->AddComponent<DNClientProxy>();
-				server->AddComponent<ServerEntityManager>();
-				server->AddComponent<ProxyEntityManager>();
+				dnServer->AddComponent<ServerEntityManager>();
+				dnServer->AddComponent<ProxyEntityManager>();
+				//net
+				dnServer->AddComponent<DNServerProxy>();
+				dnServer->AddComponent<DNClientProxy>();
 				break;
 			}
 			case EMServerType::DatabaseServer:
 			{
-				server->AddComponent<DNClientProxy>();
-				server->AddComponent<RdbProxy>();
+				dnServer->AddComponent<RdbProxy>();
+				//net
+				dnServer->AddComponent<DNClientProxy>();
 				break;
 			}
 			case EMServerType::LogicServer:
 			{
-				server->AddComponent<MdbProxy>();
-				server->AddComponent<DNServerProxy>();
-				server->AddComponent<DNClientProxy>();
-				server->AddComponent<RoomEntityManager>();
-				server->AddComponent<ClientEntityManager>();
+				dnServer->AddComponent<MdbProxy>();
+				dnServer->AddComponent<RoomEntityManager>();
+				dnServer->AddComponent<ClientEntityManager>();
+				//net
+				dnServer->AddComponent<DNServerProxy>();
+				dnServer->AddComponent<DNClientProxy>();
 				break;
 			}
 			default:
@@ -393,23 +399,21 @@ public:
 		auto reloadDll = [this, pause, resume](std::stringstream* ss = nullptr)
 			{
 				pause();
-				if(oWorlds.size() > 1)
-				{
-					World::Ptr firstWorld = oWorlds[0];
-					HotReloadDll::Ptr pHotDll = firstWorld->GetSystem<HotReloadDll>(EMSystemType::HotReloadDll);
-					if(pHotDll->ReloadHandle([&](){
-						for(auto& world : oWorlds)
-						{
-							pHotDll->OnUnregHotReload(world);
-						}
-					}))
+				
+				HotReloadDll::CVPtr pHotDll = GetSystem<HotReloadDll>(EMSystemType::HotReloadDll);
+				if(pHotDll->ReloadHandle([&](){
+					for(auto& world : oWorlds)
 					{
-						for(auto& world : oWorlds)
-						{
-							pHotDll->OnRegHotReload(world);
-						}
+						pHotDll->OnUnregHotReload(world);
+					}
+				}))
+				{
+					for(auto& world : oWorlds)
+					{
+						pHotDll->OnRegHotReload(world);
 					}
 				}
+				
 				resume();
 			};
 
@@ -453,16 +457,18 @@ public:
 		
 	}
 
-	void Dispose() override
+	virtual void Dispose() override
 	{
-		Object::Dispose();
-
-		for (auto& world : oWorlds)
+		for (auto it = oWorlds.rbegin(); it != oWorlds.rend(); ++it)
 		{
-			world->Dispose();
+			(*it)->Dispose();
 		}
 		
 		oWorlds.clear();
+		
+		World::Dispose();
+
+		mCmdHandle.clear();
 	}
 
 private:

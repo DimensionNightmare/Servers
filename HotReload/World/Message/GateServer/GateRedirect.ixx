@@ -10,7 +10,7 @@ import DNTask;
 namespace GateServerMessage
 {
 
-	export DNTaskVoid Exe_ReqLoadData(const DNSocketChannel::Ptr& channel, uint32_t msgId, const std::string& binMsg)
+	export DNTaskVoid Exe_ReqLoadData(DNSocketChannel::CVPtr channel, uint32_t msgId, const std::string& binMsg)
 	{
 		GMsg::L2D_ReqLoadData request;
 		if(!request.ParseFromString(binMsg))
@@ -61,7 +61,7 @@ namespace GateServerMessage
 		co_return;
 	}
 
-	export DNTaskVoid Exe_ReqSaveData(const DNSocketChannel::Ptr& channel, uint32_t msgId, const std::string& binMsg)
+	export DNTaskVoid Exe_ReqSaveData(DNSocketChannel::CVPtr channel, uint32_t msgId, const std::string& binMsg)
 	{
 		GMsg::L2D_ReqSaveData request;
 		if(!request.ParseFromString(binMsg))

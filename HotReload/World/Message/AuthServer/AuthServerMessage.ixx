@@ -10,11 +10,9 @@ export class AuthServerMessageHandle : public MessageRegister
 
 public:
 
-	static void RegApiHandle(DNServer::WPtr server, hv::HttpService* service)
+	void RegApiHandle(DNServer::CVPtr dnServer) override
 	{
-		service->Static("/", "./");
-
-		ApiInit(server, service);
+		ApiInit(dnServer);
 	}
 
 	void RegMsgHandle()
@@ -22,7 +20,7 @@ public:
 
 	}
 
-	std::function<void(const DNServer::Ptr& server)> GetClientRegistFunc()
+	std::function<void(DNServer::CVPtr)> GetClientRegistFunc()
 	{
 		return &AuthServerMessage::Evt_ReqRegistSrv;
 	}

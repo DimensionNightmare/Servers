@@ -25,6 +25,7 @@ private:
     void operator delete(void*) = delete;
 public:
 	using Ptr = std::shared_ptr<ServerEntityManagerHelper>;
+	using CVPtr = const Ptr&;
 
 	ServerEntityHelper::Ptr GetEntity(uint64_t entityId)
 	{
@@ -51,7 +52,7 @@ public:
 		return nullptr;
 	}
 
-	void MountEntity(ServerEntityHelper::Ptr entity)
+	void MountEntity(ServerEntityHelper::CVPtr entity)
 	{
 		std::unique_lock<std::shared_mutex> ulock(oMapMutex);
 		if (mEntityMap.contains(entity->ID()))
@@ -60,7 +61,7 @@ public:
 		}
 	}
 
-	void UnMountEntity(ServerEntityHelper::Ptr entity)
+	void UnMountEntity(ServerEntityHelper::CVPtr entity)
 	{
 		std::unique_lock<std::shared_mutex> ulock(oMapMutex);
 		mEntityMapList[entity->GetServerType()].remove(entity);

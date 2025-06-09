@@ -21,6 +21,8 @@ public:
 	virtual void Dispose() override
 	{
 		EntityManager::Dispose();
+
+		mEntityMapList.clear();
 	}
 
 	/// @brief 
@@ -41,8 +43,8 @@ public:
 
 		if(mEntityMap.count(entityId))
 		{
-			ServerEntity::Ptr rm = mEntityMap[entityId];
-			if(const ServerEntity::Ptr& link = rm->LinkNode())
+			ServerEntity::CVPtr rm = mEntityMap[entityId];
+			if(ServerEntity::CVPtr link = rm->LinkNode())
 			{
 				link->GetMapLinkNode(rm->GetServerType()).remove(rm);
 			}
@@ -71,9 +73,9 @@ public: // dll override
 	{
 		if (mEntityMap.contains(entityId))
 		{
-			ServerEntity::Ptr entity = mEntityMap[entityId];
+			ServerEntity::CVPtr entity = mEntityMap[entityId];
 
-			if (const ServerEntity::Ptr& owner = entity->LinkNode())
+			if (ServerEntity::CVPtr owner = entity->LinkNode())
 			{
 				owner->ClearFlag(EMServerEntityFlag::Locked);
 			}
@@ -91,7 +93,7 @@ public: // dll override
 
 	void AddEntity(uint64_t entityId, EMServerType regType)
 	{
-		ServerEntity::Ptr entity = std::shared_ptr<ServerEntity>(new ServerEntity(GetOwner()->GetWorldW()));
+		ServerEntity::CVPtr entity = std::shared_ptr<ServerEntity>(new ServerEntity(GetOwner()->GetWorldW()));
 		entity->SetID(entityId);
 
 		std::unique_lock<std::shared_mutex> ulock(oMapMutex);

@@ -27,9 +27,11 @@ public:
 
 	virtual void Dispose() override
 	{
+		// CheckSaveEntity(true);
+
 		EntityManager::Dispose();
 
-		// CheckSaveEntity(true);
+		mDbFailure.clear();
 	}
 
 	virtual void TickMainFrame() override
@@ -41,7 +43,7 @@ public: // dll proxy
 
 	void AddEntity(uint64_t entityId)
 	{
-		ClientEntity::Ptr entity = std::shared_ptr<ClientEntity>(new ClientEntity(GetOwner()->GetWorldW()));
+		ClientEntity::CVPtr entity = std::shared_ptr<ClientEntity>(new ClientEntity(GetOwner()->GetWorldW()));
 		entity->SetID(entityId);
 
 		std::unique_lock<std::shared_mutex> ulock(oMapMutex);

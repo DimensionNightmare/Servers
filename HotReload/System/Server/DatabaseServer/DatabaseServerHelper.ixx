@@ -33,20 +33,46 @@ private:
     void operator delete(void*) = delete;
 public:
 	using Ptr = std::shared_ptr<DatabaseServerHelper>;
+	using CVPtr = const Ptr&;
 
-	DNClientProxyHelper::Ptr GetClientProxy() { return GetComponent<DNClientProxyHelper>(EMComponentType::DNClientProxy); }
+	DNClientProxyHelper::Ptr GetClientProxy()
+	{ 
+		DNClientProxyHelper::Ptr proxy = GetComponent<DNClientProxyHelper>(EMComponentType::DNClientProxy);
+		if(!proxy || proxy->IsDisposed())
+		{
+			return nullptr;
+		}
+		return proxy;
+	}
 
-	ServerEntityManagerHelper::Ptr GetServerEntityManager() { return GetComponent<ServerEntityManagerHelper>(EMComponentType::ServerEntityManager); }
+	ServerEntityManagerHelper::Ptr GetServerEntityManager() 
+	{
+		ServerEntityManagerHelper::Ptr proxy = GetComponent<ServerEntityManagerHelper>(EMComponentType::ServerEntityManager);
+		if(!proxy || proxy->IsDisposed())
+		{
+			return nullptr;
+		}
 
-	RdbProxyHelper::Ptr GetRdbProxy(){ return GetComponent<RdbProxyHelper>(EMComponentType::RdbProxy); }
+		return proxy;
+	}
+
+	RdbProxyHelper::Ptr GetRdbProxy()
+	{ 
+		RdbProxyHelper::Ptr proxy = GetComponent<RdbProxyHelper>(EMComponentType::RdbProxy);
+		if(!proxy || proxy->IsDisposed())
+		{
+			return nullptr;
+		}
+		return proxy;
+	}
 
 	bool InitDatabase()
 	{
-		if(RdbProxyHelper::Ptr proxy = GetRdbProxy())
+		if(RdbProxyHelper::CVPtr proxy = GetRdbProxy())
 		{
 			try
 			{
-				World::Ptr pWorld = GetWorld();
+				World::CVPtr pWorld = GetWorld();
 
 				
 				std::string* value = pWorld->LaunchParam("connection");
@@ -193,11 +219,11 @@ public:
 	{
 		msgHandle->RegMsgHandle();
 
-		if (DNClientProxy::Ptr proxy = GetComponent<DNClientProxy>(EMComponentType::DNClientProxy))
+		if (DNClientProxy::CVPtr proxy = GetComponent<DNClientProxy>(EMComponentType::DNClientProxy))
 		{
-			proxy->onConnection = [this,msgHandle](const DNSocketChannel::Ptr& channel)
+			proxy->onConnection = [this,msgHandle](DNSocketChannel::CVPtr channel)
 				{
-					DNClientProxyHelper::Ptr proxyHelper = GetClientProxy();
+					DNClientProxyHelper::CVPtr proxyHelper = GetClientProxy();
 
 					if(!proxyHelper){ return ;}
 
@@ -240,7 +266,7 @@ public:
 
 								proxyHelper->Timer()->setTimeout(200, [this, originIp, originPort](uint64_t timerID)
 									{
-										DNClientProxyHelper::Ptr proxyHelper = GetClientProxy();
+										DNClientProxyHelper::CVPtr proxyHelper = GetClientProxy();
 										if(!proxyHelper){ return ;}
 										TickMainSpaceDll(proxyHelper.get(), FUNCPLACE(DNClientProxy,RedirectClient),  std::stoi(originPort), originIp);
 									});
@@ -255,9 +281,9 @@ public:
 					}
 				};
 
-			proxy->onMessage = [this,msgHandle](const DNSocketChannel::Ptr& channel, hv::Buffer* buf)
+			proxy->onMessage = [this,msgHandle](DNSocketChannel::CVPtr channel, hv::Buffer* buf)
 				{
-					DNClientProxyHelper::Ptr proxyHelper = GetClientProxy();
+					DNClientProxyHelper::CVPtr proxyHelper = GetClientProxy();
 
 					if(!proxyHelper){ return ;}
 
@@ -316,7 +342,7 @@ public:
 
 	int HandleServerShutdown()
 	{
-		if (DNClientProxyHelper::Ptr proxy = GetClientProxy())
+		if (DNClientProxyHelper::CVPtr proxy = GetClientProxy())
 		{
 			proxy->onConnection = nullptr;
 			proxy->onMessage = nullptr;

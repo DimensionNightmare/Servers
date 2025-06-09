@@ -24,7 +24,7 @@ private:
 	std::function<void()> mFunc;
 };
 
-export void MessagePackAndSend(uint32_t msgId, EMMsgDeal deal, std::string& data, const DNSocketChannel::Ptr& channel)
+export void MessagePackAndSend(uint32_t msgId, EMMsgDeal deal, std::string& data, DNSocketChannel::CVPtr channel)
 {
 	MessagePack(msgId, deal, 0, data);
 
@@ -33,7 +33,7 @@ export void MessagePackAndSend(uint32_t msgId, EMMsgDeal deal, std::string& data
 	SPidLogger.Record(ELogLevel_Debug, "{} Send type={} With Mid:{}", channel->peeraddr().c_str(), (int)deal, msgId);
 }
 
-export void MessagePackAndSend(uint32_t msgId, EMMsgDeal deal, const std::string& pbName, std::string& data, const DNSocketChannel::Ptr& channel)
+export void MessagePackAndSend(uint32_t msgId, EMMsgDeal deal, const std::string& pbName, std::string& data, DNSocketChannel::CVPtr channel)
 {
 	MessagePack(msgId, deal, DoStringHash(pbName), data);
 	channel->write(data);
@@ -41,7 +41,7 @@ export void MessagePackAndSend(uint32_t msgId, EMMsgDeal deal, const std::string
 	SPidLogger.Record(ELogLevel_Debug, "{} Send type={} With Mid:{}, Mess:{}", channel->peeraddr().c_str(), (int)deal, msgId, pbName);
 }
 
-export void MessagePackAndSend(uint32_t msgId, EMMsgDeal deal, const std::string& pbName, const std::string& data, const DNSocketChannel::Ptr& channel)
+export void MessagePackAndSend(uint32_t msgId, EMMsgDeal deal, const std::string& pbName, const std::string& data, DNSocketChannel::CVPtr channel)
 {
 	std::string msgData = data;
 	MessagePack(msgId, deal, DoStringHash(pbName), msgData);

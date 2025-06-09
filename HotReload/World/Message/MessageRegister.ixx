@@ -12,7 +12,7 @@ export class MessageRegister
 
 public:
 
-	void MsgHandle(const DNSocketChannel::Ptr& channel, uint32_t msgId, size_t msgHashId, const std::string& msgData)
+	void MsgHandle(DNSocketChannel::CVPtr channel, uint32_t msgId, size_t msgHashId, const std::string& msgData)
 	{
 		if (MHandleMap.contains(msgHashId))
 		{
@@ -23,22 +23,22 @@ public:
 			}
 			catch (const std::exception& e)
 			{
-				if(World::Ptr pworld = channel->GetWorld())
+				if(World::CVPtr pWorld = channel->GetWorld())
 				{
-					pworld->GetSystem<LoggerPrint>(EMSystemType::LoggerPrint)->Record(ELogLevel_Debug, "{}", e.what());
+					pWorld->GetSystem<LoggerPrint>(EMSystemType::LoggerPrint)->Record(ELogLevel_Debug, "{}", e.what());
 				}
 			}
 		}
 		else
 		{
-			if(World::Ptr pworld = channel->GetWorld())
+			if(World::CVPtr pWorld = channel->GetWorld())
 			{
-				pworld->GetSystem<LoggerPrint>(EMSystemType::LoggerPrint)->Record(EL10nCode_MsgHandleFind);
+				pWorld->GetSystem<LoggerPrint>(EMSystemType::LoggerPrint)->Record(EL10nCode_MsgHandleFind);
 			}
 		}
 	}
 
-	void MsgRetHandle(const DNSocketChannel::Ptr& channel, size_t msgHashId, const std::string& msgData)
+	void MsgRetHandle(DNSocketChannel::CVPtr channel, size_t msgHashId, const std::string& msgData)
 	{
 		if (MHandleRetMap.contains(msgHashId))
 		{
@@ -49,22 +49,22 @@ public:
 			}
 			catch (const std::exception& e)
 			{
-				if(World::Ptr pworld = channel->GetWorld())
+				if(World::CVPtr pWorld = channel->GetWorld())
 				{
-					pworld->GetSystem<LoggerPrint>(EMSystemType::LoggerPrint)->Record(ELogLevel_Debug, "{}", e.what());
+					pWorld->GetSystem<LoggerPrint>(EMSystemType::LoggerPrint)->Record(ELogLevel_Debug, "{}", e.what());
 				}
 			}
 		}
 		else
 		{
-			if(World::Ptr pworld = channel->GetWorld())
+			if(World::CVPtr pWorld = channel->GetWorld())
 			{
-				pworld->GetSystem<LoggerPrint>(EMSystemType::LoggerPrint)->Record(EL10nCode_MsgHandleFind);
+				pWorld->GetSystem<LoggerPrint>(EMSystemType::LoggerPrint)->Record(EL10nCode_MsgHandleFind);
 			}
 		}
 	}
 
-	void MsgRedirectHandle(const DNSocketChannel::Ptr& channel, uint32_t msgId, size_t msgHashId, const std::string& msgData)
+	void MsgRedirectHandle(DNSocketChannel::CVPtr channel, uint32_t msgId, size_t msgHashId, const std::string& msgData)
 	{
 		if (MHandleRedirectMap.contains(msgHashId))
 		{
@@ -75,27 +75,29 @@ public:
 			}
 			catch (const std::exception& e)
 			{
-				if(World::Ptr pworld = channel->GetWorld())
+				if(World::CVPtr pWorld = channel->GetWorld())
 				{
-					pworld->GetSystem<LoggerPrint>(EMSystemType::LoggerPrint)->Record(ELogLevel_Debug, "{}", e.what());
+					pWorld->GetSystem<LoggerPrint>(EMSystemType::LoggerPrint)->Record(ELogLevel_Debug, "{}", e.what());
 				}
 			}
 		}
 		else
 		{
-			if(World::Ptr pworld = channel->GetWorld())
+			if(World::CVPtr pWorld = channel->GetWorld())
 			{
-				pworld->GetSystem<LoggerPrint>(EMSystemType::LoggerPrint)->Record(EL10nCode_MsgHandleFind);
+				pWorld->GetSystem<LoggerPrint>(EMSystemType::LoggerPrint)->Record(EL10nCode_MsgHandleFind);
 			}
 		}
 	}
 
 	virtual void RegMsgHandle() = 0;
 
-	virtual std::function<void(const DNServer::Ptr& server)> GetClientRegistFunc() = 0;
+	virtual std::function<void(DNServer::CVPtr)> GetClientRegistFunc() = 0;
+
+	virtual void RegApiHandle(DNServer::CVPtr server){}
 
 protected:
-	std::unordered_map<size_t, std::pair<const Message*, std::function<void(const DNSocketChannel::Ptr&, uint32_t, const std::string&)>>> MHandleMap;
-	std::unordered_map<size_t, std::pair<const Message*, std::function<void(const DNSocketChannel::Ptr&, const std::string&)>>> MHandleRetMap;
-	std::unordered_map<size_t, std::pair<const Message*, std::function<void(const DNSocketChannel::Ptr&, uint32_t, const std::string&)>>> MHandleRedirectMap;
+	std::unordered_map<size_t, std::pair<const Message*, std::function<void(DNSocketChannel::CVPtr, uint32_t, const std::string&)>>> MHandleMap;
+	std::unordered_map<size_t, std::pair<const Message*, std::function<void(DNSocketChannel::CVPtr, const std::string&)>>> MHandleRetMap;
+	std::unordered_map<size_t, std::pair<const Message*, std::function<void(DNSocketChannel::CVPtr, uint32_t, const std::string&)>>> MHandleRedirectMap;
 };

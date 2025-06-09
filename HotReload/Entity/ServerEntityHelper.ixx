@@ -21,10 +21,11 @@ private:
 public: // dll override
 
 	using Ptr = std::shared_ptr<ServerEntityHelper>;
+	using CVPtr = const Ptr&;
 
 	void SetServerType(EMServerType type) { emServerType = type; }
 
-	void SetLinkNode(const ServerEntity::Ptr& node) { pLink = node; }
+	void SetLinkNode(ServerEntity::CVPtr node) { pLink = node; }
 
 	std::string ServerIp() { return sServIp; }
 	void SetServerIp(const std::string& ip) { sServIp = ip; }
@@ -37,7 +38,7 @@ public: // dll override
 	void SetConnNum(int div) { IConnNum += div; }
 
 	/// @brief this server child add
-	void SetMapLinkNode(EMServerType type, const ServerEntity::Ptr& node)
+	void SetMapLinkNode(EMServerType type, ServerEntity::CVPtr node)
 	{
 		if (type <= EMServerType::None || type >= EMServerType::Max)
 		{
@@ -54,9 +55,9 @@ public: // dll override
 	void SetTimerId(uint64_t timerId) { iCloseTimerId = timerId; }
 
 	/// @brief net socket set
-	const DNSocketChannel::Ptr& GetChannel() { return pChannel; }
+	DNSocketChannel::CVPtr GetChannel() { return pChannel; }
 
 	/// @brief net socket get
-	void SetChannel(const DNSocketChannel::Ptr& channel) { pChannel = channel; }
+	void SetChannel(DNSocketChannel::CVPtr channel) { pChannel = channel; }
 
 };

@@ -18,6 +18,7 @@ protected:
 	friend class World;
 public:
 	using Ptr = std::shared_ptr<DNl10n>;
+	using CVPtr = const Ptr&;
 	using WPtr = std::weak_ptr<DNl10n>;
 	
 	virtual ~DNl10n()

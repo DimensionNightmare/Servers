@@ -8,7 +8,7 @@ import FuncHelper;
 
 namespace LogicServerMessage
 {
-	export void Exe_RetAccountReplace(const DNSocketChannel::Ptr& channel, uint32_t msgId, const std::string& binMsg)
+	export void Exe_RetAccountReplace(DNSocketChannel::CVPtr channel, uint32_t msgId, const std::string& binMsg)
 	{
 		GMsg::S2C_RetAccountReplace request;
 		if(!request.ParseFromString(binMsg))
@@ -16,18 +16,18 @@ namespace LogicServerMessage
 			return;
 		}
 
-		LogicServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<LogicServerHelper>(EMSystemType::DNServer);
-		ClientEntityManagerHelper::Ptr entityMan = dnServer->GetClientEntityManager();
+		LogicServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<LogicServerHelper>(EMSystemType::DNServer);
+		ClientEntityManagerHelper::CVPtr entityMan = dnServer->GetClientEntityManager();
 
-		ClientEntityHelper::Ptr entity = entityMan->GetEntity(request.account_id());
+		ClientEntityHelper::CVPtr entity = entityMan->GetEntity(request.account_id());
 		if (!entity)
 		{
 			dnServer->GetLogger()->Record(ELogLevel_Debug, "Client Entity Kick Not Exist !");
 			return;
 		}
 
-		RoomEntityManagerHelper::Ptr roomEntityMan = dnServer->GetRoomEntityManager();
-		RoomEntityHelper::Ptr roomEntity = roomEntityMan->GetEntity(entity->RecordRoomId());
+		RoomEntityManagerHelper::CVPtr roomEntityMan = dnServer->GetRoomEntityManager();
+		RoomEntityHelper::CVPtr roomEntity = roomEntityMan->GetEntity(entity->RecordRoomId());
 
 		// cache
 		if (roomEntity)
@@ -46,7 +46,7 @@ namespace LogicServerMessage
 	}
 
 	// client request
-	export DNTaskVoid Msg_ReqClientLogin(const DNSocketChannel::Ptr& channel, uint32_t msgId, const std::string& binMsg)
+	export DNTaskVoid Msg_ReqClientLogin(DNSocketChannel::CVPtr channel, uint32_t msgId, const std::string& binMsg)
 	{
 		GMsg::C2S_ReqAuthToken request;
 		if(!request.ParseFromString(binMsg))
@@ -61,10 +61,10 @@ namespace LogicServerMessage
 			MessagePackAndSend(msgId, EMMsgDeal::Res, binData, channel);
 		});
 
-		LogicServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<LogicServerHelper>(EMSystemType::DNServer);
-		ClientEntityManagerHelper::Ptr entityMan = dnServer->GetClientEntityManager();
+		LogicServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<LogicServerHelper>(EMSystemType::DNServer);
+		ClientEntityManagerHelper::CVPtr entityMan = dnServer->GetClientEntityManager();
 
-		ClientEntity::Ptr entity = entityMan->AddEntity(request.account_id());
+		ClientEntityHelper::Ptr entity = entityMan->AddEntity(request.account_id());
 		if (entity)
 		{
 			dnServer->GetLogger()->Record(ELogLevel_Debug, "AddEntity Client!");
@@ -88,7 +88,7 @@ namespace LogicServerMessage
 		}
 
 #if 0
-		RoomEntityManagerHelper::Ptr roomEntityMan = dnServer->GetRoomEntityManager();
+		RoomEntityManagerHelper::CVPtr roomEntityMan = dnServer->GetRoomEntityManager();
 		RoomEntity::Ptr roomEntity = nullptr;
 
 		// cache
@@ -140,7 +140,7 @@ namespace LogicServerMessage
 				};
 			auto dataChannel = taskGen(&response);
 
-			DNServerProxyHelper::Ptr server = dnServer->GetServerProxy();
+			DNServerProxyHelper::CVPtr server = dnServer->GetServerProxy();
 			uint32_t msgId = server->GetMsgId();
 
 			// wait data parse

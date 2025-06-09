@@ -31,14 +31,15 @@ private:
     void operator delete(void*) = delete;
 public:
 	using Ptr = std::shared_ptr<ClientEntityManagerHelper>;
+	using CVPtr = const Ptr&;
 
-	ClientEntity::Ptr AddEntity(uint64_t entityId)
+	ClientEntityHelper::Ptr AddEntity(uint64_t entityId)
 	{
 		if (!mEntityMap.contains(entityId))
 		{
 			TickMainSpaceDll(this, FUNCPLACE(ClientEntityManager,AddEntity), entityId);
 
-			ClientEntity::Ptr entity = mEntityMap[entityId];
+			ClientEntityHelper::Ptr entity = GetEntity(entityId);
 			
 			return entity;
 		}
@@ -57,9 +58,9 @@ public:
 		return nullptr;
 	}
 
-	DNTaskVoid LoadEntity(const ClientEntityHelper::Ptr& entity, GMsg::d2L_ReqLoadEntityData* inRequest, GMsg::L2d_ResLoadEntityData* inResponse)
+	DNTaskVoid LoadEntity(ClientEntityHelper::CVPtr entity, GMsg::d2L_ReqLoadEntityData* inRequest, GMsg::L2d_ResLoadEntityData* inResponse)
 	{
-		DNClientProxyHelper::Ptr sqlClient = pSqlClient->GetSelf<DNClientProxyHelper>();
+		DNClientProxyHelper::CVPtr sqlClient = pSqlClient->GetSelf<DNClientProxyHelper>();
 
 		if (!sqlClient || sqlClient->RegistType() != static_cast<uint8_t>(EMServerType::GateServer))
 		{
@@ -95,7 +96,7 @@ public:
 		uint64_t entityId = entity->ID();
 		std::string keyName = std::format("{}_{}", table_name, entityId);
 
-		MdbProxyHelper::Ptr dbProxy = GetOwner()->GetComponent<MdbProxyHelper>(EMComponentType::MdbProxy);
+		MdbProxyHelper::CVPtr dbProxy = GetOwner()->GetComponent<MdbProxyHelper>(EMComponentType::MdbProxy);
 		if(auto connection = dbProxy->GetConnection())
 		{
 			// nosql
@@ -212,7 +213,7 @@ public:
 	}
 
 	/// @brief save entity data to database. this is task.
-	DNTaskVoid SaveEntity(ClientEntityHelper::Ptr entity, bool offline = false)
+	DNTaskVoid SaveEntity(ClientEntityHelper::CVPtr entity, bool offline = false)
 	{
 		uint64_t entityId = entity->ID();
 
@@ -250,7 +251,7 @@ public:
 		GMsg::D2L_ResSaveData response;
 
 		{
-			DNClientProxyHelper::Ptr sqlClient = pSqlClient->GetSelf<DNClientProxyHelper>();
+			DNClientProxyHelper::CVPtr sqlClient = pSqlClient->GetSelf<DNClientProxyHelper>();
 
 			auto taskGen = [](Message* msg) -> DNTask<Message*>
 				{
@@ -281,7 +282,7 @@ public:
 		}
 
 		// nosql
-		MdbProxyHelper::Ptr dbProxy = GetOwner()->GetComponent<MdbProxyHelper>(EMComponentType::MdbProxy);
+		MdbProxyHelper::CVPtr dbProxy = GetOwner()->GetComponent<MdbProxyHelper>(EMComponentType::MdbProxy);
 		if(auto connection = dbProxy->GetConnection())
 		{
 			std::string keyName = std::format("{}_{}", table_name, entityId);
@@ -296,13 +297,13 @@ public:
 	void CheckSaveEntity(bool shutdown = false)
 	{
 
-		std::function<void(ClientEntityHelper::Ptr, bool)> dealFunc = nullptr;
+		std::function<void(ClientEntityHelper::CVPtr, bool)> dealFunc = nullptr;
 		
-		DNClientProxyHelper::Ptr sqlClient = pSqlClient->GetSelf<DNClientProxyHelper>();
+		DNClientProxyHelper::CVPtr sqlClient = pSqlClient->GetSelf<DNClientProxyHelper>();
 
 		if (!sqlClient || sqlClient->RegistType() != uint8_t(EMServerType::GateServer))
 		{
-			dealFunc = [this](ClientEntityHelper::Ptr entity, bool offline)
+			dealFunc = [this](ClientEntityHelper::CVPtr entity, bool offline)
 				{
 					std::string binData;
 					uint64_t entityId = entity->ID();
@@ -347,7 +348,7 @@ public:
 	}
 	
 	/// @brief server self pointer save. mean connected father node success.
-	void InitSqlConn(const DNClientProxy::Ptr& sockClient)
+	void InitSqlConn(DNClientProxy::CVPtr sockClient)
 	{
 		pSqlClient = sockClient;
 	}

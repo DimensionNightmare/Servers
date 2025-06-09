@@ -11,7 +11,7 @@ namespace ControlServerMessage
 {
 
 	// client request
-	export void Msg_ReqRegistSrv(const DNSocketChannel::Ptr& channel, uint32_t msgId, const std::string& binMsg)
+	export void Msg_ReqRegistSrv(DNSocketChannel::CVPtr channel, uint32_t msgId, const std::string& binMsg)
 	{
 		GMsg::COM_ReqRegistSrv request;
 		if(!request.ParseFromString(binMsg))
@@ -27,9 +27,9 @@ namespace ControlServerMessage
 			MessagePackAndSend(msgId, EMMsgDeal::Res, binData, channel);
 		});
 
-		ControlServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<ControlServerHelper>(EMSystemType::DNServer);
+		ControlServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<ControlServerHelper>(EMSystemType::DNServer);
 
-		ServerEntityManagerHelper::Ptr entityMan = dnServer->GetServerEntityManager();
+		ServerEntityManagerHelper::CVPtr entityMan = dnServer->GetServerEntityManager();
 
 		dnServer->GetLogger()->Record(ELogLevel_Debug, "ip Reqregist: {}, {}", channel->peeraddr(), request.server_type());
 
@@ -43,12 +43,12 @@ namespace ControlServerMessage
 		}
 
 		//exist?
-		else if (ServerEntity::Ptr entity = channel->getContextPtr<ServerEntity>())
+		else if (ServerEntity::CVPtr entity = channel->getContextPtr<ServerEntity>())
 		{
 			response.set_error_code(EL10nCode_RegistServerChannelExist);
 		}
 
-		else if (ServerEntityHelper::Ptr entity = entityMan->AddEntity(request.server_id(), regType))
+		else if (ServerEntityHelper::CVPtr entity = entityMan->AddEntity(request.server_id(), regType))
 		{
 			size_t pos = ipPort.find(":");
 			entity->SetServerIp(ipPort.substr(0, pos));
@@ -63,7 +63,7 @@ namespace ControlServerMessage
 		
 	}
 
-	export void Exe_RetHeartbeat(const DNSocketChannel::Ptr& channel, const std::string& binMsg)
+	export void Exe_RetHeartbeat(DNSocketChannel::CVPtr channel, const std::string& binMsg)
 	{
 		GMsg::COM_RetHeartbeat request;
 		if(!request.ParseFromString(binMsg))

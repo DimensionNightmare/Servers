@@ -53,6 +53,7 @@ export class DNSocketChannel : public hv::SocketChannel
 {
 public:
 	using Ptr = std::shared_ptr<DNSocketChannel>;
+	using CVPtr = const Ptr&;
 	using WPtr = std::weak_ptr<DNSocketChannel>;
 
 	virtual ~DNSocketChannel()

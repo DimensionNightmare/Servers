@@ -19,6 +19,8 @@ public:
 	virtual void Dispose() override
 	{
 		EntityManager::Dispose();
+
+		mEntityMapList.clear();
 	}
 
 	virtual void TickMainFrame() override
@@ -56,7 +58,7 @@ public: // dll proxy
 	{
 		if (mEntityMap.contains(entityId))
 		{
-			RoomEntity::Ptr entity = mEntityMap[entityId];
+			RoomEntity::CVPtr entity = mEntityMap[entityId];
 			entity->Dispose();
 			
 			std::unique_lock<std::shared_mutex> ulock(oMapMutex);
@@ -70,7 +72,7 @@ public: // dll proxy
 
 	void AddEntity(uint64_t entityId, uint64_t mapId)
 	{
-		RoomEntity::Ptr entity = std::shared_ptr<RoomEntity>(new RoomEntity(GetOwner()->GetWorldW()));
+		RoomEntity::CVPtr entity = std::shared_ptr<RoomEntity>(new RoomEntity(GetOwner()->GetWorldW()));
 		entity->SetID(entityId);
 
 		std::unique_lock<std::shared_mutex> ulock(oMapMutex);

@@ -15,9 +15,9 @@ using namespace std::chrono;
 
 #define MSGSET writer->response->SetBody
 
-export void ApiAuth(DNServer::WPtr server, hv::HttpService* service)
+export void ApiAuth(DNServer::CVPtr dnServer, hv::HttpService* service)
 {
-	service->POST("/Auth/User/LoginToken", [server](const hv::HttpRequestPtr& req, const hv::HttpResponseWriterPtr& writer)
+	service->POST("/Auth/User/LoginToken", [dnServer = dnServer->GetSelfW<DNServer>()](const hv::HttpRequestPtr& req, const hv::HttpResponseWriterPtr& writer)
 		{
 			writer->Begin();
 			nlohmann::json errData;
@@ -39,7 +39,7 @@ export void ApiAuth(DNServer::WPtr server, hv::HttpService* service)
 			accInfo.set_auth_name(authName);
 			accInfo.set_auth_string(authString);
 
-			DNServer::Ptr serverTemp = server.lock();
+			DNServer::Ptr serverTemp = dnServer.lock();
 			if (!serverTemp)
 			{
 				errData["code"] = http_status::HTTP_STATUS_BAD_REQUEST;
@@ -150,7 +150,7 @@ export void ApiAuth(DNServer::WPtr server, hv::HttpService* service)
 			taskGen(accInfo, writer);
 		});
 
-	service->POST("/Auth/User/RegistUser", [server](const hv::HttpRequestPtr& req, const hv::HttpResponseWriterPtr& writer)
+	service->POST("/Auth/User/RegistUser", [dnServer = dnServer->GetSelfW<DNServer>()](const hv::HttpRequestPtr& req, const hv::HttpResponseWriterPtr& writer)
 		{
 			nlohmann::json errData;
 
@@ -172,7 +172,7 @@ export void ApiAuth(DNServer::WPtr server, hv::HttpService* service)
 			accInfo.set_auth_name(authName);
 			accInfo.set_auth_string(authString);
 
-			DNServer::Ptr serverTemp = server.lock();
+			DNServer::Ptr serverTemp = dnServer.lock();
 			if (!serverTemp)
 			{
 				errData["code"] = http_status::HTTP_STATUS_BAD_REQUEST;
@@ -258,7 +258,7 @@ export void ApiAuth(DNServer::WPtr server, hv::HttpService* service)
 			writer->End();
 		});
 
-	service->POST("/Auth/Test/DB", [server](const hv::HttpRequestPtr& req, const hv::HttpResponseWriterPtr& writer)
+	service->POST("/Auth/Test/DB", [dnServer = dnServer->GetSelfW<DNServer>()](const hv::HttpRequestPtr& req, const hv::HttpResponseWriterPtr& writer)
 		{
 
 		});

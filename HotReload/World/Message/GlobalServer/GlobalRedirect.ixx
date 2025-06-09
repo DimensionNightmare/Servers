@@ -10,7 +10,7 @@ import DNTask;
 namespace GlobalServerMessage
 {
 
-	export DNTaskVoid Msg_ReqAuthAccount(const DNSocketChannel::Ptr& channel, uint32_t msgId, const std::string& binMsg)
+	export DNTaskVoid Msg_ReqAuthAccount(DNSocketChannel::CVPtr channel, uint32_t msgId, const std::string& binMsg)
 	{
 		GMsg::A2g_ReqAuthAccount request;
 		if(!request.ParseFromString(binMsg))
@@ -26,11 +26,11 @@ namespace GlobalServerMessage
 		});
 
 		// if has db not need origin
-		GlobalServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<GlobalServerHelper>(EMSystemType::DNServer);
+		GlobalServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<GlobalServerHelper>(EMSystemType::DNServer);
 		std::list<ServerEntity::Ptr> serverList = dnServer->GetServerEntityManager()->GetEntitysByType(EMServerType::GateServer);
 
 		std::list<ServerEntityHelper::Ptr> tempList;
-		for (ServerEntity::Ptr server : serverList)
+		for (ServerEntity::Ptr& server : serverList)
 		{
 			if (server->HasFlag(EMServerEntityFlag::Locked))
 			{
@@ -38,7 +38,7 @@ namespace GlobalServerMessage
 			}
 		}
 
-		tempList.sort([](ServerEntityHelper::Ptr lhs, ServerEntityHelper::Ptr rhs) { return lhs->ConnNum() < rhs->ConnNum(); });
+		tempList.sort([](ServerEntityHelper::CVPtr lhs, ServerEntityHelper::CVPtr rhs) { return lhs->ConnNum() < rhs->ConnNum(); });
 
 
 		std::string binData;
@@ -48,7 +48,7 @@ namespace GlobalServerMessage
 		}
 		else
 		{
-			ServerEntityHelper::Ptr entity = tempList.front();
+			ServerEntityHelper::CVPtr entity = tempList.front();
 			dnServer->GetLogger()->Record(ELogLevel_Debug, "send to GateServer : {}", entity->ID());
 
 			entity->SetConnNum(1);
@@ -63,7 +63,7 @@ namespace GlobalServerMessage
 				};
 			auto dataChannel = taskGen(&response);
 
-			DNServerProxyHelper::Ptr serverProxy = dnServer->GetServerProxy();
+			DNServerProxyHelper::CVPtr serverProxy = dnServer->GetServerProxy();
 			uint32_t msgId = serverProxy->GetMsgId();
 
 			serverProxy->AddMsg(msgId, &dataChannel, 8000);

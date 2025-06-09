@@ -14,11 +14,11 @@ namespace LogicServerMessage
 {
 
 	// client request
-	export DNTaskVoid Evt_ReqRegistSrv(const DNServer::Ptr& server)
+	export DNTaskVoid Evt_ReqRegistSrv(DNServer::CVPtr server)
 	{
-		LogicServerHelper::Ptr dnServer = server->GetSelf<LogicServerHelper>();
+		LogicServerHelper::CVPtr dnServer = server->GetSelf<LogicServerHelper>();
 
-		DNClientProxyHelper::Ptr clientProxy = dnServer->GetClientProxy();
+		DNClientProxyHelper::CVPtr clientProxy = dnServer->GetClientProxy();
 		
 		dnServer->GetLogger()->Record(ELogLevel_Debug, "Client:{}, port:{}", clientProxy->remote_host, clientProxy->remote_port);
 		
@@ -75,7 +75,7 @@ namespace LogicServerMessage
 	}
 
 	// client request
-	export void Msg_ReqRegistSrv(const DNSocketChannel::Ptr& channel, uint32_t msgId, const std::string& binMsg)
+	export void Msg_ReqRegistSrv(DNSocketChannel::CVPtr channel, uint32_t msgId, const std::string& binMsg)
 	{
 		GMsg::d2L_ReqRegistSrv request;
 		if(!request.ParseFromString(binMsg))
@@ -106,14 +106,14 @@ namespace LogicServerMessage
 		}
 
 		//exist?
-		if (RoomEntity::Ptr entity = channel->getContextPtr<RoomEntity>())
+		if (RoomEntity::CVPtr entity = channel->getContextPtr<RoomEntity>())
 		{
 			response.set_error_code(EL10nCode_RegistServerChannelExist);
 		}
 
 		else if (request.is_pull())
 		{
-			if (RoomEntityHelper::Ptr entity = entityMan->GetEntity(request.server_id()))
+			if (RoomEntityHelper::CVPtr entity = entityMan->GetEntity(request.server_id()))
 			{
 				// wait destroy`s destroy
 				if (uint64_t timerId = entity->TimerId())
@@ -123,7 +123,7 @@ namespace LogicServerMessage
 				}
 
 				// already connect
-				if (const DNSocketChannel::Ptr& sock = entity->GetChannel())
+				if (DNSocketChannel::CVPtr sock = entity->GetChannel())
 				{
 					response.set_error_code(EL10nCode_PullServerReqRegistAlready);
 				}
@@ -149,7 +149,7 @@ namespace LogicServerMessage
 			}
 		}
 
-		else if (RoomEntityHelper::Ptr entity = entityMan->AddEntity(entityMan->GenRoomId(), request.map_id()))
+		else if (RoomEntityHelper::CVPtr entity = entityMan->AddEntity(entityMan->GenRoomId(), request.map_id()))
 		{
 			size_t pos = ipPort.find(":");
 			entity->SetServerIp(ipPort.substr(0, pos));
@@ -166,20 +166,20 @@ namespace LogicServerMessage
 
 	}
 
-	export void Exe_RetChangeCtlSrv(const DNSocketChannel::Ptr& channel, const std::string& binMsg)
+	export void Exe_RetChangeCtlSrv(DNSocketChannel::CVPtr channel, const std::string& binMsg)
 	{
 		GMsg::COM_RetChangeCtlSrv request;
 		if(!request.ParseFromString(binMsg))
 		{
 			return;
 		}
-		LogicServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<LogicServerHelper>(EMSystemType::DNServer);
-		DNClientProxyHelper::Ptr clientProxy = dnServer->GetClientProxy();
+		LogicServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<LogicServerHelper>(EMSystemType::DNServer);
+		DNClientProxyHelper::CVPtr clientProxy = dnServer->GetClientProxy();
 
 		TickMainSpaceDll(clientProxy.get(), FUNCPLACE(DNClientProxy,RedirectClient),  request.server_port(), request.server_ip());
 	}
 
-	export void Exe_RetHeartbeat(const DNSocketChannel::Ptr& channel, const std::string& binMsg)
+	export void Exe_RetHeartbeat(DNSocketChannel::CVPtr channel, const std::string& binMsg)
 	{
 		GMsg::COM_RetHeartbeat request;
 		if(!request.ParseFromString(binMsg))

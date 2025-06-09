@@ -16,6 +16,7 @@ protected:
 	}
 public:
 	using Ptr = std::shared_ptr<RoomEntity>;
+	using CVPtr = const Ptr&;
 
 	virtual ~RoomEntity() = default;
 

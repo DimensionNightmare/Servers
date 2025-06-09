@@ -35,17 +35,52 @@ private:
     void operator delete(void*) = delete;
 public:
 	using Ptr = std::shared_ptr<GateServerHelper>;
+	using CVPtr = const Ptr&;
 
-	DNClientProxyHelper::Ptr GetClientProxy() { return GetComponent<DNClientProxyHelper>(EMComponentType::DNClientProxy); }
+	DNClientProxyHelper::Ptr GetClientProxy()
+	{ 
+		DNClientProxyHelper::Ptr proxy = GetComponent<DNClientProxyHelper>(EMComponentType::DNClientProxy);
+		if(!proxy || proxy->IsDisposed())
+		{
+			return nullptr;
+		}
+		return proxy;
+	}
 
-	DNServerProxyHelper::Ptr GetServerProxy() { return GetComponent<DNServerProxyHelper>(EMComponentType::DNServerProxy); }
+	DNServerProxyHelper::Ptr GetServerProxy() 
+	{
+		DNServerProxyHelper::Ptr proxy = GetComponent<DNServerProxyHelper>(EMComponentType::DNServerProxy);
+		if(!proxy || proxy->IsDisposed())
+		{
+			return nullptr;
+		}
+		return proxy;
+	}
 
-	ServerEntityManagerHelper::Ptr GetServerEntityManager() { return GetComponent<ServerEntityManagerHelper>(EMComponentType::ServerEntityManager); }
+	ServerEntityManagerHelper::Ptr GetServerEntityManager() 
+	{
+		ServerEntityManagerHelper::Ptr proxy = GetComponent<ServerEntityManagerHelper>(EMComponentType::ServerEntityManager);
+		if(!proxy || proxy->IsDisposed())
+		{
+			return nullptr;
+		}
 
-	ProxyEntityManagerHelper::Ptr GetProxyEntityManager() { return GetComponent<ProxyEntityManagerHelper>(EMComponentType::ProxyEntityManager); }
+		return proxy;
+	}
+
+	ProxyEntityManagerHelper::Ptr GetProxyEntityManager() 
+	{
+		ProxyEntityManagerHelper::Ptr proxy = GetComponent<ProxyEntityManagerHelper>(EMComponentType::ProxyEntityManager);
+		if(!proxy || proxy->IsDisposed())
+		{
+			return nullptr;
+		}
+
+		return proxy;
+	}
 
 	/// @brief send close to change socket
-	void ServerEntityCloseEvent(Entity::Ptr entity)
+	void ServerEntityCloseEvent(Entity::CVPtr entity)
 	{
 		// up to Global
 		std::string binData;
@@ -58,9 +93,9 @@ public:
 		GetServerEntityManager()->RemoveEntity(entity->ID());
 	}
 
-	void ProxyEntityCloseEvent(Entity::Ptr entity)
+	void ProxyEntityCloseEvent(Entity::CVPtr entity)
 	{
-		ProxyEntityManagerHelper::Ptr entityMan = GetProxyEntityManager();
+		ProxyEntityManagerHelper::CVPtr entityMan = GetProxyEntityManager();
 		uint64_t entityId = entity->ID();
 
 		ServerEntityHelper::Ptr serverEntity = nullptr;
@@ -85,11 +120,11 @@ public:
 	{
 		msgHandle->RegMsgHandle();
 
-		if (DNServerProxy::Ptr proxy = GetServerProxy())
+		if (DNServerProxy::CVPtr proxy = GetServerProxy())
 		{
-			proxy->onConnection = [this](const DNSocketChannel::Ptr& channel)
+			proxy->onConnection = [this](DNSocketChannel::CVPtr channel)
 				{
-					DNServerProxyHelper::Ptr proxyHelper = GetServerProxy();
+					DNServerProxyHelper::CVPtr proxyHelper = GetServerProxy();
 
 					if(!proxyHelper){ return ;}
 
@@ -105,7 +140,7 @@ public:
 					else
 					{
 						GetLogger()->Record(EL10nCode_CliConnOff, peeraddr, channel->fd(), channel->id());
-						if (Entity::Ptr entity = channel->getContextPtr<Entity>())
+						if (Entity::CVPtr entity = channel->getContextPtr<Entity>())
 						{
 							switch (entity->GetEntityType())
 							{
@@ -125,9 +160,9 @@ public:
 					}
 				};
 
-			proxy->onMessage = [this,msgHandle](const DNSocketChannel::Ptr& channel, hv::Buffer* buf)
+			proxy->onMessage = [this,msgHandle](DNSocketChannel::CVPtr channel, hv::Buffer* buf)
 				{
-					DNServerProxyHelper::Ptr proxyHelper = GetServerProxy();
+					DNServerProxyHelper::CVPtr proxyHelper = GetServerProxy();
 
 					if(!proxyHelper){ return ;}
 
@@ -186,11 +221,11 @@ public:
 
 		}
 
-		if (DNClientProxy::Ptr proxy = GetComponent<DNClientProxy>(EMComponentType::DNClientProxy))
+		if (DNClientProxy::CVPtr proxy = GetComponent<DNClientProxy>(EMComponentType::DNClientProxy))
 		{
-			proxy->onConnection = [this,msgHandle](const DNSocketChannel::Ptr& channel)
+			proxy->onConnection = [this,msgHandle](DNSocketChannel::CVPtr channel)
 				{
-					DNClientProxyHelper::Ptr proxyHelper = GetClientProxy();
+					DNClientProxyHelper::CVPtr proxyHelper = GetClientProxy();
 
 					if(!proxyHelper){ return ;}
 
@@ -222,9 +257,9 @@ public:
 					}
 				};
 
-			proxy->onMessage = [this,msgHandle](const DNSocketChannel::Ptr& channel, hv::Buffer* buf)
+			proxy->onMessage = [this,msgHandle](DNSocketChannel::CVPtr channel, hv::Buffer* buf)
 				{
-					DNClientProxyHelper::Ptr proxyHelper = GetClientProxy();
+					DNClientProxyHelper::CVPtr proxyHelper = GetClientProxy();
 
 					if(!proxyHelper){ return ;}
 
@@ -284,7 +319,7 @@ public:
 
 	int HandleServerShutdown()
 	{
-		if (DNServerProxyHelper::Ptr proxy = GetServerProxy())
+		if (DNServerProxyHelper::CVPtr proxy = GetServerProxy())
 		{
 			proxy->onConnection = nullptr;
 			proxy->onMessage = nullptr;
@@ -292,7 +327,7 @@ public:
 			proxy->MsgMapClear();
 		}
 
-		if (DNClientProxyHelper::Ptr proxy = GetClientProxy())
+		if (DNClientProxyHelper::CVPtr proxy = GetClientProxy())
 		{
 			proxy->onConnection = nullptr;
 			proxy->onMessage = nullptr;

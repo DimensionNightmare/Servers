@@ -71,17 +71,17 @@ extern "C"
 	}
 #endif
 
-	HOTRELOAD int InitHotReload(const World::Ptr& world)
+	HOTRELOAD int InitHotReload(World::CVPtr world)
 	{
 		Libhv::hvlog_disable();
 
-		DNServer::Ptr dnServer = world->GetSystem<DNServer>(EMSystemType::DNServer);
+		DNServer::CVPtr dnServer = world->GetSystem<DNServer>(EMSystemType::DNServer);
 		
 		bool isDeal = false;
 		
 		switch (dnServer->GetServerType())
 		{
-			#define one(Type) case EMServerType::Type:{static Type##MessageHandle msgHandle; isDeal = dnServer->GetSelf<Type##Helper>()->HandleServerInit(&msgHandle); break;}
+			#define one(Type, func) case EMServerType::Type:{static Type##MessageHandle msgHandle; isDeal = dnServer->GetSelf<Type##Helper>()->HandleServerInit(&msgHandle); break;}
 			one(ControlServer)
 			one(GlobalServer)
 			one(AuthServer)
@@ -95,9 +95,9 @@ extern "C"
 		return isDeal;
 	}
 
-	HOTRELOAD int ShutdownHotReload(const World::Ptr& world)
+	HOTRELOAD int ShutdownHotReload(World::CVPtr world)
 	{
-		DNServer::Ptr dnServer = world->GetSystem<DNServer>(EMSystemType::DNServer);
+		DNServer::CVPtr dnServer = world->GetSystem<DNServer>(EMSystemType::DNServer);
 
 		bool isDeal = false;
 		switch (dnServer->GetServerType())

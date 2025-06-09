@@ -21,6 +21,7 @@ private:
 
 public:
 	using Ptr = std::shared_ptr<RdbProxyHelper>;
+	using CVPtr = const Ptr&;
 
 
 	void AddConnection(uint16_t dbName, std::shared_ptr<pqxx::connection>&& connection)

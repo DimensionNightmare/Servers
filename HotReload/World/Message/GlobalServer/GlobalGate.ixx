@@ -8,7 +8,7 @@ import ThirdParty.Libhv;
 namespace GlobalServerMessage
 {
 
-	export void Exe_RetRegistSrv(const DNSocketChannel::Ptr& channel, const std::string& binMsg)
+	export void Exe_RetRegistSrv(DNSocketChannel::CVPtr channel, const std::string& binMsg)
 	{
 		GMsg::g2G_RetRegistSrv request;
 		if(!request.ParseFromString(binMsg))
@@ -18,7 +18,7 @@ namespace GlobalServerMessage
 
 		GlobalServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<GlobalServerHelper>(EMSystemType::DNServer);
 		ServerEntityManagerHelper::Ptr entityMan = dnServer->GetServerEntityManager();
-		if (ServerEntityHelper::Ptr entity = entityMan->GetEntity(request.server_id()))
+		if (ServerEntityHelper::CVPtr entity = entityMan->GetEntity(request.server_id()))
 		{
 			if (request.is_regist())
 			{
@@ -43,7 +43,7 @@ namespace GlobalServerMessage
 		}
 	}
 
-	export void Exe_RetRegistChild(const DNSocketChannel::Ptr& channel, const std::string& binMsg)
+	export void Exe_RetRegistChild(DNSocketChannel::CVPtr channel, const std::string& binMsg)
 	{
 		GMsg::g2G_RetRegistChild request;
 		if(!request.ParseFromString(binMsg))

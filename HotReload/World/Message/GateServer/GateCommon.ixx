@@ -9,7 +9,7 @@ import DNServer;
 namespace GateServerMessage
 {
 
-	void Evt_RetRegistChild(const DNServer::Ptr& server)
+	void Evt_RetRegistChild(DNServer::CVPtr server)
 	{
 		GateServerHelper::Ptr dnServer = server->GetSelf<GateServerHelper>();
 		ServerEntityManagerHelper::Ptr entityMan = dnServer->GetServerEntityManager();
@@ -19,7 +19,7 @@ namespace GateServerMessage
 
 		request.set_server_id(dnServer->ID());
 
-		auto AddChild = [&request](ServerEntity::Ptr serv)
+		auto AddChild = [&request](ServerEntity::CVPtr serv)
 			{
 				GMsg::COM_ReqRegistSrv* child = request.add_childs();
 				child->set_server_id(serv->ID());
@@ -27,13 +27,13 @@ namespace GateServerMessage
 			};
 
 		const std::list<ServerEntity::Ptr>& dbs = entityMan->GetEntitysByType(EMServerType::DatabaseServer);
-		for (ServerEntity::Ptr serv : dbs)
+		for (ServerEntity::CVPtr serv : dbs)
 		{
 			AddChild(serv);
 		}
 
 		const std::list<ServerEntity::Ptr>& logics = entityMan->GetEntitysByType(EMServerType::LogicServer);
-		for (ServerEntity::Ptr serv : logics)
+		for (ServerEntity::CVPtr serv : logics)
 		{
 			AddChild(serv);
 		}
@@ -50,7 +50,7 @@ namespace GateServerMessage
 	}
 
 	// self request
-	export DNTaskVoid Evt_ReqRegistSrv(const DNServer::Ptr& server)
+	export DNTaskVoid Evt_ReqRegistSrv(DNServer::CVPtr server)
 	{
 		GateServerHelper::Ptr dnServer = server->GetSelf<GateServerHelper>();
 
@@ -118,7 +118,7 @@ namespace GateServerMessage
 	}
 
 	// client request
-	export void Msg_ReqRegistSrv(const DNSocketChannel::Ptr& channel, uint32_t msgId, const std::string& binMsg)
+	export void Msg_ReqRegistSrv(DNSocketChannel::CVPtr channel, uint32_t msgId, const std::string& binMsg)
 	{
 		GMsg::COM_ReqRegistSrv request;
 		if(!request.ParseFromString(binMsg))
@@ -151,12 +151,12 @@ namespace GateServerMessage
 		}
 
 		//exist?
-		if (ServerEntity::Ptr entity = channel->getContextPtr<ServerEntity>())
+		if (ServerEntity::CVPtr entity = channel->getContextPtr<ServerEntity>())
 		{
 			response.set_error_code(EL10nCode_RegistServerChannelExist);
 		}
 
-		else if (ServerEntityHelper::Ptr entity = entityMan->AddEntity(serverId, regType))
+		else if (ServerEntityHelper::CVPtr entity = entityMan->AddEntity(serverId, regType))
 		{
 			size_t pos = ipPort.find(":");
 			entity->SetServerIp(ipPort.substr(0, pos));
@@ -188,7 +188,7 @@ namespace GateServerMessage
 		}
 	}
 
-	export void Exe_RetHeartbeat(const DNSocketChannel::Ptr& channel, const std::string& binMsg)
+	export void Exe_RetHeartbeat(DNSocketChannel::CVPtr channel, const std::string& binMsg)
 	{
 		GMsg::COM_RetHeartbeat request;
 		if(!request.ParseFromString(binMsg))

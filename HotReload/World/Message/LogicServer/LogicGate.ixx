@@ -7,7 +7,7 @@ import ThirdParty.Libhv;
 
 namespace LogicServerMessage
 {
-	export void Exe_RetProxyOffline(const DNSocketChannel::Ptr& channel, const std::string& binMsg)
+	export void Exe_RetProxyOffline(DNSocketChannel::CVPtr channel, const std::string& binMsg)
 	{
 		GMsg::g2L_RetProxyOffline request;
 		if(!request.ParseFromString(binMsg))
@@ -15,10 +15,10 @@ namespace LogicServerMessage
 			return;
 		}
 
-		LogicServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<LogicServerHelper>(EMSystemType::DNServer);
-		ClientEntityManagerHelper::Ptr entityMan = dnServer->GetClientEntityManager();
+		LogicServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<LogicServerHelper>(EMSystemType::DNServer);
+		ClientEntityManagerHelper::CVPtr entityMan = dnServer->GetClientEntityManager();
 
-		if (ClientEntity::Ptr entity = entityMan->GetEntity(request.entity_id()))
+		if (ClientEntity::CVPtr entity = entityMan->GetEntity(request.entity_id()))
 		{
 			dnServer->GetLogger()->Record(ELogLevel_Debug, "Recv Client {} Disconnect !!", entity->ID());
 

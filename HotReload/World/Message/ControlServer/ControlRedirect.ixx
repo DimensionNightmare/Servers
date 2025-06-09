@@ -10,7 +10,7 @@ import DNTask;
 
 namespace ControlServerMessage
 {
-	export DNTaskVoid Msg_ReqAuthAccount(const DNSocketChannel::Ptr& channel, uint32_t msgId, const std::string& binMsg)
+	export DNTaskVoid Msg_ReqAuthAccount(DNSocketChannel::CVPtr channel, uint32_t msgId, const std::string& binMsg)
 	{
 		GMsg::A2g_ReqAuthAccount request;
 		if(!request.ParseFromString(binMsg))
@@ -27,18 +27,18 @@ namespace ControlServerMessage
 
 		ServerEntityHelper::Ptr serverEntity = nullptr;
 
-		ControlServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<ControlServerHelper>(EMSystemType::DNServer);
+		ControlServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<ControlServerHelper>(EMSystemType::DNServer);
 
-		ServerEntityManagerHelper::Ptr manager = dnServer->GetServerEntityManager();
+		ServerEntityManagerHelper::CVPtr manager = dnServer->GetServerEntityManager();
 
 		const std::list<ServerEntity::Ptr>& serverList = manager->GetEntitysByType(EMServerType::GlobalServer);
 
 		// std::erase_if(serverList, [](ServerEntity::Ptr itor){return itor ? itor->TimerId() : true; });
 		// serverList.sort([](ServerEntity::Ptr lhs, ServerEntity::Ptr rhs){return lhs->ConnNum() < rhs->ConnNum(); });
 
-		for (const ServerEntity::Ptr& server : serverList)
+		for (ServerEntity::CVPtr server : serverList)
 		{
-			ServerEntityHelper::Ptr entityHelper = server->GetSelf<ServerEntityHelper>();
+			ServerEntityHelper::CVPtr entityHelper = server->GetSelf<ServerEntityHelper>();
 
 			if (entityHelper->TimerId())
 			{
@@ -72,7 +72,7 @@ namespace ControlServerMessage
 			auto dataChannel = taskGen(&response);
 			// wait data parse
 
-			DNServerProxyHelper::Ptr proxy = dnServer->GetServerProxy();
+			DNServerProxyHelper::CVPtr proxy = dnServer->GetServerProxy();
 
 			uint32_t msgId = proxy->GetMsgId();
 			proxy->AddMsg(msgId, &dataChannel, 9000);
