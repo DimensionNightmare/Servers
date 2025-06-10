@@ -29,11 +29,21 @@ template <typename R, typename Class, typename... Args>
 struct MemberFunctionArgs<R(Class::*)(Args...)>
 {
 	using Arguments = std::tuple<Args...>;
+	using ClassType = Class;
 };
+
+template <typename Method, typename DerivedFromClass>
+concept MemberFunctionOfBase = 
+    std::is_member_function_pointer_v<Method> &&
+    std::is_base_of_v<
+        typename MemberFunctionArgs<Method>::ClassType,
+        std::remove_cv_t<DerivedFromClass>
+    >;
 
 std::unordered_map<std::string, void*> DllMapCache;
 
 export template <typename Class, typename Method, typename... Args>
+requires MemberFunctionOfBase<Method, Class>
 auto TickMainSpaceDll(Class* obj, Method method, const char* classmethod, Args&&... args)
 {
 	using ArgsTuple = typename MemberFunctionArgs<decltype(method)>::Arguments;

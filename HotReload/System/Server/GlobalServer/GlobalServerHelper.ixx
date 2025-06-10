@@ -82,20 +82,16 @@ public:
 		GMsg::COM_RetChangeCtlSrv request;
 		std::string binData;
 
-		auto registControl = [&](ServerEntity::Ptr& beEntity, ServerEntity::CVPtr entity) ->bool
+		auto registControl = [&](ServerEntityHelper::CVPtr beEntityHelper, ServerEntityHelper::CVPtr entityHelper) ->bool
 		{
-			ServerEntityHelper::CVPtr entityHelper = entity->GetSelf<ServerEntityHelper>();
-
 			DNSocketChannel::CVPtr channel = entityHelper->GetChannel();
 			if(!channel)
 			{
 				return false;
 			}
-			entityHelper->SetLinkNode(beEntity);
+			entityHelper->SetLinkNode(beEntityHelper);
 
 			channel->deleteContextPtr();
-
-			ServerEntityHelper::CVPtr beEntityHelper = beEntity->GetSelf<ServerEntityHelper>();
 
 			// sendData
 			request.set_server_ip(beEntityHelper->ServerIp());
@@ -103,7 +99,7 @@ public:
 
 			request.SerializeToString(&binData);
 			// timer destory
-			entityHelper->SetTimerId(TickMainSpaceDll(entityHelper.get(), FUNCPLACE(ServerEntityManager,CheckEntityCloseTimer), entityHelper->ID()));
+			entityHelper->SetTimerId(TickMainSpaceDll(entityMan.get(), FUNCPLACE(ServerEntityManager,CheckEntityCloseTimer), entityHelper->ID()));
 			MessagePackAndSend(0, EMMsgDeal::Ret, request.GetDescriptor()->full_name(), binData, channel);
 			entityHelper->SetChannel(nullptr);
 
@@ -117,27 +113,29 @@ public:
 				continue;
 			}
 
+			ServerEntityHelper::CVPtr gateHelper = gate->GetSelf<ServerEntityHelper>();
+
 			std::list<ServerEntity::Ptr>& gatesDb = gate->GetMapLinkNode(EMServerType::DatabaseServer);
 			std::list<ServerEntity::Ptr>& gatesLogic = gate->GetMapLinkNode(EMServerType::LogicServer);
 			if (!dbs.empty() && gatesDb.size() < 1)
 			{
-				ServerEntity::CVPtr ele = dbs.front();
+				ServerEntityHelper::CVPtr dbHelper = dbs.front()->GetSelf<ServerEntityHelper>();
 				// dbs.pop_front();
-				if(registControl(gate, ele))
+				if(registControl(gateHelper, dbHelper))
 				{
-					entityMan->UnMountEntity(ele->GetSelf<ServerEntityHelper>());
-					gatesDb.emplace_back(ele);
+					entityMan->UnMountEntity(dbHelper);
+					gatesDb.emplace_back(dbHelper);
 				}
 			}
 
 			if (!logics.empty() && gatesLogic.size() < 1)
 			{
-				ServerEntity::CVPtr ele = logics.front();
+				ServerEntityHelper::CVPtr logicHelper = logics.front()->GetSelf<ServerEntityHelper>();
 				// logics.pop_front();
-				if(registControl(gate, ele))
+				if(registControl(gateHelper, logicHelper))
 				{
-					entityMan->UnMountEntity(ele->GetSelf<ServerEntityHelper>());
-					gatesLogic.emplace_back(ele);
+					entityMan->UnMountEntity(logicHelper);
+					gatesLogic.emplace_back(logicHelper);
 				}
 			}
 

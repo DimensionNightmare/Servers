@@ -9,15 +9,20 @@ import DNServer;
 import ThirdParty.Libhv;
 import std.compat;
 import DNTask;
+import DNWebProxyHelper;
 
 
 using namespace std::chrono;
 
 #define MSGSET writer->response->SetBody
 
-export void ApiAuth(DNServer::CVPtr dnServer, hv::HttpService* service)
+export void ApiAuth(DNServer::CVPtr dnServer)
 {
-	service->POST("/Auth/User/LoginToken", [dnServer = dnServer->GetSelfW<DNServer>()](const hv::HttpRequestPtr& req, const hv::HttpResponseWriterPtr& writer)
+	DNServer::WPtr server = dnServer->GetSelfW<DNServer>();
+
+	DNWebProxyHelper::Ptr webProxyHelper = dnServer->GetComponent<DNWebProxyHelper>(EMComponentType::DNWebProxy);
+
+	webProxyHelper->service->POST("/Auth/User/LoginToken", [server](const hv::HttpRequestPtr& req, const hv::HttpResponseWriterPtr& writer)
 		{
 			writer->Begin();
 			nlohmann::json errData;
@@ -39,7 +44,7 @@ export void ApiAuth(DNServer::CVPtr dnServer, hv::HttpService* service)
 			accInfo.set_auth_name(authName);
 			accInfo.set_auth_string(authString);
 
-			DNServer::Ptr serverTemp = dnServer.lock();
+			DNServer::Ptr serverTemp = server.lock();
 			if (!serverTemp)
 			{
 				errData["code"] = http_status::HTTP_STATUS_BAD_REQUEST;
@@ -57,7 +62,7 @@ export void ApiAuth(DNServer::CVPtr dnServer, hv::HttpService* service)
 				std::shared_ptr<pqxx::connection> connection = dnServer->GetRdbProxy()->GetConnection(static_cast<uint16_t>(EMSqlDbNameEnum::Account));
 
 				pqxx::read_transaction query(*connection);
-				DbSqlHelper<GDb::Account> accounts(&query);
+				DbSqlHelper<GDb::Account> accounts(&query, dnServer->GetLogger());
 
 				#define DBSelectOne(obj, name) .SelectOne(#name, [&obj]() { return obj.name(); })
 				#define DBSelectCond(obj, name, cond, splicing) .SelectCond(#name, cond, splicing, [&obj]() { return obj.name(); })
@@ -150,7 +155,7 @@ export void ApiAuth(DNServer::CVPtr dnServer, hv::HttpService* service)
 			taskGen(accInfo, writer);
 		});
 
-	service->POST("/Auth/User/RegistUser", [dnServer = dnServer->GetSelfW<DNServer>()](const hv::HttpRequestPtr& req, const hv::HttpResponseWriterPtr& writer)
+	webProxyHelper->service->POST("/Auth/User/RegistUser", [server](const hv::HttpRequestPtr& req, const hv::HttpResponseWriterPtr& writer)
 		{
 			nlohmann::json errData;
 
@@ -172,7 +177,7 @@ export void ApiAuth(DNServer::CVPtr dnServer, hv::HttpService* service)
 			accInfo.set_auth_name(authName);
 			accInfo.set_auth_string(authString);
 
-			DNServer::Ptr serverTemp = dnServer.lock();
+			DNServer::Ptr serverTemp = server.lock();
 			if (!serverTemp)
 			{
 				errData["code"] = http_status::HTTP_STATUS_BAD_REQUEST;
@@ -189,7 +194,7 @@ export void ApiAuth(DNServer::CVPtr dnServer, hv::HttpService* service)
 				std::shared_ptr<pqxx::connection> connection = dnServer->GetRdbProxy()->GetConnection(static_cast<uint16_t>(EMSqlDbNameEnum::Account));
 				
 				pqxx::read_transaction query(*connection);
-				DbSqlHelper<GDb::Account> accounts(&query);
+				DbSqlHelper<GDb::Account> accounts(&query, dnServer->GetLogger());
 
 				accounts
 					.InitEntity(accInfo)
@@ -228,7 +233,7 @@ export void ApiAuth(DNServer::CVPtr dnServer, hv::HttpService* service)
 				std::shared_ptr<pqxx::connection> connection = dnServer->GetRdbProxy()->GetConnection(static_cast<uint16_t>(EMSqlDbNameEnum::Account));
 
 				pqxx::work query(*connection);
-				DbSqlHelper<GDb::Account> accounts(&query);
+				DbSqlHelper<GDb::Account> accounts(&query, dnServer->GetLogger());
 
 				accounts.InitEntity(accInfo).Insert().Commit();
 
@@ -258,7 +263,7 @@ export void ApiAuth(DNServer::CVPtr dnServer, hv::HttpService* service)
 			writer->End();
 		});
 
-	service->POST("/Auth/Test/DB", [dnServer = dnServer->GetSelfW<DNServer>()](const hv::HttpRequestPtr& req, const hv::HttpResponseWriterPtr& writer)
+	webProxyHelper->service->POST("/Auth/Test/DB", [server](const hv::HttpRequestPtr& req, const hv::HttpResponseWriterPtr& writer)
 		{
 
 		});

@@ -26,6 +26,8 @@ public:
 	virtual void Dispose() override
 	{
 		Component::Dispose();
+		
+		pMdbProxys.clear();
 	}
 
 	LoggerPrint::Ptr GetLogger(){ return pLogger.expired() ? nullptr : pLogger.lock(); }

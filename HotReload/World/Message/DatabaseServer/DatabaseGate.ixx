@@ -35,7 +35,7 @@ namespace DatabaseServerMessage
 					findMsg->ParseFromString(request.entity_data());
 
 					pqxx::work txn(*connection);
-					DbSqlHelper dbHelper(&txn, findMsg);
+					DbSqlHelper dbHelper(&txn, dnServer->GetLogger(), findMsg);
 
 					auto query = [&]()
 						{
@@ -133,7 +133,7 @@ namespace DatabaseServerMessage
 					findMsg->ParseFromString(request.entity_data());
 
 					pqxx::work txn(*connection);
-					DbSqlHelper dbHelper(&txn, findMsg);
+					DbSqlHelper dbHelper(&txn, dnServer->GetLogger(), findMsg);
 
 					dbHelper
 						.UpdateByKey(request.key_name())

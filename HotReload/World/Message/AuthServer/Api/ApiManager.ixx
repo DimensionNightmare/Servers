@@ -2,36 +2,40 @@ module;
 export module ApiManager;
 
 import :ApiAuth;
-import AuthServerHelper;
+import DNClientProxyHelper;
 
 export void ApiInit(DNServer::CVPtr dnServer)
 {
-	// service->preprocessor = [dnServer](const hv::HttpContextPtr& ctx) -> int
-	// 	{
-	// 		static bool pass = 0;
+	DNServer::WPtr server = dnServer->GetSelfW<DNServer>();
 
-	// 		if (ctx->request->path.contains("/Test/"))
-	// 		{
-	// 			return pass;
-	// 		}
+	DNWebProxyHelper::Ptr webProxyHelper = dnServer->GetComponent<DNWebProxyHelper>(EMComponentType::DNWebProxy);
 
-	// 		DNServer::Ptr serverTemp = dnServer.lock();
-	// 		if(!serverTemp) { return !pass; }
+	webProxyHelper->service->preprocessor = [server](const hv::HttpContextPtr& ctx) -> int
+		{
+			static bool pass = 0;
+
+			if (ctx->request->path.contains("/Test/"))
+			{
+				return pass;
+			}
+
+			DNServer::Ptr dnServer = server.lock();
+			if(!dnServer) { return !pass; }
 
 
-	// 		nlohmann::json errData;
+			nlohmann::json errData;
 
-	// 		AuthServerHelper::Ptr dnServer = serverTemp->GetSelf<AuthServerHelper>();
-	// 		if (dnServer->GetClientProxy()->GetRegistState() != EMRegistState::Registed)
-	// 		{
-	// 			errData["code"] = http_status::HTTP_STATUS_BAD_REQUEST;
-	// 			errData["message"] = "Server Disconnect!";
-	// 			ctx->response->SetBody(errData.dump());
-	// 			return !pass;
-	// 		}
+			DNClientProxyHelper::Ptr clientSock = dnServer->GetComponent<DNClientProxyHelper>(EMComponentType::DNClientProxy);
+			if (clientSock->GetRegistState() != EMRegistState::Registed)
+			{
+				errData["code"] = http_status::HTTP_STATUS_BAD_REQUEST;
+				errData["message"] = "Server Disconnect!";
+				ctx->response->SetBody(errData.dump());
+				return !pass;
+			}
 
-	// 		return pass;
-	// 	};
+			return pass;
+		};
 
-	// ApiAuth(dnServer);
+	ApiAuth(dnServer);
 }

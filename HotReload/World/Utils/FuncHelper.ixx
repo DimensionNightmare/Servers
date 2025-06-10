@@ -30,7 +30,10 @@ export void MessagePackAndSend(uint32_t msgId, EMMsgDeal deal, std::string& data
 
 	channel->write(data);
 
-	SPidLogger.Record(ELogLevel_Debug, "{} Send type={} With Mid:{}", channel->peeraddr().c_str(), (int)deal, msgId);
+	if(LoggerPrint::Ptr logger = channel->GetWorld()->GetSystem<LoggerPrint>(EMSystemType::LoggerPrint))
+	{
+		logger->Record(ELogLevel_Debug, "{} Send type={} With Mid:{}", channel->peeraddr().c_str(), (int)deal, msgId);
+	} 
 }
 
 export void MessagePackAndSend(uint32_t msgId, EMMsgDeal deal, const std::string& pbName, std::string& data, DNSocketChannel::CVPtr channel)
@@ -38,7 +41,10 @@ export void MessagePackAndSend(uint32_t msgId, EMMsgDeal deal, const std::string
 	MessagePack(msgId, deal, DoStringHash(pbName), data);
 	channel->write(data);
 
-	SPidLogger.Record(ELogLevel_Debug, "{} Send type={} With Mid:{}, Mess:{}", channel->peeraddr().c_str(), (int)deal, msgId, pbName);
+	if(LoggerPrint::Ptr logger = channel->GetWorld()->GetSystem<LoggerPrint>(EMSystemType::LoggerPrint))
+	{
+		logger->Record(ELogLevel_Debug, "{} Send type={} With Mid:{}, Mess:{}", channel->peeraddr().c_str(), (int)deal, msgId, pbName);
+	}
 }
 
 export void MessagePackAndSend(uint32_t msgId, EMMsgDeal deal, const std::string& pbName, const std::string& data, DNSocketChannel::CVPtr channel)
@@ -47,5 +53,8 @@ export void MessagePackAndSend(uint32_t msgId, EMMsgDeal deal, const std::string
 	MessagePack(msgId, deal, DoStringHash(pbName), msgData);
 	channel->write(msgData);
 
-	SPidLogger.Record(ELogLevel_Debug, "{} Send type={} With Mid:{}, Mess:{}", channel->peeraddr().c_str(), (int)deal, msgId, pbName);
+	if(LoggerPrint::Ptr logger = channel->GetWorld()->GetSystem<LoggerPrint>(EMSystemType::LoggerPrint))
+	{
+		logger->Record(ELogLevel_Debug, "{} Send type={} With Mid:{}, Mess:{}", channel->peeraddr().c_str(), (int)deal, msgId, pbName);
+	}
 }

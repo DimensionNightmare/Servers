@@ -206,7 +206,9 @@ public:
 		{
 			if(proxy->service)
 			{
-				*(proxy->service) = {};
+				std::function<int(const hv::HttpContextPtr&)> funcReplace = nullptr;
+				proxy->service->preprocessor = funcReplace;
+				proxy->service->pathHandlers.clear();
 			}
 		}
 

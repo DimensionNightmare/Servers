@@ -137,7 +137,7 @@ public:
 					if (auto connection = proxy->GetConnection((uint16_t)dbNameEnum))
 					{
 						pqxx::work txn(*connection);
-						DbSqlHelper<GDb::SingleTon> singleTon(&txn);
+						DbSqlHelper<GDb::SingleTon> singleTon(&txn, GetLogger());
 						singleTon.InitEntity(kv);
 
 						if (!singleTon.IsExist())
@@ -148,7 +148,7 @@ public:
 
 						for (Message* dbEntity : dbEntitys)
 						{
-							DbSqlHelper<Message> helper(&txn, dbEntity);
+							DbSqlHelper<Message> helper(&txn, GetLogger(), dbEntity);
 
 							const std::string& tableName = helper.GetName();
 							kv.set_key(std::format("{}_Schema", tableName));

@@ -415,9 +415,10 @@ class DbSqlHelper : public IDbSqlHelper
 
 public:
 
-	DbSqlHelper(pqxx::dbtransaction* work, TMessage* entity = nullptr)
+	DbSqlHelper(pqxx::dbtransaction* work, LoggerPrint::CVPtr logger, TMessage* entity = nullptr)
 	{
 		pWork = work;
+		pLogger = logger;
 		pEntity = entity;
 	}
 
@@ -441,7 +442,7 @@ public:
 			return false;
 		}
 
-		SPidLogger.Record(ELogLevel_Debug, "{}", sSqlStatement);
+		pLogger->Record(ELogLevel_Debug, "{}", sSqlStatement);
 		try
 		{
 			pqxx::result result = pWork->exec(sSqlStatement);
@@ -449,7 +450,7 @@ public:
 		}
 		catch (const std::exception& e)
 		{
-			SPidLogger.Record(ELogLevel_Debug, "{}", e.what());
+			pLogger->Record(ELogLevel_Debug, "{}", e.what());
 			bExecResult = false;
 		}
 		
@@ -1375,4 +1376,6 @@ private:
 	uint32_t iQueryCount = 0;
 
 	TMessage* pEntity = nullptr;
+
+	LoggerPrint::Ptr pLogger;
 };

@@ -26,7 +26,6 @@ public:
 	using Ptr = std::shared_ptr<DNClientProxyHelper>;
 	using CVPtr = const Ptr&;
 
-	// regist to controlserver
 	EMRegistState GetRegistState() { return eRegistState; }
 	void SetRegistState(EMRegistState state) { eRegistState = state; }
 

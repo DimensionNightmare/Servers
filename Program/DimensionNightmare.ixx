@@ -330,8 +330,9 @@ public:
 			}
 			case EMServerType::AuthServer:
 			{
-				dnServer->AddComponent<DNWebProxy>();
+				// db
 				dnServer->AddComponent<RdbProxy>();
+				dnServer->AddComponent<DNWebProxy>();
 				//net
 				if(value)
 				{
@@ -350,6 +351,7 @@ public:
 			}
 			case EMServerType::DatabaseServer:
 			{
+				// db
 				dnServer->AddComponent<RdbProxy>();
 				//net
 				dnServer->AddComponent<DNClientProxy>();
@@ -357,6 +359,7 @@ public:
 			}
 			case EMServerType::LogicServer:
 			{
+				// db
 				dnServer->AddComponent<MdbProxy>();
 				dnServer->AddComponent<RoomEntityManager>();
 				dnServer->AddComponent<ClientEntityManager>();

@@ -118,9 +118,9 @@ public:
 
 	virtual void Dispose() override
 	{
-		End();
-
 		Component::Dispose();
+		
+		End();
 
 		pLoop = nullptr;
 		mMsgList.clear();
