@@ -3,7 +3,7 @@ export module ClientEntity;
 
 import BitFlag;
 import ECSW;
-import ThirdParty.Protobuf;
+import ThirdParty.PbGen;
 import std.compat;
 
 export enum class EMClientEntityFlag : uint16_t
@@ -22,6 +22,9 @@ protected:
 	ClientEntity(World::WPtr world):Entity(world)
 	{
 		eEntityType = EMEntityType::Client;
+
+		pDbEntity = std::make_unique<GDb::Player>();
+		
 	}
 
 public:
@@ -41,15 +44,14 @@ public: // dll override
 
 	/// @brief db entity get
 
-	template <typename T = Message>
-	std::shared_ptr<T> GetDbEntity() { return std::static_pointer_cast<T>(pDbEntity); }
+	GDb::Player* GetDbEntity() { return pDbEntity.get(); }
 
 protected: // dll proxy
 
 	uint64_t iRecordRoomId = 0;
 
 	/// @brief db entity
-	std::shared_ptr<Message> pDbEntity;
+	std::unique_ptr<GDb::Player> pDbEntity;
 
 public:
 

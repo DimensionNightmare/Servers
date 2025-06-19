@@ -70,10 +70,11 @@ public: // dll proxy
 		return false;
 	}
 
-	void AddEntity(uint64_t entityId, uint64_t mapId)
+	void AddEntity(uint64_t& entityId, uint64_t mapId)
 	{
 		RoomEntity::CVPtr entity = std::shared_ptr<RoomEntity>(new RoomEntity(GetOwner()->GetWorldW()));
-		entity->SetID(entityId);
+		// entity->SetID(entityId);
+		entityId = entity->ID();
 
 		std::unique_lock<std::shared_mutex> ulock(oMapMutex);
 		mEntityMap[entityId] = entity;

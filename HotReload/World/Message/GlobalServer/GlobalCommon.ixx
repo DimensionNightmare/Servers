@@ -117,7 +117,7 @@ namespace GlobalServerMessage
 		}
 
 		//exist?
-		else if (ServerEntity::CVPtr entity = channel->getContextPtr<ServerEntity>())
+		else if (ServerEntityHelper::Ptr entity = channel->getContextPtr<ServerEntityHelper>())
 		{
 			response.set_error_code(EL10nCode_RegistServerChannelExist);
 		}
@@ -125,7 +125,7 @@ namespace GlobalServerMessage
 		// take task to regist !
 		else if (request.is_pull())
 		{
-			if (ServerEntityHelper::CVPtr entity = entityMan->GetEntity(request.server_id()))
+			if (entity = entityMan->GetEntity(request.server_id()))
 			{
 				// wait destroy`s destroy
 				if (uint64_t timerId = entity->TimerId())
@@ -162,7 +162,7 @@ namespace GlobalServerMessage
 
 		}
 
-		else if (ServerEntityHelper::CVPtr entity = entityMan->AddEntity(request.server_id(), regType))
+		else if (entity = entityMan->AddEntity(request.server_id(), regType))
 		{
 			size_t pos = ipPort.find(":");
 			entity->SetServerIp(ipPort.substr(0, pos));

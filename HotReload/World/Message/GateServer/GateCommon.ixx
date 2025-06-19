@@ -151,12 +151,12 @@ namespace GateServerMessage
 		}
 
 		//exist?
-		if (ServerEntity::CVPtr entity = channel->getContextPtr<ServerEntity>())
+		if (ServerEntityHelper::Ptr entity = channel->getContextPtr<ServerEntityHelper>())
 		{
 			response.set_error_code(EL10nCode_RegistServerChannelExist);
 		}
 
-		else if (ServerEntityHelper::CVPtr entity = entityMan->AddEntity(serverId, regType))
+		else if (entity = entityMan->AddEntity(serverId, regType))
 		{
 			size_t pos = ipPort.find(":");
 			entity->SetServerIp(ipPort.substr(0, pos));

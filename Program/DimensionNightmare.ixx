@@ -375,6 +375,16 @@ public:
 			}
 		}
 
+		try
+		{
+			dnServer->Broadcast(EMEventType::ServerStart);
+		}
+		catch(const std::exception& e)
+		{
+			pLogger->Record(ELogLevel_Error, "dnserver lunch error! error: {}", e.what());
+			return false;
+		}
+		
 		if (!pHotDll->OnRegHotReload(world))
 		{
 			pLogger->Record(ELogLevel_Error, "program lunch OnRegHotReload error!");

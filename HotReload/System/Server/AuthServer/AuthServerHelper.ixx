@@ -66,36 +66,6 @@ public:
 		return proxy;
 	}
 
-	bool InitDatabase()
-	{
-		
-		if(RdbProxyHelper::CVPtr proxy = GetRdbProxy())
-		{
-			try
-			{
-				World::CVPtr pWorld = GetWorld();
-
-				//"postgresql://root@localhost"
-				std::string* value = pWorld->LaunchParam("connection");
-
-				std::string* dbName = pWorld->LaunchParam("dbname");
-
-				auto connection = std::make_shared<pqxx::connection>(std::format("{} dbname = {}", *value, *dbName));
-
-				proxy->AddConnection((uint16_t)EnumName<EMSqlDbNameEnum>(*dbName), std::move(connection));
-			}
-			catch (const std::exception& e)
-			{
-				GetLogger()->Record(ELogLevel_Debug, "{}", e.what());
-				return false;
-			}
-
-			return true;
-		}
-
-		return false;
-	}
-
 	int HandleServerInit(MessageRegister* msgHandle)
 	{
 		
@@ -187,7 +157,7 @@ public:
 		}
 		
 
-		return InitDatabase();
+		return true;
 	}
 
 	int HandleServerShutdown()

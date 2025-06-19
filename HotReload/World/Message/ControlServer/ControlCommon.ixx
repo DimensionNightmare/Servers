@@ -43,12 +43,12 @@ namespace ControlServerMessage
 		}
 
 		//exist?
-		else if (ServerEntity::CVPtr entity = channel->getContextPtr<ServerEntity>())
+		else if (ServerEntityHelper::Ptr entity = channel->getContextPtr<ServerEntityHelper>())
 		{
 			response.set_error_code(EL10nCode_RegistServerChannelExist);
 		}
 
-		else if (ServerEntityHelper::CVPtr entity = entityMan->AddEntity(request.server_id(), regType))
+		else if (entity = entityMan->AddEntity(request.server_id(), regType))
 		{
 			size_t pos = ipPort.find(":");
 			entity->SetServerIp(ipPort.substr(0, pos));

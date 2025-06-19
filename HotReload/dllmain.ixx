@@ -77,11 +77,10 @@ extern "C"
 
 		DNServer::CVPtr dnServer = world->GetSystem<DNServer>(EMSystemType::DNServer);
 		
-		bool isDeal = false;
-		
+	
 		switch (dnServer->GetServerType())
 		{
-			#define one(Type, func) case EMServerType::Type:{static Type##MessageHandle msgHandle; isDeal = dnServer->GetSelf<Type##Helper>()->HandleServerInit(&msgHandle); break;}
+			#define one(Type) case EMServerType::Type:{static Type##MessageHandle msgHandle; return dnServer->GetSelf<Type##Helper>()->HandleServerInit(&msgHandle); }
 			one(ControlServer)
 			one(GlobalServer)
 			one(AuthServer)
@@ -92,17 +91,16 @@ extern "C"
 			#undef one
 		}
 
-		return isDeal;
+		return 0;
 	}
 
 	HOTRELOAD int ShutdownHotReload(World::CVPtr world)
 	{
 		DNServer::CVPtr dnServer = world->GetSystem<DNServer>(EMSystemType::DNServer);
 
-		bool isDeal = false;
 		switch (dnServer->GetServerType())
 		{
-			#define one(Type) case EMServerType::Type: {isDeal = dnServer->GetSelf<Type##Helper>()->HandleServerShutdown(); break;}
+			#define one(Type) case EMServerType::Type: { return dnServer->GetSelf<Type##Helper>()->HandleServerShutdown();}
 			one(ControlServer)
 			one(GlobalServer)
 			one(AuthServer)
@@ -112,7 +110,7 @@ extern "C"
 			#undef one
 		}
 
-		return isDeal;
+		return 0;
 	}
 
 }

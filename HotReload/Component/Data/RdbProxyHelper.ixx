@@ -23,19 +23,13 @@ public:
 	using Ptr = std::shared_ptr<RdbProxyHelper>;
 	using CVPtr = const Ptr&;
 
-
-	void AddConnection(uint16_t dbName, std::shared_ptr<pqxx::connection>&& connection)
-	{
-		pMdbProxys.emplace(dbName, std::move(connection));
-	}
-
 	std::shared_ptr<pqxx::connection> GetConnection(uint16_t dbName)
 	{
-		if (pMdbProxys.contains(dbName))
+		if (pRdbProxys.contains(dbName))
 		{
-			return pMdbProxys[dbName];
+			return pRdbProxys[dbName];
 		}
 		return nullptr;
 	}
-	
+
 };

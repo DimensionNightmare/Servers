@@ -27,7 +27,6 @@ public:
 
 	void SetDbEntity(const std::string& data)
 	{
-		pDbEntity = std::make_shared<GDb::Player>();
 		pDbEntity->ParseFromString(data);
 	}
 

@@ -85,33 +85,6 @@ public:
 		return proxy;
 	}
 
-	bool InitDatabase()
-	{
-		if(MdbProxyHelper::CVPtr proxy = GetMdbProxy())
-		{
-			try
-			{
-				World::CVPtr pWorld = GetWorld();
-
-				std::string* value = pWorld->LaunchParam("connection");
-
-				auto connection = std::make_shared<sw::redis::Redis>(*value);
-				connection->ping();
-
-				proxy->AddConnection(std::move(connection));
-			}
-			catch (const std::exception& e)
-			{
-				GetLogger()->Record(ELogLevel_Debug, "{}", e.what());
-				return false;
-			}
-
-			return true;
-		}
-
-		return false;
-	}
-	
 	int HandleServerInit(MessageRegister* msgHandle)
 	{
 		msgHandle->RegMsgHandle();
@@ -331,7 +304,7 @@ public:
 
 		}
 
-		return InitDatabase();
+		return true;
 	}
 
 	int HandleServerShutdown()
@@ -351,11 +324,6 @@ public:
 			proxy->SetRegistEvent(nullptr);
 
 			proxy->MsgMapClear();
-		}
-
-		if(MdbProxyHelper::CVPtr mdbProxy = GetMdbProxy())
-		{
-			mdbProxy->ClearConnections();
 		}
 
 		return true;

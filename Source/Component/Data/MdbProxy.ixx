@@ -30,7 +30,26 @@ public:
 		pMdbProxys.clear();
 	}
 
+	virtual bool Awake() override
+	{
+		GetOwner()->AddEvent(EMEventType::ServerStart, GetSelfW<MdbProxy>(), &MdbProxy::InitDatabase);
+		return true;
+	}
+
 	LoggerPrint::Ptr GetLogger(){ return pLogger.expired() ? nullptr : pLogger.lock(); }
+
+	void InitDatabase()
+	{
+		World::CVPtr pWorld = GetOwner()->GetWorld();
+
+		std::string* value = pWorld->LaunchParam("connection");
+
+		auto connection = std::make_shared<sw::redis::Redis>(*value);
+		
+		connection->ping();
+
+		pMdbProxys.emplace(0, std::move(connection));
+	}
 
 protected:
 

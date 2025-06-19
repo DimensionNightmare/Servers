@@ -73,7 +73,7 @@ public:
 			if(inResponse)
 			{
 				std::string* entity_data = inResponse->add_entity_data();
-				GDb::PlayerPtr dbEntity = entity->GetDbEntity<GDb::Player>();
+				GDb::Player* dbEntity = entity->GetDbEntity();
 				dbEntity->SerializeToString(entity_data);
 			}
 			co_return;
@@ -123,6 +123,9 @@ public:
 		// sql
 		GMsg::L2D_ReqLoadData request;
 
+		GDb::Player* dbEntity = entity->GetDbEntity();
+
+		// only query db data
 		if (inRequest)
 		{
 			request.set_table_name(inRequest->table_name());
@@ -130,19 +133,16 @@ public:
 			request.set_entity_data(inRequest->entity_data());
 			request.set_need_create(inRequest->need_create());
 		}
+		// this mean new Entity branch
 		else
 		{
-			// request.set_need_create(true);
+			request.set_need_create(true);
 
-			// std::string* entity_data = request.mutable_entity_data();
-			// dbEntity->SerializeToString(entity_data);
 			request.set_limit(1);
 			request.set_table_name(table_name);
 			request.set_key_name(ClientEntity::SKeyName);
 			
-			GDb::Player temp;
-			temp.set_account_id(entityId);
-			temp.SerializeToString(request.mutable_entity_data());
+			dbEntity->SerializeToString(request.mutable_entity_data());
 		}
 
 
@@ -222,7 +222,7 @@ public:
 			co_return;
 		}
 		
-		GDb::PlayerPtr dbEntity = entity->GetDbEntity<GDb::Player>();
+		GDb::Player* dbEntity = entity->GetDbEntity();
 
 		// change maprecord
 		if(offline)

@@ -76,10 +76,6 @@ namespace LogicServerMessage
 			{
 				dnServer->GetLogger()->Record(ELogLevel_Debug, "AddEntity Client but not from db!");
 			}
-			else if(entity->GetDbEntity() == nullptr)
-			{
-				response.set_new_account(true);
-			}
 		}
 		else
 		{
@@ -87,9 +83,9 @@ namespace LogicServerMessage
 			entity = entityMan->GetEntity(request.account_id());
 		}
 
-#if 0
+#if 1
 		RoomEntityManagerHelper::CVPtr roomEntityMan = dnServer->GetRoomEntityManager();
-		RoomEntity::Ptr roomEntity = nullptr;
+		RoomEntityHelper::Ptr roomEntity = nullptr;
 
 		// cache
 		if (uint64_t roomId = entity->RecordRoomId())
@@ -121,12 +117,12 @@ namespace LogicServerMessage
 			std::list<RoomEntity::Ptr> roomEntityList = roomEntityMan->GetEntitysByMapId(mapId);
 			if (roomEntityList.empty())
 			{
-				response.set_error_code(5);
+				response.set_error_code(EL10nCode_NotDsServer);
 				dnServer->GetLogger()->Record(ELogLevel_Debug, "not ds Server");
 			}
 			else
 			{
-				roomEntity = roomEntityList.front();
+				roomEntity = roomEntityList.front()->GetSelf<RoomEntityHelper>();
 			}
 			
 		}
@@ -152,8 +148,7 @@ namespace LogicServerMessage
 
 			if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
 			{
-				dnServer->GetLogger()->Record(ELogLevel_Debug, "requst timeout! ");
-				response.set_error_code(6);
+				response.set_error_code(EL10nCode_ReqRegistTimeout);
 			}
 			else
 			{
@@ -161,6 +156,7 @@ namespace LogicServerMessage
 				//combin
 				response.set_server_ip(roomEntity->ServerIp());
 				response.set_server_port(roomEntity->ServerPort());
+				response.set_token(entity->GetToken());
 			}
 
 		}

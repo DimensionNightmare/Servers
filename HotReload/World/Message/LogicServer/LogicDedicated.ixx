@@ -82,7 +82,7 @@ namespace LogicServerMessage
 			return;
 		}
 
-		if (GDb::PlayerPtr dbEntity = entity->GetDbEntity<GDb::Player>())
+		if (GDb::Player* dbEntity = entity->GetDbEntity())
 		{
 			dbEntity->MergeFrom(player);
 			if (request.runtime_save())

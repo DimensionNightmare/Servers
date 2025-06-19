@@ -28,17 +28,13 @@ public:
 	using Ptr = std::shared_ptr<RoomEntityManagerHelper>;
 	using CVPtr = const Ptr&;
 
-	RoomEntityHelper::CVPtr AddEntity(uint64_t entityId, uint32_t mapId)
+	RoomEntityHelper::Ptr AddEntity(uint32_t mapId)
 	{
-		if (!mEntityMap.contains(entityId))
-		{
-			TickMainSpaceDll(this, FUNCPLACE(RoomEntityManager,AddEntity), entityId, mapId);
-			RoomEntityHelper::CVPtr entity = GetEntity(entityId);
-			entity->SetMapID(mapId);
-			return entity;
-		}
-
-		return nullptr;
+		uint64_t entityId = 0;
+		TickMainSpaceDll(this, FUNCPLACE(RoomEntityManager,AddEntity), std::ref(entityId), mapId);
+		RoomEntityHelper::CVPtr entity = GetEntity(entityId);
+		entity->SetMapID(mapId);
+		return entity;
 	}
 
 	void MountEntity(RoomEntityHelper::CVPtr entity)
@@ -56,7 +52,7 @@ public:
 		mEntityMapList[entity->MapID()].remove(entity);
 	}
 
-	RoomEntityHelper::CVPtr GetEntity(uint64_t entityId)
+	RoomEntityHelper::Ptr GetEntity(uint64_t entityId)
 	{
 		std::shared_lock<std::shared_mutex> lock(oMapMutex);
 		if (mEntityMap.contains(entityId))

@@ -51,6 +51,8 @@ namespace GateServerMessage
 				{
 					dnServer->GetLogger()->Record(ELogLevel_Debug, "Send Logic tick User->{}, server:{}", entity->ID(), entity->RecordServerId());
 
+					entity->GetChannel()->deleteContextPtr();
+
 					ServerEntityManagerHelper::Ptr serverEntityMan = dnServer->GetServerEntityManager();
 					if(ServerEntityHelper::CVPtr serverEntity = serverEntityMan->GetEntity(serverId))
 					{

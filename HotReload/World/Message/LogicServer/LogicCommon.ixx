@@ -106,14 +106,14 @@ namespace LogicServerMessage
 		}
 
 		//exist?
-		if (RoomEntity::CVPtr entity = channel->getContextPtr<RoomEntity>())
+		if (RoomEntityHelper::Ptr entity = channel->getContextPtr<RoomEntityHelper>())
 		{
 			response.set_error_code(EL10nCode_RegistServerChannelExist);
 		}
 
 		else if (request.is_pull())
 		{
-			if (RoomEntityHelper::CVPtr entity = entityMan->GetEntity(request.server_id()))
+			if (entity = entityMan->GetEntity(request.server_id()))
 			{
 				// wait destroy`s destroy
 				if (uint64_t timerId = entity->TimerId())
@@ -149,7 +149,7 @@ namespace LogicServerMessage
 			}
 		}
 
-		else if (RoomEntityHelper::CVPtr entity = entityMan->AddEntity(entityMan->GenRoomId(), request.map_id()))
+		else if (entity = entityMan->AddEntity(request.map_id()))
 		{
 			size_t pos = ipPort.find(":");
 			entity->SetServerIp(ipPort.substr(0, pos));

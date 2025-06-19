@@ -66,7 +66,7 @@ public:
 		return proxy;
 	}
 
-	bool InitDatabase()
+	bool CheckDatabase()
 	{
 		if(RdbProxyHelper::CVPtr proxy = GetRdbProxy())
 		{
@@ -74,45 +74,6 @@ public:
 			{
 				World::CVPtr pWorld = GetWorld();
 
-				
-				std::string* value = pWorld->LaunchParam("connection");
-				pqxx::connection check(*value);
-				pqxx::nontransaction checkTxn(check);
-
-				if (std::string* names = pWorld->LaunchParam("dbnames"))
-				{
-					std::vector<std::string> dbNames = StrSplit(*names, ",");
-					
-					for (std::string& dbName : dbNames)
-					{
-						try
-						{
-							EnumName<EMSqlDbNameEnum>(dbName); // check vaild
-						}
-						catch(...)
-						{
-							return false;
-						}
-
-						if (!checkTxn.query_value<bool>(std::format("SELECT EXISTS (SELECT 1 FROM pg_database WHERE datname = '{}');", dbName)))
-						{
-							checkTxn.exec(std::format("CREATE DATABASE \"{}\";", dbName));
-							GetLogger()->Record(ELogLevel_Debug, "Create Database:{}", dbName);
-						}
-
-						uint16_t key = (uint16_t)EnumName<EMSqlDbNameEnum>(dbName);
-						std::string connectStr = std::format("{} dbname = {}", *value, dbName);
-
-						auto connection = std::make_shared<pqxx::connection>(connectStr);
-
-						proxy->AddConnection(key, std::move(connection));
-					}
-				}
-				else
-				{
-
-					return false;
-				}
 
 				std::unordered_map<EMSqlDbNameEnum, std::vector<Message*> > registTable = {
 					{
@@ -134,7 +95,7 @@ public:
 
 				for (auto& [dbNameEnum, dbEntitys] : registTable)
 				{
-					if (auto connection = proxy->GetConnection((uint16_t)dbNameEnum))
+					if (auto connection = proxy->GetConnection(static_cast<uint16_t>(dbNameEnum)))
 					{
 						pqxx::work txn(*connection);
 						DbSqlHelper<GDb::SingleTon> singleTon(&txn, GetLogger());
@@ -337,7 +298,7 @@ public:
 
 		}
 
-		return InitDatabase();
+		return CheckDatabase();
 	}
 
 	int HandleServerShutdown()

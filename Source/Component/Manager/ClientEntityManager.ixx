@@ -45,6 +45,7 @@ public: // dll proxy
 	{
 		ClientEntity::CVPtr entity = std::shared_ptr<ClientEntity>(new ClientEntity(GetOwner()->GetWorldW()));
 		entity->SetID(entityId);
+		entity->GetDbEntity()->set_account_id(entityId);
 
 		std::unique_lock<std::shared_mutex> ulock(oMapMutex);
 		mEntityMap[entityId] = entity;
