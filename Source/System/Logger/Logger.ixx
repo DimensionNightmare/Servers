@@ -7,14 +7,13 @@ import ECSW;
 import ThirdParty.Protobuf;
 import std.compat;
 
-class LogColor
+namespace LogColor
 {
-public:
-    inline static std::string RED		= "\033[31m";
-    inline static std::string GREEN		= "\033[32m";
-    inline static std::string YELLOW	= "\033[33m";
-    inline static std::string BLUE		= "\033[34m";
-    inline static std::string RESET		= "\033[0m" ;
+    const std::string RED		= "\033[31m";
+    const std::string GREEN		= "\033[32m";
+    const std::string YELLOW	= "\033[33m";
+    const std::string BLUE		= "\033[34m";
+    const std::string RESET		= "\033[0m" ;
 };
 
 export class LoggerPrint : public System

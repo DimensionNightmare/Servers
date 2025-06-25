@@ -156,7 +156,6 @@ namespace LogicServerMessage
 				//combin
 				response.set_server_ip(roomEntity->ServerIp());
 				response.set_server_port(roomEntity->ServerPort());
-				response.set_token(entity->GetToken());
 			}
 
 		}
