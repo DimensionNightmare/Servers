@@ -200,13 +200,6 @@ bool DNl10n::Init()
 		return false;
 	}
 
-	mL10nCodeDll.clear();
-
-	for (auto& one : mL10nCode.data_map())
-	{
-		mL10nCodeDll[one.first] = &one.second;
-	}
-	
 	eType = EL10nType_zh_CN;
 	if (value = pWorld->LaunchParam("l10nLang"))
 	{	

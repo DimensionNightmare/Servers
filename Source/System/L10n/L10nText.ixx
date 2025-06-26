@@ -3,16 +3,31 @@ export module L10nText;
 
 import ECSW;
 import ThirdParty.Protobuf;
+import std.compat;
 
 #define FUNCPLACE(class, func) &class::func, #class"_"#func
 
 export class DNl10n : public System
 {
 protected:
-	DNl10n(World::WPtr world) 
+	DNl10n(World::WPtr world)
 		: System(world)
 	{
 		emSystemType = EMSystemType::DNl10n;
+
+		// create code space ..0.0..
+		pPBMapFindFunc = [this](EL10nCode type, ELogLevel& logLevel)->const std::string&
+			{
+				auto& map = mL10nCode.data_map();
+				auto finder = map.find(type);
+				if (finder == map.end())
+				{
+					throw std::invalid_argument(std::format("I10n Tip Config not exist this type {}", PbGen::EL10nCode_Name_(type)));
+				}
+				
+				logLevel = finder->second.level();
+				return std::invoke(pL10nTipFunc, &finder->second);
+			};
 	}
 
 	friend class World;
@@ -20,16 +35,15 @@ public:
 	using Ptr = std::shared_ptr<DNl10n>;
 	using CVPtr = const Ptr&;
 	using WPtr = std::weak_ptr<DNl10n>;
-	
+
 	virtual ~DNl10n()
 	{
-		
+
 	}
 
 	virtual void Dispose() override
 	{
 		System::Dispose();
-		mL10nCodeDll.clear();
 	}
 
 	/// PB's map find key need same runtimespace.
@@ -40,16 +54,13 @@ public:
 	const std::string& GetTipText(EL10nCode type, ELogLevel& logLevel)
 	{
 		logLevel = ELogLevel_None;
-		
-		if (!mL10nCodeDll.contains(type))
-		{
-			throw std::invalid_argument(std::format("I10n Tip Config not exist this type {}", PbGen::EL10nCode_Name_(type)));
-		}
 
-		auto& one = mL10nCodeDll[type];
+		// auto finded = pPBMapFindFunc(mL10nCode.data_map(), type);
 
-		logLevel = one->level();
-		return (one->*(pL10nTipFunc))();
+		// logLevel = finded->second.level();
+		// // return ((finded->second).*(pL10nTipFunc))();
+		// return std::invoke(pL10nTipFunc, &finded->second);
+		return pPBMapFindFunc(type, logLevel);
 	}
 
 public:
@@ -57,8 +68,9 @@ public:
 	/// @brief main use this
 	l10n::l10nCodes mL10nCode;
 
-	/// @brief dll use this
-	std::unordered_map<uint32_t, const l10n::l10nCode*> mL10nCodeDll;
+	/// @brief l10n imp. find get.
+	// FindFunctionPtr pPBMapFindFunc = nullptr;
+	std::function<const std::string&(EL10nCode, ELogLevel&)> pPBMapFindFunc = nullptr;
 
 	/// @brief l10n imp. text get.
 	typedef const std::string& (l10n::l10nCode::* TipTextFunc)() const;

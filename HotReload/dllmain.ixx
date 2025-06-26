@@ -21,6 +21,7 @@ import DNServer;
 import ThirdParty.Libhv;
 import std.compat;
 import ThirdParty.Protobuf;
+import L10nText;
 
 #ifdef _WIN32
 	#ifdef HOTRELOAD_BUILD
@@ -76,6 +77,8 @@ extern "C"
 		Libhv::hvlog_disable();
 
 		DNServer::CVPtr dnServer = world->GetSystem<DNServer>(EMSystemType::DNServer);
+
+		DNl10n::CVPtr dnL10n = world->GetSystem<DNl10n>(EMSystemType::DNl10n);
 		
 	
 		switch (dnServer->GetServerType())

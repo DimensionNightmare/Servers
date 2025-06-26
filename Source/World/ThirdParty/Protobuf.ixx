@@ -13,6 +13,7 @@ export
 {
 	using namespace google::protobuf;
 
+	using ::Map;
 	using ::Message;
 	using ::Descriptor;
 	using ::FieldDescriptor;

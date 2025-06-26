@@ -1,3 +1,4 @@
 /.vs
-/[oO]ut/*
+/[oO]ut
 /*.log
+/Config/Data
