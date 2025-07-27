@@ -293,7 +293,7 @@ public:
 		}
 
 		// i10n
-		l10nText::CVPtr dnL10n = world->AddSystem<l10nText>();
+		L10nText::CVPtr dnL10n = world->AddSystem<L10nText>();
 		if(!dnL10n->Init())
 		{
 			return false;
@@ -432,7 +432,7 @@ public:
 
 		auto reloadConfig = [this](std::stringstream* = nullptr)
 			{
-				// l10nText::PInstance->Init();
+				// L10nText::PInstance->Init();
 			};
 
 		mCmdHandle = {

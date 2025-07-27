@@ -45,7 +45,7 @@ export enum class EMSystemType : uint8_t
 {
 	None,
 	LoggerPrint,
-	l10nText,
+	L10nText,
 	Server,
 	HotReloadDll,
 };

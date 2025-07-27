@@ -7,13 +7,13 @@ import std.compat;
 
 #define FUNCPLACE(class, func) &class::func, #class"_"#func
 
-export class l10nText : public System
+export class L10nText : public System
 {
 protected:
-	l10nText(World::WPtr world)
+	L10nText(World::WPtr world)
 		: System(world)
 	{
-		emSystemType = EMSystemType::l10nText;
+		emSystemType = EMSystemType::L10nText;
 
 		// create code space ..0.0..
 		pPBMapFindFunc = [this](EL10nCode type, ELogLevel& logLevel)->const std::string&
@@ -32,11 +32,11 @@ protected:
 
 	friend class World;
 public:
-	using Ptr = std::shared_ptr<l10nText>;
+	using Ptr = std::shared_ptr<L10nText>;
 	using CVPtr = const Ptr&;
-	using WPtr = std::weak_ptr<l10nText>;
+	using WPtr = std::weak_ptr<L10nText>;
 
-	virtual ~l10nText()
+	virtual ~L10nText()
 	{
 
 	}

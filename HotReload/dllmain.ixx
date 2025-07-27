@@ -78,7 +78,7 @@ extern "C"
 
 		Server::CVPtr dnServer = world->GetSystem<Server>(EMSystemType::Server);
 
-		l10nText::CVPtr dnL10n = world->GetSystem<l10nText>(EMSystemType::l10nText);
+		L10nText::CVPtr dnL10n = world->GetSystem<L10nText>(EMSystemType::L10nText);
 		
 	
 		switch (dnServer->GetServerType())
