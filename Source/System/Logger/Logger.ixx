@@ -40,10 +40,10 @@ public:
 		System::Dispose();
 	}
 
-	bool Init()
+	bool Awake() override
 	{
-		World::CVPtr pWorld = GetWorld();
-		std::string* value = pWorld->LaunchParam("LoggerLevel");
+		World::CVPtr world = GetWorld();
+		std::string* value = world->LaunchParam("LoggerLevel");
 		if(!value)
 		{
 			return false;
@@ -54,7 +54,7 @@ public:
 		ELogLevel_Parse(strType, &logLevel);
 		SetLogger(logLevel);
 
-		value = pWorld->LaunchParam("program");
+		value = world->LaunchParam("program");
 		if(!value)
 		{
 			return false;
@@ -62,12 +62,13 @@ public:
 		
 		std::filesystem::path logFile = *value;
 
-		value = pWorld->LaunchParam("svrName");
+		if(value = world->LaunchParam("svrName"))
+		{
+			logFile = logFile.parent_path() / *value;
+			sTitle = *value;
+		}
 
-		logFile = logFile.parent_path() / *value;
 		SetLogger(logFile);
-
-		sTitle = *value;
 
 		return true;
 	}
@@ -180,12 +181,12 @@ protected:
 	ELogLevel eLogLevel = ELogLevel_Debug;
 };
 
-bool L10nText::Init()
+bool L10nText::Awake()
 {
-	World::CVPtr pWorld = GetWorld();
+	World::CVPtr world = GetWorld();
 
-	LoggerPrint::CVPtr pLogger = pWorld->GetSystem<LoggerPrint>(EMSystemType::LoggerPrint);
-	std::string* value = pWorld->LaunchParam("l10nDataPath");
+	LoggerPrint::CVPtr pLogger = world->GetSystem<LoggerPrint>(EMSystemType::LoggerPrint);
+	std::string* value = world->LaunchParam("l10nDataPath");
 	if (!value)
 	{
 		pLogger->Record(ELogLevel_Error, "Launch Param l10nErrPath Error !");
@@ -201,7 +202,7 @@ bool L10nText::Init()
 	}
 
 	eType = EL10nType_zh_CN;
-	if (value = pWorld->LaunchParam("l10nLang"))
+	if (value = world->LaunchParam("l10nLang"))
 	{	
 		std::string strType = "EL10nType_" + *value;
 		if(!EL10nType_Parse(strType, &eType))
@@ -239,7 +240,18 @@ public:
 	LoggerPrintPid()
 	{
 		pWorld = std::make_shared<World>();
-		pWorld->AddSystem<L10nText>();
+
+		std::filesystem::path exePath = Platform::GetExecutablePath();
+		
+		oPidWorkPath = exePath.parent_path() / std::format("PID_LOG/PID_{}", Platform::GetCurrentProcessId());
+
+		std::unordered_map<std::string, std::string> commonInfo = {
+			{"program", oPidWorkPath.string()},
+			{"LoggerLevel", "Debug"},
+		};
+
+		pWorld->MoveLuanchConfigToSelf(std::move(commonInfo));
+
 		pLogger = pWorld->AddSystem<LoggerPrint>();
 	}
 
@@ -255,17 +267,16 @@ public:
 		return true;
 	}
 
-	bool Init(const std::filesystem::path& path)
+	bool Init(std::unordered_map<std::string, std::string>& commonInfo)
 	{
-		GetLogger()->SetLogger(path);
+		pWorld->MoveLuanchConfigToSelf(commonInfo);
+		
+		L10nText::CVPtr l10nText = pWorld->AddSystem<L10nText>();
+		if(!l10nText)
+		{
+			return false;
+		}
 		return true;
-	}
-
-	bool Init(std::unordered_map<std::string, std::string> commonInfo)
-	{
-		pWorld->MoveLuanchConfigToSelf(std::move(commonInfo));
-		L10nText::CVPtr pL10n = pWorld->GetSystem<L10nText>(EMSystemType::L10nText);
-		return pL10n->Init();
 	}
 
 	template <typename... Args>
@@ -282,9 +293,12 @@ public:
 
 	LoggerPrint::Ptr GetLogger() { return pLogger.expired() ? nullptr : pLogger.lock(); }
 
+	const std::filesystem::path& GetPidWorkPath() const { return oPidWorkPath; }
+
 private:
 	World::Ptr pWorld;
 	LoggerPrint::WPtr pLogger;
+	std::filesystem::path oPidWorkPath;
 };
 
 export LoggerPrintPid SPidLogger;

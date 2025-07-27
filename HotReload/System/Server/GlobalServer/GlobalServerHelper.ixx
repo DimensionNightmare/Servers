@@ -258,7 +258,7 @@ public:
 					{
 						GetLogger()->Record(EL10nCode_SrvConnOn, peeraddr, channel->fd(), channel->id());
 
-						channel->SetWorld(pWorld);
+						channel->SetWorld(GetWorldW());
 
 						proxyHelper->SetRegistEvent(msgHandle->GetClientRegistFunc());
 

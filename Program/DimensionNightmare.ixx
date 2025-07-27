@@ -63,8 +63,15 @@ export void WriteDumpFile(std::filesystem::path fileName, _EXCEPTION_POINTERS* E
 	}
 }
 
+export enum class EMProgramFlag
+{
+	None = 0,
+	ResourceLoadDown = 1,
+	Max,
+};
 
-export class DimensionNightmare : public World
+
+export class DimensionNightmare : public World, public BitFlag<EMProgramFlag>
 {
 
 public:
@@ -287,14 +294,14 @@ public:
 		
 		// logger
 		LoggerPrint::CVPtr pLogger = world->AddSystem<LoggerPrint>();
-		if(!pLogger->Init())
+		if(!pLogger)
 		{
 			return false;
 		}
 
 		// i10n
 		L10nText::CVPtr dnL10n = world->AddSystem<L10nText>();
-		if(!dnL10n->Init())
+		if(!dnL10n)
 		{
 			return false;
 		}

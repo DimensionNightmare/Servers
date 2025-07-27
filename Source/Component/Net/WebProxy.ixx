@@ -34,10 +34,10 @@ public:
 
 	bool Awake() override
 	{
-		World::CVPtr pWorld = GetOwner()->GetWorld();
+		World::CVPtr world = GetOwner()->GetWorld();
 
 		uint16_t port = 0;
-		std::string* value = pWorld->LaunchParam("port");
+		std::string* value = world->LaunchParam("port");
 		if (value)
 		{
 			port = stoi(*value);

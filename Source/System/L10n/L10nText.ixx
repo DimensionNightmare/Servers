@@ -49,7 +49,7 @@ public:
 	/// PB's map find key need same runtimespace.
 	/// reason is absl hashkey need random address.
 	/// absl\hash\internal\hash.h kSeed
-	bool Init();
+	bool Awake() override;
 
 	const std::string& GetTipText(EL10nCode type, ELogLevel& logLevel)
 	{

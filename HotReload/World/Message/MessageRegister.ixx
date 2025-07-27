@@ -23,17 +23,17 @@ public:
 			}
 			catch (const std::exception& e)
 			{
-				if(World::CVPtr pWorld = channel->GetWorld())
+				if(World::CVPtr world = channel->GetWorld())
 				{
-					pWorld->GetSystem<LoggerPrint>(EMSystemType::LoggerPrint)->Record(ELogLevel_Debug, "{}", e.what());
+					world->GetSystem<LoggerPrint>(EMSystemType::LoggerPrint)->Record(ELogLevel_Debug, "{}", e.what());
 				}
 			}
 		}
 		else
 		{
-			if(World::CVPtr pWorld = channel->GetWorld())
+			if(World::CVPtr world = channel->GetWorld())
 			{
-				pWorld->GetSystem<LoggerPrint>(EMSystemType::LoggerPrint)->Record(EL10nCode_MsgHandleFind);
+				world->GetSystem<LoggerPrint>(EMSystemType::LoggerPrint)->Record(EL10nCode_MsgHandleFind);
 			}
 		}
 	}
@@ -49,17 +49,17 @@ public:
 			}
 			catch (const std::exception& e)
 			{
-				if(World::CVPtr pWorld = channel->GetWorld())
+				if(World::CVPtr world = channel->GetWorld())
 				{
-					pWorld->GetSystem<LoggerPrint>(EMSystemType::LoggerPrint)->Record(ELogLevel_Debug, "{}", e.what());
+					world->GetSystem<LoggerPrint>(EMSystemType::LoggerPrint)->Record(ELogLevel_Debug, "{}", e.what());
 				}
 			}
 		}
 		else
 		{
-			if(World::CVPtr pWorld = channel->GetWorld())
+			if(World::CVPtr world = channel->GetWorld())
 			{
-				pWorld->GetSystem<LoggerPrint>(EMSystemType::LoggerPrint)->Record(EL10nCode_MsgHandleFind);
+				world->GetSystem<LoggerPrint>(EMSystemType::LoggerPrint)->Record(EL10nCode_MsgHandleFind);
 			}
 		}
 	}
@@ -75,17 +75,17 @@ public:
 			}
 			catch (const std::exception& e)
 			{
-				if(World::CVPtr pWorld = channel->GetWorld())
+				if(World::CVPtr world = channel->GetWorld())
 				{
-					pWorld->GetSystem<LoggerPrint>(EMSystemType::LoggerPrint)->Record(ELogLevel_Debug, "{}", e.what());
+					world->GetSystem<LoggerPrint>(EMSystemType::LoggerPrint)->Record(ELogLevel_Debug, "{}", e.what());
 				}
 			}
 		}
 		else
 		{
-			if(World::CVPtr pWorld = channel->GetWorld())
+			if(World::CVPtr world = channel->GetWorld())
 			{
-				pWorld->GetSystem<LoggerPrint>(EMSystemType::LoggerPrint)->Record(EL10nCode_MsgHandleFind);
+				world->GetSystem<LoggerPrint>(EMSystemType::LoggerPrint)->Record(EL10nCode_MsgHandleFind);
 			}
 		}
 	}

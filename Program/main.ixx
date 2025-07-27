@@ -28,7 +28,7 @@ export int main(int argc, char** argv)
 
 #ifdef _WIN32
 	system("chcp 65001");
-	Platform::SetDebugFlag();
+// 	Platform::SetDebugFlag();
 // 	SetCurrentDirectoryA(execPath.parent_path().string().c_str());
 // #elif __unix__
 // 	chdir(execPath.parent_path().string().c_str());
@@ -57,42 +57,31 @@ export int main(int argc, char** argv)
 		launchParam.emplace(split.substr(0, pos), split.substr(pos + 1));
 	}
 
-	static std::filesystem::path pidWorkPath = execPath.parent_path() / std::format("PID_LOG/PID_{}", Platform::GetCurrentProcessId());
-
-	SPidLogger.Init(pidWorkPath);
-
-	App = std::make_shared<DimensionNightmare>();
-	
-	if (!App->Init(std::move(launchParam)))
-	{
-		CloseApp();
-		return 0;
-	}
-	
-	SPidLogger.Record(ELogLevel_Normal, "hello ~");
-
 #ifdef _WIN32
 
-	auto CtrlHandler = [](DWORD signal) -> int
+	auto CtrlHandler = [](unsigned long signal) -> int
 		{
 
+			SPidLogger.Record(EL10nCode_CmdOpBreak);
 			switch (signal)
 			{
-				// CTRL_C_EVENT = 0, CTRL_BREAK_EVENT = 1, CTRL_CLOSE_EVENT = 2, CTRL_LOGOFF_EVENT = 5, CTRL_SHUTDOWN_EVENT = 6
+				// ctrl+c				ctrl+break/pause		close window			logoff					shutdown
+				// CTRL_C_EVENT = 0,	CTRL_BREAK_EVENT = 1,	CTRL_CLOSE_EVENT = 2,	CTRL_LOGOFF_EVENT = 5,	CTRL_SHUTDOWN_EVENT = 6
 				case 0:
 				case 1:
 				case 6:
-					SPidLogger.Record(EL10nCode_CmdOpBreak);
+					while (App && !App->HasFlag(EMProgramFlag::ResourceLoadDown))
+					{
+						// wait resource load down
+						Platform::Sleep(20);
+					}
 					CloseApp();
 					AppRun = false;
 					return true;
 				case 2:
-					while(true)
-					{
-						CloseApp();
-						break;
-					}
+					CloseApp();
 					AppRun = false;
+					Platform::Sleep(200);
 					return true;
 			}
 
@@ -110,7 +99,7 @@ export int main(int argc, char** argv)
 		{
 			SPidLogger.Record(EL10nCode_UnhandledException);
 
-			WriteDumpFile(pidWorkPath / "MiniDump.dmp", ExceptionInfo);
+			WriteDumpFile(SPidLogger.GetPidWorkPath() / "MiniDump.dmp", ExceptionInfo);
 
 			CloseApp();
 			AppRun = false;
@@ -155,13 +144,22 @@ export int main(int argc, char** argv)
 
 #endif
 
+	App = std::make_shared<DimensionNightmare>();
+	if (!App->Init(std::move(launchParam)))
+	{
+		CloseApp();
+		return 0;
+	}
+	
+	SPidLogger.Record(ELogLevel_Normal, "hello ~");
+
 	SPidLogger.Record(ELogLevel_Normal, "Dimension Instance addr->(DimensionNightmare*){}", static_cast<void*>(App.get()));
 
 	App->AppStartInitThread();
 
 	AppRun = true;
 
-	auto InputThread = std::async(std::launch::deferred, [&]()
+	auto InputThread = std::async(std::launch::async, [&]()
 		{
 			std::stringstream ss;
 			std::string str;
@@ -188,13 +186,13 @@ export int main(int argc, char** argv)
 					if(!fileName.empty())
 					{
 						fileName.append(".dmp");
-						WriteDumpFile(pidWorkPath / fileName);
+						WriteDumpFile(SPidLogger.GetPidWorkPath() / fileName);
 					}
 				};
 
 			auto open = [&]()
 				{
-					std::string allStr = execPath.string() + " ";
+					std::string allStr = SPidLogger.GetPidWorkPath().string() + " ";
 					while (ss >> str)
 					{
 						allStr += str + " ";
@@ -232,16 +230,27 @@ export int main(int argc, char** argv)
 				#undef one
 			};
 
+			char ch;
+
 			while (AppRun)
 			{
-				std::getline(std::cin, str);
+				// std::getline(std::cin, str);
+
+				while(AppRun && !Platform::_kbhit())
+				{
+					Platform::Sleep(200);
+				}
 
 				if (!App)
 				{
 					break;
 				}
 
-				if (!str.empty())
+				ch = Platform::_getch();
+				std::cout << ch;
+				str += ch;
+
+				if(str.back() == '\r' || str.back() == '\n')
 				{
 					ss.clear();
 					ss.str(str);
@@ -260,12 +269,16 @@ export int main(int argc, char** argv)
 					}
 
 					SPidLogger.Record(ELogLevel_Normal, "<cmd down>");
+
+					str.clear();
 				}
 
 			}
 		});
 
-	InputThread.get();
+	// InputThread.get();
+
+	App->SetFlag(EMProgramFlag::ResourceLoadDown);
 
 	while (AppRun && App)
 	{

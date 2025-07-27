@@ -72,7 +72,7 @@ public:
 		{
 			try
 			{
-				World::CVPtr pWorld = GetWorld();
+				World::CVPtr world = GetWorld();
 
 
 				std::unordered_map<EMSqlDbNameEnum, std::vector<Message*> > registTable = {

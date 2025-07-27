@@ -52,9 +52,9 @@ public:
 
 	bool Awake() override
 	{
-		World::CVPtr pWorld = GetOwner()->GetWorld();
-		std::string* ctlPort = pWorld->LaunchParam("ctlPort");
-		std::string* ctlIp = pWorld->LaunchParam("ctlIp");
+		World::CVPtr world = GetOwner()->GetWorld();
+		std::string* ctlPort = world->LaunchParam("ctlPort");
+		std::string* ctlIp = world->LaunchParam("ctlIp");
 		if (!ctlPort || !ctlIp)
 		{
 			return false;
@@ -197,7 +197,7 @@ public: // dll override
 
 		eRegistState = EMRegistState::None;
 		closesocket();
-		Timer()->setTimeout(500, [=](uint64_t)
+		Timer()->setTimeout(500, [this, port, ip](uint64_t)
 		{
 			createsocket(port, ip.c_str());
 

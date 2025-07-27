@@ -14,13 +14,11 @@ protected:
 	/// @brief
 	HotReloadDll(World::WPtr world):System(world)
 	{
-		World::CVPtr pWorld = GetWorld();
-		
 		emSystemType = EMSystemType::HotReloadDll;
 
-		sDllDir = std::filesystem::path(*pWorld->LaunchParam("program")).parent_path() / sDllDir;
+		sDllDir = std::filesystem::path(*GetWorld()->LaunchParam("program")).parent_path() / sDllDir;
 
-		if(std::string* value = pWorld->LaunchParam("svrName"))
+		if(std::string* value = GetWorld()->LaunchParam("svrName"))
 		{
 			sServerName = *value;
 		}
@@ -30,7 +28,7 @@ protected:
 		}
 		
 
-		pLogger = pWorld->GetSystemW<LoggerPrint>(EMSystemType::LoggerPrint);
+		pLogger = GetWorld()->GetSystemW<LoggerPrint>(EMSystemType::LoggerPrint);
 	}
 public:
 	using Ptr = std::shared_ptr<HotReloadDll>;

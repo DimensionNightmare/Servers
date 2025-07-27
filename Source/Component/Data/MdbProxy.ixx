@@ -40,9 +40,9 @@ public:
 
 	void InitDatabase()
 	{
-		World::CVPtr pWorld = GetOwner()->GetWorld();
+		World::CVPtr world = GetOwner()->GetWorld();
 
-		std::string* value = pWorld->LaunchParam("connection");
+		std::string* value = world->LaunchParam("connection");
 
 		auto connection = std::make_shared<sw::redis::Redis>(*value);
 		

@@ -20,6 +20,7 @@ module;
 	#include <dbghelp.h>
 	#include <crtdbg.h>
 	#pragma comment(lib, "dbghelp.lib")
+	#include <conio.h>
 #elif __unix__
 	#include <dlfcn.h>
 	#include <csignal>
@@ -85,6 +86,9 @@ export namespace Platform
 	using ::sockaddr;
 	using ::ntohs;
 	using ::getsockname;
+
+	using ::_kbhit;
+	using ::_getch;
 }
 
 export namespace Platform
@@ -133,6 +137,15 @@ export namespace Platform
 		// _CrtSetReportMode(_CRT_ERROR, _CRTDBG_MODE_DEBUG);
 		// _CrtSetReportMode(_CRT_ASSERT, _CRTDBG_MODE_DEBUG);
 
+	}
+
+	std::string GetExecutablePath()
+	{
+#if _WIN32
+		char path[MAX_PATH];
+		GetModuleFileNameA(NULL, path, MAX_PATH); // 获取完整路径
+		return std::string(path);
+#endif
 	}
 }
 

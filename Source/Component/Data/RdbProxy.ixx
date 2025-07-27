@@ -45,13 +45,13 @@ public:
 
 	void InitDatabase()
 	{
-		World::CVPtr pWorld = GetOwner()->GetWorld();
+		World::CVPtr world = GetOwner()->GetWorld();
 
-		std::string* value = pWorld->LaunchParam("connection");
+		std::string* value = world->LaunchParam("connection");
 		pqxx::connection check(*value);
 		pqxx::nontransaction checkTxn(check);
 
-		std::string* names = pWorld->LaunchParam("dbnames");
+		std::string* names = world->LaunchParam("dbnames");
 		
 		std::vector<std::string> dbNames = StrSplit(*names, ",");
 		

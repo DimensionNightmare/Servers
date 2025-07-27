@@ -55,9 +55,9 @@ export enum class EMSystemType : uint8_t
 
 class World;
 
-#pragma region Event
+#pragma region DNEvent
 
-export class Event
+export class DNEvent
 {
 public:
 	template<typename T, typename Callback>
@@ -104,14 +104,14 @@ private:
 	std::unordered_map<EMEventType, std::unordered_map<uint64_t,uint64_t>> mEventCollection;
 };
 
-export Event GEvent;
+export DNEvent GEvent;
 
 #pragma endregion
 
 
 #pragma region Object
 
-export class Object : public std::enable_shared_from_this<Object>, public Event
+export class Object : public std::enable_shared_from_this<Object>, public DNEvent
 {
 public:
 	using Ptr = std::shared_ptr<Object>;
@@ -300,7 +300,7 @@ public: // dll override
 			return;
 		}
 
-		Event::RemoveEvent(it->second->ID());
+		DNEvent::RemoveEvent(it->second->ID());
 		mComponents.erase(type);
 	}
 	
