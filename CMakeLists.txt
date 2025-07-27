@@ -61,14 +61,14 @@ find_package(pbgen CONFIG REQUIRED)
 add_definitions(/utf-8)
 
 ################################ MainLib ################################
-file(GLOB_RECURSE DNSourceModule CONFIGURE_DEPENDS 
+file(GLOB_RECURSE SourceModule CONFIGURE_DEPENDS 
 	"Source/*.ixx"
 )
 
 add_library(MainSource STATIC)
 target_sources(MainSource 
 	PUBLIC FILE_SET CXX_MODULES TYPE CXX_MODULES FILES  
-	${DNSourceModule}
+	${SourceModule}
 )
 
 target_link_libraries(MainSource PUBLIC

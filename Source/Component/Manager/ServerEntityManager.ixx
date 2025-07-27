@@ -3,7 +3,7 @@ export module ServerEntityManager;
 
 import ServerEntity;
 import EntityManager;
-import DNServer;
+import Server;
 
 export class ServerEntityManager : public EntityManager<ServerEntity>
 {

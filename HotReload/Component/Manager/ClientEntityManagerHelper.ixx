@@ -7,9 +7,9 @@ import FuncHelper;
 import MdbProxyHelper;
 import ClientEntityHelper;
 import DllUtils;
-import DNTask;
+import Task;
 import ThirdParty.PbGen;
-import DNClientProxyHelper;
+import ClientProxyHelper;
 
 #define FUNCPLACE(class, func) &class::func, #class"_"#func
 
@@ -58,9 +58,9 @@ public:
 		return nullptr;
 	}
 
-	DNTaskVoid LoadEntity(ClientEntityHelper::CVPtr entity, GMsg::d2L_ReqLoadEntityData* inRequest, GMsg::L2d_ResLoadEntityData* inResponse)
+	TaskVoid LoadEntity(ClientEntityHelper::CVPtr entity, GMsg::d2L_ReqLoadEntityData* inRequest, GMsg::L2d_ResLoadEntityData* inResponse)
 	{
-		DNClientProxyHelper::CVPtr sqlClient = pSqlClient->GetSelf<DNClientProxyHelper>();
+		ClientProxyHelper::CVPtr sqlClient = pSqlClient->GetSelf<ClientProxyHelper>();
 
 		if (!sqlClient || sqlClient->RegistType() != static_cast<uint8_t>(EMServerType::GateServer))
 		{
@@ -150,7 +150,7 @@ public:
 
 		GMsg::D2L_ResLoadData response;
 		{
-			auto taskGen = [](Message* msg) -> DNTask<Message*>
+			auto taskGen = [](Message* msg) -> Task<Message*>
 				{
 					co_return msg;
 				};
@@ -161,7 +161,7 @@ public:
 			MessagePackAndSend(msgId, EMMsgDeal::Redir, request.GetDescriptor()->full_name(), binData, sqlClient->GetChannel());
 
 			co_await dataChannel;
-			if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
+			if (dataChannel.HasFlag(EMTaskFlag::Timeout))
 			{
 				response.set_error_code(EL10nCode_CRdbReqTimeout);
 			}
@@ -213,7 +213,7 @@ public:
 	}
 
 	/// @brief save entity data to database. this is task.
-	DNTaskVoid SaveEntity(ClientEntityHelper::CVPtr entity, bool offline = false)
+	TaskVoid SaveEntity(ClientEntityHelper::CVPtr entity, bool offline = false)
 	{
 		uint64_t entityId = entity->ID();
 
@@ -251,9 +251,9 @@ public:
 		GMsg::D2L_ResSaveData response;
 
 		{
-			DNClientProxyHelper::CVPtr sqlClient = pSqlClient->GetSelf<DNClientProxyHelper>();
+			ClientProxyHelper::CVPtr sqlClient = pSqlClient->GetSelf<ClientProxyHelper>();
 
-			auto taskGen = [](Message* msg) -> DNTask<Message*>
+			auto taskGen = [](Message* msg) -> Task<Message*>
 				{
 					co_return msg;
 				};
@@ -267,7 +267,7 @@ public:
 			MessagePackAndSend(msgId, EMMsgDeal::Redir, request.GetDescriptor()->full_name(), binData, sqlClient->GetChannel());
 
 			co_await dataChannel;
-			if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
+			if (dataChannel.HasFlag(EMTaskFlag::Timeout))
 			{
 				response.set_error_code(EL10nCode_CRdbReqTimeout);
 			}
@@ -299,7 +299,7 @@ public:
 
 		std::function<void(ClientEntityHelper::CVPtr, bool)> dealFunc = nullptr;
 		
-		DNClientProxyHelper::CVPtr sqlClient = pSqlClient->GetSelf<DNClientProxyHelper>();
+		ClientProxyHelper::CVPtr sqlClient = pSqlClient->GetSelf<ClientProxyHelper>();
 
 		if (!sqlClient || sqlClient->RegistType() != uint8_t(EMServerType::GateServer))
 		{
@@ -348,7 +348,7 @@ public:
 	}
 	
 	/// @brief server self pointer save. mean connected father node success.
-	void InitSqlConn(DNClientProxy::CVPtr sockClient)
+	void InitSqlConn(ClientProxy::CVPtr sockClient)
 	{
 		pSqlClient = sockClient;
 	}

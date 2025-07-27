@@ -1,12 +1,12 @@
 module;
-export module DNTask;
+export module Task;
 
 import std.compat;
 import BitFlag;
 
 using namespace std::chrono;
 
-export enum class EMDNTaskFlag : uint16_t
+export enum class EMTaskFlag : uint16_t
 {
 	Timeout = 0,
 	PaserError,
@@ -16,7 +16,7 @@ export enum class EMDNTaskFlag : uint16_t
 };
 
 export template <typename T>
-struct DNTask : public BitFlag<EMDNTaskFlag>
+struct Task : public BitFlag<EMTaskFlag>
 {
 	struct promise_type;
 	using HandleType = std::coroutine_handle<promise_type>;
@@ -26,9 +26,9 @@ struct DNTask : public BitFlag<EMDNTaskFlag>
 		{
 		}
 
-		DNTask get_return_object()
+		Task get_return_object()
 		{
-			return DNTask{ HandleType::from_promise(*this) };
+			return Task{ HandleType::from_promise(*this) };
 		}
 
 		void return_value(const T& value)
@@ -41,7 +41,7 @@ struct DNTask : public BitFlag<EMDNTaskFlag>
 
 		std::suspend_always final_suspend() noexcept
 		{
-			// DNTask don't Call by self, need Message handle Tick;
+			// Task don't Call by self, need Message handle Tick;
 			// ReleaseAwaitHandle();
 			return {};
 		}
@@ -73,7 +73,7 @@ struct DNTask : public BitFlag<EMDNTaskFlag>
 	{
 		tHandle.promise().oAwaitHandle = caller;
 
-		if (HasFlag(EMDNTaskFlag::TimeCost))
+		if (HasFlag(EMTaskFlag::TimeCost))
 		{
 			oTimePoint = steady_clock::now();
 		}
@@ -84,13 +84,13 @@ struct DNTask : public BitFlag<EMDNTaskFlag>
 	}
 #pragma endregion
 
-	DNTask(HandleType handle)
+	Task(HandleType handle)
 	{
 		tHandle = handle;
-		// SetFlag(EMDNTaskFlag::TimeCost);
+		// SetFlag(EMTaskFlag::TimeCost);
 	}
 
-	~DNTask()
+	~Task()
 	{
 		Destroy();
 	}
@@ -117,7 +117,7 @@ struct DNTask : public BitFlag<EMDNTaskFlag>
 
 	void Destroy()
 	{
-		if (HasFlag(EMDNTaskFlag::TimeCost))
+		if (HasFlag(EMTaskFlag::TimeCost))
 		{
 			// steady_clock::time_point now = steady_clock::now();
 			// SPidLogger.Record(ELogLevel_Normal, "tasktimeid:{}, cost:{}ms", iTimerId, duration_cast<microseconds>(now - oTimePoint).count() / 1000.0);
@@ -142,7 +142,7 @@ private:
 	steady_clock::time_point oTimePoint;
 };
 
-export struct DNTaskVoid
+export struct TaskVoid
 {
 	struct promise_type;
 	using HandleType = std::coroutine_handle<promise_type>;
@@ -152,9 +152,9 @@ export struct DNTaskVoid
 
 		void return_void() { bReturned = true; }
 
-		DNTaskVoid get_return_object()
+		TaskVoid get_return_object()
 		{
-			return DNTaskVoid{ HandleType::from_promise(*this) };
+			return TaskVoid{ HandleType::from_promise(*this) };
 		}
 
 		std::suspend_never initial_suspend() { return {}; }
@@ -194,7 +194,7 @@ export struct DNTaskVoid
 	}
 #pragma endregion
 
-	DNTaskVoid(HandleType handle)
+	TaskVoid(HandleType handle)
 	{
 		tHandle = handle;
 	}

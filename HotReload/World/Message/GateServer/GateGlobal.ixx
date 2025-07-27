@@ -13,7 +13,7 @@ import FuncHelper;
 namespace GateServerMessage
 {
 
-	export void Exe_ReqUserToken(DNSocketChannel::CVPtr channel, uint32_t msgId, const std::string& binMsg)
+	export void Exe_ReqUserToken(SocketChannel::CVPtr channel, uint32_t msgId, const std::string& binMsg)
 	{
 		GMsg::A2g_ReqAuthAccount request;
 		
@@ -26,13 +26,13 @@ namespace GateServerMessage
 
 		std::string binData;
 
-		GateServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<GateServerHelper>(EMSystemType::DNServer);
+		GateServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<GateServerHelper>(EMSystemType::Server);
 		ProxyEntityManagerHelper::Ptr entityMan = dnServer->GetProxyEntityManager();
 		ProxyEntityHelper::Ptr entity = entityMan->GetEntity(request.account_id());
 		if (entity)
 		{
 			//exit
-			if (DNSocketChannel::CVPtr online = entity->GetChannel())
+			if (SocketChannel::CVPtr online = entity->GetChannel())
 			{
 				// kick channel
 				GMsg::S2C_RetAccountReplace request;

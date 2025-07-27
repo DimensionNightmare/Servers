@@ -1,26 +1,26 @@
 module;
-export module DNWebProxy;
+export module WebProxy;
 
 import Logger;
 import ECSW;
 import std.compat;
 import ThirdParty.Libhv;
 
-export class DNWebProxy : public Component, public hv::HttpServer
+export class WebProxy : public Component, public hv::HttpServer
 {
 protected:
 	friend class System;
-	DNWebProxy(System::WPtr system):Component(system)
+	WebProxy(System::WPtr system):Component(system)
 	{
-		eComponentType = EMComponentType::DNWebProxy;
+		eComponentType = EMComponentType::WebProxy;
 
 		pLogger = GetOwner()->GetWorld()->GetSystemW<LoggerPrint>(EMSystemType::LoggerPrint);
 	}
 public:
-	using Ptr = std::shared_ptr<DNWebProxy>;
+	using Ptr = std::shared_ptr<WebProxy>;
 	using CVPtr = const Ptr&;
-	using WPtr = std::weak_ptr<DNWebProxy>;
-	~DNWebProxy()
+	using WPtr = std::weak_ptr<WebProxy>;
+	~WebProxy()
 	{
 
 	}
@@ -49,7 +49,7 @@ public:
 
 		GetLogger()->Record(EL10nCode_SrvListenOn, port, 0);
 
-		GetOwner()->GetWorld()->AddEvent(EMEventType::ServerStart, GetSelfW<DNWebProxy>(), &DNWebProxy::Start);
+		GetOwner()->GetWorld()->AddEvent(EMEventType::ServerStart, GetSelfW<WebProxy>(), &WebProxy::Start);
 
 		service = new hv::HttpService();
 		service->Static("/", "./");

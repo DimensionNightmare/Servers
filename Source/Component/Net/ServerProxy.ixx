@@ -1,33 +1,33 @@
 module;
-export module DNServerProxy;
+export module ServerProxy;
 
 import MessagePack;
 import ThirdParty.Platform;
 import ECSW;
 import Logger;
 import std.compat;
-import DNTask;
-import DNServer;
+import Task;
+import Server;
 import ThirdParty.Libhv;
 
-export class DNServerProxy : public Component, public hv::TcpServerTmpl<DNSocketChannel>
+export class ServerProxy : public Component, public hv::TcpServerTmpl<SocketChannel>
 {
 protected:
 	friend class System;
-	DNServerProxy(System::WPtr system):Component(system),TcpServerTmpl(nullptr)
+	ServerProxy(System::WPtr system):Component(system),TcpServerTmpl(nullptr)
 	{
-		eComponentType = EMComponentType::DNServerProxy;
+		eComponentType = EMComponentType::ServerProxy;
 
 		pLoop = std::make_unique<EventLoopThread>();
 		pLogger = GetOwner()->GetWorld()->GetSystemW<LoggerPrint>(EMSystemType::LoggerPrint);
 	}
 
 public:
-	using Ptr = std::shared_ptr<DNServerProxy>;
+	using Ptr = std::shared_ptr<ServerProxy>;
 	using CVPtr = const Ptr&;
-	using WPtr = std::weak_ptr<DNServerProxy>;
+	using WPtr = std::weak_ptr<ServerProxy>;
 
-	~DNServerProxy()
+	~ServerProxy()
 	{
 		
 	}
@@ -36,7 +36,7 @@ public:
 	{
 		int16_t inport = 0;
 
-		DNServer::CVPtr dnServer = GetOwner<DNServer>();
+		Server::CVPtr dnServer = GetOwner<Server>();
 
 		switch(dnServer->GetServerType())
 		{
@@ -95,7 +95,7 @@ public:
 
 		GetLogger()->Record(EL10nCode_SrvListenOn, port, listenfd);
 
-		GetOwner()->GetWorld()->AddEvent(EMEventType::ServerStart, GetSelfW<DNServerProxy>(), &DNServerProxy::Start);
+		GetOwner()->GetWorld()->AddEvent(EMEventType::ServerStart, GetSelfW<ServerProxy>(), &ServerProxy::Start);
 
 		return true;
 	}
@@ -105,7 +105,7 @@ public:
 		pLoop->start();
 
 		// first split self to base pointer
-		auto base_ptr = static_cast<TcpServerTmpl<DNSocketChannel>*>(this);
+		auto base_ptr = static_cast<TcpServerTmpl<SocketChannel>*>(this);
 		// then cast to template<>
 		Libhv::Run(base_ptr);
 	}
@@ -131,7 +131,7 @@ public:
 
 public: // dll override
 
-	void InitConnectedChannel(DNSocketChannel::CVPtr channel)
+	void InitConnectedChannel(SocketChannel::CVPtr channel)
 	{
 		// if not regist
 		CheckChannelByTimer(channel);
@@ -158,11 +158,11 @@ public: // dll override
 			if (mMsgList.contains(id))
 			{
 				std::unique_lock<std::shared_mutex> ulock(oMsgMutex);
-				DNTask<Message*>* task = mMsgList[id];
+				Task<Message*>* task = mMsgList[id];
 				mMsgList.erase(id);
 				if(task)
 				{
-					task->SetFlag(EMDNTaskFlag::Timeout);
+					task->SetFlag(EMTaskFlag::Timeout);
 					task->CallResume();
 				}
 			}
@@ -185,7 +185,7 @@ public: // dll override
 		}
 
 		{
-			if (DNSocketChannel::CVPtr channel = getChannelById(id))
+			if (SocketChannel::CVPtr channel = getChannelById(id))
 			{
 				if (!channel->contextPtr())
 				{
@@ -205,15 +205,15 @@ public: // dll override
 		mMapTimer.emplace(timerId, id);
 	}
 
-	void CheckChannelByTimer(DNSocketChannel::CVPtr channel)
+	void CheckChannelByTimer(SocketChannel::CVPtr channel)
 	{
-		size_t timerId = Timer()->setTimeout(5000, std::bind(&DNServerProxy::ChannelTimeoutTimer, this, std::placeholders::_1));
+		size_t timerId = Timer()->setTimeout(5000, std::bind(&ServerProxy::ChannelTimeoutTimer, this, std::placeholders::_1));
 		AddTimerRecord(timerId, channel->id());
 	}
 	
 	uint64_t CheckMessageTimeoutTimer(uint32_t breakTime, uint32_t msgId)
 	{
-		uint64_t timerId = Timer()->setTimeout(breakTime, std::bind(&DNServerProxy::MessageTimeoutTimer, this, std::placeholders::_1));
+		uint64_t timerId = Timer()->setTimeout(breakTime, std::bind(&ServerProxy::MessageTimeoutTimer, this, std::placeholders::_1));
 		std::unique_lock<std::shared_mutex> ulock(oTimerMutex);
 		mMapTimer[timerId] = msgId;
 		return timerId;
@@ -226,7 +226,7 @@ protected:
 	// only oddnumber
 	std::atomic<uint32_t> iMsgId;
 	// unordered_
-	std::unordered_map<uint32_t, DNTask<Message*>* > mMsgList;
+	std::unordered_map<uint32_t, Task<Message*>* > mMsgList;
 	//
 	std::unordered_map<uint64_t, uint32_t > mMapTimer;
 

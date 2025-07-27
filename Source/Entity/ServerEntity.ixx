@@ -4,7 +4,7 @@ export module ServerEntity;
 import BitFlag;
 import ECSW;
 import std.compat;
-import DNServer;
+import Server;
 import ThirdParty.Libhv;
 
 export enum class EMServerEntityFlag : uint16_t
@@ -54,5 +54,5 @@ protected: // dll proxy
 
 	uint64_t iCloseTimerId = 0;
 
-	DNSocketChannel::Ptr pChannel;
+	SocketChannel::Ptr pChannel;
 };

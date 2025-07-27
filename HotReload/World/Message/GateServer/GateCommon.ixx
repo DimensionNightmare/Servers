@@ -3,17 +3,17 @@ export module GateServerMessage:GateCommon;
 
 import GateServerHelper;
 import FuncHelper;
-import DNServer;
+import Server;
 
 
 namespace GateServerMessage
 {
 
-	void Evt_RetRegistChild(DNServer::CVPtr server)
+	void Evt_RetRegistChild(Server::CVPtr server)
 	{
 		GateServerHelper::Ptr dnServer = server->GetSelf<GateServerHelper>();
 		ServerEntityManagerHelper::Ptr entityMan = dnServer->GetServerEntityManager();
-		DNClientProxyHelper::Ptr clientProxy = dnServer->GetClientProxy();
+		ClientProxyHelper::Ptr clientProxy = dnServer->GetClientProxy();
 
 		GMsg::g2G_RetRegistChild request;
 
@@ -50,12 +50,12 @@ namespace GateServerMessage
 	}
 
 	// self request
-	export DNTaskVoid Evt_ReqRegistSrv(DNServer::CVPtr server)
+	export TaskVoid Evt_ReqRegistSrv(Server::CVPtr server)
 	{
 		GateServerHelper::Ptr dnServer = server->GetSelf<GateServerHelper>();
 
-		DNClientProxyHelper::Ptr clientProxy = dnServer->GetClientProxy();
-		DNServerProxyHelper::Ptr serverProxy = dnServer->GetServerProxy();
+		ClientProxyHelper::Ptr clientProxy = dnServer->GetClientProxy();
+		ServerProxyHelper::Ptr serverProxy = dnServer->GetServerProxy();
 		
 		dnServer->GetLogger()->Record(ELogLevel_Debug, "Client:{}, port:{}", clientProxy->remote_host, clientProxy->remote_port);
 		
@@ -82,7 +82,7 @@ namespace GateServerMessage
 		GMsg::COM_ResRegistSrv response;
 
 		{
-			auto taskGen = [](Message* msg) -> DNTask<Message*>
+			auto taskGen = [](Message* msg) -> Task<Message*>
 				{
 					co_return msg;
 				};
@@ -93,7 +93,7 @@ namespace GateServerMessage
 			MessagePackAndSend(msgId, EMMsgDeal::Req, request.GetDescriptor()->full_name(), binData, clientProxy->GetChannel());
 
 			co_await dataChannel;
-			if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
+			if (dataChannel.HasFlag(EMTaskFlag::Timeout))
 			{
 				response.set_error_code(EL10nCode_ReqRegistTimeout);
 			}
@@ -118,7 +118,7 @@ namespace GateServerMessage
 	}
 
 	// client request
-	export void Msg_ReqRegistSrv(DNSocketChannel::CVPtr channel, uint32_t msgId, const std::string& binMsg)
+	export void Msg_ReqRegistSrv(SocketChannel::CVPtr channel, uint32_t msgId, const std::string& binMsg)
 	{
 		GMsg::COM_ReqRegistSrv request;
 		if(!request.ParseFromString(binMsg))
@@ -126,7 +126,7 @@ namespace GateServerMessage
 			return;
 		}
 
-		GateServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<GateServerHelper>(EMSystemType::DNServer);
+		GateServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<GateServerHelper>(EMSystemType::Server);
 		ServerEntityManagerHelper::Ptr entityMan = dnServer->GetServerEntityManager();
 
 		dnServer->GetLogger()->Record(ELogLevel_Debug, "ip Reqregist: {}, {}", channel->peeraddr(), request.server_type());
@@ -182,13 +182,13 @@ namespace GateServerMessage
 			std::string binData;
 			request.SerializeToString(&binData);
 			
-			DNClientProxyHelper::Ptr clientProxy = dnServer->GetClientProxy();
+			ClientProxyHelper::Ptr clientProxy = dnServer->GetClientProxy();
 
 			MessagePackAndSend(0, EMMsgDeal::Ret, request.GetDescriptor()->full_name(), binData, clientProxy->GetChannel());
 		}
 	}
 
-	export void Exe_RetHeartbeat(DNSocketChannel::CVPtr channel, const std::string& binMsg)
+	export void Exe_RetHeartbeat(SocketChannel::CVPtr channel, const std::string& binMsg)
 	{
 		GMsg::COM_RetHeartbeat request;
 		if(!request.ParseFromString(binMsg))

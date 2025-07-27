@@ -21,10 +21,10 @@ export enum EMEventType : uint8_t
 export enum class EMComponentType : uint8_t
 {
 	None,
-	DNServerProxy,
+	ServerProxy,
 	ServerEntityManager,
-	DNClientProxy,
-	DNWebProxy,
+	ClientProxy,
+	WebProxy,
 	RoomEntityManager,
 	ProxyEntityManager,
 	ClientEntityManager,
@@ -45,8 +45,8 @@ export enum class EMSystemType : uint8_t
 {
 	None,
 	LoggerPrint,
-	DNl10n,
-	DNServer,
+	l10nText,
+	Server,
 	HotReloadDll,
 };
 

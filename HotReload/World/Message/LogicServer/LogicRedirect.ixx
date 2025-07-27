@@ -8,7 +8,7 @@ import FuncHelper;
 
 namespace LogicServerMessage
 {
-	export void Exe_RetAccountReplace(DNSocketChannel::CVPtr channel, uint32_t msgId, const std::string& binMsg)
+	export void Exe_RetAccountReplace(SocketChannel::CVPtr channel, uint32_t msgId, const std::string& binMsg)
 	{
 		GMsg::S2C_RetAccountReplace request;
 		if(!request.ParseFromString(binMsg))
@@ -16,7 +16,7 @@ namespace LogicServerMessage
 			return;
 		}
 
-		LogicServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<LogicServerHelper>(EMSystemType::DNServer);
+		LogicServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<LogicServerHelper>(EMSystemType::Server);
 		ClientEntityManagerHelper::CVPtr entityMan = dnServer->GetClientEntityManager();
 
 		ClientEntityHelper::CVPtr entity = entityMan->GetEntity(request.account_id());
@@ -46,7 +46,7 @@ namespace LogicServerMessage
 	}
 
 	// client request
-	export DNTaskVoid Msg_ReqClientLogin(DNSocketChannel::CVPtr channel, uint32_t msgId, const std::string& binMsg)
+	export TaskVoid Msg_ReqClientLogin(SocketChannel::CVPtr channel, uint32_t msgId, const std::string& binMsg)
 	{
 		GMsg::C2S_ReqAuthToken request;
 		if(!request.ParseFromString(binMsg))
@@ -61,7 +61,7 @@ namespace LogicServerMessage
 			MessagePackAndSend(msgId, EMMsgDeal::Res, binData, channel);
 		});
 
-		LogicServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<LogicServerHelper>(EMSystemType::DNServer);
+		LogicServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<LogicServerHelper>(EMSystemType::Server);
 		ClientEntityManagerHelper::CVPtr entityMan = dnServer->GetClientEntityManager();
 
 		ClientEntityHelper::Ptr entity = entityMan->AddEntity(request.account_id());
@@ -130,13 +130,13 @@ namespace LogicServerMessage
 		// req token
 		if (roomEntity)
 		{
-			auto taskGen = [](Message* msg) -> DNTask<Message*>
+			auto taskGen = [](Message* msg) -> Task<Message*>
 				{
 					co_return msg;
 				};
 			auto dataChannel = taskGen(&response);
 
-			DNServerProxyHelper::CVPtr server = dnServer->GetServerProxy();
+			ServerProxyHelper::CVPtr server = dnServer->GetServerProxy();
 			uint32_t msgId = server->GetMsgId();
 
 			// wait data parse
@@ -146,7 +146,7 @@ namespace LogicServerMessage
 
 			co_await dataChannel;
 
-			if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
+			if (dataChannel.HasFlag(EMTaskFlag::Timeout))
 			{
 				response.set_error_code(EL10nCode_ReqRegistTimeout);
 			}

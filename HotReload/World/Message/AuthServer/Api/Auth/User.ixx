@@ -5,22 +5,22 @@ import DllUtils;
 import DbUtils;
 import FuncHelper;
 import AuthServerHelper;
-import DNServer;
+import Server;
 import ThirdParty.Libhv;
 import std.compat;
-import DNTask;
-import DNWebProxyHelper;
+import Task;
+import WebProxyHelper;
 
 
 using namespace std::chrono;
 
 #define MSGSET writer->response->SetBody
 
-export void ApiAuth(DNServer::CVPtr dnServer)
+export void ApiAuth(Server::CVPtr dnServer)
 {
-	DNServer::WPtr server = dnServer->GetSelfW<DNServer>();
+	Server::WPtr server = dnServer->GetSelfW<Server>();
 
-	DNWebProxyHelper::Ptr webProxyHelper = dnServer->GetComponent<DNWebProxyHelper>(EMComponentType::DNWebProxy);
+	WebProxyHelper::Ptr webProxyHelper = dnServer->GetComponent<WebProxyHelper>(EMComponentType::WebProxy);
 
 	webProxyHelper->service->POST("/Auth/User/LoginToken", [server](const hv::HttpRequestPtr& req, const hv::HttpResponseWriterPtr& writer)
 		{
@@ -44,7 +44,7 @@ export void ApiAuth(DNServer::CVPtr dnServer)
 			accInfo.set_auth_name(authName);
 			accInfo.set_auth_string(authString);
 
-			DNServer::Ptr serverTemp = server.lock();
+			Server::Ptr serverTemp = server.lock();
 			if (!serverTemp)
 			{
 				errData["code"] = http_status::HTTP_STATUS_BAD_REQUEST;
@@ -96,7 +96,7 @@ export void ApiAuth(DNServer::CVPtr dnServer)
 				return;
 			}
 
-			auto taskGen = [dnServer](GDb::Account accInfo, hv::HttpResponseWriterPtr writer) -> DNTaskVoid
+			auto taskGen = [dnServer](GDb::Account accInfo, hv::HttpResponseWriterPtr writer) -> TaskVoid
 				{
 					// HttpResponseWriterPtr writer = writer;	//sharedptr ref count ++
 					GMsg::A2g_ReqAuthAccount request;
@@ -105,7 +105,7 @@ export void ApiAuth(DNServer::CVPtr dnServer)
 
 					GMsg::g2A_ResAuthAccount response;
 
-					DNClientProxyHelper::Ptr clientProxy = dnServer->GetClientProxy();
+					ClientProxyHelper::Ptr clientProxy = dnServer->GetClientProxy();
 
 					// pack data
 					std::string binData;
@@ -116,7 +116,7 @@ export void ApiAuth(DNServer::CVPtr dnServer)
 
 					{
 						// data alloc
-						auto taskGen = [](Message* msg) -> DNTask<Message*>
+						auto taskGen = [](Message* msg) -> Task<Message*>
 							{
 								co_return msg;
 							};
@@ -128,7 +128,7 @@ export void ApiAuth(DNServer::CVPtr dnServer)
 						MessagePackAndSend(msgId, EMMsgDeal::Redir, request.GetDescriptor()->full_name(), binData, clientProxy->GetChannel());
 						
 						co_await dataChannel;
-						if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
+						if (dataChannel.HasFlag(EMTaskFlag::Timeout))
 						{
 							retData["code"] = HTTP_STATUS_REQUEST_TIMEOUT;
 
@@ -177,7 +177,7 @@ export void ApiAuth(DNServer::CVPtr dnServer)
 			accInfo.set_auth_name(authName);
 			accInfo.set_auth_string(authString);
 
-			DNServer::Ptr serverTemp = server.lock();
+			Server::Ptr serverTemp = server.lock();
 			if (!serverTemp)
 			{
 				errData["code"] = http_status::HTTP_STATUS_BAD_REQUEST;

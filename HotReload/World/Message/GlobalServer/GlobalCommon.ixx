@@ -3,21 +3,21 @@ export module GlobalServerMessage:GlobalCommon;
 
 import FuncHelper;
 import GlobalServerHelper;
-import DNServer;
-import DNTask;
+import Server;
+import Task;
 
 
 namespace GlobalServerMessage
 {
 
 	// client request
-	export DNTaskVoid Evt_ReqRegistSrv(DNServer::CVPtr server)
+	export TaskVoid Evt_ReqRegistSrv(Server::CVPtr server)
 	{
 		GlobalServerHelper::Ptr dnServer = server->GetSelf<GlobalServerHelper>();
 
-		DNClientProxyHelper::Ptr clientProxy = dnServer->GetClientProxy();
+		ClientProxyHelper::Ptr clientProxy = dnServer->GetClientProxy();
 
-		DNServerProxyHelper::Ptr serverProxy = dnServer->GetServerProxy();
+		ServerProxyHelper::Ptr serverProxy = dnServer->GetServerProxy();
 		
 		dnServer->GetLogger()->Record(ELogLevel_Debug, "Client:{}, port:{}", clientProxy->remote_host, clientProxy->remote_port);
 		
@@ -43,7 +43,7 @@ namespace GlobalServerMessage
 		GMsg::COM_ResRegistSrv response;
 
 		{
-			auto taskGen = [](Message* msg) -> DNTask<Message*>
+			auto taskGen = [](Message* msg) -> Task<Message*>
 				{
 					co_return msg;
 				};
@@ -54,7 +54,7 @@ namespace GlobalServerMessage
 			MessagePackAndSend(msgId, EMMsgDeal::Req, request.GetDescriptor()->full_name(), binData, clientProxy->GetChannel());
 			
 			co_await dataChannel;
-			if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
+			if (dataChannel.HasFlag(EMTaskFlag::Timeout))
 			{
 				response.set_error_code(EL10nCode_ReqRegistTimeout);
 			}
@@ -78,7 +78,7 @@ namespace GlobalServerMessage
 	}
 
 	// client request
-	export void Msg_ReqRegistSrv(DNSocketChannel::CVPtr channel, uint32_t msgId, const std::string& binMsg)
+	export void Msg_ReqRegistSrv(SocketChannel::CVPtr channel, uint32_t msgId, const std::string& binMsg)
 	{
 		GMsg::COM_ReqRegistSrv request;
 		if(!request.ParseFromString(binMsg))
@@ -86,7 +86,7 @@ namespace GlobalServerMessage
 			return;
 		}
 
-		GlobalServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<GlobalServerHelper>(EMSystemType::DNServer);
+		GlobalServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<GlobalServerHelper>(EMSystemType::Server);
 		
 		dnServer->GetLogger()->Record(ELogLevel_Debug, "ip Reqregist: {}, {}", channel->peeraddr(), request.server_type());
 
@@ -135,7 +135,7 @@ namespace GlobalServerMessage
 				}
 
 				// already connect
-				if (DNSocketChannel::CVPtr sock = entity->GetChannel())
+				if (SocketChannel::CVPtr sock = entity->GetChannel())
 				{
 					response.set_error_code(EL10nCode_PullServerReqRegistAlready);
 				}
@@ -180,7 +180,7 @@ namespace GlobalServerMessage
 
 	}
 
-	export void Exe_RetHeartbeat(DNSocketChannel::CVPtr channel, const std::string& binMsg)
+	export void Exe_RetHeartbeat(SocketChannel::CVPtr channel, const std::string& binMsg)
 	{
 		GMsg::COM_RetHeartbeat request;
 		if(!request.ParseFromString(binMsg))

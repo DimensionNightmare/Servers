@@ -17,7 +17,7 @@ import DatabaseServerMessage;
 import LogicServerMessage;
 import ThirdParty.Platform;
 import ECSW;
-import DNServer;
+import Server;
 import ThirdParty.Libhv;
 import std.compat;
 import ThirdParty.Protobuf;
@@ -76,9 +76,9 @@ extern "C"
 	{
 		Libhv::hvlog_disable();
 
-		DNServer::CVPtr dnServer = world->GetSystem<DNServer>(EMSystemType::DNServer);
+		Server::CVPtr dnServer = world->GetSystem<Server>(EMSystemType::Server);
 
-		DNl10n::CVPtr dnL10n = world->GetSystem<DNl10n>(EMSystemType::DNl10n);
+		l10nText::CVPtr dnL10n = world->GetSystem<l10nText>(EMSystemType::l10nText);
 		
 	
 		switch (dnServer->GetServerType())
@@ -99,7 +99,7 @@ extern "C"
 
 	HOTRELOAD int ShutdownHotReload(World::CVPtr world)
 	{
-		DNServer::CVPtr dnServer = world->GetSystem<DNServer>(EMSystemType::DNServer);
+		Server::CVPtr dnServer = world->GetSystem<Server>(EMSystemType::Server);
 
 		switch (dnServer->GetServerType())
 		{

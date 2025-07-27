@@ -1,12 +1,12 @@
 module;
-export module DNClientProxy;
+export module ClientProxy;
 
 import MessagePack;
 import ECSW;
 import Logger;
 import std.compat;
-import DNTask;
-import DNServer;
+import Task;
+import Server;
 import ThirdParty.Libhv;
 
 #define NABS(n) ((n) < 0 ? (n) : -(n))
@@ -18,13 +18,13 @@ export enum class EMRegistState : uint8_t
 	Registed,
 };
 
-export class DNClientProxy : public Component, public hv::TcpClientTmpl<DNSocketChannel>
+export class ClientProxy : public Component, public hv::TcpClientTmpl<SocketChannel>
 {
 protected:
 	friend class System;
-	DNClientProxy(System::WPtr system):Component(system),TcpClientTmpl(nullptr)
+	ClientProxy(System::WPtr system):Component(system),TcpClientTmpl(nullptr)
 	{
-		eComponentType = EMComponentType::DNClientProxy;
+		eComponentType = EMComponentType::ClientProxy;
 
 		pLoop = std::make_unique<EventLoopThread>();
 
@@ -32,11 +32,11 @@ protected:
 	}
 public:
 
-	using Ptr = std::shared_ptr<DNClientProxy>;
+	using Ptr = std::shared_ptr<ClientProxy>;
 	using CVPtr = const Ptr&;
-	using WPtr = std::weak_ptr<DNClientProxy>;
+	using WPtr = std::weak_ptr<ClientProxy>;
 
-	~DNClientProxy()
+	~ClientProxy()
 	{
 		pLoop = nullptr;
 		mMsgList.clear();
@@ -76,7 +76,7 @@ public:
 		setting.length_field_offset = 0;
 		setUnpack(&setting);
 
-		GetOwner()->GetWorld()->AddEvent(EMEventType::ServerStart, GetSelfW<DNClientProxy>(), &DNClientProxy::Start);
+		GetOwner()->GetWorld()->AddEvent(EMEventType::ServerStart, GetSelfW<ClientProxy>(), &ClientProxy::Start);
 
 		return true;
 	}
@@ -86,7 +86,7 @@ public:
 		pLoop->start();
 
 		// first split self to base pointer
-		auto base_ptr = static_cast<TcpClientTmpl<DNSocketChannel>*>(this);
+		auto base_ptr = static_cast<TcpClientTmpl<SocketChannel>*>(this);
 		// then cast to template<>
 		Libhv::Run(base_ptr);
 	}
@@ -113,7 +113,7 @@ public: // dll override
 		{
 			if (pRegistEvent)
 			{
-				pRegistEvent(GetOwner<DNServer>());
+				pRegistEvent(GetOwner<Server>());
 			}
 			else
 			{
@@ -144,9 +144,9 @@ public: // dll override
 			if (mMsgList.contains(msgId))
 			{
 				std::unique_lock<std::shared_mutex> ulock(oMsgMutex);
-				DNTask<Message*>* task = mMsgList[msgId];
+				Task<Message*>* task = mMsgList[msgId];
 				mMsgList.erase(msgId);
-				task->SetFlag(EMDNTaskFlag::Timeout);
+				task->SetFlag(EMTaskFlag::Timeout);
 				task->CallResume();
 			}
 		}
@@ -154,7 +154,7 @@ public: // dll override
 
 	uint64_t CheckMessageTimeoutTimer(uint32_t breakTime, uint32_t msgId)
 	{
-		uint64_t timerId = Timer()->setTimeout(breakTime, std::bind(&DNClientProxy::MessageTimeoutTimer, this, std::placeholders::_1));
+		uint64_t timerId = Timer()->setTimeout(breakTime, std::bind(&ClientProxy::MessageTimeoutTimer, this, std::placeholders::_1));
 		std::unique_lock<std::shared_mutex> ulock(oTimerMutex);
 		mMapTimer[timerId] = msgId;
 		return timerId;
@@ -181,13 +181,13 @@ public: // dll override
 		// MessagePackAndSend(0, EMMsgDeal::Ret, request.GetDescriptor()->full_name(), binData, GetChannel());
 	}
 
-	void InitConnectedChannel(DNSocketChannel::CVPtr chanhel)
+	void InitConnectedChannel(SocketChannel::CVPtr chanhel)
 	{
-		// chanhel->setHeartbeat(4000, std::bind(&DNClientProxy::TickHeartbeat, this));
+		// chanhel->setHeartbeat(4000, std::bind(&ClientProxy::TickHeartbeat, this));
 		// channel->setWriteTimeout(12000);
 		if (eRegistState == EMRegistState::None)
 		{
-			Timer()->setInterval(1000, std::bind(&DNClientProxy::TickRegistEvent, this, std::placeholders::_1));
+			Timer()->setInterval(1000, std::bind(&ClientProxy::TickRegistEvent, this, std::placeholders::_1));
 		}
 	}
 
@@ -202,7 +202,7 @@ public: // dll override
 			createsocket(port, ip.c_str());
 
 			// first split self to base pointer
-			auto base_ptr = static_cast<TcpClientTmpl<DNSocketChannel>*>(this);
+			auto base_ptr = static_cast<TcpClientTmpl<SocketChannel>*>(this);
 			// then cast to template<>
 			Libhv::Run(base_ptr);
 		});
@@ -216,7 +216,7 @@ protected: // dll proxy
 	std::atomic<uint32_t> iMsgId;
 
 	// unordered_
-	std::unordered_map<uint32_t, DNTask<Message*>* > mMsgList;
+	std::unordered_map<uint32_t, Task<Message*>* > mMsgList;
 
 	//
 	std::unordered_map<uint64_t, uint32_t > mMapTimer;
@@ -227,7 +227,7 @@ protected: // dll proxy
 	// callback regist to server‘s servertype
 	uint8_t iRegistType = 0;
 
-	std::function<void(DNServer::CVPtr)> pRegistEvent;
+	std::function<void(Server::CVPtr)> pRegistEvent;
 
 	std::shared_mutex oMsgMutex;
 

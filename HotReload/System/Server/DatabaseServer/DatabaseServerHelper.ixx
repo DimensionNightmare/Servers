@@ -2,12 +2,12 @@ module;
 export module DatabaseServerHelper;
 
 export import ThirdParty.PbGen;
-import DNClientProxyHelper;
+import ClientProxyHelper;
 import ServerEntityManagerHelper;
 import DbUtils;
 import RdbProxyHelper;
 import StrUtils;
-import DNServer;
+import Server;
 import DllUtils;
 import MessagePack;
 import ECSW;
@@ -15,7 +15,7 @@ import MessageRegister;
 
 #define FUNCPLACE(class, func) &class::func, #class"_"#func
 
-export class DatabaseServerHelper : public DNServer
+export class DatabaseServerHelper : public Server
 {
 
 private:
@@ -35,9 +35,9 @@ public:
 	using Ptr = std::shared_ptr<DatabaseServerHelper>;
 	using CVPtr = const Ptr&;
 
-	DNClientProxyHelper::Ptr GetClientProxy()
+	ClientProxyHelper::Ptr GetClientProxy()
 	{ 
-		DNClientProxyHelper::Ptr proxy = GetComponent<DNClientProxyHelper>(EMComponentType::DNClientProxy);
+		ClientProxyHelper::Ptr proxy = GetComponent<ClientProxyHelper>(EMComponentType::ClientProxy);
 		if(!proxy || proxy->IsDisposed())
 		{
 			return nullptr;
@@ -180,11 +180,11 @@ public:
 	{
 		msgHandle->RegMsgHandle();
 
-		if (DNClientProxy::CVPtr proxy = GetComponent<DNClientProxy>(EMComponentType::DNClientProxy))
+		if (ClientProxy::CVPtr proxy = GetComponent<ClientProxy>(EMComponentType::ClientProxy))
 		{
-			proxy->onConnection = [this,msgHandle](DNSocketChannel::CVPtr channel)
+			proxy->onConnection = [this,msgHandle](SocketChannel::CVPtr channel)
 				{
-					DNClientProxyHelper::CVPtr proxyHelper = GetClientProxy();
+					ClientProxyHelper::CVPtr proxyHelper = GetClientProxy();
 
 					if(!proxyHelper){ return ;}
 
@@ -197,7 +197,7 @@ public:
 						channel->SetWorld(GetWorldW());
 						
 						proxyHelper->SetRegistEvent(msgHandle->GetClientRegistFunc());
-						TickMainSpaceDll(proxyHelper.get(), FUNCPLACE(DNClientProxy,InitConnectedChannel),  channel);
+						TickMainSpaceDll(proxyHelper.get(), FUNCPLACE(ClientProxy,InitConnectedChannel),  channel);
 					}
 					else
 					{
@@ -227,9 +227,9 @@ public:
 
 								proxyHelper->Timer()->setTimeout(200, [this, originIp, originPort](uint64_t timerID)
 									{
-										DNClientProxyHelper::CVPtr proxyHelper = GetClientProxy();
+										ClientProxyHelper::CVPtr proxyHelper = GetClientProxy();
 										if(!proxyHelper){ return ;}
-										TickMainSpaceDll(proxyHelper.get(), FUNCPLACE(DNClientProxy,RedirectClient),  std::stoi(originPort), originIp);
+										TickMainSpaceDll(proxyHelper.get(), FUNCPLACE(ClientProxy,RedirectClient),  std::stoi(originPort), originIp);
 									});
 							}
 						}
@@ -242,9 +242,9 @@ public:
 					}
 				};
 
-			proxy->onMessage = [this,msgHandle](DNSocketChannel::CVPtr channel, hv::Buffer* buf)
+			proxy->onMessage = [this,msgHandle](SocketChannel::CVPtr channel, hv::Buffer* buf)
 				{
-					DNClientProxyHelper::CVPtr proxyHelper = GetClientProxy();
+					ClientProxyHelper::CVPtr proxyHelper = GetClientProxy();
 
 					if(!proxyHelper){ return ;}
 
@@ -270,7 +270,7 @@ public:
 					}
 					else if (packet->dealType == EMMsgDeal::Res)
 					{
-						if (DNTask<Message*>* task = proxyHelper->GetMsg(packet->msgId)) // client sock request
+						if (Task<Message*>* task = proxyHelper->GetMsg(packet->msgId)) // client sock request
 						{
 							proxyHelper->DelMsg(packet->msgId);
 							task->Resume();
@@ -279,7 +279,7 @@ public:
 							{
 								if (!message->ParseFromString(msgData))
 								{
-									task->SetFlag(EMDNTaskFlag::PaserError);
+									task->SetFlag(EMTaskFlag::PaserError);
 								}
 							}
 							
@@ -303,7 +303,7 @@ public:
 
 	int HandleServerShutdown()
 	{
-		if (DNClientProxyHelper::CVPtr proxy = GetClientProxy())
+		if (ClientProxyHelper::CVPtr proxy = GetClientProxy())
 		{
 			proxy->onConnection = nullptr;
 			proxy->onMessage = nullptr;

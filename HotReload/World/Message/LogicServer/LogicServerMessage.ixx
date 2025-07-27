@@ -35,7 +35,7 @@ public:
 		#undef MSG_MAPPING
 	}
 	
-	std::function<void(DNServer::CVPtr)> GetClientRegistFunc()
+	std::function<void(Server::CVPtr)> GetClientRegistFunc()
 	{
 		return &LogicServerMessage::Evt_ReqRegistSrv;
 	}

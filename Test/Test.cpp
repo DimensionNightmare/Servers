@@ -330,7 +330,7 @@ int main()
 
 #if 0
 template <typename T>
-struct DNTask
+struct Task
 {
 	struct promise_type;
 	using HandleType = std::coroutine_handle<promise_type>;
@@ -340,9 +340,9 @@ struct DNTask
 		{
 		}
 
-		DNTask get_return_object()
+		Task get_return_object()
 		{
-			return DNTask{ HandleType::from_promise(*this) };
+			return Task{ HandleType::from_promise(*this) };
 		}
 
 		void return_value(const T& value)
@@ -355,7 +355,7 @@ struct DNTask
 
 		std::suspend_always final_suspend() noexcept
 		{
-			// DNTask don't Call by self, need Message handle Tick;
+			// Task don't Call by self, need Message handle Tick;
 			// ReleaseAwaitHandle();
 			return {};
 		}
@@ -394,13 +394,13 @@ struct DNTask
 	}
 	// Awaitable
 
-	DNTask(HandleType handle)
+	Task(HandleType handle)
 	{
 		tHandle = handle;
-		// SetFlag(EMDNTaskFlag::TimeCost);
+		// SetFlag(EMTaskFlag::TimeCost);
 	}
 
-	~DNTask()
+	~Task()
 	{
 		Destroy();
 	}
@@ -444,7 +444,7 @@ private:
 
 };
 
-struct DNTaskVoid
+struct TaskVoid
 {
 	struct promise_type;
 	using HandleType = std::coroutine_handle<promise_type>;
@@ -454,9 +454,9 @@ struct DNTaskVoid
 
 		void return_void() { bReturned = true; }
 
-		DNTaskVoid get_return_object()
+		TaskVoid get_return_object()
 		{
-			return DNTaskVoid{ HandleType::from_promise(*this) };
+			return TaskVoid{ HandleType::from_promise(*this) };
 		}
 
 		std::suspend_never initial_suspend() { return {}; }
@@ -495,7 +495,7 @@ struct DNTaskVoid
 	}
 	// Awaitable End
 
-	DNTaskVoid(HandleType handle)
+	TaskVoid(HandleType handle)
 	{
 		tHandle = handle;
 	}
@@ -554,18 +554,18 @@ public:
 
 shared_ptr<TimerThread> loop;
 
-DNTaskVoid funcD() {
+TaskVoid funcD() {
     std::cout << "1" << std::endl;
 	co_return;
 }
 
-DNTask<int*> funcC() {
+Task<int*> funcC() {
     std::cout << "1" << std::endl;
 	int* a = new int();
 	co_return a;
 }
 
-DNTaskVoid funcB() {
+TaskVoid funcB() {
 	auto res = funcC();
 	
 	loop->setTimeout(2500, [&](int64_t timeId){
@@ -579,7 +579,7 @@ DNTaskVoid funcB() {
     std::cout << "2" << std::endl;
 }
 
-DNTaskVoid funcA() {
+TaskVoid funcA() {
     co_await funcB();
 	co_await funcD();
 	co_await funcB();

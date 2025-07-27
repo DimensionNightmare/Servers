@@ -5,12 +5,12 @@ import FuncHelper;
 import GlobalServerHelper;
 
 import ThirdParty.Libhv;
-import DNTask;
+import Task;
 
 namespace GlobalServerMessage
 {
 
-	export DNTaskVoid Msg_ReqAuthAccount(DNSocketChannel::CVPtr channel, uint32_t msgId, const std::string& binMsg)
+	export TaskVoid Msg_ReqAuthAccount(SocketChannel::CVPtr channel, uint32_t msgId, const std::string& binMsg)
 	{
 		GMsg::A2g_ReqAuthAccount request;
 		if(!request.ParseFromString(binMsg))
@@ -26,7 +26,7 @@ namespace GlobalServerMessage
 		});
 
 		// if has db not need origin
-		GlobalServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<GlobalServerHelper>(EMSystemType::DNServer);
+		GlobalServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<GlobalServerHelper>(EMSystemType::Server);
 		std::list<ServerEntity::Ptr> serverList = dnServer->GetServerEntityManager()->GetEntitysByType(EMServerType::GateServer);
 
 		std::list<ServerEntityHelper::Ptr> tempList;
@@ -57,13 +57,13 @@ namespace GlobalServerMessage
 			binData = binMsg;
 
 			// data alloc
-			auto taskGen = [](Message* msg) -> DNTask<Message*>
+			auto taskGen = [](Message* msg) -> Task<Message*>
 				{
 					co_return msg;
 				};
 			auto dataChannel = taskGen(&response);
 
-			DNServerProxyHelper::CVPtr serverProxy = dnServer->GetServerProxy();
+			ServerProxyHelper::CVPtr serverProxy = dnServer->GetServerProxy();
 			uint32_t msgId = serverProxy->GetMsgId();
 
 			serverProxy->AddMsg(msgId, &dataChannel, 8000);
@@ -71,7 +71,7 @@ namespace GlobalServerMessage
 			MessagePackAndSend(msgId, EMMsgDeal::Req, request.GetDescriptor()->full_name(), binData, entity->GetChannel());
 
 			co_await dataChannel;
-			if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
+			if (dataChannel.HasFlag(EMTaskFlag::Timeout))
 			{
 				response.set_error_code(EL10nCode_SGlobalReqTimeout);
 

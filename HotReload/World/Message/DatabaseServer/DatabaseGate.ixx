@@ -11,7 +11,7 @@ import std.compat;
 namespace DatabaseServerMessage
 {
 
-	export void Exe_ReqLoadData(DNSocketChannel::CVPtr channel, uint32_t msgId, const std::string& binMsg)
+	export void Exe_ReqLoadData(SocketChannel::CVPtr channel, uint32_t msgId, const std::string& binMsg)
 	{
 		GMsg::L2D_ReqLoadData request;
 		if(!request.ParseFromString(binMsg))
@@ -26,7 +26,7 @@ namespace DatabaseServerMessage
 			MessagePackAndSend(msgId, EMMsgDeal::Res, binData, channel);
 		});
 
-		DatabaseServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<DatabaseServerHelper>(EMSystemType::DNServer);
+		DatabaseServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<DatabaseServerHelper>(EMSystemType::Server);
 
 		if (auto connection = dnServer->GetRdbProxy()->GetConnection(static_cast<uint16_t>(EMSqlDbNameEnum::Nightmare)))
 		{
@@ -107,7 +107,7 @@ namespace DatabaseServerMessage
 		}
 	}
 
-	export void Exe_ReqSaveData(DNSocketChannel::CVPtr channel, uint32_t msgId, const std::string& binMsg)
+	export void Exe_ReqSaveData(SocketChannel::CVPtr channel, uint32_t msgId, const std::string& binMsg)
 	{
 		GMsg::L2D_ReqSaveData request;
 		if(!request.ParseFromString(binMsg))
@@ -122,7 +122,7 @@ namespace DatabaseServerMessage
 			MessagePackAndSend(msgId, EMMsgDeal::Res, binData, channel);
 		});
 
-		DatabaseServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<DatabaseServerHelper>(EMSystemType::DNServer);
+		DatabaseServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<DatabaseServerHelper>(EMSystemType::Server);
 
 		std::string binData;
 

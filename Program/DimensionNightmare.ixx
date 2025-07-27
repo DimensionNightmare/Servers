@@ -2,16 +2,16 @@ module;
 
 export module DimensionNightmare;
 
-import DNServer;
+import Server;
 import ThirdParty.Platform;
 import HotReloadDll;
 import ProxyEntityManager;
 import RoomEntityManager;
 import ServerEntityManager;
 import ClientEntityManager;
-import DNClientProxy;
-import DNServerProxy;
-import DNWebProxy;
+import ClientProxy;
+import ServerProxy;
+import WebProxy;
 import StrUtils;
 import RdbProxy;
 import MdbProxy;
@@ -293,7 +293,7 @@ public:
 		}
 
 		// i10n
-		DNl10n::CVPtr dnL10n = world->AddSystem<DNl10n>();
+		l10nText::CVPtr dnL10n = world->AddSystem<l10nText>();
 		if(!dnL10n->Init())
 		{
 			return false;
@@ -303,7 +303,7 @@ public:
 		std::string* value = world->LaunchParam("svrName");
 		EMServerType serverType = EnumName<EMServerType>(*value);
 
-		DNServer::CVPtr dnServer = world->AddSystem<DNServer>();
+		Server::CVPtr dnServer = world->AddSystem<Server>();
 		dnServer->SetServerType(serverType);
 
 		value = world->LaunchParam("byCtl");
@@ -314,17 +314,17 @@ public:
 			{
 				dnServer->AddComponent<ServerEntityManager>();
 				//net
-				dnServer->AddComponent<DNServerProxy>();
+				dnServer->AddComponent<ServerProxy>();
 				break;
 			}
 			case EMServerType::GlobalServer:
 			{
 				dnServer->AddComponent<ServerEntityManager>();
 				//net
-				dnServer->AddComponent<DNServerProxy>();
+				dnServer->AddComponent<ServerProxy>();
 				if(value)
 				{
-					dnServer->AddComponent<DNClientProxy>();
+					dnServer->AddComponent<ClientProxy>();
 				}
 				break;
 			}
@@ -332,11 +332,11 @@ public:
 			{
 				// db
 				dnServer->AddComponent<RdbProxy>();
-				dnServer->AddComponent<DNWebProxy>();
+				dnServer->AddComponent<WebProxy>();
 				//net
 				if(value)
 				{
-					dnServer->AddComponent<DNClientProxy>();
+					dnServer->AddComponent<ClientProxy>();
 				}
 				break;
 			}
@@ -345,8 +345,8 @@ public:
 				dnServer->AddComponent<ServerEntityManager>();
 				dnServer->AddComponent<ProxyEntityManager>();
 				//net
-				dnServer->AddComponent<DNServerProxy>();
-				dnServer->AddComponent<DNClientProxy>();
+				dnServer->AddComponent<ServerProxy>();
+				dnServer->AddComponent<ClientProxy>();
 				break;
 			}
 			case EMServerType::DatabaseServer:
@@ -354,7 +354,7 @@ public:
 				// db
 				dnServer->AddComponent<RdbProxy>();
 				//net
-				dnServer->AddComponent<DNClientProxy>();
+				dnServer->AddComponent<ClientProxy>();
 				break;
 			}
 			case EMServerType::LogicServer:
@@ -364,8 +364,8 @@ public:
 				dnServer->AddComponent<RoomEntityManager>();
 				dnServer->AddComponent<ClientEntityManager>();
 				//net
-				dnServer->AddComponent<DNServerProxy>();
-				dnServer->AddComponent<DNClientProxy>();
+				dnServer->AddComponent<ServerProxy>();
+				dnServer->AddComponent<ClientProxy>();
 				break;
 			}
 			default:
@@ -432,7 +432,7 @@ public:
 
 		auto reloadConfig = [this](std::stringstream* = nullptr)
 			{
-				// DNl10n::PInstance->Init();
+				// l10nText::PInstance->Init();
 			};
 
 		mCmdHandle = {
@@ -527,12 +527,12 @@ extern "C"
 
 	REGIST_MAINSPACE_SIGN_FUNCTION(ClientEntityManager, AddEntity);
 
-	REGIST_MAINSPACE_SIGN_FUNCTION(DNClientProxy, InitConnectedChannel);
-	REGIST_MAINSPACE_SIGN_FUNCTION(DNClientProxy, CheckMessageTimeoutTimer);
-	REGIST_MAINSPACE_SIGN_FUNCTION(DNClientProxy, RedirectClient);
+	REGIST_MAINSPACE_SIGN_FUNCTION(ClientProxy, InitConnectedChannel);
+	REGIST_MAINSPACE_SIGN_FUNCTION(ClientProxy, CheckMessageTimeoutTimer);
+	REGIST_MAINSPACE_SIGN_FUNCTION(ClientProxy, RedirectClient);
 
-	REGIST_MAINSPACE_SIGN_FUNCTION(DNServerProxy, InitConnectedChannel);
-	REGIST_MAINSPACE_SIGN_FUNCTION(DNServerProxy, CheckMessageTimeoutTimer);
+	REGIST_MAINSPACE_SIGN_FUNCTION(ServerProxy, InitConnectedChannel);
+	REGIST_MAINSPACE_SIGN_FUNCTION(ServerProxy, CheckMessageTimeoutTimer);
 }
 
 

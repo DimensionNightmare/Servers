@@ -4,8 +4,8 @@ export module DatabaseServerMessage:DatabaseCommon;
 import DllUtils;
 import FuncHelper;
 import DatabaseServerHelper;
-import DNServer;
-import DNTask;
+import Server;
+import Task;
 
 
 #define FUNCPLACE(class, func) &class::func, #class"_"#func
@@ -14,11 +14,11 @@ namespace DatabaseServerMessage
 {
 
 	// client request
-	export DNTaskVoid Evt_ReqRegistSrv(DNServer::CVPtr server)
+	export TaskVoid Evt_ReqRegistSrv(Server::CVPtr server)
 	{
 		DatabaseServerHelper::CVPtr dnServer = server->GetSelf<DatabaseServerHelper>();
 
-		DNClientProxyHelper::CVPtr clientProxy = dnServer->GetClientProxy();
+		ClientProxyHelper::CVPtr clientProxy = dnServer->GetClientProxy();
 		
 		dnServer->GetLogger()->Record(ELogLevel_Debug, "database req regist Client:{}, port:{}", clientProxy->remote_host, clientProxy->remote_port);
 		
@@ -38,7 +38,7 @@ namespace DatabaseServerMessage
 		GMsg::COM_ResRegistSrv response;
 
 		{
-			auto taskGen = [](Message* msg) -> DNTask<Message*>
+			auto taskGen = [](Message* msg) -> Task<Message*>
 				{
 					co_return msg;
 				};
@@ -52,7 +52,7 @@ namespace DatabaseServerMessage
 			MessagePackAndSend(msgId, EMMsgDeal::Req, request.GetDescriptor()->full_name(), binData, clientProxy->GetChannel());
 
 			co_await dataChannel;
-			if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
+			if (dataChannel.HasFlag(EMTaskFlag::Timeout))
 			{
 				response.set_error_code(EL10nCode_ReqRegistTimeout);
 			}
@@ -74,7 +74,7 @@ namespace DatabaseServerMessage
 		co_return;
 	}
 
-	export void Exe_RetChangeCtlSrv(DNSocketChannel::CVPtr channel, const std::string& binMsg)
+	export void Exe_RetChangeCtlSrv(SocketChannel::CVPtr channel, const std::string& binMsg)
 	{
 		GMsg::COM_RetChangeCtlSrv request;
 		if(!request.ParseFromString(binMsg))
@@ -82,10 +82,10 @@ namespace DatabaseServerMessage
 			return;
 		}
 
-		DatabaseServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<DatabaseServerHelper>(EMSystemType::DNServer);
+		DatabaseServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<DatabaseServerHelper>(EMSystemType::Server);
 
-		DNClientProxyHelper::CVPtr clientProxy = dnServer->GetClientProxy();
+		ClientProxyHelper::CVPtr clientProxy = dnServer->GetClientProxy();
 
-		TickMainSpaceDll(clientProxy.get(), FUNCPLACE(DNClientProxy,RedirectClient), request.server_port(), request.server_ip());
+		TickMainSpaceDll(clientProxy.get(), FUNCPLACE(ClientProxy,RedirectClient), request.server_port(), request.server_ip());
 	}
 }

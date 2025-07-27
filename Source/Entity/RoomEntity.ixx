@@ -36,6 +36,6 @@ protected: // dll proxy
 
 	uint64_t iCloseTimerId = 0;
 
-	DNSocketChannel::Ptr pChannel;
+	SocketChannel::Ptr pChannel;
 	
 };

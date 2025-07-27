@@ -1,45 +1,45 @@
 module;
-export module DNServerProxyHelper;
+export module ServerProxyHelper;
 
-import DNServerProxy;
+import ServerProxy;
 import DllUtils;
 
 #define FUNCPLACE(class, func) &class::func, #class"_"#func
 
-export class DNServerProxyHelper : public DNServerProxy
+export class ServerProxyHelper : public ServerProxy
 {
 	
 private:
 
-	DNServerProxyHelper() = delete;
-	~DNServerProxyHelper() = default;
+	ServerProxyHelper() = delete;
+	~ServerProxyHelper() = default;
 
-	DNServerProxyHelper(const DNServerProxyHelper&) = delete;
-	void operator=(const DNServerProxyHelper&) = delete;
+	ServerProxyHelper(const ServerProxyHelper&) = delete;
+	void operator=(const ServerProxyHelper&) = delete;
 
-	DNServerProxyHelper(DNServerProxyHelper&&) = delete;
-	DNServerProxyHelper& operator=(DNServerProxyHelper&&) = delete;
+	ServerProxyHelper(ServerProxyHelper&&) = delete;
+	ServerProxyHelper& operator=(ServerProxyHelper&&) = delete;
 
 	void* operator new(size_t) = delete;
     void operator delete(void*) = delete;
 public:
-	using Ptr = std::shared_ptr<DNServerProxyHelper>;
+	using Ptr = std::shared_ptr<ServerProxyHelper>;
 	using CVPtr = const Ptr&;
 
 	uint32_t GetMsgId() { return ++iMsgId; }
 
-	bool AddMsg(uint32_t msgId, DNTask<Message*>* task, uint32_t breakTime = 10000)
+	bool AddMsg(uint32_t msgId, Task<Message*>* task, uint32_t breakTime = 10000)
 	{
 		std::unique_lock<std::shared_mutex> ulock(oMsgMutex);
 		mMsgList.emplace(msgId, task);
 		if (breakTime > 0)
 		{
-			task->TimerId() = TickMainSpaceDll(this, FUNCPLACE(DNServerProxy,CheckMessageTimeoutTimer),  breakTime, msgId);
+			task->TimerId() = TickMainSpaceDll(this, FUNCPLACE(ServerProxy,CheckMessageTimeoutTimer),  breakTime, msgId);
 		}
 		return true;
 	}
 
-	DNTask<Message*>* GetMsg(uint32_t msgId)
+	Task<Message*>* GetMsg(uint32_t msgId)
 	{
 		std::shared_lock<std::shared_mutex> lock(oMsgMutex);
 		if (mMsgList.contains(msgId))
@@ -54,7 +54,7 @@ public:
 		std::unique_lock<std::shared_mutex> ulock(oMsgMutex);
 		if (mMsgList.contains(msgId))
 		{
-			if (DNTask<Message*>* task = mMsgList[msgId])
+			if (Task<Message*>* task = mMsgList[msgId])
 			{
 				if (size_t timerId = task->TimerId())
 				{

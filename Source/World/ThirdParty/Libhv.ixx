@@ -49,19 +49,19 @@ export namespace hv
 	using hv::TcpServerTmpl;
 }
 
-export class DNSocketChannel : public hv::SocketChannel
+export class SocketChannel : public hv::SocketChannel
 {
 public:
-	using Ptr = std::shared_ptr<DNSocketChannel>;
+	using Ptr = std::shared_ptr<SocketChannel>;
 	using CVPtr = const Ptr&;
-	using WPtr = std::weak_ptr<DNSocketChannel>;
+	using WPtr = std::weak_ptr<SocketChannel>;
 
-	virtual ~DNSocketChannel()
+	virtual ~SocketChannel()
 	{
 		
 	}
 
-	DNSocketChannel(hio_t* io) : SocketChannel(io)
+	SocketChannel(hio_t* io) : hv::SocketChannel(io)
 	{
 		
 	}
@@ -84,9 +84,9 @@ export namespace Libhv
 
 	void hvlog_disable() { hlog_disable(); }
 
-	void Run(hv::TcpClientTmpl<DNSocketChannel>* obj) { obj->start(); }
+	void Run(hv::TcpClientTmpl<SocketChannel>* obj) { obj->start(); }
 
-	void Run(hv::TcpServerTmpl<DNSocketChannel>* obj) { obj->start(); }
+	void Run(hv::TcpServerTmpl<SocketChannel>* obj) { obj->start(); }
 
 }
 

@@ -5,11 +5,11 @@ import LogicServerHelper;
 
 import ThirdParty.Libhv;
 import FuncHelper;
-import DNTask;
+import Task;
 
 namespace LogicServerMessage
 {
-	export DNTaskVoid Msg_ReqLoadEntityData(DNSocketChannel::CVPtr channel, uint32_t msgId, const std::string& binMsg)
+	export TaskVoid Msg_ReqLoadEntityData(SocketChannel::CVPtr channel, uint32_t msgId, const std::string& binMsg)
 	{
 		GMsg::d2L_ReqLoadEntityData request;
 		if(!request.ParseFromString(binMsg))
@@ -30,7 +30,7 @@ namespace LogicServerMessage
 			co_return;
 		}
 
-		LogicServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<LogicServerHelper>(EMSystemType::DNServer);
+		LogicServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<LogicServerHelper>(EMSystemType::Server);
 		ClientEntityManagerHelper::CVPtr entityMan = dnServer->GetClientEntityManager();
 
 		ClientEntity::CVPtr entity = entityMan->GetEntity(player.account_id());
@@ -49,7 +49,7 @@ namespace LogicServerMessage
 		co_return;
 	}
 
-	export void Msg_ReqSaveEntityData(DNSocketChannel::CVPtr channel, const std::string& binMsg)
+	export void Msg_ReqSaveEntityData(SocketChannel::CVPtr channel, const std::string& binMsg)
 	{
 		GMsg::d2L_ReqSaveEntityData request;
 		if(!request.ParseFromString(binMsg))
@@ -59,7 +59,7 @@ namespace LogicServerMessage
 
 		GDb::Player player;
 		
-		LogicServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<LogicServerHelper>(EMSystemType::DNServer);
+		LogicServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<LogicServerHelper>(EMSystemType::Server);
 
 		if (!player.ParseFromString(request.entity_data()))
 		{

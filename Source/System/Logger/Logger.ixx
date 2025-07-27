@@ -88,7 +88,7 @@ public:
 	void Record(EL10nCode code, Args&&... args)
 	{
 		ELogLevel level;
-		const std::string& fmt = GetDNl10n()->GetTipText(code, level);
+		const std::string& fmt = Getl10nText()->GetTipText(code, level);
 
 		if (level < eLogLevel)
 		{
@@ -124,9 +124,9 @@ public:
 		}
 	}
 
-	DNl10n::Ptr GetDNl10n() { return pDNl10n.expired() ? nullptr : pDNl10n.lock(); }
+	l10nText::Ptr Getl10nText() { return pl10nText.expired() ? nullptr : pl10nText.lock(); }
 
-	void SetDNl10n(DNl10n::WPtr l10n){ pDNl10n = l10n; }
+	void Setl10nText(l10nText::WPtr l10n){ pl10nText = l10n; }
 
 protected:
 
@@ -171,7 +171,7 @@ protected:
 
 
 protected:
-	DNl10n::WPtr pDNl10n;
+	l10nText::WPtr pl10nText;
 
 	std::ofstream LogFile; 
 
@@ -180,7 +180,7 @@ protected:
 	ELogLevel eLogLevel = ELogLevel_Debug;
 };
 
-bool DNl10n::Init()
+bool l10nText::Init()
 {
 	World::CVPtr pWorld = GetWorld();
 
@@ -228,7 +228,7 @@ bool DNl10n::Init()
 			return false;
 	}
 
-	pLogger->SetDNl10n(GetSelfW<DNl10n>());
+	pLogger->Setl10nText(GetSelfW<l10nText>());
 
 	return true;
 }
@@ -239,7 +239,7 @@ public:
 	LoggerPrintPid()
 	{
 		pWorld = std::make_shared<World>();
-		pWorld->AddSystem<DNl10n>();
+		pWorld->AddSystem<l10nText>();
 		pLogger = pWorld->AddSystem<LoggerPrint>();
 	}
 
@@ -264,7 +264,7 @@ public:
 	bool Init(std::unordered_map<std::string, std::string> commonInfo)
 	{
 		pWorld->MoveLuanchConfigToSelf(std::move(commonInfo));
-		DNl10n::CVPtr pL10n = pWorld->GetSystem<DNl10n>(EMSystemType::DNl10n);
+		l10nText::CVPtr pL10n = pWorld->GetSystem<l10nText>(EMSystemType::l10nText);
 		return pL10n->Init();
 	}
 

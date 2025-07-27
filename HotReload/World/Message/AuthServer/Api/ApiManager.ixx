@@ -2,13 +2,13 @@ module;
 export module ApiManager;
 
 import :ApiAuth;
-import DNClientProxyHelper;
+import ClientProxyHelper;
 
-export void ApiInit(DNServer::CVPtr dnServer)
+export void ApiInit(Server::CVPtr dnServer)
 {
-	DNServer::WPtr server = dnServer->GetSelfW<DNServer>();
+	Server::WPtr server = dnServer->GetSelfW<Server>();
 
-	DNWebProxyHelper::Ptr webProxyHelper = dnServer->GetComponent<DNWebProxyHelper>(EMComponentType::DNWebProxy);
+	WebProxyHelper::Ptr webProxyHelper = dnServer->GetComponent<WebProxyHelper>(EMComponentType::WebProxy);
 
 	webProxyHelper->service->preprocessor = [server](const hv::HttpContextPtr& ctx) -> int
 		{
@@ -19,13 +19,13 @@ export void ApiInit(DNServer::CVPtr dnServer)
 				return pass;
 			}
 
-			DNServer::Ptr dnServer = server.lock();
+			Server::Ptr dnServer = server.lock();
 			if(!dnServer) { return !pass; }
 
 
 			nlohmann::json errData;
 
-			DNClientProxyHelper::Ptr clientSock = dnServer->GetComponent<DNClientProxyHelper>(EMComponentType::DNClientProxy);
+			ClientProxyHelper::Ptr clientSock = dnServer->GetComponent<ClientProxyHelper>(EMComponentType::ClientProxy);
 			if (clientSock->GetRegistState() != EMRegistState::Registed)
 			{
 				errData["code"] = http_status::HTTP_STATUS_BAD_REQUEST;

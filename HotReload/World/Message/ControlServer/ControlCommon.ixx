@@ -11,7 +11,7 @@ namespace ControlServerMessage
 {
 
 	// client request
-	export void Msg_ReqRegistSrv(DNSocketChannel::CVPtr channel, uint32_t msgId, const std::string& binMsg)
+	export void Msg_ReqRegistSrv(SocketChannel::CVPtr channel, uint32_t msgId, const std::string& binMsg)
 	{
 		GMsg::COM_ReqRegistSrv request;
 		if(!request.ParseFromString(binMsg))
@@ -27,7 +27,7 @@ namespace ControlServerMessage
 			MessagePackAndSend(msgId, EMMsgDeal::Res, binData, channel);
 		});
 
-		ControlServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<ControlServerHelper>(EMSystemType::DNServer);
+		ControlServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<ControlServerHelper>(EMSystemType::Server);
 
 		ServerEntityManagerHelper::CVPtr entityMan = dnServer->GetServerEntityManager();
 
@@ -63,7 +63,7 @@ namespace ControlServerMessage
 		
 	}
 
-	export void Exe_RetHeartbeat(DNSocketChannel::CVPtr channel, const std::string& binMsg)
+	export void Exe_RetHeartbeat(SocketChannel::CVPtr channel, const std::string& binMsg)
 	{
 		GMsg::COM_RetHeartbeat request;
 		if(!request.ParseFromString(binMsg))

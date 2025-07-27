@@ -1,5 +1,5 @@
 module;
-export module DNServer;
+export module Server;
 
 import Logger;
 import ECSW;
@@ -33,18 +33,18 @@ export std::array<std::pair<EMServerType, std::string>, 7> ServerTypeList = {{
 }};
 
 
-export class DNServer : public System
+export class Server : public System
 {
 public:
-	using Ptr = std::shared_ptr<DNServer>;
+	using Ptr = std::shared_ptr<Server>;
 	using CVPtr = const Ptr&;
-	using WPtr = std::weak_ptr<DNServer>;
+	using WPtr = std::weak_ptr<Server>;
 	
 protected:
 	friend class World;
-	DNServer(World::WPtr world):System(world)
+	Server(World::WPtr world):System(world)
 	{
-		emSystemType = EMSystemType::DNServer;
+		emSystemType = EMSystemType::Server;
 
 		pLogger = GetWorld()->GetSystemW<LoggerPrint>(EMSystemType::LoggerPrint);
 
@@ -53,7 +53,7 @@ protected:
 public:
 	
 
-	virtual ~DNServer()
+	virtual ~Server()
 	{
 	}
 

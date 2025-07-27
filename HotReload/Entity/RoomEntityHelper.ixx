@@ -38,9 +38,9 @@ public:
 	void SetTimerId(uint64_t timerId) { iCloseTimerId = timerId; }
 
 	/// @brief net socket set
-	DNSocketChannel::CVPtr GetChannel() { return pChannel; }
+	SocketChannel::CVPtr GetChannel() { return pChannel; }
 
 	/// @brief net socket get
-	void SetChannel(DNSocketChannel::CVPtr channel) { pChannel = channel; }
+	void SetChannel(SocketChannel::CVPtr channel) { pChannel = channel; }
 
 };

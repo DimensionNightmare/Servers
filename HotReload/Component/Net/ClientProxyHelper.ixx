@@ -1,29 +1,29 @@
 module;
-export module DNClientProxyHelper;
+export module ClientProxyHelper;
 
-import DNClientProxy;
+import ClientProxy;
 import DllUtils;
 
 #define FUNCPLACE(class, func) &class::func, #class"_"#func
 
-export class DNClientProxyHelper : public DNClientProxy
+export class ClientProxyHelper : public ClientProxy
 {
 
 private:
 
-	DNClientProxyHelper() = delete;
-	~DNClientProxyHelper() = default;
+	ClientProxyHelper() = delete;
+	~ClientProxyHelper() = default;
 
-	DNClientProxyHelper(const DNClientProxyHelper&) = delete;
-	void operator=(const DNClientProxyHelper&) = delete;
+	ClientProxyHelper(const ClientProxyHelper&) = delete;
+	void operator=(const ClientProxyHelper&) = delete;
 
-	DNClientProxyHelper(DNClientProxyHelper&&) = delete;
-	DNClientProxyHelper& operator=(DNClientProxyHelper&&) = delete;
+	ClientProxyHelper(ClientProxyHelper&&) = delete;
+	ClientProxyHelper& operator=(ClientProxyHelper&&) = delete;
 
 	void* operator new(size_t) = delete;
     void operator delete(void*) = delete;
 public:
-	using Ptr = std::shared_ptr<DNClientProxyHelper>;
+	using Ptr = std::shared_ptr<ClientProxyHelper>;
 	using CVPtr = const Ptr&;
 
 	EMRegistState GetRegistState() { return eRegistState; }
@@ -32,13 +32,13 @@ public:
 	uint8_t RegistType() { return iRegistType; }
 	void SetRegistType(uint8_t type) { iRegistType = type; }
 
-	void SetRegistEvent(std::function<void(DNServer::CVPtr)> event)
+	void SetRegistEvent(std::function<void(Server::CVPtr)> event)
 	{
 		pRegistEvent = event;
 	}
 	
 	// task
-	DNTask<Message*>* GetMsg(uint32_t msgId)
+	Task<Message*>* GetMsg(uint32_t msgId)
 	{
 		std::shared_lock<std::shared_mutex> lock(oMsgMutex);
 		if (mMsgList.contains(msgId))
@@ -48,14 +48,14 @@ public:
 		return nullptr;
 	}
 
-	bool AddMsg(uint32_t msgId, DNTask<Message*>* task, uint32_t breakTime = 10000)
+	bool AddMsg(uint32_t msgId, Task<Message*>* task, uint32_t breakTime = 10000)
 	{
 		std::unique_lock<std::shared_mutex> ulock(oMsgMutex);
 		mMsgList.emplace(msgId, task);
 		// timeout
 		if (breakTime > 0)
 		{
-			task->TimerId() = TickMainSpaceDll(this, FUNCPLACE(DNClientProxy,CheckMessageTimeoutTimer),  breakTime, msgId);
+			task->TimerId() = TickMainSpaceDll(this, FUNCPLACE(ClientProxy,CheckMessageTimeoutTimer),  breakTime, msgId);
 		}
 		return true;
 	}
@@ -65,7 +65,7 @@ public:
 		std::unique_lock<std::shared_mutex> ulock(oMsgMutex);
 		if (mMsgList.contains(msgId))
 		{
-			if (DNTask<Message*>* task = mMsgList[msgId])
+			if (Task<Message*>* task = mMsgList[msgId])
 			{
 				if (size_t timerId = task->TimerId())
 				{
@@ -89,6 +89,6 @@ public:
 
 	uint32_t GetMsgId() { return ++iMsgId; }
 	
-	DNSocketChannel::CVPtr GetChannel() { return channel; }
+	SocketChannel::CVPtr GetChannel() { return channel; }
 	
 };

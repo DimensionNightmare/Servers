@@ -24,7 +24,7 @@ private:
 	std::function<void()> mFunc;
 };
 
-export void MessagePackAndSend(uint32_t msgId, EMMsgDeal deal, std::string& data, DNSocketChannel::CVPtr channel)
+export void MessagePackAndSend(uint32_t msgId, EMMsgDeal deal, std::string& data, SocketChannel::CVPtr channel)
 {
 	MessagePack(msgId, deal, 0, data);
 
@@ -36,7 +36,7 @@ export void MessagePackAndSend(uint32_t msgId, EMMsgDeal deal, std::string& data
 	} 
 }
 
-export void MessagePackAndSend(uint32_t msgId, EMMsgDeal deal, const std::string& pbName, std::string& data, DNSocketChannel::CVPtr channel)
+export void MessagePackAndSend(uint32_t msgId, EMMsgDeal deal, const std::string& pbName, std::string& data, SocketChannel::CVPtr channel)
 {
 	MessagePack(msgId, deal, DoStringHash(pbName), data);
 	channel->write(data);
@@ -47,7 +47,7 @@ export void MessagePackAndSend(uint32_t msgId, EMMsgDeal deal, const std::string
 	}
 }
 
-export void MessagePackAndSend(uint32_t msgId, EMMsgDeal deal, const std::string& pbName, const std::string& data, DNSocketChannel::CVPtr channel)
+export void MessagePackAndSend(uint32_t msgId, EMMsgDeal deal, const std::string& pbName, const std::string& data, SocketChannel::CVPtr channel)
 {
 	std::string msgData = data;
 	MessagePack(msgId, deal, DoStringHash(pbName), msgData);

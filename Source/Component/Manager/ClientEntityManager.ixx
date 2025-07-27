@@ -3,7 +3,7 @@ export module ClientEntityManager;
 
 import ClientEntity;
 import EntityManager;
-import DNClientProxy;
+import ClientProxy;
 import StrUtils;
 import MdbProxy;
 
@@ -69,7 +69,7 @@ public: // dll proxy
 	}
 
 protected: // dll proxy
-	DNClientProxy::Ptr pSqlClient;
+	ClientProxy::Ptr pSqlClient;
 
 	/// @brief if save error. bin data will record to this.
 	std::unordered_map<uint64_t, std::string> mDbFailure;

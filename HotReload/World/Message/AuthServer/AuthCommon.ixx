@@ -2,20 +2,20 @@ module;
 export module AuthServerMessage:AuthCommon;
 
 import AuthServerHelper;
-import DNServer;
+import Server;
 import FuncHelper;
-import DNTask;
+import Task;
 
 
 namespace AuthServerMessage
 {
 
 	// client request
-	export DNTaskVoid Evt_ReqRegistSrv(DNServer::CVPtr server)
+	export TaskVoid Evt_ReqRegistSrv(Server::CVPtr server)
 	{
 		AuthServerHelper::CVPtr dnServer = server->GetSelf<AuthServerHelper>();
 
-		DNClientProxyHelper::CVPtr clientProxy = dnServer->GetClientProxy();
+		ClientProxyHelper::CVPtr clientProxy = dnServer->GetClientProxy();
 
 		uint32_t msgId = clientProxy->GetMsgId();
 
@@ -32,7 +32,7 @@ namespace AuthServerMessage
 			request.set_is_pull(true);
 		}
 
-		if(DNWebProxyHelper::CVPtr serverProxy = dnServer->GetWebProxy())
+		if(WebProxyHelper::CVPtr serverProxy = dnServer->GetWebProxy())
 		{
 			request.set_server_port(serverProxy->port);
 		}
@@ -46,7 +46,7 @@ namespace AuthServerMessage
 		GMsg::COM_ResRegistSrv response;
 
 		{
-			auto taskGen = [](Message* msg) -> DNTask<Message*>
+			auto taskGen = [](Message* msg) -> Task<Message*>
 				{
 					co_return msg;
 				};
@@ -57,7 +57,7 @@ namespace AuthServerMessage
 			MessagePackAndSend(msgId, EMMsgDeal::Req, request.GetDescriptor()->full_name(), binData, clientProxy->GetChannel());
 
 			co_await dataChannel;
-			if (dataChannel.HasFlag(EMDNTaskFlag::Timeout))
+			if (dataChannel.HasFlag(EMTaskFlag::Timeout))
 			{
 				response.set_error_code(EL10nCode_ReqRegistTimeout);
 			}
