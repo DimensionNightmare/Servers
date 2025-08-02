@@ -97,7 +97,7 @@ public:
 
 		if (!launchParam.contains("svrType"))
 		{
-			SPidLogger.Record(ELogLevel_Error, "lunch param svrType is null! ");
+			SPidLogger->Record(ELogLevel_Error, "lunch param svrType is null! ");
 			return false;
 		}
 
@@ -111,7 +111,7 @@ public:
 		uint64_t bitFlagValue = bitServerOpenFlag.GetAllFlagNum();
 		if (bitFlagValue == 0 || bitFlagValue >= (1 << static_cast<uint8_t>(EMServerType::Max)))
 		{
-			SPidLogger.Record(ELogLevel_Error, "serverType Not Invalid! ");
+			SPidLogger->Record(ELogLevel_Error, "serverType Not Invalid! ");
 			return false;
 		}
 
@@ -123,7 +123,7 @@ public:
 
 		if(!std::filesystem::exists(iniFilePath))
 		{
-			SPidLogger.Record(ELogLevel_Error, "ConfigIni Not Finded!");
+			SPidLogger->Record(ELogLevel_Error, "ConfigIni Not Finded!");
 			return false;
 		}
 
@@ -245,7 +245,7 @@ public:
 		}
 
 
-		SPidLogger.Init(iniFileParam["Common"]);
+		SPidLogger->Init(iniFileParam["Common"]);
 
 		
 		HotReloadDll::CVPtr pHotDll = AddSystem<HotReloadDll>();
@@ -263,7 +263,8 @@ public:
 				auto mergeMap = iniFileParam["Common"];
 				mergeMap.merge(iniFileParam[serverName]);
 
-				World::CVPtr world = std::make_shared<World>();
+				// World::CVPtr world = std::make_shared<World>();
+				World::CVPtr world = MemPool->Allocate<World>();
 				world->MoveLuanchConfigToSelf(std::move(mergeMap));
 
 				if(!InitServer(world, pHotDll))
@@ -457,7 +458,7 @@ public:
 			allCommands += k + "\n\t\t";
 		}
 
-		SPidLogger.Record(ELogLevel_Normal, "{}", allCommands);
+		SPidLogger->Record(ELogLevel_Normal, "{}", allCommands);
 	}	
 
 	/// @brief exec command line

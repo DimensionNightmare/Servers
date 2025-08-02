@@ -32,7 +32,9 @@
     "C_Cpp.intelliSenseCacheSize": 51200,
     "cmake.allowCommentsInPresetsFile": true,
 	"C_Cpp.default.compileCommands": [
-		"${workspaceRoot}/out/build/compile_commands.json",
+		"${workspaceRoot}/out/build/Debug/compile_commands.json",
+		"${workspaceRoot}/out/build/Release/compile_commands.json",
+		"${workspaceRoot}/out/build/RelWithDebInfo/compile_commands.json",
 	],
 	"C_Cpp.autoAddFileAssociations": false
 }

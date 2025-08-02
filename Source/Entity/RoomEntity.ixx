@@ -10,6 +10,7 @@ export class RoomEntity : public Entity
 {
 protected:
 	friend class RoomEntityManager;
+	friend class UniversalMemoryPool;
 	RoomEntity(World::WPtr world):Entity(world)
 	{
 		eEntityType = EMEntityType::Room;

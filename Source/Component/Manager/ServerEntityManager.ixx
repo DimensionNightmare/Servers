@@ -9,6 +9,7 @@ export class ServerEntityManager : public EntityManager<ServerEntity>
 {
 protected:
 	friend class System;
+	friend class UniversalMemoryPool;
 	/// @brief timer manager create
 	ServerEntityManager(System::WPtr system):EntityManager(system)
 	{
@@ -93,7 +94,8 @@ public: // dll override
 
 	void AddEntity(uint64_t entityId, EMServerType regType)
 	{
-		ServerEntity::CVPtr entity = std::shared_ptr<ServerEntity>(new ServerEntity(GetOwner()->GetWorldW()));
+		// ServerEntity::CVPtr entity = std::shared_ptr<ServerEntity>(new ServerEntity(GetOwner()->GetWorldW()));
+		ServerEntity::CVPtr entity = MemPool->Allocate<ServerEntity, World::WPtr>(GetOwner()->GetSelfW<World>());
 		entity->SetID(entityId);
 
 		std::unique_lock<std::shared_mutex> ulock(oMapMutex);

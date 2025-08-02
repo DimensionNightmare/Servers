@@ -31,6 +31,7 @@ protected:
 	}
 
 	friend class World;
+	friend class UniversalMemoryPool;
 public:
 	using Ptr = std::shared_ptr<L10nText>;
 	using CVPtr = const Ptr&;

@@ -22,11 +22,14 @@ export class ClientProxy : public Component, public hv::TcpClientTmpl<SocketChan
 {
 protected:
 	friend class System;
+	friend class UniversalMemoryPool;
 	ClientProxy(System::WPtr system):Component(system),TcpClientTmpl(nullptr)
 	{
 		eComponentType = EMComponentType::ClientProxy;
 
-		pLoop = std::make_unique<EventLoopThread>();
+		// pLoop = std::make_unique<EventLoopThread>();
+		pLoop = MemPool->Allocate<EventLoopThread>();
+		
 
 		pLogger = GetOwner()->GetWorld()->GetSystemW<LoggerPrint>(EMSystemType::LoggerPrint);
 	}
@@ -210,7 +213,7 @@ public: // dll override
 
 protected: // dll proxy
 
-	std::unique_ptr<EventLoopThread> pLoop;
+	std::shared_ptr<EventLoopThread> pLoop;
 
 	// only oddnumber
 	std::atomic<uint32_t> iMsgId;

@@ -13,6 +13,7 @@ export class ClientEntityManager : public EntityManager<ClientEntity>
 	
 protected:
 	friend class System;
+	friend class UniversalMemoryPool;
 	/// @brief timer manager create
 	ClientEntityManager(System::WPtr system):EntityManager(system)
 	{
@@ -43,7 +44,8 @@ public: // dll proxy
 
 	void AddEntity(uint64_t entityId)
 	{
-		ClientEntity::CVPtr entity = std::shared_ptr<ClientEntity>(new ClientEntity(GetOwner()->GetWorldW()));
+		// ClientEntity::CVPtr entity = std::shared_ptr<ClientEntity>(new ClientEntity(GetOwner()->GetWorldW()));
+		ClientEntity::CVPtr entity = MemPool->Allocate<ClientEntity, World::WPtr>(GetOwner()->GetSelfW<World>());;
 		entity->SetID(entityId);
 		entity->GetDbEntity()->set_account_id(entityId);
 

@@ -120,7 +120,7 @@ struct Task : public BitFlag<EMTaskFlag>
 		if (HasFlag(EMTaskFlag::TimeCost))
 		{
 			// steady_clock::time_point now = steady_clock::now();
-			// SPidLogger.Record(ELogLevel_Normal, "tasktimeid:{}, cost:{}ms", iTimerId, duration_cast<microseconds>(now - oTimePoint).count() / 1000.0);
+			// SPidLogger->Record(ELogLevel_Normal, "tasktimeid:{}, cost:{}ms", iTimerId, duration_cast<microseconds>(now - oTimePoint).count() / 1000.0);
 		}
 
 		if (tHandle)

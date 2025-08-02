@@ -30,7 +30,7 @@ export std::array<std::pair<EMServerType, std::string>, 7> ServerTypeList = {{
 	one(DatabaseServer),
 	one(LogicServer),
 	#undef one
-}};
+}}; // dynamic initializer
 
 
 export class Server : public System
@@ -42,6 +42,8 @@ public:
 	
 protected:
 	friend class World;
+	friend class UniversalMemoryPool;
+	
 	Server(World::WPtr world):System(world)
 	{
 		emSystemType = EMSystemType::Server;

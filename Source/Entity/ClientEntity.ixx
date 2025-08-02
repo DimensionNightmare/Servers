@@ -19,11 +19,13 @@ export class ClientEntity : public Entity, public BitFlag<EMClientEntityFlag>
 {
 protected:
 	friend class ClientEntityManager;
+	friend class UniversalMemoryPool;
 	ClientEntity(World::WPtr world):Entity(world)
 	{
 		eEntityType = EMEntityType::Client;
 
-		pDbEntity = std::make_unique<GDb::Player>();
+		// pDbEntity = std::make_unique<GDb::Player>();
+		pDbEntity = MemPool->Allocate<GDb::Player>();
 		
 	}
 
@@ -51,7 +53,7 @@ protected: // dll proxy
 	uint64_t iRecordRoomId = 0;
 
 	/// @brief db entity
-	std::unique_ptr<GDb::Player> pDbEntity;
+	std::shared_ptr<GDb::Player> pDbEntity;
 
 public:
 

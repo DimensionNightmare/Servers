@@ -14,11 +14,14 @@ export class ServerProxy : public Component, public hv::TcpServerTmpl<SocketChan
 {
 protected:
 	friend class System;
+	friend class UniversalMemoryPool;
 	ServerProxy(System::WPtr system):Component(system),TcpServerTmpl(nullptr)
 	{
 		eComponentType = EMComponentType::ServerProxy;
 
-		pLoop = std::make_unique<EventLoopThread>();
+		// pLoop = std::make_unique<EventLoopThread>();
+		pLoop = MemPool->Allocate<EventLoopThread>();
+		
 		pLogger = GetOwner()->GetWorld()->GetSystemW<LoggerPrint>(EMSystemType::LoggerPrint);
 	}
 
@@ -220,7 +223,7 @@ public: // dll override
 	}
 public:
 	// cant init in tcpclient this class
-	std::unique_ptr<EventLoopThread> pLoop;
+	std::shared_ptr<EventLoopThread> pLoop;
 
 protected:
 	// only oddnumber

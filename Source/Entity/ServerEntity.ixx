@@ -18,6 +18,7 @@ export class ServerEntity : public Entity, public BitFlag<EMServerEntityFlag>
 {
 protected:
 	friend class ServerEntityManager;
+	friend class UniversalMemoryPool;
 	ServerEntity(World::WPtr world):Entity(world)
 	{
 		eEntityType = EMEntityType::Server;

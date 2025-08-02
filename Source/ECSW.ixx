@@ -5,6 +5,9 @@ export module ECSW;
 import std.compat;
 import ThirdParty.Platform;
 import NumUtils;
+import UniversalMemoryPool;
+
+export std::shared_ptr<UniversalMemoryPool> MemPool;
 
 #pragma region EnumType
 
@@ -104,7 +107,7 @@ private:
 	std::unordered_map<EMEventType, std::unordered_map<uint64_t,uint64_t>> mEventCollection;
 };
 
-export DNEvent GEvent;
+export DNEvent GEvent; // dynamic initializer
 
 #pragma endregion
 
@@ -116,6 +119,8 @@ export class Object : public std::enable_shared_from_this<Object>, public DNEven
 public:
 	using Ptr = std::shared_ptr<Object>;
 	using CVPtr = const Ptr&;
+
+	Object() = default;
 
 	virtual ~Object()
 	{
@@ -272,7 +277,8 @@ public: // dll override
 		static_assert(std::is_base_of_v<Component, T>, "T must inherit from component");
 		try
 		{
-			std::shared_ptr<T> component = std::shared_ptr<T>(new T(shared_from_this()));
+			// std::shared_ptr<T> component = std::shared_ptr<T>(new T(shared_from_this()));
+			std::shared_ptr<T> component = MemPool->Allocate<T>(shared_from_this());
 			if(!component->Awake())
 			{
 				component->Dispose();
@@ -353,7 +359,8 @@ public:
 		static_assert(std::is_base_of_v<Component, T>, "T must inherit from component");
 		try
 		{
-			std::shared_ptr<T> component = std::shared_ptr<T>(new T(GetSelfW<System>()));
+			// std::shared_ptr<T> component = std::shared_ptr<T>(new T(GetSelfW<System>()));
+			std::shared_ptr<T> component = MemPool->Allocate<T, System::WPtr>(GetSelfW<System>());
 			if(!component->Awake())
 			{
 				component->Dispose();
@@ -387,6 +394,8 @@ public:
 	using CVPtr = const Ptr&;
 	using WPtr = std::weak_ptr<World>;
 
+	World() = default;
+
 	virtual ~World()
 	{
 
@@ -403,7 +412,8 @@ public:
 		static_assert(std::is_base_of_v<System, T>, "T must inherit from System");
 		try
 		{
-			std::shared_ptr<T> system = std::shared_ptr<T>(new T(GetSelfW<World>()));
+			// std::shared_ptr<T> system = std::shared_ptr<T>(new T(GetSelfW<World>()));
+			std::shared_ptr<T> system = MemPool->Allocate<T, World::WPtr>(GetSelfW<World>());
 			if(!system->Awake())
 			{
 				system->Dispose();

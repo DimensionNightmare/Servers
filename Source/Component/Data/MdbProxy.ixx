@@ -10,6 +10,7 @@ export class MdbProxy : public Component
 {
 protected:
 	friend class System;
+	friend class UniversalMemoryPool;
 	MdbProxy(System::WPtr system):Component(system)
 	{
 		eComponentType = EMComponentType::MdbProxy;
@@ -44,7 +45,8 @@ public:
 
 		std::string* value = world->LaunchParam("connection");
 
-		auto connection = std::make_shared<sw::redis::Redis>(*value);
+		// auto connection = std::make_shared<sw::redis::Redis>(*value);
+		auto connection = MemPool->Allocate<sw::redis::Redis, const std::string&>(*value);
 		
 		connection->ping();
 

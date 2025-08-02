@@ -11,6 +11,7 @@ export class HotReloadDll : public System
 {
 protected:
 	friend class World;
+	friend class UniversalMemoryPool;
 	/// @brief
 	HotReloadDll(World::WPtr world):System(world)
 	{

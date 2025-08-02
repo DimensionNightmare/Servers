@@ -8,6 +8,7 @@ export class RoomEntityManager : public EntityManager<RoomEntity>
 {
 protected:
 	friend class System;
+	friend class UniversalMemoryPool;
 	/// @brief timer manager create
 	RoomEntityManager(System::WPtr system):EntityManager(system)
 	{
@@ -72,7 +73,8 @@ public: // dll proxy
 
 	void AddEntity(uint64_t& entityId, uint64_t mapId)
 	{
-		RoomEntity::CVPtr entity = std::shared_ptr<RoomEntity>(new RoomEntity(GetOwner()->GetWorldW()));
+		// RoomEntity::CVPtr entity = std::shared_ptr<RoomEntity>(new RoomEntity(GetOwner()->GetWorldW()));
+		RoomEntity::CVPtr entity = MemPool->Allocate<RoomEntity, World::WPtr>(GetOwner()->GetSelfW<World>());
 		// entity->SetID(entityId);
 		entityId = entity->ID();
 

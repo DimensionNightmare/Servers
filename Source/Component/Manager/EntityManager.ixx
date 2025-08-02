@@ -12,7 +12,8 @@ protected:
 	/// @brief timer manager create
 	EntityManager(System::WPtr system):Component(system)
 	{
-		pLoop = std::make_unique<hv::EventLoopThread>();
+		// pLoop = std::make_unique<hv::EventLoopThread>();
+		pLoop = MemPool->Allocate<hv::EventLoopThread>();
 
 		pLogger = GetOwner()->GetWorld()->GetSystemW<LoggerPrint>(EMSystemType::LoggerPrint);
 	}
@@ -76,7 +77,7 @@ protected: // dll proxy
 	/// @brief mMapTimer Mutex
 	std::shared_mutex oTimerMutex;
 
-	std::unique_ptr<hv::EventLoopThread> pLoop;
+	std::shared_ptr<hv::EventLoopThread> pLoop;
 
 	LoggerPrint::WPtr pLogger;
 

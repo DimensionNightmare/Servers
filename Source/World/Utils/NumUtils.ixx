@@ -128,4 +128,4 @@ private:
 	}
 };
 
-export LockFreeSnowflake SFIdGenerator(0, 0);
+export LockFreeSnowflake SFIdGenerator(0, 0); // dynamic initializer

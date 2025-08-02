@@ -21,6 +21,7 @@ export class LoggerPrint : public System
 protected:
 	
 	friend class World;
+	friend class UniversalMemoryPool;
 	LoggerPrint(World::WPtr world):System(world)
 	{
 		emSystemType = EMSystemType::LoggerPrint;
@@ -234,12 +235,14 @@ bool L10nText::Awake()
 	return true;
 }
 
-class LoggerPrintPid
+export class LoggerPrintPid
 {
 public:
 	LoggerPrintPid()
 	{
-		pWorld = std::make_shared<World>();
+		// pWorld = std::make_shared<World>();
+
+		pWorld = MemPool->Allocate<World>();
 
 		std::filesystem::path exePath = Platform::GetExecutablePath();
 		
@@ -257,8 +260,11 @@ public:
 
 	~LoggerPrintPid()
 	{
-		pWorld->Dispose();
-		pWorld = nullptr;
+		if(pWorld)
+		{
+			pWorld->Dispose();
+			pWorld = nullptr;
+		}
 	}
 
 	bool Init(ELogLevel level)
@@ -301,4 +307,4 @@ private:
 	std::filesystem::path oPidWorkPath;
 };
 
-export LoggerPrintPid SPidLogger;
+export std::shared_ptr<LoggerPrintPid> SPidLogger; // dynamic initializer

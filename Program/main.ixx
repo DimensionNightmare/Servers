@@ -5,6 +5,8 @@ import DimensionNightmare;
 import ThirdParty.Platform;
 import std.compat;
 import Logger;
+import UniversalMemoryPool;
+import ECSW;
 
 enum class EMLunchType : uint8_t
 {
@@ -34,8 +36,14 @@ export int main(int argc, char** argv)
 // 	chdir(execPath.parent_path().string().c_str());
 #endif
 
-	
-	SPidLogger.Init(ELogLevel_Debug);
+	// dynamic initializer
+	{
+		MemPool = std::make_shared<UniversalMemoryPool>();
+
+		SPidLogger = MemPool->Allocate<LoggerPrintPid>();
+	}
+
+	SPidLogger->Init(ELogLevel_Debug);
 
 	// lunch param
 	std::unordered_map<std::string, std::string> launchParam = {
@@ -50,7 +58,8 @@ export int main(int argc, char** argv)
 
 		if (pos == std::string::npos)
 		{
-			SPidLogger.Record(ELogLevel_Debug, "program lunch param error! Pos:{} ", i);
+			SPidLogger->Record(ELogLevel_Debug, "program lunch param error! Pos:{} ", i);
+			SPidLogger = nullptr;
 			return 0;
 		}
 
@@ -62,7 +71,7 @@ export int main(int argc, char** argv)
 	auto CtrlHandler = [](unsigned long signal) -> int
 		{
 
-			SPidLogger.Record(EL10nCode_CmdOpBreak);
+			SPidLogger->Record(EL10nCode_CmdOpBreak);
 			switch (signal)
 			{
 				// ctrl+c				ctrl+break/pause		close window			logoff					shutdown
@@ -90,16 +99,16 @@ export int main(int argc, char** argv)
 
 	if (!Platform::SetConsoleCtrlHandler(CtrlHandler, true))
 	{
-		SPidLogger.Record(EL10nCode_CmdCtl);
+		SPidLogger->Record(EL10nCode_CmdCtl);
 		CloseApp();
 		return 0;
 	}
 
 	auto UnhandledHandler = [](_EXCEPTION_POINTERS* ExceptionInfo) -> long
 		{
-			SPidLogger.Record(EL10nCode_UnhandledException);
+			SPidLogger->Record(EL10nCode_UnhandledException);
 
-			WriteDumpFile(SPidLogger.GetPidWorkPath() / "MiniDump.dmp", ExceptionInfo);
+			WriteDumpFile(SPidLogger->GetPidWorkPath() / "MiniDump.dmp", ExceptionInfo);
 
 			CloseApp();
 			AppRun = false;
@@ -109,7 +118,7 @@ export int main(int argc, char** argv)
 
 	if (!Platform::SetUnhandledExceptionFilter(UnhandledHandler))
 	{
-		SPidLogger.Record(EL10nCode_UnhandledException);
+		SPidLogger->Record(EL10nCode_UnhandledException);
 		App = nullptr;
 		return 0;
 	}
@@ -117,7 +126,7 @@ export int main(int argc, char** argv)
 
 	auto CtrlHandler = [](int signal)
 		{
-			SPidLogger.Record(EL10nCode_CmdOpBreak);
+			SPidLogger->Record(EL10nCode_CmdOpBreak);
 			AppRun = false;
 			CloseApp();
 		};
@@ -125,7 +134,7 @@ export int main(int argc, char** argv)
 
 	auto UnhandledHandler = [](int signum, siginfo_t* info, void* context)
 		{
-			SPidLogger.Record(EL10nCode_UnhandledException);
+			SPidLogger->Record(EL10nCode_UnhandledException);
 
 			AppRun = false;
 			CloseApp();
@@ -144,16 +153,17 @@ export int main(int argc, char** argv)
 
 #endif
 
-	App = std::make_shared<DimensionNightmare>();
+	// App = std::make_shared<DimensionNightmare>();
+	App = MemPool->Allocate<DimensionNightmare>();
 	if (!App->Init(std::move(launchParam)))
 	{
 		CloseApp();
 		return 0;
 	}
 	
-	SPidLogger.Record(ELogLevel_Normal, "hello ~");
+	SPidLogger->Record(ELogLevel_Normal, "hello ~");
 
-	SPidLogger.Record(ELogLevel_Normal, "Dimension Instance addr->(DimensionNightmare*){}", static_cast<void*>(App.get()));
+	SPidLogger->Record(ELogLevel_Normal, "Dimension Instance addr->(DimensionNightmare*){}", static_cast<void*>(App.get()));
 
 	App->AppStartInitThread();
 
@@ -186,19 +196,19 @@ export int main(int argc, char** argv)
 					if(!fileName.empty())
 					{
 						fileName.append(".dmp");
-						WriteDumpFile(SPidLogger.GetPidWorkPath() / fileName);
+						WriteDumpFile(SPidLogger->GetPidWorkPath() / fileName);
 					}
 				};
 
 			auto open = [&]()
 				{
-					std::string allStr = SPidLogger.GetPidWorkPath().string() + " ";
+					std::string allStr = SPidLogger->GetPidWorkPath().string() + " ";
 					while (ss >> str)
 					{
 						allStr += str + " ";
 					}
 
-					SPidLogger.Record(ELogLevel_Normal, "{}", allStr);
+					SPidLogger->Record(ELogLevel_Normal, "{}", allStr);
 
 #ifdef _WIN32
 					Platform::PROCESS_INFORMATION pinfo{};
@@ -213,11 +223,19 @@ export int main(int argc, char** argv)
 					if (0)
 #endif
 					{
-						SPidLogger.Record(ELogLevel_Normal, "success");
+						SPidLogger->Record(ELogLevel_Normal, "success");
 					}
 					else
 					{
-						SPidLogger.Record(ELogLevel_Error, "error:{}", Platform::GetLastError());
+						SPidLogger->Record(ELogLevel_Error, "error:{}", Platform::GetLastError());
+					}
+				};
+
+			auto dump_pool = [&]()
+				{
+					if(MemPool)
+					{
+						MemPool->PrintLeaks();
 					}
 				};
 
@@ -225,7 +243,7 @@ export int main(int argc, char** argv)
 			{
 				#define one(func) {#func, func}
 
-				one(quit), one(abort), one(dump_memory), one(open)
+				one(quit), one(abort), one(dump_memory), one(open), one(dump_pool), 
 				
 				#undef one
 			};
@@ -257,7 +275,7 @@ export int main(int argc, char** argv)
 					str.clear();
 					ss >> str;
 
-					SPidLogger.Record(ELogLevel_Normal, "<cmd {}>", str);
+					SPidLogger->Record(ELogLevel_Normal, "<cmd {}>", str);
 
 					if (cmdMap.contains(str))
 					{
@@ -268,7 +286,7 @@ export int main(int argc, char** argv)
 						App->ExecCommand(&str, &ss);
 					}
 
-					SPidLogger.Record(ELogLevel_Normal, "<cmd down>");
+					SPidLogger->Record(ELogLevel_Normal, "<cmd down>");
 
 					str.clear();
 				}
@@ -288,7 +306,11 @@ export int main(int argc, char** argv)
 
 	Platform::Sleep(50);
 
-	SPidLogger.Record(ELogLevel_Normal, "bye ~");
+	SPidLogger->Record(ELogLevel_Normal, "bye ~");
+
+	SPidLogger = nullptr;
+
+	MemPool = nullptr;
 
 	return 0;
 }
