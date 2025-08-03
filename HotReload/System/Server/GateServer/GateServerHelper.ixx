@@ -1,4 +1,3 @@
-module;
 export module GateServerHelper;
 
 export import ThirdParty.PbGen;

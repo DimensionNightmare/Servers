@@ -1,4 +1,3 @@
-module;
 #include <concepts>
 
 #if _WIN32

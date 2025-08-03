@@ -1,4 +1,3 @@
-module;
 #include "sw/redis++/redis++.h"
 export module ThirdParty.RedisPP;
 

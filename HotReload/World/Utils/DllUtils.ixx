@@ -1,4 +1,3 @@
-module;
 export module DllUtils;
 
 import std;

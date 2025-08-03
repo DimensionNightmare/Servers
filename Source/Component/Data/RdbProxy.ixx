@@ -1,4 +1,3 @@
-module;
 export module RdbProxy;
 
 import ThirdParty.Libpqxx;

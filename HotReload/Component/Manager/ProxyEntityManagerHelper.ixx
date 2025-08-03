@@ -1,4 +1,3 @@
-module;
 export module ProxyEntityManagerHelper;
 
 import ProxyEntityManager;
@@ -43,7 +42,7 @@ public:
 
 	ProxyEntityHelper::Ptr GetEntity(uint64_t entityId)
 	{
-		std::shared_lock<std::shared_mutex> lock(oMapMutex);
+		std::shared_lock lock(oMapMutex);
 		if (mEntityMap.contains(entityId))
 		{
 			return mEntityMap[entityId]->GetSelf<ProxyEntityHelper>();

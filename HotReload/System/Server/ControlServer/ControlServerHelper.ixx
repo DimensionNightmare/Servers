@@ -1,4 +1,3 @@
-module;
 export module ControlServerHelper;
 
 export import ThirdParty.PbGen;

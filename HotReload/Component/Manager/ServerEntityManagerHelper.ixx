@@ -1,4 +1,3 @@
-module;
 export module ServerEntityManagerHelper;
 
 import ServerEntityManager;
@@ -29,7 +28,7 @@ public:
 
 	ServerEntityHelper::Ptr GetEntity(uint64_t entityId)
 	{
-		std::shared_lock<std::shared_mutex> lock(oMapMutex);
+		std::shared_lock lock(oMapMutex);
 		if (mEntityMap.contains(entityId))
 		{
 			return mEntityMap[entityId]->GetSelf<ServerEntityHelper>();
@@ -54,7 +53,7 @@ public:
 
 	void MountEntity(ServerEntityHelper::CVPtr entity)
 	{
-		std::unique_lock<std::shared_mutex> ulock(oMapMutex);
+		std::unique_lock ulock(oMapMutex);
 		if (mEntityMap.contains(entity->ID()))
 		{
 			mEntityMapList[entity->GetServerType()].emplace_back(entity);
@@ -63,13 +62,13 @@ public:
 
 	void UnMountEntity(ServerEntityHelper::CVPtr entity)
 	{
-		std::unique_lock<std::shared_mutex> ulock(oMapMutex);
+		std::unique_lock ulock(oMapMutex);
 		mEntityMapList[entity->GetServerType()].remove(entity);
 	}
 
 	std::list<ServerEntity::Ptr>& GetEntitysByType(EMServerType type)
 	{
-		std::shared_lock<std::shared_mutex> lock(oMapMutex);
+		std::shared_lock lock(oMapMutex);
 		return mEntityMapList[type];
 	}
 

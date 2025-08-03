@@ -1,4 +1,3 @@
-module;
 export module ProxyEntity;
 
 import ECSW;

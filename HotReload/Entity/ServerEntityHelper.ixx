@@ -1,4 +1,3 @@
-module;
 export module ServerEntityHelper;
 
 import ServerEntity;

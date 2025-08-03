@@ -1,4 +1,3 @@
-module;
 export module GlobalServerHelper;
 
 export import ThirdParty.PbGen;

@@ -1,4 +1,3 @@
-module;
 export module WebProxyHelper;
 
 import WebProxy;

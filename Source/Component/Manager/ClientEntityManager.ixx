@@ -1,4 +1,3 @@
-module;
 export module ClientEntityManager;
 
 import ClientEntity;
@@ -49,7 +48,7 @@ public: // dll proxy
 		entity->SetID(entityId);
 		entity->GetDbEntity()->set_account_id(entityId);
 
-		std::unique_lock<std::shared_mutex> ulock(oMapMutex);
+		std::unique_lock ulock(oMapMutex);
 		mEntityMap[entityId] = entity;
 	}
 
@@ -62,7 +61,7 @@ public: // dll proxy
 			ClientEntity::Ptr& entity = mEntityMap[entityId];
 			entity->Dispose();
 
-			std::unique_lock<std::shared_mutex> ulock(oMapMutex);
+			std::unique_lock ulock(oMapMutex);
 			mEntityMap.erase(entityId);
 			return true;
 		}

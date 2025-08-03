@@ -1,4 +1,3 @@
-module;
 export module ServerProxy;
 
 import MessagePack;
@@ -152,7 +151,7 @@ public: // dll override
 				return;
 			}
 
-			std::unique_lock<std::shared_mutex> ulock(oTimerMutex);
+			std::unique_lock ulock(oTimerMutex);
 			id = mMapTimer[timerID];
 			mMapTimer.erase(timerID);
 		}
@@ -160,7 +159,7 @@ public: // dll override
 		{
 			if (mMsgList.contains(id))
 			{
-				std::unique_lock<std::shared_mutex> ulock(oMsgMutex);
+				std::unique_lock ulock(oMsgMutex);
 				Task<Message*>* task = mMsgList[id];
 				mMsgList.erase(id);
 				if(task)
@@ -182,7 +181,7 @@ public: // dll override
 				return;
 			}
 
-			std::unique_lock<std::shared_mutex> ulock(oTimerMutex);
+			std::unique_lock ulock(oTimerMutex);
 			id = mMapTimer[timerID];
 			mMapTimer.erase(timerID);
 		}
@@ -204,7 +203,7 @@ public: // dll override
 
 	void AddTimerRecord(size_t timerId, uint32_t id)
 	{
-		std::unique_lock<std::shared_mutex> ulock(oTimerMutex);
+		std::unique_lock ulock(oTimerMutex);
 		mMapTimer.emplace(timerId, id);
 	}
 
@@ -217,7 +216,7 @@ public: // dll override
 	uint64_t CheckMessageTimeoutTimer(uint32_t breakTime, uint32_t msgId)
 	{
 		uint64_t timerId = Timer()->setTimeout(breakTime, std::bind(&ServerProxy::MessageTimeoutTimer, this, std::placeholders::_1));
-		std::unique_lock<std::shared_mutex> ulock(oTimerMutex);
+		std::unique_lock ulock(oTimerMutex);
 		mMapTimer[timerId] = msgId;
 		return timerId;
 	}

@@ -1,4 +1,3 @@
-module;
 export module ControlServerMessage:ControlRedirect;
 
 import ServerEntity;

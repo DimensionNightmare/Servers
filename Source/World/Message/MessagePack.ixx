@@ -1,4 +1,3 @@
-module;
 export module MessagePack;
 
 import std.compat;

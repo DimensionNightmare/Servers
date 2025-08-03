@@ -1,4 +1,3 @@
-module;
 
 #include "google/protobuf/reflection.h"
 #include "google/protobuf/descriptor.pb.h"
@@ -6,7 +5,6 @@ module;
 #include "google/protobuf/extension_set.h"
 
 #include "l10n/l10n.pb.h"
-
 export module ThirdParty.Protobuf;
 
 export

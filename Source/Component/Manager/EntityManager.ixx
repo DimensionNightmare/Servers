@@ -1,4 +1,3 @@
-module;
 export module EntityManager;
 
 import Logger;
@@ -63,7 +62,7 @@ public: // dll override
 
 	void AddTimerRecord(uint64_t timerId, uint64_t id)
 	{
-		std::unique_lock<std::shared_mutex> ulock(oTimerMutex);
+		std::unique_lock ulock(oTimerMutex);
 		mMapTimer.emplace(timerId, id);
 	}
 	

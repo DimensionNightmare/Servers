@@ -1,4 +1,3 @@
-module;
 export module GateServerMessage:GateGlobal;
 
 import DllUtils;

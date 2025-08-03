@@ -1,4 +1,3 @@
-module;
 export module GlobalServerMessage:GlobalGate;
 
 import GlobalServerHelper;

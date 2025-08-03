@@ -1,4 +1,3 @@
-module;
 export module LogicServerMessage:LogicDedicated;
 
 import LogicServerHelper;

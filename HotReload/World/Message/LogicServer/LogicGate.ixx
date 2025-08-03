@@ -1,4 +1,3 @@
-module;
 export module LogicServerMessage:LogicGate;
 
 import LogicServerHelper;

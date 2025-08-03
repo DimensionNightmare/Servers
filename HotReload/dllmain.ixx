@@ -1,6 +1,4 @@
 
-module;
-
 export module DLLMAIN;
 
 import GlobalServerHelper;

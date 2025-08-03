@@ -1,4 +1,3 @@
-module;
 export module ProxyEntityManager;
 
 import ProxyEntity;
@@ -31,7 +30,7 @@ public:
 	/// @brief 
 	void EntityCloseTimer(uint64_t timerID)
 	{
-		std::unique_lock<std::shared_mutex> ulock(oTimerMutex);
+		std::unique_lock ulock(oTimerMutex);
 		if (!mMapTimer.contains(timerID))
 		{
 			return;
@@ -62,7 +61,7 @@ public: // dll proxy
 	{
 		if (mEntityMap.contains(entityId))
 		{
-			std::unique_lock<std::shared_mutex> ulock(oMapMutex);
+			std::unique_lock ulock(oMapMutex);
 			ProxyEntity::CVPtr entity = mEntityMap[entityId];
 			entity->Dispose();
 			mEntityMap.erase(entityId);
@@ -78,7 +77,7 @@ public: // dll proxy
 		ProxyEntity::CVPtr entity = MemPool->Allocate<ProxyEntity, World::WPtr>(GetOwner()->GetSelfW<World>());
 		entity->SetID(entityId);
 
-		std::unique_lock<std::shared_mutex> ulock(oMapMutex);
+		std::unique_lock ulock(oMapMutex);
 		mEntityMap[entityId] = entity;
 	}
 

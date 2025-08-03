@@ -1,4 +1,3 @@
-module;
 export module L10nText;
 
 import ECSW;
@@ -16,18 +15,7 @@ protected:
 		emSystemType = EMSystemType::L10nText;
 
 		// create code space ..0.0..
-		pPBMapFindFunc = [this](EL10nCode type, ELogLevel& logLevel)->const std::string&
-			{
-				auto& map = mL10nCode.data_map();
-				auto finder = map.find(type);
-				if (finder == map.end())
-				{
-					throw std::invalid_argument(std::format("I10n Tip Config not exist this type {}", PbGen::EL10nCode_Name_(type)));
-				}
-				
-				logLevel = finder->second.level();
-				return std::invoke(pL10nTipFunc, &finder->second);
-			};
+		GetTipText_Proxy = std::bind(&L10nText::GetTipText, this, std::placeholders::_1, std::placeholders::_2);
 	}
 
 	friend class World;
@@ -56,12 +44,15 @@ public:
 	{
 		logLevel = ELogLevel_None;
 
-		// auto finded = pPBMapFindFunc(mL10nCode.data_map(), type);
-
-		// logLevel = finded->second.level();
-		// // return ((finded->second).*(pL10nTipFunc))();
-		// return std::invoke(pL10nTipFunc, &finded->second);
-		return pPBMapFindFunc(type, logLevel);
+		auto& map = mL10nCode.data_map();
+		auto finder = map.find(type);
+		if (finder == map.end())
+		{
+			throw std::invalid_argument(std::format("I10n Tip Config not exist this type {}", PbGen::EL10nCode_Name_(type)));
+		}
+		
+		logLevel = finder->second.level();
+		return std::invoke(pL10nTipFunc, &finder->second);
 	}
 
 public:
@@ -71,7 +62,7 @@ public:
 
 	/// @brief l10n imp. find get.
 	// FindFunctionPtr pPBMapFindFunc = nullptr;
-	std::function<const std::string&(EL10nCode, ELogLevel&)> pPBMapFindFunc = nullptr;
+	std::function<const std::string&(EL10nCode, ELogLevel&)> GetTipText_Proxy = nullptr;
 
 	/// @brief l10n imp. text get.
 	typedef const std::string& (l10n::l10nCode::* TipTextFunc)() const;

@@ -1,4 +1,3 @@
-module;
 export module ApiManager:ApiAuth;
 
 import DllUtils;

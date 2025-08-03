@@ -1,4 +1,3 @@
-module;
 export module LogicServerMessage:LogicCommon;
 
 import DllUtils;

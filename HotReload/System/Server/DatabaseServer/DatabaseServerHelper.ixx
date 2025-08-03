@@ -1,4 +1,3 @@
-module;
 export module DatabaseServerHelper;
 
 export import ThirdParty.PbGen;

@@ -1,5 +1,3 @@
-module;
-
 export module DimensionNightmare;
 
 import Server;
@@ -490,6 +488,14 @@ public:
 		World::Dispose();
 
 		mCmdHandle.clear();
+	}
+
+	uint64_t GetRandomNuber()
+	{
+		std::random_device rd;
+		std::mt19937 gen(rd());
+		std::uniform_int_distribution<uint64_t> dis(0, 99999999999);
+		return dis(gen);
 	}
 
 private:

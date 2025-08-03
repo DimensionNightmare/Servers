@@ -1,4 +1,3 @@
-module;
 export module GateServerMessage:GateClient;
 
 import GateServerHelper;

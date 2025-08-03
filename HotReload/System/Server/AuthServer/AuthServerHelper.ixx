@@ -1,4 +1,3 @@
-module;
 export module AuthServerHelper;
 
 export import ThirdParty.PbGen;

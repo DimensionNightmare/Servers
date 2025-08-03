@@ -1,4 +1,3 @@
-module;
 export module StrUtils;
 
 import std.compat;

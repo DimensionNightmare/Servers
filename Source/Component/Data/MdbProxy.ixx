@@ -1,4 +1,3 @@
-module;
 export module MdbProxy;
 
 import ThirdParty.RedisPP;

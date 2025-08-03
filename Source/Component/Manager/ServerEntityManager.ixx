@@ -1,4 +1,3 @@
-module;
 export module ServerEntityManager;
 
 import ServerEntity;
@@ -34,7 +33,7 @@ public:
 	/// @brief 
 	void EntityCloseTimer(uint64_t timerID)
 	{
-		std::unique_lock<std::shared_mutex> ulock(oTimerMutex);
+		std::unique_lock ulock(oTimerMutex);
 		if (!mMapTimer.contains(timerID))
 		{
 			return;
@@ -83,7 +82,7 @@ public: // dll override
 
 			entity->Dispose();
 
-			std::unique_lock<std::shared_mutex> ulock(oMapMutex);
+			std::unique_lock ulock(oMapMutex);
 			mEntityMapList[entity->GetServerType()].remove(entity);
 			mEntityMap.erase(entityId);
 			return true;
@@ -98,7 +97,7 @@ public: // dll override
 		ServerEntity::CVPtr entity = MemPool->Allocate<ServerEntity, World::WPtr>(GetOwner()->GetSelfW<World>());
 		entity->SetID(entityId);
 
-		std::unique_lock<std::shared_mutex> ulock(oMapMutex);
+		std::unique_lock ulock(oMapMutex);
 		mEntityMap[entityId] = entity;
 		mEntityMapList[regType].emplace_back(entity);
 	}

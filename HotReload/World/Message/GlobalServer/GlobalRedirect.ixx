@@ -1,4 +1,3 @@
-module;
 export module GlobalServerMessage:GlobalRedirect;
 
 import FuncHelper;

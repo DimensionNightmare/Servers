@@ -1,272 +1,295 @@
-module;
-
 export module UniversalMemoryPool;
 
-import std;
+import std.compat;
 
 export class UniversalMemoryPool
 {
+	static constexpr size_t MaxCachedSize = 4096; // 最大缓存块大小
+
+	static constexpr size_t BucketCount = 16; // 桶数量
+
+	// 分配记录
 	struct AllocationRecord
 	{
 		size_t size;
-		size_t type_hash;
 		std::source_location location;
 	};
 
-	struct DeferredDeallocation
+	// 大小分类桶
+	struct SizeBucket
 	{
-		void* memory;
-		size_t size;
-		size_t type_hash;
+		std::shared_mutex mutex;
+		std::vector<char*> blocks;
 	};
 
+	// 锁统计数据结构
+	struct LockStats
+	{
+		std::atomic_uint64_t totalWaitNs = 0;  // 总等待时间（纳秒）
+		std::atomic_uint64_t maxWaitNs = 0;     // 最大单次等待时间
+		std::atomic_uint64_t lockCount = 0;     // 锁获取次数
+	};
+
+	// 锁统计收集器
+	class LockProfiler
+	{
+	public:
+		LockProfiler(LockStats& stats) : stats(stats)
+		{
+			start = std::chrono::steady_clock::now();
+		}
+
+		~LockProfiler()
+		{
+			auto end = std::chrono::steady_clock::now();
+			uint64_t duration = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
+
+			stats.totalWaitNs += duration;
+			stats.lockCount++;
+
+			// 原子更新最大值
+			uint64_t currentMax = stats.maxWaitNs.load();
+			while (duration > currentMax &&
+				!stats.maxWaitNs.compare_exchange_weak(currentMax, duration))
+			{
+				// 循环直到更新成功
+			}
+		}
+
+	private:
+		LockStats& stats;
+		std::chrono::steady_clock::time_point start;
+	};
+
+	// 锁统计数据
+	LockStats mainLockStats;
+	std::array<LockStats, BucketCount> bucketLockStats;
+	std::atomic_bool enableProfiling{ true };
+
 public:
-	UniversalMemoryPool(size_t pool_size = 1024 * 1024 * 256) : iPoolSize(pool_size)
+	UniversalMemoryPool(size_t pool_size = 1024 * 1024 * 128) : iPoolSize(pool_size)
 	{
 		pPool = static_cast<char*>(::operator new(iPoolSize));
-		mFreeBlocks.emplace(pPool, iPoolSize);
+		AddToFreeList(pPool, iPoolSize);
 	}
 
 	~UniversalMemoryPool()
 	{
+		// 检查泄漏
 		CheckLeaks();
+
+		// 释放主内存池
 		::operator delete(pPool);
 	}
 
 	template<typename T, typename... Args>
-	std::shared_ptr<T> Allocate(Args&&... args,
-		const std::source_location& loc = std::source_location::current()
+	std::shared_ptr<T> Allocate(Args&&... args
+		,const std::source_location& loc = std::source_location::current()
 	)
 	{
-		return AllocateImpl<T>(loc, std::forward<Args>(args)...);
-	}
-
-	void PrintLeaks(){ CheckLeaks(); }
-
-private:
-	// 统一的实现函数
-	template<typename T, typename... Args>
-	std::shared_ptr<T> AllocateImpl(
-		const std::source_location& loc,
-		Args&&... args
-	)
-	{
-		AllocationScope scope(this);
-		const size_t size = std::bit_ceil(sizeof(T));
-		void* raw_memory = AllocateRaw(size);
-
-		size_t type_hash = typeid(T).hash_code();
-		scope.RecordAllocation(raw_memory, size, type_hash);
-		std::memset(raw_memory, 0, size);
+		constexpr size_t size = std::bit_ceil(sizeof(T));
+		char* raw_memory = nullptr;
 
 		try
 		{
-			T* object_ptr = new(raw_memory) T(std::forward<Args>(args)...);
+			// 尝试快速分配
+			raw_memory = TryFastAllocation(size);
+			if (!raw_memory)
+			{
+				raw_memory = AllocateRaw(size);
+			}
 
-			// 记录分配信息（包含源代码位置）
-			RecordAllocationInfo(raw_memory, size, type_hash, loc);
+			if (raw_memory)
+			{	
+				T* object_ptr = new(raw_memory) T(std::forward<Args>(args)...);
 
-			return std::shared_ptr<T>(
-				object_ptr,
-				[this, raw_memory, size, type_hash](T* ptr)
-				{
-					ptr->~T();
-					DeferDeallocation(raw_memory, size, type_hash);
-				}
-			);
+				// 记录分配信息（包含源代码位置）
+				RecordAllocationInfo(raw_memory, size, loc);
+
+				return std::shared_ptr<T>(
+					object_ptr,
+					[this, raw_memory, size](T* ptr)
+					{
+						ptr->~T();
+						RollbackAllocation(raw_memory, size);
+					}
+				);
+			}
+
+			return std::shared_ptr<T>(new T(std::forward<Args>(args)...));
 		}
 		catch (...)
 		{
-			scope.RollbackAllocation();
+			if (raw_memory)
+			{
+				RollbackAllocation(raw_memory, size);
+			}
 			throw;
 		}
 	}
+	
+	void PrintLeaks() { CheckLeaks(); }
 
-	class AllocationScope
+	void EnableProfiling(bool enable) { enableProfiling = enable; }
+
+	// 获取锁统计信息
+	void PrintLockStats(int core) const
 	{
-	public:
-		AllocationScope(UniversalMemoryPool* pool) : pool(pool)
+		if (!enableProfiling)
 		{
-			if (GetNestingLevel() == 0 && pool)
-			{
-				std::unique_lock lock(pool->oMtx);
-				pool->ProcessDeferredDeallocations();
-			}
-			GetNestingLevel()++;
+			std::cout << "Profiling is disabled\n";
+			return;
 		}
 
-		~AllocationScope()
+		std::cout << "\n===== Lock Wait Time Statistics =====\n";
+
+		// 主锁统计
+		std::cout << "Main Lock:\n";
+		PrintSingleLockStats(mainLockStats, core);
+
+		// 桶锁统计
+		for (size_t i = 0; i < BucketCount; i++)
 		{
-			if (--GetNestingLevel() == 0 && pool)
-			{
-				std::unique_lock lock(pool->oMtx);
-				pool->ProcessDeferredDeallocations();
-			}
+			std::cout << "Bucket " << i << ":\n";
+			PrintSingleLockStats(bucketLockStats[i], core);
 		}
-
-		bool IsTopLevel() const
-		{
-			return GetNestingLevel() == 1;
-		}
-
-		void RecordAllocation(void* memory, size_t size, size_t type_hash)
-		{
-			this->memory = memory;
-			this->size = size;
-			this->type_hash = type_hash;
-		}
-
-		void RollbackAllocation()
-		{
-			if (memory && pool)
-			{
-				pool->RollbackAllocation(memory, size);
-				memory = nullptr;
-			}
-		}
-
-		static size_t& GetNestingLevel()
-		{
-			thread_local size_t level = 0;
-			return level;
-		}
-
-	private:
-		UniversalMemoryPool* pool;
-		void* memory = nullptr;
-		size_t size = 0;
-		size_t type_hash = 0;
-	};
-
-	// 记录分配信息（包含源代码位置）
-	void RecordAllocationInfo(
-		void* memory,
-		size_t size,
-		size_t type_hash,
-		const std::source_location& loc
-	)
-	{
-		std::unique_lock lock(oMtx);
-
-		AllocationRecord record;
-		record.size = size;
-		record.type_hash = type_hash;
-		record.location = loc;
-
-		mAllocatedRecords[memory] = record;
 	}
 
-	void* AllocateRaw(size_t size)
+private:
+	// 尝试快速分配
+	char* TryFastAllocation(size_t size)
 	{
-		std::unique_lock lock(oMtx);
-		size = std::bit_ceil(size);
-
-		auto it = FindFreeBlock(size);
-		if (it == mFreeBlocks.end())
+		// 只尝试缓存小到中等大小的块
+		if (size > MaxCachedSize)
 		{
-			CoalesceFreeBlocks();
-			it = FindFreeBlock(size);
+			return nullptr;
 		}
 
-		if (it == mFreeBlocks.end())
+		// 获取桶索引
+		size_t bucket_index = GetBucketIndex(size);
+
+		// 尝试从桶中快速获取
 		{
-			ExpandPool(size * 2);
-			it = FindFreeBlock(size);
+			std::unique_lock lock(sizeBuckets[bucket_index].mutex);
+			// auto lock = GetLock(sizeBuckets[bucket_index].mutex, bucketLockStats[bucket_index]);
+			if (!sizeBuckets[bucket_index].blocks.empty())
+			{
+				char* addr = sizeBuckets[bucket_index].blocks.back();
+				sizeBuckets[bucket_index].blocks.pop_back();
+				return addr;
+			}
+		}
+		return nullptr;
+	}
+
+	// 核心分配函数
+	char* AllocateRaw(size_t size)
+	{
+		// 第一次尝试：快速查找（使用读锁）
+
+		std::unique_lock lock(mainMutex);
+		// auto lock = GetLock(mainMutex, mainLockStats);
+		if (auto it = FindFreeBlock(size); it != mFreeBlocks.end())
+		{
+			return AllocateFromIterator(it, size);
 		}
 
-		if (it == mFreeBlocks.end())
-		{
-			throw std::bad_alloc();
-		}
+		return nullptr;
+	}
 
+	// 辅助函数：从迭代器分配（修复死锁）
+	char* AllocateFromIterator(auto it, size_t size)
+	{
 		char* addr = it->first;
 		size_t block_size = it->second;
-		void* raw_memory = addr;
+		char* raw_memory = addr;
 
-		if (block_size > size + Alignment)
+		if (block_size >= size)
 		{
-			mFreeBlocks.emplace(addr + size, block_size - size);
-		}
-		else
-		{
-			size = block_size;
+			// 将剩余块添加到合适的空闲链表
+			size_t remaining = block_size - size;
+			char* remaining_addr = addr + size;
+
+			// 直接添加剩余块，避免调用AddToFreeList
+			if (remaining <= MaxCachedSize)
+			{
+				size_t bucket_index = GetBucketIndex(remaining);
+				std::unique_lock lock(sizeBuckets[bucket_index].mutex);
+				// auto lock = GetLock(sizeBuckets[bucket_index].mutex, bucketLockStats[bucket_index]);
+				sizeBuckets[bucket_index].blocks.push_back(remaining_addr);
+			}
+			else
+			{
+				mFreeBlocks.emplace(remaining_addr, remaining);
+			}
 		}
 
 		mFreeBlocks.erase(it);
 		return raw_memory;
 	}
 
-	void ExpandPool(size_t additional_size)
+	// 添加块到空闲链表（修复死锁）
+	void AddToFreeList(char* addr, size_t size)
 	{
-		char* new_pool = static_cast<char*>(::operator new(additional_size));
-		mFreeBlocks.emplace(new_pool, additional_size);
-		allocatedChunks.push_back({ new_pool, additional_size });
-		iPoolSize += additional_size;
-	}
-
-	void RollbackAllocation(void* raw_memory, size_t size)
-	{
-		std::unique_lock lock(oMtx);
-		mFreeBlocks.emplace(static_cast<char*>(raw_memory), size);
-		mAllocatedRecords.erase(raw_memory);
-	}
-
-	void DeferDeallocation(void* raw_memory, size_t size, size_t type_hash)
-	{
+		// 如果大小在缓存范围内，添加到桶中
+		if (size <= MaxCachedSize)
 		{
-			std::lock_guard lock(deferredMutex);
-			deferredDeallocations.push_back({ raw_memory, size, type_hash });
+			size_t bucket_index = GetBucketIndex(size);
+			std::unique_lock lock(sizeBuckets[bucket_index].mutex);
+			// auto lock = GetLock(sizeBuckets[bucket_index].mutex, bucketLockStats[bucket_index]);
+			sizeBuckets[bucket_index].blocks.push_back(addr);
 		}
-
-		if (AllocationScope::GetNestingLevel() == 0)
-		{
-			ProcessDeferredDeallocations();
-		}
-	}
-
-	void ProcessDeferredDeallocations()
-	{
-		std::unique_lock lock(oMtx, std::defer_lock);
-		std::list<DeferredDeallocation> deferred;
-
-		{
-			std::lock_guard def_lock(deferredMutex);
-			deferred.swap(deferredDeallocations);
-		}
-
-		for (auto& item : deferred)
-		{
-			if (!lock.owns_lock()) lock.lock();
-			DeallocateImpl(item.memory, item.size, item.type_hash);
-		}
-	}
-
-	void DeallocateImpl(void* raw_memory, size_t size, size_t type_hash)
-	{
-		if (auto it = mAllocatedRecords.find(raw_memory); it != mAllocatedRecords.end())
-		{
-			auto& record = it->second;
-			if (record.type_hash != 0 && record.type_hash != type_hash)
-			{
-				std::cerr << "Type mismatch during deallocation: "
-					<< "Expected " << record.type_hash
-					<< ", got " << type_hash << "\n";
-			}
-
-			MergeFreeBlocks(static_cast<char*>(raw_memory), size);
-			mAllocatedRecords.erase(it);
-		}
+		// 否则添加到主内存池
 		else
 		{
-			std::cerr << "Attempt to deallocate unmanaged memory: "
-				<< raw_memory << "\n";
+			std::unique_lock lock(mainMutex);
+			// auto lock = GetLock(mainMutex, mainLockStats);
+			mFreeBlocks.emplace(addr, size);
+		}
+	}
+
+	// 获取桶索引
+	size_t GetBucketIndex(size_t size)
+	{
+		// 使用位宽计算桶索引
+		return std::min<size_t>(
+			std::bit_width(size),
+			BucketCount - 1
+		);
+	}
+
+	// 记录分配信息
+	void RecordAllocationInfo(
+		char* memory,
+		size_t size,
+		const std::source_location& loc
+	)
+	{
+		// auto lock = GetLock(recordMutex, mainLockStats);
+		std::unique_lock lock(recordMutex);
+
+		AllocationRecord record;
+		record.size = size;
+		record.location = loc;
+
+		mAllocatedRecords[memory] = record;
+	}
+
+	void RollbackAllocation(char* raw_memory, size_t size)
+	{
+		AddToFreeList(raw_memory, size);
+		{
+			std::unique_lock lock(recordMutex);
+			// auto lock = GetLock(recordMutex, mainLockStats);
+			mAllocatedRecords.erase(raw_memory);
 		}
 	}
 
 	// 检查内存泄漏
 	void CheckLeaks()
 	{
-		std::unique_lock lock(oMtx);
+		std::unique_lock lock(mainMutex);
+		// auto lock = GetLock(mainMutex, mainLockStats);
 
 		if (!mAllocatedRecords.empty())
 		{
@@ -278,7 +301,6 @@ private:
 			{
 				std::cerr << "Leaked block at: " << addr << "\n"
 					<< "  Size: " << record.size << " bytes\n"
-					<< "  Type hash: " << record.type_hash << "\n"
 					<< "  Allocation location:\n"
 					<< "    File: " << record.location.file_name() << "\n"
 					<< "    Function: " << record.location.function_name() << "\n"
@@ -290,96 +312,78 @@ private:
 		}
 	}
 
-	// 查找合适空闲块
+	// 查找合适空闲块（优化版）
 	auto FindFreeBlock(size_t size)
 	{
-		for (auto it = mFreeBlocks.begin(); it != mFreeBlocks.end(); ++it)
+		// 使用高效算法查找最佳匹配块
+		auto best_fit = mFreeBlocks.end();
+
+		for (auto it = mFreeBlocks.begin(); it != best_fit; ++it)
 		{
 			if (it->second >= size)
 			{
 				return it;
 			}
 		}
-		return mFreeBlocks.end();
+
+		return best_fit;
 	}
 
-	void MergeFreeBlocks(char* addr, size_t size)
+	// 打印单个锁的统计信息
+	void PrintSingleLockStats(const LockStats& stats, int core) const
 	{
-		char* block_end = addr + size;
-
-		// 向后合并
-		auto next = mFreeBlocks.find(block_end);
-		if (next != mFreeBlocks.end())
+		uint64_t count = stats.lockCount.load();
+		if (count == 0)
 		{
-			size += next->second;
-			mFreeBlocks.erase(next);
+			std::cout << "  No locks acquired\n";
+			return;
 		}
 
-		// 向前合并
-		for (auto it = mFreeBlocks.begin(); it != mFreeBlocks.end(); )
-		{
-			char* cur_addr = it->first;
-			size_t cur_size = it->second;
+		uint64_t totalNs = stats.totalWaitNs.load();
+		uint64_t maxNs = stats.maxWaitNs.load();
 
-			if (cur_addr + cur_size == addr)
-			{
-				size += cur_size;
-				addr = cur_addr;
-				it = mFreeBlocks.erase(it);
-			}
-			else
-			{
-				++it;
-			}
-		}
-
-		mFreeBlocks[addr] = size;
+		std::cout << "  Lock count: " << count << "\n";
+		std::cout << "  Total wait time: " << FormatNs(totalNs) << "\n";
+		std::cout << "  Total core wait time: " << FormatNs(totalNs / core) << "\n";
+		std::cout << "  Average wait time: " << FormatNs(totalNs / count) << "\n";
+		std::cout << "  Max wait time: " << FormatNs(maxNs) << "\n";
 	}
 
-	void CoalesceFreeBlocks()
+	// 格式化纳秒时间为易读格式
+	std::string FormatNs(uint64_t ns) const
 	{
-		std::vector<std::pair<char*, size_t>> blocks;
-		for (auto& block : mFreeBlocks)
-		{
-			blocks.push_back(block);
-		}
-
-		// 按地址排序
-		std::sort(blocks.begin(), blocks.end(),
-			[](const auto& a, const auto& b) { return a.first < b.first; });
-
-		// 合并相邻块
-		for (size_t i = 0; i < blocks.size() - 1; )
-		{
-			char* end = blocks[i].first + blocks[i].second;
-			if (end == blocks[i + 1].first)
-			{
-				blocks[i].second += blocks[i + 1].second;
-				blocks.erase(blocks.begin() + i + 1);
-			}
-			else
-			{
-				i++;
-			}
-		}
-
-		// 更新空闲块表
-		mFreeBlocks.clear();
-		for (auto& block : blocks)
-		{
-			mFreeBlocks.insert(block);
-		}
+		if (ns < 1000) return std::to_string(ns) + " ns";
+		if (ns < 1000000) return std::to_string(ns / 1000.0) + " μs";
+		if (ns < 1000000000) return std::to_string(ns / 1000000.0) + " ms";
+		return std::to_string(ns / 1000000000.0) + " s";
 	}
 
-	static constexpr size_t Alignment = alignof(std::max_align_t);
+	// 带统计的锁获取
+	template<typename Mutex>
+	auto GetLock(Mutex& mutex, LockStats& stats)
+	{
+		if (enableProfiling)
+		{
+			LockProfiler profiler(stats);
+			return std::unique_lock<Mutex>(mutex);
+		}
+		return std::unique_lock<Mutex>(mutex);
+	}
 
-	char* pPool;
-	size_t iPoolSize;
+
+	char* pPool = nullptr;
+	size_t iPoolSize = 0;
+
+	// 主内存池
 	std::map<char*, size_t> mFreeBlocks;
-	std::unordered_map<void*, AllocationRecord> mAllocatedRecords;
-	std::list<DeferredDeallocation> deferredDeallocations;
-	std::recursive_mutex oMtx;
-	std::mutex deferredMutex;
+	std::shared_mutex mainMutex;
+	std::shared_mutex recordMutex;
+
+	// 大小分类桶
+	std::array<SizeBucket, BucketCount> sizeBuckets;
+
+	// 分配记录
+	std::unordered_map<char*, AllocationRecord> mAllocatedRecords;
 
 	// 分配的内存块记录
 	std::vector<std::pair<char*, size_t>> allocatedChunks;

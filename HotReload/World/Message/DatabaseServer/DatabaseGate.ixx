@@ -1,4 +1,3 @@
-module;
 export module DatabaseServerMessage:DatabaseGate;
 
 import DbUtils;

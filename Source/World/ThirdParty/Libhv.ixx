@@ -1,4 +1,3 @@
-module;
 #include <concepts>
 
 #include "hv/hasync.h"

@@ -1,5 +1,3 @@
-module;
-
 export module BitFlag;
 
 import std.compat;

@@ -1,4 +1,3 @@
-module;
 export module RoomEntity;
 
 import ECSW;

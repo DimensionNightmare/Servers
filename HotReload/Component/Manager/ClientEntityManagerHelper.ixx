@@ -1,4 +1,3 @@
-module;
 export module ClientEntityManagerHelper;
 
 import ClientEntityManager;
@@ -49,7 +48,7 @@ public:
 
 	ClientEntityHelper::Ptr GetEntity(uint64_t entityId)
 	{
-		std::shared_lock<std::shared_mutex> lock(oMapMutex);
+		std::shared_lock lock(oMapMutex);
 		if (mEntityMap.contains(entityId))
 		{
 			return mEntityMap[entityId]->GetSelf<ClientEntityHelper>();

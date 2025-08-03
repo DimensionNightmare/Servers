@@ -1,4 +1,3 @@
-module;
 export module RoomEntityManager;
 
 import RoomEntity;
@@ -30,7 +29,7 @@ public:
 
 	void EntityCloseTimer(uint64_t timerID)
 	{
-		std::unique_lock<std::shared_mutex> ulock(oTimerMutex);
+		std::unique_lock ulock(oTimerMutex);
 		if (!mMapTimer.contains(timerID))
 		{
 			return;
@@ -62,7 +61,7 @@ public: // dll proxy
 			RoomEntity::CVPtr entity = mEntityMap[entityId];
 			entity->Dispose();
 			
-			std::unique_lock<std::shared_mutex> ulock(oMapMutex);
+			std::unique_lock ulock(oMapMutex);
 			mEntityMapList[entity->MapID()].remove(entity);
 			mEntityMap.erase(entityId);
 			return true;
@@ -78,7 +77,7 @@ public: // dll proxy
 		// entity->SetID(entityId);
 		entityId = entity->ID();
 
-		std::unique_lock<std::shared_mutex> ulock(oMapMutex);
+		std::unique_lock ulock(oMapMutex);
 		mEntityMap[entityId] = entity;
 		mEntityMapList[mapId].emplace_back(entity);
 	}

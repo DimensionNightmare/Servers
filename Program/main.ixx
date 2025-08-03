@@ -1,4 +1,3 @@
-module;
 export module MAIN;
 
 import DimensionNightmare;
@@ -23,6 +22,13 @@ bool AppRun = false;
 		App = nullptr; 	\
 	}
 
+#define TIMERSTART(tag) auto tag##_start = std::chrono::system_clock::now(),tag##_end = tag##_start
+#define TIMEREND(tag) tag##_end = std::chrono::system_clock::now()
+#define DURATION_s(tag)  printf("%s costs %I64d s\n",#tag,std::chrono::duration_cast<std::chrono::seconds>(tag##_end - tag##_start).count())
+#define DURATION_ms(tag) printf("%s costs %I64d ms\n",#tag,std::chrono::duration_cast<std::chrono::milliseconds>(tag##_end - tag##_start).count());
+#define DURATION_us(tag) printf("%s costs %I64d us\n",#tag,std::chrono::duration_cast<std::chrono::microseconds>(tag##_end - tag##_start).count());
+#define DURATION_ns(tag) printf("%s costs %I64d ns\n",#tag,std::chrono::duration_cast<std::chrono::nanoseconds>(tag##_end - tag##_start).count());
+
 
 export int main(int argc, char** argv)
 {
@@ -39,6 +45,89 @@ export int main(int argc, char** argv)
 	// dynamic initializer
 	{
 		MemPool = std::make_shared<UniversalMemoryPool>();
+
+#if 0
+		int count = 100000;
+		int threads = 8;
+
+		std::vector<std::future<void>> ones;
+
+		for(int i = 0; i < threads; i++)
+		{
+			ones.push_back(std::async(std::launch::async, [=]()
+			{
+				TIMERSTART(MemPoolAlloc);
+
+				// auto memPool = std::make_shared<UniversalMemoryPool>();
+				
+				try
+				{
+					for(int j = 0; j < count; j++)
+					{
+						// auto a = MemPool->Allocate<DimensionNightmare>();
+						auto a = new DimensionNightmare();
+						auto ramdon = a->GetRandomNuber() - 1;
+						
+						a->Dispose();
+
+						delete a;
+
+						// memPool->RollbackAllocationWithOrigin(static_cast<void*>(a), std::bit_ceil(sizeof(DimensionNightmare)));
+					}
+				}
+				catch (const std::exception& e)
+				{
+					printf("MemPoolAlloc exception: %s\n", e.what());
+				}
+				
+
+				TIMEREND(MemPoolAlloc);
+				DURATION_ms(MemPoolAlloc);
+
+				// memPool->PrintLockStats(1);
+			}));
+		}
+
+		std::vector<std::future<void>> twos;
+
+		for(int i = 0; i < threads; i++)
+		{
+			twos.push_back(std::async(std::launch::async, [=]()
+			{
+				TIMERSTART(SysMemAlloc);
+
+				try
+				{
+					for(int j = 0; j < count; j++)
+					{
+						auto a = std::make_shared<DimensionNightmare>();
+						auto ramdon = a->GetRandomNuber() - 1;
+						a->Dispose();
+					}
+				}
+				catch (const std::exception& e)
+				{
+					printf("SysMemAlloc exception: %s\n", e.what());
+				}
+
+				TIMEREND(SysMemAlloc);
+				DURATION_ms(SysMemAlloc);
+			}));
+		}
+
+		for(auto& one : ones)
+		{
+			one.get();
+		}
+		for(auto& two : twos)
+		{
+			two.get();
+		}
+
+		// MemPool->PrintLockStats(threads);
+
+		return 0;
+# endif
 
 		SPidLogger = MemPool->Allocate<LoggerPrintPid>();
 	}

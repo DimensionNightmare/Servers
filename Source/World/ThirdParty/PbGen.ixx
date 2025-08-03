@@ -1,4 +1,3 @@
-module;
 #include <concepts>
 
 #include "GCfg/GCfg.pb.h"
@@ -10,7 +9,6 @@ module;
 #include "Server/S_Gate.pb.h"
 #include "Client/C_Auth.pb.h"
 #include "Server/S_Logic.pb.h"
-
 export module ThirdParty.PbGen;
 
 import ThirdParty.Protobuf;

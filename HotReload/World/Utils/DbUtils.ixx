@@ -1,4 +1,3 @@
-module;
 export module DbUtils;
 
 import ThirdParty.Protobuf;

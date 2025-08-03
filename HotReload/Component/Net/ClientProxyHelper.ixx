@@ -1,4 +1,3 @@
-module;
 export module ClientProxyHelper;
 
 import ClientProxy;
@@ -40,7 +39,7 @@ public:
 	// task
 	Task<Message*>* GetMsg(uint32_t msgId)
 	{
-		std::shared_lock<std::shared_mutex> lock(oMsgMutex);
+		std::shared_lock lock(oMsgMutex);
 		if (mMsgList.contains(msgId))
 		{
 			return mMsgList[msgId];
@@ -50,7 +49,7 @@ public:
 
 	bool AddMsg(uint32_t msgId, Task<Message*>* task, uint32_t breakTime = 10000)
 	{
-		std::unique_lock<std::shared_mutex> ulock(oMsgMutex);
+		std::unique_lock ulock(oMsgMutex);
 		mMsgList.emplace(msgId, task);
 		// timeout
 		if (breakTime > 0)
@@ -62,7 +61,7 @@ public:
 
 	void DelMsg(uint32_t msgId)
 	{
-		std::unique_lock<std::shared_mutex> ulock(oMsgMutex);
+		std::unique_lock ulock(oMsgMutex);
 		if (mMsgList.contains(msgId))
 		{
 			if (Task<Message*>* task = mMsgList[msgId])
@@ -79,7 +78,7 @@ public:
 
 	void MsgMapClear()
 	{
-		std::unique_lock<std::shared_mutex> ulock(oMsgMutex);
+		std::unique_lock ulock(oMsgMutex);
 		for (auto& [k, v] : mMsgList)
 		{
 			v->CallResume();

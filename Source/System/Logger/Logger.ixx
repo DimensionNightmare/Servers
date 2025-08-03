@@ -1,4 +1,3 @@
-module;
 export module Logger;
 
 import StrUtils;
@@ -89,8 +88,8 @@ public:
 	template <typename... Args>
 	void Record(EL10nCode code, Args&&... args)
 	{
-		ELogLevel level;
-		const std::string& fmt = GetL10nText()->GetTipText(code, level);
+		ELogLevel level = ELogLevel_None;
+		const std::string& fmt = GetL10nText()->GetTipText_Proxy(code, level);
 
 		if (level < eLogLevel)
 		{

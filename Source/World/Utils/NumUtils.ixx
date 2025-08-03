@@ -1,5 +1,3 @@
-module;
-
 export module NumUtils;
 
 import std.compat;

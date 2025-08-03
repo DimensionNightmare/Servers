@@ -1,4 +1,3 @@
-module;
 #include "pqxx/transaction"
 #include "pqxx/connection"
 #include "pqxx/nontransaction"

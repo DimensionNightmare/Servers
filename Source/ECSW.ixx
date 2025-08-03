@@ -1,5 +1,3 @@
-module;
-
 export module ECSW;
 
 import std.compat;
@@ -238,7 +236,7 @@ public: // dll override
 	std::shared_ptr<T> GetComponent(EMComponentType type)
 	{
 		// this while lock when dispose***
-		// std::unique_lock<std::shared_mutex> ulock(mComponentLock);
+		// std::unique_lock ulock(mComponentLock);
 		
 		auto it = mComponents.find(type);
 		if (it != mComponents.end())
@@ -258,7 +256,7 @@ public: // dll override
 			return;
 		}
 
-		std::unique_lock<std::shared_mutex> ulock(mComponentLock);
+		std::unique_lock ulock(mComponentLock);
 
 		auto it = mComponents.end();
 		do {
@@ -284,7 +282,7 @@ public: // dll override
 				component->Dispose();
 				return nullptr;
 			}
-			std::unique_lock<std::shared_mutex> ulock(mComponentLock);
+			std::unique_lock ulock(mComponentLock);
 			mComponents.emplace(component->GetComponentType(), component);
 			return component;
 		}
@@ -298,7 +296,7 @@ public: // dll override
 
 	void RemoveComponent(EMComponentType type)
 	{
-		std::unique_lock<std::shared_mutex> ulock(mComponentLock);
+		std::unique_lock ulock(mComponentLock);
 
 		auto it = mComponents.find(type);
 		if (it == mComponents.end())

@@ -1,4 +1,3 @@
-module;
 export module ObjectTrace;
 
 // import ECSW;
