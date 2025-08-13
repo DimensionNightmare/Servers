@@ -7,7 +7,6 @@ import DbUtils;
 import RdbProxyHelper;
 import StrUtils;
 import Server;
-import DllUtils;
 import MessagePack;
 import ECSW;
 import MessageRegister;
@@ -73,21 +72,24 @@ public:
 			{
 				World::CVPtr world = GetWorld();
 
+				#define REMOVE_CV(TYPE) static_cast<Message*>(const_cast<TYPE*>(TYPE::internal_default_instance()))
 
 				std::unordered_map<EMSqlDbNameEnum, std::vector<Message*> > registTable = {
 					{
 						EMSqlDbNameEnum::Account,
 						{
-							(Message*)GDb::Account::internal_default_instance(),
+							REMOVE_CV(GDb::Account),
 						}
 					},
 					{
 						EMSqlDbNameEnum::Nightmare,
 						{
-							(Message*)GDb::Player::internal_default_instance(),
+							REMOVE_CV(GDb::Player),
 						}
 					},
 				};
+
+				#undef REMOVE_CV
 
 				GDb::SingleTon kv;
 				std::string schemaMd5;
@@ -196,7 +198,7 @@ public:
 						channel->SetWorld(GetWorldW());
 						
 						proxyHelper->SetRegistEvent(msgHandle->GetClientRegistFunc());
-						TickMainSpaceDll(proxyHelper.get(), FUNCPLACE(ClientProxy,InitConnectedChannel),  channel);
+						proxyHelper->pInitConnectedChannel(channel);
 					}
 					else
 					{
@@ -228,7 +230,7 @@ public:
 									{
 										ClientProxyHelper::CVPtr proxyHelper = GetClientProxy();
 										if(!proxyHelper){ return ;}
-										TickMainSpaceDll(proxyHelper.get(), FUNCPLACE(ClientProxy,RedirectClient),  std::stoi(originPort), originIp);
+										proxyHelper->pRedirectClient(std::stoi(originPort), originIp);
 									});
 							}
 						}

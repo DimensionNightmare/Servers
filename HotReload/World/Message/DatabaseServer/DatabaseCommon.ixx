@@ -1,6 +1,5 @@
 export module DatabaseServerMessage:DatabaseCommon;
 
-import DllUtils;
 import FuncHelper;
 import DatabaseServerHelper;
 import Server;
@@ -85,6 +84,6 @@ namespace DatabaseServerMessage
 
 		ClientProxyHelper::CVPtr clientProxy = dnServer->GetClientProxy();
 
-		TickMainSpaceDll(clientProxy.get(), FUNCPLACE(ClientProxy,RedirectClient), request.server_port(), request.server_ip());
+		clientProxy->pRedirectClient(request.server_port(), request.server_ip());
 	}
 }

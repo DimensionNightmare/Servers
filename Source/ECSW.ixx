@@ -220,7 +220,6 @@ public:
 
 	virtual ~Entity()
 	{
-		
 	}
 	
 public: // dll override
@@ -396,7 +395,6 @@ public:
 
 	virtual ~World()
 	{
-
 	}
 	
 	void AddSystem(System::CVPtr system)

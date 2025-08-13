@@ -31,35 +31,37 @@ export void WriteDumpFile(std::filesystem::path fileName, _EXCEPTION_POINTERS* E
 	);
 
 	// INVALID_HANDLE_VALUE ((HANDLE)(LONG_PTR)-1)
-	if (hDumpFile != (void*)(int64_t*)-1)
+	if (hDumpFile == nullptr)
 	{
-		Platform::_MINIDUMP_EXCEPTION_INFORMATION info;
-		info.ThreadId = Platform::GetCurrentThreadId();
-		info.ExceptionPointers = ExceptionInfo;
-		info.ClientPointers = 0;
+		return;
+	}
 
-		Platform::MINIDUMP_TYPE dumpType = (Platform::MINIDUMP_TYPE)(
-			MiniDumpWithDataSegs |
-			MiniDumpWithFullMemory |
-			MiniDumpWithHandleData |
-			MiniDumpWithThreadInfo |
-			MiniDumpWithUnloadedModules |
-			MiniDumpWithFullMemoryInfo |
-			MiniDumpWithProcessThreadData
-			);
+	Platform::_MINIDUMP_EXCEPTION_INFORMATION info;
+	info.ThreadId = Platform::GetCurrentThreadId();
+	info.ExceptionPointers = ExceptionInfo;
+	info.ClientPointers = 0;
 
-		Platform::MiniDumpWriteDump(
-			Platform::GetCurrentProcess(),
-			Platform::GetCurrentProcessId(),
-			hDumpFile,
-			dumpType, // MiniDumpNormal
-			ExceptionInfo ? &info : nullptr,
-			nullptr,
-			nullptr
+	Platform::MINIDUMP_TYPE dumpType = (Platform::MINIDUMP_TYPE)(
+		MiniDumpWithDataSegs |
+		MiniDumpWithFullMemory |
+		MiniDumpWithHandleData |
+		MiniDumpWithThreadInfo |
+		MiniDumpWithUnloadedModules |
+		MiniDumpWithFullMemoryInfo |
+		MiniDumpWithProcessThreadData
 		);
 
-		Platform::CloseHandle(hDumpFile);
-	}
+	Platform::MiniDumpWriteDump(
+		Platform::GetCurrentProcess(),
+		Platform::GetCurrentProcessId(),
+		hDumpFile,
+		dumpType, // MiniDumpNormal
+		ExceptionInfo ? &info : nullptr,
+		nullptr,
+		nullptr
+	);
+
+	Platform::CloseHandle(hDumpFile);
 }
 
 export enum class EMProgramFlag
@@ -392,7 +394,7 @@ public:
 			return false;
 		}
 		
-		if (!pHotDll->InitHotReload(world))
+		if (pHotDll->pInitHotReload(world) != 1)
 		{
 			pLogger->Record(ELogLevel_Error, "program lunch OnRegHotReload error!");
 			return false;
@@ -424,13 +426,13 @@ public:
 				if(pHotDll->ReloadHandle([&](){
 					for(auto& world : oWorlds)
 					{
-						pHotDll->ShutdownHotReload(world);
+						pHotDll->pShutdownHotReload(world);
 					}
 				}))
 				{
 					for(auto& world : oWorlds)
 					{
-						pHotDll->InitHotReload(world);
+						pHotDll->pInitHotReload(world);
 					}
 				}
 				
@@ -471,12 +473,6 @@ public:
 
 	void TickMainFrame() {  }
 
-	/// @brief init gWorldWPtr with world ptr
-	void AppStartInitThread()
-	{
-		
-	}
-
 	virtual void Dispose() override
 	{
 		for (auto it = oWorlds.rbegin(); it != oWorlds.rend(); ++it)
@@ -489,14 +485,6 @@ public:
 		World::Dispose();
 
 		mCmdHandle.clear();
-	}
-
-	uint64_t GetRandomNuber()
-	{
-		std::random_device rd;
-		std::mt19937 gen(rd());
-		std::uniform_int_distribution<uint64_t> dis(0, 99999999999);
-		return dis(gen);
 	}
 
 private:
@@ -520,43 +508,26 @@ extern "C"
 	}
 }
 
-template <typename Method>
-struct MemberFunctionArgs;
+// template <typename Method>
+// struct MemberFunctionArgs;
 
-template <typename R, typename Class, typename... Args>
-struct MemberFunctionArgs<R(Class::*)(Args...)>
-{
-	using Arguments = std::tuple<Args...>;
-};
+// template <typename R, typename Class, typename... Args>
+// struct MemberFunctionArgs<R(Class::*)(Args...)>
+// {
+// 	using Arguments = std::tuple<Args...>;
+// };
 
-#define REGIST_MAINSPACE_SIGN_FUNCTION(Class, Method) 																		\
-    __declspec(dllexport) auto Class##_##Method(Class* obj, MemberFunctionArgs<decltype(&Class::Method)>::Arguments args)	\
-    {																														\
-		return std::apply([obj](auto&&... args) {																			\
-            return std::invoke(&Class::Method, obj, std::forward<decltype(args)>(args)...);									\
-        }, args);																											\
-    }
+// #define REGIST_MAINSPACE_SIGN_FUNCTION(Class, Method) 																		\
+//     __declspec(dllexport) auto Class##_##Method(Class* obj, MemberFunctionArgs<decltype(&Class::Method)>::Arguments args)	\
+//     {																														\
+// 		return std::apply([obj](auto&&... args) {																			\
+//             return std::invoke(&Class::Method, obj, std::forward<decltype(args)>(args)...);									\
+//         }, args);																											\
+//     }
 
-extern "C"
-{
-	REGIST_MAINSPACE_SIGN_FUNCTION(ProxyEntityManager, CheckEntityCloseTimer);
-	REGIST_MAINSPACE_SIGN_FUNCTION(ProxyEntityManager, AddEntity);
-	
-	REGIST_MAINSPACE_SIGN_FUNCTION(RoomEntityManager, CheckEntityCloseTimer);
-	REGIST_MAINSPACE_SIGN_FUNCTION(RoomEntityManager, AddEntity);
-
-	REGIST_MAINSPACE_SIGN_FUNCTION(ServerEntityManager, CheckEntityCloseTimer);
-	REGIST_MAINSPACE_SIGN_FUNCTION(ServerEntityManager, AddEntity);
-
-	REGIST_MAINSPACE_SIGN_FUNCTION(ClientEntityManager, AddEntity);
-
-	REGIST_MAINSPACE_SIGN_FUNCTION(ClientProxy, InitConnectedChannel);
-	REGIST_MAINSPACE_SIGN_FUNCTION(ClientProxy, CheckMessageTimeoutTimer);
-	REGIST_MAINSPACE_SIGN_FUNCTION(ClientProxy, RedirectClient);
-
-	REGIST_MAINSPACE_SIGN_FUNCTION(ServerProxy, InitConnectedChannel);
-	REGIST_MAINSPACE_SIGN_FUNCTION(ServerProxy, CheckMessageTimeoutTimer);
-}
-
+// extern "C"
+// {
+// 	REGIST_MAINSPACE_SIGN_FUNCTION(ClientProxy, RedirectClient);
+// }
 
 #pragma endregion

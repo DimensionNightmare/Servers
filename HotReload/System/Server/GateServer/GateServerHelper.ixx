@@ -7,7 +7,6 @@ import ServerProxyHelper;
 import ServerEntityManagerHelper;
 import ProxyEntityManagerHelper;
 import FuncHelper;
-import DllUtils;
 import MessagePack;
 import ECSW;
 import MessageRegister;
@@ -134,7 +133,7 @@ public:
 
 						channel->SetWorld(GetWorldW());
 
-						TickMainSpaceDll(proxyHelper.get(), FUNCPLACE(ServerProxy,InitConnectedChannel),  channel);
+						proxyHelper->pInitConnectedChannel(channel);
 					}
 					else
 					{
@@ -237,7 +236,7 @@ public:
 						channel->SetWorld(GetWorldW());
 						
 						proxyHelper->SetRegistEvent(msgHandle->GetClientRegistFunc());
-						TickMainSpaceDll(proxyHelper.get(), FUNCPLACE(ClientProxy,InitConnectedChannel),  channel);
+						proxyHelper->pInitConnectedChannel(channel);
 					}
 					else
 					{

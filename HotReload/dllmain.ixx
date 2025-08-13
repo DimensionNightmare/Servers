@@ -102,8 +102,8 @@ extern "C"
 				{
 					World* world = func();
 					HotReload::CVPtr pHotDll = world->GetSystem<HotReload>(EMSystemType::HotReload);
-					pHotDll->InitHotReload(std::function<int(World::CVPtr)>());
-					pHotDll->ShutdownHotReload(std::function<int(World::CVPtr)>());
+					pHotDll->pInitHotReload = nullptr;
+					pHotDll->pShutdownHotReload = nullptr;
 				}
 
 				ShutdownProtobufLibrary();
@@ -120,8 +120,8 @@ extern "C"
 				{
 					World* world = func();
 					HotReload::CVPtr pHotDll = world->GetSystem<HotReload>(EMSystemType::HotReload);
-					pHotDll->InitHotReload(InitHotReload);
-					pHotDll->ShutdownHotReload(ShutdownHotReload);
+					pHotDll->pInitHotReload = std::bind(InitHotReload, std::placeholders::_1);
+					pHotDll->pShutdownHotReload = std::bind(ShutdownHotReload, std::placeholders::_1);
 				}
 				break;
 			}

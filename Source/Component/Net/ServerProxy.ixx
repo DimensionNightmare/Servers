@@ -22,6 +22,9 @@ protected:
 		pLoop = MemPool->Allocate<EventLoopThread>();
 		
 		pLogger = GetOwner()->GetWorld()->GetSystemW<LoggerPrint>(EMSystemType::LoggerPrint);
+
+		pInitConnectedChannel = std::bind(&ServerProxy::InitConnectedChannel, this, std::placeholders::_1);
+		pCheckMessageTimeoutTimer = std::bind(&ServerProxy::CheckMessageTimeoutTimer, this, std::placeholders::_1, std::placeholders::_2);
 	}
 
 public:
@@ -223,6 +226,10 @@ public: // dll override
 public:
 	// cant init in tcpclient this class
 	std::shared_ptr<EventLoopThread> pLoop;
+	
+	std::function<void(SocketChannel::CVPtr)> pInitConnectedChannel;
+
+	std::function<uint64_t(uint32_t,uint32_t)> pCheckMessageTimeoutTimer;
 
 protected:
 	// only oddnumber

@@ -12,9 +12,15 @@ protected:
 	RoomEntityManager(System::WPtr system):EntityManager(system)
 	{
 		eComponentType = EMComponentType::RoomEntityManager;
+
+		pCheckEntityCloseTimer = std::bind(&RoomEntityManager::CheckEntityCloseTimer, this, std::placeholders::_1);
+		pAddEntity = std::bind(&RoomEntityManager::AddEntity, this, std::placeholders::_1);
 	}
 public:
-	virtual ~RoomEntityManager() = default;
+	virtual ~RoomEntityManager()
+	{
+		
+	}
 
 	virtual void Dispose() override
 	{
@@ -70,17 +76,20 @@ public: // dll proxy
 		return false;
 	}
 
-	void AddEntity(uint64_t& entityId, uint64_t mapId)
+	RoomEntity::Ptr AddEntity(uint64_t mapId)
 	{
 		// RoomEntity::CVPtr entity = std::shared_ptr<RoomEntity>(new RoomEntity(GetOwner()->GetWorldW()));
-		RoomEntity::CVPtr entity = MemPool->Allocate<RoomEntity, World::WPtr>(GetOwner()->GetSelfW<World>());
+		RoomEntity::Ptr entity = MemPool->Allocate<RoomEntity, World::WPtr>(GetOwner()->GetWorldW());
 		// entity->SetID(entityId);
-		entityId = entity->ID();
 
 		std::unique_lock ulock(oMapMutex);
-		mEntityMap[entityId] = entity;
+		mEntityMap[entity->ID()] = entity;
 		mEntityMapList[mapId].emplace_back(entity);
+		return entity;
 	}
+
+public:
+	std::function<RoomEntity::Ptr(uint64_t)> pAddEntity;
 
 protected:
 	/// @brief 

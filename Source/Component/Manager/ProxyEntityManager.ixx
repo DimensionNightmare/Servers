@@ -12,10 +12,16 @@ protected:
 	ProxyEntityManager(System::WPtr system):EntityManager(system)
 	{
 		eComponentType = EMComponentType::ProxyEntityManager;
+
+		pCheckEntityCloseTimer = std::bind(&ProxyEntityManager::CheckEntityCloseTimer, this, std::placeholders::_1);
+		pAddEntity = std::bind(&ProxyEntityManager::AddEntity, this, std::placeholders::_1);
 	}
 public:
 
-	virtual ~ProxyEntityManager() = default;
+	virtual ~ProxyEntityManager()
+	{
+		
+	}
 
 	virtual void Dispose() override
 	{
@@ -71,14 +77,18 @@ public: // dll proxy
 		return false;
 	}
 
-	void AddEntity(uint64_t entityId)
+	ProxyEntity::Ptr AddEntity(uint64_t entityId)
 	{
 		// ProxyEntity::CVPtr entity = std::shared_ptr<ProxyEntity>(new ProxyEntity(GetOwner()->GetWorldW()));
-		ProxyEntity::CVPtr entity = MemPool->Allocate<ProxyEntity, World::WPtr>(GetOwner()->GetSelfW<World>());
+		ProxyEntity::Ptr entity = MemPool->Allocate<ProxyEntity, World::WPtr>(GetOwner()->GetWorldW());
 		entity->SetID(entityId);
 
 		std::unique_lock ulock(oMapMutex);
 		mEntityMap[entityId] = entity;
+		return entity;
 	}
+
+public:
+	std::function<ProxyEntity::Ptr(uint64_t)> pAddEntity;
 
 };

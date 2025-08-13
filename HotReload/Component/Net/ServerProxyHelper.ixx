@@ -1,7 +1,6 @@
 export module ServerProxyHelper;
 
 import ServerProxy;
-import DllUtils;
 
 #define FUNCPLACE(class, func) &class::func, #class"_"#func
 
@@ -33,7 +32,7 @@ public:
 		mMsgList.emplace(msgId, task);
 		if (breakTime > 0)
 		{
-			task->TimerId() = TickMainSpaceDll(this, FUNCPLACE(ServerProxy,CheckMessageTimeoutTimer),  breakTime, msgId);
+			task->TimerId() = pCheckMessageTimeoutTimer(breakTime, msgId);
 		}
 		return true;
 	}

@@ -1,7 +1,6 @@
 export module ClientProxyHelper;
 
 import ClientProxy;
-import DllUtils;
 
 #define FUNCPLACE(class, func) &class::func, #class"_"#func
 
@@ -54,7 +53,7 @@ public:
 		// timeout
 		if (breakTime > 0)
 		{
-			task->TimerId() = TickMainSpaceDll(this, FUNCPLACE(ClientProxy,CheckMessageTimeoutTimer),  breakTime, msgId);
+			task->TimerId() = pCheckMessageTimeoutTimer(breakTime, msgId);
 		}
 		return true;
 	}

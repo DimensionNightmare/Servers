@@ -32,7 +32,9 @@ protected:
 
 		pLogger = GetOwner()->GetWorld()->GetSystemW<LoggerPrint>(EMSystemType::LoggerPrint);
 
-		GetLogger()->Record(ELogLevel_Debug, "{}/{}/{}", __FUNCTION__, typeid(this).name(), static_cast<void*>(this));
+		pInitConnectedChannel = std::bind(&ClientProxy::InitConnectedChannel, this, std::placeholders::_1);
+		pCheckMessageTimeoutTimer = std::bind(&ClientProxy::CheckMessageTimeoutTimer, this, std::placeholders::_1, std::placeholders::_2);
+		pRedirectClient = std::bind(&ClientProxy::RedirectClient, this, std::placeholders::_1, std::placeholders::_2);
 	}
 public:
 
@@ -42,18 +44,17 @@ public:
 
 	virtual ~ClientProxy()
 	{
-		GetLogger()->Record(ELogLevel_Debug, "{}/{}/{}", __FUNCTION__, typeid(this).name(), static_cast<void*>(this));
-
-		pLoop = nullptr;
-		mMsgList.clear();
-		mMapTimer.clear();
+		
 	}
 
 	virtual void Dispose() override
 	{
-		End();
+		mMsgList.clear();
+		mMapTimer.clear();
 
+		End();
 		Component::Dispose();
+		pLoop = nullptr;
 	}
 
 	bool Awake() override
@@ -213,6 +214,14 @@ public: // dll override
 			Libhv::Run(base_ptr);
 		});
 	}
+
+public:
+
+	std::function<void(SocketChannel::CVPtr)> pInitConnectedChannel;
+
+	std::function<uint64_t(uint32_t,uint32_t)> pCheckMessageTimeoutTimer;
+
+	std::function<void(uint16_t,const std::string&)> pRedirectClient;
 
 protected: // dll proxy
 

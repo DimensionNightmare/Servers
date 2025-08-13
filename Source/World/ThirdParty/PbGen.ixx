@@ -1,3 +1,4 @@
+module;
 #include <concepts>
 
 #include "GCfg/GCfg.pb.h"

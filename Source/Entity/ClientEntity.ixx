@@ -33,12 +33,14 @@ public:
 	using CVPtr = const Ptr&;
 	virtual ~ClientEntity()
 	{
-		pDbEntity = nullptr;
+		
 	}
 
 	virtual void Dispose() override
 	{
 		Entity::Dispose();
+
+		pDbEntity = nullptr;
 	}
 	
 public: // dll override

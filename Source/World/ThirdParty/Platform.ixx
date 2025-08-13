@@ -1,3 +1,4 @@
+module;
 #include <concepts>
 
 #if _WIN32
@@ -88,11 +89,13 @@ export namespace Platform
 
 	using ::_kbhit;
 	using ::_getch;
+
+	// using InvalidHandle = INVALID_HANDLE_VALUE;
 }
 
 export namespace Platform
 {
-	std::string GetStackTrace()
+	std::string GetStackTrace(unsigned int begin = 0)
 	{
 		HANDLE process = GetCurrentProcess();
 		SymInitialize(process, NULL, TRUE);
@@ -109,7 +112,7 @@ export namespace Platform
 		line.SizeOfStruct = sizeof(IMAGEHLP_LINE64);
 		DWORD displacement;
 
-		for (unsigned int i = 0; i < frames; i++)
+		for (unsigned int i = begin; i < frames; i++)
 		{
 			DWORD64 address = (DWORD64)(stack[i]);
 			SymFromAddr(process, address, 0, symbol);

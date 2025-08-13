@@ -7,7 +7,6 @@ import DbUtils;
 import RdbProxyHelper;
 import StrUtils;
 import Server;
-import DllUtils;
 import MessagePack;
 import ECSW;
 import MessageRegister;
@@ -87,7 +86,7 @@ public:
 						channel->SetWorld(GetWorldW());
 
 						proxyHelper->SetRegistEvent(msgHandle->GetClientRegistFunc());
-						TickMainSpaceDll(proxyHelper.get(), FUNCPLACE(ClientProxy,InitConnectedChannel),  channel);
+						proxyHelper->pInitConnectedChannel(channel);
 					}
 					else
 					{

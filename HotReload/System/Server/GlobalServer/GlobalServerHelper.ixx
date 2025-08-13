@@ -4,7 +4,6 @@ export import ThirdParty.PbGen;
 import ClientProxyHelper;
 import ServerProxyHelper;
 import ServerEntityManagerHelper;
-import DllUtils;
 import FuncHelper;
 import Server;
 import MessagePack;
@@ -98,7 +97,7 @@ public:
 
 			request.SerializeToString(&binData);
 			// timer destory
-			entityHelper->SetTimerId(TickMainSpaceDll(entityMan.get(), FUNCPLACE(ServerEntityManager,CheckEntityCloseTimer), entityHelper->ID()));
+			entityHelper->SetTimerId(entityMan->pCheckEntityCloseTimer(entityHelper->ID()));
 			MessagePackAndSend(0, EMMsgDeal::Ret, request.GetDescriptor()->full_name(), binData, channel);
 			entityHelper->SetChannel(nullptr);
 
@@ -167,7 +166,7 @@ public:
 
 						channel->SetWorld(GetWorldW());
 
-						TickMainSpaceDll(proxyHelper.get(), FUNCPLACE(ServerProxy,InitConnectedChannel),  channel);
+						proxyHelper->pInitConnectedChannel(channel);
 					}
 					else
 					{
@@ -261,7 +260,7 @@ public:
 
 						proxyHelper->SetRegistEvent(msgHandle->GetClientRegistFunc());
 
-						TickMainSpaceDll(proxyHelper.get(), FUNCPLACE(ClientProxy,InitConnectedChannel),  channel);
+						proxyHelper->pInitConnectedChannel(channel);
 					}
 					else
 					{

@@ -5,6 +5,7 @@ import ECSW;
 import std.compat;
 import Server;
 import ThirdParty.Libhv;
+import Logger;
 
 export enum class EMServerEntityFlag : uint16_t
 {
@@ -25,8 +26,16 @@ protected:
 public:
 	using Ptr = std::shared_ptr<ServerEntity>;
 	using CVPtr = const Ptr&;
+
 	virtual ~ServerEntity()
 	{
+		
+	}
+
+	virtual void Dispose() override
+	{
+		Entity::Dispose();
+
 		pLink = nullptr;
 		mMapLink.clear();
 	}

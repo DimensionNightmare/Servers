@@ -5,7 +5,6 @@ import StrUtils;
 import FuncHelper;
 import MdbProxyHelper;
 import ClientEntityHelper;
-import DllUtils;
 import Task;
 import ThirdParty.PbGen;
 import ClientProxyHelper;
@@ -36,11 +35,7 @@ public:
 	{
 		if (!mEntityMap.contains(entityId))
 		{
-			TickMainSpaceDll(this, FUNCPLACE(ClientEntityManager,AddEntity), entityId);
-
-			ClientEntityHelper::Ptr entity = GetEntity(entityId);
-			
-			return entity;
+			return pAddEntity(entityId)->GetSelf<ClientEntityHelper>();
 		}
 
 		return nullptr;

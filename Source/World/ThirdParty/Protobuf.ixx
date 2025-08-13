@@ -1,4 +1,5 @@
 
+module;
 #include "google/protobuf/reflection.h"
 #include "google/protobuf/descriptor.pb.h"
 #include "google/protobuf/json/json.h"

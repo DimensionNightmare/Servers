@@ -4,7 +4,6 @@ export import ThirdParty.PbGen;
 import Server;
 import ServerProxyHelper;
 import ServerEntityManagerHelper;
-import DllUtils;
 import MessagePack;
 import ECSW;
 import MessageRegister;
@@ -71,7 +70,7 @@ public:
 
 						channel->SetWorld(GetWorldW());
 						
-						TickMainSpaceDll(proxyHelper.get(), FUNCPLACE(ServerProxy,InitConnectedChannel),  channel);
+						proxyHelper->pInitConnectedChannel(channel);
 					}
 					else
 					{

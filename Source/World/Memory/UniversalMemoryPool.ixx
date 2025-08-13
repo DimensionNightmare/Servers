@@ -4,8 +4,6 @@ import std.compat;
 
 // import Logger;
 
-std::atomic<int> allocint(0); 
-
 export class UniversalMemoryPool
 {
 	static constexpr size_t MaxCachedSize = 4096; // 最大缓存块大小
@@ -23,7 +21,7 @@ export class UniversalMemoryPool
 	struct SizeBucket
 	{
 		std::shared_mutex mutex;
-		std::vector<char*> blocks;
+		std::vector<void*> blocks;
 	};
 
 	// 锁统计数据结构
@@ -73,7 +71,7 @@ export class UniversalMemoryPool
 public:
 	UniversalMemoryPool(size_t pool_size = 1024 * 1024 * 128) : iPoolSize(pool_size)
 	{
-		pPool = static_cast<char*>(::operator new(iPoolSize));
+		pPool = static_cast<void*>(::operator new(iPoolSize));
 		AddToFreeList(pPool, iPoolSize);
 	}
 
@@ -92,7 +90,7 @@ public:
 	)
 	{
 		constexpr size_t size = std::bit_ceil(sizeof(T));
-		char* raw_memory = nullptr;
+		void* raw_memory = nullptr;
 
 		try
 		{
@@ -107,8 +105,6 @@ public:
 			{	
 				// 记录分配信息（包含源代码位置）
 				RecordAllocationInfo(raw_memory, size, loc);
-
-				allocint++;
 				
 				T* object_ptr = new(raw_memory) T(std::forward<Args>(args)...);
 
@@ -116,21 +112,20 @@ public:
 					object_ptr,
 					[this, raw_memory, size](T* ptr)
 					{
-						allocint--;
 						ptr->~T();
-						std::cout << std::format("{}", static_cast<void*>(ptr)) << std::endl;
+						ptr = nullptr;
 						RollbackAllocation(raw_memory, size);
 					}
 				);
 			}
 
-			return std::shared_ptr<T>(new T(std::forward<Args>(args)...));
+			// return std::shared_ptr<T>(new T(std::forward<Args>(args)...));
+			return nullptr;
 		}
 		catch (...)
 		{
 			if (raw_memory)
 			{
-				std::cout << std::format( "{}", static_cast<void*>(raw_memory))  << std::endl;;
 				RollbackAllocation(raw_memory, size);
 			}
 			throw;
@@ -166,7 +161,7 @@ public:
 
 private:
 	// 尝试快速分配
-	char* TryFastAllocation(size_t size)
+	void* TryFastAllocation(size_t size)
 	{
 		// 只尝试缓存小到中等大小的块
 		if (size > MaxCachedSize)
@@ -183,7 +178,7 @@ private:
 			// auto lock = GetLock(sizeBuckets[bucket_index].mutex, bucketLockStats[bucket_index]);
 			if (!sizeBuckets[bucket_index].blocks.empty())
 			{
-				char* addr = sizeBuckets[bucket_index].blocks.back();
+				void* addr = sizeBuckets[bucket_index].blocks.back();
 				sizeBuckets[bucket_index].blocks.pop_back();
 				return addr;
 			}
@@ -192,9 +187,9 @@ private:
 	}
 
 	// 核心分配函数
-	char* AllocateRaw(size_t size)
+	void* AllocateRaw(size_t size)
 	{
-		char* addr = nullptr;
+		void* addr = nullptr;
 
 		// auto lock = GetLock(mainMutex, mainLockStats);
 		{
@@ -209,17 +204,17 @@ private:
 	}
 
 	// 辅助函数：从迭代器分配（修复死锁）
-	char* AllocateFromIterator(auto it, size_t size)
+	void* AllocateFromIterator(auto it, size_t size)
 	{
-		char* addr = it->first;
+		void* addr = it->first;
 		size_t block_size = it->second;
-		char* raw_memory = addr;
+		void* raw_memory = addr;
 
 		if (block_size >= size)
 		{
 			// 将剩余块添加到合适的空闲链表
 			size_t remaining = block_size - size;
-			char* remaining_addr = addr + size;
+			void* remaining_addr = static_cast<uint8_t*>(addr) + size;
 
 			// 直接添加剩余块，避免调用AddToFreeList
 			if (remaining <= MaxCachedSize)
@@ -240,7 +235,7 @@ private:
 	}
 
 	// 添加块到空闲链表（修复死锁）
-	void AddToFreeList(char* addr, size_t size)
+	void AddToFreeList(void* addr, size_t size)
 	{
 		// 如果大小在缓存范围内，添加到桶中
 		if (size <= MaxCachedSize)
@@ -271,7 +266,7 @@ private:
 
 	// 记录分配信息
 	void RecordAllocationInfo(
-		char* memory,
+		void* memory,
 		size_t size,
 		const std::source_location& loc
 	)
@@ -286,13 +281,22 @@ private:
 		mAllocatedRecords[memory] = record;
 	}
 
-	void RollbackAllocation(char* raw_memory, size_t size)
+	void RollbackAllocation(void* raw_memory, size_t size)
 	{
 		AddToFreeList(raw_memory, size);
 		{
 			std::unique_lock lock(recordMutex);
 			// auto lock = GetLock(recordMutex, mainLockStats);
-			mAllocatedRecords.erase(raw_memory);
+			auto it = mAllocatedRecords.find(raw_memory);
+			if (it != mAllocatedRecords.end())
+			{
+				mAllocatedRecords.erase(it);
+			}
+			else
+			{
+				std::cerr << "Warning: Attempted to rollback untracked memory at "
+					<< std::format("{}", raw_memory) << "\n";
+			}
 		}
 	}
 
@@ -305,18 +309,15 @@ private:
 		if (!mAllocatedRecords.empty())
 		{
 			std::cerr << "\n\n*** MEMORY LEAK DETECTED ***\n";
-			std::cerr << "Leaked " << mAllocatedRecords.size() << " alloc/free " << allocint
+			std::cerr << "Leaked " << mAllocatedRecords.size()
 				<< " block(s) of memory\n";
 
 			for (auto& [addr, record] : mAllocatedRecords)
 			{
-				std::cerr << "Leaked block at: " << static_cast<void*>(addr) << "\n"
+				std::cerr << "Leaked block at: " << std::format("{}", addr) << "\n"
 					<< "  Size: " << record.size << " bytes\n"
 					<< "  Allocation location:\n"
-					<< "    File: " << record.location.file_name() << "\n"
-					<< "    Function: " << record.location.function_name() << "\n"
-					<< "    Line: " << record.location.line() << "\n"
-					<< "    Column: " << record.location.column() << "\n\n";
+					<< "    File: " << record.location.file_name() << ":" << record.location.line() << "\n";
 			}
 
 			std::cerr << "*** END OF LEAK REPORT ***\n\n";
@@ -382,11 +383,11 @@ private:
 	}
 
 
-	char* pPool = nullptr;
+	void* pPool = nullptr;
 	size_t iPoolSize = 0;
 
 	// 主内存池
-	std::map<char*, size_t> mFreeBlocks;
+	std::map<void*, size_t> mFreeBlocks;
 	std::shared_mutex mainMutex;
 	std::shared_mutex recordMutex;
 
@@ -394,8 +395,8 @@ private:
 	std::array<SizeBucket, BucketCount> sizeBuckets;
 
 	// 分配记录
-	std::unordered_map<char*, AllocationRecord> mAllocatedRecords;
+	std::unordered_map<void*, AllocationRecord> mAllocatedRecords;
 
 	// 分配的内存块记录
-	std::vector<std::pair<char*, size_t>> allocatedChunks;
+	std::vector<std::pair<void*, size_t>> allocatedChunks;
 };

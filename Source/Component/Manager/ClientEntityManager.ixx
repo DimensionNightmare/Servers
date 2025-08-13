@@ -17,6 +17,8 @@ protected:
 	ClientEntityManager(System::WPtr system):EntityManager(system)
 	{
 		eComponentType = EMComponentType::ClientEntityManager;
+
+		pAddEntity = std::bind(&ClientEntityManager::AddEntity, this, std::placeholders::_1);
 	}
 public:
 
@@ -41,15 +43,16 @@ public:
 
 public: // dll proxy
 
-	void AddEntity(uint64_t entityId)
+	ClientEntity::Ptr AddEntity(uint64_t entityId)
 	{
 		// ClientEntity::CVPtr entity = std::shared_ptr<ClientEntity>(new ClientEntity(GetOwner()->GetWorldW()));
-		ClientEntity::CVPtr entity = MemPool->Allocate<ClientEntity, World::WPtr>(GetOwner()->GetSelfW<World>());;
+		ClientEntity::Ptr entity = MemPool->Allocate<ClientEntity, World::WPtr>(GetOwner()->GetWorldW());;
 		entity->SetID(entityId);
 		entity->GetDbEntity()->set_account_id(entityId);
 
 		std::unique_lock ulock(oMapMutex);
 		mEntityMap[entityId] = entity;
+		return entity;
 	}
 
 	bool RemoveEntity(uint64_t entityId)
@@ -68,6 +71,9 @@ public: // dll proxy
 
 		return false;
 	}
+
+public:
+	std::function<ClientEntity::Ptr(uint64_t)> pAddEntity;
 
 protected: // dll proxy
 	ClientProxy::Ptr pSqlClient;

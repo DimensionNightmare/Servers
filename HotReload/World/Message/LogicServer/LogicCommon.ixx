@@ -1,6 +1,5 @@
 export module LogicServerMessage:LogicCommon;
 
-import DllUtils;
 import FuncHelper;
 import LogicServerHelper;
 import Server;
@@ -175,7 +174,7 @@ namespace LogicServerMessage
 		LogicServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<LogicServerHelper>(EMSystemType::Server);
 		ClientProxyHelper::CVPtr clientProxy = dnServer->GetClientProxy();
 
-		TickMainSpaceDll(clientProxy.get(), FUNCPLACE(ClientProxy,RedirectClient),  request.server_port(), request.server_ip());
+		clientProxy->pRedirectClient(request.server_port(), request.server_ip());
 	}
 
 	export void Exe_RetHeartbeat(SocketChannel::CVPtr channel, const std::string& binMsg)

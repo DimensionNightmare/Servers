@@ -65,6 +65,9 @@ public: // dll override
 		std::unique_lock ulock(oTimerMutex);
 		mMapTimer.emplace(timerId, id);
 	}
+
+public:
+	std::function<uint64_t(uint64_t)> pCheckEntityCloseTimer;
 	
 protected: // dll proxy
 

@@ -1,7 +1,6 @@
 export module ProxyEntityManagerHelper;
 
 import ProxyEntityManager;
-import DllUtils;
 import ProxyEntityHelper;
 
 #define FUNCPLACE(class, func) &class::func, #class"_"#func
@@ -30,11 +29,7 @@ public:
 	{
 		if (!mEntityMap.contains(entityId))
 		{
-			TickMainSpaceDll(this, FUNCPLACE(ProxyEntityManager,AddEntity), entityId);
-
-			ProxyEntityHelper::Ptr entity = GetEntity(entityId);
-			
-			return entity;
+			return pAddEntity(entityId)->GetSelf<ProxyEntityHelper>();
 		}
 
 		return nullptr;

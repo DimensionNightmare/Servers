@@ -62,11 +62,15 @@ export int main(int argc, char** argv)
 				
 				try
 				{
+					std::random_device rd;
+					std::mt19937 gen(rd());
+					std::uniform_int_distribution<uint64_t> dis(0, 99999999999);
+
 					for(int j = 0; j < count; j++)
 					{
 						auto a = MemPool->Allocate<DimensionNightmare>();
 						// auto a = new DimensionNightmare();
-						auto ramdon = a->GetRandomNuber() - 1;
+						auto ramdon = dis(gen);
 						a->Dispose();
 
 						auto b = MemPool->Allocate<int>();
@@ -99,10 +103,14 @@ export int main(int argc, char** argv)
 
 				try
 				{
+					std::random_device rd;
+					std::mt19937 gen(rd());
+					std::uniform_int_distribution<uint64_t> dis(0, 99999999999);
+
 					for(int j = 0; j < count; j++)
 					{
 						auto a = std::make_shared<DimensionNightmare>();
-						auto ramdon = a->GetRandomNuber() - 1;
+						auto ramdon = dis(gen);
 						a->Dispose();
 
 						auto b = std::make_shared<int>(0);
@@ -198,14 +206,19 @@ export int main(int argc, char** argv)
 
 	auto UnhandledHandler = [](_EXCEPTION_POINTERS* ExceptionInfo) -> long
 		{
-			SPidLogger->Record(EL10nCode_UnhandledException);
+			// SPidLogger->Record(ELogLevel_Error, "Unhandled Exception! info {}",
+			// 	Platform::GetStackTrace(8));
 
 			WriteDumpFile(SPidLogger->GetPidWorkPath() / "MiniDump.dmp", ExceptionInfo);
+
+			App->GetSystem<HotReload>(EMSystemType::HotReload)->SetExcptionState();
 
 			CloseApp();
 			AppRun = false;
 
-			return 0; // EXCEPTION_CONTINUE_SEARCH
+			// return 0; // EXCEPTION_CONTINUE_SEARCH
+			return 1; // EXCEPTION_EXECUTE_HANDLER
+			// return -1; // EXCEPTION_CONTINUE_EXECUTION
 		};
 
 	if (!Platform::SetUnhandledExceptionFilter(UnhandledHandler))
@@ -252,15 +265,11 @@ export int main(int argc, char** argv)
 		goto POINT_EXIT;
 	}
 	
-	SPidLogger->Record(ELogLevel_Normal, "hello ~");
-
-	SPidLogger->Record(ELogLevel_Normal, "Dimension Instance addr->(DimensionNightmare*){}", static_cast<void*>(App.get()));
-
-	App->AppStartInitThread();
+	SPidLogger->Record(ELogLevel_Normal, "hello ~ Dimension Instance addr->(DimensionNightmare*){}", static_cast<void*>(App.get()));
 
 	AppRun = true;
 
-	InputThread = std::async(std::launch::deferred, [&]()
+	InputThread = std::async(std::launch::async, [&]()
 		{
 			std::stringstream ss;
 			std::string str;
@@ -275,9 +284,15 @@ export int main(int argc, char** argv)
 
 			auto abort = [&]()
 				{
-					int a = 100;
-					int b = 0;
-					int c = a / b;
+					std::cout << "abort now!\n";
+					// int a = 100;
+					// int b = 0;
+					// int c = a / b;
+
+					// int* p = nullptr;
+					// *p = 10;
+					World::CVPtr world = nullptr;
+					App->GetSystem<HotReload>(EMSystemType::HotReload)->pInitHotReload(world);
 				};
 
 			auto dump_memory = [&]()

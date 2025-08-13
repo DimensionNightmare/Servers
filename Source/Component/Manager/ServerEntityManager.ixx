@@ -14,13 +14,13 @@ protected:
 	{
 		eComponentType = EMComponentType::ServerEntityManager;
 
-		GetLogger()->Record(ELogLevel_Debug, "{}/{}/{}", __FUNCTION__, typeid(this).name(), static_cast<void*>(this));
+		pCheckEntityCloseTimer = std::bind(&ServerEntityManager::CheckEntityCloseTimer, this, std::placeholders::_1);
+		pAddEntity = std::bind(&ServerEntityManager::AddEntity, this, std::placeholders::_1, std::placeholders::_2);
 	}
 public:
 
 	virtual ~ServerEntityManager()
 	{
-		GetLogger()->Record(ELogLevel_Debug, "{}/{}/{}", __FUNCTION__, typeid(this).name(), static_cast<void*>(this));
 	}
 
 	virtual void Dispose() override
@@ -96,16 +96,21 @@ public: // dll override
 		return false;
 	}
 
-	void AddEntity(uint64_t entityId, EMServerType regType)
+	ServerEntity::Ptr AddEntity(uint64_t entityId, EMServerType regType)
 	{
 		// ServerEntity::CVPtr entity = std::shared_ptr<ServerEntity>(new ServerEntity(GetOwner()->GetWorldW()));
-		ServerEntity::CVPtr entity = MemPool->Allocate<ServerEntity, World::WPtr>(GetOwner()->GetSelfW<World>());
+		ServerEntity::Ptr entity = MemPool->Allocate<ServerEntity, World::WPtr>(GetOwner()->GetWorldW());
 		entity->SetID(entityId);
 
 		std::unique_lock ulock(oMapMutex);
 		mEntityMap[entityId] = entity;
 		mEntityMapList[regType].emplace_back(entity);
+		return entity;
 	}
+
+public:
+
+	std::function<ServerEntity::Ptr(uint64_t,EMServerType)> pAddEntity;
 
 protected: // dll proxy
 	/// @brief 

@@ -1,7 +1,6 @@
 export module RoomEntityManagerHelper;
 
 import RoomEntityManager;
-import DllUtils;
 import RoomEntityHelper;
 
 #define FUNCPLACE(class, func) &class::func, #class"_"#func
@@ -29,9 +28,7 @@ public:
 
 	RoomEntityHelper::Ptr AddEntity(uint32_t mapId)
 	{
-		uint64_t entityId = 0;
-		TickMainSpaceDll(this, FUNCPLACE(RoomEntityManager,AddEntity), std::ref(entityId), mapId);
-		RoomEntityHelper::CVPtr entity = GetEntity(entityId);
+		RoomEntityHelper::CVPtr entity = pAddEntity(mapId)->GetSelf<RoomEntityHelper>();
 		entity->SetMapID(mapId);
 		return entity;
 	}

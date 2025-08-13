@@ -1,7 +1,6 @@
 export module ServerEntityManagerHelper;
 
 import ServerEntityManager;
-import DllUtils;
 import ServerEntityHelper;
 
 #define FUNCPLACE(class, func) &class::func, #class"_"#func
@@ -41,9 +40,7 @@ public:
 	{
 		if (!mEntityMap.contains(entityId))
 		{
-			TickMainSpaceDll(this, FUNCPLACE(ServerEntityManager,AddEntity), entityId, regType);
-			
-			ServerEntityHelper::Ptr entity = GetEntity(entityId);
+			ServerEntityHelper::Ptr entity = pAddEntity(entityId, regType)->GetSelf<ServerEntityHelper>();
 			entity->SetServerType(regType);
 			return entity;
 		}

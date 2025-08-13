@@ -1,6 +1,5 @@
 export module GateServerMessage:GateGlobal;
 
-import DllUtils;
 import GateServerHelper;
 import ProxyEntityHelper;
 import StrUtils;
@@ -83,7 +82,7 @@ namespace GateServerMessage
 		// entity or token expired
 		if (!entity->TimerId())
 		{
-			entity->SetTimerId(TickMainSpaceDll(entityMan.get(), FUNCPLACE(ProxyEntityManager,CheckEntityCloseTimer), entity->ID()));
+			entity->SetTimerId(entityMan->pCheckEntityCloseTimer(entity->ID()));
 		}
 
 		dnServer->GetLogger()->Record(ELogLevel_Debug, "ReqUserToken User: {}!!", request.account_id());

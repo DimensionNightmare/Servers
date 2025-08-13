@@ -169,39 +169,11 @@ public:
 		isNormalFree = false;
 	}
 
-	/// @brief exec runtime lib func
-	bool InitHotReload(World::CVPtr world)
-	{
-		if(pInitHotReload)
-		{
-			return pInitHotReload(world) == 1;
-		}
+public:
+	
+	std::function<int(World::CVPtr)> pShutdownHotReload;
 
-		return false;
-	}
-
-	/// @brief exec runtime lib func
-	bool ShutdownHotReload(World::CVPtr world)
-	{
-		if(pShutdownHotReload)
-		{
-			return pShutdownHotReload(world) == 1;
-		}
-
-		return false;
-	}
-
-	/// @brief exec runtime lib func
-	void InitHotReload(std::function<int(World::CVPtr)> func)
-	{
-		pInitHotReload.swap(func);
-	}
-
-	/// @brief exec runtime lib func
-	void ShutdownHotReload(std::function<int(World::CVPtr)> func)
-	{
-		pShutdownHotReload.swap(func);
-	}
+	std::function<int(World::CVPtr)> pInitHotReload;
 
 protected:
 
@@ -225,8 +197,4 @@ protected:
 	std::string sServerName;
 
 	// LoggerPrint::WPtr pLogger;
-
-	std::function<int(World::CVPtr)> pShutdownHotReload;
-
-	std::function<int(World::CVPtr)> pInitHotReload;
 };

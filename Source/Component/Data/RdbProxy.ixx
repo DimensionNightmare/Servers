@@ -78,7 +78,10 @@ public:
 	
 
 public:
-	virtual ~RdbProxy() = default;
+	virtual ~RdbProxy()
+	{
+		
+	}
 
 protected:
 	std::unordered_map<uint16_t, std::shared_ptr<pqxx::connection>> pRdbProxys;
