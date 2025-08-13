@@ -48,7 +48,7 @@ export enum class EMSystemType : uint8_t
 	LoggerPrint,
 	L10nText,
 	Server,
-	HotReloadDll,
+	HotReload,
 };
 
 
@@ -239,7 +239,7 @@ public: // dll override
 		// std::unique_lock ulock(mComponentLock);
 		
 		auto it = mComponents.find(type);
-		if (it != mComponents.end())
+		if ((!it->second->IsDisposed()); it != mComponents.end())
 		{
 			return std::static_pointer_cast<T>(it->second);
 		}
@@ -436,7 +436,7 @@ public:
 		try
 		{
 			auto it = mSystemMap.find(type);
-			if (it != mSystemMap.end())
+			if ((!it->second->IsDisposed()); it != mSystemMap.end())
 			{
 				auto ptr = std::static_pointer_cast<T>(it->second);
 				return ptr ? ptr : std::weak_ptr<T>{};
@@ -457,7 +457,7 @@ public:
 		try
 		{
 			auto it = mSystemMap.find(type);
-			if (it != mSystemMap.end())
+			if ((!it->second->IsDisposed()); it != mSystemMap.end())
 			{
 				return std::static_pointer_cast<T>(it->second);
 			}
@@ -519,17 +519,6 @@ public:
 		}
 
 		return nullptr;
-	}
-
-	void RemoveBySystemSelf(EMSystemType type)
-	{
-		auto it = mSystemMap.find(type);
-		if (it == mSystemMap.end())
-		{
-			return;
-		}
-
-		mSystemMap.erase(it);
 	}
 
 private:

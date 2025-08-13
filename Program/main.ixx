@@ -64,13 +64,14 @@ export int main(int argc, char** argv)
 				{
 					for(int j = 0; j < count; j++)
 					{
-						// auto a = MemPool->Allocate<DimensionNightmare>();
-						auto a = new DimensionNightmare();
+						auto a = MemPool->Allocate<DimensionNightmare>();
+						// auto a = new DimensionNightmare();
 						auto ramdon = a->GetRandomNuber() - 1;
-						
 						a->Dispose();
 
-						delete a;
+						auto b = MemPool->Allocate<int>();
+
+						// delete a;
 
 						// memPool->RollbackAllocationWithOrigin(static_cast<void*>(a), std::bit_ceil(sizeof(DimensionNightmare)));
 					}
@@ -103,6 +104,8 @@ export int main(int argc, char** argv)
 						auto a = std::make_shared<DimensionNightmare>();
 						auto ramdon = a->GetRandomNuber() - 1;
 						a->Dispose();
+
+						auto b = std::make_shared<int>(0);
 					}
 				}
 				catch (const std::exception& e)
@@ -132,6 +135,8 @@ export int main(int argc, char** argv)
 		SPidLogger = MemPool->Allocate<LoggerPrintPid>();
 	}
 
+	std::future<void> InputThread;
+
 	SPidLogger->Init(ELogLevel_Debug);
 
 	// lunch param
@@ -148,8 +153,7 @@ export int main(int argc, char** argv)
 		if (pos == std::string::npos)
 		{
 			SPidLogger->Record(ELogLevel_Debug, "program lunch param error! Pos:{} ", i);
-			SPidLogger = nullptr;
-			return 0;
+			goto POINT_EXIT;
 		}
 
 		launchParam.emplace(split.substr(0, pos), split.substr(pos + 1));
@@ -189,8 +193,7 @@ export int main(int argc, char** argv)
 	if (!Platform::SetConsoleCtrlHandler(CtrlHandler, true))
 	{
 		SPidLogger->Record(EL10nCode_CmdCtl);
-		CloseApp();
-		return 0;
+		goto POINT_EXIT;
 	}
 
 	auto UnhandledHandler = [](_EXCEPTION_POINTERS* ExceptionInfo) -> long
@@ -208,8 +211,7 @@ export int main(int argc, char** argv)
 	if (!Platform::SetUnhandledExceptionFilter(UnhandledHandler))
 	{
 		SPidLogger->Record(EL10nCode_UnhandledException);
-		App = nullptr;
-		return 0;
+		goto POINT_EXIT;
 	}
 #elif __unix__
 
@@ -247,7 +249,7 @@ export int main(int argc, char** argv)
 	if (!App->Init(std::move(launchParam)))
 	{
 		CloseApp();
-		return 0;
+		goto POINT_EXIT;
 	}
 	
 	SPidLogger->Record(ELogLevel_Normal, "hello ~");
@@ -258,7 +260,7 @@ export int main(int argc, char** argv)
 
 	AppRun = true;
 
-	auto InputThread = std::async(std::launch::async, [&]()
+	InputThread = std::async(std::launch::deferred, [&]()
 		{
 			std::stringstream ss;
 			std::string str;
@@ -396,7 +398,7 @@ export int main(int argc, char** argv)
 	Platform::Sleep(50);
 
 	SPidLogger->Record(ELogLevel_Normal, "bye ~");
-
+POINT_EXIT:
 	SPidLogger = nullptr;
 
 	MemPool = nullptr;

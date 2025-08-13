@@ -20,7 +20,7 @@ public:
 	using Ptr = std::shared_ptr<WebProxy>;
 	using CVPtr = const Ptr&;
 	using WPtr = std::weak_ptr<WebProxy>;
-	~WebProxy()
+	virtual ~WebProxy()
 	{
 
 	}

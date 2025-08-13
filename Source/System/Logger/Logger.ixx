@@ -30,7 +30,7 @@ public:
 	using Ptr = std::shared_ptr<LoggerPrint>;
 	using CVPtr = const Ptr&;
 	using WPtr = std::weak_ptr<LoggerPrint>;
-	~LoggerPrint()
+	virtual ~LoggerPrint()
 	{
 
 	}

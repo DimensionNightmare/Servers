@@ -31,6 +31,8 @@ protected:
 		
 
 		pLogger = GetOwner()->GetWorld()->GetSystemW<LoggerPrint>(EMSystemType::LoggerPrint);
+
+		GetLogger()->Record(ELogLevel_Debug, "{}/{}/{}", __FUNCTION__, typeid(this).name(), static_cast<void*>(this));
 	}
 public:
 
@@ -38,8 +40,10 @@ public:
 	using CVPtr = const Ptr&;
 	using WPtr = std::weak_ptr<ClientProxy>;
 
-	~ClientProxy()
+	virtual ~ClientProxy()
 	{
+		GetLogger()->Record(ELogLevel_Debug, "{}/{}/{}", __FUNCTION__, typeid(this).name(), static_cast<void*>(this));
+
 		pLoop = nullptr;
 		mMsgList.clear();
 		mMapTimer.clear();

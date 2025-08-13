@@ -2,6 +2,10 @@ export module UniversalMemoryPool;
 
 import std.compat;
 
+// import Logger;
+
+std::atomic<int> allocint(0); 
+
 export class UniversalMemoryPool
 {
 	static constexpr size_t MaxCachedSize = 4096; // 最大缓存块大小
@@ -101,16 +105,20 @@ public:
 
 			if (raw_memory)
 			{	
-				T* object_ptr = new(raw_memory) T(std::forward<Args>(args)...);
-
 				// 记录分配信息（包含源代码位置）
 				RecordAllocationInfo(raw_memory, size, loc);
+
+				allocint++;
+				
+				T* object_ptr = new(raw_memory) T(std::forward<Args>(args)...);
 
 				return std::shared_ptr<T>(
 					object_ptr,
 					[this, raw_memory, size](T* ptr)
 					{
+						allocint--;
 						ptr->~T();
+						std::cout << std::format("{}", static_cast<void*>(ptr)) << std::endl;
 						RollbackAllocation(raw_memory, size);
 					}
 				);
@@ -122,6 +130,7 @@ public:
 		{
 			if (raw_memory)
 			{
+				std::cout << std::format( "{}", static_cast<void*>(raw_memory))  << std::endl;;
 				RollbackAllocation(raw_memory, size);
 			}
 			throw;
@@ -185,16 +194,18 @@ private:
 	// 核心分配函数
 	char* AllocateRaw(size_t size)
 	{
-		// 第一次尝试：快速查找（使用读锁）
+		char* addr = nullptr;
 
-		std::unique_lock lock(mainMutex);
 		// auto lock = GetLock(mainMutex, mainLockStats);
-		if (auto it = FindFreeBlock(size); it != mFreeBlocks.end())
 		{
-			return AllocateFromIterator(it, size);
+			std::unique_lock lock(mainMutex);
+			if (auto it = FindFreeBlock(size); it != mFreeBlocks.end())
+			{
+				addr = AllocateFromIterator(it, size);
+			}
 		}
-
-		return nullptr;
+		
+		return addr;
 	}
 
 	// 辅助函数：从迭代器分配（修复死锁）
@@ -288,18 +299,18 @@ private:
 	// 检查内存泄漏
 	void CheckLeaks()
 	{
-		std::unique_lock lock(mainMutex);
-		// auto lock = GetLock(mainMutex, mainLockStats);
+		std::shared_lock lock(recordMutex);
+		// auto lock = GetLock(recordMutex, mainLockStats);
 
 		if (!mAllocatedRecords.empty())
 		{
 			std::cerr << "\n\n*** MEMORY LEAK DETECTED ***\n";
-			std::cerr << "Leaked " << mAllocatedRecords.size()
+			std::cerr << "Leaked " << mAllocatedRecords.size() << " alloc/free " << allocint
 				<< " block(s) of memory\n";
 
 			for (auto& [addr, record] : mAllocatedRecords)
 			{
-				std::cerr << "Leaked block at: " << addr << "\n"
+				std::cerr << "Leaked block at: " << static_cast<void*>(addr) << "\n"
 					<< "  Size: " << record.size << " bytes\n"
 					<< "  Allocation location:\n"
 					<< "    File: " << record.location.file_name() << "\n"

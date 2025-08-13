@@ -1,19 +1,19 @@
-export module HotReloadDll;
+export module HotReload;
 
 import ThirdParty.Platform;
 import std.compat;
 import ECSW;
 import Logger;
 
-export class HotReloadDll : public System
+export class HotReload : public System
 {
 protected:
 	friend class World;
 	friend class UniversalMemoryPool;
 	/// @brief
-	HotReloadDll(World::WPtr world):System(world)
+	HotReload(World::WPtr world):System(world)
 	{
-		emSystemType = EMSystemType::HotReloadDll;
+		emSystemType = EMSystemType::HotReload;
 
 		sDllDir = std::filesystem::path(*GetWorld()->LaunchParam("program")).parent_path() / sDllDir;
 
@@ -27,20 +27,25 @@ protected:
 		}
 		
 
-		pLogger = GetWorld()->GetSystemW<LoggerPrint>(EMSystemType::LoggerPrint);
+		// pLogger = GetWorld()->GetSystemW<LoggerPrint>(EMSystemType::LoggerPrint);
 	}
 public:
-	using Ptr = std::shared_ptr<HotReloadDll>;
+	using Ptr = std::shared_ptr<HotReload>;
 	using CVPtr = const Ptr&;
 
 	/// @brief
-	~HotReloadDll()
+	virtual ~HotReload()
 	{
-		FreeHandle();
+		if(oLibHandle != nullptr)
+		{
+			std::cerr << "HotReload Handle not disposed! Please check code!\n" << Platform::GetStackTrace() << std::endl;
+		}
 	}
 
 	virtual void Dispose() override
 	{
+		FreeHandle();
+		
 		System::Dispose();
 	}
 
@@ -56,7 +61,7 @@ public:
 		Platform::HotHandle hModule = Platform::LoadLibraryA(dllPath.string().c_str());
 		if (!hModule)
 		{
-			GetLogger()->Record(EL10nCode_DllLoad, Platform::GetLastError());
+			SPidLogger->Record(EL10nCode_DllLoad, Platform::GetLastError());
 			return nullptr;
 		}
 
@@ -66,7 +71,7 @@ public:
 		void* hModule = dlopen(fullPath.c_str(), RTLD_LAZY);
 		if (!hModule)
 		{
-			GetLogger()->Record(ELogLevel_Debug, dlerror());
+			SPidLogger->Record(ELogLevel_Debug, dlerror());
 			return nullptr;
 		}
 #endif
@@ -96,7 +101,7 @@ public:
 			}
 			catch (const std::exception& e)
 			{
-				GetLogger()->Record(ELogLevel_Debug, "filesystem:{}", e.what());
+				SPidLogger->Record(ELogLevel_Debug, "filesystem:{}", e.what());
 			}
 		}
 
@@ -108,13 +113,13 @@ public:
 	{
 		if (!std::filesystem::exists(sDllDir))
 		{
-			GetLogger()->Record(EL10nCode_DllMenuPath);
+			SPidLogger->Record(EL10nCode_DllMenuPath);
 			return false;
 		}
 
 		if (!SDllName)
 		{
-			GetLogger()->Record(EL10nCode_DllFileName);
+			SPidLogger->Record(EL10nCode_DllFileName);
 			return false;
 		}
 #ifdef _WIN32
@@ -132,7 +137,7 @@ public:
 		}
 		catch (const std::exception& e)
 		{
-			GetLogger()->Record(ELogLevel_Debug, "{}", e.what());
+			SPidLogger->Record(ELogLevel_Debug, "{}", e.what());
 			return false;
 		}
 #endif
@@ -165,50 +170,42 @@ public:
 	}
 
 	/// @brief exec runtime lib func
-	bool OnRegHotReload(World::CVPtr world)
+	bool InitHotReload(World::CVPtr world)
 	{
-		if (void* funtPtr = GetFuncPtr("InitHotReload"))
+		if(pInitHotReload)
 		{
-			using funcSign = int (*)(World::CVPtr);
-			if (funcSign func = reinterpret_cast<funcSign>(funtPtr))
-			{
-				return func(world) == int(true);
-			}
+			return pInitHotReload(world) == 1;
 		}
 
 		return false;
 	}
 
 	/// @brief exec runtime lib func
-	bool OnUnregHotReload(World::CVPtr world)
+	bool ShutdownHotReload(World::CVPtr world)
 	{
-		// launch error pHotDll is Null
-		if (void* funtPtr = GetFuncPtr("ShutdownHotReload"))
+		if(pShutdownHotReload)
 		{
-			using funcSign = int (*)(World::CVPtr);
-			if (funcSign func = reinterpret_cast<funcSign>(funtPtr))
-			{
-				return func(world) == int(true);
-			}
+			return pShutdownHotReload(world) == 1;
 		}
 
 		return false;
 	}
 
-protected:
-
-	/// @brief get runtime lib funcpointer
-	Platform::FuncHandle GetFuncPtr(const char* funcName)
+	/// @brief exec runtime lib func
+	void InitHotReload(std::function<int(World::CVPtr)> func)
 	{
-#ifdef _WIN32
-		return Platform::GetProcAddress(oLibHandle, funcName);
-#elif __unix__
-		return dlsym(oLibHandle, funcName);
-#endif
-		return nullptr;
+		pInitHotReload.swap(func);
 	}
 
-	LoggerPrint::Ptr GetLogger(){ return pLogger.expired() ? nullptr : pLogger.lock(); }
+	/// @brief exec runtime lib func
+	void ShutdownHotReload(std::function<int(World::CVPtr)> func)
+	{
+		pShutdownHotReload.swap(func);
+	}
+
+protected:
+
+	// LoggerPrint::Ptr GetLogger(){ return pLogger.expired() ? nullptr : pLogger.lock(); }
 
 protected:
 	/// @brief runtime library floder name
@@ -227,5 +224,9 @@ protected:
 
 	std::string sServerName;
 
-	LoggerPrint::WPtr pLogger;
+	// LoggerPrint::WPtr pLogger;
+
+	std::function<int(World::CVPtr)> pShutdownHotReload;
+
+	std::function<int(World::CVPtr)> pInitHotReload;
 };

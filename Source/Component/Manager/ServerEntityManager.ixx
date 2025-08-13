@@ -13,10 +13,15 @@ protected:
 	ServerEntityManager(System::WPtr system):EntityManager(system)
 	{
 		eComponentType = EMComponentType::ServerEntityManager;
+
+		GetLogger()->Record(ELogLevel_Debug, "{}/{}/{}", __FUNCTION__, typeid(this).name(), static_cast<void*>(this));
 	}
 public:
 
-	virtual ~ServerEntityManager() = default;
+	virtual ~ServerEntityManager()
+	{
+		GetLogger()->Record(ELogLevel_Debug, "{}/{}/{}", __FUNCTION__, typeid(this).name(), static_cast<void*>(this));
+	}
 
 	virtual void Dispose() override
 	{

@@ -2,7 +2,7 @@ export module DimensionNightmare;
 
 import Server;
 import ThirdParty.Platform;
-import HotReloadDll;
+import HotReload;
 import ProxyEntityManager;
 import RoomEntityManager;
 import ServerEntityManager;
@@ -16,6 +16,7 @@ import MdbProxy;
 import BitFlag;
 import std.compat;
 import ECSW;
+import Logger;
 
 export void WriteDumpFile(std::filesystem::path fileName, _EXCEPTION_POINTERS* ExceptionInfo = nullptr)
 {
@@ -246,7 +247,7 @@ public:
 		SPidLogger->Init(iniFileParam["Common"]);
 
 		
-		HotReloadDll::CVPtr pHotDll = AddSystem<HotReloadDll>();
+		HotReload::CVPtr pHotDll = AddSystem<HotReload>();
 
 		if (!pHotDll->ReloadHandle())
 		{
@@ -281,14 +282,14 @@ public:
 		MoveLuanchConfigToSelf(std::move(iniFileParam["Common"]));
 
 		// free manager
-		// RemoveSystem(EMSystemType::HotReloadDll);
+		// RemoveSystem(EMSystemType::HotReload);
 
 		return true;
 	}
 
 	/// @brief create dnServer
 	/// @param pHotDll if mutiServer, will own common
-	bool InitServer(World::CVPtr world, HotReloadDll::CVPtr pHotDll)
+	bool InitServer(World::CVPtr world, HotReload::CVPtr pHotDll)
 	{
 		
 		// logger
@@ -391,7 +392,7 @@ public:
 			return false;
 		}
 		
-		if (!pHotDll->OnRegHotReload(world))
+		if (!pHotDll->InitHotReload(world))
 		{
 			pLogger->Record(ELogLevel_Error, "program lunch OnRegHotReload error!");
 			return false;
@@ -419,17 +420,17 @@ public:
 			{
 				pause();
 				
-				HotReloadDll::CVPtr pHotDll = GetSystem<HotReloadDll>(EMSystemType::HotReloadDll);
+				HotReload::CVPtr pHotDll = GetSystem<HotReload>(EMSystemType::HotReload);
 				if(pHotDll->ReloadHandle([&](){
 					for(auto& world : oWorlds)
 					{
-						pHotDll->OnUnregHotReload(world);
+						pHotDll->ShutdownHotReload(world);
 					}
 				}))
 				{
 					for(auto& world : oWorlds)
 					{
-						pHotDll->OnRegHotReload(world);
+						pHotDll->InitHotReload(world);
 					}
 				}
 				
@@ -510,6 +511,14 @@ public:
 
 
 #pragma region Export main space 
+
+extern "C"
+{
+	__declspec(dllexport) World* GetMainWorld()
+	{
+		return DimensionNightmare::PInstance.get();
+	}
+}
 
 template <typename Method>
 struct MemberFunctionArgs;

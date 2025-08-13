@@ -14,7 +14,7 @@ protected:
 		eComponentType = EMComponentType::RoomEntityManager;
 	}
 public:
-	~RoomEntityManager() = default;
+	virtual ~RoomEntityManager() = default;
 
 	virtual void Dispose() override
 	{

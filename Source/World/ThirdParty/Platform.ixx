@@ -146,6 +146,17 @@ export namespace Platform
 		return std::string(path);
 #endif
 	}
+
+	/// @brief get runtime lib funcpointer
+	FuncHandle GetFuncPtr(HotHandle handle, const char* funcName)
+	{
+#ifdef _WIN32
+		return GetProcAddress(handle, funcName);
+#elif __unix__
+		return dlsym(handle, funcName);
+#endif
+		return nullptr;
+	}
 }
 
 #endif

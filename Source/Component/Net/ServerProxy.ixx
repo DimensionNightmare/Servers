@@ -29,7 +29,7 @@ public:
 	using CVPtr = const Ptr&;
 	using WPtr = std::weak_ptr<ServerProxy>;
 
-	~ServerProxy()
+	virtual ~ServerProxy()
 	{
 		
 	}

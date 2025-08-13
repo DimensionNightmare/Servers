@@ -21,7 +21,7 @@ public:
 	using Ptr = std::shared_ptr<MdbProxy>;
 	using CVPtr = const Ptr&;
 	
-	~MdbProxy() = default;
+	virtual ~MdbProxy() = default;
 
 	virtual void Dispose() override
 	{
