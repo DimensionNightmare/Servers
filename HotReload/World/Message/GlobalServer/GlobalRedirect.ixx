@@ -2,9 +2,10 @@ export module GlobalServerMessage:GlobalRedirect;
 
 import FuncHelper;
 import GlobalServerHelper;
-
+import std;
 import ThirdParty.Libhv;
 import Task;
+import ServerEntity;
 
 namespace GlobalServerMessage
 {

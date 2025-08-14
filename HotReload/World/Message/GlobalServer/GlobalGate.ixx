@@ -1,7 +1,7 @@
 export module GlobalServerMessage:GlobalGate;
 
 import GlobalServerHelper;
-
+import std;
 import ThirdParty.Libhv;
 
 namespace GlobalServerMessage

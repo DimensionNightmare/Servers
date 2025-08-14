@@ -5,6 +5,7 @@ import L10nText;
 import ECSW;
 import ThirdParty.Protobuf;
 import std.compat;
+import ThirdParty.Platform;
 
 namespace LogColor
 {

@@ -5,6 +5,7 @@ import GateServerHelper;
 import ThirdParty.Libhv;
 import FuncHelper;
 import Task;
+import std;
 
 namespace GateServerMessage
 {

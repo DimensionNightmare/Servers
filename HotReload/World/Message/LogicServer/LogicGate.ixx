@@ -1,7 +1,7 @@
 export module LogicServerMessage:LogicGate;
 
+import std;
 import LogicServerHelper;
-
 import ThirdParty.Libhv;
 
 namespace LogicServerMessage

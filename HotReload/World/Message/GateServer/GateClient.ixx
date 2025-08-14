@@ -7,6 +7,7 @@ import ThirdParty.Libhv;
 import FuncHelper;
 import Task;
 import ProxyEntityHelper;
+import std;
 
 namespace GateServerMessage
 {

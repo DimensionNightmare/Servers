@@ -4,6 +4,7 @@ import Logger;
 import ThirdParty.Protobuf;
 import ThirdParty.Libhv;
 import Server;
+import std;
 
 export class MessageRegister
 {

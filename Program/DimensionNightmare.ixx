@@ -453,13 +453,13 @@ public:
 			#undef one
 		};
 
-		std::string allCommands = "Commands: \n\t\t";
-		for (auto& [k, v] : mCmdHandle)
-		{
-			allCommands += k + "\n\t\t";
-		}
+		// std::string allCommands = "Commands: \n\t\t";
+		// for (auto& [k, v] : mCmdHandle)
+		// {
+		// 	allCommands += k + "\n\t\t";
+		// }
 
-		SPidLogger->Record(ELogLevel_Normal, "{}", allCommands);
+		// SPidLogger->Record(ELogLevel_Normal, "{}", allCommands);
 	}	
 
 	/// @brief exec command line

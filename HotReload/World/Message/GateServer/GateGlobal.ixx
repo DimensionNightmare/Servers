@@ -5,6 +5,7 @@ import ProxyEntityHelper;
 import StrUtils;
 import ThirdParty.Libhv;
 import FuncHelper;
+import std;
 
 #define FUNCPLACE(class, func) &class::func, #class"_"#func
 
