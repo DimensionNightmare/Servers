@@ -1,28 +1,20 @@
-if("${CMAKE_VERSION}" MATCHES "msvc")
-	cmake_minimum_required (VERSION 3.31.0)
+
+string(TOLOWER "${CMAKE_VERSION}" cmake_version_lower)
+if("${cmake_version_lower}" MATCHES "msvc")
+	cmake_minimum_required (VERSION 3.31.6)
+
+	#https://github.com/microsoft/CMake/blob/f336929b4d90c7a5b92338dae99814ed5da4c4c9/Help/dev/experimental.rst
+	set(CMAKE_EXPERIMENTAL_CXX_IMPORT_STD "0e5b6991-d74f-4b3d-a41c-cf096e0b2508")
 else()
 	cmake_minimum_required (VERSION 4.0.0)
+
+	#https://github.com/Kitware/CMake/blob/cc2b82e2f3a96e8de78c796d63d067db68d10df6/Help/dev/experimental.rst
+	set(CMAKE_EXPERIMENTAL_CXX_IMPORT_STD
+		"d0edc3af-4c50-42ea-a356-e2862fe7a444" # 4.0.3
+	)
 endif()
 
-set(CustomStd 1)
-
-if(NOT CustomStd)
-
-	if("${CMAKE_VERSION}" MATCHES "msvc")
-		#https://github.com/microsoft/CMake/blob/f336929b4d90c7a5b92338dae99814ed5da4c4c9/Help/dev/experimental.rst
-		set(CMAKE_EXPERIMENTAL_CXX_IMPORT_STD "0e5b6991-d74f-4b3d-a41c-cf096e0b2508")
-	else()
-		
-		#https://github.com/Kitware/CMake/blob/cc2b82e2f3a96e8de78c796d63d067db68d10df6/Help/dev/experimental.rst
-		set(CMAKE_EXPERIMENTAL_CXX_IMPORT_STD
-			"a9e1cf81-9932-4810-974b-6eccaf14e457" # updated value for 4.0.0
-			# "d0edc3af-4c50-42ea-a356-e2862fe7a444" # 4.0.3
-		)
-	endif()
-
-	set(CMAKE_CXX_MODULE_STD 1)
-
-endif()
+set(CMAKE_CXX_MODULE_STD 1)
 
 if (POLICY CMP0141)
 	cmake_policy(SET CMP0141 NEW)
@@ -92,11 +84,6 @@ find_package(pbgen CONFIG REQUIRED)
 file(GLOB_RECURSE SourceModule CONFIGURE_DEPENDS 
 	"Source/*.ixx"
 )
-
-if(NOT CustomStd)
-	list(REMOVE_ITEM SourceModule "${CMAKE_CURRENT_SOURCE_DIR}/Source/World/Std/std.ixx")
-	list(REMOVE_ITEM SourceModule "${CMAKE_CURRENT_SOURCE_DIR}/Source/World/Std/std.compat.ixx")
-endif()
 
 add_library(MainSource STATIC)
 target_sources(MainSource 
