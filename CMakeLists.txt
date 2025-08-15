@@ -91,8 +91,8 @@ file(GLOB_RECURSE SourceModule CONFIGURE_DEPENDS
 )
 
 if(NOT CustomStd)
-	list(REMOVE_ITEM SourceModule "Source/World/Std/std.ixx")
-	list(REMOVE_ITEM SourceModule "Source/World/Std/std.compat.ixx")
+	list(REMOVE_ITEM SourceModule "${CMAKE_CURRENT_SOURCE_DIR}/Source/World/Std/std.ixx")
+	list(REMOVE_ITEM SourceModule "${CMAKE_CURRENT_SOURCE_DIR}/Source/World/Std/std.compat.ixx")
 endif()
 
 add_library(MainSource STATIC)
