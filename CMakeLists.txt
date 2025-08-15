@@ -235,15 +235,10 @@ if(MSVC)
 			"#define PRODUCT_VERSION \"${ARG_VERSION_MAJOR}.${ARG_VERSION_MINOR}.${ARG_VERSION_PATCH}.${ARG_VERSION_TWEAK}\"\n"
 		)
 		
-			# 创建版本资源文件
-		set(UTF8_BOM "")
-		foreach(code 239 187 191)  # EF BB BF 的十进制表示
-			string(ASCII ${code} char)
-			string(APPEND UTF8_BOM "${char}")
-		endforeach()
-
+		# 创建版本资源文件
 		file(WRITE ${VERSION_RC_FILE}
-			"${UTF8_BOM}#include \"${RESULT_NAME}.h\"\n"
+			"#pragma code_page(65001)\n"
+			"#include \"${RESULT_NAME}.h\"\n"
 			"#include <winver.h>\n\n"
 			"VS_VERSION_INFO VERSIONINFO\n"
 			"FILEVERSION PRODUCT_VERSION_MAJOR, PRODUCT_VERSION_MINOR, PRODUCT_VERSION_PATCH, PRODUCT_VERSION_TWEAK\n"
