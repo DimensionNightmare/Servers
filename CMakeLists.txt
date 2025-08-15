@@ -1,4 +1,8 @@
-cmake_minimum_required (VERSION 3.10)
+if("${CMAKE_VERSION}" MATCHES "msvc")
+	cmake_minimum_required (VERSION 3.31.0)
+else()
+	cmake_minimum_required (VERSION 4.0.0)
+endif()
 
 set(CustomStd 1)
 
@@ -54,8 +58,7 @@ if(CMAKE_SYSTEM_NAME MATCHES "Linux")
 endif()
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
-	# set(CMAKE_CXX_SCAN_FOR_MODULES ON)
+	
 endif()
 
 if(MSVC)
