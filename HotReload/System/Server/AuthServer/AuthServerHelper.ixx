@@ -86,7 +86,7 @@ public:
 						channel->SetWorld(GetWorldW());
 
 						proxyHelper->SetRegistEvent(msgHandle->GetClientRegistFunc());
-						proxyHelper->pInitConnectedChannel(channel);
+						proxyHelper->InitConnectedChannel(channel);
 					}
 					else
 					{

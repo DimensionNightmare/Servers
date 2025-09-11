@@ -2,6 +2,7 @@ export module ProxyEntityManager;
 
 import ProxyEntity;
 import EntityManager;
+import FuncUtils;
 
 export class ProxyEntityManager : public EntityManager<ProxyEntity>
 {
@@ -10,11 +11,10 @@ protected:
 	friend class UniversalMemoryPool;
 	/// @brief timer manager create
 	ProxyEntityManager(System::WPtr system):EntityManager(system)
+		,CheckEntityCloseTimer(this)
+		,AddEntity(this)
 	{
 		eComponentType = EMComponentType::ProxyEntityManager;
-
-		pCheckEntityCloseTimer = std::bind(&ProxyEntityManager::CheckEntityCloseTimer, this, std::placeholders::_1);
-		pAddEntity = std::bind(&ProxyEntityManager::AddEntity, this, std::placeholders::_1);
 	}
 public:
 
@@ -50,16 +50,6 @@ public:
 
 	}
 
-	/// @brief 
-	uint64_t CheckEntityCloseTimer(uint64_t entityId)
-	{
-		uint64_t timerId = Timer()->setTimeout(10000, std::bind(&ProxyEntityManager::EntityCloseTimer, this, std::placeholders::_1));
-
-		AddTimerRecord(timerId, entityId);
-
-		return timerId;
-	}
-
 public: // dll proxy
 
 	/// @brief 
@@ -77,7 +67,7 @@ public: // dll proxy
 		return false;
 	}
 
-	ProxyEntity::Ptr AddEntity(uint64_t entityId)
+	ProxyEntity::Ptr _AddEntity(uint64_t entityId)
 	{
 		// ProxyEntity::CVPtr entity = std::shared_ptr<ProxyEntity>(new ProxyEntity(GetOwner()->GetWorldW()));
 		ProxyEntity::Ptr entity = MemPool->Allocate<ProxyEntity, World::WPtr>(GetOwner()->GetWorldW());
@@ -87,8 +77,22 @@ public: // dll proxy
 		mEntityMap[entityId] = entity;
 		return entity;
 	}
+	
+	/// @brief 
+	uint64_t _CheckEntityCloseTimer(uint64_t entityId)
+	{
+		FunctionContainer<&ProxyEntityManager::EntityCloseTimer> funcProxy(this);
+
+		uint64_t timerId = Timer()->setTimeout(10000, funcProxy);
+
+		AddTimerRecord(timerId, entityId);
+
+		return timerId;
+	}
 
 public:
-	std::function<ProxyEntity::Ptr(uint64_t)> pAddEntity;
+	
+	FunctionContainer<&ProxyEntityManager::_AddEntity> AddEntity;
+	FunctionContainer<&ProxyEntityManager::_CheckEntityCloseTimer> CheckEntityCloseTimer;
 
 };

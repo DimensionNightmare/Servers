@@ -53,7 +53,7 @@ public:
 		// timeout
 		if (breakTime > 0)
 		{
-			task->TimerId() = pCheckMessageTimeoutTimer(breakTime, msgId);
+			task->TimerId() = CheckMessageTimeoutTimer(breakTime, msgId);
 		}
 		return true;
 	}

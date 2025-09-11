@@ -70,7 +70,7 @@ public:
 
 						channel->SetWorld(GetWorldW());
 						
-						proxyHelper->pInitConnectedChannel(channel);
+						proxyHelper->InitConnectedChannel(channel);
 					}
 					else
 					{

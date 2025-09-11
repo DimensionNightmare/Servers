@@ -2,6 +2,7 @@ export module RoomEntityManager;
 
 import RoomEntity;
 import EntityManager;
+import FuncUtils;
 
 export class RoomEntityManager : public EntityManager<RoomEntity>
 {
@@ -10,11 +11,10 @@ protected:
 	friend class UniversalMemoryPool;
 	/// @brief timer manager create
 	RoomEntityManager(System::WPtr system):EntityManager(system)
+		,CheckEntityCloseTimer(this)
+		,AddEntity(this)
 	{
 		eComponentType = EMComponentType::RoomEntityManager;
-
-		pCheckEntityCloseTimer = std::bind(&RoomEntityManager::CheckEntityCloseTimer, this, std::placeholders::_1);
-		pAddEntity = std::bind(&RoomEntityManager::AddEntity, this, std::placeholders::_1);
 	}
 public:
 	virtual ~RoomEntityManager()
@@ -49,15 +49,6 @@ public:
 
 	}
 
-	uint64_t CheckEntityCloseTimer(uint64_t entityId)
-	{
-		uint64_t timerId = Timer()->setTimeout(10000, std::bind(&RoomEntityManager::EntityCloseTimer, this, std::placeholders::_1));
-
-		AddTimerRecord(timerId, entityId);
-
-		return timerId;
-	}
-
 public: // dll proxy
 
 	bool RemoveEntity(uint64_t entityId)
@@ -76,7 +67,7 @@ public: // dll proxy
 		return false;
 	}
 
-	RoomEntity::Ptr AddEntity(uint64_t mapId)
+	RoomEntity::Ptr _AddEntity(uint64_t mapId)
 	{
 		// RoomEntity::CVPtr entity = std::shared_ptr<RoomEntity>(new RoomEntity(GetOwner()->GetWorldW()));
 		RoomEntity::Ptr entity = MemPool->Allocate<RoomEntity, World::WPtr>(GetOwner()->GetWorldW());
@@ -88,8 +79,20 @@ public: // dll proxy
 		return entity;
 	}
 
+	uint64_t _CheckEntityCloseTimer(uint64_t entityId)
+	{
+		FunctionContainer<&RoomEntityManager::EntityCloseTimer> funcProxy(this);
+
+		uint64_t timerId = Timer()->setTimeout(10000, funcProxy);
+
+		AddTimerRecord(timerId, entityId);
+
+		return timerId;
+	}
+
 public:
-	std::function<RoomEntity::Ptr(uint64_t)> pAddEntity;
+	FunctionContainer<&RoomEntityManager::_AddEntity> AddEntity;
+	FunctionContainer<&RoomEntityManager::_CheckEntityCloseTimer> CheckEntityCloseTimer;
 
 protected:
 	/// @brief 

@@ -243,6 +243,9 @@ public:
 		{
 			launchParam.merge(iniFileParam["Common"]);
 			iniFileParam["Common"] = std::move(launchParam);
+
+			auto mapCopy = iniFileParam["Common"];
+			MoveLuanchConfigToSelf(mapCopy);
 		}
 
 
@@ -423,11 +426,18 @@ public:
 				pause();
 				
 				HotReload::CVPtr pHotDll = GetSystem<HotReload>(EMSystemType::HotReload);
+
+				//after func
+				auto unloadFunc = pHotDll->pShutdownHotReload;
+
 				if(pHotDll->ReloadHandle([&](){
+
 					for(auto& world : oWorlds)
 					{
-						pHotDll->pShutdownHotReload(world);
+						unloadFunc(world);
 					}
+
+					unloadFunc = nullptr;
 				}))
 				{
 					for(auto& world : oWorlds)

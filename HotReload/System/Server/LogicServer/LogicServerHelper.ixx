@@ -194,7 +194,7 @@ public:
 						channel->SetWorld(GetWorldW());
 						
 						proxyHelper->SetRegistEvent(msgHandle->GetClientRegistFunc());
-						proxyHelper->pInitConnectedChannel(channel);
+						proxyHelper->InitConnectedChannel(channel);
 
 						GetClientEntityManager()->InitSqlConn(proxyHelper->GetSelf<ClientProxy>());
 					}
@@ -227,7 +227,7 @@ public:
 										ClientProxyHelper::CVPtr proxyHelper = GetClientProxy();
 
 										if(!proxyHelper){ return ;}
-										proxyHelper->pRedirectClient(std::stoi(originPort), originIp);
+										proxyHelper->RedirectClient(std::stoi(originPort), originIp);
 
 									});
 							}

@@ -8,13 +8,17 @@ import std.compat;
 import Task;
 import Server;
 import ThirdParty.Libhv;
+import FuncUtils;
 
 export class ServerProxy : public Component, public hv::TcpServerTmpl<SocketChannel>
 {
 protected:
 	friend class System;
 	friend class UniversalMemoryPool;
-	ServerProxy(System::WPtr system):Component(system),TcpServerTmpl(nullptr)
+	ServerProxy(System::WPtr system):Component(system)
+		,TcpServerTmpl(nullptr)
+		,CheckMessageTimeoutTimer(this)
+		,InitConnectedChannel(this)
 	{
 		eComponentType = EMComponentType::ServerProxy;
 
@@ -22,9 +26,6 @@ protected:
 		pLoop = MemPool->Allocate<EventLoopThread>();
 		
 		pLogger = GetOwner()->GetWorld()->GetSystemW<LoggerPrint>(EMSystemType::LoggerPrint);
-
-		pInitConnectedChannel = std::bind(&ServerProxy::InitConnectedChannel, this, std::placeholders::_1);
-		pCheckMessageTimeoutTimer = std::bind(&ServerProxy::CheckMessageTimeoutTimer, this, std::placeholders::_1, std::placeholders::_2);
 	}
 
 public:
@@ -136,15 +137,6 @@ public:
 
 public: // dll override
 
-	void InitConnectedChannel(SocketChannel::CVPtr channel)
-	{
-		// if not regist
-		CheckChannelByTimer(channel);
-		// if not recive data
-
-		// channel->setReadTimeout(15000);
-	}
-
 	void MessageTimeoutTimer(uint64_t timerID)
 	{
 		uint32_t id = -1;
@@ -212,13 +204,28 @@ public: // dll override
 
 	void CheckChannelByTimer(SocketChannel::CVPtr channel)
 	{
-		size_t timerId = Timer()->setTimeout(5000, std::bind(&ServerProxy::ChannelTimeoutTimer, this, std::placeholders::_1));
+		FunctionContainer<&ServerProxy::ChannelTimeoutTimer> funcProxy(this);
+		
+		size_t timerId = Timer()->setTimeout(5000, funcProxy);
 		AddTimerRecord(timerId, channel->id());
 	}
-	
-	uint64_t CheckMessageTimeoutTimer(uint32_t breakTime, uint32_t msgId)
+
+private:
+
+	void _InitConnectedChannel(SocketChannel::CVPtr channel)
 	{
-		uint64_t timerId = Timer()->setTimeout(breakTime, std::bind(&ServerProxy::MessageTimeoutTimer, this, std::placeholders::_1));
+		// if not regist
+		CheckChannelByTimer(channel);
+		// if not recive data
+
+		// channel->setReadTimeout(15000);
+	}
+	
+	uint64_t _CheckMessageTimeoutTimer(uint32_t breakTime, uint32_t msgId)
+	{
+		FunctionContainer<&ServerProxy::MessageTimeoutTimer> funcProxy(this);
+		
+		uint64_t timerId = Timer()->setTimeout(breakTime, funcProxy);
 		std::unique_lock ulock(oTimerMutex);
 		mMapTimer[timerId] = msgId;
 		return timerId;
@@ -226,10 +233,10 @@ public: // dll override
 public:
 	// cant init in tcpclient this class
 	std::shared_ptr<EventLoopThread> pLoop;
-	
-	std::function<void(SocketChannel::CVPtr)> pInitConnectedChannel;
 
-	std::function<uint64_t(uint32_t,uint32_t)> pCheckMessageTimeoutTimer;
+	FunctionContainer<&ServerProxy::_InitConnectedChannel> InitConnectedChannel;
+
+	FunctionContainer<&ServerProxy::_CheckMessageTimeoutTimer> CheckMessageTimeoutTimer;
 
 protected:
 	// only oddnumber

@@ -40,7 +40,8 @@ public:
 	{
 		if (!mEntityMap.contains(entityId))
 		{
-			ServerEntityHelper::Ptr entity = pAddEntity(entityId, regType)->GetSelf<ServerEntityHelper>();
+			ServerEntityManager* self = this;
+			ServerEntityHelper::Ptr entity = self->AddEntity(entityId, regType)->GetSelf<ServerEntityHelper>();
 			entity->SetServerType(regType);
 			return entity;
 		}

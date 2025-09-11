@@ -84,6 +84,6 @@ namespace DatabaseServerMessage
 
 		ClientProxyHelper::CVPtr clientProxy = dnServer->GetClientProxy();
 
-		clientProxy->pRedirectClient(request.server_port(), request.server_ip());
+		clientProxy->RedirectClient(request.server_port(), request.server_ip());
 	}
 }

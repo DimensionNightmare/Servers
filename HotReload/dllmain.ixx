@@ -96,19 +96,8 @@ extern "C"
 				// lpvReserved != nullptr ; Staticly linked DLL process detach
 				// lpvReserved == nullptr ; LoadLibrary Dynamically linked DLL process detach 
 
-				using funcSign = World* (*)();
-				auto funtPtr = Platform::GetFuncPtr(nullptr, "GetMainWorld");
-				if (funcSign func = reinterpret_cast<funcSign>(funtPtr))
-				{
-					World* world = func();
-					HotReload::CVPtr pHotDll = world->GetSystem<HotReload>(EMSystemType::HotReload);
-					pHotDll->pInitHotReload = nullptr;
-					pHotDll->pShutdownHotReload = nullptr;
-				}
-
 				ShutdownProtobufLibrary();
 				Libhv::cleanup();
-				
 				break;
 			}
 			// DLL_PROCESS_ATTACH
@@ -120,8 +109,12 @@ extern "C"
 				{
 					World* world = func();
 					HotReload::CVPtr pHotDll = world->GetSystem<HotReload>(EMSystemType::HotReload);
-					pHotDll->pInitHotReload = std::bind(InitHotReload, std::placeholders::_1);
-					pHotDll->pShutdownHotReload = std::bind(ShutdownHotReload, std::placeholders::_1);
+					{
+						pHotDll->pInitHotReload = &InitHotReload;
+					}
+					{	
+						pHotDll->pShutdownHotReload = &ShutdownHotReload;
+					}
 				}
 				break;
 			}

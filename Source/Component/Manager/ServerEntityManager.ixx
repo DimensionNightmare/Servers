@@ -3,6 +3,7 @@ export module ServerEntityManager;
 import ServerEntity;
 import EntityManager;
 import Server;
+import FuncUtils;
 
 export class ServerEntityManager : public EntityManager<ServerEntity>
 {
@@ -11,11 +12,11 @@ protected:
 	friend class UniversalMemoryPool;
 	/// @brief timer manager create
 	ServerEntityManager(System::WPtr system):EntityManager(system)
+		,CheckEntityCloseTimer(this)
+		,AddEntity(this)
 	{
 		eComponentType = EMComponentType::ServerEntityManager;
 
-		pCheckEntityCloseTimer = std::bind(&ServerEntityManager::CheckEntityCloseTimer, this, std::placeholders::_1);
-		pAddEntity = std::bind(&ServerEntityManager::AddEntity, this, std::placeholders::_1, std::placeholders::_2);
 	}
 public:
 
@@ -61,15 +62,6 @@ public:
 		}
 	}
 
-	/// @brief 
-	uint64_t CheckEntityCloseTimer(uint64_t entityId)
-	{
-		uint64_t timerId = Timer()->setTimeout(10000, std::bind(&ServerEntityManager::EntityCloseTimer, this, std::placeholders::_1));
-
-		AddTimerRecord(timerId, entityId);
-
-		return timerId;
-	}
 
 public: // dll override
 
@@ -96,7 +88,7 @@ public: // dll override
 		return false;
 	}
 
-	ServerEntity::Ptr AddEntity(uint64_t entityId, EMServerType regType)
+	ServerEntity::Ptr _AddEntity(uint64_t entityId, EMServerType regType)
 	{
 		// ServerEntity::CVPtr entity = std::shared_ptr<ServerEntity>(new ServerEntity(GetOwner()->GetWorldW()));
 		ServerEntity::Ptr entity = MemPool->Allocate<ServerEntity, World::WPtr>(GetOwner()->GetWorldW());
@@ -108,9 +100,22 @@ public: // dll override
 		return entity;
 	}
 
+	/// @brief 
+	uint64_t _CheckEntityCloseTimer(uint64_t entityId)
+	{
+		FunctionContainer<&ServerEntityManager::EntityCloseTimer> funcProxy(this);
+
+		uint64_t timerId = Timer()->setTimeout(10000, funcProxy);
+
+		AddTimerRecord(timerId, entityId);
+
+		return timerId;
+	}
+
 public:
 
-	std::function<ServerEntity::Ptr(uint64_t,EMServerType)> pAddEntity;
+	FunctionContainer<&ServerEntityManager::_AddEntity> AddEntity;
+	FunctionContainer<&ServerEntityManager::_CheckEntityCloseTimer> CheckEntityCloseTimer;
 
 protected: // dll proxy
 	/// @brief 

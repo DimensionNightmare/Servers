@@ -133,7 +133,7 @@ public:
 
 						channel->SetWorld(GetWorldW());
 
-						proxyHelper->pInitConnectedChannel(channel);
+						proxyHelper->InitConnectedChannel(channel);
 					}
 					else
 					{
@@ -236,7 +236,7 @@ public:
 						channel->SetWorld(GetWorldW());
 						
 						proxyHelper->SetRegistEvent(msgHandle->GetClientRegistFunc());
-						proxyHelper->pInitConnectedChannel(channel);
+						proxyHelper->InitConnectedChannel(channel);
 					}
 					else
 					{

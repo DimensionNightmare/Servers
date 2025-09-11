@@ -83,7 +83,7 @@ namespace GateServerMessage
 		// entity or token expired
 		if (!entity->TimerId())
 		{
-			entity->SetTimerId(entityMan->pCheckEntityCloseTimer(entity->ID()));
+			entity->SetTimerId(entityMan->CheckEntityCloseTimer(entity->ID()));
 		}
 
 		dnServer->GetLogger()->Record(ELogLevel_Debug, "ReqUserToken User: {}!!", request.account_id());

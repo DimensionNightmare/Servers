@@ -90,7 +90,7 @@ public:
 	void Record(EL10nCode code, Args&&... args)
 	{
 		ELogLevel level = ELogLevel_None;
-		const std::string& fmt = GetL10nText()->GetTipText_Proxy(code, level);
+		const std::string& fmt = GetL10nText()->GetTipText(code, level);
 
 		if (level < eLogLevel)
 		{

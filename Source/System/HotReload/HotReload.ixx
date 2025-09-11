@@ -44,6 +44,9 @@ public:
 
 	virtual void Dispose() override
 	{
+		pShutdownHotReload = nullptr;
+		pInitHotReload = nullptr;
+
 		FreeHandle();
 		
 		System::Dispose();

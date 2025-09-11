@@ -97,7 +97,7 @@ public:
 
 			request.SerializeToString(&binData);
 			// timer destory
-			entityHelper->SetTimerId(entityMan->pCheckEntityCloseTimer(entityHelper->ID()));
+			entityHelper->SetTimerId(entityMan->CheckEntityCloseTimer(entityHelper->ID()));
 			MessagePackAndSend(0, EMMsgDeal::Ret, request.GetDescriptor()->full_name(), binData, channel);
 			entityHelper->SetChannel(nullptr);
 
@@ -166,7 +166,7 @@ public:
 
 						channel->SetWorld(GetWorldW());
 
-						proxyHelper->pInitConnectedChannel(channel);
+						proxyHelper->InitConnectedChannel(channel);
 					}
 					else
 					{
@@ -260,7 +260,7 @@ public:
 
 						proxyHelper->SetRegistEvent(msgHandle->GetClientRegistFunc());
 
-						proxyHelper->pInitConnectedChannel(channel);
+						proxyHelper->InitConnectedChannel(channel);
 					}
 					else
 					{

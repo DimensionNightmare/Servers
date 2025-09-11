@@ -28,7 +28,8 @@ public:
 
 	RoomEntityHelper::Ptr AddEntity(uint32_t mapId)
 	{
-		RoomEntityHelper::CVPtr entity = pAddEntity(mapId)->GetSelf<RoomEntityHelper>();
+		RoomEntityManager* self = this;
+		RoomEntityHelper::CVPtr entity = self->AddEntity(mapId)->GetSelf<RoomEntityHelper>();
 		entity->SetMapID(mapId);
 		return entity;
 	}

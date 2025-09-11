@@ -174,7 +174,7 @@ namespace LogicServerMessage
 		LogicServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<LogicServerHelper>(EMSystemType::Server);
 		ClientProxyHelper::CVPtr clientProxy = dnServer->GetClientProxy();
 
-		clientProxy->pRedirectClient(request.server_port(), request.server_ip());
+		clientProxy->RedirectClient(request.server_port(), request.server_ip());
 	}
 
 	export void Exe_RetHeartbeat(SocketChannel::CVPtr channel, const std::string& binMsg)

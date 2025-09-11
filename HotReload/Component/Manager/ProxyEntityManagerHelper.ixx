@@ -29,7 +29,8 @@ public:
 	{
 		if (!mEntityMap.contains(entityId))
 		{
-			return pAddEntity(entityId)->GetSelf<ProxyEntityHelper>();
+			ProxyEntityManager* self = this;
+			return self->AddEntity(entityId)->GetSelf<ProxyEntityHelper>();
 		}
 
 		return nullptr;

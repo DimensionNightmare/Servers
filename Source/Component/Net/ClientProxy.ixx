@@ -7,6 +7,7 @@ import std.compat;
 import Task;
 import Server;
 import ThirdParty.Libhv;
+import FuncUtils;
 
 #define NABS(n) ((n) < 0 ? (n) : -(n))
 
@@ -22,7 +23,11 @@ export class ClientProxy : public Component, public hv::TcpClientTmpl<SocketChan
 protected:
 	friend class System;
 	friend class UniversalMemoryPool;
-	ClientProxy(System::WPtr system):Component(system),TcpClientTmpl(nullptr)
+	ClientProxy(System::WPtr system):Component(system)
+		,TcpClientTmpl(nullptr)
+		,CheckMessageTimeoutTimer(this)
+		,InitConnectedChannel(this)
+		,RedirectClient(this)
 	{
 		eComponentType = EMComponentType::ClientProxy;
 
@@ -31,10 +36,6 @@ protected:
 		
 
 		pLogger = GetOwner()->GetWorld()->GetSystemW<LoggerPrint>(EMSystemType::LoggerPrint);
-
-		pInitConnectedChannel = std::bind(&ClientProxy::InitConnectedChannel, this, std::placeholders::_1);
-		pCheckMessageTimeoutTimer = std::bind(&ClientProxy::CheckMessageTimeoutTimer, this, std::placeholders::_1, std::placeholders::_2);
-		pRedirectClient = std::bind(&ClientProxy::RedirectClient, this, std::placeholders::_1, std::placeholders::_2);
 	}
 public:
 
@@ -159,14 +160,6 @@ public: // dll override
 		}
 	}
 
-	uint64_t CheckMessageTimeoutTimer(uint32_t breakTime, uint32_t msgId)
-	{
-		uint64_t timerId = Timer()->setTimeout(breakTime, std::bind(&ClientProxy::MessageTimeoutTimer, this, std::placeholders::_1));
-		std::unique_lock ulock(oTimerMutex);
-		mMapTimer[timerId] = msgId;
-		return timerId;
-	}
-
 	const auto& Timer() { return pLoop->loop(); }
 
 	void AddTimerRecord(size_t timerId, uint32_t id)
@@ -188,17 +181,32 @@ public: // dll override
 		// MessagePackAndSend(0, EMMsgDeal::Ret, request.GetDescriptor()->full_name(), binData, GetChannel());
 	}
 
-	void InitConnectedChannel(SocketChannel::CVPtr chanhel)
+private:
+
+	uint64_t _CheckMessageTimeoutTimer(uint32_t breakTime, uint32_t msgId)
+	{
+		FunctionContainer<&ClientProxy::MessageTimeoutTimer> funcProxy(this);
+
+		uint64_t timerId = Timer()->setTimeout(breakTime, funcProxy);
+		std::unique_lock ulock(oTimerMutex);
+		mMapTimer[timerId] = msgId;
+		return timerId;
+	}
+
+	void _InitConnectedChannel(SocketChannel::CVPtr chanhel)
 	{
 		// chanhel->setHeartbeat(4000, std::bind(&ClientProxy::TickHeartbeat, this));
 		// channel->setWriteTimeout(12000);
+
+		FunctionContainer<&ClientProxy::TickRegistEvent> funcProxy(this);
+
 		if (eRegistState == EMRegistState::None)
 		{
-			Timer()->setInterval(1000, std::bind(&ClientProxy::TickRegistEvent, this, std::placeholders::_1));
+			Timer()->setInterval(1000, funcProxy);
 		}
 	}
 
-	void RedirectClient(uint16_t port, const std::string& ip)
+	void _RedirectClient(uint16_t port, const std::string& ip)
 	{
 		GetLogger()->Record(ELogLevel_Debug, "reclient to {}:{}", ip, port);
 
@@ -217,11 +225,11 @@ public: // dll override
 
 public:
 
-	std::function<void(SocketChannel::CVPtr)> pInitConnectedChannel;
+	FunctionContainer<&ClientProxy::_InitConnectedChannel> InitConnectedChannel;
 
-	std::function<uint64_t(uint32_t,uint32_t)> pCheckMessageTimeoutTimer;
+	FunctionContainer<&ClientProxy::_CheckMessageTimeoutTimer> CheckMessageTimeoutTimer;
 
-	std::function<void(uint16_t,const std::string&)> pRedirectClient;
+	FunctionContainer<&ClientProxy::_RedirectClient> RedirectClient;
 
 protected: // dll proxy
 

@@ -5,6 +5,7 @@ import EntityManager;
 import ClientProxy;
 import StrUtils;
 import MdbProxy;
+import FuncUtils;
 
 /// @brief manager client proxys
 export class ClientEntityManager : public EntityManager<ClientEntity>
@@ -15,10 +16,9 @@ protected:
 	friend class UniversalMemoryPool;
 	/// @brief timer manager create
 	ClientEntityManager(System::WPtr system):EntityManager(system)
+		,AddEntity(this)
 	{
 		eComponentType = EMComponentType::ClientEntityManager;
-
-		pAddEntity = std::bind(&ClientEntityManager::AddEntity, this, std::placeholders::_1);
 	}
 public:
 
@@ -43,7 +43,7 @@ public:
 
 public: // dll proxy
 
-	ClientEntity::Ptr AddEntity(uint64_t entityId)
+	ClientEntity::Ptr _AddEntity(uint64_t entityId)
 	{
 		// ClientEntity::CVPtr entity = std::shared_ptr<ClientEntity>(new ClientEntity(GetOwner()->GetWorldW()));
 		ClientEntity::Ptr entity = MemPool->Allocate<ClientEntity, World::WPtr>(GetOwner()->GetWorldW());;
@@ -73,7 +73,7 @@ public: // dll proxy
 	}
 
 public:
-	std::function<ClientEntity::Ptr(uint64_t)> pAddEntity;
+	FunctionContainer<&ClientEntityManager::_AddEntity> AddEntity;
 
 protected: // dll proxy
 	ClientProxy::Ptr pSqlClient;

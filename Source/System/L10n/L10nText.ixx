@@ -3,19 +3,19 @@ export module L10nText;
 import ECSW;
 import ThirdParty.Protobuf;
 import std.compat;
+import FuncUtils;
 
 #define FUNCPLACE(class, func) &class::func, #class"_"#func
 
 export class L10nText : public System
 {
 protected:
-	L10nText(World::WPtr world)
-		: System(world)
+	L10nText(World::WPtr world) : System(world)
+		// create code space ..0.0..
+		, GetTipText(this)
 	{
 		emSystemType = EMSystemType::L10nText;
 
-		// create code space ..0.0..
-		GetTipText_Proxy = std::bind(&L10nText::GetTipText, this, std::placeholders::_1, std::placeholders::_2);
 	}
 
 	friend class World;
@@ -40,7 +40,8 @@ public:
 	/// absl\hash\internal\hash.h kSeed
 	bool Awake() override;
 
-	const std::string& GetTipText(EL10nCode type, ELogLevel& logLevel)
+private:
+	const std::string& _GetTipText(EL10nCode type, ELogLevel& logLevel)
 	{
 		logLevel = ELogLevel_None;
 
@@ -57,12 +58,15 @@ public:
 
 public:
 
+	/// @brief l10n imp. find get.
+	// FindFunctionPtr pPBMapFindFunc = nullptr;
+	FunctionContainer<&L10nText::_GetTipText> GetTipText;
+
+private:
+
 	/// @brief main use this
 	l10n::l10nCodes mL10nCode;
 
-	/// @brief l10n imp. find get.
-	// FindFunctionPtr pPBMapFindFunc = nullptr;
-	std::function<const std::string&(EL10nCode, ELogLevel&)> GetTipText_Proxy = nullptr;
 
 	/// @brief l10n imp. text get.
 	typedef const std::string& (l10n::l10nCode::* TipTextFunc)() const;

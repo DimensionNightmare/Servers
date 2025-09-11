@@ -35,7 +35,8 @@ public:
 	{
 		if (!mEntityMap.contains(entityId))
 		{
-			return pAddEntity(entityId)->GetSelf<ClientEntityHelper>();
+			ClientEntityManager* self = this;
+			return self->AddEntity(entityId)->GetSelf<ClientEntityHelper>();
 		}
 
 		return nullptr;
