@@ -36,7 +36,7 @@ export int main(int argc, char** argv)
 
 #ifdef _WIN32
 	system("chcp 65001");
-// 	Platform::SetDebugFlag();
+	Platform::SetDebugFlag();
 // 	SetCurrentDirectoryA(execPath.parent_path().string().c_str());
 // #elif __unix__
 // 	chdir(execPath.parent_path().string().c_str());
@@ -47,7 +47,7 @@ export int main(int argc, char** argv)
 		MemPool = std::make_shared<UniversalMemoryPool>();
 
 #if 0
-		int count = 100000;
+		int count = 1000'0000;
 		int threads = 8;
 
 		std::vector<std::future<void>> ones;
@@ -57,8 +57,6 @@ export int main(int argc, char** argv)
 			ones.push_back(std::async(std::launch::async, [=]()
 			{
 				TIMERSTART(MemPoolAlloc);
-
-				// auto memPool = std::make_shared<UniversalMemoryPool>();
 				
 				try
 				{
@@ -70,14 +68,10 @@ export int main(int argc, char** argv)
 					{
 						auto a = MemPool->Allocate<DimensionNightmare>();
 						// auto a = new DimensionNightmare();
-						auto ramdon = dis(gen);
+						// auto ramdon = dis(gen);
 						a->Dispose();
 
-						auto b = MemPool->Allocate<int>();
-
 						// delete a;
-
-						// memPool->RollbackAllocationWithOrigin(static_cast<void*>(a), std::bit_ceil(sizeof(DimensionNightmare)));
 					}
 				}
 				catch (const std::exception& e)
@@ -89,7 +83,6 @@ export int main(int argc, char** argv)
 				TIMEREND(MemPoolAlloc);
 				DURATION_ms(MemPoolAlloc);
 
-				// memPool->PrintLockStats(1);
 			}));
 		}
 
@@ -110,10 +103,8 @@ export int main(int argc, char** argv)
 					for(int j = 0; j < count; j++)
 					{
 						auto a = std::make_shared<DimensionNightmare>();
-						auto ramdon = dis(gen);
+						// auto ramdon = dis(gen);
 						a->Dispose();
-
-						auto b = std::make_shared<int>(0);
 					}
 				}
 				catch (const std::exception& e)
@@ -290,8 +281,6 @@ export int main(int argc, char** argv)
 
 					// int* p = nullptr;
 					// *p = 10;
-					World::CVPtr world = nullptr;
-					App->GetSystem<HotReload>(EMSystemType::HotReload)->pInitHotReload(world);
 				};
 
 			auto dump_memory = [&]()

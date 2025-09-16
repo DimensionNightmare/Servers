@@ -1,6 +1,6 @@
 export module DatabaseServerHelper;
 
-export import ThirdParty.PbGen;
+import ThirdParty.PbGen;
 import ClientProxyHelper;
 import ServerEntityManagerHelper;
 import DbUtils;
@@ -215,7 +215,7 @@ public:
 							{
 								GetLogger()->Record(ELogLevel_Debug, "orgin not match peeraddr {} reclient ~", origin);
 
-								proxyHelper->Timer()->setTimeout(200, [this, originIp, originPort](uint64_t timerID)
+								proxyHelper->GetTimer()->SetTimeout(200, [this, originIp, originPort](uint64_t timerID)
 									{
 										ClientProxyHelper::CVPtr proxyHelper = GetClientProxy();
 										if(!proxyHelper){ return ;}

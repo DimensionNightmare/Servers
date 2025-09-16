@@ -8,12 +8,13 @@ import FuncHelper;
 import Task;
 import ProxyEntityHelper;
 import std;
+import ThirdParty.PbGen;
 
-namespace GateServerMessage
+export namespace GateServerMessage
 {
 
 	// client request
-	export TaskVoid Msg_ReqAuthToken(SocketChannel::CVPtr channel, uint32_t msgId, const std::string& binMsg)
+	TaskVoid Msg_ReqAuthToken(SocketChannel::CVPtr channel, uint32_t msgId, const std::string& binMsg)
 	{
 		GMsg::C2S_ReqAuthToken request;
 		if(!request.ParseFromString(binMsg))
@@ -52,7 +53,7 @@ namespace GateServerMessage
 			if (uint64_t timerId = entity->TimerId())
 			{
 				entity->SetTimerId(0);
-				entityMan->RemoveTimerRecord(timerId);
+				entityMan->GetTimer()->KillTimer(timerId);
 			}
 			
 			channel->setContextPtr(entity);
@@ -113,4 +114,5 @@ namespace GateServerMessage
 
 		co_return;
 	}
+
 }

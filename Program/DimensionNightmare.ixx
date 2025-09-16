@@ -17,6 +17,7 @@ import BitFlag;
 import std.compat;
 import ECSW;
 import Logger;
+import Timer;
 
 export void WriteDumpFile(std::filesystem::path fileName, _EXCEPTION_POINTERS* ExceptionInfo = nullptr)
 {
@@ -88,7 +89,7 @@ public:
 	}
 
 	/// @brief load ini config
-	bool Init(std::unordered_map<std::string, std::string>&& launchParam)
+	bool Init(std::unordered_map<std::string, std::string> launchParam)
 	{
 		/// @brief load ini config
 		BitFlag<EMServerType> bitServerOpenFlag;
@@ -309,6 +310,8 @@ public:
 		{
 			return false;
 		}
+
+		world->AddSystem<Timer>();
 
 		
 		std::string* value = world->LaunchParam("svrName");

@@ -6,12 +6,13 @@ import ThirdParty.Libhv;
 import FuncHelper;
 import ServerEntityHelper;
 import std;
+import ThirdParty.PbGen;
 
-namespace ControlServerMessage
+export namespace ControlServerMessage
 {
 
 	// client request
-	export void Msg_ReqRegistSrv(SocketChannel::CVPtr channel, uint32_t msgId, const std::string& binMsg)
+	void Msg_ReqRegistSrv(SocketChannel::CVPtr channel, uint32_t msgId, const std::string& binMsg)
 	{
 		GMsg::COM_ReqRegistSrv request;
 		if(!request.ParseFromString(binMsg))
@@ -63,7 +64,7 @@ namespace ControlServerMessage
 		
 	}
 
-	export void Exe_RetHeartbeat(SocketChannel::CVPtr channel, const std::string& binMsg)
+	void Exe_RetHeartbeat(SocketChannel::CVPtr channel, const std::string& binMsg)
 	{
 		GMsg::COM_RetHeartbeat request;
 		if(!request.ParseFromString(binMsg))
@@ -71,4 +72,5 @@ namespace ControlServerMessage
 			return;
 		}
 	}
+
 }

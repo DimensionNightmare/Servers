@@ -4,13 +4,14 @@ import AuthServerHelper;
 import Server;
 import FuncHelper;
 import Task;
+import ThirdParty.PbGen;
 
 
-namespace AuthServerMessage
+export namespace AuthServerMessage
 {
 
 	// client request
-	export TaskVoid Evt_ReqRegistSrv(Server::CVPtr server)
+	TaskVoid Evt_ReqRegistSrv(Server::CVPtr server)
 	{
 		AuthServerHelper::CVPtr dnServer = server->GetSelf<AuthServerHelper>();
 

@@ -43,6 +43,9 @@ public:
 		}
 
 		uint64_t entityId = mMapTimer[timerID];
+
+		mMapTimer.erase(timerID);
+
 		if (RemoveEntity(entityId))
 		{
 			GetLogger()->Record(ELogLevel_Debug, "destory proxy Timer entity");
@@ -82,7 +85,7 @@ public: // dll proxy
 	{
 		FunctionContainer<&ProxyEntityManager::EntityCloseTimer> funcProxy(this);
 
-		uint64_t timerId = Timer()->setTimeout(10000, funcProxy);
+		uint64_t timerId = GetTimer()->SetTimeout(10000, funcProxy);
 
 		AddTimerRecord(timerId, entityId);
 

@@ -390,7 +390,7 @@ void GetFieldDefaultValueByProtoType(const FieldDescriptor* field, std::string& 
 
 }
 
-export class IDbSqlHelper
+class IDbSqlHelper
 {
 public:
 	~IDbSqlHelper() = default;

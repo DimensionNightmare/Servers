@@ -56,7 +56,7 @@ public:
 			{
 				if (size_t timerId = task->TimerId())
 				{
-					Timer()->killTimer(timerId);
+					GetTimer()->KillTimer(timerId);
 					mMapTimer.erase(timerId);
 				}
 			}

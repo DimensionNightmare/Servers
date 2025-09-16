@@ -8,7 +8,7 @@ import ThirdParty.Libhv;
 import std.compat;
 import Task;
 import WebProxyHelper;
-
+import ThirdParty.PbGen;
 
 using namespace std::chrono;
 

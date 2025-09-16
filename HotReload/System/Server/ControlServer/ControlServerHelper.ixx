@@ -1,6 +1,6 @@
 export module ControlServerHelper;
 
-export import ThirdParty.PbGen;
+import ThirdParty.PbGen;
 import Server;
 import ServerProxyHelper;
 import ServerEntityManagerHelper;

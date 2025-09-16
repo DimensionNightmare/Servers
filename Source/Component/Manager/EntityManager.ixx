@@ -3,6 +3,7 @@ export module EntityManager;
 import Logger;
 import ECSW;
 import ThirdParty.Libhv;
+import Timer;
 
 export template<class TEntity = Entity>
 class EntityManager : public Component
@@ -11,10 +12,10 @@ protected:
 	/// @brief timer manager create
 	EntityManager(System::WPtr system):Component(system)
 	{
-		// pLoop = std::make_unique<hv::EventLoopThread>();
-		pLoop = MemPool->Allocate<hv::EventLoopThread>();
-
 		pLogger = GetOwner()->GetWorld()->GetSystemW<LoggerPrint>(EMSystemType::LoggerPrint);
+
+		
+		pTimer = GetOwner()->GetWorld()->GetSystemW<Timer>(EMSystemType::Timer);
 	}
 	
 public:
@@ -24,25 +25,11 @@ public:
 		
 	}
 
-	virtual bool Awake() override
-	{
-		GetOwner()->GetWorld()->AddEvent(EMEventType::ServerStart, GetSelfW<EntityManager>(), &EntityManager::Start);
-		return true;
-	}
-
-	/// @brief start timer manager
-	virtual bool Start()
-	{
-		pLoop->start();
-		return true;
-	}
-
 	/// @brief main loop func mount
 	virtual void TickMainFrame() = 0;
 
 	virtual void Dispose() override
 	{
-		pLoop = nullptr;
 		for (auto& [id, entity] : mEntityMap)
 		{
 			entity->Dispose();
@@ -53,11 +40,9 @@ public:
 		Component::Dispose();
 	}
 
-protected:
-
 	LoggerPrint::Ptr GetLogger(){ return pLogger.expired() ? nullptr : pLogger.lock(); }
 
-	const auto& Timer() { return pLoop->loop(); }
+	Timer::Ptr GetTimer(){ return pTimer.expired() ? nullptr : pTimer.lock(); }
 
 public: // dll override
 
@@ -65,11 +50,6 @@ public: // dll override
 	{
 		std::unique_lock ulock(oTimerMutex);
 		mMapTimer.emplace(timerId, id);
-	}
-
-	void RemoveTimerRecord(uint64_t timerId)
-	{
-		Timer()->killTimer(timerId);
 	}
 	
 protected: // dll proxy
@@ -82,8 +62,8 @@ protected: // dll proxy
 	/// @brief mMapTimer Mutex
 	std::shared_mutex oTimerMutex;
 
-	std::shared_ptr<hv::EventLoopThread> pLoop;
-
 	LoggerPrint::WPtr pLogger;
+
+	Timer::WPtr pTimer;
 
 };

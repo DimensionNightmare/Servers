@@ -4,13 +4,14 @@ import FuncHelper;
 import GlobalServerHelper;
 import Server;
 import Task;
+import ThirdParty.PbGen;
 
 
-namespace GlobalServerMessage
+export namespace GlobalServerMessage
 {
 
 	// client request
-	export TaskVoid Evt_ReqRegistSrv(Server::CVPtr server)
+	TaskVoid Evt_ReqRegistSrv(Server::CVPtr server)
 	{
 		GlobalServerHelper::Ptr dnServer = server->GetSelf<GlobalServerHelper>();
 
@@ -77,7 +78,7 @@ namespace GlobalServerMessage
 	}
 
 	// client request
-	export void Msg_ReqRegistSrv(SocketChannel::CVPtr channel, uint32_t msgId, const std::string& binMsg)
+	void Msg_ReqRegistSrv(SocketChannel::CVPtr channel, uint32_t msgId, const std::string& binMsg)
 	{
 		GMsg::COM_ReqRegistSrv request;
 		if(!request.ParseFromString(binMsg))
@@ -130,7 +131,7 @@ namespace GlobalServerMessage
 				if (uint64_t timerId = entity->TimerId())
 				{
 					entity->SetTimerId(0);
-					entityMan->RemoveTimerRecord(timerId);
+					entityMan->GetTimer()->KillTimer(timerId);
 				}
 
 				// already connect
@@ -179,7 +180,7 @@ namespace GlobalServerMessage
 
 	}
 
-	export void Exe_RetHeartbeat(SocketChannel::CVPtr channel, const std::string& binMsg)
+	void Exe_RetHeartbeat(SocketChannel::CVPtr channel, const std::string& binMsg)
 	{
 		GMsg::COM_RetHeartbeat request;
 		if(!request.ParseFromString(binMsg))
@@ -187,4 +188,5 @@ namespace GlobalServerMessage
 			return;
 		}
 	}
+
 }

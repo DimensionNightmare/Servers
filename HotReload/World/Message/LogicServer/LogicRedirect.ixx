@@ -4,10 +4,11 @@ import LogicServerHelper;
 import std;
 import ThirdParty.Libhv;
 import FuncHelper;
+import ThirdParty.PbGen;
 
-namespace LogicServerMessage
+export namespace LogicServerMessage
 {
-	export void Exe_RetAccountReplace(SocketChannel::CVPtr channel, uint32_t msgId, const std::string& binMsg)
+	void Exe_RetAccountReplace(SocketChannel::CVPtr channel, uint32_t msgId, const std::string& binMsg)
 	{
 		GMsg::S2C_RetAccountReplace request;
 		if(!request.ParseFromString(binMsg))
@@ -45,7 +46,7 @@ namespace LogicServerMessage
 	}
 
 	// client request
-	export TaskVoid Msg_ReqClientLogin(SocketChannel::CVPtr channel, uint32_t msgId, const std::string& binMsg)
+	TaskVoid Msg_ReqClientLogin(SocketChannel::CVPtr channel, uint32_t msgId, const std::string& binMsg)
 	{
 		GMsg::C2S_ReqAuthToken request;
 		if(!request.ParseFromString(binMsg))

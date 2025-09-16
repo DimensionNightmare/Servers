@@ -6,11 +6,12 @@ import ThirdParty.Libhv;
 import FuncHelper;
 import Task;
 import std;
+import ThirdParty.PbGen;
 
-namespace GateServerMessage
+export namespace GateServerMessage
 {
 
-	export TaskVoid Exe_ReqLoadData(SocketChannel::CVPtr channel, uint32_t msgId, const std::string& binMsg)
+	TaskVoid Exe_ReqLoadData(SocketChannel::CVPtr channel, uint32_t msgId, const std::string& binMsg)
 	{
 		GMsg::L2D_ReqLoadData request;
 		if(!request.ParseFromString(binMsg))
@@ -61,7 +62,7 @@ namespace GateServerMessage
 		co_return;
 	}
 
-	export TaskVoid Exe_ReqSaveData(SocketChannel::CVPtr channel, uint32_t msgId, const std::string& binMsg)
+	TaskVoid Exe_ReqSaveData(SocketChannel::CVPtr channel, uint32_t msgId, const std::string& binMsg)
 	{
 		GMsg::L2D_ReqSaveData request;
 		if(!request.ParseFromString(binMsg))
@@ -111,4 +112,5 @@ namespace GateServerMessage
 
 		co_return;
 	}
+
 }

@@ -1,6 +1,6 @@
 export module AuthServerHelper;
 
-export import ThirdParty.PbGen;
+import ThirdParty.PbGen;
 import ClientProxyHelper;
 import WebProxyHelper;
 import DbUtils;

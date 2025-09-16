@@ -3,6 +3,7 @@ export module LogicServerMessage:LogicGate;
 import std;
 import LogicServerHelper;
 import ThirdParty.Libhv;
+import ThirdParty.PbGen;
 
 export namespace LogicServerMessage
 {

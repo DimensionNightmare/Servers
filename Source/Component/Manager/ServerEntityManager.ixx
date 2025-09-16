@@ -47,6 +47,8 @@ public:
 
 		uint64_t entityId = mMapTimer[timerID];
 
+		mMapTimer.erase(timerID);
+
 		if(mEntityMap.count(entityId))
 		{
 			ServerEntity::CVPtr rm = mEntityMap[entityId];
@@ -103,7 +105,7 @@ public: // dll override
 	{
 		FunctionContainer<&ServerEntityManager::EntityCloseTimer> funcProxy(this);
 
-		uint64_t timerId = Timer()->setTimeout(10000, funcProxy);
+		uint64_t timerId = GetTimer()->SetTimeout(10000, funcProxy);
 
 		AddTimerRecord(timerId, entityId);
 

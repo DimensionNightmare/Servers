@@ -6,11 +6,12 @@ import StrUtils;
 import ThirdParty.Libhv;
 import FuncHelper;
 import std;
+import ThirdParty.PbGen;
 
-namespace GateServerMessage
+export namespace GateServerMessage
 {
 
-	export void Exe_ReqUserToken(SocketChannel::CVPtr channel, uint32_t msgId, const std::string& binMsg)
+	void Exe_ReqUserToken(SocketChannel::CVPtr channel, uint32_t msgId, const std::string& binMsg)
 	{
 		GMsg::A2g_ReqAuthAccount request;
 		

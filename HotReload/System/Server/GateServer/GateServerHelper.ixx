@@ -1,6 +1,6 @@
 export module GateServerHelper;
 
-export import ThirdParty.PbGen;
+import ThirdParty.PbGen;
 import Server;
 import ClientProxyHelper;
 import ServerProxyHelper;

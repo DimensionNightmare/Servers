@@ -3,11 +3,12 @@ export module GlobalServerMessage:GlobalGate;
 import GlobalServerHelper;
 import std;
 import ThirdParty.Libhv;
+import ThirdParty.PbGen;
 
-namespace GlobalServerMessage
+export namespace GlobalServerMessage
 {
 
-	export void Exe_RetRegistSrv(SocketChannel::CVPtr channel, const std::string& binMsg)
+	void Exe_RetRegistSrv(SocketChannel::CVPtr channel, const std::string& binMsg)
 	{
 		GMsg::g2G_RetRegistSrv request;
 		if(!request.ParseFromString(binMsg))
@@ -24,7 +25,7 @@ namespace GlobalServerMessage
 				if (uint64_t timerId = entity->TimerId())
 				{
 					entity->SetTimerId(0);
-					entityMan->RemoveTimerRecord(timerId);
+					entityMan->GetTimer()->KillTimer(timerId);
 				}
 			}
 			else
@@ -42,7 +43,7 @@ namespace GlobalServerMessage
 		}
 	}
 
-	export void Exe_RetRegistChild(SocketChannel::CVPtr channel, const std::string& binMsg)
+	void Exe_RetRegistChild(SocketChannel::CVPtr channel, const std::string& binMsg)
 	{
 		GMsg::g2G_RetRegistChild request;
 		if(!request.ParseFromString(binMsg))
@@ -67,4 +68,5 @@ namespace GlobalServerMessage
 			entity->SetMapLinkNode(childType, servChild->GetSelf<ServerEntity>());
 		}
 	}
+
 }

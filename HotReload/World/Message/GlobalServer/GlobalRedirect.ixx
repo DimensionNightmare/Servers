@@ -6,11 +6,12 @@ import std;
 import ThirdParty.Libhv;
 import Task;
 import ServerEntity;
+import ThirdParty.PbGen;
 
-namespace GlobalServerMessage
+export namespace GlobalServerMessage
 {
 
-	export TaskVoid Msg_ReqAuthAccount(SocketChannel::CVPtr channel, uint32_t msgId, const std::string& binMsg)
+	TaskVoid Msg_ReqAuthAccount(SocketChannel::CVPtr channel, uint32_t msgId, const std::string& binMsg)
 	{
 		GMsg::A2g_ReqAuthAccount request;
 		if(!request.ParseFromString(binMsg))
@@ -94,4 +95,5 @@ namespace GlobalServerMessage
 
 		co_return;
 	}
+
 }

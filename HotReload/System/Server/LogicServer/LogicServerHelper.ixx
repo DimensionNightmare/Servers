@@ -1,6 +1,6 @@
 export module LogicServerHelper;
 
-export import ThirdParty.PbGen;
+import ThirdParty.PbGen;
 import ClientProxyHelper;
 import ServerProxyHelper;
 import RoomEntityManagerHelper;
@@ -211,7 +211,7 @@ public:
 							if (proxyHelper->isConnected())
 							{
 								GetLogger()->Record(ELogLevel_Debug, "orgin not match peeraddr {} reclient ~", origin);
-								proxyHelper->Timer()->setTimeout(200, [this, originIp, originPort](uint64_t timerID)
+								proxyHelper->GetTimer()->SetTimeout(200, [this, originIp, originPort](uint64_t timerID)
 									{
 										ClientProxyHelper::CVPtr proxyHelper = GetClientProxy();
 

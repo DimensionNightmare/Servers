@@ -4,6 +4,7 @@ import FuncHelper;
 import DatabaseServerHelper;
 import Server;
 import Task;
+import ThirdParty.PbGen;
 
 export namespace DatabaseServerMessage
 {
@@ -83,4 +84,5 @@ export namespace DatabaseServerMessage
 
 		clientProxy->RedirectClient(request.server_port(), request.server_ip());
 	}
+
 }

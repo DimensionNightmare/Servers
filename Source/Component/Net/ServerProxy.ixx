@@ -9,6 +9,7 @@ import Task;
 import Server;
 import ThirdParty.Libhv;
 import FuncUtils;
+import Timer;
 
 export class ServerProxy : public Component, public hv::TcpServerTmpl<SocketChannel>
 {
@@ -21,11 +22,10 @@ protected:
 		,InitConnectedChannel(this)
 	{
 		eComponentType = EMComponentType::ServerProxy;
-
-		// pLoop = std::make_unique<EventLoopThread>();
-		pLoop = MemPool->Allocate<EventLoopThread>();
 		
 		pLogger = GetOwner()->GetWorld()->GetSystemW<LoggerPrint>(EMSystemType::LoggerPrint);
+
+		pTimer = GetOwner()->GetWorld()->GetSystemW<Timer>(EMSystemType::Timer);
 	}
 
 public:
@@ -108,8 +108,6 @@ public:
 
 	void Start()
 	{
-		pLoop->start();
-
 		// first split self to base pointer
 		auto base_ptr = static_cast<TcpServerTmpl<SocketChannel>*>(this);
 		// then cast to template<>
@@ -118,7 +116,6 @@ public:
 
 	void End()
 	{
-		pLoop->stop(true);
 		stop(true);
 	}
 
@@ -128,12 +125,9 @@ public:
 		
 		End();
 
-		pLoop = nullptr;
 		mMsgList.clear();
 		mMapTimer.clear();
 	}
-
-	LoggerPrint::Ptr GetLogger(){ return pLogger.expired() ? nullptr : pLogger.lock(); }
 
 public: // dll override
 
@@ -194,8 +188,6 @@ public: // dll override
 
 	}
 
-	const auto& Timer() { return pLoop->loop(); }
-
 	void AddTimerRecord(size_t timerId, uint32_t id)
 	{
 		std::unique_lock ulock(oTimerMutex);
@@ -206,9 +198,13 @@ public: // dll override
 	{
 		FunctionContainer<&ServerProxy::ChannelTimeoutTimer> funcProxy(this);
 		
-		size_t timerId = Timer()->setTimeout(5000, funcProxy);
+		size_t timerId = GetTimer()->SetTimeout(5000, funcProxy);
 		AddTimerRecord(timerId, channel->id());
 	}
+
+	LoggerPrint::Ptr GetLogger(){ return pLogger.expired() ? nullptr : pLogger.lock(); }
+
+	Timer::Ptr GetTimer(){ return pTimer.expired() ? nullptr : pTimer.lock(); }
 
 private:
 
@@ -225,15 +221,13 @@ private:
 	{
 		FunctionContainer<&ServerProxy::MessageTimeoutTimer> funcProxy(this);
 		
-		uint64_t timerId = Timer()->setTimeout(breakTime, funcProxy);
+		uint64_t timerId = GetTimer()->SetTimeout(breakTime, funcProxy);
 		std::unique_lock ulock(oTimerMutex);
 		mMapTimer[timerId] = msgId;
 		return timerId;
 	}
 public:
 	// cant init in tcpclient this class
-	std::shared_ptr<EventLoopThread> pLoop;
-
 	FunctionContainer<&ServerProxy::_InitConnectedChannel> InitConnectedChannel;
 
 	FunctionContainer<&ServerProxy::_CheckMessageTimeoutTimer> CheckMessageTimeoutTimer;
@@ -251,4 +245,6 @@ protected:
 	std::shared_mutex oTimerMutex;
 
 	LoggerPrint::WPtr pLogger;
+
+	Timer::WPtr pTimer;
 };

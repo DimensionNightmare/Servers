@@ -6,25 +6,25 @@ import StrUtils;
 import Logger;
 import std.compat;
 
-export class FinalExecute
-{
-public:
-	FinalExecute(std::function<void()> func):mFunc(func)
-	{
-
-	}
-
-	~FinalExecute()
-	{
-		mFunc();
-	}
-
-private:
-	std::function<void()> mFunc;
-};
-
 export 
 {
+	class FinalExecute
+	{
+	public:
+		FinalExecute(std::function<void()> func):mFunc(func)
+		{
+
+		}
+
+		~FinalExecute()
+		{
+			mFunc();
+		}
+
+	private:
+		std::function<void()> mFunc;
+	};
+
 	void MessagePackAndSend(uint32_t msgId, EMMsgDeal deal, std::string& data, SocketChannel::CVPtr channel)
 	{
 		MessagePack(msgId, deal, 0, data);

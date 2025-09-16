@@ -1,6 +1,6 @@
 export module GlobalServerHelper;
 
-export import ThirdParty.PbGen;
+import ThirdParty.PbGen;
 import ClientProxyHelper;
 import ServerProxyHelper;
 import ServerEntityManagerHelper;

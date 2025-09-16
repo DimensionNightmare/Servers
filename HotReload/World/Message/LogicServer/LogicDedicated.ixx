@@ -5,6 +5,7 @@ import std;
 import ThirdParty.Libhv;
 import FuncHelper;
 import Task;
+import ThirdParty.PbGen;
 
 export namespace LogicServerMessage
 {

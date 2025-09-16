@@ -6,6 +6,7 @@ import DatabaseServerHelper;
 import ThirdParty.Libhv;
 import FuncHelper;
 import std.compat;
+import ThirdParty.PbGen;
 
 export namespace DatabaseServerMessage
 {
@@ -178,4 +179,5 @@ export namespace DatabaseServerMessage
 		}
 
 	}
+
 }

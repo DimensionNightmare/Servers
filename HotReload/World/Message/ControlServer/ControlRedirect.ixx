@@ -7,10 +7,12 @@ import ThirdParty.Libhv;
 import FuncHelper;
 import Task;
 import std;
+import ThirdParty.PbGen;
 
-namespace ControlServerMessage
+export namespace ControlServerMessage
 {
-	export TaskVoid Msg_ReqAuthAccount(SocketChannel::CVPtr channel, uint32_t msgId, const std::string& binMsg)
+
+	TaskVoid Msg_ReqAuthAccount(SocketChannel::CVPtr channel, uint32_t msgId, const std::string& binMsg)
 	{
 		GMsg::A2g_ReqAuthAccount request;
 		if(!request.ParseFromString(binMsg))
@@ -89,4 +91,5 @@ namespace ControlServerMessage
 
 		co_return;
 	}
+
 }

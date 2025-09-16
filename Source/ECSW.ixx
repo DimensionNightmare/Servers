@@ -49,6 +49,7 @@ export enum class EMSystemType : uint8_t
 	L10nText,
 	Server,
 	HotReload,
+	Timer,
 };
 
 

@@ -3,9 +3,9 @@ export module GateServerMessage:GateCommon;
 import GateServerHelper;
 import FuncHelper;
 import Server;
+import ThirdParty.PbGen;
 
-
-namespace GateServerMessage
+export namespace GateServerMessage
 {
 
 	void Evt_RetRegistChild(Server::CVPtr server)
@@ -49,7 +49,7 @@ namespace GateServerMessage
 	}
 
 	// self request
-	export TaskVoid Evt_ReqRegistSrv(Server::CVPtr server)
+	TaskVoid Evt_ReqRegistSrv(Server::CVPtr server)
 	{
 		GateServerHelper::Ptr dnServer = server->GetSelf<GateServerHelper>();
 
@@ -117,7 +117,7 @@ namespace GateServerMessage
 	}
 
 	// client request
-	export void Msg_ReqRegistSrv(SocketChannel::CVPtr channel, uint32_t msgId, const std::string& binMsg)
+	void Msg_ReqRegistSrv(SocketChannel::CVPtr channel, uint32_t msgId, const std::string& binMsg)
 	{
 		GMsg::COM_ReqRegistSrv request;
 		if(!request.ParseFromString(binMsg))
@@ -187,7 +187,7 @@ namespace GateServerMessage
 		}
 	}
 
-	export void Exe_RetHeartbeat(SocketChannel::CVPtr channel, const std::string& binMsg)
+	void Exe_RetHeartbeat(SocketChannel::CVPtr channel, const std::string& binMsg)
 	{
 		GMsg::COM_RetHeartbeat request;
 		if(!request.ParseFromString(binMsg))
@@ -195,4 +195,5 @@ namespace GateServerMessage
 			return;
 		}
 	}
+
 }

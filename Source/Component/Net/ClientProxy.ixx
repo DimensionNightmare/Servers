@@ -8,6 +8,7 @@ import Task;
 import Server;
 import ThirdParty.Libhv;
 import FuncUtils;
+import Timer;
 
 export enum class EMRegistState : uint8_t
 {
@@ -28,12 +29,10 @@ protected:
 		,RedirectClient(this)
 	{
 		eComponentType = EMComponentType::ClientProxy;
-
-		// pLoop = std::make_unique<EventLoopThread>();
-		pLoop = MemPool->Allocate<EventLoopThread>();
 		
-
 		pLogger = GetOwner()->GetWorld()->GetSystemW<LoggerPrint>(EMSystemType::LoggerPrint);
+
+		pTimer = GetOwner()->GetWorld()->GetSystemW<Timer>(EMSystemType::Timer);
 	}
 public:
 
@@ -53,7 +52,6 @@ public:
 
 		End();
 		Component::Dispose();
-		pLoop = nullptr;
 	}
 
 	bool Awake() override
@@ -89,8 +87,6 @@ public:
 
 	void Start()
 	{
-		pLoop->start();
-
 		// first split self to base pointer
 		auto base_ptr = static_cast<TcpClientTmpl<SocketChannel>*>(this);
 		// then cast to template<>
@@ -99,12 +95,8 @@ public:
 
 	void End()
 	{
-		pLoop->stop(true);
 		stop(true);
 	}
-
-
-	LoggerPrint::Ptr GetLogger(){ return pLogger.expired() ? nullptr : pLogger.lock(); }
 
 public: // dll override
 
@@ -128,7 +120,7 @@ public: // dll override
 		}
 		else
 		{
-			Timer()->killTimer(timerID);
+			GetTimer()->KillTimer(timerID);
 		}
 	}
 
@@ -158,8 +150,6 @@ public: // dll override
 		}
 	}
 
-	const auto& Timer() { return pLoop->loop(); }
-
 	void AddTimerRecord(size_t timerId, uint32_t id)
 	{
 		std::unique_lock ulock(oTimerMutex);
@@ -179,13 +169,17 @@ public: // dll override
 		// MessagePackAndSend(0, EMMsgDeal::Ret, request.GetDescriptor()->full_name(), binData, GetChannel());
 	}
 
+	LoggerPrint::Ptr GetLogger(){ return pLogger.expired() ? nullptr : pLogger.lock(); }
+
+	Timer::Ptr GetTimer(){ return pTimer.expired() ? nullptr : pTimer.lock(); }
+
 private:
 
 	uint64_t _CheckMessageTimeoutTimer(uint32_t breakTime, uint32_t msgId)
 	{
 		FunctionContainer<&ClientProxy::MessageTimeoutTimer> funcProxy(this);
 
-		uint64_t timerId = Timer()->setTimeout(breakTime, funcProxy);
+		uint64_t timerId = GetTimer()->SetTimeout(breakTime, funcProxy);
 		std::unique_lock ulock(oTimerMutex);
 		mMapTimer[timerId] = msgId;
 		return timerId;
@@ -200,7 +194,7 @@ private:
 
 		if (eRegistState == EMRegistState::None)
 		{
-			Timer()->setInterval(1000, funcProxy);
+			GetTimer()->SetInterval(1000, funcProxy);
 		}
 	}
 
@@ -210,7 +204,7 @@ private:
 
 		eRegistState = EMRegistState::None;
 		closesocket();
-		Timer()->setTimeout(500, [this, port, ip](uint64_t)
+		GetTimer()->SetTimeout(500, [this, port, ip](uint64_t)
 		{
 			createsocket(port, ip.c_str());
 
@@ -230,8 +224,6 @@ public:
 	FunctionContainer<&ClientProxy::_RedirectClient> RedirectClient;
 
 protected: // dll proxy
-
-	std::shared_ptr<EventLoopThread> pLoop;
 
 	// only oddnumber
 	std::atomic<uint32_t> iMsgId;
@@ -255,4 +247,6 @@ protected: // dll proxy
 	std::shared_mutex oTimerMutex;
 
 	LoggerPrint::WPtr pLogger;
+
+	Timer::WPtr pTimer;
 };

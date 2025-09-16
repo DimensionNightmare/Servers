@@ -4,6 +4,7 @@ import FuncHelper;
 import LogicServerHelper;
 import Server;
 import Task;
+import ThirdParty.PbGen;
 
 export namespace LogicServerMessage
 {
@@ -114,7 +115,7 @@ export namespace LogicServerMessage
 				if (uint64_t timerId = entity->TimerId())
 				{
 					entity->SetTimerId(0);
-					entityMan->RemoveTimerRecord(timerId);
+					entityMan->GetTimer()->KillTimer(timerId);
 				}
 
 				// already connect
