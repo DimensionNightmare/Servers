@@ -4,9 +4,9 @@ import std;
 import LogicServerHelper;
 import ThirdParty.Libhv;
 
-namespace LogicServerMessage
+export namespace LogicServerMessage
 {
-	export void Exe_RetProxyOffline(SocketChannel::CVPtr channel, const std::string& binMsg)
+	void Exe_RetProxyOffline(SocketChannel::CVPtr channel, const std::string& binMsg)
 	{
 		GMsg::g2L_RetProxyOffline request;
 		if(!request.ParseFromString(binMsg))

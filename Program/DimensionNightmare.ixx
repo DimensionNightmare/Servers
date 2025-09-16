@@ -267,7 +267,6 @@ public:
 				auto mergeMap = iniFileParam["Common"];
 				mergeMap.merge(iniFileParam[serverName]);
 
-				// World::CVPtr world = std::make_shared<World>();
 				World::CVPtr world = MemPool->Allocate<World>();
 				world->MoveLuanchConfigToSelf(std::move(mergeMap));
 

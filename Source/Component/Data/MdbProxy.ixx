@@ -46,7 +46,6 @@ public:
 
 		std::string* value = world->LaunchParam("connection");
 
-		// auto connection = std::make_shared<sw::redis::Redis>(*value);
 		auto connection = MemPool->Allocate<sw::redis::Redis, const std::string&>(*value);
 		
 		connection->ping();

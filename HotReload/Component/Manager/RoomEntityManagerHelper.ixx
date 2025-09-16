@@ -2,11 +2,9 @@ export module RoomEntityManagerHelper;
 
 import RoomEntityManager;
 import RoomEntityHelper;
+import FuncUtils;
 
-#define FUNCPLACE(class, func) &class::func, #class"_"#func
-
-
-export class RoomEntityManagerHelper : public RoomEntityManager
+export class RoomEntityManagerHelper : public Helper<RoomEntityManagerHelper, RoomEntityManager>
 {
 
 private:
@@ -14,24 +12,16 @@ private:
 	RoomEntityManagerHelper() = delete;
 	~RoomEntityManagerHelper() = default;
 
-	RoomEntityManagerHelper(const RoomEntityManagerHelper&) = delete;
-	void operator=(const RoomEntityManagerHelper&) = delete;
-
-	RoomEntityManagerHelper(RoomEntityManagerHelper&&) = delete;
-	RoomEntityManagerHelper& operator=(RoomEntityManagerHelper&&) = delete;
-
-	void* operator new(size_t) = delete;
-    void operator delete(void*) = delete;
 public:
-	using Ptr = std::shared_ptr<RoomEntityManagerHelper>;
-	using CVPtr = const Ptr&;
 
-	RoomEntityHelper::Ptr AddEntity(uint32_t mapId)
+	RoomEntityHelper::Ptr AddEntity(uint32_t entityId)
 	{
-		RoomEntityManager* self = this;
-		RoomEntityHelper::CVPtr entity = self->AddEntity(mapId)->GetSelf<RoomEntityHelper>();
-		entity->SetMapID(mapId);
-		return entity;
+		RoomEntity::CVPtr entity = Base()->AddEntity(entityId);
+		mEntityMapList[entityId].emplace_back(entity);
+
+		RoomEntityHelper::CVPtr helper = entity->GetSelf<RoomEntityHelper>();
+		helper->SetMapID(entityId);
+		return helper;
 	}
 
 	void MountEntity(RoomEntityHelper::CVPtr entity)

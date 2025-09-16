@@ -1,25 +1,16 @@
 export module ProxyEntityHelper;
 
 import ProxyEntity;
+import FuncUtils;
 
-export class ProxyEntityHelper : public ProxyEntity
+export class ProxyEntityHelper : public Helper<ProxyEntityHelper, ProxyEntity>
 {
 private:
 
 	ProxyEntityHelper() = delete;
 	~ProxyEntityHelper() = default;
 
-	ProxyEntityHelper(const ProxyEntityHelper&) = delete;
-	void operator=(const ProxyEntityHelper&) = delete;
-
-	ProxyEntityHelper(ProxyEntityHelper&&) = delete;
-	ProxyEntityHelper& operator=(ProxyEntityHelper&&) = delete;
-
-	void* operator new(size_t) = delete;
-    void operator delete(void*) = delete;
 public: // dll override
-	using Ptr = std::shared_ptr<ProxyEntityHelper>;
-	using CVPtr = const Ptr&;
 
 	/// @brief the this close timedown destroy timerid.
 	/// @brief authenticate,shutdown and reconnect waiting.

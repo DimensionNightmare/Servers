@@ -257,7 +257,6 @@ export int main(int argc, char** argv)
 
 #endif
 
-	// App = std::make_shared<DimensionNightmare>();
 	App = MemPool->Allocate<DimensionNightmare>();
 	if (!App->Init(std::move(launchParam)))
 	{

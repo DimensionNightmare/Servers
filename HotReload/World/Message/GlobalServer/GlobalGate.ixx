@@ -24,7 +24,7 @@ namespace GlobalServerMessage
 				if (uint64_t timerId = entity->TimerId())
 				{
 					entity->SetTimerId(0);
-					entityMan->Timer()->killTimer(timerId);
+					entityMan->RemoveTimerRecord(timerId);
 				}
 			}
 			else

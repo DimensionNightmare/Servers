@@ -9,8 +9,6 @@ import Server;
 import ThirdParty.Libhv;
 import FuncUtils;
 
-#define NABS(n) ((n) < 0 ? (n) : -(n))
-
 export enum class EMRegistState : uint8_t
 {
 	None,

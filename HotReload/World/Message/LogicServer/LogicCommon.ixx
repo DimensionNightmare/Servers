@@ -5,14 +5,11 @@ import LogicServerHelper;
 import Server;
 import Task;
 
-
-#define FUNCPLACE(class, func) &class::func, #class"_"#func
-
-namespace LogicServerMessage
+export namespace LogicServerMessage
 {
 
 	// client request
-	export TaskVoid Evt_ReqRegistSrv(Server::CVPtr server)
+	TaskVoid Evt_ReqRegistSrv(Server::CVPtr server)
 	{
 		LogicServerHelper::CVPtr dnServer = server->GetSelf<LogicServerHelper>();
 
@@ -73,7 +70,7 @@ namespace LogicServerMessage
 	}
 
 	// client request
-	export void Msg_ReqRegistSrv(SocketChannel::CVPtr channel, uint32_t msgId, const std::string& binMsg)
+	void Msg_ReqRegistSrv(SocketChannel::CVPtr channel, uint32_t msgId, const std::string& binMsg)
 	{
 		GMsg::d2L_ReqRegistSrv request;
 		if(!request.ParseFromString(binMsg))
@@ -117,7 +114,7 @@ namespace LogicServerMessage
 				if (uint64_t timerId = entity->TimerId())
 				{
 					entity->SetTimerId(0);
-					entityMan->Timer()->killTimer(timerId);
+					entityMan->RemoveTimerRecord(timerId);
 				}
 
 				// already connect
@@ -164,7 +161,7 @@ namespace LogicServerMessage
 
 	}
 
-	export void Exe_RetChangeCtlSrv(SocketChannel::CVPtr channel, const std::string& binMsg)
+	void Exe_RetChangeCtlSrv(SocketChannel::CVPtr channel, const std::string& binMsg)
 	{
 		GMsg::COM_RetChangeCtlSrv request;
 		if(!request.ParseFromString(binMsg))
@@ -177,7 +174,7 @@ namespace LogicServerMessage
 		clientProxy->RedirectClient(request.server_port(), request.server_ip());
 	}
 
-	export void Exe_RetHeartbeat(SocketChannel::CVPtr channel, const std::string& binMsg)
+	void Exe_RetHeartbeat(SocketChannel::CVPtr channel, const std::string& binMsg)
 	{
 		GMsg::COM_RetHeartbeat request;
 		if(!request.ParseFromString(binMsg))

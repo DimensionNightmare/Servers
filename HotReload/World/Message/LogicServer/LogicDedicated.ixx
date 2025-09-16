@@ -6,9 +6,9 @@ import ThirdParty.Libhv;
 import FuncHelper;
 import Task;
 
-namespace LogicServerMessage
+export namespace LogicServerMessage
 {
-	export TaskVoid Msg_ReqLoadEntityData(SocketChannel::CVPtr channel, uint32_t msgId, const std::string& binMsg)
+	TaskVoid Msg_ReqLoadEntityData(SocketChannel::CVPtr channel, uint32_t msgId, const std::string& binMsg)
 	{
 		GMsg::d2L_ReqLoadEntityData request;
 		if(!request.ParseFromString(binMsg))
@@ -48,7 +48,7 @@ namespace LogicServerMessage
 		co_return;
 	}
 
-	export void Msg_ReqSaveEntityData(SocketChannel::CVPtr channel, const std::string& binMsg)
+	void Msg_ReqSaveEntityData(SocketChannel::CVPtr channel, const std::string& binMsg)
 	{
 		GMsg::d2L_ReqSaveEntityData request;
 		if(!request.ParseFromString(binMsg))

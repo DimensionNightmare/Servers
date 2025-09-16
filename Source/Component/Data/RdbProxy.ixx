@@ -68,7 +68,6 @@ public:
 			uint16_t key = (uint16_t)EnumName<EMSqlDbNameEnum>(dbName);
 			std::string connectStr = std::format("{} dbname = {}", *value, dbName);
 
-			// auto connection = std::make_shared<pqxx::connection>(connectStr);
 			auto connection = MemPool->Allocate<pqxx::connection, const std::string&>(connectStr);
 
 			pRdbProxys.emplace(key, std::move(connection));

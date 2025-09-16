@@ -1,25 +1,16 @@
 export module RoomEntityHelper;
 
 import RoomEntity;
+import FuncUtils;
 
-export class RoomEntityHelper : public RoomEntity
+export class RoomEntityHelper : public Helper<RoomEntityHelper, RoomEntity>
 {
 private:
 
 	RoomEntityHelper() = delete;
 	~RoomEntityHelper() = default;
 
-	RoomEntityHelper(const RoomEntityHelper&) = delete;
-	void operator=(const RoomEntityHelper&) = delete;
-
-	RoomEntityHelper(RoomEntityHelper&&) = delete;
-	RoomEntityHelper& operator=(RoomEntityHelper&&) = delete;
-
-	void* operator new(size_t) = delete;
-    void operator delete(void*) = delete;
 public:
-	using Ptr = std::shared_ptr<RoomEntityHelper>;
-	using CVPtr = const Ptr&;
 
 	void SetMapID(uint32_t mapId) { iMapId = mapId; }
 

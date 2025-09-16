@@ -56,14 +56,20 @@ public:
 protected:
 
 	LoggerPrint::Ptr GetLogger(){ return pLogger.expired() ? nullptr : pLogger.lock(); }
-public: // dll override
 
 	const auto& Timer() { return pLoop->loop(); }
+
+public: // dll override
 
 	void AddTimerRecord(uint64_t timerId, uint64_t id)
 	{
 		std::unique_lock ulock(oTimerMutex);
 		mMapTimer.emplace(timerId, id);
+	}
+
+	void RemoveTimerRecord(uint64_t timerId)
+	{
+		Timer()->killTimer(timerId);
 	}
 	
 protected: // dll proxy

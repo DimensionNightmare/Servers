@@ -69,7 +69,6 @@ public: // dll proxy
 
 	ProxyEntity::Ptr _AddEntity(uint64_t entityId)
 	{
-		// ProxyEntity::CVPtr entity = std::shared_ptr<ProxyEntity>(new ProxyEntity(GetOwner()->GetWorldW()));
 		ProxyEntity::Ptr entity = MemPool->Allocate<ProxyEntity, World::WPtr>(GetOwner()->GetWorldW());
 		entity->SetID(entityId);
 

@@ -9,10 +9,9 @@ import Server;
 import MessagePack;
 import ECSW;
 import MessageRegister;
+import FuncUtils;
 
-#define FUNCPLACE(class, func) &class::func, #class"_"#func
-
-export class GlobalServerHelper : public Server
+export class GlobalServerHelper : public Helper<GlobalServerHelper, Server>
 {
 
 private:
@@ -20,17 +19,7 @@ private:
 	GlobalServerHelper() = delete;
 	~GlobalServerHelper() = default;
 
-	GlobalServerHelper(const GlobalServerHelper&) = delete;
-	// void operator=(const GlobalServerHelper&) = delete;
-
-	GlobalServerHelper(GlobalServerHelper&&) = delete;
-	GlobalServerHelper& operator=(GlobalServerHelper&&) = delete;
-
-	void* operator new(size_t) = delete;
-    void operator delete(void*) = delete;
 public:
-	using Ptr = std::shared_ptr<GlobalServerHelper>;
-	using CVPtr = const Ptr&;
 
 	ClientProxyHelper::Ptr GetClientProxy()
 	{ 

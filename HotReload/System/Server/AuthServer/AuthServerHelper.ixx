@@ -10,11 +10,9 @@ import Server;
 import MessagePack;
 import ECSW;
 import MessageRegister;
+import FuncUtils;
 
-#define FUNCPLACE(class, func) &class::func, #class"_"#func
-
-
-export class AuthServerHelper : public Server
+export class AuthServerHelper : public Helper<AuthServerHelper, Server>
 {
 
 private:
@@ -22,17 +20,7 @@ private:
 	AuthServerHelper() = delete;
 	~AuthServerHelper() = default;
 
-	AuthServerHelper(const AuthServerHelper&) = delete;
-	// void operator=(const AuthServerHelper&) = delete;
-
-	AuthServerHelper(AuthServerHelper&&) = delete;
-	AuthServerHelper& operator=(AuthServerHelper&&) = delete;
-
-	void* operator new(size_t) = delete;
-    void operator delete(void*) = delete;
 public:
-	using Ptr = std::shared_ptr<AuthServerHelper>;
-	using CVPtr = const Ptr&;
 
 	ClientProxyHelper::Ptr GetClientProxy()
 	{ 

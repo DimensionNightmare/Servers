@@ -1,10 +1,9 @@
 export module ClientProxyHelper;
 
 import ClientProxy;
+import FuncUtils;
 
-#define FUNCPLACE(class, func) &class::func, #class"_"#func
-
-export class ClientProxyHelper : public ClientProxy
+export class ClientProxyHelper : public Helper<ClientProxyHelper, ClientProxy>
 {
 
 private:
@@ -12,17 +11,7 @@ private:
 	ClientProxyHelper() = delete;
 	~ClientProxyHelper() = default;
 
-	ClientProxyHelper(const ClientProxyHelper&) = delete;
-	void operator=(const ClientProxyHelper&) = delete;
-
-	ClientProxyHelper(ClientProxyHelper&&) = delete;
-	ClientProxyHelper& operator=(ClientProxyHelper&&) = delete;
-
-	void* operator new(size_t) = delete;
-    void operator delete(void*) = delete;
 public:
-	using Ptr = std::shared_ptr<ClientProxyHelper>;
-	using CVPtr = const Ptr&;
 
 	EMRegistState GetRegistState() { return eRegistState; }
 	void SetRegistState(EMRegistState state) { eRegistState = state; }

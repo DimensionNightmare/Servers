@@ -2,10 +2,9 @@ export module ProxyEntityManagerHelper;
 
 import ProxyEntityManager;
 import ProxyEntityHelper;
+import FuncUtils;
 
-#define FUNCPLACE(class, func) &class::func, #class"_"#func
-
-export class ProxyEntityManagerHelper : public ProxyEntityManager
+export class ProxyEntityManagerHelper : public Helper<ProxyEntityManagerHelper, ProxyEntityManager>
 {
 
 private:
@@ -13,24 +12,14 @@ private:
 	ProxyEntityManagerHelper() = delete;
 	~ProxyEntityManagerHelper() = default;
 
-	ProxyEntityManagerHelper(const ProxyEntityManagerHelper&) = delete;
-	void operator=(const ProxyEntityManagerHelper&) = delete;
-
-	ProxyEntityManagerHelper(ProxyEntityManagerHelper&&) = delete;
-	ProxyEntityManagerHelper& operator=(ProxyEntityManagerHelper&&) = delete;
-
-	void* operator new(size_t) = delete;
-    void operator delete(void*) = delete;
 public:
-	using Ptr = std::shared_ptr<ProxyEntityManagerHelper>;
-	using CVPtr = const Ptr&;
 
 	ProxyEntityHelper::Ptr AddEntity(uint64_t entityId)
 	{
 		if (!mEntityMap.contains(entityId))
 		{
-			ProxyEntityManager* self = this;
-			return self->AddEntity(entityId)->GetSelf<ProxyEntityHelper>();
+			ProxyEntity::Ptr entity = Base()->AddEntity(entityId);
+			return entity->GetSelf<ProxyEntityHelper>();
 		}
 
 		return nullptr;

@@ -69,13 +69,10 @@ public: // dll proxy
 
 	RoomEntity::Ptr _AddEntity(uint64_t mapId)
 	{
-		// RoomEntity::CVPtr entity = std::shared_ptr<RoomEntity>(new RoomEntity(GetOwner()->GetWorldW()));
 		RoomEntity::Ptr entity = MemPool->Allocate<RoomEntity, World::WPtr>(GetOwner()->GetWorldW());
-		// entity->SetID(entityId);
 
 		std::unique_lock ulock(oMapMutex);
 		mEntityMap[entity->ID()] = entity;
-		mEntityMapList[mapId].emplace_back(entity);
 		return entity;
 	}
 

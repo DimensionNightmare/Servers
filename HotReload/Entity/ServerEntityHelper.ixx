@@ -1,26 +1,16 @@
 export module ServerEntityHelper;
 
 import ServerEntity;
+import FuncUtils;
 
-export class ServerEntityHelper : public ServerEntity
+export class ServerEntityHelper : public Helper<ServerEntityHelper, ServerEntity>
 {
 private:
 
 	ServerEntityHelper() = delete;
 	~ServerEntityHelper() = default;
 
-	ServerEntityHelper(const ServerEntityHelper&) = delete;
-	void operator=(const ServerEntityHelper&) = delete;
-
-	ServerEntityHelper(ServerEntityHelper&&) = delete;
-	ServerEntityHelper& operator=(ServerEntityHelper&&) = delete;
-
-	void* operator new(size_t) = delete;
-    void operator delete(void*) = delete;
 public: // dll override
-
-	using Ptr = std::shared_ptr<ServerEntityHelper>;
-	using CVPtr = const Ptr&;
 
 	void SetServerType(EMServerType type) { emServerType = type; }
 

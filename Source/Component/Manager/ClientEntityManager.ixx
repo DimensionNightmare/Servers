@@ -45,10 +45,8 @@ public: // dll proxy
 
 	ClientEntity::Ptr _AddEntity(uint64_t entityId)
 	{
-		// ClientEntity::CVPtr entity = std::shared_ptr<ClientEntity>(new ClientEntity(GetOwner()->GetWorldW()));
 		ClientEntity::Ptr entity = MemPool->Allocate<ClientEntity, World::WPtr>(GetOwner()->GetWorldW());;
 		entity->SetID(entityId);
-		entity->GetDbEntity()->set_account_id(entityId);
 
 		std::unique_lock ulock(oMapMutex);
 		mEntityMap[entityId] = entity;

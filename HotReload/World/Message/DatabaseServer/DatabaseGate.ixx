@@ -7,10 +7,10 @@ import ThirdParty.Libhv;
 import FuncHelper;
 import std.compat;
 
-namespace DatabaseServerMessage
+export namespace DatabaseServerMessage
 {
 
-	export void Exe_ReqLoadData(SocketChannel::CVPtr channel, uint32_t msgId, const std::string& binMsg)
+	void Exe_ReqLoadData(SocketChannel::CVPtr channel, uint32_t msgId, const std::string& binMsg)
 	{
 		GMsg::L2D_ReqLoadData request;
 		if(!request.ParseFromString(binMsg))
@@ -106,7 +106,7 @@ namespace DatabaseServerMessage
 		}
 	}
 
-	export void Exe_ReqSaveData(SocketChannel::CVPtr channel, uint32_t msgId, const std::string& binMsg)
+	void Exe_ReqSaveData(SocketChannel::CVPtr channel, uint32_t msgId, const std::string& binMsg)
 	{
 		GMsg::L2D_ReqSaveData request;
 		if(!request.ParseFromString(binMsg))

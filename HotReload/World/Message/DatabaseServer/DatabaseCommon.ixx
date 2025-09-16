@@ -5,14 +5,11 @@ import DatabaseServerHelper;
 import Server;
 import Task;
 
-
-#define FUNCPLACE(class, func) &class::func, #class"_"#func
-
-namespace DatabaseServerMessage
+export namespace DatabaseServerMessage
 {
 
 	// client request
-	export TaskVoid Evt_ReqRegistSrv(Server::CVPtr server)
+	TaskVoid Evt_ReqRegistSrv(Server::CVPtr server)
 	{
 		DatabaseServerHelper::CVPtr dnServer = server->GetSelf<DatabaseServerHelper>();
 
@@ -72,7 +69,7 @@ namespace DatabaseServerMessage
 		co_return;
 	}
 
-	export void Exe_RetChangeCtlSrv(SocketChannel::CVPtr channel, const std::string& binMsg)
+	void Exe_RetChangeCtlSrv(SocketChannel::CVPtr channel, const std::string& binMsg)
 	{
 		GMsg::COM_RetChangeCtlSrv request;
 		if(!request.ParseFromString(binMsg))

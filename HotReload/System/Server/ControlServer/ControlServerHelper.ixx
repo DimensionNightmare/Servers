@@ -7,27 +7,16 @@ import ServerEntityManagerHelper;
 import MessagePack;
 import ECSW;
 import MessageRegister;
+import FuncUtils;
 
-#define FUNCPLACE(class, func) &class::func, #class"_"#func
-
-export class ControlServerHelper : public Server
+export class ControlServerHelper : public Helper<ControlServerHelper, Server>
 {
 private:
 
 	ControlServerHelper() = delete;
 	~ControlServerHelper() = default;
 
-	ControlServerHelper(const ControlServerHelper&) = delete;
-	// void operator=(const ControlServerHelper&) = delete;
-
-	ControlServerHelper(ControlServerHelper&&) = delete;
-	ControlServerHelper& operator=(ControlServerHelper&&) = delete;
-
-	void* operator new(size_t) = delete;
-    void operator delete(void*) = delete;
 public:
-	using Ptr = std::shared_ptr<ControlServerHelper>;
-	using CVPtr = const Ptr&;
 
 	ServerProxyHelper::Ptr GetServerProxy() 
 	{

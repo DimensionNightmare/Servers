@@ -1,26 +1,16 @@
 export module RdbProxyHelper;
 
 import RdbProxy;
+import FuncUtils;
 
-export class RdbProxyHelper : public RdbProxy
+export class RdbProxyHelper : public Helper<RdbProxyHelper, RdbProxy>
 {
 private:
 
 	RdbProxyHelper() = delete;
 	~RdbProxyHelper() = default;
 
-	RdbProxyHelper(const RdbProxyHelper&) = delete;
-	void operator=(const RdbProxyHelper&) = delete;
-
-	RdbProxyHelper(RdbProxyHelper&&) = delete;
-	RdbProxyHelper& operator=(RdbProxyHelper&&) = delete;
-
-	void* operator new(size_t) = delete;
-    void operator delete(void*) = delete;
-
 public:
-	using Ptr = std::shared_ptr<RdbProxyHelper>;
-	using CVPtr = const Ptr&;
 
 	std::shared_ptr<pqxx::connection> GetConnection(uint16_t dbName)
 	{

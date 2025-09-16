@@ -274,7 +274,6 @@ public: // dll override
 		static_assert(std::is_base_of_v<Component, T>, "T must inherit from component");
 		try
 		{
-			// std::shared_ptr<T> component = std::shared_ptr<T>(new T(shared_from_this()));
 			std::shared_ptr<T> component = MemPool->Allocate<T>(shared_from_this());
 			if(!component->Awake())
 			{
@@ -356,7 +355,6 @@ public:
 		static_assert(std::is_base_of_v<Component, T>, "T must inherit from component");
 		try
 		{
-			// std::shared_ptr<T> component = std::shared_ptr<T>(new T(GetSelfW<System>()));
 			std::shared_ptr<T> component = MemPool->Allocate<T, System::WPtr>(GetSelfW<System>());
 			if(!component->Awake())
 			{
@@ -408,7 +406,6 @@ public:
 		static_assert(std::is_base_of_v<System, T>, "T must inherit from System");
 		try
 		{
-			// std::shared_ptr<T> system = std::shared_ptr<T>(new T(GetSelfW<World>()));
 			std::shared_ptr<T> system = MemPool->Allocate<T, World::WPtr>(GetSelfW<World>());
 			if(!system->Awake())
 			{

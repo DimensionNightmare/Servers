@@ -90,13 +90,11 @@ public: // dll override
 
 	ServerEntity::Ptr _AddEntity(uint64_t entityId, EMServerType regType)
 	{
-		// ServerEntity::CVPtr entity = std::shared_ptr<ServerEntity>(new ServerEntity(GetOwner()->GetWorldW()));
 		ServerEntity::Ptr entity = MemPool->Allocate<ServerEntity, World::WPtr>(GetOwner()->GetWorldW());
 		entity->SetID(entityId);
 
 		std::unique_lock ulock(oMapMutex);
 		mEntityMap[entityId] = entity;
-		mEntityMapList[regType].emplace_back(entity);
 		return entity;
 	}
 

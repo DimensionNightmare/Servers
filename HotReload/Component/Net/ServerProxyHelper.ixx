@@ -1,10 +1,9 @@
 export module ServerProxyHelper;
 
 import ServerProxy;
+import FuncUtils;
 
-#define FUNCPLACE(class, func) &class::func, #class"_"#func
-
-export class ServerProxyHelper : public ServerProxy
+export class ServerProxyHelper : public Helper<ServerProxyHelper, ServerProxy>
 {
 	
 private:
@@ -12,17 +11,7 @@ private:
 	ServerProxyHelper() = delete;
 	~ServerProxyHelper() = default;
 
-	ServerProxyHelper(const ServerProxyHelper&) = delete;
-	void operator=(const ServerProxyHelper&) = delete;
-
-	ServerProxyHelper(ServerProxyHelper&&) = delete;
-	ServerProxyHelper& operator=(ServerProxyHelper&&) = delete;
-
-	void* operator new(size_t) = delete;
-    void operator delete(void*) = delete;
 public:
-	using Ptr = std::shared_ptr<ServerProxyHelper>;
-	using CVPtr = const Ptr&;
 
 	uint32_t GetMsgId() { return ++iMsgId; }
 

@@ -12,10 +12,9 @@ import ECSW;
 import MessageRegister;
 import ServerEntityHelper;
 import ProxyEntityHelper;
+import FuncUtils;
 
-#define FUNCPLACE(class, func) &class::func, #class"_"#func
-
-export class GateServerHelper : public Server
+export class GateServerHelper : public Helper<GateServerHelper, Server>
 {
 
 private:
@@ -23,17 +22,7 @@ private:
 	GateServerHelper() = delete;
 	~GateServerHelper() = default;
 
-	GateServerHelper(const GateServerHelper&) = delete;
-	// void operator=(const GateServerHelper&) = delete;
-
-	GateServerHelper(GateServerHelper&&) = delete;
-	GateServerHelper& operator=(GateServerHelper&&) = delete;
-
-	void* operator new(size_t) = delete;
-    void operator delete(void*) = delete;
 public:
-	using Ptr = std::shared_ptr<GateServerHelper>;
-	using CVPtr = const Ptr&;
 
 	ClientProxyHelper::Ptr GetClientProxy()
 	{ 

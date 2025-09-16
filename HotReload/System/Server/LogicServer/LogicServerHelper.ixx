@@ -10,10 +10,9 @@ import Server;
 import MessagePack;
 import ECSW;
 import MessageRegister;
+import FuncUtils;
 
-#define FUNCPLACE(class, func) &class::func, #class"_"#func
-
-export class LogicServerHelper : public Server
+export class LogicServerHelper : public Helper<LogicServerHelper, Server>
 {
 
 private:
@@ -21,17 +20,7 @@ private:
 	LogicServerHelper() = delete;
 	~LogicServerHelper() = default;
 
-	LogicServerHelper(const LogicServerHelper&) = delete;
-	// void operator=(const LogicServerHelper&) = delete;
-
-	LogicServerHelper(LogicServerHelper&&) = delete;
-	LogicServerHelper& operator=(LogicServerHelper&&) = delete;
-
-	void* operator new(size_t) = delete;
-    void operator delete(void*) = delete;
 public:
-	using Ptr = std::shared_ptr<LogicServerHelper>;
-	using CVPtr = const Ptr&;
 
 	ClientProxyHelper::Ptr GetClientProxy()
 	{ 

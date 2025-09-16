@@ -2,10 +2,9 @@ export module ServerEntityManagerHelper;
 
 import ServerEntityManager;
 import ServerEntityHelper;
+import FuncUtils;
 
-#define FUNCPLACE(class, func) &class::func, #class"_"#func
-
-export class ServerEntityManagerHelper : public ServerEntityManager
+export class ServerEntityManagerHelper : public Helper<ServerEntityManagerHelper, ServerEntityManager>
 {
 
 private:
@@ -13,17 +12,7 @@ private:
 	ServerEntityManagerHelper() = delete;
 	~ServerEntityManagerHelper() = default;
 
-	ServerEntityManagerHelper(const ServerEntityManagerHelper&) = delete;
-	void operator=(const ServerEntityManagerHelper&) = delete;
-
-	ServerEntityManagerHelper(ServerEntityManagerHelper&&) = delete;
-	ServerEntityManagerHelper& operator=(ServerEntityManagerHelper&&) = delete;
-
-	void* operator new(size_t) = delete;
-    void operator delete(void*) = delete;
 public:
-	using Ptr = std::shared_ptr<ServerEntityManagerHelper>;
-	using CVPtr = const Ptr&;
 
 	ServerEntityHelper::Ptr GetEntity(uint64_t entityId)
 	{
@@ -40,10 +29,12 @@ public:
 	{
 		if (!mEntityMap.contains(entityId))
 		{
-			ServerEntityManager* self = this;
-			ServerEntityHelper::Ptr entity = self->AddEntity(entityId, regType)->GetSelf<ServerEntityHelper>();
-			entity->SetServerType(regType);
-			return entity;
+			ServerEntity::Ptr entity = Base()->AddEntity(entityId, regType);
+			mEntityMapList[regType].emplace_back(entity);
+			
+			ServerEntityHelper::Ptr helper = entity->GetSelf<ServerEntityHelper>();
+			helper->SetServerType(regType);
+			return helper;
 		}
 
 		return nullptr;

@@ -8,10 +8,9 @@ import ClientEntityHelper;
 import Task;
 import ThirdParty.PbGen;
 import ClientProxyHelper;
+import FuncUtils;
 
-#define FUNCPLACE(class, func) &class::func, #class"_"#func
-
-export class ClientEntityManagerHelper : public ClientEntityManager
+export class ClientEntityManagerHelper : public Helper<ClientEntityManagerHelper, ClientEntityManager>
 {
 
 private:
@@ -19,24 +18,16 @@ private:
 	ClientEntityManagerHelper() = delete;
 	~ClientEntityManagerHelper() = default;
 
-	ClientEntityManagerHelper(const ClientEntityManagerHelper&) = delete;
-	void operator=(const ClientEntityManagerHelper&) = delete;
-
-	ClientEntityManagerHelper(ClientEntityManagerHelper&&) = delete;
-	ClientEntityManagerHelper& operator=(ClientEntityManagerHelper&&) = delete;
-
-	void* operator new(size_t) = delete;
-    void operator delete(void*) = delete;
 public:
-	using Ptr = std::shared_ptr<ClientEntityManagerHelper>;
-	using CVPtr = const Ptr&;
 
 	ClientEntityHelper::Ptr AddEntity(uint64_t entityId)
 	{
 		if (!mEntityMap.contains(entityId))
 		{
-			ClientEntityManager* self = this;
-			return self->AddEntity(entityId)->GetSelf<ClientEntityHelper>();
+			ClientEntity::Ptr entity = Base()->AddEntity(entityId);
+			entity->GetDbEntity()->set_account_id(entityId);
+
+			return entity->GetSelf<ClientEntityHelper>();
 		}
 
 		return nullptr;

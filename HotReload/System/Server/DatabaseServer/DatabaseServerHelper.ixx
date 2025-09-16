@@ -10,10 +10,9 @@ import Server;
 import MessagePack;
 import ECSW;
 import MessageRegister;
+import FuncUtils;
 
-#define FUNCPLACE(class, func) &class::func, #class"_"#func
-
-export class DatabaseServerHelper : public Server
+export class DatabaseServerHelper : public Helper<DatabaseServerHelper, Server>
 {
 
 private:
@@ -21,17 +20,7 @@ private:
 	DatabaseServerHelper() = delete;
 	~DatabaseServerHelper() = default;
 
-	DatabaseServerHelper(const DatabaseServerHelper&) = delete;
-	// void operator=(const DatabaseServerHelper&) = delete;
-
-	DatabaseServerHelper(DatabaseServerHelper&&) = delete;
-	DatabaseServerHelper& operator=(DatabaseServerHelper&&) = delete;
-
-	void* operator new(size_t) = delete;
-    void operator delete(void*) = delete;
 public:
-	using Ptr = std::shared_ptr<DatabaseServerHelper>;
-	using CVPtr = const Ptr&;
 
 	ClientProxyHelper::Ptr GetClientProxy()
 	{ 

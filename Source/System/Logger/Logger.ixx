@@ -240,8 +240,6 @@ export class LoggerPrintPid
 public:
 	LoggerPrintPid()
 	{
-		// pWorld = std::make_shared<World>();
-
 		pWorld = MemPool->Allocate<World>();
 
 		std::filesystem::path exePath = Platform::GetExecutablePath();

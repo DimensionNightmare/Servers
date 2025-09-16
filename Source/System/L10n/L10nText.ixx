@@ -5,8 +5,6 @@ import ThirdParty.Protobuf;
 import std.compat;
 import FuncUtils;
 
-#define FUNCPLACE(class, func) &class::func, #class"_"#func
-
 export class L10nText : public System
 {
 protected:
