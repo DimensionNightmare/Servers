@@ -61,7 +61,7 @@ export namespace ControlServerMessage
 
 		if (!serverEntity)
 		{
-			response.set_error_code(EL10nCode_NotExistGlobalServer);
+			response.set_errorcode(EL10nCode_NotExistGlobalServer);
 		}
 		else
 		{
@@ -84,7 +84,7 @@ export namespace ControlServerMessage
 			co_await dataChannel;
 			if (dataChannel.HasFlag(EMTaskFlag::Timeout))
 			{
-				response.set_error_code(EL10nCode_SControlReqTimeout);
+				response.set_errorcode(EL10nCode_SControlReqTimeout);
 			}
 
 		}

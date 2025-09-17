@@ -28,11 +28,11 @@ export namespace DatabaseServerMessage
 
 		DatabaseServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<DatabaseServerHelper>(EMSystemType::Server);
 
-		if (auto connection = dnServer->GetRdbProxy()->GetConnection(static_cast<uint16_t>(EMSqlDbNameEnum::Nightmare)))
+		if (auto connection = dnServer->GetRdbProxy()->GetConnection(EMSqlDbNameEnum::Nightmare))
 		{
 			auto dealFunc = [&](Message* findMsg)
 				{
-					findMsg->ParseFromString(request.entity_data());
+					findMsg->ParseFromString(request.entitydata());
 
 					pqxx::work txn(*connection);
 					DbSqlHelper dbHelper(&txn, dnServer->GetLogger(), findMsg);
@@ -40,7 +40,7 @@ export namespace DatabaseServerMessage
 					auto query = [&]()
 						{
 							dbHelper
-								.SelectByKey(request.key_name())
+								// .SelectByKey(request.keyname())
 								.Limit(request.limit())
 								.Commit();
 
@@ -48,7 +48,7 @@ export namespace DatabaseServerMessage
 							{
 								for (int64_t cur = 0; cur < resSize; cur++)
 								{
-									std::string* binData = response.add_entity_data();
+									std::string* binData = response.add_entitydata();
 									dbHelper.Result()[cur]->SerializeToString(binData);
 								}
 
@@ -58,7 +58,7 @@ export namespace DatabaseServerMessage
 					query();
 
 					// not exist just create
-					if (!response.entity_data_size() && request.need_create())
+					if (!response.entitydata_size() && request.needcreate())
 					{
 						dbHelper.Insert(true).Commit();
 
@@ -71,7 +71,7 @@ export namespace DatabaseServerMessage
 					}
 				};
 
-			if (const Descriptor* descriptor = PbGen::FindMessageTypeByName(request.table_name()))
+			if (const Descriptor* descriptor = PbGen::FindMessageTypeByName(request.tablename()))
 			{
 				if (const Message* prototype = PbGen::GetPrototype(descriptor))
 				{
@@ -84,26 +84,26 @@ export namespace DatabaseServerMessage
 					catch (const std::exception& e)
 					{
 						dnServer->GetLogger()->Record(ELogLevel_Debug, "{}", e.what());
-						response.set_error_code(EL10nCode_UnkonwOpreator);
+						response.set_errorcode(EL10nCode_UnkonwOpreator);
 					}
 
 					delete message;
 				}
 				else
 				{
-					response.set_error_code(EL10nCode_PBMessageNotGen);
+					response.set_errorcode(EL10nCode_PBMessageNotGen);
 				}
 			}
 			else
 			{
-				response.set_error_code(EL10nCode_PBMessageNotExist);
+				response.set_errorcode(EL10nCode_PBMessageNotExist);
 
 			}
 
 		}
 		else
 		{
-			response.set_error_code(EL10nCode_DBNotConnect);
+			response.set_errorcode(EL10nCode_DBNotConnect);
 		}
 	}
 
@@ -126,24 +126,24 @@ export namespace DatabaseServerMessage
 
 		std::string binData;
 
-		if (auto connection = dnServer->GetRdbProxy()->GetConnection(static_cast<uint16_t>(EMSqlDbNameEnum::Nightmare)))
+		if (auto connection = dnServer->GetRdbProxy()->GetConnection(EMSqlDbNameEnum::Nightmare))
 		{
 			auto dealFunc = [&](Message* findMsg)
 				{
-					findMsg->ParseFromString(request.entity_data());
+					findMsg->ParseFromString(request.entitydata());
 
 					pqxx::work txn(*connection);
 					DbSqlHelper dbHelper(&txn, dnServer->GetLogger(), findMsg);
 
 					dbHelper
-						.UpdateByKey(request.key_name())
+						.UpdateByKey(request.keynumber())
 						.Commit();
 
 					txn.commit();
 
 				};
 
-			if (const Descriptor* descriptor = PbGen::FindMessageTypeByName(request.table_name()))
+			if (const Descriptor* descriptor = PbGen::FindMessageTypeByName(request.tablename()))
 			{
 				if (const Message* prototype = PbGen::GetPrototype(descriptor))
 				{
@@ -156,26 +156,26 @@ export namespace DatabaseServerMessage
 					catch (const std::exception& e)
 					{
 						dnServer->GetLogger()->Record(ELogLevel_Debug, "{}", e.what());
-						response.set_error_code(EL10nCode_UnkonwOpreator);
+						response.set_errorcode(EL10nCode_UnkonwOpreator);
 					}
 
 					delete message;
 				}
 				else
 				{
-					response.set_error_code(EL10nCode_PBMessageNotGen);
+					response.set_errorcode(EL10nCode_PBMessageNotGen);
 				}
 			}
 			else
 			{
-				response.set_error_code(EL10nCode_PBMessageNotExist);
+				response.set_errorcode(EL10nCode_PBMessageNotExist);
 
 			}
 
 		}
 		else
 		{
-			response.set_error_code(EL10nCode_DBNotConnect);
+			response.set_errorcode(EL10nCode_DBNotConnect);
 		}
 
 	}

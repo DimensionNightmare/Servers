@@ -26,18 +26,18 @@ export namespace GateServerMessage
 
 		GateServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<GateServerHelper>(EMSystemType::Server);
 		ProxyEntityManagerHelper::Ptr entityMan = dnServer->GetProxyEntityManager();
-		ProxyEntityHelper::Ptr entity = entityMan->GetEntity(request.account_id());
+		ProxyEntityHelper::Ptr entity = entityMan->GetEntity(request.accountid());
 		if (entity)
 		{
 			//exit
 			if (SocketChannel::CVPtr online = entity->GetChannel())
 			{
 				// kick channel
-				GMsg::S2C_RetAccountReplace request;
-				request.set_server_ip(request.server_ip());
+				GMsg::S2C_RetAccountReplace notify_request;
+				notify_request.set_serverip(request.serverip());
 
-				request.SerializeToString(&binData);
-				MessagePackAndSend(0, EMMsgDeal::Ret, request.GetDescriptor()->full_name(), binData, online);
+				notify_request.SerializeToString(&binData);
+				MessagePackAndSend(0, EMMsgDeal::Ret, notify_request.GetDescriptor()->full_name(), binData, online);
 
 				//kick socket
 				online->deleteContextPtr();
@@ -54,7 +54,7 @@ export namespace GateServerMessage
 					ServerEntityManagerHelper::Ptr serverEntityMan = dnServer->GetServerEntityManager();
 					if(ServerEntityHelper::CVPtr serverEntity = serverEntityMan->GetEntity(serverId))
 					{
-						request.set_account_id(entity->ID());
+						request.set_accountid(entity->ID());
 
 						request.SerializeToString(&binData);
 						MessagePackAndSend(0, EMMsgDeal::Redir, request.GetDescriptor()->full_name(), binData, serverEntity->GetChannel());
@@ -67,7 +67,7 @@ export namespace GateServerMessage
 		}
 		else
 		{
-			entity = entityMan->AddEntity(request.account_id());
+			entity = entityMan->AddEntity(request.accountid());
 
 			std::string token = Md5Hash(GetNowTimeStr());
 			entity->SetToken(token);
@@ -77,7 +77,7 @@ export namespace GateServerMessage
 		}
 
 		response.set_token(entity->Token());
-		response.set_expired_timespan(entity->ExpireTime());
+		response.set_expiredtimespan(entity->ExpireTime());
 
 		// entity or token expired
 		if (!entity->TimerId())
@@ -85,7 +85,7 @@ export namespace GateServerMessage
 			entity->SetTimerId(entityMan->CheckEntityCloseTimer(entity->ID()));
 		}
 
-		dnServer->GetLogger()->Record(ELogLevel_Debug, "ReqUserToken User: {}!!", request.account_id());
+		dnServer->GetLogger()->Record(ELogLevel_Debug, "ReqUserToken User: {}!!", request.accountid());
 
 		response.SerializeToString(&binData);
 		MessagePackAndSend(msgId, EMMsgDeal::Res, binData, channel);

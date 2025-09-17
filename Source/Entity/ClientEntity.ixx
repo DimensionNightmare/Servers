@@ -55,10 +55,4 @@ protected: // dll proxy
 
 	/// @brief db entity
 	std::shared_ptr<GDb::Player> pDbEntity;
-
-public:
-
-	/// @brief sql table primary key
-	inline static const char* SKeyName = "account_id";
-
 };

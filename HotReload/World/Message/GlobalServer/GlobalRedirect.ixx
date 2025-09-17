@@ -45,7 +45,7 @@ export namespace GlobalServerMessage
 		std::string binData;
 		if (tempList.empty())
 		{
-			response.set_error_code(EL10nCode_NotExistGateServer);
+			response.set_errorcode(EL10nCode_NotExistGateServer);
 		}
 		else
 		{
@@ -74,14 +74,14 @@ export namespace GlobalServerMessage
 			co_await dataChannel;
 			if (dataChannel.HasFlag(EMTaskFlag::Timeout))
 			{
-				response.set_error_code(EL10nCode_SGlobalReqTimeout);
+				response.set_errorcode(EL10nCode_SGlobalReqTimeout);
 
 			}
 
-			if(response.error_code() == EL10nCode_None)
+			if(response.errorcode() == EL10nCode_None)
 			{
-				response.set_server_ip(entity->ServerIp());
-				response.set_server_port(entity->ServerPort());
+				response.set_serverip(entity->ServerIp());
+				response.set_serverport(entity->ServerPort());
 			}
 			else
 			{

@@ -72,8 +72,8 @@ public:
 		// up to Global
 		std::string binData;
 		GMsg::g2G_RetRegistSrv request;
-		request.set_server_id(entity->ID());
-		request.set_is_regist(false);
+		request.set_serverid(entity->ID());
+		request.set_isregist(false);
 		request.SerializeToString(&binData);
 		MessagePackAndSend(0, EMMsgDeal::Ret, request.GetDescriptor()->full_name(), binData, GetClientProxy()->GetChannel());
 
@@ -95,7 +95,7 @@ public:
 		{
 			std::string binData;
 			GMsg::g2L_RetProxyOffline request;
-			request.set_entity_id(entityId);
+			request.set_entityid(entityId);
 			request.SerializeToString(&binData);
 			MessagePackAndSend(0, EMMsgDeal::Ret, request.GetDescriptor()->full_name(), binData, serverEntity->GetChannel());
 		}

@@ -57,7 +57,7 @@ public:
 		
 		for (std::string& dbName : dbNames)
 		{
-			EnumName<EMSqlDbNameEnum>(dbName); // check vaild = assert
+			EMSqlDbNameEnum key = EnumName<EMSqlDbNameEnum>(dbName); // check vaild = assert
 			
 			if (!checkTxn.query_value<bool>(std::format("SELECT EXISTS (SELECT 1 FROM pg_database WHERE datname = '{}');", dbName)))
 			{
@@ -65,7 +65,6 @@ public:
 				GetLogger()->Record(ELogLevel_Debug, "Create Database:{}", dbName);
 			}
 
-			uint16_t key = (uint16_t)EnumName<EMSqlDbNameEnum>(dbName);
 			std::string connectStr = std::format("{} dbname = {}", *value, dbName);
 
 			auto connection = MemPool->Allocate<pqxx::connection, const std::string&>(connectStr);
@@ -83,7 +82,7 @@ public:
 	}
 
 protected:
-	std::unordered_map<uint16_t, std::shared_ptr<pqxx::connection>> pRdbProxys;
+	std::unordered_map<EMSqlDbNameEnum, std::shared_ptr<pqxx::connection>> pRdbProxys;
 
 	LoggerPrint::WPtr pLogger;
 };

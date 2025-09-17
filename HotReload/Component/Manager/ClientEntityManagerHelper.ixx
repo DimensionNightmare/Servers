@@ -25,7 +25,7 @@ public:
 		if (!mEntityMap.contains(entityId))
 		{
 			ClientEntity::Ptr entity = Base()->AddEntity(entityId);
-			entity->GetDbEntity()->set_account_id(entityId);
+			entity->GetDbEntity()->set_accountid(entityId);
 
 			return entity->GetSelf<ClientEntityHelper>();
 		}
@@ -58,9 +58,9 @@ public:
 		{
 			if(inResponse)
 			{
-				std::string* entity_data = inResponse->add_entity_data();
+				std::string* entitydata = inResponse->add_entitydata();
 				GDb::Player* dbEntity = entity->GetDbEntity();
-				dbEntity->SerializeToString(entity_data);
+				dbEntity->SerializeToString(entitydata);
 			}
 			co_return;
 		}
@@ -69,7 +69,7 @@ public:
 			GetLogger()->Record(ELogLevel_Debug, "entity {} is DBIniting. return .", entity->ID());
 			if (inResponse)
 			{
-				inResponse->set_error_code(EL10nCode_DBIniting);
+				inResponse->set_errorcode(EL10nCode_DBIniting);
 			}
 			co_return;
 		}
@@ -78,9 +78,9 @@ public:
 
 		std::string binData;
 
-		std::string table_name = GDb::Player::GetDescriptor()->full_name();
+		std::string tablename = GDb::Player::GetDescriptor()->full_name();
 		uint64_t entityId = entity->ID();
-		std::string keyName = std::format("{}_{}", table_name, entityId);
+		std::string keyName = std::format("{}_{}", tablename, entityId);
 
 		MdbProxyHelper::CVPtr dbProxy = GetOwner()->GetComponent<MdbProxyHelper>(EMComponentType::MdbProxy);
 		if(auto connection = dbProxy->GetConnection())
@@ -97,8 +97,8 @@ public:
 
 				if (inResponse)
 				{
-					std::string* entity_data = inResponse->add_entity_data();
-					*entity_data = binData;
+					std::string* entitydata = inResponse->add_entitydata();
+					*entitydata = binData;
 				}
 
 				entity->SetFlag(EMClientEntityFlag::DBInited);
@@ -114,21 +114,21 @@ public:
 		// only query db data
 		if (inRequest)
 		{
-			request.set_table_name(inRequest->table_name());
-			request.set_key_name(inRequest->key_name());
-			request.set_entity_data(inRequest->entity_data());
-			request.set_need_create(inRequest->need_create());
+			request.set_tablename(inRequest->tablename());
+			request.set_keynumber(inRequest->keynumber());
+			request.set_entitydata(inRequest->entitydata());
+			request.set_needcreate(inRequest->needcreate());
 		}
 		// this mean new Entity branch
 		else
 		{
-			request.set_need_create(true);
+			request.set_needcreate(true);
 
 			request.set_limit(1);
-			request.set_table_name(table_name);
-			request.set_key_name(ClientEntity::SKeyName);
+			request.set_tablename(tablename);
+			request.set_keynumber(GDb::Player::kAccountIdFieldNumber);
 			
-			dbEntity->SerializeToString(request.mutable_entity_data());
+			dbEntity->SerializeToString(request.mutable_entitydata());
 		}
 
 
@@ -149,28 +149,28 @@ public:
 			co_await dataChannel;
 			if (dataChannel.HasFlag(EMTaskFlag::Timeout))
 			{
-				response.set_error_code(EL10nCode_CRdbReqTimeout);
+				response.set_errorcode(EL10nCode_CRdbReqTimeout);
 			}
 		}
 		
 		entity->ClearFlag(EMClientEntityFlag::DBIniting);
 
-		if (response.error_code() != EL10nCode_None)
+		if (response.errorcode() != EL10nCode_None)
 		{
 
-			// binData = request.entity_data();
+			// binData = request.entitydata();
 			// BytesToHexString(binData);
 			// mDbFailure[entityId] = binData;
-			GetLogger()->Record(ELogLevel_Debug, "Load Db Entity Error id = {}, error_code = {}! ", entityId, static_cast<int>(response.error_code()));
+			GetLogger()->Record(ELogLevel_Debug, "Load Db Entity Error id = {}, errorcode = {}! ", entityId, static_cast<int>(response.errorcode()));
 			co_return;
 		}
 
 		entity->SetFlag(EMClientEntityFlag::DBInited);
 
-		int lenth = response.entity_data_size();
+		int lenth = response.entitydata_size();
 		if (lenth == 1)
 		{
-			const std::string& entityData = response.entity_data(0);
+			const std::string& entityData = response.entitydata(0);
 			entity->SetDbEntity(entityData);
 			
 			if(auto connection = dbProxy->GetConnection())
@@ -187,11 +187,11 @@ public:
 
 		if (inResponse)
 		{
-			inResponse->set_error_code(response.error_code());
+			inResponse->set_errorcode(response.errorcode());
 			for (int i = 0; i < lenth; i++)
 			{
-				std::string* bytes = inResponse->add_entity_data();
-				*bytes = response.entity_data(i);
+				std::string* bytes = inResponse->add_entitydata();
+				*bytes = response.entitydata(i);
 			}
 		}
 
@@ -213,26 +213,26 @@ public:
 		// change maprecord
 		if(offline)
 		{
-			GDef_MapPointRecord* mapInfo = dbEntity->mutable_map_info();
-			GDef_MapPoint* cur_point = mapInfo->mutable_cur_point();
-			GDef_Vector3* property_location = dbEntity->mutable_property_entity()->mutable_location();
-			*cur_point->mutable_point() = *property_location;
+			GDef_MapPointRecord* mapInfo = dbEntity->mutable_mapinfo();
+			GDef_MapPoint* curpoint = mapInfo->mutable_curpoint();
+			GDef_Vector3* property_location = dbEntity->mutable_propertyentity()->mutable_location();
+			*curpoint->mutable_point() = *property_location;
 			property_location->Clear();
 
-			GDef_MapPoint* last_point = mapInfo->mutable_last_point();
-			*last_point = *cur_point;
-			cur_point->Clear();
+			GDef_MapPoint* lastpoint = mapInfo->mutable_lastpoint();
+			*lastpoint = *curpoint;
+			curpoint->Clear();
 		}
 
-		std::string entity_data;
-		dbEntity->SerializeToString(&entity_data);
+		std::string entitydata;
+		dbEntity->SerializeToString(&entitydata);
 
 		// sql
 		GMsg::L2D_ReqSaveData request;
-		std::string table_name = dbEntity->GetDescriptor()->full_name();
-		request.set_table_name(table_name);
-		request.set_key_name(ClientEntity::SKeyName);
-		request.set_entity_data(entity_data);
+		std::string tablename = dbEntity->GetDescriptor()->full_name();
+		request.set_tablename(tablename);
+		request.set_keynumber(GDb::Player::kAccountIdFieldNumber);
+		request.set_entitydata(entitydata);
 
 		GMsg::D2L_ResSaveData response;
 
@@ -255,15 +255,15 @@ public:
 			co_await dataChannel;
 			if (dataChannel.HasFlag(EMTaskFlag::Timeout))
 			{
-				response.set_error_code(EL10nCode_CRdbReqTimeout);
+				response.set_errorcode(EL10nCode_CRdbReqTimeout);
 			}
 		}
 
-		if (response.error_code() != EL10nCode_None)
+		if (response.errorcode() != EL10nCode_None)
 		{
-			BytesToHexString(entity_data);
-			mDbFailure[entityId] = entity_data;
-			GetLogger()->Record(ELogLevel_Debug, "Save Db Entity Error id = {}, error_code = {}! ", entityId, static_cast<int>(response.error_code()));
+			BytesToHexString(entitydata);
+			mDbFailure[entityId] = entitydata;
+			GetLogger()->Record(ELogLevel_Debug, "Save Db Entity Error id = {}, errorcode = {}! ", entityId, static_cast<int>(response.errorcode()));
 			co_return;
 		}
 
@@ -271,8 +271,8 @@ public:
 		MdbProxyHelper::CVPtr dbProxy = GetOwner()->GetComponent<MdbProxyHelper>(EMComponentType::MdbProxy);
 		if(auto connection = dbProxy->GetConnection())
 		{
-			std::string keyName = std::format("{}_{}", table_name, entityId);
-			connection->set(keyName, entity_data);
+			std::string keyName = std::format("{}_{}", tablename, entityId);
+			connection->set(keyName, entitydata);
 		}
 
 		mDbFailure.erase(entityId);

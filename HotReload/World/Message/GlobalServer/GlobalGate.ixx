@@ -18,9 +18,9 @@ export namespace GlobalServerMessage
 
 		GlobalServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<GlobalServerHelper>(EMSystemType::Server);
 		ServerEntityManagerHelper::Ptr entityMan = dnServer->GetServerEntityManager();
-		if (ServerEntityHelper::CVPtr entity = entityMan->GetEntity(request.server_id()))
+		if (ServerEntityHelper::CVPtr entity = entityMan->GetEntity(request.serverid()))
 		{
-			if (request.is_regist())
+			if (request.isregist())
 			{
 				if (uint64_t timerId = entity->TimerId())
 				{
@@ -37,7 +37,7 @@ export namespace GlobalServerMessage
 
 				dnServer->GetLogger()->Record(ELogLevel_Debug, "Global get notify release gate lock!");
 
-				entityMan->RemoveEntity(request.server_id());
+				entityMan->RemoveEntity(request.serverid());
 				dnServer->UpdateServerGroup();
 			}
 		}
@@ -54,7 +54,7 @@ export namespace GlobalServerMessage
 		GlobalServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<GlobalServerHelper>(EMSystemType::Server);
 		ServerEntityManagerHelper::Ptr entityMan = dnServer->GetServerEntityManager();
 
-		ServerEntityHelper::Ptr entity = entityMan->GetEntity(request.server_id());
+		ServerEntityHelper::Ptr entity = entityMan->GetEntity(request.serverid());
 		if(!entity)
 		{
 			return;
@@ -63,8 +63,8 @@ export namespace GlobalServerMessage
 		for (int i = 0; i < request.childs_size(); i++)
 		{
 			const GMsg::COM_ReqRegistSrv& child = request.childs(i);
-			EMServerType childType = (EMServerType)child.server_type();
-			ServerEntityHelper::Ptr servChild = entityMan->AddEntity(child.server_id(), childType);
+			EMServerType childType = (EMServerType)child.servertype();
+			ServerEntityHelper::Ptr servChild = entityMan->AddEntity(child.serverid(), childType);
 			entity->SetMapLinkNode(childType, servChild->GetSelf<ServerEntity>());
 		}
 	}

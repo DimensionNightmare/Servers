@@ -300,7 +300,7 @@ void HexStringToBytes(std::string& hexString)
 int main()
 {
 	GDb::Player player;
-	player.set_account_id(11);
+	player.set_accountid(11);
 	auto propertyEntity = player.mutable_property_entity();
 	propertyEntity->set_model_id(1);
 	std::string msgData;
@@ -324,7 +324,7 @@ int main()
 	player.Clear();
 	util::JsonStringToMessage(msgData1, &player);
 
-	std::cout << "id: " << player.account_id() << std::endl;
+	std::cout << "id: " << player.accountid() << std::endl;
 }
 #endif
 

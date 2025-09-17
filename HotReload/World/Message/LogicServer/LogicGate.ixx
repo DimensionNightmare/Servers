@@ -18,7 +18,7 @@ export namespace LogicServerMessage
 		LogicServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<LogicServerHelper>(EMSystemType::Server);
 		ClientEntityManagerHelper::CVPtr entityMan = dnServer->GetClientEntityManager();
 
-		if (ClientEntity::CVPtr entity = entityMan->GetEntity(request.entity_id()))
+		if (ClientEntity::CVPtr entity = entityMan->GetEntity(request.entityid()))
 		{
 			dnServer->GetLogger()->Record(ELogLevel_Debug, "Recv Client {} Disconnect !!", entity->ID());
 
@@ -27,6 +27,6 @@ export namespace LogicServerMessage
 			return;
 		}
 
-		dnServer->GetLogger()->Record(ELogLevel_Debug, "Recv Client {} Disconnect but not Exist!!", request.entity_id());
+		dnServer->GetLogger()->Record(ELogLevel_Debug, "Recv Client {} Disconnect but not Exist!!", request.entityid());
 	}
 }

@@ -12,7 +12,7 @@ private:
 
 public:
 
-	std::shared_ptr<pqxx::connection> GetConnection(uint16_t dbName)
+	std::shared_ptr<pqxx::connection> GetConnection(EMSqlDbNameEnum dbName)
 	{
 		if (pRdbProxys.contains(dbName))
 		{

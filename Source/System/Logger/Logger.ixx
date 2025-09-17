@@ -217,12 +217,12 @@ bool L10nText::Awake()
 	{
 		case EL10nType_zh_CN:
 		{
-			pL10nTipFunc = &l10n::l10nCode::zh_cn;
+			pL10nTipFunc = &l10n::l10nCode::zhcn;
 			break;
 		}
 		case EL10nType_en_US:
 		{
-			pL10nTipFunc = &l10n::l10nCode::en_us;
+			pL10nTipFunc = &l10n::l10nCode::enus;
 			break;
 		}
 		default:

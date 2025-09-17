@@ -32,33 +32,33 @@ export namespace ControlServerMessage
 
 		ServerEntityManagerHelper::CVPtr entityMan = dnServer->GetServerEntityManager();
 
-		dnServer->GetLogger()->Record(ELogLevel_Debug, "ip Reqregist: {}, {}", channel->peeraddr(), request.server_type());
+		dnServer->GetLogger()->Record(ELogLevel_Debug, "ip Reqregist: {}, {}", channel->peeraddr(), request.servertype());
 
 		const std::string& ipPort = channel->localaddr();
 
-		EMServerType regType = (EMServerType)request.server_type();
+		EMServerType regType = (EMServerType)request.servertype();
 
 		if (regType < EMServerType::GlobalServer || regType > EMServerType::AuthServer || ipPort.empty())
 		{
-			response.set_error_code(EL10nCode_RegistServerTypeError);
+			response.set_errorcode(EL10nCode_RegistServerTypeError);
 		}
 
 		//exist?
 		else if (ServerEntityHelper::Ptr entity = channel->getContextPtr<ServerEntityHelper>())
 		{
-			response.set_error_code(EL10nCode_RegistServerChannelExist);
+			response.set_errorcode(EL10nCode_RegistServerChannelExist);
 		}
 
-		else if (entity = entityMan->AddEntity(request.server_id(), regType))
+		else if (entity = entityMan->AddEntity(request.serverid(), regType))
 		{
 			size_t pos = ipPort.find(":");
 			entity->SetServerIp(ipPort.substr(0, pos));
-			entity->SetServerPort(request.server_port());
+			entity->SetServerPort(request.serverport());
 			entity->SetChannel(channel);
 
 			channel->setContextPtr(entity);
 
-			response.set_ret_server_type(static_cast<uint8_t>(dnServer->GetServerType()));
+			response.set_retservertype(static_cast<uint8_t>(dnServer->GetServerType()));
 		}
 
 		

@@ -85,7 +85,7 @@ public:
 
 				for (auto& [dbNameEnum, dbEntitys] : registTable)
 				{
-					if (auto connection = proxy->GetConnection(static_cast<uint16_t>(dbNameEnum)))
+					if (auto connection = proxy->GetConnection(dbNameEnum))
 					{
 						pqxx::work txn(*connection);
 						DbSqlHelper<GDb::SingleTon> singleTon(&txn, GetLogger());
@@ -99,7 +99,7 @@ public:
 
 						for (Message* dbEntity : dbEntitys)
 						{
-							DbSqlHelper<Message> helper(&txn, GetLogger(), dbEntity);
+							DbSqlHelper helper(&txn, GetLogger(), dbEntity);
 
 							const std::string& tableName = helper.GetName();
 							kv.set_key(std::format("{}_Schema", tableName));
@@ -116,7 +116,6 @@ public:
 								continue;
 							}
 
-							// #define DBSelectOne(obj, name) .SelectOne(#name, [&obj]() { return obj.name(); })
 							// #define DBSelectCond(obj, name, cond, splicing) .SelectCond(#name, cond, splicing, [&obj]() { return obj.name(); })
 							// #define DBUpdate(obj, name) .Update(obj, #name, [&obj]() { return obj.name(); })
 							// #define DBUpdateCond(obj, name, cond, splicing) .UpdateCond(#name, cond, splicing, [&obj]() { return obj.name(); })
@@ -124,12 +123,9 @@ public:
 
 							// // key method
 							// #define DBUpdateByKey(obj, name) .UpdateByKey(#name, [&obj]() { return obj.name(); })
-							// #define DBSelectByKey(obj, name) .SelectByKey(#name, [&obj]() { return obj.name(); })
-
-							#define DBSelectByKey(obj, name) .SelectByKey(#name, [&obj]() { return obj.name(); })
-
+						
 							singleTon
-								DBSelectByKey(kv, key)
+								.SelectByKey<GDb::SingleTon::kKeyFieldNumber>()
 								.Commit();
 
 							if (!singleTon.IsSuccess() || !singleTon.Result().size())
@@ -146,7 +142,7 @@ public:
 
 
 								kv.set_value(schemaMd5);
-								singleTon.UpdateByKey("key").Commit();
+								singleTon.UpdateByKey<GDb::SingleTon::kKeyFieldNumber>().Commit();
 							}
 						}
 

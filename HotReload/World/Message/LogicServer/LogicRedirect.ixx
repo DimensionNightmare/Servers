@@ -19,7 +19,7 @@ export namespace LogicServerMessage
 		LogicServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<LogicServerHelper>(EMSystemType::Server);
 		ClientEntityManagerHelper::CVPtr entityMan = dnServer->GetClientEntityManager();
 
-		ClientEntityHelper::CVPtr entity = entityMan->GetEntity(request.account_id());
+		ClientEntityHelper::CVPtr entity = entityMan->GetEntity(request.accountid());
 		if (!entity)
 		{
 			dnServer->GetLogger()->Record(ELogLevel_Debug, "Client Entity Kick Not Exist !");
@@ -64,7 +64,7 @@ export namespace LogicServerMessage
 		LogicServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<LogicServerHelper>(EMSystemType::Server);
 		ClientEntityManagerHelper::CVPtr entityMan = dnServer->GetClientEntityManager();
 
-		ClientEntityHelper::Ptr entity = entityMan->AddEntity(request.account_id());
+		ClientEntityHelper::Ptr entity = entityMan->AddEntity(request.accountid());
 		if (entity)
 		{
 			dnServer->GetLogger()->Record(ELogLevel_Debug, "AddEntity Client!");
@@ -80,7 +80,7 @@ export namespace LogicServerMessage
 		else
 		{
 			dnServer->GetLogger()->Record(ELogLevel_Debug, "AddEntity Exist Client!");
-			entity = entityMan->GetEntity(request.account_id());
+			entity = entityMan->GetEntity(request.accountid());
 		}
 
 #if 1
@@ -98,26 +98,26 @@ export namespace LogicServerMessage
 		{
 			uint64_t mapId = 0;
 			// from db
-			if(entity->GetDbEntity()->has_map_info())
+			if(entity->GetDbEntity()->has_mapinfo())
 			{
-				GDef_MapPointRecord* mapRecord = entity->GetDbEntity()->mutable_map_info();
-				*mapRecord->mutable_cur_point() = *mapRecord->mutable_last_point();
+				GDef_MapPointRecord* mapRecord = entity->GetDbEntity()->mutable_mapinfo();
+				*mapRecord->mutable_curpoint() = *mapRecord->mutable_lastpoint();
 
-				mapId = mapRecord->cur_point().map_id();
+				mapId = mapRecord->curpoint().mapid();
 			}
 			// new player use default 1
 			else
 			{
 				mapId++;
 
-				GDef_MapPointRecord* mapRecord = entity->GetDbEntity()->mutable_map_info();
-				mapRecord->mutable_cur_point()->set_map_id(mapId);
+				GDef_MapPointRecord* mapRecord = entity->GetDbEntity()->mutable_mapinfo();
+				mapRecord->mutable_curpoint()->set_mapid(mapId);
 			}
 
 			std::list<RoomEntity::Ptr> roomEntityList = roomEntityMan->GetEntitysByMapId(mapId);
 			if (roomEntityList.empty())
 			{
-				response.set_error_code(EL10nCode_NotDsServer);
+				response.set_errorcode(EL10nCode_NotDsServer);
 				dnServer->GetLogger()->Record(ELogLevel_Debug, "not ds Server");
 			}
 			else
@@ -148,14 +148,14 @@ export namespace LogicServerMessage
 
 			if (dataChannel.HasFlag(EMTaskFlag::Timeout))
 			{
-				response.set_error_code(EL10nCode_ReqRegistTimeout);
+				response.set_errorcode(EL10nCode_ReqRegistTimeout);
 			}
 			else
 			{
 				entity->SetRecordRoomId(roomEntity->ID());
 				//combin
-				response.set_server_ip(roomEntity->ServerIp());
-				response.set_server_port(roomEntity->ServerPort());
+				response.set_serverip(roomEntity->ServerIp());
+				response.set_serverport(roomEntity->ServerPort());
 			}
 
 		}

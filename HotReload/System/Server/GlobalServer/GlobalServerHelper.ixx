@@ -81,8 +81,8 @@ public:
 			channel->deleteContextPtr();
 
 			// sendData
-			request.set_server_ip(beEntityHelper->ServerIp());
-			request.set_server_port(beEntityHelper->ServerPort());
+			request.set_serverip(beEntityHelper->ServerIp());
+			request.set_serverport(beEntityHelper->ServerPort());
 
 			request.SerializeToString(&binData);
 			// timer destory

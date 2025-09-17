@@ -22,12 +22,12 @@ export namespace DatabaseServerMessage
 
 		GMsg::COM_ReqRegistSrv request;
 
-		request.set_server_id(dnServer->ID());
-		request.set_server_type((int)dnServer->GetServerType());
+		request.set_serverid(dnServer->ID());
+		request.set_servertype((int)dnServer->GetServerType());
 
 		if (dnServer->IsPullServer())
 		{
-			request.set_is_pull(true);
+			request.set_ispull(true);
 		}
 
 		// data alloc
@@ -50,19 +50,19 @@ export namespace DatabaseServerMessage
 			co_await dataChannel;
 			if (dataChannel.HasFlag(EMTaskFlag::Timeout))
 			{
-				response.set_error_code(EL10nCode_ReqRegistTimeout);
+				response.set_errorcode(EL10nCode_ReqRegistTimeout);
 			}
 
 		}
 
-		if (response.error_code() == EL10nCode_None)
+		if (response.errorcode() == EL10nCode_None)
 		{
 			clientProxy->SetRegistState(EMRegistState::Registed);
-			clientProxy->SetRegistType(response.ret_server_type());
+			clientProxy->SetRegistType(response.retservertype());
 		}
 		else
 		{
-			dnServer->GetLogger()->Record(response.error_code());
+			dnServer->GetLogger()->Record(response.errorcode());
 			// dnServer->IsRun() = false; //exit application
 			clientProxy->SetRegistState(EMRegistState::None);
 		}
@@ -82,7 +82,7 @@ export namespace DatabaseServerMessage
 
 		ClientProxyHelper::CVPtr clientProxy = dnServer->GetClientProxy();
 
-		clientProxy->RedirectClient(request.server_port(), request.server_ip());
+		clientProxy->RedirectClient(request.serverport(), request.serverip());
 	}
 
 }

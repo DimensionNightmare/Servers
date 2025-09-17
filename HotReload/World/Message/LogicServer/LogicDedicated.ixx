@@ -25,7 +25,7 @@ export namespace LogicServerMessage
 		});
 
 		GDb::Player player;
-		if (!player.ParseFromString(request.entity_data()))
+		if (!player.ParseFromString(request.entitydata()))
 		{
 			co_return;
 		}
@@ -33,11 +33,11 @@ export namespace LogicServerMessage
 		LogicServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<LogicServerHelper>(EMSystemType::Server);
 		ClientEntityManagerHelper::CVPtr entityMan = dnServer->GetClientEntityManager();
 
-		ClientEntity::CVPtr entity = entityMan->GetEntity(player.account_id());
+		ClientEntity::CVPtr entity = entityMan->GetEntity(player.accountid());
 
 		if (!entity)
 		{
-			response.set_error_code(EL10nCode_NoneClientEntity);
+			response.set_errorcode(EL10nCode_NoneClientEntity);
 		}
 		else
 		{
@@ -61,7 +61,7 @@ export namespace LogicServerMessage
 		
 		LogicServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<LogicServerHelper>(EMSystemType::Server);
 
-		if (!player.ParseFromString(request.entity_data()))
+		if (!player.ParseFromString(request.entitydata()))
 		{
 			dnServer->GetLogger()->Record(ELogLevel_Debug, "Save data but parse error!");
 			return;
@@ -69,7 +69,7 @@ export namespace LogicServerMessage
 
 		
 		ClientEntityManagerHelper::CVPtr entityMan = dnServer->GetClientEntityManager();
-		ClientEntity::CVPtr entity = entityMan->GetEntity(player.account_id());
+		ClientEntity::CVPtr entity = entityMan->GetEntity(player.accountid());
 
 		if(!entity)
 		{
@@ -85,7 +85,7 @@ export namespace LogicServerMessage
 		if (GDb::Player* dbEntity = entity->GetDbEntity())
 		{
 			dbEntity->MergeFrom(player);
-			if (request.runtime_save())
+			if (request.runtimesave())
 			{
 				entity->SetFlag(EMClientEntityFlag::DBModify);
 			}

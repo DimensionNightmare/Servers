@@ -22,12 +22,12 @@ export namespace LogicServerMessage
 
 		GMsg::COM_ReqRegistSrv request;
 
-		request.set_server_id(dnServer->ID());
-		request.set_server_type((int)dnServer->GetServerType());
+		request.set_serverid(dnServer->ID());
+		request.set_servertype((int)dnServer->GetServerType());
 
 		if (dnServer->IsPullServer())
 		{
-			request.set_is_pull(true);
+			request.set_ispull(true);
 		}
 
 		// pack data
@@ -50,19 +50,19 @@ export namespace LogicServerMessage
 			co_await dataChannel;
 			if (dataChannel.HasFlag(EMTaskFlag::Timeout))
 			{
-				response.set_error_code(EL10nCode_ReqRegistTimeout);
+				response.set_errorcode(EL10nCode_ReqRegistTimeout);
 			}
 
 		}
 
-		if (response.error_code() == EL10nCode_None)
+		if (response.errorcode() == EL10nCode_None)
 		{
 			clientProxy->SetRegistState(EMRegistState::Registed);
-			clientProxy->SetRegistType(response.ret_server_type());
+			clientProxy->SetRegistType(response.retservertype());
 		}
 		else
 		{
-			dnServer->GetLogger()->Record(response.error_code());
+			dnServer->GetLogger()->Record(response.errorcode());
 			// dnServer->IsRun() = false; //exit application
 			clientProxy->SetRegistState(EMRegistState::None);
 		}
@@ -81,7 +81,7 @@ export namespace LogicServerMessage
 
 		LogicServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<LogicServerHelper>(EMSystemType::Server);
 		
-		dnServer->GetLogger()->Record(ELogLevel_Debug, "ip Reqregist: {}, {}", channel->peeraddr(), request.server_type());
+		dnServer->GetLogger()->Record(ELogLevel_Debug, "ip Reqregist: {}, {}", channel->peeraddr(), request.servertype());
 
 		GMsg::COM_ResRegistSrv response;
 
@@ -93,23 +93,23 @@ export namespace LogicServerMessage
 
 		RoomEntityManagerHelper::Ptr entityMan = dnServer->GetRoomEntityManager();
 
-		EMServerType regType = (EMServerType)request.server_type();
+		EMServerType regType = (EMServerType)request.servertype();
 		const std::string& ipPort = channel->localaddr();
 
 		if (regType != EMServerType::DedicatedServer || ipPort.empty())
 		{
-			response.set_error_code(EL10nCode_RegistServerTypeError);
+			response.set_errorcode(EL10nCode_RegistServerTypeError);
 		}
 
 		//exist?
 		if (RoomEntityHelper::Ptr entity = channel->getContextPtr<RoomEntityHelper>())
 		{
-			response.set_error_code(EL10nCode_RegistServerChannelExist);
+			response.set_errorcode(EL10nCode_RegistServerChannelExist);
 		}
 
-		else if (request.is_pull())
+		else if (request.ispull())
 		{
-			if (entity = entityMan->GetEntity(request.server_id()))
+			if (entity = entityMan->GetEntity(request.serverid()))
 			{
 				// wait destroy`s destroy
 				if (uint64_t timerId = entity->TimerId())
@@ -121,7 +121,7 @@ export namespace LogicServerMessage
 				// already connect
 				if (SocketChannel::CVPtr sock = entity->GetChannel())
 				{
-					response.set_error_code(EL10nCode_PullServerReqRegistAlready);
+					response.set_errorcode(EL10nCode_PullServerReqRegistAlready);
 				}
 				else
 				{
@@ -131,25 +131,25 @@ export namespace LogicServerMessage
 
 					size_t pos = ipPort.find(":");
 					entity->SetServerIp(ipPort.substr(0, pos));
-					entity->SetServerPort(request.server_port());
+					entity->SetServerPort(request.serverport());
 
 					// Re-enroll
 					entityMan->MountEntity(entity);
 
-					response.set_ret_server_type(static_cast<uint8_t>(dnServer->GetServerType()));
+					response.set_retservertype(static_cast<uint8_t>(dnServer->GetServerType()));
 				}
 			}
 			else
 			{
-				response.set_error_code(EL10nCode_PullServerTimeout);
+				response.set_errorcode(EL10nCode_PullServerTimeout);
 			}
 		}
 
-		else if (entity = entityMan->AddEntity(request.map_id()))
+		else if (entity = entityMan->AddEntity(request.mapid()))
 		{
 			size_t pos = ipPort.find(":");
 			entity->SetServerIp(ipPort.substr(0, pos));
-			entity->SetServerPort(request.server_port());
+			entity->SetServerPort(request.serverport());
 
 			dnServer->GetLogger()->Record(ELogLevel_Debug, "ds regist:{}:{}", entity->ServerIp(), entity->ServerPort());
 
@@ -157,7 +157,7 @@ export namespace LogicServerMessage
 
 			channel->setContextPtr(entity);
 
-			response.set_ret_server_type(static_cast<uint8_t>(dnServer->GetServerType()));
+			response.set_retservertype(static_cast<uint8_t>(dnServer->GetServerType()));
 		}
 
 	}
@@ -172,7 +172,7 @@ export namespace LogicServerMessage
 		LogicServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<LogicServerHelper>(EMSystemType::Server);
 		ClientProxyHelper::CVPtr clientProxy = dnServer->GetClientProxy();
 
-		clientProxy->RedirectClient(request.server_port(), request.server_ip());
+		clientProxy->RedirectClient(request.serverport(), request.serverip());
 	}
 
 	void Exe_RetHeartbeat(SocketChannel::CVPtr channel, const std::string& binMsg)

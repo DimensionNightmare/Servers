@@ -32,7 +32,7 @@ export namespace GateServerMessage
 
 		if (dbServers.empty())
 		{
-			response.set_error_code(EL10nCode_NotExistDBServer);
+			response.set_errorcode(EL10nCode_NotExistDBServer);
 		}
 		else
 		{
@@ -54,7 +54,7 @@ export namespace GateServerMessage
 			co_await dataChannel;
 			if (dataChannel.HasFlag(EMTaskFlag::Timeout))
 			{
-				response.set_error_code(EL10nCode_SGateReqTimeout);
+				response.set_errorcode(EL10nCode_SGateReqTimeout);
 			}
 			
 		}
@@ -82,7 +82,7 @@ export namespace GateServerMessage
 
 		if (dbServers.empty())
 		{
-			response.set_error_code(EL10nCode_NotExistDBServer);
+			response.set_errorcode(EL10nCode_NotExistDBServer);
 		}
 		else
 		{
@@ -105,7 +105,7 @@ export namespace GateServerMessage
 			if (dataChannel.HasFlag(EMTaskFlag::Timeout))
 			{
 				dnServer->GetLogger()->Record(ELogLevel_Debug, "requst timeout! ");
-				response.set_error_code(EL10nCode_SGateReqTimeout);
+				response.set_errorcode(EL10nCode_SGateReqTimeout);
 			}
 			
 		}

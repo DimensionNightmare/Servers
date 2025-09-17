@@ -39,8 +39,8 @@ export void ApiAuth(Server::CVPtr dnServer)
 			}
 
 			GDb::Account accInfo;
-			accInfo.set_auth_name(authName);
-			accInfo.set_auth_string(authString);
+			accInfo.set_authname(authName);
+			accInfo.set_authstring(authString);
 
 			Server::Ptr serverTemp = server.lock();
 			if (!serverTemp)
@@ -57,19 +57,16 @@ export void ApiAuth(Server::CVPtr dnServer)
 			try
 			{
 				
-				std::shared_ptr<pqxx::connection> connection = dnServer->GetRdbProxy()->GetConnection(static_cast<uint16_t>(EMSqlDbNameEnum::Account));
+				std::shared_ptr<pqxx::connection> connection = dnServer->GetRdbProxy()->GetConnection(EMSqlDbNameEnum::Account);
 
 				pqxx::read_transaction query(*connection);
 				DbSqlHelper<GDb::Account> accounts(&query, dnServer->GetLogger());
 
-				#define DBSelectOne(obj, name) .SelectOne(#name, [&obj]() { return obj.name(); })
-				#define DBSelectCond(obj, name, cond, splicing) .SelectCond(#name, cond, splicing, [&obj]() { return obj.name(); })
 				accounts
-					// DBSelectOne(accInfo, account_id)
 					.InitEntity(accInfo)
 					.SelectAll()
-					DBSelectCond(accInfo, auth_name, "=", "")
-					DBSelectCond(accInfo, auth_string, "=", " AND ")
+					.SelectCond<GDb::Account::kAuthNameFieldNumber>("=", "")
+					.SelectCond<GDb::Account::kAuthStringFieldNumber>("=", " AND ")
 					.Limit(2)
 					.Commit();
 
@@ -98,8 +95,8 @@ export void ApiAuth(Server::CVPtr dnServer)
 				{
 					// HttpResponseWriterPtr writer = writer;	//sharedptr ref count ++
 					GMsg::A2g_ReqAuthAccount request;
-					request.set_account_id(accInfo.account_id());
-					request.set_server_ip(writer->peeraddr());
+					request.set_accountid(accInfo.accountid());
+					request.set_serverip(writer->peeraddr());
 
 					GMsg::g2A_ResAuthAccount response;
 
@@ -130,7 +127,7 @@ export void ApiAuth(Server::CVPtr dnServer)
 						{
 							retData["code"] = HTTP_STATUS_REQUEST_TIMEOUT;
 
-							response.set_error_code(EL10nCode_SAuthReqTimeout);
+							response.set_errorcode(EL10nCode_SAuthReqTimeout);
 						}
 						else
 						{
@@ -142,7 +139,7 @@ export void ApiAuth(Server::CVPtr dnServer)
 					binData.clear();
 					auto state = MessageToJsonString(response, &binData);
 					retData["data"] = nlohmann::json::parse(binData);
-					retData["data"]["accountId"] = accInfo.account_id();
+					retData["data"]["accountId"] = accInfo.accountid();
 
 					MSGSET(retData.dump());
 					writer->End();
@@ -172,8 +169,8 @@ export void ApiAuth(Server::CVPtr dnServer)
 
 
 			GDb::Account accInfo;
-			accInfo.set_auth_name(authName);
-			accInfo.set_auth_string(authString);
+			accInfo.set_authname(authName);
+			accInfo.set_authstring(authString);
 
 			Server::Ptr serverTemp = server.lock();
 			if (!serverTemp)
@@ -189,7 +186,7 @@ export void ApiAuth(Server::CVPtr dnServer)
 
 			try
 			{
-				std::shared_ptr<pqxx::connection> connection = dnServer->GetRdbProxy()->GetConnection(static_cast<uint16_t>(EMSqlDbNameEnum::Account));
+				std::shared_ptr<pqxx::connection> connection = dnServer->GetRdbProxy()->GetConnection(EMSqlDbNameEnum::Account);
 				
 				pqxx::read_transaction query(*connection);
 				DbSqlHelper<GDb::Account> accounts(&query, dnServer->GetLogger());
@@ -197,7 +194,7 @@ export void ApiAuth(Server::CVPtr dnServer)
 				accounts
 					.InitEntity(accInfo)
 					.SelectAll(false, true)
-					DBSelectCond(accInfo, auth_name, "=", "")
+					.SelectCond<GDb::Account::kAuthNameFieldNumber>("=", "")
 					.Commit();
 
 				if (uint32_t count = accounts.ResultCount())
@@ -221,14 +218,14 @@ export void ApiAuth(Server::CVPtr dnServer)
 
 			int64_t msTime = time_point_cast<nanoseconds>(system_clock::now()).time_since_epoch().count();
 
-			accInfo.set_create_time(msTime);
-			accInfo.set_update_time(msTime);
-			accInfo.set_last_logout_time(msTime);
-			accInfo.set_last_logout_time(msTime);
+			accInfo.set_createtime(msTime);
+			accInfo.set_updatetime(msTime);
+			accInfo.set_lastlogouttime(msTime);
+			accInfo.set_lastlogouttime(msTime);
 
 			try
 			{
-				std::shared_ptr<pqxx::connection> connection = dnServer->GetRdbProxy()->GetConnection(static_cast<uint16_t>(EMSqlDbNameEnum::Account));
+				std::shared_ptr<pqxx::connection> connection = dnServer->GetRdbProxy()->GetConnection(EMSqlDbNameEnum::Account);
 
 				pqxx::work query(*connection);
 				DbSqlHelper<GDb::Account> accounts(&query, dnServer->GetLogger());
