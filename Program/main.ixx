@@ -274,7 +274,6 @@ export int main(int argc, char** argv)
 
 			auto abort = [&]()
 				{
-					std::cout << "abort now!\n";
 					// int a = 100;
 					// int b = 0;
 					// int c = a / b;

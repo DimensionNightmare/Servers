@@ -105,15 +105,15 @@ public:
 							kv.set_key(std::format("{}_Schema", tableName));
 							schemaMd5 = helper.GetTableSchemaMd5();
 
+							bool hasCreated = false;
+
 							if (!helper.IsExist())
 							{
 
 								GetLogger()->Record(ELogLevel_Debug, "Create Table:{}", tableName);
 								helper.CreateTable().Commit();
 
-								kv.set_value(schemaMd5);
-								singleTon.Insert().Commit();
-								continue;
+								hasCreated = true;
 							}
 
 							// #define DBSelectCond(obj, name, cond, splicing) .SelectCond(#name, cond, splicing, [&obj]() { return obj.name(); })
@@ -128,22 +128,35 @@ public:
 								.SelectByKey<GDb::SingleTon::kKeyFieldNumber>()
 								.Commit();
 
-							if (!singleTon.IsSuccess() || !singleTon.Result().size())
+							if (singleTon.IsSuccess())
 							{
-								continue;
+								if(singleTon.Result().size() > 0)
+								{
+									kv = *singleTon.Result()[0];
+									if (schemaMd5 == kv.value())
+									{
+										continue;
+									}
+								}
+								else
+								{
+									if(hasCreated)
+									{
+										kv.set_value(schemaMd5);
+										singleTon.Insert().Commit();
+										continue;
+									}
+								}
+								
 							}
-
-							kv = *singleTon.Result()[0];
-
-							if (schemaMd5 != kv.value())
-							{
-								GetLogger()->Record(ELogLevel_Debug, "not match md5:\n{}\n{}", schemaMd5, kv.value());
-								helper.UpdateTable().Commit();
+							
+							GetLogger()->Record(ELogLevel_Debug, "not match md5:\n{}\n{}", schemaMd5, kv.value());
+							helper.UpdateTable().Commit();
 
 
-								kv.set_value(schemaMd5);
-								singleTon.UpdateByKey<GDb::SingleTon::kKeyFieldNumber>().Commit();
-							}
+							kv.set_value(schemaMd5);
+							singleTon.UpdateByKey<GDb::SingleTon::kKeyFieldNumber>().Commit();
+							
 						}
 
 						txn.commit();

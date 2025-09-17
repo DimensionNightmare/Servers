@@ -24,50 +24,6 @@ export class UniversalMemoryPool
 		std::vector<void*> blocks;
 	};
 
-	// 锁统计数据结构
-	struct LockStats
-	{
-		std::atomic_uint64_t totalWaitNs = 0;  // 总等待时间（纳秒）
-		std::atomic_uint64_t maxWaitNs = 0;     // 最大单次等待时间
-		std::atomic_uint64_t lockCount = 0;     // 锁获取次数
-	};
-
-	// 锁统计收集器
-	class LockProfiler
-	{
-	public:
-		LockProfiler(LockStats& stats) : stats(stats)
-		{
-			start = std::chrono::steady_clock::now();
-		}
-
-		~LockProfiler()
-		{
-			auto end = std::chrono::steady_clock::now();
-			uint64_t duration = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
-
-			stats.totalWaitNs += duration;
-			stats.lockCount++;
-
-			// 原子更新最大值
-			uint64_t currentMax = stats.maxWaitNs.load();
-			while (duration > currentMax &&
-				!stats.maxWaitNs.compare_exchange_weak(currentMax, duration))
-			{
-				// 循环直到更新成功
-			}
-		}
-
-	private:
-		LockStats& stats;
-		std::chrono::steady_clock::time_point start;
-	};
-
-	// 锁统计数据
-	LockStats mainLockStats;
-	std::array<LockStats, BucketCount> bucketLockStats;
-	std::atomic_bool enableProfiling{ true };
-
 public:
 	UniversalMemoryPool(size_t pool_size = 1024 * 1024 * 128) : iPoolSize(pool_size)
 	{
@@ -131,33 +87,6 @@ public:
 			throw;
 		}
 	}
-	
-	void PrintLeaks() { CheckLeaks(); }
-
-	void EnableProfiling(bool enable) { enableProfiling = enable; }
-
-	// 获取锁统计信息
-	void PrintLockStats(int core) const
-	{
-		if (!enableProfiling)
-		{
-			std::cout << "Profiling is disabled\n";
-			return;
-		}
-
-		std::cout << "\n===== Lock Wait Time Statistics =====\n";
-
-		// 主锁统计
-		std::cout << "Main Lock:\n";
-		PrintSingleLockStats(mainLockStats, core);
-
-		// 桶锁统计
-		for (size_t i = 0; i < BucketCount; i++)
-		{
-			std::cout << "Bucket " << i << ":\n";
-			PrintSingleLockStats(bucketLockStats[i], core);
-		}
-	}
 
 private:
 	// 尝试快速分配
@@ -175,7 +104,7 @@ private:
 		// 尝试从桶中快速获取
 		{
 			std::unique_lock lock(sizeBuckets[bucket_index].mutex);
-			// auto lock = GetLock(sizeBuckets[bucket_index].mutex, bucketLockStats[bucket_index]);
+			
 			if (!sizeBuckets[bucket_index].blocks.empty())
 			{
 				void* addr = sizeBuckets[bucket_index].blocks.back();
@@ -190,14 +119,11 @@ private:
 	void* AllocateRaw(size_t size)
 	{
 		void* addr = nullptr;
-
-		// auto lock = GetLock(mainMutex, mainLockStats);
+		
+		std::unique_lock lock(mainMutex);
+		if (auto it = FindFreeBlock(size); it != mFreeBlocks.end())
 		{
-			std::unique_lock lock(mainMutex);
-			if (auto it = FindFreeBlock(size); it != mFreeBlocks.end())
-			{
-				addr = AllocateFromIterator(it, size);
-			}
+			addr = AllocateFromIterator(it, size);
 		}
 		
 		return addr;
@@ -221,7 +147,7 @@ private:
 			{
 				size_t bucket_index = GetBucketIndex(remaining);
 				std::unique_lock lock(sizeBuckets[bucket_index].mutex);
-				// auto lock = GetLock(sizeBuckets[bucket_index].mutex, bucketLockStats[bucket_index]);
+				
 				sizeBuckets[bucket_index].blocks.push_back(remaining_addr);
 			}
 			else
@@ -242,14 +168,14 @@ private:
 		{
 			size_t bucket_index = GetBucketIndex(size);
 			std::unique_lock lock(sizeBuckets[bucket_index].mutex);
-			// auto lock = GetLock(sizeBuckets[bucket_index].mutex, bucketLockStats[bucket_index]);
+			
 			sizeBuckets[bucket_index].blocks.push_back(addr);
 		}
 		// 否则添加到主内存池
 		else
 		{
 			std::unique_lock lock(mainMutex);
-			// auto lock = GetLock(mainMutex, mainLockStats);
+			
 			mFreeBlocks.emplace(addr, size);
 		}
 	}
@@ -271,7 +197,7 @@ private:
 		const std::source_location& loc
 	)
 	{
-		// auto lock = GetLock(recordMutex, mainLockStats);
+		
 		std::unique_lock lock(recordMutex);
 
 		AllocationRecord record;
@@ -286,7 +212,7 @@ private:
 		AddToFreeList(raw_memory, size);
 		{
 			std::unique_lock lock(recordMutex);
-			// auto lock = GetLock(recordMutex, mainLockStats);
+			
 			auto it = mAllocatedRecords.find(raw_memory);
 			if (it != mAllocatedRecords.end())
 			{
@@ -305,7 +231,6 @@ private:
 	void CheckLeaks()
 	{
 		std::shared_lock lock(recordMutex);
-		// auto lock = GetLock(recordMutex, mainLockStats);
 
 		if (!mAllocatedRecords.empty())
 		{
@@ -342,53 +267,11 @@ private:
 		return best_fit;
 	}
 
-	// 打印单个锁的统计信息
-	void PrintSingleLockStats(const LockStats& stats, int core) const
-	{
-		uint64_t count = stats.lockCount.load();
-		if (count == 0)
-		{
-			std::cout << "  No locks acquired\n";
-			return;
-		}
-
-		uint64_t totalNs = stats.totalWaitNs.load();
-		uint64_t maxNs = stats.maxWaitNs.load();
-
-		std::cout << "  Lock count: " << count << "\n";
-		std::cout << "  Total wait time: " << FormatNs(totalNs) << "\n";
-		std::cout << "  Total core wait time: " << FormatNs(totalNs / core) << "\n";
-		std::cout << "  Average wait time: " << FormatNs(totalNs / count) << "\n";
-		std::cout << "  Max wait time: " << FormatNs(maxNs) << "\n";
-	}
-
-	// 格式化纳秒时间为易读格式
-	std::string FormatNs(uint64_t ns) const
-	{
-		if (ns < 1000) return std::to_string(ns) + " ns";
-		if (ns < 1000000) return std::to_string(ns / 1000.0) + " μs";
-		if (ns < 1000000000) return std::to_string(ns / 1000000.0) + " ms";
-		return std::to_string(ns / 1000000000.0) + " s";
-	}
-
-	// 带统计的锁获取
-	template<typename Mutex>
-	auto GetLock(Mutex& mutex, LockStats& stats)
-	{
-		if (enableProfiling)
-		{
-			LockProfiler profiler(stats);
-			return std::unique_lock<Mutex>(mutex);
-		}
-		return std::unique_lock<Mutex>(mutex);
-	}
-
-
 	void* pPool = nullptr;
 	size_t iPoolSize = 0;
 
 	// 主内存池
-	std::map<void*, size_t> mFreeBlocks;
+	std::unordered_map<void*, size_t> mFreeBlocks;
 	std::shared_mutex mainMutex;
 	std::shared_mutex recordMutex;
 
