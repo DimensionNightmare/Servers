@@ -580,13 +580,9 @@ public:
 
 				histroy.emplace_back(std::format("{0}\"{1}\" ADD COLUMN \"new_{2}\" {3};\nUPDATE \"{1}\" SET \"new_{2}\" = \"{2}\";\n{0}\"{1}\" DROP COLUMN \"{2}\";\n{0}\"{1}\" RENAME COLUMN \"new_{2}\" TO \"{2}\";\n", opTypeStr, GetName(), colName, tempstr));
 
-				std::cout << histroy.back() << std::endl;
-
 				if (!field->is_optional())
 				{
 					histroy.emplace_back(std::format("{0}\"{1}\" ALTER COLUMN \"{2}\" SET NOT NULL;\n", opTypeStr, GetName(), colName));
-
-					std::cout << histroy.back() << std::endl;
 				}
 
 				tempstr.clear();
