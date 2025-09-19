@@ -324,19 +324,11 @@ export int main(int argc, char** argv)
 					}
 				};
 
-			auto dump_pool = [&]()
-				{
-					if(MemPool)
-					{
-						MemPool->PrintLeaks();
-					}
-				};
-
 			std::unordered_map<std::string, std::function<void()>> cmdMap = 
 			{
 				#define one(func) {#func, func}
 
-				one(quit), one(abort), one(dump_memory), one(open), one(dump_pool), 
+				one(quit), one(abort), one(dump_memory), one(open),
 				
 				#undef one
 			};

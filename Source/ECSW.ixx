@@ -497,14 +497,9 @@ public:
 		mSystemMap.clear();
 	}
 
-	void MoveLuanchConfigToSelf(std::unordered_map<std::string, std::string>&& config)
-	{
-		mLuanchConfig = std::move(config);
-	}
-
 	void MoveLuanchConfigToSelf(std::unordered_map<std::string, std::string>& config)
 	{
-		mLuanchConfig = config;
+		mLuanchConfig = std::move(config);
 	}
 
 	std::string* LaunchParam(const std::string& key)

@@ -237,21 +237,17 @@ public:
 		if(bitServerOpenFlag.GetAllFlagCount() > 1)
 		{
 			iniFileParam["Common"]["program"] = launchParam["program"];
-
-			MoveLuanchConfigToSelf(iniFileParam["Common"]);
 		}
 		else
 		{
 			launchParam.merge(iniFileParam["Common"]);
 			iniFileParam["Common"] = std::move(launchParam);
-
-			auto mapCopy = iniFileParam["Common"];
-			MoveLuanchConfigToSelf(mapCopy);
 		}
-
+		
+		auto mapCopy = iniFileParam["Common"];
+		MoveLuanchConfigToSelf(mapCopy);
 
 		SPidLogger->Init(iniFileParam["Common"]);
-
 		
 		HotReload::CVPtr pHotDll = AddSystem<HotReload>();
 
@@ -269,7 +265,7 @@ public:
 				mergeMap.merge(iniFileParam[serverName]);
 
 				World::CVPtr world = MemPool->Allocate<World>();
-				world->MoveLuanchConfigToSelf(std::move(mergeMap));
+				world->MoveLuanchConfigToSelf(mergeMap);
 
 				if(!InitServer(world, pHotDll))
 				{
@@ -282,9 +278,6 @@ public:
 				oWorlds.push_back(world);
 			}
 		}
-
-
-		MoveLuanchConfigToSelf(std::move(iniFileParam["Common"]));
 
 		// free manager
 		// RemoveSystem(EMSystemType::HotReload);

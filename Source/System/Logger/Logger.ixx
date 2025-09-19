@@ -98,14 +98,14 @@ public:
 		}
 
 		// std::vformat(fmt, std::make_format_args(std::forward<Args>(args)...));
-		auto&& args_tuple = std::forward_as_tuple(std::forward<Args>(args)...);
+		// auto&& args_tuple = std::forward_as_tuple(std::forward<Args>(args)...);
 
-        auto format_args = std::apply([](auto&&... args) {
-            return std::make_format_args(args...);
-        }, args_tuple);
+        // auto format_args = std::apply([](auto&&... args) {
+        //     return std::make_format_args(args...);
+        // }, args_tuple);
 		
 	
-		flush(level, std::vformat(fmt, format_args));
+		flush(level, std::vformat(fmt, std::make_format_args(args...)));
 	}
 
 	/// @brief set logger type and Log file Init 
@@ -251,7 +251,7 @@ public:
 			{"LoggerLevel", "Debug"},
 		};
 
-		pWorld->MoveLuanchConfigToSelf(std::move(commonInfo));
+		pWorld->MoveLuanchConfigToSelf(commonInfo);
 
 		pLogger = pWorld->AddSystem<LoggerPrint>();
 	}
@@ -271,7 +271,7 @@ public:
 		return true;
 	}
 
-	bool Init(std::unordered_map<std::string, std::string>& commonInfo)
+	bool Init(std::unordered_map<std::string, std::string> commonInfo)
 	{
 		pWorld->MoveLuanchConfigToSelf(commonInfo);
 		

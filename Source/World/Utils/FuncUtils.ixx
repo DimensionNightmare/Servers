@@ -55,7 +55,7 @@ export
 		void SetInstance(Class* instance)
 		{
 			pInstance = instance;
-			mProxy = [](Class* obj, Args... args) -> Ret
+			mProxy = [](Class* obj, Args&&... args) -> Ret
 				{
 					return (obj->*Func)(std::forward<Args>(args)...);
 				};
