@@ -4,6 +4,7 @@ import GlobalServerHelper;
 import std;
 import ThirdParty.Libhv;
 import ThirdParty.PbGen;
+import Logger;
 
 export namespace GlobalServerMessage
 {
@@ -35,7 +36,7 @@ export namespace GlobalServerMessage
 				owner->GetMapLinkNode(entity->GetServerType()).remove(entity);
 				owner->ClearFlag(EMServerEntityFlag::Locked);
 
-				dnServer->GetLogger()->Record(ELogLevel_Debug, "Global get notify release gate lock!");
+				LoggerPrint::Log(channel, ELogLevel_Debug, "Global get notify release gate lock!");
 
 				entityMan->RemoveEntity(request.serverid());
 				dnServer->UpdateServerGroup();

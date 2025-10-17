@@ -8,6 +8,8 @@ import FuncHelper;
 import Task;
 import std;
 import ThirdParty.PbGen;
+import Logger;
+import ThirdParty.Protobuf;
 
 export namespace ControlServerMessage
 {

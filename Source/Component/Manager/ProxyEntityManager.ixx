@@ -3,6 +3,7 @@ export module ProxyEntityManager;
 import ProxyEntity;
 import EntityManager;
 import FuncUtils;
+import Logger;
 
 export class ProxyEntityManager : public EntityManager<ProxyEntity>
 {
@@ -48,7 +49,7 @@ public:
 
 		if (RemoveEntity(entityId))
 		{
-			GetLogger()->Record(ELogLevel_Debug, "destory proxy Timer entity");
+			LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "destory proxy Timer entity");
 		}
 
 	}
@@ -72,7 +73,7 @@ public: // dll proxy
 
 	ProxyEntity::Ptr _AddEntity(uint64_t entityId)
 	{
-		ProxyEntity::Ptr entity = MemPool->Allocate<ProxyEntity, World::WPtr>(GetOwner()->GetWorldW());
+		ProxyEntity::Ptr entity = G_InstanceHolder.MemPool->Allocate<ProxyEntity, World::WPtr>(GetOwner()->GetWorldW());
 		entity->SetID(entityId);
 
 		std::unique_lock ulock(oMapMutex);

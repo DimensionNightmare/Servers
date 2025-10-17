@@ -10,6 +10,7 @@ import Server;
 import ThirdParty.Libhv;
 import FuncUtils;
 import Timer;
+import ThirdParty.Protobuf;
 
 export class ServerProxy : public Component, public hv::TcpServerTmpl<SocketChannel>
 {
@@ -23,8 +24,6 @@ protected:
 	{
 		eComponentType = EMComponentType::ServerProxy;
 		
-		pLogger = GetOwner()->GetWorld()->GetSystemW<LoggerPrint>(EMSystemType::LoggerPrint);
-
 		pTimer = GetOwner()->GetWorld()->GetSystemW<Timer>(EMSystemType::Timer);
 	}
 
@@ -53,7 +52,7 @@ public:
 				std::string* param = GetOwner()->GetWorld()->LaunchParam("port");
 				if (!param)
 				{
-					GetLogger()->Record(EL10nCode_SrvNeedIPPort);
+					LoggerPrint::Log(GetWorld(), EL10nCode_SrvNeedIPPort);
 					// return false;
 					return false;
 				}
@@ -66,7 +65,7 @@ public:
 		int listenfd = createsocket(inport, "0.0.0.0");
 		if (listenfd < 0)
 		{
-			GetLogger()->Record(EL10nCode_CreateSocket);
+			LoggerPrint::Log(GetWorld(), EL10nCode_CreateSocket);
 			// return false;
 			return false;
 		}
@@ -83,7 +82,7 @@ public:
 			int addrLen = sizeof(addr);
 			if (Platform::getsockname(listenfd, reinterpret_cast<struct Platform::sockaddr*>(&addr), &addrLen) < 0)
 			{
-				GetLogger()->Record(EL10nCode_GetSocketName);
+				LoggerPrint::Log(GetWorld(), EL10nCode_GetSocketName);
 				return false;
 			}
 
@@ -99,7 +98,7 @@ public:
 		setUnpack(&setting);
 		setThreadNum(1);
 
-		GetLogger()->Record(EL10nCode_SrvListenOn, port, listenfd);
+		LoggerPrint::Log(GetWorld(), EL10nCode_SrvListenOn, port, listenfd);
 
 		GetOwner()->GetWorld()->AddEvent(EMEventType::ServerStart, GetSelfW<ServerProxy>(), &ServerProxy::Start);
 
@@ -180,7 +179,7 @@ public: // dll override
 			{
 				if (!channel->contextPtr())
 				{
-					GetLogger()->Record(ELogLevel_Debug, "ChannelTimeoutTimer dnServer destory entity\n");
+					LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "ChannelTimeoutTimer dnServer destory entity\n");
 					channel->close();
 				}
 			}
@@ -201,8 +200,6 @@ public: // dll override
 		size_t timerId = GetTimer()->SetTimeout(5000, funcProxy);
 		AddTimerRecord(timerId, channel->id());
 	}
-
-	LoggerPrint::Ptr GetLogger(){ return pLogger.expired() ? nullptr : pLogger.lock(); }
 
 	Timer::Ptr GetTimer(){ return pTimer.expired() ? nullptr : pTimer.lock(); }
 
@@ -243,8 +240,6 @@ protected:
 	std::shared_mutex oMsgMutex;
 
 	std::shared_mutex oTimerMutex;
-
-	LoggerPrint::WPtr pLogger;
 
 	Timer::WPtr pTimer;
 };

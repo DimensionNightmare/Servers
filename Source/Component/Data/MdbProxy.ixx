@@ -13,8 +13,6 @@ protected:
 	MdbProxy(System::WPtr system):Component(system)
 	{
 		eComponentType = EMComponentType::MdbProxy;
-
-		pLogger = GetOwner()->GetWorld()->GetSystemW<LoggerPrint>(EMSystemType::LoggerPrint);
 	}
 
 public:
@@ -38,15 +36,13 @@ public:
 		return true;
 	}
 
-	LoggerPrint::Ptr GetLogger(){ return pLogger.expired() ? nullptr : pLogger.lock(); }
-
 	void InitDatabase()
 	{
 		World::CVPtr world = GetOwner()->GetWorld();
 
 		std::string* value = world->LaunchParam("connection");
 
-		auto connection = MemPool->Allocate<sw::redis::Redis, const std::string&>(*value);
+		auto connection = G_InstanceHolder.MemPool->Allocate<sw::redis::Redis, const std::string&>(*value);
 		
 		connection->ping();
 
@@ -56,7 +52,4 @@ public:
 protected:
 
 	std::unordered_map<uint16_t, std::shared_ptr<sw::redis::Redis>> pMdbProxys;
-
-	LoggerPrint::WPtr pLogger;
-
 };

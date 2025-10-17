@@ -7,6 +7,7 @@ import ThirdParty.Libhv;
 import Task;
 import ServerEntity;
 import ThirdParty.PbGen;
+import Logger;
 
 export namespace GlobalServerMessage
 {
@@ -50,7 +51,7 @@ export namespace GlobalServerMessage
 		else
 		{
 			ServerEntityHelper::CVPtr entity = tempList.front();
-			dnServer->GetLogger()->Record(ELogLevel_Debug, "send to GateServer : {}", entity->ID());
+			LoggerPrint::Log(channel, ELogLevel_Debug, "send to GateServer : {}", entity->ID());
 
 			entity->SetConnNum(1);
 
@@ -90,7 +91,7 @@ export namespace GlobalServerMessage
 
 			
 
-			dnServer->GetLogger()->Record(ELogLevel_Debug, "{}", response.DebugString());
+			LoggerPrint::Log(channel, ELogLevel_Debug, "{}", response.DebugString());
 		}
 
 		co_return;

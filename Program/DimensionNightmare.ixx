@@ -19,6 +19,22 @@ import ECSW;
 import Logger;
 import Timer;
 
+export enum class EMProgramFlag
+{
+	None = 0,
+	ResourceLoadDown = 1,
+	Max,
+};
+
+export struct ProgramConfig
+{
+	std::unordered_map<std::string, std::string> launchConfig;
+
+	std::unordered_map<std::string, std::unordered_map<std::string, std::string>> iniFileConfig;
+
+	BitFlag<EMServerType> bitServerOpenFlag;
+};
+
 export void WriteDumpFile(std::filesystem::path fileName, _EXCEPTION_POINTERS* ExceptionInfo = nullptr)
 {
 	auto hDumpFile = Platform::CreateFileA(
@@ -65,13 +81,154 @@ export void WriteDumpFile(std::filesystem::path fileName, _EXCEPTION_POINTERS* E
 	Platform::CloseHandle(hDumpFile);
 }
 
-export enum class EMProgramFlag
+export bool InitProgramConfig(ProgramConfig& programConfig)
 {
-	None = 0,
-	ResourceLoadDown = 1,
-	Max,
-};
+	/// @brief load ini config
+	auto& launchConfig = programConfig.launchConfig;
+	auto& bitServerOpenFlag = programConfig.bitServerOpenFlag;
+	auto& iniFileParam = programConfig.iniFileConfig;
 
+#pragma region LuanchConfig
+
+	if (!launchConfig.contains("svrType"))
+	{
+		LoggerPrint::Log(nullptr, ELogLevel_Error, "lunch param svrType is null! ");
+		return false;
+	}
+
+	for(auto& serverType : StrSplit(launchConfig["svrType"], ","))
+	{
+		bitServerOpenFlag.SetFlag(std::stoi(serverType));
+	}
+
+	launchConfig.erase("svrType");
+
+	uint64_t bitFlagValue = bitServerOpenFlag.GetAllFlagNum();
+	if (bitFlagValue == 0 || bitFlagValue >= (1 << static_cast<uint8_t>(EMServerType::Max)))
+	{
+		LoggerPrint::Log(nullptr, ELogLevel_Error, "serverType Not Invalid! ");
+		return false;
+	}
+
+#ifndef NDEBUG
+	const char* iniFilePath = "./Config/ServerDebug.ini";
+#else
+	const char* iniFilePath = "./Config/Server.ini";
+#endif
+
+	if(!std::filesystem::exists(iniFilePath))
+	{
+		LoggerPrint::Log(nullptr, ELogLevel_Error, "ConfigIni Not Finded!");
+		return false;
+	}
+
+#ifdef _WIN32
+	#define MAX_SECTION_NAME 512
+	char buffer[MAX_SECTION_NAME] = { 0 };
+	size_t bufferSize = sizeof(buffer);
+	Platform::GetPrivateProfileSectionNamesA(buffer, MAX_SECTION_NAME, iniFilePath);
+	char* current = buffer;
+	while (*current)
+	{
+		iniFileParam[current];
+		current += strlen(current) + 1;
+	}
+#elif __unix__
+	std::unordered_map<std::string, std::list<std::string>> sectionVal;
+
+	auto GetINISectionNames = [&](const char* iniFilePath)
+		{
+			ifstream file(iniFilePath);
+			if (!file.is_open())
+			{
+				cerr << "Failed to open INI file: " << iniFilePath << std::endl;
+				return;
+			}
+
+			std::string line;
+			while (getline(file, line))
+			{
+				if (line.empty())
+				{
+					continue;
+				}
+
+				if (line[0] == '[')
+				{
+					size_t endPos = line.find_first_of("]");
+					if (endPos != std::string::npos)
+					{
+						std::string mainSection = line.substr(1, endPos - 1);
+						iniFileParam.emplace_back(mainSection);
+					}
+				}
+				else if (line[0] != ';')
+				{
+					sectionVal[iniFileParam.back()].emplace_back(line);
+				}
+			}
+
+			file.close();
+		};
+
+	GetINISectionNames(iniFilePath);
+
+	auto iter = iniFileParam.begin();
+	while (iter != iniFileParam.end())
+	{
+		if ((*iter).find("Server") != std::string::npos && *iter != serverName)
+		{
+			sectionVal.erase(*iter);
+			iter = iniFileParam.erase(iter);
+		}
+		else
+		{
+			++iter;
+		}
+	}
+#endif
+	auto handler = [&](std::unordered_map<std::string, std::string>& map, std::string& split)
+	{
+		size_t pos = split.find('=');
+		if (pos != std::string::npos)
+		{
+			std::string key = split.substr(0, pos);
+
+			map.emplace(key, split.substr(pos + 1));
+		}
+	};
+	
+
+	for (auto& [mainSection, sectionMap] : iniFileParam)
+	{
+		if (mainSection.find_last_of("Server") != std::string::npos)
+		{
+			sectionMap.emplace("svrName", mainSection);
+		}
+
+#ifdef _WIN32
+		Platform::GetPrivateProfileSectionA(mainSection.c_str(), buffer, MAX_SECTION_NAME, iniFilePath);
+		char* keyValuePair = buffer;
+		while (*keyValuePair)
+		{
+			std::string split(keyValuePair);
+			keyValuePair += strlen(keyValuePair) + 1;
+			handler(sectionMap, split);
+		}
+#elif __unix__
+		for (const std::string& keyValuePair : sectionVal[mainSection])
+		{
+			std::string split(keyValuePair);
+			handler(split);
+		}
+#endif
+	}
+
+#pragma endregion
+
+
+	return true;
+}
 
 export class DimensionNightmare : public World, public BitFlag<EMProgramFlag>
 {
@@ -89,191 +246,39 @@ public:
 	}
 
 	/// @brief load ini config
-	bool Init(std::unordered_map<std::string, std::string> launchParam)
+	bool Init(ProgramConfig& programConfig)
 	{
-		/// @brief load ini config
-		BitFlag<EMServerType> bitServerOpenFlag;
-		std::unordered_map<std::string, std::unordered_map<std::string, std::string>> iniFileParam;
-
-#pragma region LuanchConfig
-
-		if (!launchParam.contains("svrType"))
+		// init auth world
 		{
-			SPidLogger->Record(ELogLevel_Error, "lunch param svrType is null! ");
-			return false;
-		}
-
-		for(auto& serverType : StrSplit(launchParam["svrType"], ","))
-		{
-			bitServerOpenFlag.SetFlag(std::stoi(serverType));
-		}
-
-		launchParam.erase("svrType");
-
-		uint64_t bitFlagValue = bitServerOpenFlag.GetAllFlagNum();
-		if (bitFlagValue == 0 || bitFlagValue >= (1 << static_cast<uint8_t>(EMServerType::Max)))
-		{
-			SPidLogger->Record(ELogLevel_Error, "serverType Not Invalid! ");
-			return false;
-		}
-
-#ifndef NDEBUG
-		const char* iniFilePath = "./Config/ServerDebug.ini";
-#else
-		const char* iniFilePath = "./Config/Server.ini";
-#endif
-
-		if(!std::filesystem::exists(iniFilePath))
-		{
-			SPidLogger->Record(ELogLevel_Error, "ConfigIni Not Finded!");
-			return false;
-		}
-
-#ifdef _WIN32
-		#define MAX_SECTION_NAME 512
-		char buffer[MAX_SECTION_NAME] = { 0 };
-		size_t bufferSize = sizeof(buffer);
-		Platform::GetPrivateProfileSectionNamesA(buffer, MAX_SECTION_NAME, iniFilePath);
-		char* current = buffer;
-		while (*current)
-		{
-			iniFileParam[current];
-			current += strlen(current) + 1;
-		}
-#elif __unix__
-		std::unordered_map<std::string, std::list<std::string>> sectionVal;
-
-		auto GetINISectionNames = [&](const char* iniFilePath)
-			{
-				ifstream file(iniFilePath);
-				if (!file.is_open())
-				{
-					cerr << "Failed to open INI file: " << iniFilePath << std::endl;
-					return;
-				}
-
-				std::string line;
-				while (getline(file, line))
-				{
-					if (line.empty())
-					{
-						continue;
-					}
-
-					if (line[0] == '[')
-					{
-						size_t endPos = line.find_first_of("]");
-						if (endPos != std::string::npos)
-						{
-							std::string mainSection = line.substr(1, endPos - 1);
-							iniFileParam.emplace_back(mainSection);
-						}
-					}
-					else if (line[0] != ';')
-					{
-						sectionVal[iniFileParam.back()].emplace_back(line);
-					}
-				}
-
-				file.close();
-			};
-
-		GetINISectionNames(iniFilePath);
-
-		auto iter = iniFileParam.begin();
-		while (iter != iniFileParam.end())
-		{
-			if ((*iter).find("Server") != std::string::npos && *iter != serverName)
-			{
-				sectionVal.erase(*iter);
-				iter = iniFileParam.erase(iter);
-			}
-			else
-			{
-				++iter;
-			}
-		}
-#endif
-		auto handler = [&](std::unordered_map<std::string, std::string>& map, std::string& split)
-		{
-			size_t pos = split.find('=');
-			if (pos != std::string::npos)
-			{
-				std::string key = split.substr(0, pos);
-
-				map.emplace(key, split.substr(pos + 1));
-			}
-		};
-		
-
-		for (auto& [mainSection, sectionMap] : iniFileParam)
-		{
-			if (mainSection.find_last_of("Server") != std::string::npos)
-			{
-				sectionMap.emplace("svrName", mainSection);
-			}
-
-#ifdef _WIN32
-			Platform::GetPrivateProfileSectionA(mainSection.c_str(), buffer, MAX_SECTION_NAME, iniFilePath);
-			char* keyValuePair = buffer;
-			while (*keyValuePair)
-			{
-				std::string split(keyValuePair);
-				keyValuePair += strlen(keyValuePair) + 1;
-				handler(sectionMap, split);
-			}
-#elif __unix__
-			for (const std::string& keyValuePair : sectionVal[mainSection])
-			{
-				std::string split(keyValuePair);
-				handler(split);
-			}
-#endif
-		}
-
-#pragma endregion
-
-		// muti dnServer only this valid.
-		if(bitServerOpenFlag.GetAllFlagCount() > 1)
-		{
-			iniFileParam["Common"]["program"] = launchParam["program"];
-		}
-		else
-		{
-			launchParam.merge(iniFileParam["Common"]);
-			iniFileParam["Common"] = std::move(launchParam);
-		}
-		
-		auto mapCopy = iniFileParam["Common"];
-		MoveLuanchConfigToSelf(mapCopy);
-
-		SPidLogger->Init(iniFileParam["Common"]);
-		
-		HotReload::CVPtr pHotDll = AddSystem<HotReload>();
-
-		if (!pHotDll->ReloadHandle())
-		{
-			return false;
-		}
+			G_InstanceHolder.AuthWorld = G_InstanceHolder.MemPool->Allocate<World>();
+			G_InstanceHolder.AuthWorld->MoveLuanchConfigToSelf(programConfig.iniFileConfig["Common"]);
 	
+			G_InstanceHolder.AuthWorld->AddSystem<LoggerPrint>();
+			G_InstanceHolder.AuthWorld->AddSystem<L10nText>();
+
+			HotReload::CVPtr pHotDll = G_InstanceHolder.AuthWorld->AddSystem<HotReload>();
+			if (!pHotDll->ReloadHandle())
+			{
+				return false;
+			}
+		}
+
 		for(auto& [serverEnum, serverName] : ServerTypeList)
 		{
 			// set global Launch config
-			if(bitServerOpenFlag.HasFlag(serverEnum))
+			if(programConfig.bitServerOpenFlag.HasFlag(serverEnum))
 			{
-				auto mergeMap = iniFileParam["Common"];
-				mergeMap.merge(iniFileParam[serverName]);
+				
+				World::CVPtr world = G_InstanceHolder.MemPool->Allocate<World>();
+				world->MoveLuanchConfigToSelf(programConfig.iniFileConfig[serverName]);
 
-				World::CVPtr world = MemPool->Allocate<World>();
-				world->MoveLuanchConfigToSelf(mergeMap);
+				// if(!InitServer(world, pHotDll))
+				// {
+				// 	world->Dispose();
+				// 	continue;
+				// }
 
-				if(!InitServer(world, pHotDll))
-				{
-					world->Dispose();
-					continue;
-				}
-
-				world->Broadcast(EMEventType::ServerStart);
+				// world->Broadcast(EMEventType::ServerStart);
 
 				oWorlds.push_back(world);
 			}
@@ -289,24 +294,8 @@ public:
 	/// @param pHotDll if mutiServer, will own common
 	bool InitServer(World::CVPtr world, HotReload::CVPtr pHotDll)
 	{
-		
-		// logger
-		LoggerPrint::CVPtr pLogger = world->AddSystem<LoggerPrint>();
-		if(!pLogger)
-		{
-			return false;
-		}
-
-		// i10n
-		L10nText::CVPtr dnL10n = world->AddSystem<L10nText>();
-		if(!dnL10n)
-		{
-			return false;
-		}
-
 		world->AddSystem<Timer>();
 
-		
 		std::string* value = world->LaunchParam("svrName");
 		EMServerType serverType = EnumName<EMServerType>(*value);
 
@@ -377,7 +366,7 @@ public:
 			}
 			default:
 			{
-				pLogger->Record(EL10nCode_SrvTypeNotVaild);
+				LoggerPrint::Log(nullptr, EL10nCode_SrvTypeNotVaild);
 				return false;
 			}
 		}
@@ -388,13 +377,13 @@ public:
 		}
 		catch(const std::exception& e)
 		{
-			pLogger->Record(ELogLevel_Error, "dnserver lunch error! error: {}", e.what());
+			LoggerPrint::Log(nullptr, ELogLevel_Error, "dnserver lunch error! error: {}", e.what());
 			return false;
 		}
 		
 		if (pHotDll->pInitHotReload(world) != 1)
 		{
-			pLogger->Record(ELogLevel_Error, "program lunch OnRegHotReload error!");
+			LoggerPrint::Log(nullptr, ELogLevel_Error, "program lunch OnRegHotReload error!");
 			return false;
 		}
 
@@ -464,7 +453,7 @@ public:
 		// 	allCommands += k + "\n\t\t";
 		// }
 
-		// SPidLogger->Record(ELogLevel_Normal, "{}", allCommands);
+		// LoggerPrint::Log(nullptr, ELogLevel_Normal, "{}", allCommands);
 	}	
 
 	/// @brief exec command line

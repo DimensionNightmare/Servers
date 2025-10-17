@@ -5,8 +5,6 @@ import ThirdParty.Platform;
 import NumUtils;
 import UniversalMemoryPool;
 
-export std::shared_ptr<UniversalMemoryPool> MemPool;
-
 #pragma region EnumType
 
 export enum EMEventType : uint8_t
@@ -56,6 +54,19 @@ export enum class EMSystemType : uint8_t
 #pragma endregion
 
 class World;
+
+struct InstanceHolder
+{
+	UniversalMemoryPool::Ptr MemPool;
+	
+	std::shared_ptr<World> AuthWorld;
+	
+	std::shared_ptr<World> MainWorld;
+
+	~InstanceHolder();
+};
+
+export InstanceHolder G_InstanceHolder;
 
 #pragma region DNEvent
 
@@ -191,6 +202,9 @@ public:
 
 	template<typename T>
 	std::shared_ptr<T> GetOwner(){ return std::static_pointer_cast<T>(GetOwner()); }
+
+	std::shared_ptr<World> GetWorld();
+
 public:
 
 	EMComponentType GetComponentType() { return eComponentType; }
@@ -275,7 +289,7 @@ public: // dll override
 		static_assert(std::is_base_of_v<Component, T>, "T must inherit from component");
 		try
 		{
-			std::shared_ptr<T> component = MemPool->Allocate<T>(shared_from_this());
+			std::shared_ptr<T> component = G_InstanceHolder.MemPool->Allocate<T>(shared_from_this());
 			if(!component->Awake())
 			{
 				component->Dispose();
@@ -318,6 +332,17 @@ protected: // dll proxy
 	std::shared_mutex mComponentLock;
 };
 
+std::shared_ptr<World> Component::GetWorld()
+{
+	auto owner = GetOwner();
+	if(!owner)
+	{
+		return nullptr;
+	}
+
+	return owner->GetWorld();
+}
+
 
 #pragma endregion
 
@@ -356,7 +381,7 @@ public:
 		static_assert(std::is_base_of_v<Component, T>, "T must inherit from component");
 		try
 		{
-			std::shared_ptr<T> component = MemPool->Allocate<T, System::WPtr>(GetSelfW<System>());
+			std::shared_ptr<T> component = G_InstanceHolder.MemPool->Allocate<T, System::WPtr>(GetSelfW<System>());
 			if(!component->Awake())
 			{
 				component->Dispose();
@@ -407,7 +432,7 @@ public:
 		static_assert(std::is_base_of_v<System, T>, "T must inherit from System");
 		try
 		{
-			std::shared_ptr<T> system = MemPool->Allocate<T, World::WPtr>(GetSelfW<World>());
+			std::shared_ptr<T> system = G_InstanceHolder.MemPool->Allocate<T, World::WPtr>(GetSelfW<World>());
 			if(!system->Awake())
 			{
 				system->Dispose();
@@ -519,5 +544,23 @@ private:
 	std::unordered_map<EMSystemType, std::shared_ptr<System>> mSystemMap;
 
 };
+
+InstanceHolder::~InstanceHolder()
+{
+	if(MainWorld)
+	{
+		MainWorld->Dispose();
+		MainWorld = nullptr;
+	}
+
+	if(AuthWorld)
+	{
+		AuthWorld->Dispose();
+		AuthWorld = nullptr;
+	}
+
+	MemPool = nullptr;
+}
+
 
 #pragma endregion

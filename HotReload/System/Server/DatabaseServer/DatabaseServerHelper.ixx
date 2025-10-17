@@ -11,6 +11,7 @@ import MessagePack;
 import ECSW;
 import MessageRegister;
 import FuncUtils;
+import Logger;
 
 export class DatabaseServerHelper : public Helper<DatabaseServerHelper, Server>
 {
@@ -59,8 +60,6 @@ public:
 		{
 			try
 			{
-				World::CVPtr world = GetWorld();
-
 				#define REMOVE_CV(TYPE) static_cast<Message*>(const_cast<TYPE*>(TYPE::internal_default_instance()))
 
 				std::unordered_map<EMSqlDbNameEnum, std::vector<Message*> > registTable = {
@@ -88,18 +87,18 @@ public:
 					if (auto connection = proxy->GetConnection(dbNameEnum))
 					{
 						pqxx::work txn(*connection);
-						DbSqlHelper<GDb::SingleTon> singleTon(&txn, GetLogger());
+						DbSqlHelper<GDb::SingleTon> singleTon(&txn, GetWorld());
 						singleTon.InitEntity(kv);
 
 						if (!singleTon.IsExist())
 						{
-							GetLogger()->Record(ELogLevel_Debug, "Create Table:SingleTon");
+							LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "Create Table:SingleTon");
 							singleTon.CreateTable().Commit();
 						}
 
 						for (Message* dbEntity : dbEntitys)
 						{
-							DbSqlHelper helper(&txn, GetLogger(), dbEntity);
+							DbSqlHelper helper(&txn, GetWorld(), dbEntity);
 
 							const std::string& tableName = helper.GetName();
 							kv.set_key(std::format("{}_Schema", tableName));
@@ -110,7 +109,7 @@ public:
 							if (!helper.IsExist())
 							{
 
-								GetLogger()->Record(ELogLevel_Debug, "Create Table:{}", tableName);
+								LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "Create Table:{}", tableName);
 								helper.CreateTable().Commit();
 
 								hasCreated = true;
@@ -149,8 +148,8 @@ public:
 								}
 								
 							}
-							
-							GetLogger()->Record(ELogLevel_Debug, "not match md5:\n{}\n{}", schemaMd5, kv.value());
+
+							LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "not match md5:\n{}\n{}", schemaMd5, kv.value());
 							helper.UpdateTable().Commit();
 
 
@@ -165,7 +164,7 @@ public:
 			}
 			catch (const std::exception& e)
 			{
-				GetLogger()->Record(ELogLevel_Debug, "{}", e.what());
+				LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "{}", e.what());
 				return false;
 			}
 
@@ -191,7 +190,7 @@ public:
 
 					if (channel->isConnected())
 					{
-						GetLogger()->Record(EL10nCode_SrvConnOn, peeraddr, channel->fd(), channel->id());
+						LoggerPrint::Log(GetWorld(), EL10nCode_SrvConnOn, peeraddr, channel->fd(), channel->id());
 
 						channel->SetWorld(GetWorldW());
 						
@@ -200,7 +199,7 @@ public:
 					}
 					else
 					{
-						GetLogger()->Record(EL10nCode_SrvConnOff, peeraddr, channel->fd(), channel->id());
+						LoggerPrint::Log(GetWorld(), EL10nCode_SrvConnOff, peeraddr, channel->fd(), channel->id());
 
 						std::string originIp;
 						if(std::string* param = GetWorld()->LaunchParam("ctlIp"))
@@ -222,7 +221,7 @@ public:
 
 							if (proxyHelper->isConnected())
 							{
-								GetLogger()->Record(ELogLevel_Debug, "orgin not match peeraddr {} reclient ~", origin);
+								LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "orgin not match peeraddr {} reclient ~", origin);
 
 								proxyHelper->GetTimer()->SetTimeout(200, [this, originIp, originPort](uint64_t timerID)
 									{
@@ -249,11 +248,11 @@ public:
 
 					MessagePacket* packet = MessagePacket::From(buf->data());
 
-					GetLogger()->Record(ELogLevel_Debug, "c {} Recv type={} With Mid:{}", channel->peeraddr(), static_cast<int>(packet->dealType), packet->msgId);
+					LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "c {} Recv type={} With Mid:{}", channel->peeraddr(), static_cast<int>(packet->dealType), packet->msgId);
 
 					if(packet->pkgLenth > 2 * 1024)
 					{
-						GetLogger()->Record(ELogLevel_Debug, "Recv byte len limit={}", packet->pkgLenth);
+						LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "Recv byte len limit={}", packet->pkgLenth);
 						return;
 					}
 					
@@ -286,12 +285,12 @@ public:
 						}
 						else
 						{
-							GetLogger()->Record(EL10nCode_MsgFind);
+							LoggerPrint::Log(GetWorld(), EL10nCode_MsgFind);
 						}
 					}
 					else
 					{
-						GetLogger()->Record(EL10nCode_MsgDealType);
+						LoggerPrint::Log(GetWorld(), EL10nCode_MsgDealType);
 					}
 				};
 

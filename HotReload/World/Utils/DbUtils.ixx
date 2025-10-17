@@ -6,6 +6,7 @@ import ThirdParty.Libpqxx;
 import StrUtils;
 import std.compat;
 import Logger;
+import ECSW;
 
 using namespace std::chrono;
 
@@ -415,10 +416,10 @@ class DbSqlHelper : public IDbSqlHelper
 
 public:
 
-	DbSqlHelper(pqxx::dbtransaction* work, LoggerPrint::CVPtr logger, TMessage* entity = nullptr)
+	DbSqlHelper(pqxx::dbtransaction* work, World::Ptr world, TMessage* entity = nullptr)
 	{
 		pWork = work;
-		pLogger = logger;
+		pWorld = world;
 		pEntity = entity;
 	}
 
@@ -442,7 +443,7 @@ public:
 			return false;
 		}
 
-		pLogger->Record(ELogLevel_Debug, "{}", sSqlStatement);
+		LoggerPrint::Log(pWorld, ELogLevel_Debug, "{}", sSqlStatement);
 		try
 		{
 			pqxx::result result = pWork->exec(sSqlStatement);
@@ -450,7 +451,7 @@ public:
 		}
 		catch (const std::exception& e)
 		{
-			pLogger->Record(ELogLevel_Debug, "{}", e.what());
+			LoggerPrint::Log(pWorld, ELogLevel_Debug, "{}", e.what());
 			bExecResult = false;
 		}
 		
@@ -1445,5 +1446,5 @@ private:
 
 	TMessage* pEntity = nullptr;
 
-	LoggerPrint::Ptr pLogger;
+	World::Ptr pWorld = nullptr;
 };

@@ -122,7 +122,7 @@ export
 			if (HasFlag(EMTaskFlag::TimeCost))
 			{
 				// steady_clock::time_point now = steady_clock::now();
-				// SPidLogger->Record(ELogLevel_Normal, "tasktimeid:{}, cost:{}ms", iTimerId, duration_cast<microseconds>(now - oTimePoint).count() / 1000.0);
+				// LoggerPrint::Log(nullptr, ELogLevel_Normal, "tasktimeid:{}, cost:{}ms", iTimerId, duration_cast<microseconds>(now - oTimePoint).count() / 1000.0);
 			}
 	
 			if (tHandle)

@@ -13,7 +13,7 @@ protected:
 	{
 		emSystemType = EMSystemType::Timer;
 
-		pLoop = MemPool->Allocate<hv::EventLoopThread>();
+		pLoop = G_InstanceHolder.MemPool->Allocate<hv::EventLoopThread>();
 
 	}
 public:

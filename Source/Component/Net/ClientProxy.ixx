@@ -9,6 +9,7 @@ import Server;
 import ThirdParty.Libhv;
 import FuncUtils;
 import Timer;
+import ThirdParty.Protobuf;
 
 export enum class EMRegistState : uint8_t
 {
@@ -30,8 +31,6 @@ protected:
 	{
 		eComponentType = EMComponentType::ClientProxy;
 		
-		pLogger = GetOwner()->GetWorld()->GetSystemW<LoggerPrint>(EMSystemType::LoggerPrint);
-
 		pTimer = GetOwner()->GetWorld()->GetSystemW<Timer>(EMSystemType::Timer);
 	}
 public:
@@ -169,8 +168,6 @@ public: // dll override
 		// MessagePackAndSend(0, EMMsgDeal::Ret, request.GetDescriptor()->full_name(), binData, GetChannel());
 	}
 
-	LoggerPrint::Ptr GetLogger(){ return pLogger.expired() ? nullptr : pLogger.lock(); }
-
 	Timer::Ptr GetTimer(){ return pTimer.expired() ? nullptr : pTimer.lock(); }
 
 private:
@@ -200,7 +197,7 @@ private:
 
 	void _RedirectClient(uint16_t port, const std::string& ip)
 	{
-		GetLogger()->Record(ELogLevel_Debug, "reclient to {}:{}", ip, port);
+		LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "reclient to {}:{}", ip, port);
 
 		eRegistState = EMRegistState::None;
 		closesocket();
@@ -245,8 +242,6 @@ protected: // dll proxy
 	std::shared_mutex oMsgMutex;
 
 	std::shared_mutex oTimerMutex;
-
-	LoggerPrint::WPtr pLogger;
 
 	Timer::WPtr pTimer;
 };

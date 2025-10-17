@@ -9,6 +9,7 @@ import Task;
 import ThirdParty.PbGen;
 import ClientProxyHelper;
 import FuncUtils;
+import Logger;
 
 export class ClientEntityManagerHelper : public Helper<ClientEntityManagerHelper, ClientEntityManager>
 {
@@ -66,7 +67,7 @@ public:
 		}
 		else if(entity->HasFlag(EMClientEntityFlag::DBIniting))
 		{
-			GetLogger()->Record(ELogLevel_Debug, "entity {} is DBIniting. return .", entity->ID());
+			LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "entity {} is DBIniting. return .", entity->ID());
 			if (inResponse)
 			{
 				inResponse->set_errorcode(EL10nCode_DBIniting);
@@ -161,7 +162,7 @@ public:
 			// binData = request.entitydata();
 			// BytesToHexString(binData);
 			// mDbFailure[entityId] = binData;
-			GetLogger()->Record(ELogLevel_Debug, "Load Db Entity Error id = {}, errorcode = {}! ", entityId, static_cast<int>(response.errorcode()));
+			LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "Load Db Entity Error id = {}, errorcode = {}! ", entityId, static_cast<int>(response.errorcode()));
 			co_return;
 		}
 
@@ -181,7 +182,7 @@ public:
 		}
 		else if(lenth > 1)
 		{
-			GetLogger()->Record(ELogLevel_Debug, "Load Db Entity mutiply data!");
+			LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "Load Db Entity mutiply data!");
 		}
 
 
@@ -263,7 +264,7 @@ public:
 		{
 			BytesToHexString(entitydata);
 			mDbFailure[entityId] = entitydata;
-			GetLogger()->Record(ELogLevel_Debug, "Save Db Entity Error id = {}, errorcode = {}! ", entityId, static_cast<int>(response.errorcode()));
+			LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "Save Db Entity Error id = {}, errorcode = {}! ", entityId, static_cast<int>(response.errorcode()));
 			co_return;
 		}
 
@@ -295,7 +296,7 @@ public:
 					uint64_t entityId = entity->ID();
 					if (!entity->GetDbEntity())
 					{
-						GetLogger()->Record(ELogLevel_Debug, "SaveEntity not pb Data:{}", entityId);
+						LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "SaveEntity not pb Data:{}", entityId);
 						return;
 					}
 
@@ -314,7 +315,7 @@ public:
 		{
 			if (!entity->GetDbEntity())
 			{
-				GetLogger()->Record(ELogLevel_Debug, "SaveEntity not pb Data:{}", ID);
+				LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "SaveEntity not pb Data:{}", ID);
 				continue;
 			}
 

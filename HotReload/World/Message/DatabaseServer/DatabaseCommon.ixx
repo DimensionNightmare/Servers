@@ -5,6 +5,7 @@ import DatabaseServerHelper;
 import Server;
 import Task;
 import ThirdParty.PbGen;
+import Logger;
 
 export namespace DatabaseServerMessage
 {
@@ -16,7 +17,7 @@ export namespace DatabaseServerMessage
 
 		ClientProxyHelper::CVPtr clientProxy = dnServer->GetClientProxy();
 		
-		dnServer->GetLogger()->Record(ELogLevel_Debug, "database req regist Client:{}, port:{}", clientProxy->remote_host, clientProxy->remote_port);
+		LoggerPrint::Log(dnServer, ELogLevel_Debug, "database req regist Client:{}, port:{}", clientProxy->remote_host, clientProxy->remote_port);
 		
 		clientProxy->SetRegistState(EMRegistState::Registing);
 
@@ -62,7 +63,7 @@ export namespace DatabaseServerMessage
 		}
 		else
 		{
-			dnServer->GetLogger()->Record(response.errorcode());
+			LoggerPrint::Log(dnServer, response.errorcode());
 			// dnServer->IsRun() = false; //exit application
 			clientProxy->SetRegistState(EMRegistState::None);
 		}

@@ -22,18 +22,12 @@ public:
 			}
 			catch (const std::exception& e)
 			{
-				if(World::CVPtr world = channel->GetWorld())
-				{
-					world->GetSystem<LoggerPrint>(EMSystemType::LoggerPrint)->Record(ELogLevel_Debug, "{}", e.what());
-				}
+				LoggerPrint::Log(channel, ELogLevel_Debug, "{}", e.what());
 			}
 		}
 		else
 		{
-			if(World::CVPtr world = channel->GetWorld())
-			{
-				world->GetSystem<LoggerPrint>(EMSystemType::LoggerPrint)->Record(EL10nCode_MsgHandleFind);
-			}
+			LoggerPrint::Log(channel, EL10nCode_MsgHandleFind);
 		}
 	}
 
@@ -48,18 +42,12 @@ public:
 			}
 			catch (const std::exception& e)
 			{
-				if(World::CVPtr world = channel->GetWorld())
-				{
-					world->GetSystem<LoggerPrint>(EMSystemType::LoggerPrint)->Record(ELogLevel_Debug, "{}", e.what());
-				}
+				LoggerPrint::Log(channel, ELogLevel_Debug, "{}", e.what());
 			}
 		}
 		else
 		{
-			if(World::CVPtr world = channel->GetWorld())
-			{
-				world->GetSystem<LoggerPrint>(EMSystemType::LoggerPrint)->Record(EL10nCode_MsgHandleFind);
-			}
+			LoggerPrint::Log(channel, EL10nCode_MsgHandleFind);
 		}
 	}
 
@@ -74,18 +62,12 @@ public:
 			}
 			catch (const std::exception& e)
 			{
-				if(World::CVPtr world = channel->GetWorld())
-				{
-					world->GetSystem<LoggerPrint>(EMSystemType::LoggerPrint)->Record(ELogLevel_Debug, "{}", e.what());
-				}
+				LoggerPrint::Log(channel, ELogLevel_Debug, "{}", e.what());
 			}
 		}
 		else
 		{
-			if(World::CVPtr world = channel->GetWorld())
-			{
-				world->GetSystem<LoggerPrint>(EMSystemType::LoggerPrint)->Record(EL10nCode_MsgHandleFind);
-			}
+			LoggerPrint::Log(channel, EL10nCode_MsgHandleFind);
 		}
 	}
 

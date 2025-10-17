@@ -141,6 +141,8 @@ public:
 	void* operator new(size_t) = delete;
 	void operator delete(void*) = delete;
 
+	using BaseT::BaseT;
+
 	using Ptr = std::shared_ptr<Derived>;
 	using CVPtr = const Ptr&;
 

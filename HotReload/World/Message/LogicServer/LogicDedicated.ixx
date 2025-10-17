@@ -6,6 +6,7 @@ import ThirdParty.Libhv;
 import FuncHelper;
 import Task;
 import ThirdParty.PbGen;
+import Logger;
 
 export namespace LogicServerMessage
 {
@@ -63,7 +64,7 @@ export namespace LogicServerMessage
 
 		if (!player.ParseFromString(request.entitydata()))
 		{
-			dnServer->GetLogger()->Record(ELogLevel_Debug, "Save data but parse error!");
+			LoggerPrint::Log(channel, ELogLevel_Debug, "Save data but parse error!");
 			return;
 		}
 
@@ -78,7 +79,7 @@ export namespace LogicServerMessage
 
 		if (!entity)
 		{
-			dnServer->GetLogger()->Record(ELogLevel_Debug, "ReqSaveData not entity!");
+			LoggerPrint::Log(channel, ELogLevel_Debug, "ReqSaveData not entity!");
 			return;
 		}
 
@@ -93,7 +94,7 @@ export namespace LogicServerMessage
 		}
 		else
 		{
-			dnServer->GetLogger()->Record(ELogLevel_Debug, "SaveData but dbEntity is null!");
+			LoggerPrint::Log(channel, ELogLevel_Debug, "SaveData but dbEntity is null!");
 		}
 
 	}

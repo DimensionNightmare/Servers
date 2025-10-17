@@ -20,8 +20,6 @@ protected:
 	RdbProxy(System::WPtr system):Component(system)
 	{
 		eComponentType = EMComponentType::RdbProxy;
-
-		pLogger = GetOwner()->GetWorld()->GetSystemW<LoggerPrint>(EMSystemType::LoggerPrint);
 	}
 
 public:
@@ -34,8 +32,6 @@ public:
 
 		pRdbProxys.clear();
 	}
-
-	LoggerPrint::Ptr GetLogger(){ return pLogger.expired() ? nullptr : pLogger.lock(); }
 
 	virtual bool Awake() override
 	{
@@ -62,12 +58,12 @@ public:
 			if (!checkTxn.query_value<bool>(std::format("SELECT EXISTS (SELECT 1 FROM pg_database WHERE datname = '{}');", dbName)))
 			{
 				checkTxn.exec(std::format("CREATE DATABASE \"{}\";", dbName));
-				GetLogger()->Record(ELogLevel_Debug, "Create Database:{}", dbName);
+				LoggerPrint::Log(world, ELogLevel_Debug, "Create Database:{}", dbName);
 			}
 
 			std::string connectStr = std::format("{} dbname = {}", *value, dbName);
 
-			auto connection = MemPool->Allocate<pqxx::connection, const std::string&>(connectStr);
+			auto connection = G_InstanceHolder.MemPool->Allocate<pqxx::connection, const std::string&>(connectStr);
 
 			pRdbProxys.emplace(key, std::move(connection));
 		}
@@ -83,6 +79,4 @@ public:
 
 protected:
 	std::unordered_map<EMSqlDbNameEnum, std::shared_ptr<pqxx::connection>> pRdbProxys;
-
-	LoggerPrint::WPtr pLogger;
 };

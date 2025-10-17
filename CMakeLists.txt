@@ -140,9 +140,9 @@ target_sources(HotReload
 target_compile_definitions(HotReload PRIVATE HOTRELOAD_BUILD)
 
 if(NOT CMAKE_SYSTEM_NAME MATCHES "Linux")
-	set_target_properties(HotReload PROPERTIES RUNTIME_OUTPUT_DIRECTORY  $<1:${CMAKE_BINARY_DIR}/Runtime>)
+	set_target_properties(HotReload PROPERTIES RUNTIME_OUTPUT_DIRECTORY  $<1:${CMAKE_BINARY_DIR}/HotReload>)
 else()
-	set_target_properties(HotReload PROPERTIES LIBRARY_OUTPUT_DIRECTORY $<1:${CMAKE_BINARY_DIR}/Runtime>)
+	set_target_properties(HotReload PROPERTIES LIBRARY_OUTPUT_DIRECTORY $<1:${CMAKE_BINARY_DIR}/HotReload>)
 endif()
 
 target_link_libraries(HotReload PRIVATE MainSource)
@@ -349,7 +349,7 @@ add_dependencies(MainTarget MainSource HotReload)
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
 	install(TARGETS DimensionNightmareServer DESTINATION ${CMAKE_INSTALL_PREFIX})
 	
-	install(TARGETS HotReload RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/Runtime)
+	install(TARGETS HotReload RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/HotReload)
 
 	install(FILES 
 		${PostgreSQL_LIBRARY_DIRS}/../bin/libpq.dll 
@@ -358,7 +358,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
 		${PostgreSQL_LIBRARY_DIRS}/../bin/libintl-9.dll
 		${PostgreSQL_LIBRARY_DIRS}/../bin/libssl-3-x64.dll
 		${PostgreSQL_LIBRARY_DIRS}/../bin/libwinpthread-1.dll
-		DESTINATION ${CMAKE_INSTALL_PREFIX}/Bin)
+		DESTINATION ${CMAKE_INSTALL_PREFIX}/Binaries)
 
 
 	install(FILES Config/Server.ini  DESTINATION ${CMAKE_INSTALL_PREFIX}/Config)

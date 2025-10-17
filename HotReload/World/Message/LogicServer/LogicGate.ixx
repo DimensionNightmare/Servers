@@ -4,6 +4,7 @@ import std;
 import LogicServerHelper;
 import ThirdParty.Libhv;
 import ThirdParty.PbGen;
+import Logger;
 
 export namespace LogicServerMessage
 {
@@ -20,13 +21,13 @@ export namespace LogicServerMessage
 
 		if (ClientEntity::CVPtr entity = entityMan->GetEntity(request.entityid()))
 		{
-			dnServer->GetLogger()->Record(ELogLevel_Debug, "Recv Client {} Disconnect !!", entity->ID());
+			LoggerPrint::Log(channel, ELogLevel_Debug, "Recv Client {} Disconnect !!", entity->ID());
 
 			entityMan->SaveEntity(entity->GetSelf<ClientEntityHelper>(), true);
 			entityMan->RemoveEntity(entity->ID());
 			return;
 		}
 
-		dnServer->GetLogger()->Record(ELogLevel_Debug, "Recv Client {} Disconnect but not Exist!!", request.entityid());
+		LoggerPrint::Log(channel, ELogLevel_Debug, "Recv Client {} Disconnect but not Exist!!", request.entityid());
 	}
 }

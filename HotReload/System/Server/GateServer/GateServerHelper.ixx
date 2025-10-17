@@ -13,6 +13,7 @@ import MessageRegister;
 import ServerEntityHelper;
 import ProxyEntityHelper;
 import FuncUtils;
+import Logger;
 
 export class GateServerHelper : public Helper<GateServerHelper, Server>
 {
@@ -118,7 +119,7 @@ public:
 					const std::string& peeraddr = channel->peeraddr();
 					if (channel->isConnected())
 					{
-						GetLogger()->Record(EL10nCode_CliConnOn, peeraddr, channel->fd(), channel->id());
+						LoggerPrint::Log(GetWorld(), EL10nCode_CliConnOn, peeraddr, channel->fd(), channel->id());
 
 						channel->SetWorld(GetWorldW());
 
@@ -126,7 +127,7 @@ public:
 					}
 					else
 					{
-						GetLogger()->Record(EL10nCode_CliConnOff, peeraddr, channel->fd(), channel->id());
+						LoggerPrint::Log(GetWorld(), EL10nCode_CliConnOff, peeraddr, channel->fd(), channel->id());
 						if (Entity::CVPtr entity = channel->getContextPtr<Entity>())
 						{
 							switch (entity->GetEntityType())
@@ -155,11 +156,11 @@ public:
 
 					MessagePacket* packet = MessagePacket::From(buf->data());
 
-					GetLogger()->Record(ELogLevel_Debug, "s {} Recv type={} With Mid:{}", channel->peeraddr(), static_cast<int>(packet->dealType), packet->msgId);
+					LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "s {} Recv type={} With Mid:{}", channel->peeraddr(), static_cast<int>(packet->dealType), packet->msgId);
 
 					if(packet->pkgLenth > 2 * 1024)
 					{
-						GetLogger()->Record(ELogLevel_Debug, "Recv byte len limit={}", packet->pkgLenth);
+						LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "Recv byte len limit={}", packet->pkgLenth);
 						return;
 					}
 
@@ -197,12 +198,12 @@ public:
 						}
 						else
 						{
-							GetLogger()->Record(EL10nCode_MsgFind);
+							LoggerPrint::Log(GetWorld(), EL10nCode_MsgFind);
 						}
 					}
 					else
 					{
-						GetLogger()->Record(EL10nCode_MsgDealType);
+						LoggerPrint::Log(GetWorld(), EL10nCode_MsgDealType);
 					}
 				};
 
@@ -220,7 +221,7 @@ public:
 
 					if (channel->isConnected())
 					{
-						GetLogger()->Record(EL10nCode_SrvConnOn, peeraddr, channel->fd(), channel->id());
+						LoggerPrint::Log(GetWorld(), EL10nCode_SrvConnOn, peeraddr, channel->fd(), channel->id());
 
 						channel->SetWorld(GetWorldW());
 						
@@ -229,7 +230,7 @@ public:
 					}
 					else
 					{
-						GetLogger()->Record(EL10nCode_SrvConnOff, peeraddr, channel->fd(), channel->id());
+						LoggerPrint::Log(GetWorld(), EL10nCode_SrvConnOff, peeraddr, channel->fd(), channel->id());
 						if (proxyHelper->GetRegistState() == EMRegistState::Registed)
 						{
 							proxyHelper->SetRegistState(EMRegistState::None);
@@ -252,11 +253,11 @@ public:
 
 					MessagePacket* packet = MessagePacket::From(buf->data());
 
-					GetLogger()->Record(ELogLevel_Debug, "c {} Recv type={} With Mid:{}", channel->peeraddr(), static_cast<int>(packet->dealType), packet->msgId);
+					LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "c {} Recv type={} With Mid:{}", channel->peeraddr(), static_cast<int>(packet->dealType), packet->msgId);
 
 					if(packet->pkgLenth > 2 * 1024)
 					{
-						GetLogger()->Record(ELogLevel_Debug, "Recv byte len limit={}", packet->pkgLenth);
+						LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "Recv byte len limit={}", packet->pkgLenth);
 						return;
 					}
 					
@@ -290,12 +291,12 @@ public:
 						}
 						else
 						{
-							GetLogger()->Record(EL10nCode_MsgFind);
+							LoggerPrint::Log(GetWorld(), EL10nCode_MsgFind);
 						}
 					}
 					else
 					{
-						GetLogger()->Record(EL10nCode_MsgDealType);
+						LoggerPrint::Log(GetWorld(), EL10nCode_MsgDealType);
 					}
 				};
 

@@ -5,6 +5,7 @@ import LogicServerHelper;
 import Server;
 import Task;
 import ThirdParty.PbGen;
+import Logger;
 
 export namespace LogicServerMessage
 {
@@ -15,9 +16,9 @@ export namespace LogicServerMessage
 		LogicServerHelper::CVPtr dnServer = server->GetSelf<LogicServerHelper>();
 
 		ClientProxyHelper::CVPtr clientProxy = dnServer->GetClientProxy();
-		
-		dnServer->GetLogger()->Record(ELogLevel_Debug, "Client:{}, port:{}", clientProxy->remote_host, clientProxy->remote_port);
-		
+
+		LoggerPrint::Log(dnServer, ELogLevel_Debug, "Client:{}, port:{}", clientProxy->remote_host, clientProxy->remote_port);
+
 		clientProxy->SetRegistState(EMRegistState::Registing);
 
 		GMsg::COM_ReqRegistSrv request;
@@ -62,7 +63,7 @@ export namespace LogicServerMessage
 		}
 		else
 		{
-			dnServer->GetLogger()->Record(response.errorcode());
+			LoggerPrint::Log(dnServer, response.errorcode());
 			// dnServer->IsRun() = false; //exit application
 			clientProxy->SetRegistState(EMRegistState::None);
 		}
@@ -80,8 +81,8 @@ export namespace LogicServerMessage
 		}
 
 		LogicServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<LogicServerHelper>(EMSystemType::Server);
-		
-		dnServer->GetLogger()->Record(ELogLevel_Debug, "ip Reqregist: {}, {}", channel->peeraddr(), request.servertype());
+
+		LoggerPrint::Log(channel, ELogLevel_Debug, "ip Reqregist: {}, {}", channel->peeraddr(), request.servertype());
 
 		GMsg::COM_ResRegistSrv response;
 
@@ -151,7 +152,7 @@ export namespace LogicServerMessage
 			entity->SetServerIp(ipPort.substr(0, pos));
 			entity->SetServerPort(request.serverport());
 
-			dnServer->GetLogger()->Record(ELogLevel_Debug, "ds regist:{}:{}", entity->ServerIp(), entity->ServerPort());
+			LoggerPrint::Log(channel, ELogLevel_Debug, "ds regist:{}:{}", entity->ServerIp(), entity->ServerPort());
 
 			entity->SetChannel(channel);
 

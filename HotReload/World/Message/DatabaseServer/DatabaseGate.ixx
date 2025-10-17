@@ -7,6 +7,8 @@ import ThirdParty.Libhv;
 import FuncHelper;
 import std.compat;
 import ThirdParty.PbGen;
+import Logger;
+import ThirdParty.Protobuf;
 
 export namespace DatabaseServerMessage
 {
@@ -35,7 +37,7 @@ export namespace DatabaseServerMessage
 					findMsg->ParseFromString(request.entitydata());
 
 					pqxx::work txn(*connection);
-					DbSqlHelper dbHelper(&txn, dnServer->GetLogger(), findMsg);
+					DbSqlHelper dbHelper(&txn, channel->GetWorld(), findMsg);
 
 					auto query = [&]()
 						{
@@ -83,7 +85,7 @@ export namespace DatabaseServerMessage
 					}
 					catch (const std::exception& e)
 					{
-						dnServer->GetLogger()->Record(ELogLevel_Debug, "{}", e.what());
+						LoggerPrint::Log(channel, ELogLevel_Debug, "{}", e.what());
 						response.set_errorcode(EL10nCode_UnkonwOpreator);
 					}
 
@@ -133,7 +135,7 @@ export namespace DatabaseServerMessage
 					findMsg->ParseFromString(request.entitydata());
 
 					pqxx::work txn(*connection);
-					DbSqlHelper dbHelper(&txn, dnServer->GetLogger(), findMsg);
+					DbSqlHelper dbHelper(&txn, channel->GetWorld(), findMsg);
 
 					dbHelper
 						.UpdateByKey(request.keynumber())
@@ -155,7 +157,7 @@ export namespace DatabaseServerMessage
 					}
 					catch (const std::exception& e)
 					{
-						dnServer->GetLogger()->Record(ELogLevel_Debug, "{}", e.what());
+						LoggerPrint::Log(channel, ELogLevel_Debug, "{}", e.what());
 						response.set_errorcode(EL10nCode_UnkonwOpreator);
 					}
 

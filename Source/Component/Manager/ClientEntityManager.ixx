@@ -6,6 +6,7 @@ import ClientProxy;
 import StrUtils;
 import MdbProxy;
 import FuncUtils;
+import Logger;
 
 /// @brief manager client proxys
 export class ClientEntityManager : public EntityManager<ClientEntity>
@@ -45,7 +46,7 @@ public: // dll proxy
 
 	ClientEntity::Ptr _AddEntity(uint64_t entityId)
 	{
-		ClientEntity::Ptr entity = MemPool->Allocate<ClientEntity, World::WPtr>(GetOwner()->GetWorldW());;
+		ClientEntity::Ptr entity = G_InstanceHolder.MemPool->Allocate<ClientEntity, World::WPtr>(GetOwner()->GetWorldW());;
 		entity->SetID(entityId);
 
 		std::unique_lock ulock(oMapMutex);
@@ -58,7 +59,7 @@ public: // dll proxy
 
 		if (mEntityMap.contains(entityId))
 		{
-			GetLogger()->Record(ELogLevel_Debug, "destory client entity");
+			LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "destory client entity");
 			ClientEntity::Ptr& entity = mEntityMap[entityId];
 			entity->Dispose();
 

@@ -5,6 +5,7 @@ import std;
 import ThirdParty.Libhv;
 import FuncHelper;
 import ThirdParty.PbGen;
+import Logger;
 
 export namespace LogicServerMessage
 {
@@ -22,7 +23,7 @@ export namespace LogicServerMessage
 		ClientEntityHelper::CVPtr entity = entityMan->GetEntity(request.accountid());
 		if (!entity)
 		{
-			dnServer->GetLogger()->Record(ELogLevel_Debug, "Client Entity Kick Not Exist !");
+			LoggerPrint::Log(channel, ELogLevel_Debug, "Client Entity Kick Not Exist !");
 			return;
 		}
 
@@ -38,7 +39,7 @@ export namespace LogicServerMessage
 		}
 		else
 		{
-			dnServer->GetLogger()->Record(ELogLevel_Debug, "Client Entity Kick Server Not Exist !");
+			LoggerPrint::Log(channel, ELogLevel_Debug, "Client Entity Kick Server Not Exist !");
 		}
 
 		// close entity save data
@@ -67,19 +68,19 @@ export namespace LogicServerMessage
 		ClientEntityHelper::Ptr entity = entityMan->AddEntity(request.accountid());
 		if (entity)
 		{
-			dnServer->GetLogger()->Record(ELogLevel_Debug, "AddEntity Client!");
+			LoggerPrint::Log(channel, ELogLevel_Debug, "AddEntity Client!");
 
 			// msg will destroy. MessageHandle not will waiting.
 			co_await entityMan->LoadEntity(entity->GetSelf<ClientEntityHelper>(), nullptr, nullptr);
 
 			if (!entity->HasFlag(EMClientEntityFlag::DBInited))
 			{
-				dnServer->GetLogger()->Record(ELogLevel_Debug, "AddEntity Client but not from db!");
+				LoggerPrint::Log(channel, ELogLevel_Debug, "AddEntity Client but not from db!");
 			}
 		}
 		else
 		{
-			dnServer->GetLogger()->Record(ELogLevel_Debug, "AddEntity Exist Client!");
+			LoggerPrint::Log(channel, ELogLevel_Debug, "AddEntity Exist Client!");
 			entity = entityMan->GetEntity(request.accountid());
 		}
 
@@ -118,7 +119,7 @@ export namespace LogicServerMessage
 			if (roomEntityList.empty())
 			{
 				response.set_errorcode(EL10nCode_NotDsServer);
-				dnServer->GetLogger()->Record(ELogLevel_Debug, "not ds Server");
+				LoggerPrint::Log(channel, ELogLevel_Debug, "not ds Server");
 			}
 			else
 			{
@@ -160,7 +161,7 @@ export namespace LogicServerMessage
 
 		}
 
-		dnServer->GetLogger()->Record(ELogLevel_Debug, "ds:{}", response.DebugString());
+		LoggerPrint::Log(channel, ELogLevel_Debug, "ds:{}", response.DebugString());
 #endif
 
 		co_return;

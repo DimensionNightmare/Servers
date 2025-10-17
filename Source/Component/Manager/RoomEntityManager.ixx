@@ -3,6 +3,7 @@ export module RoomEntityManager;
 import RoomEntity;
 import EntityManager;
 import FuncUtils;
+import Logger;
 
 export class RoomEntityManager : public EntityManager<RoomEntity>
 {
@@ -47,7 +48,7 @@ public:
 
 		if (RemoveEntity(entityId))
 		{
-			GetLogger()->Record(ELogLevel_Debug, "EntityCloseTimer Room destory entity");
+			LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "EntityCloseTimer Room destory entity");
 		}
 
 	}
@@ -72,7 +73,7 @@ public: // dll proxy
 
 	RoomEntity::Ptr _AddEntity(uint64_t mapId)
 	{
-		RoomEntity::Ptr entity = MemPool->Allocate<RoomEntity, World::WPtr>(GetOwner()->GetWorldW());
+		RoomEntity::Ptr entity = G_InstanceHolder.MemPool->Allocate<RoomEntity, World::WPtr>(GetOwner()->GetWorldW());
 
 		std::unique_lock ulock(oMapMutex);
 		mEntityMap[entity->ID()] = entity;

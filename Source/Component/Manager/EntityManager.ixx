@@ -12,9 +12,6 @@ protected:
 	/// @brief timer manager create
 	EntityManager(System::WPtr system):Component(system)
 	{
-		pLogger = GetOwner()->GetWorld()->GetSystemW<LoggerPrint>(EMSystemType::LoggerPrint);
-
-		
 		pTimer = GetOwner()->GetWorld()->GetSystemW<Timer>(EMSystemType::Timer);
 	}
 	
@@ -40,8 +37,6 @@ public:
 		Component::Dispose();
 	}
 
-	LoggerPrint::Ptr GetLogger(){ return pLogger.expired() ? nullptr : pLogger.lock(); }
-
 	Timer::Ptr GetTimer(){ return pTimer.expired() ? nullptr : pTimer.lock(); }
 
 public: // dll override
@@ -61,8 +56,6 @@ protected: // dll proxy
 	std::unordered_map<uint64_t, uint64_t> mMapTimer;
 	/// @brief mMapTimer Mutex
 	std::shared_mutex oTimerMutex;
-
-	LoggerPrint::WPtr pLogger;
 
 	Timer::WPtr pTimer;
 

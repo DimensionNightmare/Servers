@@ -9,6 +9,7 @@ import std.compat;
 import Task;
 import WebProxyHelper;
 import ThirdParty.PbGen;
+import Logger;
 
 using namespace std::chrono;
 
@@ -60,7 +61,7 @@ export void ApiAuth(Server::CVPtr dnServer)
 				std::shared_ptr<pqxx::connection> connection = dnServer->GetRdbProxy()->GetConnection(EMSqlDbNameEnum::Account);
 
 				pqxx::read_transaction query(*connection);
-				DbSqlHelper<GDb::Account> accounts(&query, dnServer->GetLogger());
+				DbSqlHelper<GDb::Account> accounts(&query, dnServer->GetWorld());
 
 				accounts
 					.InitEntity(accInfo)
@@ -83,7 +84,7 @@ export void ApiAuth(Server::CVPtr dnServer)
 			}
 			catch (const std::exception& e)
 			{
-				dnServer->GetLogger()->Record(ELogLevel_Debug, "{}", e.what());
+				LoggerPrint::Log(dnServer, ELogLevel_Debug, "{}", e.what());
 				errData["code"] = http_status::HTTP_STATUS_BAD_REQUEST;
 				errData["message"] = "Server Error!!";
 				MSGSET(errData.dump());
@@ -189,7 +190,7 @@ export void ApiAuth(Server::CVPtr dnServer)
 				std::shared_ptr<pqxx::connection> connection = dnServer->GetRdbProxy()->GetConnection(EMSqlDbNameEnum::Account);
 				
 				pqxx::read_transaction query(*connection);
-				DbSqlHelper<GDb::Account> accounts(&query, dnServer->GetLogger());
+				DbSqlHelper<GDb::Account> accounts(&query, dnServer->GetWorld());
 
 				accounts
 					.InitEntity(accInfo)
@@ -208,7 +209,7 @@ export void ApiAuth(Server::CVPtr dnServer)
 			}
 			catch (const std::exception& e)
 			{
-				dnServer->GetLogger()->Record(ELogLevel_Debug, "{}", e.what());
+				LoggerPrint::Log(dnServer, ELogLevel_Debug, "{}", e.what());
 				errData["code"] = http_status::HTTP_STATUS_BAD_REQUEST;
 				errData["message"] = "Regist Error!!";
 				MSGSET(errData.dump());
@@ -228,7 +229,7 @@ export void ApiAuth(Server::CVPtr dnServer)
 				std::shared_ptr<pqxx::connection> connection = dnServer->GetRdbProxy()->GetConnection(EMSqlDbNameEnum::Account);
 
 				pqxx::work query(*connection);
-				DbSqlHelper<GDb::Account> accounts(&query, dnServer->GetLogger());
+				DbSqlHelper<GDb::Account> accounts(&query, dnServer->GetWorld());
 
 				accounts.InitEntity(accInfo).Insert().Commit();
 
@@ -249,7 +250,7 @@ export void ApiAuth(Server::CVPtr dnServer)
 			}
 			catch (const std::exception& e)
 			{
-				dnServer->GetLogger()->Record(ELogLevel_Debug, "{}", e.what());
+				LoggerPrint::Log(dnServer, ELogLevel_Debug, "{}", e.what());
 				errData["code"] = http_status::HTTP_STATUS_BAD_REQUEST;
 				errData["message"] = "Regist Error!!";
 				MSGSET(errData.dump());

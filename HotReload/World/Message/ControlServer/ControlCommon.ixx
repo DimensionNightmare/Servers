@@ -7,6 +7,7 @@ import FuncHelper;
 import ServerEntityHelper;
 import std;
 import ThirdParty.PbGen;
+import Logger;
 
 export namespace ControlServerMessage
 {
@@ -32,7 +33,7 @@ export namespace ControlServerMessage
 
 		ServerEntityManagerHelper::CVPtr entityMan = dnServer->GetServerEntityManager();
 
-		dnServer->GetLogger()->Record(ELogLevel_Debug, "ip Reqregist: {}, {}", channel->peeraddr(), request.servertype());
+		LoggerPrint::Log(channel, ELogLevel_Debug, "ip Reqregist: {}, {}", channel->peeraddr(), request.servertype());
 
 		const std::string& ipPort = channel->localaddr();
 

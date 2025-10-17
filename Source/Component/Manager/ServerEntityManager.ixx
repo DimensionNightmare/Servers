@@ -4,6 +4,7 @@ import ServerEntity;
 import EntityManager;
 import Server;
 import FuncUtils;
+import Logger;
 
 export class ServerEntityManager : public EntityManager<ServerEntity>
 {
@@ -59,7 +60,7 @@ public:
 
 			RemoveEntity(entityId);
 			
-			GetLogger()->Record(ELogLevel_Debug, "EntityCloseTimer server destory entity");
+			LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "EntityCloseTimer server destory entity");
 			
 		}
 	}
@@ -92,7 +93,7 @@ public: // dll override
 
 	ServerEntity::Ptr _AddEntity(uint64_t entityId, EMServerType regType)
 	{
-		ServerEntity::Ptr entity = MemPool->Allocate<ServerEntity, World::WPtr>(GetOwner()->GetWorldW());
+		ServerEntity::Ptr entity = G_InstanceHolder.MemPool->Allocate<ServerEntity, World::WPtr>(GetOwner()->GetWorldW());
 		entity->SetID(entityId);
 
 		std::unique_lock ulock(oMapMutex);

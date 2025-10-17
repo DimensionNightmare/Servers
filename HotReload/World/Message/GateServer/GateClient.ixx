@@ -9,6 +9,8 @@ import Task;
 import ProxyEntityHelper;
 import std;
 import ThirdParty.PbGen;
+import Logger;
+import ThirdParty.Protobuf;
 
 export namespace GateServerMessage
 {
@@ -37,18 +39,18 @@ export namespace GateServerMessage
 		ProxyEntityHelper::CVPtr entity = entityMan->GetEntity(request.accountid());
 		if (!entity)
 		{
-			dnServer->GetLogger()->Record(ELogLevel_Debug, "noaccount {}!!", request.accountid());
+			LoggerPrint::Log(channel, ELogLevel_Debug, "noaccount {}!!", request.accountid());
 			response.set_errorcode(EL10nCode_NoneProxyEntity);
 		}
 		// if not match, timer will destory entity
 		else if (Md5Hash(entity->Token()) != request.token())
 		{
-			dnServer->GetLogger()->Record(ELogLevel_Debug, "not match!!");
+			LoggerPrint::Log(channel, ELogLevel_Debug, "not match!!");
 			response.set_errorcode(EL10nCode_LoginTokenNotMatch);
 		}
 		else
 		{
-			dnServer->GetLogger()->Record(ELogLevel_Debug, "match!!");
+			LoggerPrint::Log(channel, ELogLevel_Debug, "match!!");
 
 			if (uint64_t timerId = entity->TimerId())
 			{
@@ -76,7 +78,7 @@ export namespace GateServerMessage
 				std::list<ServerEntity::Ptr> serverEntityList = serverEntityMan->GetEntitysByType(EMServerType::LogicServer);
 				if (serverEntityList.empty())
 				{
-					dnServer->GetLogger()->Record(ELogLevel_Debug, "Msg_ReqAuthToken not LogicServer !!");
+					LoggerPrint::Log(channel, ELogLevel_Debug, "Msg_ReqAuthToken not LogicServer !!");
 					response.set_errorcode(EL10nCode_NotExistLogicServer);
 				}
 				else

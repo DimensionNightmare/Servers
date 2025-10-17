@@ -47,8 +47,6 @@ protected:
 	{
 		emSystemType = EMSystemType::Server;
 
-		pLogger = GetWorld()->GetSystemW<LoggerPrint>(EMSystemType::LoggerPrint);
-
 		Libhv::hvlog_disable();
 	}
 public:
@@ -77,8 +75,6 @@ public:
 	EMServerType GetServerType() { return emServerType; }
 	void SetServerType(EMServerType type) { emServerType = type; }
 
-	LoggerPrint::Ptr GetLogger() { return pLogger.expired() ? nullptr : pLogger.lock(); }
-
 	bool IsPullServer() { return bIsPull;}
 	
 public: // dll override
@@ -90,6 +86,4 @@ protected:
 	bool bIsPull = false;
 
 	std::mutex oTaskMutex;
-
-	LoggerPrint::WPtr pLogger;
 };

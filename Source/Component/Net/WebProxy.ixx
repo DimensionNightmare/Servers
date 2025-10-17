@@ -13,8 +13,6 @@ protected:
 	WebProxy(System::WPtr system):Component(system)
 	{
 		eComponentType = EMComponentType::WebProxy;
-
-		pLogger = GetOwner()->GetWorld()->GetSystemW<LoggerPrint>(EMSystemType::LoggerPrint);
 	}
 public:
 	using Ptr = std::shared_ptr<WebProxy>;
@@ -47,11 +45,11 @@ public:
 		setPort(port);
 		setThreadNum(1);
 
-		GetLogger()->Record(EL10nCode_SrvListenOn, port, 0);
+		LoggerPrint::Log(GetWorld(), EL10nCode_SrvListenOn, port, 0);
 
 		GetOwner()->GetWorld()->AddEvent(EMEventType::ServerStart, GetSelfW<WebProxy>(), &WebProxy::Start);
 
-		pService = MemPool->Allocate<hv::HttpService>();
+		pService = G_InstanceHolder.MemPool->Allocate<hv::HttpService>();
 		
 		service = pService.get();
 		service->Static("/", "./");
@@ -69,11 +67,7 @@ public:
 		stop();
 	}
 
-	LoggerPrint::Ptr GetLogger(){ return pLogger.expired() ? nullptr : pLogger.lock(); }
-
 protected:
-
-	LoggerPrint::WPtr pLogger;
 
 	std::shared_ptr<hv::HttpService> pService;
 

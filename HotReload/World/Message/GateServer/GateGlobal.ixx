@@ -7,6 +7,7 @@ import ThirdParty.Libhv;
 import FuncHelper;
 import std;
 import ThirdParty.PbGen;
+import Logger;
 
 export namespace GateServerMessage
 {
@@ -47,7 +48,7 @@ export namespace GateServerMessage
 				//kick game
 				if (uint64_t serverId = entity->RecordServerId())
 				{
-					dnServer->GetLogger()->Record(ELogLevel_Debug, "Send Logic tick User->{}, server:{}", entity->ID(), entity->RecordServerId());
+					LoggerPrint::Log(channel, ELogLevel_Debug, "Send Logic tick User->{}, server:{}", entity->ID(), entity->RecordServerId());
 
 					entity->GetChannel()->deleteContextPtr();
 
@@ -85,7 +86,7 @@ export namespace GateServerMessage
 			entity->SetTimerId(entityMan->CheckEntityCloseTimer(entity->ID()));
 		}
 
-		dnServer->GetLogger()->Record(ELogLevel_Debug, "ReqUserToken User: {}!!", request.accountid());
+		LoggerPrint::Log(channel, ELogLevel_Debug, "ReqUserToken User: {}!!", request.accountid());
 
 		response.SerializeToString(&binData);
 		MessagePackAndSend(msgId, EMMsgDeal::Res, binData, channel);

@@ -4,6 +4,7 @@ import GateServerHelper;
 import FuncHelper;
 import Server;
 import ThirdParty.PbGen;
+import Logger;
 
 export namespace GateServerMessage
 {
@@ -55,9 +56,9 @@ export namespace GateServerMessage
 
 		ClientProxyHelper::Ptr clientProxy = dnServer->GetClientProxy();
 		ServerProxyHelper::Ptr serverProxy = dnServer->GetServerProxy();
-		
-		dnServer->GetLogger()->Record(ELogLevel_Debug, "Client:{}, port:{}", clientProxy->remote_host, clientProxy->remote_port);
-		
+
+		LoggerPrint::Log(dnServer, ELogLevel_Debug, "Client:{}, port:{}", clientProxy->remote_host, clientProxy->remote_port);
+
 		clientProxy->SetRegistState(EMRegistState::Registing);
 
 		GMsg::COM_ReqRegistSrv request;
@@ -108,7 +109,7 @@ export namespace GateServerMessage
 		}
 		else
 		{
-			dnServer->GetLogger()->Record(response.errorcode());
+			LoggerPrint::Log(dnServer, response.errorcode());
 			// dnServer->IsRun() = false; //exit application
 			clientProxy->SetRegistState(EMRegistState::None);
 		}
@@ -128,7 +129,7 @@ export namespace GateServerMessage
 		GateServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<GateServerHelper>(EMSystemType::Server);
 		ServerEntityManagerHelper::Ptr entityMan = dnServer->GetServerEntityManager();
 
-		dnServer->GetLogger()->Record(ELogLevel_Debug, "ip Reqregist: {}, {}", channel->peeraddr(), request.servertype());
+		LoggerPrint::Log(dnServer, ELogLevel_Debug, "ip Reqregist: {}, {}", channel->peeraddr(), request.servertype());
 
 		GMsg::COM_ResRegistSrv response;
 

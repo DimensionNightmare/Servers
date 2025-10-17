@@ -5,6 +5,7 @@ import GlobalServerHelper;
 import Server;
 import Task;
 import ThirdParty.PbGen;
+import Logger;
 
 
 export namespace GlobalServerMessage
@@ -18,9 +19,9 @@ export namespace GlobalServerMessage
 		ClientProxyHelper::Ptr clientProxy = dnServer->GetClientProxy();
 
 		ServerProxyHelper::Ptr serverProxy = dnServer->GetServerProxy();
-		
-		dnServer->GetLogger()->Record(ELogLevel_Debug, "Client:{}, port:{}", clientProxy->remote_host, clientProxy->remote_port);
-		
+
+		LoggerPrint::Log(dnServer, ELogLevel_Debug, "Client:{}, port:{}", clientProxy->remote_host, clientProxy->remote_port);
+
 		clientProxy->SetRegistState(EMRegistState::Registing);
 
 		GMsg::COM_ReqRegistSrv request;
@@ -68,7 +69,7 @@ export namespace GlobalServerMessage
 		}
 		else
 		{
-			dnServer->GetLogger()->Record(response.errorcode());
+			LoggerPrint::Log(dnServer, response.errorcode());
 			// dnServer->IsRun() = false; //exit application
 			clientProxy->SetRegistState(EMRegistState::None);
 		}
@@ -87,8 +88,8 @@ export namespace GlobalServerMessage
 		}
 
 		GlobalServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<GlobalServerHelper>(EMSystemType::Server);
-		
-		dnServer->GetLogger()->Record(ELogLevel_Debug, "ip Reqregist: {}, {}", channel->peeraddr(), request.servertype());
+
+		LoggerPrint::Log(channel, ELogLevel_Debug, "ip Reqregist: {}, {}", channel->peeraddr(), request.servertype());
 
 		GMsg::COM_ResRegistSrv response;
 

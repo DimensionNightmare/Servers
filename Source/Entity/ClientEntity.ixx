@@ -24,7 +24,7 @@ protected:
 		eEntityType = EMEntityType::Client;
 
 		// pDbEntity = std::make_unique<GDb::Player>();
-		pDbEntity = MemPool->Allocate<GDb::Player>();
+		pDbEntity = G_InstanceHolder.MemPool->Allocate<GDb::Player>();
 		
 	}
 

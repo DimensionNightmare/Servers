@@ -5,7 +5,7 @@ import Server;
 import FuncHelper;
 import Task;
 import ThirdParty.PbGen;
-
+import Logger;
 
 export namespace AuthServerMessage
 {
@@ -19,7 +19,7 @@ export namespace AuthServerMessage
 
 		uint32_t msgId = clientProxy->GetMsgId();
 
-		dnServer->GetLogger()->Record(ELogLevel_Debug, "Client:{}, port:{}", clientProxy->remote_host, clientProxy->remote_port);
+		LoggerPrint::Log(dnServer, ELogLevel_Debug, "Client:{}, port:{}", clientProxy->remote_host, clientProxy->remote_port);
 		
 		clientProxy->SetRegistState(EMRegistState::Registing);
 
@@ -71,7 +71,7 @@ export namespace AuthServerMessage
 		}
 		else
 		{
-			dnServer->GetLogger()->Record(response.errorcode());
+			LoggerPrint::Log(dnServer, response.errorcode());
 			// server->IsRun() = false; //exit application
 			clientProxy->SetRegistState(EMRegistState::None);
 		}

@@ -7,6 +7,8 @@ import FuncHelper;
 import Task;
 import std;
 import ThirdParty.PbGen;
+import Logger;
+import ThirdParty.Protobuf;
 
 export namespace GateServerMessage
 {
@@ -104,7 +106,7 @@ export namespace GateServerMessage
 			co_await dataChannel;
 			if (dataChannel.HasFlag(EMTaskFlag::Timeout))
 			{
-				dnServer->GetLogger()->Record(ELogLevel_Debug, "requst timeout! ");
+				LoggerPrint::Log(channel, ELogLevel_Debug, "requst timeout! ");
 				response.set_errorcode(EL10nCode_SGateReqTimeout);
 			}
 			
