@@ -21,7 +21,7 @@ export enum class EMRegistState : uint8_t
 export class ClientProxy : public Component, public hv::TcpClientTmpl<SocketChannel>
 {
 protected:
-	friend class System;
+
 	friend class UniversalMemoryPool;
 	ClientProxy(System::WPtr system):Component(system)
 		,TcpClientTmpl(nullptr)
@@ -170,7 +170,7 @@ public: // dll override
 
 	Timer::Ptr GetTimer(){ return pTimer.expired() ? nullptr : pTimer.lock(); }
 
-private:
+protected:
 
 	uint64_t _CheckMessageTimeoutTimer(uint32_t breakTime, uint32_t msgId)
 	{

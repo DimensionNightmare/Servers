@@ -54,7 +54,6 @@ export class SocketChannel : public hv::SocketChannel
 public:
 	using Ptr = std::shared_ptr<SocketChannel>;
 	using CVPtr = const Ptr&;
-	using WPtr = std::weak_ptr<SocketChannel>;
 
 	virtual ~SocketChannel()
 	{

@@ -25,18 +25,18 @@ export class LoggerPrint : public System
 {
 	
 private:
-	inline static std::shared_ptr<LoggerPrint> Instance_LoggerPrint;
+	inline static std::shared_ptr<LoggerPrint> PInstanceLoggerPrint;
 
-	inline static ELogLevel eLogLevel = ELogLevel_Debug;
+	inline static ELogLevel OELogLevel = ELogLevel_Debug;
 
-	inline static std::ofstream oPidLogFile;
+	inline static std::ofstream OPidLogFile;
 
 
 protected:
 	
-	friend class World;
 	friend class UniversalMemoryPool;
-	LoggerPrint(World::WPtr world):System(world)
+	LoggerPrint(World::WPtr world):System(world),
+	AddLogFile(this)
 	{
 		emSystemType = EMSystemType::LoggerPrint;
 	}
@@ -44,28 +44,27 @@ protected:
 public:
 	using Ptr = std::shared_ptr<LoggerPrint>;
 	using CVPtr = const Ptr&;
-	using WPtr = std::weak_ptr<LoggerPrint>;
 	virtual ~LoggerPrint()
 	{
 		
 	}
 
-	virtual void Dispose() override
+	virtual void Dispose()
 	{
 		System::Dispose();
 
-		Instance_LoggerPrint = nullptr;
+		PInstanceLoggerPrint = nullptr;
 	}
 
 	/// @brief set logger type and Log file Init 
 	void SetLoggerLevel(ELogLevel level)
 	{
-		eLogLevel = level;
+		OELogLevel = level;
 	}
 
 	bool Awake() override
 	{
-		Instance_LoggerPrint = GetSelf<LoggerPrint>();
+		PInstanceLoggerPrint = GetSelf<LoggerPrint>();
 
 		World::CVPtr world = GetWorld();
 		std::string* value = world->LaunchParam("LoggerLevel");
@@ -84,7 +83,7 @@ public:
 		{
 			std::filesystem::create_directories(path);
 		}
-		oPidLogFile = std::ofstream( std::format("{}/Output.log", path.string()), std::ios::app);
+		OPidLogFile = std::ofstream( std::format("{}/Output.log", path.string()), std::ios::app);
 		
 		return true;
 	}
@@ -92,7 +91,7 @@ public:
 	template <typename... Args>
     void Record(World::Ptr world, ELogLevel level, const std::format_string<Args...>& fmt, Args&&... args)
 	{
-		if (level < eLogLevel)
+		if (level < OELogLevel)
 		{
 			return;
 		}
@@ -106,7 +105,7 @@ public:
 		ELogLevel level = ELogLevel_None;
 		const std::string& fmt = GetL10nText()->GetTipText(code, level);
 
-		if (level < eLogLevel)
+		if (level < OELogLevel)
 		{
 			return;
 		}
@@ -135,18 +134,32 @@ public:
 	template <typename... Args>
     static void Log(World::Ptr world, ELogLevel level, const std::format_string<Args...>& fmt, Args&&... args)
 	{
-		Instance_LoggerPrint->Record(world, level, fmt, std::forward<Args>(args)...);
+		GetInstance()->Record(world, level, fmt, std::forward<Args>(args)...);
 	}
 
 	template <typename... Args>
     static void Log(World::Ptr world, EL10nCode code, Args&&... args)
 	{
-		Instance_LoggerPrint->Record(world, code, std::forward<Args>(args)...);
+		GetInstance()->Record(world, code, std::forward<Args>(args)...);
 	}
 
 protected:
 
-	
+	static LoggerPrint::Ptr GetInstance()
+	{
+		if(!PInstanceLoggerPrint)
+		{
+			if(P_InstanceHolder->AuthWorld)
+			{
+				PInstanceLoggerPrint = P_InstanceHolder->AuthWorld->GetSystem<LoggerPrint>(EMSystemType::LoggerPrint);
+			}
+		}
+
+		return PInstanceLoggerPrint;
+	}
+
+protected:
+
 	void flush(World::Ptr world, ELogLevel level, std::string result)
 	{
 		if (result.empty())
@@ -191,20 +204,51 @@ protected:
 	{
 		if(serverName)
 		{
+			std::shared_ptr<std::ofstream> logFile;
+			if(mLogFileMap.count(*serverName) == 0)
+			{
+				std::filesystem::path path = *GetWorld()->LaunchParam("PidLogFolder");
+				path /= std::format("{}.log", *serverName);
 
+				logFile = AddLogFile(path.string(), std::ios::app);
+			}
+			else
+			{
+				logFile = mLogFileMap[*serverName];
+			}
+			
+			
+			*logFile << logMessage;
+			logFile->flush();
+			return;
 		}
 
-		if (oPidLogFile.is_open())
+		if (OPidLogFile.is_open())
 		{
-			oPidLogFile << logMessage;
-			oPidLogFile.flush();
+			OPidLogFile << logMessage;
+			OPidLogFile.flush();
 		}
 	}
+
+	std::shared_ptr<std::ofstream> _AddLogFile(const std::string& filePath, const std::ios_base::openmode& mode)
+	{
+		std::shared_ptr<std::ofstream> logFile = std::make_shared<std::ofstream>(filePath, mode);
+
+		mLogFileMap.emplace(filePath, logFile);
+		
+		return logFile;
+	}
+
+public:
+
+	FunctionContainer<&LoggerPrint::_AddLogFile> AddLogFile;
 
 protected:
 	L10nText::WPtr pL10nText;
 
 	std::filesystem::path oLogFolderPath;
+
+	std::unordered_map<std::string, std::shared_ptr<std::ofstream>> mLogFileMap;
 };
 
 bool L10nText::Awake()

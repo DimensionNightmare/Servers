@@ -13,9 +13,6 @@ enum class EMLunchType : uint8_t
 	PULL,
 };
 
-
-bool AppRun = false;
-#define App DimensionNightmare::PInstance
 #define CloseApp() 		\
 	{ 					\
 		App->Dispose(); \
@@ -43,7 +40,7 @@ export int main(int argc, char** argv)
 
 	// dynamic initializer
 	{
-		G_InstanceHolder.MemPool = std::make_unique<UniversalMemoryPool>();
+		P_InstanceHolder = std::make_shared<InstanceHolder>();
 
 #if 0
 		int count = 1000'0000;
@@ -65,7 +62,7 @@ export int main(int argc, char** argv)
 
 					for(int j = 0; j < count; j++)
 					{
-						auto a = G_InstanceHolder.MemPool->Allocate<DimensionNightmare>();
+						auto a = P_InstanceHolder->MemPool->Allocate<DimensionNightmare>();
 						// auto a = new DimensionNightmare();
 						// auto ramdon = dis(gen);
 						a->Dispose();
@@ -125,15 +122,17 @@ export int main(int argc, char** argv)
 			two.get();
 		}
 
-		// G_InstanceHolder.MemPool->PrintLockStats(threads);
+		// P_InstanceHolder->MemPool->PrintLockStats(threads);
 
 		return 0;
 # endif
 
 	}
 
+	static bool AppRun = false;
+	static DimensionNightmare::Ptr App;
+	static std::filesystem::path pidFolderPath;
 	std::future<void> InputThread;
-
 	ProgramConfig programConfig;
 
 	for (int i = 1; i < argc; i++)
@@ -156,7 +155,6 @@ export int main(int argc, char** argv)
 		goto POINT_EXIT;
 	}
 
-	static std::filesystem::path pidFolderPath;
 	// path init. binary,log,dll...
 	{
 		
@@ -169,7 +167,7 @@ export int main(int argc, char** argv)
 		path = path / "Runtime/Logs";
 		programConfig.iniFileConfig["Common"].emplace("LogFolder", path.string());
 
-		path /= std::format("PID_LOG/PID_{}", Platform::GetCurrentProcessId());
+		path /= std::format("PID_{}", Platform::GetCurrentProcessId());
 		programConfig.iniFileConfig["Common"].emplace("PidLogFolder", path.string());
 
 		pidFolderPath = path;
@@ -265,14 +263,14 @@ export int main(int argc, char** argv)
 
 #endif
 
-	G_InstanceHolder.MainWorld = App = G_InstanceHolder.MemPool->Allocate<DimensionNightmare>();
+	P_InstanceHolder->MainWorld = App = P_InstanceHolder->MemPool->Allocate<DimensionNightmare>();
 	if (!App->Init(programConfig))
 	{
 		CloseApp();
 		goto POINT_EXIT;
 	}
 	
-	LoggerPrint::Log(nullptr, ELogLevel_Normal, "hello ~ Dimension Instance addr->(DimensionNightmare*){}", static_cast<void*>(App.get()));
+	LoggerPrint::Log(nullptr, ELogLevel_Normal, "hello ~ Program Instance addr->(InstanceHolder*){}", static_cast<void*>(P_InstanceHolder.get()));
 
 	AppRun = true;
 
@@ -411,7 +409,7 @@ export int main(int argc, char** argv)
 	LoggerPrint::Log(nullptr, ELogLevel_Normal, "bye ~");
 POINT_EXIT:
 
-	G_InstanceHolder.~InstanceHolder();
+	P_InstanceHolder = nullptr;
 
 	return 0;
 }

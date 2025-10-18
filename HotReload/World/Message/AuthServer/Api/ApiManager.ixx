@@ -27,8 +27,8 @@ export void ApiInit(Server::CVPtr dnServer)
 			ClientProxyHelper::Ptr clientSock = dnServer->GetComponent<ClientProxyHelper>(EMComponentType::ClientProxy);
 			if (clientSock->GetRegistState() != EMRegistState::Registed)
 			{
-				errData["code"] = http_status::HTTP_STATUS_BAD_REQUEST;
-				errData["message"] = "Server Disconnect!";
+				errData["Code"] = http_status::HTTP_STATUS_BAD_REQUEST;
+				errData["Message"] = "Server Disconnect!";
 				ctx->response->SetBody(errData.dump());
 				return !pass;
 			}

@@ -8,7 +8,7 @@ import Logger;
 export class ProxyEntityManager : public EntityManager<ProxyEntity>
 {
 protected:
-	friend class System;
+
 	friend class UniversalMemoryPool;
 	/// @brief timer manager create
 	ProxyEntityManager(System::WPtr system):EntityManager(system)
@@ -71,9 +71,11 @@ public: // dll proxy
 		return false;
 	}
 
+protected:
+
 	ProxyEntity::Ptr _AddEntity(uint64_t entityId)
 	{
-		ProxyEntity::Ptr entity = G_InstanceHolder.MemPool->Allocate<ProxyEntity, World::WPtr>(GetOwner()->GetWorldW());
+		ProxyEntity::Ptr entity = P_InstanceHolder->MemPool->Allocate<ProxyEntity, World::WPtr>(GetOwner()->GetWorldW());
 		entity->SetID(entityId);
 
 		std::unique_lock ulock(oMapMutex);

@@ -8,7 +8,7 @@ import Logger;
 export class RoomEntityManager : public EntityManager<RoomEntity>
 {
 protected:
-	friend class System;
+
 	friend class UniversalMemoryPool;
 	/// @brief timer manager create
 	RoomEntityManager(System::WPtr system):EntityManager(system)
@@ -71,9 +71,11 @@ public: // dll proxy
 		return false;
 	}
 
+protected:
+
 	RoomEntity::Ptr _AddEntity(uint64_t mapId)
 	{
-		RoomEntity::Ptr entity = G_InstanceHolder.MemPool->Allocate<RoomEntity, World::WPtr>(GetOwner()->GetWorldW());
+		RoomEntity::Ptr entity = P_InstanceHolder->MemPool->Allocate<RoomEntity, World::WPtr>(GetOwner()->GetWorldW());
 
 		std::unique_lock ulock(oMapMutex);
 		mEntityMap[entity->ID()] = entity;

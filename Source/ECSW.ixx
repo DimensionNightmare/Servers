@@ -53,20 +53,36 @@ export enum class EMSystemType : uint8_t
 
 #pragma endregion
 
+class Object;
+class Component;
+class Entity;
+class System;
 class World;
 
-struct InstanceHolder
+export struct InstanceHolder
 {
+	using Ptr = std::shared_ptr<InstanceHolder>;
+	InstanceHolder()
+	{
+		MemPool = std::make_shared<UniversalMemoryPool>();
+	}
+
+	~InstanceHolder()
+	{
+		Unload();
+	}
+
+	void Unload();
+
 	UniversalMemoryPool::Ptr MemPool;
 	
 	std::shared_ptr<World> AuthWorld;
 	
 	std::shared_ptr<World> MainWorld;
 
-	~InstanceHolder();
 };
 
-export InstanceHolder G_InstanceHolder;
+export std::shared_ptr<InstanceHolder> P_InstanceHolder;
 
 #pragma region DNEvent
 
@@ -124,7 +140,7 @@ export DNEvent GEvent; // dynamic initializer
 
 #pragma region Object
 
-export class Object : public std::enable_shared_from_this<Object>, public DNEvent
+export class Object : public std::enable_shared_from_this<Object>
 {
 public:
 	using Ptr = std::shared_ptr<Object>;
@@ -178,7 +194,6 @@ protected:
 export class Component : public Object
 {
 protected:
-	friend class Entity;
 	Component(std::weak_ptr<Entity> owner):
 		pOwner(owner)
 	{
@@ -220,7 +235,7 @@ protected: // dll proxy
 
 #pragma region Entity
 
-export class Entity : public Object
+export class Entity : public Object, public DNEvent
 {
 protected:
 	Entity(std::weak_ptr<World> world):
@@ -289,7 +304,7 @@ public: // dll override
 		static_assert(std::is_base_of_v<Component, T>, "T must inherit from component");
 		try
 		{
-			std::shared_ptr<T> component = G_InstanceHolder.MemPool->Allocate<T>(shared_from_this());
+			std::shared_ptr<T> component = P_InstanceHolder->MemPool->Allocate<T>(shared_from_this());
 			if(!component->Awake())
 			{
 				component->Dispose();
@@ -351,8 +366,7 @@ std::shared_ptr<World> Component::GetWorld()
 export class System : public Entity
 {
 protected:
-	friend class World;
-	
+
 	System(std::weak_ptr<World> world) 
 		: Entity(world)
 	{
@@ -381,7 +395,7 @@ public:
 		static_assert(std::is_base_of_v<Component, T>, "T must inherit from component");
 		try
 		{
-			std::shared_ptr<T> component = G_InstanceHolder.MemPool->Allocate<T, System::WPtr>(GetSelfW<System>());
+			std::shared_ptr<T> component = P_InstanceHolder->MemPool->Allocate<T, System::WPtr>(GetSelfW<System>());
 			if(!component->Awake())
 			{
 				component->Dispose();
@@ -408,7 +422,7 @@ protected:
 
 #pragma region World
 
-export class World : public Object
+export class World : public Object, public DNEvent
 {
 public:
 	using Ptr = std::shared_ptr<World>;
@@ -432,7 +446,7 @@ public:
 		static_assert(std::is_base_of_v<System, T>, "T must inherit from System");
 		try
 		{
-			std::shared_ptr<T> system = G_InstanceHolder.MemPool->Allocate<T, World::WPtr>(GetSelfW<World>());
+			std::shared_ptr<T> system = P_InstanceHolder->MemPool->Allocate<T, World::WPtr>(GetSelfW<World>());
 			if(!system->Awake())
 			{
 				system->Dispose();
@@ -545,7 +559,8 @@ private:
 
 };
 
-InstanceHolder::~InstanceHolder()
+// InstanceHolder::~InstanceHolder()
+void InstanceHolder::Unload()
 {
 	if(MainWorld)
 	{

@@ -7,6 +7,10 @@
 			"generator": "Ninja",
 			"binaryDir": "${sourceDir}/out/build/${presetName}",
 			"installDir": "${sourceDir}/out/install/${presetName}",
+			"architecture": {
+				"value": "x64",
+				"strategy": "external"
+			},
 			"cacheVariables": {
 				"CMAKE_CXX_COMPILER": "cl.exe"
 			},
@@ -20,10 +24,6 @@
 			"name": "Debug",
 			"displayName": "Debug",
 			"inherits": "windows-base",
-			"architecture": {
-				"value": "x64",
-				"strategy": "external"
-			},
 			"cacheVariables": {
 				"CMAKE_BUILD_TYPE": "Debug"
 			}
@@ -31,7 +31,7 @@
 		{
 			"name": "Release",
 			"displayName": "Release",
-			"inherits": "Debug",
+			"inherits": "windows-base",
 			"cacheVariables": {
 				"CMAKE_BUILD_TYPE": "Release"
 			}
@@ -39,7 +39,7 @@
 		{
 			"name": "RelWithDebInfo",
 			"displayName": "RelWithDebInfo",
-			"inherits": "Debug",
+			"inherits": "windows-base",
 			"cacheVariables": {
 				"CMAKE_BUILD_TYPE": "RelWithDebInfo"
 			}

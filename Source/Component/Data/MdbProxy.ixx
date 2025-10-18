@@ -8,7 +8,6 @@ import Logger;
 export class MdbProxy : public Component
 {
 protected:
-	friend class System;
 	friend class UniversalMemoryPool;
 	MdbProxy(System::WPtr system):Component(system)
 	{
@@ -42,7 +41,7 @@ public:
 
 		std::string* value = world->LaunchParam("connection");
 
-		auto connection = G_InstanceHolder.MemPool->Allocate<sw::redis::Redis, const std::string&>(*value);
+		auto connection = P_InstanceHolder->MemPool->Allocate<sw::redis::Redis, const std::string&>(*value);
 		
 		connection->ping();
 

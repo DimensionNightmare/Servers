@@ -8,7 +8,6 @@ import ThirdParty.Libhv;
 export class ProxyEntity : public Entity
 {
 protected:
-	friend class ProxyEntityManager;
 	friend class UniversalMemoryPool;
 	ProxyEntity(World::WPtr world):Entity(world)
 	{

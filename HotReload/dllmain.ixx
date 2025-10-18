@@ -43,9 +43,6 @@ int InitHotReload(World::CVPtr world)
 
 	Server::CVPtr dnServer = world->GetSystem<Server>(EMSystemType::Server);
 
-	L10nText::CVPtr dnL10n = world->GetSystem<L10nText>(EMSystemType::L10nText);
-	
-
 	switch (dnServer->GetServerType())
 	{
 		#define one(Type) case EMServerType::Type:{static Type##MessageHandle msgHandle; return dnServer->GetSelf<Type##Helper>()->HandleServerInit(&msgHandle); }
@@ -103,12 +100,13 @@ extern "C"
 			// DLL_PROCESS_ATTACH
 			case 1:
 			{
-				using funcSign = World* (*)();
-				auto funtPtr = Platform::GetFuncPtr(nullptr, "GetMainWorld");
+				using funcSign = void (*)(InstanceHolder::Ptr&);
+				auto funtPtr = Platform::GetFuncPtr(nullptr, "GetInstanceHolder");
 				if (funcSign func = reinterpret_cast<funcSign>(funtPtr))
 				{
-					World* world = func();
-					HotReload::CVPtr pHotDll = world->GetSystem<HotReload>(EMSystemType::HotReload);
+					func(P_InstanceHolder);
+				
+					HotReload::CVPtr pHotDll = P_InstanceHolder->AuthWorld->GetSystem<HotReload>(EMSystemType::HotReload);
 					{
 						pHotDll->pInitHotReload = &InitHotReload;
 					}

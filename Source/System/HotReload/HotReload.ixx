@@ -8,7 +8,6 @@ import Logger;
 export class HotReload : public System
 {
 protected:
-	friend class World;
 	friend class UniversalMemoryPool;
 	/// @brief
 	HotReload(World::WPtr world):System(world)

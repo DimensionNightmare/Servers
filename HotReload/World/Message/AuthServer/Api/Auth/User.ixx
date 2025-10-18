@@ -26,14 +26,14 @@ export void ApiAuth(Server::CVPtr dnServer)
 			writer->Begin();
 			nlohmann::json errData;
 
-			std::string authName = req->GetString("authName");
-			std::string authString = req->GetString("authString");
+			std::string authName = req->GetString("AuthName");
+			std::string authString = req->GetString("AuthString");
 
 			if (authName.empty() || authName.size() > 32 ||
 				authString.empty() || authString.size() > 64)
 			{
-				errData["code"] = http_status::HTTP_STATUS_BAD_REQUEST;
-				errData["message"] = "param error!";
+				errData["Code"] = http_status::HTTP_STATUS_BAD_REQUEST;
+				errData["Message"] = "param error!";
 				MSGSET(errData.dump());
 				writer->End();
 				return;
@@ -46,8 +46,8 @@ export void ApiAuth(Server::CVPtr dnServer)
 			Server::Ptr serverTemp = server.lock();
 			if (!serverTemp)
 			{
-				errData["code"] = http_status::HTTP_STATUS_BAD_REQUEST;
-				errData["message"] = "Server Disconnect!";
+				errData["Code"] = http_status::HTTP_STATUS_BAD_REQUEST;
+				errData["Message"] = "Server Disconnect!";
 				MSGSET(errData.dump());
 				writer->End();
 				return;
@@ -73,8 +73,8 @@ export void ApiAuth(Server::CVPtr dnServer)
 
 				if (accounts.Result().size() != 1)
 				{
-					errData["code"] = http_status::HTTP_STATUS_BAD_REQUEST;
-					errData["message"] = "not Account!";
+					errData["Code"] = http_status::HTTP_STATUS_BAD_REQUEST;
+					errData["Message"] = "not Account!";
 					MSGSET(errData.dump());
 					writer->End();
 					return;
@@ -85,8 +85,8 @@ export void ApiAuth(Server::CVPtr dnServer)
 			catch (const std::exception& e)
 			{
 				LoggerPrint::Log(dnServer, ELogLevel_Debug, "{}", e.what());
-				errData["code"] = http_status::HTTP_STATUS_BAD_REQUEST;
-				errData["message"] = "Server Error!!";
+				errData["Code"] = http_status::HTTP_STATUS_BAD_REQUEST;
+				errData["Message"] = "Server Error!!";
 				MSGSET(errData.dump());
 				writer->End();
 				return;
@@ -126,21 +126,21 @@ export void ApiAuth(Server::CVPtr dnServer)
 						co_await dataChannel;
 						if (dataChannel.HasFlag(EMTaskFlag::Timeout))
 						{
-							retData["code"] = HTTP_STATUS_REQUEST_TIMEOUT;
+							retData["Code"] = HTTP_STATUS_REQUEST_TIMEOUT;
 
 							response.set_errorcode(EL10nCode_SAuthReqTimeout);
 						}
 						else
 						{
-							retData["code"] = HTTP_STATUS_OK;
+							retData["Code"] = HTTP_STATUS_OK;
 						}
 
 					}
 
 					binData.clear();
 					auto state = MessageToJsonString(response, &binData);
-					retData["data"] = nlohmann::json::parse(binData);
-					retData["data"]["accountId"] = accInfo.accountid();
+					retData["Data"] = nlohmann::json::parse(binData);
+					retData["Data"]["AccountId"] = accInfo.accountid();
 
 					MSGSET(retData.dump());
 					writer->End();
@@ -155,14 +155,14 @@ export void ApiAuth(Server::CVPtr dnServer)
 		{
 			nlohmann::json errData;
 
-			std::string authName = req->GetString("authName");
-			std::string authString = req->GetString("authString");
+			std::string authName = req->GetString("AuthName");
+			std::string authString = req->GetString("AuthString");
 
 			if (authName.empty() || authName.size() > 32 ||
 				authString.empty() || authString.size() > 64)
 			{
-				errData["code"] = http_status::HTTP_STATUS_BAD_REQUEST;
-				errData["message"] = "param error!";
+				errData["Code"] = http_status::HTTP_STATUS_BAD_REQUEST;
+				errData["Message"] = "param error!";
 				MSGSET(errData.dump());
 				writer->End();
 				return;
@@ -176,8 +176,8 @@ export void ApiAuth(Server::CVPtr dnServer)
 			Server::Ptr serverTemp = server.lock();
 			if (!serverTemp)
 			{
-				errData["code"] = http_status::HTTP_STATUS_BAD_REQUEST;
-				errData["message"] = "Server Disconnect!";
+				errData["Code"] = http_status::HTTP_STATUS_BAD_REQUEST;
+				errData["Message"] = "Server Disconnect!";
 				MSGSET(errData.dump());
 				writer->End();
 				return;
@@ -200,8 +200,8 @@ export void ApiAuth(Server::CVPtr dnServer)
 
 				if (uint32_t count = accounts.ResultCount())
 				{
-					errData["code"] = http_status::HTTP_STATUS_BAD_REQUEST;
-					errData["message"] = "already exist authName!!";
+					errData["Code"] = http_status::HTTP_STATUS_BAD_REQUEST;
+					errData["Message"] = "already exist authName!!";
 					MSGSET(errData.dump());
 					writer->End();
 					return;
@@ -210,8 +210,8 @@ export void ApiAuth(Server::CVPtr dnServer)
 			catch (const std::exception& e)
 			{
 				LoggerPrint::Log(dnServer, ELogLevel_Debug, "{}", e.what());
-				errData["code"] = http_status::HTTP_STATUS_BAD_REQUEST;
-				errData["message"] = "Regist Error!!";
+				errData["Code"] = http_status::HTTP_STATUS_BAD_REQUEST;
+				errData["Message"] = "Regist Error!!";
 				MSGSET(errData.dump());
 				writer->End();
 				return;
@@ -237,22 +237,22 @@ export void ApiAuth(Server::CVPtr dnServer)
 
 				if (accounts.IsSuccess())
 				{
-					errData["code"] = HTTP_STATUS_OK;
-					errData["message"] = "Regist Success!!";
+					errData["Code"] = HTTP_STATUS_OK;
+					errData["Message"] = "Regist Success!!";
 					MSGSET(errData.dump());
 				}
 				else
 				{
-					errData["code"] = HTTP_STATUS_OK;
-					errData["message"] = "Regist Error!!";
+					errData["Code"] = HTTP_STATUS_OK;
+					errData["Message"] = "Regist Error!!";
 					MSGSET(errData.dump());
 				}
 			}
 			catch (const std::exception& e)
 			{
 				LoggerPrint::Log(dnServer, ELogLevel_Debug, "{}", e.what());
-				errData["code"] = http_status::HTTP_STATUS_BAD_REQUEST;
-				errData["message"] = "Regist Error!!";
+				errData["Code"] = http_status::HTTP_STATUS_BAD_REQUEST;
+				errData["Message"] = "Regist Error!!";
 				MSGSET(errData.dump());
 			}
 

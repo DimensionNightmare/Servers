@@ -25,9 +25,9 @@ export class UniversalMemoryPool
 	};
 
 public:
-	using Ptr = std::unique_ptr<UniversalMemoryPool>;
+	using Ptr = std::shared_ptr<UniversalMemoryPool>;
 
-	UniversalMemoryPool(size_t pool_size = 1024 * 1024 * 128) : iPoolSize(pool_size)
+	UniversalMemoryPool(size_t pool_size = 1024 * 1024 * 32) : iPoolSize(pool_size)
 	{
 		pPool = static_cast<void*>(::operator new(iPoolSize));
 		AddToFreeList(pPool, iPoolSize);

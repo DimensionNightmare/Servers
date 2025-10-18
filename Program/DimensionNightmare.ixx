@@ -234,6 +234,9 @@ export class DimensionNightmare : public World, public BitFlag<EMProgramFlag>
 {
 
 public:
+
+	using Ptr = std::shared_ptr<DimensionNightmare>;
+
 	/// @brief
 	DimensionNightmare()
 	{
@@ -249,19 +252,18 @@ public:
 	bool Init(ProgramConfig& programConfig)
 	{
 		// init auth world
-		{
-			G_InstanceHolder.AuthWorld = G_InstanceHolder.MemPool->Allocate<World>();
-			G_InstanceHolder.AuthWorld->MoveLuanchConfigToSelf(programConfig.iniFileConfig["Common"]);
-	
-			G_InstanceHolder.AuthWorld->AddSystem<LoggerPrint>();
-			G_InstanceHolder.AuthWorld->AddSystem<L10nText>();
+		P_InstanceHolder->AuthWorld = P_InstanceHolder->MemPool->Allocate<World>();
+		P_InstanceHolder->AuthWorld->MoveLuanchConfigToSelf(programConfig.iniFileConfig["Common"]);
 
-			HotReload::CVPtr pHotDll = G_InstanceHolder.AuthWorld->AddSystem<HotReload>();
-			if (!pHotDll->ReloadHandle())
-			{
-				return false;
-			}
+		P_InstanceHolder->AuthWorld->AddSystem<LoggerPrint>();
+		P_InstanceHolder->AuthWorld->AddSystem<L10nText>();
+
+		HotReload::CVPtr pHotDll = P_InstanceHolder->AuthWorld->AddSystem<HotReload>();
+		if (!pHotDll->ReloadHandle())
+		{
+			return false;
 		}
+		
 
 		for(auto& [serverEnum, serverName] : ServerTypeList)
 		{
@@ -269,20 +271,22 @@ public:
 			if(programConfig.bitServerOpenFlag.HasFlag(serverEnum))
 			{
 				
-				World::CVPtr world = G_InstanceHolder.MemPool->Allocate<World>();
+				World::CVPtr world = P_InstanceHolder->MemPool->Allocate<World>();
 				world->MoveLuanchConfigToSelf(programConfig.iniFileConfig[serverName]);
 
-				// if(!InitServer(world, pHotDll))
-				// {
-				// 	world->Dispose();
-				// 	continue;
-				// }
+				if(!InitServer(world, pHotDll))
+				{
+					world->Dispose();
+					continue;
+				}
 
-				// world->Broadcast(EMEventType::ServerStart);
+				world->Broadcast(EMEventType::ServerStart);
 
 				oWorlds.push_back(world);
 			}
 		}
+
+		InitCmdHandle();
 
 		// free manager
 		// RemoveSystem(EMSystemType::HotReload);
@@ -377,17 +381,15 @@ public:
 		}
 		catch(const std::exception& e)
 		{
-			LoggerPrint::Log(nullptr, ELogLevel_Error, "dnserver lunch error! error: {}", e.what());
+			LoggerPrint::Log(world, ELogLevel_Error, "dnserver lunch error! error: {}", e.what());
 			return false;
 		}
 		
 		if (pHotDll->pInitHotReload(world) != 1)
 		{
-			LoggerPrint::Log(nullptr, ELogLevel_Error, "program lunch OnRegHotReload error!");
+			LoggerPrint::Log(world, ELogLevel_Error, "program lunch OnRegHotReload error!");
 			return false;
 		}
-
-		InitCmdHandle();
 
 		return true;
 	}
@@ -409,7 +411,7 @@ public:
 			{
 				pause();
 				
-				HotReload::CVPtr pHotDll = GetSystem<HotReload>(EMSystemType::HotReload);
+				HotReload::CVPtr pHotDll = P_InstanceHolder->AuthWorld->GetSystem<HotReload>(EMSystemType::HotReload);
 
 				//after func
 				auto unloadFunc = pHotDll->pShutdownHotReload;
@@ -435,7 +437,7 @@ public:
 
 		auto reloadConfig = [this](std::stringstream* = nullptr)
 			{
-				// L10nText::PInstance->Init();
+				
 			};
 
 		mCmdHandle = {
@@ -487,8 +489,6 @@ private:
 
 	/// @brief command line std::function mapping
 	std::unordered_map<std::string, std::function<void(std::stringstream*)>> mCmdHandle;
-public:
-	inline static std::shared_ptr<DimensionNightmare> PInstance;
 };
 
 
@@ -496,32 +496,10 @@ public:
 
 extern "C"
 {
-	__declspec(dllexport) World* GetMainWorld()
+	__declspec(dllexport) void GetInstanceHolder(InstanceHolder::Ptr& holder)
 	{
-		return DimensionNightmare::PInstance.get();
+		holder.reset(P_InstanceHolder.get(), [](InstanceHolder*){});
 	}
 }
-
-// template <typename Method>
-// struct MemberFunctionArgs;
-
-// template <typename R, typename Class, typename... Args>
-// struct MemberFunctionArgs<R(Class::*)(Args...)>
-// {
-// 	using Arguments = std::tuple<Args...>;
-// };
-
-// #define REGIST_MAINSPACE_SIGN_FUNCTION(Class, Method) 																		\
-//     __declspec(dllexport) auto Class##_##Method(Class* obj, MemberFunctionArgs<decltype(&Class::Method)>::Arguments args)	\
-//     {																														\
-// 		return std::apply([obj](auto&&... args) {																			\
-//             return std::invoke(&Class::Method, obj, std::forward<decltype(args)>(args)...);									\
-//         }, args);																											\
-//     }
-
-// extern "C"
-// {
-// 	REGIST_MAINSPACE_SIGN_FUNCTION(ClientProxy, RedirectClient);
-// }
 
 #pragma endregion

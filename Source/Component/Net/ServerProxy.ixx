@@ -15,7 +15,7 @@ import ThirdParty.Protobuf;
 export class ServerProxy : public Component, public hv::TcpServerTmpl<SocketChannel>
 {
 protected:
-	friend class System;
+
 	friend class UniversalMemoryPool;
 	ServerProxy(System::WPtr system):Component(system)
 		,TcpServerTmpl(nullptr)
@@ -203,7 +203,7 @@ public: // dll override
 
 	Timer::Ptr GetTimer(){ return pTimer.expired() ? nullptr : pTimer.lock(); }
 
-private:
+protected:
 
 	void _InitConnectedChannel(SocketChannel::CVPtr channel)
 	{

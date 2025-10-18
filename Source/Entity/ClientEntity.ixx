@@ -17,14 +17,13 @@ export enum class EMClientEntityFlag : uint16_t
 export class ClientEntity : public Entity, public BitFlag<EMClientEntityFlag>
 {
 protected:
-	friend class ClientEntityManager;
 	friend class UniversalMemoryPool;
 	ClientEntity(World::WPtr world):Entity(world)
 	{
 		eEntityType = EMEntityType::Client;
 
 		// pDbEntity = std::make_unique<GDb::Player>();
-		pDbEntity = G_InstanceHolder.MemPool->Allocate<GDb::Player>();
+		pDbEntity = P_InstanceHolder->MemPool->Allocate<GDb::Player>();
 		
 	}
 

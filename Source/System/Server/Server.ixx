@@ -40,7 +40,6 @@ public:
 	using WPtr = std::weak_ptr<Server>;
 	
 protected:
-	friend class World;
 	friend class UniversalMemoryPool;
 	
 	Server(World::WPtr world):System(world)

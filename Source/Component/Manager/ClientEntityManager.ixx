@@ -13,7 +13,7 @@ export class ClientEntityManager : public EntityManager<ClientEntity>
 {
 	
 protected:
-	friend class System;
+
 	friend class UniversalMemoryPool;
 	/// @brief timer manager create
 	ClientEntityManager(System::WPtr system):EntityManager(system)
@@ -44,16 +44,6 @@ public:
 
 public: // dll proxy
 
-	ClientEntity::Ptr _AddEntity(uint64_t entityId)
-	{
-		ClientEntity::Ptr entity = G_InstanceHolder.MemPool->Allocate<ClientEntity, World::WPtr>(GetOwner()->GetWorldW());;
-		entity->SetID(entityId);
-
-		std::unique_lock ulock(oMapMutex);
-		mEntityMap[entityId] = entity;
-		return entity;
-	}
-
 	bool RemoveEntity(uint64_t entityId)
 	{
 
@@ -69,6 +59,18 @@ public: // dll proxy
 		}
 
 		return false;
+	}
+
+protected:
+
+	ClientEntity::Ptr _AddEntity(uint64_t entityId)
+	{
+		ClientEntity::Ptr entity = P_InstanceHolder->MemPool->Allocate<ClientEntity, World::WPtr>(GetOwner()->GetWorldW());;
+		entity->SetID(entityId);
+
+		std::unique_lock ulock(oMapMutex);
+		mEntityMap[entityId] = entity;
+		return entity;
 	}
 
 public:

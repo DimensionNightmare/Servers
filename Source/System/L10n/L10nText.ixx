@@ -16,7 +16,6 @@ protected:
 
 	}
 
-	friend class World;
 	friend class UniversalMemoryPool;
 public:
 	using Ptr = std::shared_ptr<L10nText>;
@@ -38,7 +37,8 @@ public:
 	/// absl\hash\internal\hash.h kSeed
 	bool Awake() override;
 
-private:
+protected:
+
 	const std::string& _GetTipText(EL10nCode type, ELogLevel& logLevel)
 	{
 		logLevel = ELogLevel_None;

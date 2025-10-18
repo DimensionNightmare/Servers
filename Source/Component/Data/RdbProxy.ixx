@@ -15,7 +15,6 @@ export enum class EMSqlDbNameEnum : uint16_t
 export class RdbProxy : public Component
 {
 protected:
-	friend class System;
 	friend class UniversalMemoryPool;
 	RdbProxy(System::WPtr system):Component(system)
 	{
@@ -63,7 +62,7 @@ public:
 
 			std::string connectStr = std::format("{} dbname = {}", *value, dbName);
 
-			auto connection = G_InstanceHolder.MemPool->Allocate<pqxx::connection, const std::string&>(connectStr);
+			auto connection = P_InstanceHolder->MemPool->Allocate<pqxx::connection, const std::string&>(connectStr);
 
 			pRdbProxys.emplace(key, std::move(connection));
 		}

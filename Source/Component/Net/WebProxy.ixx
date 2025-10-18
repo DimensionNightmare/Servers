@@ -8,7 +8,7 @@ import ThirdParty.Libhv;
 export class WebProxy : public Component, public hv::HttpServer
 {
 protected:
-	friend class System;
+
 	friend class UniversalMemoryPool;
 	WebProxy(System::WPtr system):Component(system)
 	{
@@ -49,7 +49,7 @@ public:
 
 		GetOwner()->GetWorld()->AddEvent(EMEventType::ServerStart, GetSelfW<WebProxy>(), &WebProxy::Start);
 
-		pService = G_InstanceHolder.MemPool->Allocate<hv::HttpService>();
+		pService = P_InstanceHolder->MemPool->Allocate<hv::HttpService>();
 		
 		service = pService.get();
 		service->Static("/", "./");

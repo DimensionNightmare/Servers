@@ -6,14 +6,13 @@ import ECSW;
 export class Timer : public System
 {
 protected:
-	friend class World;
 	friend class UniversalMemoryPool;
 	/// @brief
 	Timer(World::WPtr world):System(world)
 	{
 		emSystemType = EMSystemType::Timer;
 
-		pLoop = G_InstanceHolder.MemPool->Allocate<hv::EventLoopThread>();
+		pLoop = P_InstanceHolder->MemPool->Allocate<hv::EventLoopThread>();
 
 	}
 public:
