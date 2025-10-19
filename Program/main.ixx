@@ -6,6 +6,7 @@ import std.compat;
 import Logger;
 import UniversalMemoryPool;
 import ECSW;
+import HotReload;
 
 enum class EMLunchType : uint8_t
 {
@@ -33,9 +34,9 @@ export int main(int argc, char** argv)
 #ifdef _WIN32
 	system("chcp 65001");
 	Platform::SetDebugFlag();
-// 	SetCurrentDirectoryA(execPath.parent_path().string().c_str());
-// #elif __unix__
-// 	chdir(execPath.parent_path().string().c_str());
+	// 	SetCurrentDirectoryA(execPath.parent_path().string().c_str());
+	// #elif __unix__
+	// 	chdir(execPath.parent_path().string().c_str());
 #endif
 
 	// dynamic initializer
@@ -48,76 +49,76 @@ export int main(int argc, char** argv)
 
 		std::vector<std::future<void>> ones;
 
-		for(int i = 0; i < threads; i++)
+		for (int i = 0; i < threads; i++)
 		{
 			ones.push_back(std::async(std::launch::async, [=]()
-			{
-				TIMERSTART(MemPoolAlloc);
-				
-				try
 				{
-					std::random_device rd;
-					std::mt19937 gen(rd());
-					std::uniform_int_distribution<uint64_t> dis(0, 99999999999);
+					TIMERSTART(MemPoolAlloc);
 
-					for(int j = 0; j < count; j++)
+					try
 					{
-						auto a = P_InstanceHolder->MemPool->Allocate<DimensionNightmare>();
-						// auto a = new DimensionNightmare();
-						// auto ramdon = dis(gen);
-						a->Dispose();
+						std::random_device rd;
+						std::mt19937 gen(rd());
+						std::uniform_int_distribution<uint64_t> dis(0, 99999999999);
 
-						// delete a;
+						for (int j = 0; j < count; j++)
+						{
+							auto a = P_InstanceHolder->MemPool->Allocate<DimensionNightmare>();
+							// auto a = new DimensionNightmare();
+							// auto ramdon = dis(gen);
+							a->Dispose();
+
+							// delete a;
+						}
 					}
-				}
-				catch (const std::exception& e)
-				{
-					printf("MemPoolAlloc exception: %s\n", e.what());
-				}
-				
+					catch (const std::exception& e)
+					{
+						printf("MemPoolAlloc exception: %s\n", e.what());
+					}
 
-				TIMEREND(MemPoolAlloc);
-				DURATION_ms(MemPoolAlloc);
 
-			}));
+					TIMEREND(MemPoolAlloc);
+					DURATION_ms(MemPoolAlloc);
+
+				}));
 		}
 
 		std::vector<std::future<void>> twos;
 
-		for(int i = 0; i < threads; i++)
+		for (int i = 0; i < threads; i++)
 		{
 			twos.push_back(std::async(std::launch::async, [=]()
-			{
-				TIMERSTART(SysMemAlloc);
-
-				try
 				{
-					std::random_device rd;
-					std::mt19937 gen(rd());
-					std::uniform_int_distribution<uint64_t> dis(0, 99999999999);
+					TIMERSTART(SysMemAlloc);
 
-					for(int j = 0; j < count; j++)
+					try
 					{
-						auto a = std::make_shared<DimensionNightmare>();
-						// auto ramdon = dis(gen);
-						a->Dispose();
-					}
-				}
-				catch (const std::exception& e)
-				{
-					printf("SysMemAlloc exception: %s\n", e.what());
-				}
+						std::random_device rd;
+						std::mt19937 gen(rd());
+						std::uniform_int_distribution<uint64_t> dis(0, 99999999999);
 
-				TIMEREND(SysMemAlloc);
-				DURATION_ms(SysMemAlloc);
-			}));
+						for (int j = 0; j < count; j++)
+						{
+							auto a = std::make_shared<DimensionNightmare>();
+							// auto ramdon = dis(gen);
+							a->Dispose();
+						}
+					}
+					catch (const std::exception& e)
+					{
+						printf("SysMemAlloc exception: %s\n", e.what());
+					}
+
+					TIMEREND(SysMemAlloc);
+					DURATION_ms(SysMemAlloc);
+				}));
 		}
 
-		for(auto& one : ones)
+		for (auto& one : ones)
 		{
 			one.get();
 		}
-		for(auto& two : twos)
+		for (auto& two : twos)
 		{
 			two.get();
 		}
@@ -150,20 +151,20 @@ export int main(int argc, char** argv)
 		programConfig.launchConfig.emplace(split.substr(0, pos), split.substr(pos + 1));
 	}
 
-	if(!InitProgramConfig(programConfig))
+	if (!InitProgramConfig(programConfig))
 	{
 		goto POINT_EXIT;
 	}
 
 	// path init. binary,log,dll...
 	{
-		
+
 		std::filesystem::path path = argv[0];
 		programConfig.iniFileConfig["Common"].emplace("ProgramDir", path.string());
 
 		path = path.parent_path();
 		programConfig.iniFileConfig["Common"].emplace("WorkDir", path.string());
-	
+
 		path = path / "Runtime/Logs";
 		programConfig.iniFileConfig["Common"].emplace("LogFolder", path.string());
 
@@ -217,7 +218,7 @@ export int main(int argc, char** argv)
 
 			WriteDumpFile(pidFolderPath / "MiniDump.dmp", ExceptionInfo);
 
-			App->GetSystem<HotReload>(EMSystemType::HotReload)->SetExcptionState();
+			P_InstanceHolder->AuthWorld->GetSystem<HotReload>(EMSystemType::HotReload)->SetExcptionState();
 
 			CloseApp();
 			AppRun = false;
@@ -251,7 +252,7 @@ export int main(int argc, char** argv)
 			exit(signum);
 		};
 
-	struct sigaction sa{};
+	struct sigaction sa {};
 	sa.sa_sigaction = UnhandledHandler;
 	sigemptyset(&sa.sa_mask);
 	sa.sa_flags = SA_SIGINFO;
@@ -271,7 +272,7 @@ export int main(int argc, char** argv)
 	}
 
 	App->StartWorlds();
-	
+
 	LoggerPrint::Log(nullptr, ELogLevel_Normal, "hello ~ Program Instance addr->(InstanceHolder*){}", static_cast<void*>(P_InstanceHolder.get()));
 
 	AppRun = true;
@@ -281,7 +282,7 @@ export int main(int argc, char** argv)
 			std::stringstream ss;
 			std::string str;
 
-			
+
 
 			auto quit = [&]()
 				{
@@ -303,7 +304,7 @@ export int main(int argc, char** argv)
 				{
 					std::string fileName;
 					ss >> fileName;
-					if(!fileName.empty())
+					if (!fileName.empty())
 					{
 						fileName.append(".dmp");
 						WriteDumpFile(pidFolderPath / fileName);
@@ -325,7 +326,7 @@ export int main(int argc, char** argv)
 					Platform::STARTUPINFOA startInfo{};
 					startInfo.cb = sizeof(startInfo);
 
-					
+
 					startInfo.dwFlags = 0x00000001; // STARTF_USESHOWWINDOW 0x00000001
 					startInfo.wShowWindow = 1; // SW_SHOWNORMAL 1
 					if (Platform::CreateProcessA(nullptr, allStr.data(), nullptr, nullptr, 0, 0x00000010, nullptr, nullptr, &startInfo, &pinfo)) // CREATE_NEW_CONSOLE 0x00000010
@@ -341,12 +342,12 @@ export int main(int argc, char** argv)
 					}
 				};
 
-			std::unordered_map<std::string, std::function<void()>> cmdMap = 
+			std::unordered_map<std::string, std::function<void()>> cmdMap =
 			{
 				#define one(func) {#func, func}
 
 				one(quit), one(abort), one(dump_memory), one(open),
-				
+
 				#undef one
 			};
 
@@ -356,7 +357,7 @@ export int main(int argc, char** argv)
 			{
 				// std::getline(std::cin, str);
 
-				while(AppRun && !Platform::_kbhit())
+				while (AppRun && !Platform::_kbhit())
 				{
 					Platform::Sleep(200);
 				}
@@ -370,7 +371,7 @@ export int main(int argc, char** argv)
 				std::cout << ch;
 				str += ch;
 
-				if(str.back() == '\r' || str.back() == '\n')
+				if (str.back() == '\r' || str.back() == '\n')
 				{
 					ss.clear();
 					ss.str(str);

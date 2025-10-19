@@ -17,13 +17,14 @@ namespace LogColor
 };
 
 template <typename T>
-concept HasGetWorld = requires(std::shared_ptr<T> t) {
+concept HasGetWorld = requires(std::shared_ptr<T> t)
+{
 	{ t->GetWorld() } -> std::same_as<World::Ptr>;
 };
 
 export class LoggerPrint : public System
 {
-	
+
 private:
 	inline static std::shared_ptr<LoggerPrint> PInstanceLoggerPrint;
 
@@ -33,10 +34,10 @@ private:
 
 
 protected:
-	
+
 	friend class UniversalMemoryPool;
-	LoggerPrint(World::WPtr world):System(world),
-	AddLogFile(this)
+	LoggerPrint(World::WPtr world) :System(world),
+		AddLogFile(this)
 	{
 		emSystemType = EMSystemType::LoggerPrint;
 	}
@@ -46,7 +47,7 @@ public:
 	using CVPtr = const Ptr&;
 	virtual ~LoggerPrint()
 	{
-		
+
 	}
 
 	virtual void Dispose()
@@ -68,7 +69,7 @@ public:
 
 		World::CVPtr world = GetWorld();
 		std::string* value = world->LaunchParam("LoggerLevel");
-		if(!value)
+		if (!value)
 		{
 			return false;
 		}
@@ -79,17 +80,17 @@ public:
 		SetLoggerLevel(logLevel);
 
 		std::filesystem::path path = *world->LaunchParam("PidLogFolder");
-		if(!std::filesystem::exists(path))
+		if (!std::filesystem::exists(path))
 		{
 			std::filesystem::create_directories(path);
 		}
-		OPidLogFile = std::ofstream( std::format("{}/Output.log", path.string()), std::ios::app);
-		
+		OPidLogFile = std::ofstream(std::format("{}/Output.log", path.string()), std::ios::app);
+
 		return true;
 	}
 
 	template <typename... Args>
-    void Record(World::Ptr world, ELogLevel level, const std::format_string<Args...>& fmt, Args&&... args)
+	void Record(World::Ptr world, ELogLevel level, const std::format_string<Args...>& fmt, Args&&... args)
 	{
 		if (level < OELogLevel)
 		{
@@ -109,18 +110,18 @@ public:
 		{
 			return;
 		}
-	
+
 		flush(world, level, std::vformat(fmt, std::make_format_args(args...)));
 	}
 
 	L10nText::Ptr GetL10nText() { return pL10nText.expired() ? nullptr : pL10nText.lock(); }
 
-	void SetL10nText(L10nText::WPtr l10n){ pL10nText = l10n; }
+	void SetL10nText(L10nText::WPtr l10n) { pL10nText = l10n; }
 
 public:
 
 	template <HasGetWorld T, typename... Args>
-    static void Log(std::shared_ptr<T> owner, ELogLevel level, const std::format_string<Args...>& fmt, Args&&... args)
+	static void Log(std::shared_ptr<T> owner, ELogLevel level, const std::format_string<Args...>& fmt, Args&&... args)
 	{
 		Log(owner->GetWorld(), level, fmt, std::forward<Args>(args)...);
 	}
@@ -132,13 +133,13 @@ public:
 	}
 
 	template <typename... Args>
-    static void Log(World::Ptr world, ELogLevel level, const std::format_string<Args...>& fmt, Args&&... args)
+	static void Log(World::Ptr world, ELogLevel level, const std::format_string<Args...>& fmt, Args&&... args)
 	{
 		GetInstance()->Record(world, level, fmt, std::forward<Args>(args)...);
 	}
 
 	template <typename... Args>
-    static void Log(World::Ptr world, EL10nCode code, Args&&... args)
+	static void Log(World::Ptr world, EL10nCode code, Args&&... args)
 	{
 		GetInstance()->Record(world, code, std::forward<Args>(args)...);
 	}
@@ -147,9 +148,9 @@ protected:
 
 	static LoggerPrint::Ptr GetInstance()
 	{
-		if(!PInstanceLoggerPrint)
+		if (!PInstanceLoggerPrint)
 		{
-			if(P_InstanceHolder->AuthWorld)
+			if (P_InstanceHolder->AuthWorld)
 			{
 				PInstanceLoggerPrint = P_InstanceHolder->AuthWorld->GetSystem<LoggerPrint>(EMSystemType::LoggerPrint);
 			}
@@ -168,7 +169,7 @@ protected:
 		}
 
 		std::string* sTitle = nullptr;
-		if(world)
+		if (world)
 		{
 			sTitle = world->LaunchParam("svrName");
 		}
@@ -190,7 +191,7 @@ protected:
 			case ELogLevel_Debug:
 				result = std::format("[{}] {} -> \n\t{}\n", GetNowTimeStr(), sTitle ? *sTitle : "", // olocation.function_name(),
 					result);
-					break;
+				break;
 			default:
 				return;
 		}
@@ -202,10 +203,10 @@ protected:
 
 	void LogToFile(const std::string* serverName, const std::string& logMessage)
 	{
-		if(serverName)
+		if (serverName)
 		{
 			std::shared_ptr<std::ofstream> logFile;
-			if(mLogFileMap.count(*serverName) == 0)
+			if (mLogFileMap.count(*serverName) == 0)
 			{
 				std::filesystem::path path = *GetWorld()->LaunchParam("PidLogFolder");
 				path /= std::format("{}.log", *serverName);
@@ -216,8 +217,8 @@ protected:
 			{
 				logFile = mLogFileMap[*serverName];
 			}
-			
-			
+
+
 			*logFile << logMessage;
 			logFile->flush();
 			return;
@@ -235,7 +236,7 @@ protected:
 		std::shared_ptr<std::ofstream> logFile = std::make_shared<std::ofstream>(filePath, mode);
 
 		mLogFileMap.emplace(filePath, logFile);
-		
+
 		return logFile;
 	}
 
@@ -273,9 +274,9 @@ bool L10nText::Awake()
 
 	eType = EL10nType_zh_CN;
 	if (value = world->LaunchParam("l10nLang"))
-	{	
+	{
 		std::string strType = "EL10nType_" + *value;
-		if(!EL10nType_Parse(strType, &eType))
+		if (!EL10nType_Parse(strType, &eType))
 		{
 			LoggerPrint::Log(nullptr, ELogLevel_Error, "load I10n l10nLang Error !");
 			return false;
