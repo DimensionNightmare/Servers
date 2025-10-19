@@ -42,10 +42,21 @@ public:
 		::operator delete(pPool);
 	}
 
+	std::string GetMemoryRecordInfo(void* raw_memory)
+	{
+		auto it = mAllocatedRecords.find(raw_memory);
+		if(it != mAllocatedRecords.end())
+		{
+			const auto& location = it->second.location;
+
+			return std::format("{},{},{}", location.file_name(), location.line(), location.function_name());
+		}
+
+		return "";
+	}
+
 	template<typename T, typename... Args>
-	std::shared_ptr<T> Allocate(Args&&... args
-		,const std::source_location& loc = std::source_location::current()
-	)
+	std::shared_ptr<T> Allocate(Args&&... args, const std::source_location& loc = std::source_location::current())
 	{
 		constexpr size_t size = std::bit_ceil(sizeof(T));
 		void* raw_memory = nullptr;
@@ -60,21 +71,20 @@ public:
 			}
 
 			if (raw_memory)
-			{	
+			{
 				// 记录分配信息（包含源代码位置）
 				RecordAllocationInfo(raw_memory, size, loc);
-				
-				T* object_ptr = new(raw_memory) T(std::forward<Args>(args)...);
 
-				return std::shared_ptr<T>(
-					object_ptr,
-					[this, raw_memory, size](T* ptr)
+				T* object_ptr = new (raw_memory) T(std::forward<Args>(args)...);
+
+				return {
+					object_ptr
+					, [this, raw_memory, size](T* ptr)
 					{
 						ptr->~T();
-						ptr = nullptr;
 						RollbackAllocation(raw_memory, size);
 					}
-				);
+				};
 			}
 
 			// return std::shared_ptr<T>(new T(std::forward<Args>(args)...));

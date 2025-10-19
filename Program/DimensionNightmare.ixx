@@ -258,12 +258,7 @@ public:
 		P_InstanceHolder->AuthWorld->AddSystem<LoggerPrint>();
 		P_InstanceHolder->AuthWorld->AddSystem<L10nText>();
 
-		HotReload::CVPtr pHotDll = P_InstanceHolder->AuthWorld->AddSystem<HotReload>();
-		if (!pHotDll->ReloadHandle())
-		{
-			return false;
-		}
-		
+		P_InstanceHolder->AuthWorld->AddSystem<HotReload>();
 
 		for(auto& [serverEnum, serverName] : ServerTypeList)
 		{
@@ -274,13 +269,11 @@ public:
 				World::CVPtr world = P_InstanceHolder->MemPool->Allocate<World>();
 				world->MoveLuanchConfigToSelf(programConfig.iniFileConfig[serverName]);
 
-				if(!InitServer(world, pHotDll))
+				if(!InitServer(world))
 				{
 					world->Dispose();
 					continue;
 				}
-
-				world->Broadcast(EMEventType::ServerStart);
 
 				oWorlds.push_back(world);
 			}
@@ -296,7 +289,7 @@ public:
 
 	/// @brief create dnServer
 	/// @param pHotDll if mutiServer, will own common
-	bool InitServer(World::CVPtr world, HotReload::CVPtr pHotDll)
+	bool InitServer(World::CVPtr world)
 	{
 		world->AddSystem<Timer>();
 
@@ -373,22 +366,6 @@ public:
 				LoggerPrint::Log(nullptr, EL10nCode_SrvTypeNotVaild);
 				return false;
 			}
-		}
-
-		try
-		{
-			dnServer->Broadcast(EMEventType::ServerStart);
-		}
-		catch(const std::exception& e)
-		{
-			LoggerPrint::Log(world, ELogLevel_Error, "dnserver lunch error! error: {}", e.what());
-			return false;
-		}
-		
-		if (pHotDll->pInitHotReload(world) != 1)
-		{
-			LoggerPrint::Log(world, ELogLevel_Error, "program lunch OnRegHotReload error!");
-			return false;
 		}
 
 		return true;
@@ -481,6 +458,41 @@ public:
 		World::Dispose();
 
 		mCmdHandle.clear();
+	}
+
+	bool StartWorlds()
+	{
+		HotReload::CVPtr pHotDll = P_InstanceHolder->AuthWorld->GetSystem<HotReload>(EMSystemType::HotReload);
+		if (!pHotDll->ReloadHandle())
+		{
+			return false;
+		}
+
+		for(auto world : oWorlds)
+		{
+			if (pHotDll->pInitHotReload(world) != 1)
+			{
+				LoggerPrint::Log(world, ELogLevel_Error, "program lunch OnRegHotReload error!");
+				return false;
+			}
+
+			
+			try
+			{
+				Server::Ptr dnServer = world->GetSystem<Server>(EMSystemType::Server);
+				dnServer->Broadcast(EMEventType::ServerStart);
+			}
+			catch(const std::exception& e)
+			{
+				LoggerPrint::Log(world, ELogLevel_Error, "dnserver lunch error! error: {}", e.what());
+				return false;
+			}
+
+			world->Broadcast(EMEventType::ServerStart);
+		}
+
+
+		return true;
 	}
 
 private:

@@ -269,6 +269,8 @@ export int main(int argc, char** argv)
 		CloseApp();
 		goto POINT_EXIT;
 	}
+
+	App->StartWorlds();
 	
 	LoggerPrint::Log(nullptr, ELogLevel_Normal, "hello ~ Program Instance addr->(InstanceHolder*){}", static_cast<void*>(P_InstanceHolder.get()));
 
@@ -409,6 +411,7 @@ export int main(int argc, char** argv)
 	LoggerPrint::Log(nullptr, ELogLevel_Normal, "bye ~");
 POINT_EXIT:
 
+	P_InstanceHolder->Unload();
 	P_InstanceHolder = nullptr;
 
 	return 0;

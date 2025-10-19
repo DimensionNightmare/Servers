@@ -67,11 +67,6 @@ export struct InstanceHolder
 		MemPool = std::make_shared<UniversalMemoryPool>();
 	}
 
-	~InstanceHolder()
-	{
-		Unload();
-	}
-
 	void Unload();
 
 	UniversalMemoryPool::Ptr MemPool;
@@ -153,7 +148,11 @@ public:
 		if(!bIsDisposed)
 		{
 			// throw std::runtime_error("Object not disposed! Please check code!");
-			std::cerr << "Object not disposed! Please check code!\n" << Platform::GetStackTrace() << std::endl;
+			// std::cerr << "Object not disposed! Please check code!\n" << Platform::GetStackTrace() << std::endl;
+			if(P_InstanceHolder->MemPool)
+			{
+				std::cerr << "Object not disposed! Please check code!\n" << P_InstanceHolder->MemPool->GetMemoryRecordInfo(this) << std::endl;
+			}
 		}
 	}
 	
@@ -299,12 +298,12 @@ public: // dll override
 	}
 
 	template<typename T>
-	std::shared_ptr<T> AddComponent()
+	std::shared_ptr<T> AddComponent(const std::source_location& loc = std::source_location::current())
 	{
 		static_assert(std::is_base_of_v<Component, T>, "T must inherit from component");
 		try
 		{
-			std::shared_ptr<T> component = P_InstanceHolder->MemPool->Allocate<T>(shared_from_this());
+			std::shared_ptr<T> component = P_InstanceHolder->MemPool->Allocate<T>(shared_from_this(), loc);
 			if(!component->Awake())
 			{
 				component->Dispose();
@@ -390,12 +389,12 @@ public:
 	EMSystemType GetSystemType() { return emSystemType; }
 
 	template<typename T>
-	std::shared_ptr<T> AddComponent()
+	std::shared_ptr<T> AddComponent(const std::source_location& loc = std::source_location::current())
 	{
 		static_assert(std::is_base_of_v<Component, T>, "T must inherit from component");
 		try
 		{
-			std::shared_ptr<T> component = P_InstanceHolder->MemPool->Allocate<T, System::WPtr>(GetSelfW<System>());
+			std::shared_ptr<T> component = P_InstanceHolder->MemPool->Allocate<T, System::WPtr>(GetSelfW<System>(), loc);
 			if(!component->Awake())
 			{
 				component->Dispose();
@@ -441,12 +440,12 @@ public:
 	}
 
 	template<typename T = System>
-	std::shared_ptr<T> AddSystem()
+	std::shared_ptr<T> AddSystem(const std::source_location& loc = std::source_location::current())
 	{
 		static_assert(std::is_base_of_v<System, T>, "T must inherit from System");
 		try
 		{
-			std::shared_ptr<T> system = P_InstanceHolder->MemPool->Allocate<T, World::WPtr>(GetSelfW<World>());
+			std::shared_ptr<T> system = P_InstanceHolder->MemPool->Allocate<T, World::WPtr>(GetSelfW<World>(), loc);
 			if(!system->Awake())
 			{
 				system->Dispose();
