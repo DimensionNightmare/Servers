@@ -18,6 +18,7 @@ export enum class EMServerType : uint8_t
 
 	DedicatedServer 	,
 	Max					,
+	Client			= 255,
 };
 
 export std::array<std::pair<EMServerType, std::string>, 7> ServerTypeList = {{

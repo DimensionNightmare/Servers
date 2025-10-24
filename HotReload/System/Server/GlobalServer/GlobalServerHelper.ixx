@@ -141,7 +141,7 @@ public:
 	{
 		msgHandle->RegMsgHandle();
 
-		if (ServerProxy::CVPtr proxy = GetComponent<ServerProxy>(EMComponentType::ServerProxy))
+		if (ServerProxyHelper::Ptr proxy = GetServerProxy())
 		{
 			proxy->onConnection = [this](SocketChannel::CVPtr channel)
 				{
@@ -232,7 +232,7 @@ public:
 
 		}
 
-		if (ClientProxy::CVPtr proxy = GetComponent<ClientProxy>(EMComponentType::ClientProxy))
+		if (ClientProxyHelper::Ptr proxy = GetClientProxy())
 		{
 			proxy->onConnection = [this,msgHandle](SocketChannel::CVPtr channel)
 				{

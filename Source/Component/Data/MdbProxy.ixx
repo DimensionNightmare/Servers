@@ -37,7 +37,7 @@ public:
 
 	void InitDatabase()
 	{
-		World::CVPtr world = GetOwner()->GetWorld();
+		World::CVPtr world = GetWorld();
 
 		std::string* value = world->LaunchParam("connection");
 

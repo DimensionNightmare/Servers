@@ -40,7 +40,7 @@ public:
 
 	void InitDatabase()
 	{
-		World::CVPtr world = GetOwner()->GetWorld();
+		World::CVPtr world = GetWorld();
 
 		std::string* value = world->LaunchParam("connection");
 		pqxx::connection check(*value);
@@ -57,7 +57,7 @@ public:
 			if (!checkTxn.query_value<bool>(std::format("SELECT EXISTS (SELECT 1 FROM pg_database WHERE datname = '{}');", dbName)))
 			{
 				checkTxn.exec(std::format("CREATE DATABASE \"{}\";", dbName));
-				LoggerPrint::Log(world, ELogLevel_Debug, "Create Database:{}", dbName);
+				LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "Create Database:{}", dbName);
 			}
 
 			std::string connectStr = std::format("{} dbname = {}", *value, dbName);

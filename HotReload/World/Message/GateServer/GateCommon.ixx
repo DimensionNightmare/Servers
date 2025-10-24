@@ -57,7 +57,7 @@ export namespace GateServerMessage
 		ClientProxyHelper::Ptr clientProxy = dnServer->GetClientProxy();
 		ServerProxyHelper::Ptr serverProxy = dnServer->GetServerProxy();
 
-		LoggerPrint::Log(dnServer, ELogLevel_Debug, "Client:{}, port:{}", clientProxy->remote_host, clientProxy->remote_port);
+		LoggerPrint::Log(server, ELogLevel_Debug, "Client:{}, port:{}", clientProxy->remote_host, clientProxy->remote_port);
 
 		clientProxy->SetRegistState(EMRegistState::Registing);
 
@@ -109,7 +109,7 @@ export namespace GateServerMessage
 		}
 		else
 		{
-			LoggerPrint::Log(dnServer, response.errorcode());
+			LoggerPrint::Log(server, response.errorcode());
 			// dnServer->IsRun() = false; //exit application
 			clientProxy->SetRegistState(EMRegistState::None);
 		}
@@ -126,10 +126,10 @@ export namespace GateServerMessage
 			return;
 		}
 
-		GateServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<GateServerHelper>(EMSystemType::Server);
-		ServerEntityManagerHelper::Ptr entityMan = dnServer->GetServerEntityManager();
+		GateServerHelper::Ptr server = channel->GetWorld()->GetSystem<GateServerHelper>(EMSystemType::Server);
+		ServerEntityManagerHelper::Ptr entityMan = server->GetServerEntityManager();
 
-		LoggerPrint::Log(dnServer, ELogLevel_Debug, "ip Reqregist: {}, {}", channel->peeraddr(), request.servertype());
+		LoggerPrint::Log(server, ELogLevel_Debug, "ip Reqregist: {}, {}", channel->peeraddr(), request.servertype());
 
 		GMsg::COM_ResRegistSrv response;
 
@@ -165,7 +165,7 @@ export namespace GateServerMessage
 
 			channel->setContextPtr(entity);
 
-			response.set_retservertype(static_cast<uint8_t>(dnServer->GetServerType()));
+			response.set_retservertype(static_cast<uint8_t>(server->GetServerType()));
 		}
 		else
 		{
@@ -182,7 +182,7 @@ export namespace GateServerMessage
 			std::string binData;
 			request.SerializeToString(&binData);
 			
-			ClientProxyHelper::Ptr clientProxy = dnServer->GetClientProxy();
+			ClientProxyHelper::Ptr clientProxy = server->GetClientProxy();
 
 			MessagePackAndSend(0, EMMsgDeal::Ret, request.GetDescriptor()->full_name(), binData, clientProxy->GetChannel());
 		}

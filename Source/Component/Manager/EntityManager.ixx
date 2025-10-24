@@ -12,7 +12,7 @@ protected:
 	/// @brief timer manager create
 	EntityManager(System::WPtr system):Component(system)
 	{
-		pTimer = GetOwner()->GetWorld()->GetSystemW<Timer>(EMSystemType::Timer);
+		pTimer = GetWorld()->GetSystemW<Timer>(EMSystemType::Timer);
 	}
 	
 public:

@@ -17,7 +17,7 @@ export namespace DatabaseServerMessage
 
 		ClientProxyHelper::CVPtr clientProxy = dnServer->GetClientProxy();
 		
-		LoggerPrint::Log(dnServer, ELogLevel_Debug, "database req regist Client:{}, port:{}", clientProxy->remote_host, clientProxy->remote_port);
+		LoggerPrint::Log(server, ELogLevel_Debug, "database req regist Client:{}, port:{}", clientProxy->remote_host, clientProxy->remote_port);
 		
 		clientProxy->SetRegistState(EMRegistState::Registing);
 
@@ -63,7 +63,7 @@ export namespace DatabaseServerMessage
 		}
 		else
 		{
-			LoggerPrint::Log(dnServer, response.errorcode());
+			LoggerPrint::Log(server, response.errorcode());
 			// dnServer->IsRun() = false; //exit application
 			clientProxy->SetRegistState(EMRegistState::None);
 		}

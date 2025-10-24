@@ -19,7 +19,7 @@ export namespace AuthServerMessage
 
 		uint32_t msgId = clientProxy->GetMsgId();
 
-		LoggerPrint::Log(dnServer, ELogLevel_Debug, "Client:{}, port:{}", clientProxy->remote_host, clientProxy->remote_port);
+		LoggerPrint::Log(server, ELogLevel_Debug, "Client:{}, port:{}", clientProxy->remote_host, clientProxy->remote_port);
 		
 		clientProxy->SetRegistState(EMRegistState::Registing);
 
@@ -71,7 +71,7 @@ export namespace AuthServerMessage
 		}
 		else
 		{
-			LoggerPrint::Log(dnServer, response.errorcode());
+			LoggerPrint::Log(server, response.errorcode());
 			// server->IsRun() = false; //exit application
 			clientProxy->SetRegistState(EMRegistState::None);
 		}

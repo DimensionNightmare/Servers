@@ -5,8 +5,9 @@ import ThirdParty.Protobuf;
 import ThirdParty.Libhv;
 import Server;
 import std;
+import ThirdParty.PbGen;
 
-export class MessageRegister
+export struct MessageRegister
 {
 
 public:
@@ -77,7 +78,7 @@ public:
 
 	virtual void RegApiHandle(Server::CVPtr server){}
 
-protected:
+public:
 	std::unordered_map<size_t, std::pair<const Message*, std::function<void(SocketChannel::CVPtr, uint32_t, const std::string&)>>> MHandleMap;
 	std::unordered_map<size_t, std::pair<const Message*, std::function<void(SocketChannel::CVPtr, const std::string&)>>> MHandleRetMap;
 	std::unordered_map<size_t, std::pair<const Message*, std::function<void(SocketChannel::CVPtr, uint32_t, const std::string&)>>> MHandleRedirectMap;

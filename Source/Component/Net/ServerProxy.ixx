@@ -24,7 +24,7 @@ protected:
 	{
 		eComponentType = EMComponentType::ServerProxy;
 		
-		pTimer = GetOwner()->GetWorld()->GetSystemW<Timer>(EMSystemType::Timer);
+		pTimer = GetWorld()->GetSystemW<Timer>(EMSystemType::Timer);
 	}
 
 public:
@@ -49,7 +49,7 @@ public:
 			case EMServerType::GlobalServer:
 			case EMServerType::AuthServer:
 			{
-				std::string* param = GetOwner()->GetWorld()->LaunchParam("port");
+				std::string* param = GetWorld()->LaunchParam("port");
 				if (!param)
 				{
 					LoggerPrint::Log(GetWorld(), EL10nCode_SrvNeedIPPort);
@@ -100,7 +100,7 @@ public:
 
 		LoggerPrint::Log(GetWorld(), EL10nCode_SrvListenOn, port, listenfd);
 
-		GetOwner()->GetWorld()->AddEvent(EMEventType::ServerStart, GetSelfW<ServerProxy>(), &ServerProxy::Start);
+		GetWorld()->AddEvent(EMEventType::ServerStart, GetSelfW<ServerProxy>(), &ServerProxy::Start);
 
 		return true;
 	}

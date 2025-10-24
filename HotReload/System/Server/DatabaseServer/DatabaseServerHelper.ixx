@@ -178,7 +178,7 @@ public:
 	{
 		msgHandle->RegMsgHandle();
 
-		if (ClientProxy::CVPtr proxy = GetComponent<ClientProxy>(EMComponentType::ClientProxy))
+		if (ClientProxyHelper::Ptr proxy = GetClientProxy())
 		{
 			proxy->onConnection = [this,msgHandle](SocketChannel::CVPtr channel)
 				{

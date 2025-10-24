@@ -32,7 +32,7 @@ public:
 
 	bool Awake() override
 	{
-		World::CVPtr world = GetOwner()->GetWorld();
+		World::CVPtr world = GetWorld();
 
 		uint16_t port = 0;
 		std::string* value = world->LaunchParam("port");
@@ -47,7 +47,7 @@ public:
 
 		LoggerPrint::Log(GetWorld(), EL10nCode_SrvListenOn, port, 0);
 
-		GetOwner()->GetWorld()->AddEvent(EMEventType::ServerStart, GetSelfW<WebProxy>(), &WebProxy::Start);
+		GetWorld()->AddEvent(EMEventType::ServerStart, GetSelfW<WebProxy>(), &WebProxy::Start);
 
 		pService = P_InstanceHolder->MemPool->Allocate<hv::HttpService>();
 		

@@ -15,11 +15,10 @@ using namespace std::chrono;
 
 #define MSGSET writer->response->SetBody
 
-export void ApiAuth(Server::CVPtr dnServer)
+export void ApiAuth(Server::CVPtr server)
 {
-	Server::WPtr server = dnServer->GetSelfW<Server>();
 
-	WebProxyHelper::Ptr webProxyHelper = dnServer->GetComponent<WebProxyHelper>(EMComponentType::WebProxy);
+	WebProxyHelper::Ptr webProxyHelper = server->GetComponent<WebProxyHelper>(EMComponentType::WebProxy);
 
 	webProxyHelper->service->POST("/Auth/User/LoginToken", [server](const hv::HttpRequestPtr& req, const hv::HttpResponseWriterPtr& writer)
 		{
@@ -43,8 +42,7 @@ export void ApiAuth(Server::CVPtr dnServer)
 			accInfo.set_authname(authName);
 			accInfo.set_authstring(authString);
 
-			Server::Ptr serverTemp = server.lock();
-			if (!serverTemp)
+			if (!server)
 			{
 				errData["Code"] = http_status::HTTP_STATUS_BAD_REQUEST;
 				errData["Message"] = "Server Disconnect!";
@@ -53,7 +51,7 @@ export void ApiAuth(Server::CVPtr dnServer)
 				return;
 			}
 
-			AuthServerHelper::Ptr dnServer = serverTemp->GetSelf<AuthServerHelper>();
+			AuthServerHelper::Ptr dnServer = server->GetSelf<AuthServerHelper>();
 
 			try
 			{
@@ -84,7 +82,7 @@ export void ApiAuth(Server::CVPtr dnServer)
 			}
 			catch (const std::exception& e)
 			{
-				LoggerPrint::Log(dnServer, ELogLevel_Debug, "{}", e.what());
+				LoggerPrint::Log(server, ELogLevel_Debug, "{}", e.what());
 				errData["Code"] = http_status::HTTP_STATUS_BAD_REQUEST;
 				errData["Message"] = "Server Error!!";
 				MSGSET(errData.dump());
@@ -173,8 +171,7 @@ export void ApiAuth(Server::CVPtr dnServer)
 			accInfo.set_authname(authName);
 			accInfo.set_authstring(authString);
 
-			Server::Ptr serverTemp = server.lock();
-			if (!serverTemp)
+			if (!server)
 			{
 				errData["Code"] = http_status::HTTP_STATUS_BAD_REQUEST;
 				errData["Message"] = "Server Disconnect!";
@@ -183,7 +180,7 @@ export void ApiAuth(Server::CVPtr dnServer)
 				return;
 			}
 
-			AuthServerHelper::Ptr dnServer = serverTemp->GetSelf<AuthServerHelper>();
+			AuthServerHelper::Ptr dnServer = server->GetSelf<AuthServerHelper>();
 
 			try
 			{
@@ -209,7 +206,7 @@ export void ApiAuth(Server::CVPtr dnServer)
 			}
 			catch (const std::exception& e)
 			{
-				LoggerPrint::Log(dnServer, ELogLevel_Debug, "{}", e.what());
+				LoggerPrint::Log(server, ELogLevel_Debug, "{}", e.what());
 				errData["Code"] = http_status::HTTP_STATUS_BAD_REQUEST;
 				errData["Message"] = "Regist Error!!";
 				MSGSET(errData.dump());
@@ -250,7 +247,7 @@ export void ApiAuth(Server::CVPtr dnServer)
 			}
 			catch (const std::exception& e)
 			{
-				LoggerPrint::Log(dnServer, ELogLevel_Debug, "{}", e.what());
+				LoggerPrint::Log(server, ELogLevel_Debug, "{}", e.what());
 				errData["Code"] = http_status::HTTP_STATUS_BAD_REQUEST;
 				errData["Message"] = "Regist Error!!";
 				MSGSET(errData.dump());

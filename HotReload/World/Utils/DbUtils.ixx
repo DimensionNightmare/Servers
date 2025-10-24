@@ -443,7 +443,7 @@ public:
 			return false;
 		}
 
-		LoggerPrint::Log(pWorld, ELogLevel_Debug, "{}", sSqlStatement);
+		LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "{}", sSqlStatement);
 		try
 		{
 			pqxx::result result = pWork->exec(sSqlStatement);
@@ -451,7 +451,7 @@ public:
 		}
 		catch (const std::exception& e)
 		{
-			LoggerPrint::Log(pWorld, ELogLevel_Debug, "{}", e.what());
+			LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "{}", e.what());
 			bExecResult = false;
 		}
 		
@@ -1042,6 +1042,8 @@ public:
 
 		return Md5Hash(stream.str());
 	}
+
+	World::Ptr GetWorld(){ return pWorld;}
 private:
 
 	bool ChangeSqlType(EMSqlOpType type)

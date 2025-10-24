@@ -31,7 +31,7 @@ protected:
 	{
 		eComponentType = EMComponentType::ClientProxy;
 		
-		pTimer = GetOwner()->GetWorld()->GetSystemW<Timer>(EMSystemType::Timer);
+		pTimer = GetWorld()->GetSystemW<Timer>(EMSystemType::Timer);
 	}
 public:
 
@@ -55,7 +55,7 @@ public:
 
 	bool Awake() override
 	{
-		World::CVPtr world = GetOwner()->GetWorld();
+		World::CVPtr world = GetWorld();
 		std::string* ctlPort = world->LaunchParam("ctlPort");
 		std::string* ctlIp = world->LaunchParam("ctlIp");
 		if (!ctlPort || !ctlIp)
@@ -79,7 +79,7 @@ public:
 		setting.length_field_offset = 0;
 		setUnpack(&setting);
 
-		GetOwner()->GetWorld()->AddEvent(EMEventType::ServerStart, GetSelfW<ClientProxy>(), &ClientProxy::Start);
+		GetWorld()->AddEvent(EMEventType::ServerStart, GetSelfW<ClientProxy>(), &ClientProxy::Start);
 
 		return true;
 	}
