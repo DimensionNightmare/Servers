@@ -9,7 +9,8 @@ import Logger;
 
 export enum class EMServerEntityFlag : uint16_t
 {
-	Locked = 0,
+	None = 0,
+	Locked,
 	Max,
 };
 
@@ -24,7 +25,6 @@ protected:
 	}
 public:
 	using Ptr = std::shared_ptr<ServerEntity>;
-	using CVPtr = const Ptr&;
 
 	virtual ~ServerEntity()
 	{
@@ -40,13 +40,15 @@ public:
 	}
 	
 	/// @brief this server father node
-	ServerEntity::CVPtr LinkNode() { return pLink; }
+	ServerEntity::Ptr LinkNode() { return pLink; }
 
 	/// @brief this server childs get
 	std::list<ServerEntity::Ptr>& GetMapLinkNode(EMServerType type) { return mMapLink[type]; }
 	
 	/// 
 	EMServerType GetServerType() { return emServerType; }
+
+	SocketChannel::Ptr GetChannel() { return pChannel; }
 
 protected: // dll proxy
 	EMServerType emServerType = EMServerType::None;
@@ -60,7 +62,7 @@ protected: // dll proxy
 	// be regist node need
 	std::unordered_map<EMServerType, std::list<ServerEntity::Ptr>> mMapLink;
 
-	uint64_t iCloseTimerId = 0;
+	size_t iCloseTimerId = 0;
 
 	SocketChannel::Ptr pChannel;
 };

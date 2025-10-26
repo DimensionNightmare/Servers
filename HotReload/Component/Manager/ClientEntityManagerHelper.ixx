@@ -21,7 +21,7 @@ private:
 
 public:
 
-	ClientEntityHelper::Ptr AddEntity(uint64_t entityId)
+	ClientEntityHelper::Ptr AddEntity(size_t entityId)
 	{
 		if (!mEntityMap.contains(entityId))
 		{
@@ -34,7 +34,7 @@ public:
 		return nullptr;
 	}
 
-	ClientEntityHelper::Ptr GetEntity(uint64_t entityId)
+	ClientEntityHelper::Ptr GetEntity(size_t entityId)
 	{
 		std::shared_lock lock(oMapMutex);
 		if (mEntityMap.contains(entityId))
@@ -45,11 +45,11 @@ public:
 		return nullptr;
 	}
 
-	TaskVoid LoadEntity(ClientEntityHelper::CVPtr entity, GMsg::d2L_ReqLoadEntityData* inRequest, GMsg::L2d_ResLoadEntityData* inResponse)
+	TaskVoid LoadEntity(ClientEntityHelper::Ptr entity, GMsg::d2L_ReqLoadEntityData* inRequest, GMsg::L2d_ResLoadEntityData* inResponse)
 	{
-		ClientProxyHelper::CVPtr sqlClient = pSqlClient->GetSelf<ClientProxyHelper>();
+		ClientProxyHelper::Ptr sqlClient = pSqlClient->GetSelf<ClientProxyHelper>();
 
-		if (!sqlClient || sqlClient->RegistType() != static_cast<uint8_t>(EMServerType::GateServer))
+		if (!sqlClient || sqlClient->RegistType() != std::to_underlying(EMServerType::GateServer))
 		{
 			co_return;
 		}
@@ -80,10 +80,10 @@ public:
 		std::string binData;
 
 		std::string tablename = GDb::Player::GetDescriptor()->full_name();
-		uint64_t entityId = entity->ID();
+		size_t entityId = entity->ID();
 		std::string keyName = std::format("{}_{}", tablename, entityId);
 
-		MdbProxyHelper::CVPtr dbProxy = GetOwner()->GetComponent<MdbProxyHelper>(EMComponentType::MdbProxy);
+		MdbProxyHelper::Ptr dbProxy = GetOwner()->GetComponent<MdbProxyHelper>(EMComponentType::MdbProxy);
 		if(auto connection = dbProxy->GetConnection())
 		{
 			// nosql
@@ -162,7 +162,7 @@ public:
 			// binData = request.entitydata();
 			// BytesToHexString(binData);
 			// mDbFailure[entityId] = binData;
-			LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "Load Db Entity Error id = {}, errorcode = {}! ", entityId, static_cast<int>(response.errorcode()));
+			LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "Load Db Entity Error id = {}, errorcode = {}! ", entityId, std::to_underlying(response.errorcode()));
 			co_return;
 		}
 
@@ -200,9 +200,9 @@ public:
 	}
 
 	/// @brief save entity data to database. this is task.
-	TaskVoid SaveEntity(ClientEntityHelper::CVPtr entity, bool offline = false)
+	TaskVoid SaveEntity(ClientEntityHelper::Ptr entity, bool offline = false)
 	{
-		uint64_t entityId = entity->ID();
+		size_t entityId = entity->ID();
 
 		if(!entity->HasFlag(EMClientEntityFlag::DBInited))
 		{
@@ -238,7 +238,7 @@ public:
 		GMsg::D2L_ResSaveData response;
 
 		{
-			ClientProxyHelper::CVPtr sqlClient = pSqlClient->GetSelf<ClientProxyHelper>();
+			ClientProxyHelper::Ptr sqlClient = pSqlClient->GetSelf<ClientProxyHelper>();
 
 			auto taskGen = [](Message* msg) -> Task<Message*>
 				{
@@ -264,12 +264,12 @@ public:
 		{
 			BytesToHexString(entitydata);
 			mDbFailure[entityId] = entitydata;
-			LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "Save Db Entity Error id = {}, errorcode = {}! ", entityId, static_cast<int>(response.errorcode()));
+			LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "Save Db Entity Error id = {}, errorcode = {}! ", entityId, std::to_underlying(response.errorcode()));
 			co_return;
 		}
 
 		// nosql
-		MdbProxyHelper::CVPtr dbProxy = GetOwner()->GetComponent<MdbProxyHelper>(EMComponentType::MdbProxy);
+		MdbProxyHelper::Ptr dbProxy = GetOwner()->GetComponent<MdbProxyHelper>(EMComponentType::MdbProxy);
 		if(auto connection = dbProxy->GetConnection())
 		{
 			std::string keyName = std::format("{}_{}", tablename, entityId);
@@ -284,16 +284,16 @@ public:
 	void CheckSaveEntity(bool shutdown = false)
 	{
 
-		std::function<void(ClientEntityHelper::CVPtr, bool)> dealFunc = nullptr;
+		std::function<void(ClientEntityHelper::Ptr, bool)> dealFunc = nullptr;
 		
-		ClientProxyHelper::CVPtr sqlClient = pSqlClient->GetSelf<ClientProxyHelper>();
+		ClientProxyHelper::Ptr sqlClient = pSqlClient->GetSelf<ClientProxyHelper>();
 
 		if (!sqlClient || sqlClient->RegistType() != uint8_t(EMServerType::GateServer))
 		{
-			dealFunc = [this](ClientEntityHelper::CVPtr entity, bool offline)
+			dealFunc = [this](ClientEntityHelper::Ptr entity, bool offline)
 				{
 					std::string binData;
-					uint64_t entityId = entity->ID();
+					size_t entityId = entity->ID();
 					if (!entity->GetDbEntity())
 					{
 						LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "SaveEntity not pb Data:{}", entityId);
@@ -335,7 +335,7 @@ public:
 	}
 	
 	/// @brief server self pointer save. mean connected father node success.
-	void InitSqlConn(ClientProxy::CVPtr sockClient)
+	void InitSqlConn(ClientProxy::Ptr sockClient)
 	{
 		pSqlClient = sockClient;
 	}

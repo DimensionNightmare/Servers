@@ -44,7 +44,6 @@ protected:
 
 public:
 	using Ptr = std::shared_ptr<LoggerPrint>;
-	using CVPtr = const Ptr&;
 	virtual ~LoggerPrint()
 	{
 
@@ -67,7 +66,7 @@ public:
 	{
 		PInstanceLoggerPrint = GetSelf<LoggerPrint>();
 
-		World::CVPtr world = GetWorld();
+		World::Ptr world = GetWorld();
 		std::string* value = world->LaunchParam("LoggerLevel");
 		if (!value)
 		{
@@ -231,9 +230,9 @@ protected:
 		}
 	}
 
-	std::shared_ptr<std::ofstream> _AddLogFile(const std::string& filePath, const std::ios_base::openmode& mode)
+	std::shared_ptr<std::ofstream> _AddLogFile(const std::string& filePath, std::ios_base::openmode mode)
 	{
-		std::shared_ptr<std::ofstream> logFile = std::make_shared<std::ofstream>(filePath, mode);
+		std::shared_ptr<std::ofstream> logFile = P_InstanceHolder->GetMemPool().Allocate<std::ofstream>(filePath, mode);
 
 		mLogFileMap.emplace(filePath, logFile);
 
@@ -254,9 +253,9 @@ protected:
 
 bool L10nText::Awake()
 {
-	World::CVPtr world = GetWorld();
+	World::Ptr world = GetWorld();
 
-	LoggerPrint::CVPtr pLogger = world->GetSystem<LoggerPrint>(EMSystemType::LoggerPrint);
+	LoggerPrint::Ptr pLogger = world->GetSystem<LoggerPrint>(EMSystemType::LoggerPrint);
 	std::string* value = world->LaunchParam("l10nDataPath");
 	if (!value)
 	{

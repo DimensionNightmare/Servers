@@ -15,19 +15,18 @@ protected:
 	}
 public:
 	using Ptr = std::shared_ptr<ProxyEntity>;
-	using CVPtr = const Ptr&;
 	virtual ~ProxyEntity()
 	{
 	}
 
 protected: // dll proxy
-	uint64_t iRecordServerId = 0;
+	size_t iRecordServerId = 0;
 
 	std::string sToken;
 
 	int64_t iExpireTime = 0;
 
-	uint64_t iCloseTimerId = 0;
+	size_t iCloseTimerId = 0;
 
 	SocketChannel::Ptr pChannel;
 

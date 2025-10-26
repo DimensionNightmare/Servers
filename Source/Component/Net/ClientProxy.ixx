@@ -13,7 +13,7 @@ import ThirdParty.Protobuf;
 
 export enum class EMRegistState : uint8_t
 {
-	None,
+	None = 0,
 	Registing,
 	Registed,
 };
@@ -36,7 +36,6 @@ protected:
 public:
 
 	using Ptr = std::shared_ptr<ClientProxy>;
-	using CVPtr = const Ptr&;
 	using WPtr = std::weak_ptr<ClientProxy>;
 
 	virtual ~ClientProxy()
@@ -55,7 +54,7 @@ public:
 
 	bool Awake() override
 	{
-		World::CVPtr world = GetWorld();
+		World::Ptr world = GetWorld();
 		std::string* ctlPort = world->LaunchParam("ctlPort");
 		std::string* ctlIp = world->LaunchParam("ctlIp");
 		if (!ctlPort || !ctlIp)
@@ -80,6 +79,7 @@ public:
 		setUnpack(&setting);
 
 		GetWorld()->AddEvent(EMEventType::ServerStart, GetSelfW<ClientProxy>(), &ClientProxy::Start);
+		GetWorld()->AddEvent(EMEventType::ServerStop, GetSelfW<ClientProxy>(), &ClientProxy::End);
 
 		return true;
 	}
@@ -123,7 +123,7 @@ public: // dll override
 		}
 	}
 
-	void MessageTimeoutTimer(uint64_t timerID)
+	void MessageTimeoutTimer(size_t timerID)
 	{
 		uint32_t msgId = -1;
 		{
@@ -172,17 +172,17 @@ public: // dll override
 
 protected:
 
-	uint64_t _CheckMessageTimeoutTimer(uint32_t breakTime, uint32_t msgId)
+	size_t _CheckMessageTimeoutTimer(uint32_t breakTime, uint32_t msgId)
 	{
 		FunctionContainer<&ClientProxy::MessageTimeoutTimer> funcProxy(this);
 
-		uint64_t timerId = GetTimer()->SetTimeout(breakTime, funcProxy);
+		size_t timerId = GetTimer()->SetTimeout(breakTime, funcProxy);
 		std::unique_lock ulock(oTimerMutex);
 		mMapTimer[timerId] = msgId;
 		return timerId;
 	}
 
-	void _InitConnectedChannel(SocketChannel::CVPtr chanhel)
+	void _InitConnectedChannel(SocketChannel::Ptr chanhel)
 	{
 		// chanhel->setHeartbeat(4000, std::bind(&ClientProxy::TickHeartbeat, this));
 		// channel->setWriteTimeout(12000);
@@ -201,7 +201,7 @@ protected:
 
 		eRegistState = EMRegistState::None;
 		closesocket();
-		GetTimer()->SetTimeout(500, [this, port, ip](uint64_t)
+		GetTimer()->SetTimeout(500, [this, port, ip](size_t)
 		{
 			createsocket(port, ip.c_str());
 
@@ -229,7 +229,7 @@ protected: // dll proxy
 	std::unordered_map<uint32_t, Task<Message*>* > mMsgList;
 
 	//
-	std::unordered_map<uint64_t, uint32_t > mMapTimer;
+	std::unordered_map<size_t, uint32_t > mMapTimer;
 
 	// status
 	EMRegistState eRegistState = EMRegistState::None;
@@ -237,7 +237,7 @@ protected: // dll proxy
 	// callback regist to server‘s servertype
 	uint8_t iRegistType = 0;
 
-	std::function<void(Server::CVPtr)> pRegistEvent;
+	std::function<void(Server::Ptr)> pRegistEvent;
 
 	std::shared_mutex oMsgMutex;
 

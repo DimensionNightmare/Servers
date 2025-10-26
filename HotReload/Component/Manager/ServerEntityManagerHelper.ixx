@@ -14,7 +14,7 @@ private:
 
 public:
 
-	ServerEntityHelper::Ptr GetEntity(uint64_t entityId)
+	ServerEntityHelper::Ptr GetEntity(size_t entityId)
 	{
 		std::shared_lock lock(oMapMutex);
 		if (mEntityMap.contains(entityId))
@@ -25,7 +25,7 @@ public:
 		return nullptr;
 	}
 
-	ServerEntityHelper::Ptr AddEntity(uint64_t entityId, EMServerType regType)
+	ServerEntityHelper::Ptr AddEntity(size_t entityId, EMServerType regType)
 	{
 		if (!mEntityMap.contains(entityId))
 		{
@@ -40,7 +40,7 @@ public:
 		return nullptr;
 	}
 
-	void MountEntity(ServerEntityHelper::CVPtr entity)
+	void MountEntity(ServerEntityHelper::Ptr entity)
 	{
 		std::unique_lock ulock(oMapMutex);
 		if (mEntityMap.contains(entity->ID()))
@@ -49,7 +49,7 @@ public:
 		}
 	}
 
-	void UnMountEntity(ServerEntityHelper::CVPtr entity)
+	void UnMountEntity(ServerEntityHelper::Ptr entity)
 	{
 		std::unique_lock ulock(oMapMutex);
 		mEntityMapList[entity->GetServerType()].remove(entity);

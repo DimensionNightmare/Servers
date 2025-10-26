@@ -14,7 +14,7 @@ private:
 
 public:
 
-	ProxyEntityHelper::Ptr AddEntity(uint64_t entityId)
+	ProxyEntityHelper::Ptr AddEntity(size_t entityId)
 	{
 		if (!mEntityMap.contains(entityId))
 		{
@@ -25,7 +25,7 @@ public:
 		return nullptr;
 	}
 
-	ProxyEntityHelper::Ptr GetEntity(uint64_t entityId)
+	ProxyEntityHelper::Ptr GetEntity(size_t entityId)
 	{
 		std::shared_lock lock(oMapMutex);
 		if (mEntityMap.contains(entityId))

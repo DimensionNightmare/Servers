@@ -9,9 +9,9 @@ import StrUtils;
 import Server;
 import MessagePack;
 import ECSW;
-import MessageRegister;
 import FuncUtils;
 import Logger;
+import AuthServerMessage;
 
 export class AuthServerHelper : public Helper<AuthServerHelper, Server>
 {
@@ -25,44 +25,28 @@ public:
 
 	ClientProxyHelper::Ptr GetClientProxy()
 	{ 
-		ClientProxyHelper::Ptr proxy = GetComponent<ClientProxyHelper>(EMComponentType::ClientProxy);
-		if(!proxy || proxy->IsDisposed())
-		{
-			return nullptr;
-		}
-		return proxy;
+		return GetComponent<ClientProxyHelper>(EMComponentType::ClientProxy);
 	}
 
 	WebProxyHelper::Ptr GetWebProxy()
 	{ 
-		WebProxyHelper::Ptr proxy = GetComponent<WebProxyHelper>(EMComponentType::WebProxy);
-		if(!proxy || proxy->IsDisposed())
-		{
-			return nullptr;
-		}
-		return proxy;
+		return GetComponent<WebProxyHelper>(EMComponentType::WebProxy);
 	}
 
 	RdbProxyHelper::Ptr GetRdbProxy()
 	{ 
-		RdbProxyHelper::Ptr proxy = GetComponent<RdbProxyHelper>(EMComponentType::RdbProxy);
-		if(!proxy || proxy->IsDisposed())
-		{
-			return nullptr;
-		}
-		return proxy;
+		return GetComponent<RdbProxyHelper>(EMComponentType::RdbProxy);
 	}
 
-	int HandleServerInit(MessageRegister* msgHandle)
+	int HandleServerInit()
 	{
+		ServerMessage::GetMessageHandle()->pApiRegistFunc(GetSelf<Server>());
 		
-		msgHandle->RegApiHandle(GetSelf<Server>());
-
 		if (ClientProxyHelper::Ptr proxy = GetClientProxy())
 		{
-			proxy->onConnection = [this,msgHandle](SocketChannel::CVPtr channel)
+			proxy->onConnection = [this](SocketChannel::Ptr channel)
 				{
-					ClientProxyHelper::CVPtr proxyHelper = GetClientProxy();
+					ClientProxyHelper::Ptr proxyHelper = GetClientProxy();
 
 					if(!proxyHelper){ return ;}
 
@@ -74,7 +58,7 @@ public:
 
 						channel->SetWorld(GetWorldW());
 
-						proxyHelper->SetRegistEvent(msgHandle->GetClientRegistFunc());
+						proxyHelper->SetRegistEvent(ServerMessage::GetMessageHandle()->pClientRegistFunc);
 						proxyHelper->InitConnectedChannel(channel);
 					}
 					else
@@ -95,15 +79,15 @@ public:
 					}
 				};
 
-			proxy->onMessage = [this](SocketChannel::CVPtr channel, hv::Buffer* buf)
+			proxy->onMessage = [this](SocketChannel::Ptr channel, hv::Buffer* buf)
 				{
-					ClientProxyHelper::CVPtr proxyHelper = GetClientProxy();
+					ClientProxyHelper::Ptr proxyHelper = GetClientProxy();
 
 					if(!proxyHelper){ return ;}
 					
 					MessagePacket* packet = MessagePacket::From(buf->data());
 
-					LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "c {} Recv type={} With Mid:{}", channel->peeraddr(), static_cast<int>(packet->dealType), packet->msgId);
+					LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "c {} Recv type={} With Mid:{}", channel->peeraddr(), EnumName(packet->dealType), packet->msgId);
 
 					if(packet->pkgLenth > 2 * 1024)
 					{
@@ -149,7 +133,7 @@ public:
 
 	int HandleServerShutdown()
 	{
-		if (ClientProxyHelper::CVPtr proxy = GetClientProxy())
+		if (ClientProxyHelper::Ptr proxy = GetClientProxy())
 		{
 			proxy->onConnection = nullptr;
 			proxy->onMessage = nullptr;
@@ -159,7 +143,7 @@ public:
 			proxy->MsgMapClear();
 		}
 
-		if (WebProxyHelper::CVPtr proxy = GetWebProxy())
+		if (WebProxyHelper::Ptr proxy = GetWebProxy())
 		{
 			if(proxy->service)
 			{

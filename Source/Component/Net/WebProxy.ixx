@@ -16,7 +16,6 @@ protected:
 	}
 public:
 	using Ptr = std::shared_ptr<WebProxy>;
-	using CVPtr = const Ptr&;
 	using WPtr = std::weak_ptr<WebProxy>;
 	virtual ~WebProxy()
 	{
@@ -32,7 +31,7 @@ public:
 
 	bool Awake() override
 	{
-		World::CVPtr world = GetWorld();
+		World::Ptr world = GetWorld();
 
 		uint16_t port = 0;
 		std::string* value = world->LaunchParam("port");
@@ -43,13 +42,14 @@ public:
 
 		setHost("0.0.0.0");
 		setPort(port);
-		setThreadNum(1);
+		// setThreadNum(4);
 
 		LoggerPrint::Log(GetWorld(), EL10nCode_SrvListenOn, port, 0);
 
 		GetWorld()->AddEvent(EMEventType::ServerStart, GetSelfW<WebProxy>(), &WebProxy::Start);
+		GetWorld()->AddEvent(EMEventType::ServerStop, GetSelfW<WebProxy>(), &WebProxy::End);
 
-		pService = P_InstanceHolder->MemPool->Allocate<hv::HttpService>();
+		pService = P_InstanceHolder->GetMemPool().Allocate<hv::HttpService>();
 		
 		service = pService.get();
 		service->Static("/", "./");

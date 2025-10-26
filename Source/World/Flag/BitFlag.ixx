@@ -5,7 +5,7 @@ import std.compat;
 template <typename T>
 concept HasMaxField = requires {
     { T::Max };
-	requires static_cast<std::underlying_type_t<T>>(T::Max) > 0;
+	requires std::underlying_type_t<T>(T::Max) > 0;
 };
 
 export template<typename T>
@@ -17,20 +17,20 @@ public:
 	// using MaxTypeNum = std::numeric_limits<NumType>::max();
 
 	constexpr void CheckBounds(NumType flag) const {
-		if (flag >= static_cast<NumType>(T::Max)) {
+		if (flag >= std::to_underlying(T::Max)) {
 			throw std::out_of_range("Flag value out of bounds");
 		}
     }
 
-	bool HasFlag(T flag) { return oFlags.test(static_cast<NumType>(flag)); }
-	void SetFlag(T flag) { oFlags.set(static_cast<NumType>(flag)); }
+	bool HasFlag(T flag) { return oFlags.test(std::to_underlying(flag)); }
+	void SetFlag(T flag) { oFlags.set(std::to_underlying(flag)); }
 	void SetFlag(NumType flag) { CheckBounds(flag); oFlags.set(flag);}
-	void ClearFlag(T flag) { oFlags.reset(static_cast<NumType>(flag)); }
-	uint64_t GetAllFlagNum() { return oFlags.to_ullong(); }
-	uint32_t GetAllFlagCount() { return static_cast<uint32_t>(oFlags.count()); }
+	void ClearFlag(T flag) { oFlags.reset(std::to_underlying(flag)); }
+	size_t GetAllFlagNum() { return oFlags.to_ullong(); }
+	size_t GetAllFlagCount() { return oFlags.count(); }
 private:
 
-	static_assert(static_cast<std::size_t>(T::Max) <= std::numeric_limits<std::size_t>::max(), 
+	static_assert(std::to_underlying(T::Max) <= std::numeric_limits<size_t>::max(), 
                  "T::Max exceeds std::bitset size limit");
-	std::bitset<static_cast<std::size_t>(T::Max)> oFlags;
+	std::bitset<std::to_underlying(T::Max)> oFlags;
 };

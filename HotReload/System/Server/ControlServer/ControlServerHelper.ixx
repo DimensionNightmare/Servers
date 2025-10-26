@@ -6,9 +6,10 @@ import ServerProxyHelper;
 import ServerEntityManagerHelper;
 import MessagePack;
 import ECSW;
-import MessageRegister;
 import FuncUtils;
 import Logger;
+import ControlServerMessage;
+import StrUtils;
 
 export class ControlServerHelper : public Helper<ControlServerHelper, Server>
 {
@@ -21,35 +22,23 @@ public:
 
 	ServerProxyHelper::Ptr GetServerProxy() 
 	{
-		ServerProxyHelper::Ptr proxy = GetComponent<ServerProxyHelper>(EMComponentType::ServerProxy);
-		if(!proxy || proxy->IsDisposed())
-		{
-			return nullptr;
-		}
-		return proxy;
+		return GetComponent<ServerProxyHelper>(EMComponentType::ServerProxy);
 	}
 
 	ServerEntityManagerHelper::Ptr GetServerEntityManager() 
 	{
-		ServerEntityManagerHelper::Ptr proxy = GetComponent<ServerEntityManagerHelper>(EMComponentType::ServerEntityManager);
-		if(!proxy || proxy->IsDisposed())
-		{
-			return nullptr;
-		}
-
-		return proxy;
+		return GetComponent<ServerEntityManagerHelper>(EMComponentType::ServerEntityManager);
 	}
 
 	
-	int HandleServerInit(MessageRegister* msgHandle)
+	int HandleServerInit()
 	{
-		msgHandle->RegMsgHandle();
 
 		if (ServerProxyHelper::Ptr proxy = GetServerProxy())
 		{
-			proxy->onConnection = [this](SocketChannel::CVPtr channel)
+			proxy->onConnection = [this](SocketChannel::Ptr channel)
 				{
-					ServerProxyHelper::CVPtr proxyHelper = GetServerProxy();
+					ServerProxyHelper::Ptr proxyHelper = GetServerProxy();
 
 					if(!proxyHelper){ return ;}
 
@@ -67,9 +56,9 @@ public:
 						LoggerPrint::Log(GetWorld(), EL10nCode_CliConnOff, peeraddr, channel->fd(), channel->id());
 
 						// not used
-						if (ServerEntity::CVPtr entity = channel->getContextPtr<ServerEntity>())
+						if (ServerEntity::Ptr entity = channel->getContextPtr<ServerEntity>())
 						{
-							ServerEntityManagerHelper::CVPtr entityMan = GetServerEntityManager();
+							ServerEntityManagerHelper::Ptr entityMan = GetServerEntityManager();
 							entityMan->RemoveEntity(entity->ID());
 							channel->deleteContextPtr();
 						}
@@ -77,15 +66,15 @@ public:
 					}
 				};
 
-			proxy->onMessage = [this,msgHandle](SocketChannel::CVPtr channel, hv::Buffer* buf)
+			proxy->onMessage = [this](SocketChannel::Ptr channel, hv::Buffer* buf)
 				{
-					ServerProxyHelper::CVPtr proxyHelper = GetServerProxy();
+					ServerProxyHelper::Ptr proxyHelper = GetServerProxy();
 
 					if(!proxyHelper){ return ;}
 					
 					MessagePacket* packet = MessagePacket::From(buf->data());
 
-					LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "s {} Recv type={} With Mid:{}", channel->peeraddr(), static_cast<int>(packet->dealType), packet->msgId);
+					LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "s {} Recv type={} With Mid:{}", channel->peeraddr(), EnumName(packet->dealType), packet->msgId);
 
 					if(packet->pkgLenth > 2 * 1024)
 					{
@@ -94,18 +83,18 @@ public:
 					}
 					
 					std::string msgData(packet->MsgBegin(), packet->pkgLenth);
-
+					
 					if (packet->dealType == EMMsgDeal::Req)
 					{
-						msgHandle->MsgHandle(channel, packet->msgId, packet->msgHashId, msgData);
+						ServerMessage::GetMessageHandle()->MsgHandle(channel, packet->msgId, packet->msgHashId, msgData);
 					}
 					else if (packet->dealType == EMMsgDeal::Ret)
 					{
-						msgHandle->MsgRetHandle(channel, packet->msgHashId, msgData);
+						ServerMessage::GetMessageHandle()->MsgRetHandle(channel, packet->msgHashId, msgData);
 					}
 					else if (packet->dealType == EMMsgDeal::Redir)
 					{
-						msgHandle->MsgRedirectHandle(channel, packet->msgId, packet->msgHashId, msgData);
+						ServerMessage::GetMessageHandle()->MsgRedirectHandle(channel, packet->msgId, packet->msgHashId, msgData);
 					}
 					else if (packet->dealType == EMMsgDeal::Res)
 					{
@@ -143,7 +132,7 @@ public:
 
 	int HandleServerShutdown()
 	{
-		if (ServerProxyHelper::CVPtr proxy = GetServerProxy())
+		if (ServerProxyHelper::Ptr proxy = GetServerProxy())
 		{
 			proxy->onConnection = nullptr;
 			proxy->onMessage = nullptr;

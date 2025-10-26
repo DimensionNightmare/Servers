@@ -7,19 +7,12 @@ import AuthServerHelper;
 import GateServerHelper;
 import DatabaseServerHelper;
 import LogicServerHelper;
-import GlobalServerMessage;
-import ControlServerMessage;
-import AuthServerMessage;
-import GateServerMessage;
-import DatabaseServerMessage;
-import LogicServerMessage;
 import ThirdParty.Platform;
 import ECSW;
 import Server;
 import ThirdParty.Libhv;
 import std.compat;
 import ThirdParty.Protobuf;
-import L10nText;
 import HotReload;
 
 #ifdef _WIN32
@@ -37,15 +30,15 @@ import HotReload;
 #endif
 
 
-int InitHotReload(World::CVPtr world)
+int InitHotReload(World::Ptr world)
 {
 	Libhv::hvlog_disable();
 
-	Server::CVPtr dnServer = world->GetSystem<Server>(EMSystemType::Server);
+	Server::Ptr dnServer = world->GetSystem<Server>(EMSystemType::Server);
 
 	switch (dnServer->GetServerType())
 	{
-		#define one(Type) case EMServerType::Type:{static Type##MessageHandle msgHandle; return dnServer->GetSelf<Type##Helper>()->HandleServerInit(&msgHandle); }
+		#define one(Type) case EMServerType::Type:{ return dnServer->GetSelf<Type##Helper>()->HandleServerInit(); }
 		one(ControlServer)
 		one(GlobalServer)
 		one(AuthServer)
@@ -59,9 +52,9 @@ int InitHotReload(World::CVPtr world)
 	return 0;
 }
 
-int ShutdownHotReload(World::CVPtr world)
+int ShutdownHotReload(World::Ptr world)
 {
-	Server::CVPtr dnServer = world->GetSystem<Server>(EMSystemType::Server);
+	Server::Ptr dnServer = world->GetSystem<Server>(EMSystemType::Server);
 
 	switch (dnServer->GetServerType())
 	{
@@ -106,7 +99,7 @@ extern "C"
 				{
 					func(P_InstanceHolder);
 				
-					HotReload::CVPtr pHotDll = P_InstanceHolder->AuthWorld->GetSystem<HotReload>(EMSystemType::HotReload);
+					HotReload::Ptr pHotDll = P_InstanceHolder->AuthWorld->GetSystem<HotReload>(EMSystemType::HotReload);
 					{
 						pHotDll->pInitHotReload = &InitHotReload;
 					}

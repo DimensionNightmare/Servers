@@ -37,14 +37,9 @@ public:
 		mDbFailure.clear();
 	}
 
-	virtual void TickMainFrame() override
-	{
-		// CheckSaveEntity();
-	}
-
 public: // dll proxy
 
-	bool RemoveEntity(uint64_t entityId)
+	bool RemoveEntity(size_t entityId)
 	{
 
 		if (mEntityMap.contains(entityId))
@@ -63,9 +58,9 @@ public: // dll proxy
 
 protected:
 
-	ClientEntity::Ptr _AddEntity(uint64_t entityId)
+	ClientEntity::Ptr _AddEntity(size_t entityId)
 	{
-		ClientEntity::Ptr entity = P_InstanceHolder->MemPool->Allocate<ClientEntity, World::WPtr>(GetOwner()->GetWorldW());;
+		ClientEntity::Ptr entity = P_InstanceHolder->GetMemPool().Allocate<ClientEntity>(GetOwner()->GetWorldW());;
 		entity->SetID(entityId);
 
 		std::unique_lock ulock(oMapMutex);
@@ -80,6 +75,6 @@ protected: // dll proxy
 	ClientProxy::Ptr pSqlClient;
 
 	/// @brief if save error. bin data will record to this.
-	std::unordered_map<uint64_t, std::string> mDbFailure;
+	std::unordered_map<size_t, std::string> mDbFailure;
 	
 };

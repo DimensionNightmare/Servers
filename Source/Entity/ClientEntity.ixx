@@ -7,7 +7,8 @@ import std.compat;
 
 export enum class EMClientEntityFlag : uint16_t
 {
-	DBInited = 0,
+	None = 0,
+	DBInited,
 	DBIniting,
 	DBModify,
 	DBModifyPartial,
@@ -22,14 +23,12 @@ protected:
 	{
 		eEntityType = EMEntityType::Client;
 
-		// pDbEntity = std::make_unique<GDb::Player>();
-		pDbEntity = P_InstanceHolder->MemPool->Allocate<GDb::Player>();
+		pDbEntity = P_InstanceHolder->GetMemPool().Allocate<GDb::Player>();
 		
 	}
 
 public:
 	using Ptr = std::shared_ptr<ClientEntity>;
-	using CVPtr = const Ptr&;
 	virtual ~ClientEntity()
 	{
 		
@@ -50,7 +49,7 @@ public: // dll override
 
 protected: // dll proxy
 
-	uint64_t iRecordRoomId = 0;
+	size_t iRecordRoomId = 0;
 
 	/// @brief db entity
 	std::shared_ptr<GDb::Player> pDbEntity;

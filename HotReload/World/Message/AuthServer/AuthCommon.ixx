@@ -6,16 +6,18 @@ import FuncHelper;
 import Task;
 import ThirdParty.PbGen;
 import Logger;
+import AuthServerMessage;
+import ApiManager;
 
-export namespace AuthServerMessage
+namespace MsgHandleRegister
 {
 
 	// client request
-	TaskVoid Evt_ReqRegistSrv(Server::CVPtr server)
+	HandleClientRegistry Evt_ReqRegistSrv([](Server::Ptr server)->TaskVoid
 	{
-		AuthServerHelper::CVPtr dnServer = server->GetSelf<AuthServerHelper>();
+		AuthServerHelper::Ptr dnServer = server->GetSelf<AuthServerHelper>();
 
-		ClientProxyHelper::CVPtr clientProxy = dnServer->GetClientProxy();
+		ClientProxyHelper::Ptr clientProxy = dnServer->GetClientProxy();
 
 		uint32_t msgId = clientProxy->GetMsgId();
 
@@ -32,7 +34,7 @@ export namespace AuthServerMessage
 			request.set_ispull(true);
 		}
 
-		if(WebProxyHelper::CVPtr serverProxy = dnServer->GetWebProxy())
+		if(WebProxyHelper::Ptr serverProxy = dnServer->GetWebProxy())
 		{
 			request.set_serverport(serverProxy->port);
 		}
@@ -77,5 +79,7 @@ export namespace AuthServerMessage
 		}
 
 		co_return;
-	}
+	});
+
+	HandleApiRegistry Evt_ReqRegistApi(&ApiInit);
 }

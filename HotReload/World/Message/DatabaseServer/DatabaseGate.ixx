@@ -13,31 +13,20 @@ import MessagePack;
 
 import DatabaseServerMessage;
 
-namespace DatabaseServerMessage
+namespace MsgHandleRegister
 {
 
-	void Exe_ReqLoadData(SocketChannel::CVPtr channel, uint32_t msgId, const std::string& binMsg)
+	HandleRegistry<GMsg::L2D_ReqLoadData, GMsg::D2L_ResLoadData, EMMsgDeal::Req> Exe_ReqLoadData(
+				[](auto request, auto response, SocketChannel::Ptr channel)
 	{
-		GMsg::L2D_ReqLoadData request;
-		if(!request.ParseFromString(binMsg))
-		{
-			return;
-		}
-		GMsg::D2L_ResLoadData response;
-
-		FinalExecute final([&response, msgId, channel](){
-			std::string binData;
-			response.SerializeToString(&binData);
-			MessagePackAndSend(msgId, EMMsgDeal::Res, binData, channel);
-		});
-
-		DatabaseServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<DatabaseServerHelper>(EMSystemType::Server);
+		
+		DatabaseServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<DatabaseServerHelper>(EMSystemType::Server);
 
 		if (auto connection = dnServer->GetRdbProxy()->GetConnection(EMSqlDbNameEnum::Nightmare))
 		{
 			auto dealFunc = [&](Message* findMsg)
 				{
-					findMsg->ParseFromString(request.entitydata());
+					findMsg->ParseFromString(request->entitydata());
 
 					pqxx::work txn(*connection);
 					DbSqlHelper dbHelper(&txn, channel->GetWorld(), findMsg);
@@ -45,15 +34,15 @@ namespace DatabaseServerMessage
 					auto query = [&]()
 						{
 							dbHelper
-								// .SelectByKey(request.keyname())
-								.Limit(request.limit())
+								// .SelectByKey(request->keyname())
+								.Limit(request->limit())
 								.Commit();
 
 							if (int64_t resSize = dbHelper.Result().size())
 							{
 								for (int64_t cur = 0; cur < resSize; cur++)
 								{
-									std::string* binData = response.add_entitydata();
+									std::string* binData = response->add_entitydata();
 									dbHelper.Result()[cur]->SerializeToString(binData);
 								}
 
@@ -63,7 +52,7 @@ namespace DatabaseServerMessage
 					query();
 
 					// not exist just create
-					if (!response.entitydata_size() && request.needcreate())
+					if (!response->entitydata_size() && request->needcreate())
 					{
 						dbHelper.Insert(true).Commit();
 
@@ -76,7 +65,7 @@ namespace DatabaseServerMessage
 					}
 				};
 
-			if (const Descriptor* descriptor = PbGen::FindMessageTypeByName(request.tablename()))
+			if (const Descriptor* descriptor = PbGen::FindMessageTypeByName(request->tablename()))
 			{
 				if (const Message* prototype = PbGen::GetPrototype(descriptor))
 				{
@@ -89,66 +78,52 @@ namespace DatabaseServerMessage
 					catch (const std::exception& e)
 					{
 						LoggerPrint::Log(channel, ELogLevel_Debug, "{}", e.what());
-						response.set_errorcode(EL10nCode_UnkonwOpreator);
+						response->set_errorcode(EL10nCode_UnkonwOpreator);
 					}
 
 					delete message;
 				}
 				else
 				{
-					response.set_errorcode(EL10nCode_PBMessageNotGen);
+					response->set_errorcode(EL10nCode_PBMessageNotGen);
 				}
 			}
 			else
 			{
-				response.set_errorcode(EL10nCode_PBMessageNotExist);
+				response->set_errorcode(EL10nCode_PBMessageNotExist);
 
 			}
 
 		}
 		else
 		{
-			response.set_errorcode(EL10nCode_DBNotConnect);
+			response->set_errorcode(EL10nCode_DBNotConnect);
 		}
-	}
+	});
 
-	void Exe_ReqSaveData(SocketChannel::CVPtr channel, uint32_t msgId, const std::string& binMsg)
+	HandleRegistry<GMsg::L2D_ReqSaveData, GMsg::D2L_ResSaveData, EMMsgDeal::Req> Exe_ReqSaveData(
+				[](auto request, auto response, SocketChannel::Ptr channel)
 	{
-		GMsg::L2D_ReqSaveData request;
-		if(!request.ParseFromString(binMsg))
-		{
-			return;
-		}
-		GMsg::D2L_ResSaveData response;
-
-		FinalExecute final([&response, msgId, channel](){
-			std::string binData;
-			response.SerializeToString(&binData);
-			MessagePackAndSend(msgId, EMMsgDeal::Res, binData, channel);
-		});
-
-		DatabaseServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<DatabaseServerHelper>(EMSystemType::Server);
-
-		std::string binData;
+		DatabaseServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<DatabaseServerHelper>(EMSystemType::Server);
 
 		if (auto connection = dnServer->GetRdbProxy()->GetConnection(EMSqlDbNameEnum::Nightmare))
 		{
 			auto dealFunc = [&](Message* findMsg)
 				{
-					findMsg->ParseFromString(request.entitydata());
+					findMsg->ParseFromString(request->entitydata());
 
 					pqxx::work txn(*connection);
 					DbSqlHelper dbHelper(&txn, channel->GetWorld(), findMsg);
 
 					dbHelper
-						.UpdateByKey(request.keynumber())
+						.UpdateByKey(request->keynumber())
 						.Commit();
 
 					txn.commit();
 
 				};
 
-			if (const Descriptor* descriptor = PbGen::FindMessageTypeByName(request.tablename()))
+			if (const Descriptor* descriptor = PbGen::FindMessageTypeByName(request->tablename()))
 			{
 				if (const Message* prototype = PbGen::GetPrototype(descriptor))
 				{
@@ -161,113 +136,26 @@ namespace DatabaseServerMessage
 					catch (const std::exception& e)
 					{
 						LoggerPrint::Log(channel, ELogLevel_Debug, "{}", e.what());
-						response.set_errorcode(EL10nCode_UnkonwOpreator);
+						response->set_errorcode(EL10nCode_UnkonwOpreator);
 					}
 
 					delete message;
 				}
 				else
 				{
-					response.set_errorcode(EL10nCode_PBMessageNotGen);
+					response->set_errorcode(EL10nCode_PBMessageNotGen);
 				}
 			}
 			else
 			{
-				response.set_errorcode(EL10nCode_PBMessageNotExist);
+				response->set_errorcode(EL10nCode_PBMessageNotExist);
 
 			}
 
 		}
 		else
 		{
-			response.set_errorcode(EL10nCode_DBNotConnect);
-		}
-
-	}
-
-
-	
-	MessageRegistry<GMsg::L2D_ReqLoadData, GMsg::D2L_ResLoadData, EMMsgDeal::Req, true> Exe_ReqLoadData1([](auto& request, auto& response, auto channel){
-		
-		
-		DatabaseServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<DatabaseServerHelper>(EMSystemType::Server);
-
-		if (auto connection = dnServer->GetRdbProxy()->GetConnection(EMSqlDbNameEnum::Nightmare))
-		{
-			auto dealFunc = [&](Message* findMsg)
-				{
-					findMsg->ParseFromString(request.entitydata());
-
-					pqxx::work txn(*connection);
-					DbSqlHelper dbHelper(&txn, channel->GetWorld(), findMsg);
-
-					auto query = [&]()
-						{
-							dbHelper
-								// .SelectByKey(request.keyname())
-								.Limit(request.limit())
-								.Commit();
-
-							if (int64_t resSize = dbHelper.Result().size())
-							{
-								for (int64_t cur = 0; cur < resSize; cur++)
-								{
-									std::string* binData = response.add_entitydata();
-									dbHelper.Result()[cur]->SerializeToString(binData);
-								}
-
-							}
-						};
-
-					query();
-
-					// not exist just create
-					if (!response.entitydata_size() && request.needcreate())
-					{
-						dbHelper.Insert(true).Commit();
-
-						if (dbHelper.IsSuccess())
-						{
-							query();
-						}
-
-						txn.commit();
-					}
-				};
-
-			if (const Descriptor* descriptor = PbGen::FindMessageTypeByName(request.tablename()))
-			{
-				if (const Message* prototype = PbGen::GetPrototype(descriptor))
-				{
-					Message* message = prototype->New();
-
-					try
-					{
-						dealFunc(message);
-					}
-					catch (const std::exception& e)
-					{
-						LoggerPrint::Log(channel, ELogLevel_Debug, "{}", e.what());
-						response.set_errorcode(EL10nCode_UnkonwOpreator);
-					}
-
-					delete message;
-				}
-				else
-				{
-					response.set_errorcode(EL10nCode_PBMessageNotGen);
-				}
-			}
-			else
-			{
-				response.set_errorcode(EL10nCode_PBMessageNotExist);
-
-			}
-
-		}
-		else
-		{
-			response.set_errorcode(EL10nCode_DBNotConnect);
+			response->set_errorcode(EL10nCode_DBNotConnect);
 		}
 	});
 }

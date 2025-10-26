@@ -19,6 +19,6 @@ public:
 	}
 
 	/// @brief get roomid
-	uint64_t RecordRoomId() { return iRecordRoomId; }
-	void SetRecordRoomId(uint64_t roomId) { iRecordRoomId = roomId; }
+	size_t RecordRoomId() { return iRecordRoomId; }
+	void SetRecordRoomId(size_t roomId) { iRecordRoomId = roomId; }
 };

@@ -53,7 +53,6 @@ export class SocketChannel : public hv::SocketChannel
 {
 public:
 	using Ptr = std::shared_ptr<SocketChannel>;
-	using CVPtr = const Ptr&;
 
 	virtual ~SocketChannel()
 	{

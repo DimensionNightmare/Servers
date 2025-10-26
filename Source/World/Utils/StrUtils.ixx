@@ -54,7 +54,7 @@ export
 				EnumName<static_cast<T>(Is)>()...
 			};
 		}(std::make_index_sequence<num>{});
-		return names[static_cast<size_t>(value)];
+		return names[std::to_underlying(value)];
 	}
 
 	template <typename T>
@@ -176,8 +176,8 @@ const uint32_t MD5_CONSTANTS[] =
 
 std::string PaddingMessage(const std::string& message)
 {
-	uint64_t messageLength = message.length() * 8;
-	uint64_t paddingLength = (messageLength % 512 < 448) ? (448 - messageLength % 512) : (960 - messageLength % 512);
+	size_t messageLength = message.length() * 8;
+	size_t paddingLength = (messageLength % 512 < 448) ? (448 - messageLength % 512) : (960 - messageLength % 512);
 	paddingLength /= 8;
 
 	std::string paddedMessage = message;

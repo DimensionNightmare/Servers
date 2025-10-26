@@ -6,36 +6,35 @@ import ThirdParty.Libhv;
 import FuncHelper;
 import ThirdParty.PbGen;
 import Logger;
+import MessagePack;
+import LogicServerMessage;
 
-export namespace LogicServerMessage
+namespace MsgHandleRegister
 {
-	void Exe_RetAccountReplace(SocketChannel::CVPtr channel, uint32_t msgId, const std::string& binMsg)
+
+	HandleRegistry<GMsg::S2C_RetAccountReplace, void, EMMsgDeal::Ret> Exe_RetAccountReplace(
+				[](auto request, SocketChannel::Ptr channel)
 	{
-		GMsg::S2C_RetAccountReplace request;
-		if(!request.ParseFromString(binMsg))
-		{
-			return;
-		}
+		
+		LogicServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<LogicServerHelper>(EMSystemType::Server);
+		ClientEntityManagerHelper::Ptr entityMan = dnServer->GetClientEntityManager();
 
-		LogicServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<LogicServerHelper>(EMSystemType::Server);
-		ClientEntityManagerHelper::CVPtr entityMan = dnServer->GetClientEntityManager();
-
-		ClientEntityHelper::CVPtr entity = entityMan->GetEntity(request.accountid());
+		ClientEntityHelper::Ptr entity = entityMan->GetEntity(request->accountid());
 		if (!entity)
 		{
 			LoggerPrint::Log(channel, ELogLevel_Debug, "Client Entity Kick Not Exist !");
 			return;
 		}
 
-		RoomEntityManagerHelper::CVPtr roomEntityMan = dnServer->GetRoomEntityManager();
-		RoomEntityHelper::CVPtr roomEntity = roomEntityMan->GetEntity(entity->RecordRoomId());
+		RoomEntityManagerHelper::Ptr roomEntityMan = dnServer->GetRoomEntityManager();
+		RoomEntityHelper::Ptr roomEntity = roomEntityMan->GetEntity(entity->RecordRoomId());
 
 		// cache
 		if (roomEntity)
 		{
-			std::string binData = binMsg;
-
-			MessagePackAndSend(0, EMMsgDeal::Ret, request.GetDescriptor()->full_name(), binData, roomEntity->GetChannel());
+			std::string binMsg;
+			request->SerializeToString(&binMsg);
+			MessagePackAndSend(0, EMMsgDeal::Ret, request->GetDescriptor()->full_name(), binMsg, roomEntity->GetChannel());
 		}
 		else
 		{
@@ -44,28 +43,15 @@ export namespace LogicServerMessage
 
 		// close entity save data
 		entityMan->RemoveEntity(entity->ID());
-	}
+	});
 
-	// client request
-	TaskVoid Msg_ReqClientLogin(SocketChannel::CVPtr channel, uint32_t msgId, const std::string& binMsg)
+	HandleRegistry<GMsg::C2S_ReqAuthToken, GMsg::S2C_ResAuthToken, EMMsgDeal::Req> Msg_ReqClientLogin(
+				[](auto request, auto response, SocketChannel::Ptr channel) -> TaskVoid
 	{
-		GMsg::C2S_ReqAuthToken request;
-		if(!request.ParseFromString(binMsg))
-		{
-			co_return;
-		}
-		GMsg::S2C_ResAuthToken response;
+		LogicServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<LogicServerHelper>(EMSystemType::Server);
+		ClientEntityManagerHelper::Ptr entityMan = dnServer->GetClientEntityManager();
 
-		FinalExecute final([&response, msgId, channel](){
-			std::string binData;
-			response.SerializeToString(&binData);
-			MessagePackAndSend(msgId, EMMsgDeal::Res, binData, channel);
-		});
-
-		LogicServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<LogicServerHelper>(EMSystemType::Server);
-		ClientEntityManagerHelper::CVPtr entityMan = dnServer->GetClientEntityManager();
-
-		ClientEntityHelper::Ptr entity = entityMan->AddEntity(request.accountid());
+		ClientEntityHelper::Ptr entity = entityMan->AddEntity(request->accountid());
 		if (entity)
 		{
 			LoggerPrint::Log(channel, ELogLevel_Debug, "AddEntity Client!");
@@ -81,15 +67,15 @@ export namespace LogicServerMessage
 		else
 		{
 			LoggerPrint::Log(channel, ELogLevel_Debug, "AddEntity Exist Client!");
-			entity = entityMan->GetEntity(request.accountid());
+			entity = entityMan->GetEntity(request->accountid());
 		}
 
 #if 1
-		RoomEntityManagerHelper::CVPtr roomEntityMan = dnServer->GetRoomEntityManager();
+		RoomEntityManagerHelper::Ptr roomEntityMan = dnServer->GetRoomEntityManager();
 		RoomEntityHelper::Ptr roomEntity = nullptr;
 
 		// cache
-		if (uint64_t roomId = entity->RecordRoomId())
+		if (size_t roomId = entity->RecordRoomId())
 		{
 			roomEntity = roomEntityMan->GetEntity(roomId);
 		}
@@ -97,7 +83,7 @@ export namespace LogicServerMessage
 		//pool
 		if (!roomEntity)
 		{
-			uint64_t mapId = 0;
+			size_t mapId = 0;
 			// from db
 			if(entity->GetDbEntity()->has_mapinfo())
 			{
@@ -118,7 +104,7 @@ export namespace LogicServerMessage
 			std::list<RoomEntity::Ptr> roomEntityList = roomEntityMan->GetEntitysByMapId(mapId);
 			if (roomEntityList.empty())
 			{
-				response.set_errorcode(EL10nCode_NotDsServer);
+				response->set_errorcode(EL10nCode_NotDsServer);
 				LoggerPrint::Log(channel, ELogLevel_Debug, "not ds Server");
 			}
 			else
@@ -135,36 +121,37 @@ export namespace LogicServerMessage
 				{
 					co_return msg;
 				};
-			auto dataChannel = taskGen(&response);
+			auto dataChannel = taskGen(response);
 
-			ServerProxyHelper::CVPtr server = dnServer->GetServerProxy();
+			ServerProxyHelper::Ptr server = dnServer->GetServerProxy();
 			uint32_t msgId = server->GetMsgId();
 
 			// wait data parse
 			server->AddMsg(msgId, &dataChannel, 8000);
 
-			MessagePackAndSend(msgId, EMMsgDeal::Req, request.GetDescriptor()->full_name(), binMsg, roomEntity->GetChannel());
+			std::string binMsg;
+			request->SerializeToString(&binMsg);
+			MessagePackAndSend(msgId, EMMsgDeal::Req, request->GetDescriptor()->full_name(), binMsg, roomEntity->GetChannel());
 
 			co_await dataChannel;
 
 			if (dataChannel.HasFlag(EMTaskFlag::Timeout))
 			{
-				response.set_errorcode(EL10nCode_ReqRegistTimeout);
+				response->set_errorcode(EL10nCode_ReqRegistTimeout);
 			}
 			else
 			{
 				entity->SetRecordRoomId(roomEntity->ID());
 				//combin
-				response.set_serverip(roomEntity->ServerIp());
-				response.set_serverport(roomEntity->ServerPort());
+				response->set_serverip(roomEntity->ServerIp());
+				response->set_serverport(roomEntity->ServerPort());
 			}
 
 		}
 
-		LoggerPrint::Log(channel, ELogLevel_Debug, "ds:{}", response.DebugString());
+		LoggerPrint::Log(channel, ELogLevel_Debug, "ds:{}", response->DebugString());
 #endif
 
 		co_return;
-	}
-
+	});
 }

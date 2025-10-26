@@ -28,6 +28,7 @@ export
 	using ::EL10nCode_IsValid;
 	using ::ELogLevel_Parse;
 	using ::EL10nType_Parse;
+	using ::EL10nCode_Name;
 	
 
 	enum CustomFieldOptions

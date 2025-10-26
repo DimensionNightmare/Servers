@@ -1,36 +1,95 @@
 export module GateServerMessage;
 
-import :GateCommon;
-import :GateGlobal;
-import :GateClient;
-import :GateRedirect;
 import MessageRegister;
+import StrUtils;
+import MessagePack;
+import std;
 
-export class GateServerMessageHandle : public MessageRegister
+class Server;
+
+namespace ServerMessage
 {
-public:
-	void RegMsgHandle()
+	export std::shared_ptr<MessageRegister> GetMessageHandle()
 	{
-		#define MSG_MAPPING(map, msg, func) \
-			map.emplace(DoStringHash(msg::GetDescriptor()->full_name()), \
-			make_pair(msg::internal_default_instance(), func))
+		static std::shared_ptr<MessageRegister> PInstance;
+		if (PInstance == nullptr)
+		{
+			PInstance = std::make_shared<MessageRegister>();
+		}
 
-
-		MSG_MAPPING(MHandleMap, GMsg::COM_ReqRegistSrv, &GateServerMessage::Msg_ReqRegistSrv);
-		MSG_MAPPING(MHandleMap, GMsg::C2S_ReqAuthToken, &GateServerMessage::Msg_ReqAuthToken);
-		MSG_MAPPING(MHandleMap, GMsg::A2g_ReqAuthAccount, &GateServerMessage::Exe_ReqUserToken);
-
-		MSG_MAPPING(MHandleRetMap, GMsg::COM_RetHeartbeat, &GateServerMessage::Exe_RetHeartbeat);
-
-		MSG_MAPPING(MHandleRedirectMap, GMsg::L2D_ReqLoadData, &GateServerMessage::Exe_ReqLoadData);
-		MSG_MAPPING(MHandleRedirectMap, GMsg::L2D_ReqSaveData, &GateServerMessage::Exe_ReqSaveData);
-
-		#undef MSG_MAPPING
+		return PInstance;
 	}
+}
 
-	std::function<void(Server::CVPtr)> GetClientRegistFunc()
+namespace MsgHandleRegister
+{
+	struct GateTag {};
+
+	export template<typename MsgReq, typename MsgRes, EMMsgDeal msgDeal, typename ServerTag = GateTag>
+		class HandleRegistry : public MessageRegistry<MsgReq, MsgRes, msgDeal, ServerTag>
 	{
-		return &GateServerMessage::Evt_ReqRegistSrv;
-	}
+	public:
 
-};
+		using BaseType = MessageRegistry<MsgReq, MsgRes, msgDeal, ServerTag>;
+
+		template<typename Executor>
+		HandleRegistry(Executor&& executor)
+			: BaseType(std::forward<Executor>(executor))
+		{
+			RegistMsg();
+		}
+
+		void RegistMsg()
+		{
+			size_t msgHash = DoStringHash(MsgReq::GetDescriptor()->full_name());
+			switch (msgDeal)
+			{
+				case EMMsgDeal::Req:
+					ServerMessage::GetMessageHandle()->mHandleMap.emplace(msgHash, std::make_pair(MsgReq::internal_default_instance(), [this](auto a, auto b, auto c) 
+					{ 
+						if(!this->bIsCoroutine)
+						{
+							this->TickMessage(a, b, c); 
+						}
+						else
+						{
+							this->TickMessageAsync(a, b, c); 
+						}
+					}));
+					break;
+				case EMMsgDeal::Ret:
+					ServerMessage::GetMessageHandle()->mHandleRetMap.emplace(msgHash, std::make_pair(MsgReq::internal_default_instance(), [this](auto a, auto b) 
+					{ 
+						this->TickMessage(a, b); 
+					}));
+					break;
+				case EMMsgDeal::Redir:
+					ServerMessage::GetMessageHandle()->mHandleRedirectMap.emplace(msgHash, std::make_pair(MsgReq::internal_default_instance(), [this](auto a, auto b, auto c) 
+					{
+						if(!this->bIsCoroutine)
+						{
+							this->TickMessage(a, b, c); 
+						}
+						else
+						{
+							this->TickMessageAsync(a, b, c); 
+						}
+					}));
+					break;
+
+			}
+		}
+	};
+
+	export template<typename ServerTag = GateTag>
+	class HandleClientRegistry
+	{
+	public:
+		template<typename Executor>
+		HandleClientRegistry(Executor&& executor)
+		{
+			ServerMessage::GetMessageHandle()->pClientRegistFunc = std::forward<Executor>(executor);
+		}
+	};
+
+}

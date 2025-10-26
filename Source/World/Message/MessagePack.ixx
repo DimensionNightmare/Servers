@@ -7,12 +7,14 @@ export
 	
 	enum class EMMsgDir : uint8_t
 	{
+		None = 0,
 		Outer = 1, 	// Client Msg
 		Inner, 		// Server Msg
 	};
 	
 	enum class EMMsgDeal : uint8_t
 	{
+		None = 0,
 		Req = 1, 	// msg deal with
 		Res, 		// req result
 		Ret,		// notify
@@ -59,7 +61,7 @@ export
 		MessagePacket packet;
 		packet.msgId = msgId;
 		packet.dealType = deal;
-		packet.pkgLenth = uint32_t(data.size());
+		packet.pkgLenth = static_cast<uint32_t>(data.size());
 		packet.msgHashId = hashId;
 		
 		data.insert(0, reinterpret_cast<const char*>(&packet), MessagePacket::PackLenth);

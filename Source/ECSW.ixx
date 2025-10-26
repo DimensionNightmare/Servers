@@ -9,12 +9,12 @@ import UniversalMemoryPool;
 
 export enum EMEventType : uint8_t
 {
-	None = 0			,
-	ServerStart			,
-	ServerStop			,
-	ServerPause			,
-	ServerResume		,
-	AppStart			,
+	None = 0,
+	ServerStart,
+	ServerStop,
+	ServerPause,
+	ServerResume,
+	AppStart,
 };
 
 export enum class EMComponentType : uint8_t
@@ -67,13 +67,39 @@ export struct InstanceHolder
 		MemPool = std::make_shared<UniversalMemoryPool>();
 	}
 
+	struct MemPoolContext
+	{
+		std::source_location oLocation;
+		UniversalMemoryPool::Ptr pMemPool;
+
+		template<typename T, typename... Args>
+		std::shared_ptr<T> Allocate(Args&&... args)
+		{
+			std::shared_ptr<T> object = pMemPool->Allocate<T>(std::forward<Args>(args)...);
+			if (object)
+			{
+				pMemPool->SetMemoryRecordInfo(object.get(), std::move(oLocation));
+			}
+			return object;
+		}
+	};
+
 	void Unload();
 
 	UniversalMemoryPool::Ptr MemPool;
-	
+
 	std::shared_ptr<World> AuthWorld;
-	
+
 	std::shared_ptr<World> MainWorld;
+
+	MemPoolContext GetMemPool(const std::source_location& location = std::source_location::current())
+	{
+		MemPoolContext context;
+		context.oLocation = std::move(location);
+		context.pMemPool = MemPool;
+
+		return context;
+	}
 
 };
 
@@ -87,14 +113,15 @@ public:
 	template<typename T, typename Callback>
 	void AddEvent(EMEventType type, std::weak_ptr<T> entity, Callback&& callback)
 	{
-		uint64_t objId = entity.lock()->ID();
+		size_t objId = entity.lock()->ID();
 
-		auto lumbdaFunc = [entity, callback](){ 
-			if(auto origin = entity.lock())
+		auto lumbdaFunc = [entity, callback]()
 			{
-				(origin.get()->*callback)();
-			}
-		};
+				if (auto origin = entity.lock())
+				{
+					(origin.get()->*callback)();
+				}
+			};
 
 		mEventIdMap[objId][type] = lumbdaFunc;
 
@@ -103,18 +130,18 @@ public:
 
 	void Broadcast(EMEventType type)
 	{
-		for(auto& [objId,_] : mEventCollection[type]) 
+		for (auto& [objId, _] : mEventCollection[type])
 		{
 			mEventIdMap[objId][type]();
 		}
 	}
 
-	void RemoveEvent(uint64_t objId)
+	void RemoveEvent(size_t objId)
 	{
 		auto it = mEventIdMap.find(objId);
-		if(it != mEventIdMap.end())
+		if (it != mEventIdMap.end())
 		{
-			for(auto& [type, _] : it->second)
+			for (auto& [type, _] : it->second)
 			{
 				mEventCollection[type].erase(objId);
 			}
@@ -124,8 +151,8 @@ public:
 	}
 
 private:
-	std::unordered_map<uint64_t, std::unordered_map<EMEventType, std::function<void()> > > mEventIdMap;
-	std::unordered_map<EMEventType, std::unordered_map<uint64_t,uint64_t>> mEventCollection;
+	std::unordered_map<size_t, std::unordered_map<EMEventType, std::function<void()> > > mEventIdMap;
+	std::unordered_map<EMEventType, std::unordered_map<size_t, size_t>> mEventCollection;
 };
 
 export DNEvent GEvent; // dynamic initializer
@@ -139,35 +166,34 @@ export class Object : public std::enable_shared_from_this<Object>
 {
 public:
 	using Ptr = std::shared_ptr<Object>;
-	using CVPtr = const Ptr&;
 
 	Object() = default;
 
 	virtual ~Object()
 	{
-		if(!bIsDisposed)
+		if (!bIsDisposed)
 		{
 			// throw std::runtime_error("Object not disposed! Please check code!");
-			// std::cerr << "Object not disposed! Please check code!\n" << Platform::GetStackTrace() << std::endl;
-			if(P_InstanceHolder->MemPool)
+			std::cerr << "Object not disposed! Please check code!\n" << Platform::GetStackTrace() << "\n";
+			if (P_InstanceHolder->MemPool)
 			{
-				std::cerr << "Object not disposed! Please check code!\n" << P_InstanceHolder->MemPool->GetMemoryRecordInfo(this) << std::endl;
+				std::cerr << "Object not disposed! Please check code!\n" << P_InstanceHolder->MemPool->GetMemoryRecordInfo(this) << "\n";
 			}
 		}
 	}
-	
+
 public: // dll override
 
-	uint64_t ID() { return iId; }
+	size_t ID() { return iId; }
 
-	void SetID(uint64_t id) { iId = id; }
+	void SetID(size_t id) { iId = id; }
 
 	virtual void Dispose()
 	{
 		bIsDisposed = true;
 	}
 
-	virtual bool Awake(){ return true;}
+	virtual bool Awake() { return true; }
 
 	template<typename T>
 	std::shared_ptr<T> GetSelf() { return std::static_pointer_cast<T>(shared_from_this()); }
@@ -176,10 +202,10 @@ public: // dll override
 	std::weak_ptr<T> GetSelfW() { return GetSelf<T>(); }
 
 	bool IsDisposed() { return bIsDisposed; }
-	
+
 protected:
 
-	uint64_t iId = SFIdGenerator.nextId();
+	size_t iId = SFIdGenerator.nextId();
 
 	bool bIsDisposed = false;
 };
@@ -193,14 +219,13 @@ protected:
 export class Component : public Object
 {
 protected:
-	Component(std::weak_ptr<Entity> owner):
+	Component(std::weak_ptr<Entity> owner) :
 		pOwner(owner)
 	{
 
 	}
 public:
 	using Ptr = std::shared_ptr<Component>;
-	using CVPtr = const Ptr&;
 
 	/// @brief this component owner
 	virtual ~Component()
@@ -212,10 +237,10 @@ public:
 		Object::Dispose();
 	}
 
-	std::shared_ptr<Entity> GetOwner(){ return pOwner.expired() ? nullptr : pOwner.lock(); }
+	std::shared_ptr<Entity> GetOwner() { return pOwner.expired() ? nullptr : pOwner.lock(); }
 
 	template<typename T>
-	std::shared_ptr<T> GetOwner(){ return std::static_pointer_cast<T>(GetOwner()); }
+	std::shared_ptr<T> GetOwner() { return std::static_pointer_cast<T>(GetOwner()); }
 
 	std::shared_ptr<World> GetWorld();
 
@@ -237,7 +262,7 @@ protected: // dll proxy
 export class Entity : public Object, public DNEvent
 {
 protected:
-	Entity(std::weak_ptr<World> world):
+	Entity(std::weak_ptr<World> world) :
 		pWorld(world)
 	{
 
@@ -245,33 +270,32 @@ protected:
 
 public:
 	using Ptr = std::shared_ptr<Entity>;
-	using CVPtr = const Ptr&;
 
 	virtual ~Entity()
 	{
 	}
-	
+
 public: // dll override
 
 	/// @brief entity type total enum
 	EMEntityType GetEntityType() { return eEntityType; }
 
-	std::shared_ptr<World> GetWorld(){ return pWorld.expired() ? nullptr : pWorld.lock(); }
+	std::shared_ptr<World> GetWorld() { return pWorld.expired() ? nullptr : pWorld.lock(); }
 
-	std::weak_ptr<World> GetWorldW(){ return pWorld; }
+	std::weak_ptr<World> GetWorldW() { return pWorld; }
 
 	template<typename T>
 	std::shared_ptr<T> GetComponent(EMComponentType type)
 	{
 		// this while lock when dispose***
 		// std::unique_lock ulock(mComponentLock);
-		
+
 		auto it = mComponents.find(type);
 		if ((!it->second->IsDisposed()); it != mComponents.end())
 		{
 			return std::static_pointer_cast<T>(it->second);
 		}
-		
+
 		return nullptr;
 	}
 
@@ -279,7 +303,7 @@ public: // dll override
 	{
 		Object::Dispose();
 
-		if(mComponents.empty())
+		if (mComponents.empty())
 		{
 			return;
 		}
@@ -287,24 +311,25 @@ public: // dll override
 		std::unique_lock ulock(mComponentLock);
 
 		auto it = mComponents.end();
-		do {
+		do
+		{
 			--it;
 			it->second->Dispose();
 			it = mComponents.erase(it);
-			
+
 		} while (it != mComponents.begin());
 
 		mComponents.clear();
 	}
 
 	template<typename T>
-	std::shared_ptr<T> AddComponent(const std::source_location& loc = std::source_location::current())
+	std::shared_ptr<T> AddComponent(const std::source_location& location = std::source_location::current())
 	{
 		static_assert(std::is_base_of_v<Component, T>, "T must inherit from component");
 		try
 		{
-			std::shared_ptr<T> component = P_InstanceHolder->MemPool->Allocate<T>(shared_from_this(), loc);
-			if(!component->Awake())
+			std::shared_ptr<T> component = P_InstanceHolder->GetMemPool(location).Allocate<T>(shared_from_this());
+			if (!component->Awake())
 			{
 				component->Dispose();
 				return nullptr;
@@ -313,11 +338,11 @@ public: // dll override
 			mComponents.emplace(component->GetComponentType(), component);
 			return component;
 		}
-		catch(const std::exception& e)
+		catch (const std::exception& e)
 		{
 			std::cerr << e.what() << '\n';
 		}
-		
+
 		return nullptr;
 	}
 
@@ -334,7 +359,7 @@ public: // dll override
 		DNEvent::RemoveEvent(it->second->ID());
 		mComponents.erase(type);
 	}
-	
+
 protected: // dll proxy
 
 	EMEntityType eEntityType = EMEntityType::None;
@@ -349,7 +374,7 @@ protected: // dll proxy
 std::shared_ptr<World> Component::GetWorld()
 {
 	auto owner = GetOwner();
-	if(!owner)
+	if (!owner)
 	{
 		return nullptr;
 	}
@@ -366,15 +391,14 @@ export class System : public Entity
 {
 protected:
 
-	System(std::weak_ptr<World> world) 
+	System(std::weak_ptr<World> world)
 		: Entity(world)
 	{
 	}
 
-    
+
 public:
 	using Ptr = std::shared_ptr<System>;
-	using CVPtr = const Ptr&;
 	using WPtr = std::weak_ptr<System>;
 
 	virtual ~System()
@@ -389,13 +413,13 @@ public:
 	EMSystemType GetSystemType() { return emSystemType; }
 
 	template<typename T>
-	std::shared_ptr<T> AddComponent(const std::source_location& loc = std::source_location::current())
+	std::shared_ptr<T> AddComponent(const std::source_location& location = std::source_location::current())
 	{
 		static_assert(std::is_base_of_v<Component, T>, "T must inherit from component");
 		try
 		{
-			std::shared_ptr<T> component = P_InstanceHolder->MemPool->Allocate<T, System::WPtr>(GetSelfW<System>(), loc);
-			if(!component->Awake())
+			std::shared_ptr<T> component = P_InstanceHolder->GetMemPool(location).Allocate<T>(GetSelfW<System>());
+			if (!component->Awake())
 			{
 				component->Dispose();
 				return nullptr;
@@ -403,11 +427,11 @@ public:
 			mComponents.emplace(component->GetComponentType(), component);
 			return component;
 		}
-		catch(const std::exception& e)
+		catch (const std::exception& e)
 		{
 			std::cerr << e.what() << '\n';
 		}
-		
+
 		return nullptr;
 	}
 
@@ -425,7 +449,6 @@ export class World : public Object, public DNEvent
 {
 public:
 	using Ptr = std::shared_ptr<World>;
-	using CVPtr = const Ptr&;
 	using WPtr = std::weak_ptr<World>;
 
 	World() = default;
@@ -433,20 +456,20 @@ public:
 	virtual ~World()
 	{
 	}
-	
-	void AddSystem(System::CVPtr system)
+
+	void AddSystem(System::Ptr system)
 	{
 		mSystemMap.emplace(system->GetSystemType(), system);
 	}
 
 	template<typename T = System>
-	std::shared_ptr<T> AddSystem(const std::source_location& loc = std::source_location::current())
+	std::shared_ptr<T> AddSystem(const std::source_location& location = std::source_location::current())
 	{
 		static_assert(std::is_base_of_v<System, T>, "T must inherit from System");
 		try
 		{
-			std::shared_ptr<T> system = P_InstanceHolder->MemPool->Allocate<T, World::WPtr>(GetSelfW<World>(), loc);
-			if(!system->Awake())
+			std::shared_ptr<T> system = P_InstanceHolder->GetMemPool(location).Allocate<T>(GetSelfW<World>());
+			if (!system->Awake())
 			{
 				system->Dispose();
 				return nullptr;
@@ -455,11 +478,11 @@ public:
 			mSystemMap.emplace(system->GetSystemType(), system);
 			return system;
 		}
-		catch(const std::exception& e)
+		catch (const std::exception& e)
 		{
 			std::cerr << e.what() << '\n';
 		}
-		
+
 		return nullptr;
 	}
 
@@ -476,11 +499,11 @@ public:
 				return ptr ? ptr : std::weak_ptr<T>{};
 			}
 		}
-		catch(const std::exception& e)
+		catch (const std::exception& e)
 		{
 			std::cerr << e.what() << '\n';
 		}
-		
+
 		return {};
 	}
 
@@ -496,11 +519,11 @@ public:
 				return std::static_pointer_cast<T>(it->second);
 			}
 		}
-		catch(const std::exception& e)
+		catch (const std::exception& e)
 		{
 			std::cerr << e.what() << '\n';
 		}
-		
+
 		return nullptr;
 	}
 
@@ -520,14 +543,15 @@ public:
 	virtual void Dispose() override
 	{
 		Object::Dispose();
-		
-		if(mSystemMap.empty())
+
+		if (mSystemMap.empty())
 		{
 			return;
 		}
 
 		auto it = mSystemMap.end();
-		do {
+		do
+		{
 			--it;
 			it->second->Dispose();
 		} while (it != mSystemMap.begin());
@@ -542,12 +566,40 @@ public:
 
 	std::string* LaunchParam(const std::string& key)
 	{
-		if(mLuanchConfig.count(key))
+		if (mLuanchConfig.count(key))
 		{
 			return &mLuanchConfig[key];
 		}
 
 		return nullptr;
+	}
+
+	// single thread
+	void PostTask(std::function<void()> task)
+	{
+		std::lock_guard<std::mutex> lock(oQueueMutex);
+		mTasks.push(std::move(task));
+	}
+
+	virtual void TickMainFrame()
+	{
+		TickTask();
+	}
+
+protected:
+
+	void TickTask()
+	{
+		std::lock_guard<std::mutex> lock(oQueueMutex);
+		if (mTasks.empty())
+		{
+			return;
+		}
+
+		auto task = std::move(mTasks.front());
+		mTasks.pop();
+
+		task();
 	}
 
 private:
@@ -556,18 +608,21 @@ private:
 
 	std::unordered_map<EMSystemType, std::shared_ptr<System>> mSystemMap;
 
+	std::queue<std::function<void()>> mTasks;
+
+	std::mutex oQueueMutex;
+
 };
 
-// InstanceHolder::~InstanceHolder()
 void InstanceHolder::Unload()
 {
-	if(MainWorld)
+	if (MainWorld)
 	{
 		MainWorld->Dispose();
 		MainWorld = nullptr;
 	}
 
-	if(AuthWorld)
+	if (AuthWorld)
 	{
 		AuthWorld->Dispose();
 		AuthWorld = nullptr;

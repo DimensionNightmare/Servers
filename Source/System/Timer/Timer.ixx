@@ -12,12 +12,11 @@ protected:
 	{
 		emSystemType = EMSystemType::Timer;
 
-		pLoop = P_InstanceHolder->MemPool->Allocate<hv::EventLoopThread>();
+		pLoop = P_InstanceHolder->GetMemPool().Allocate<hv::EventLoopThread>();
 
 	}
 public:
 	using Ptr = std::shared_ptr<Timer>;
-	using CVPtr = const Ptr&;
 	using WPtr = std::weak_ptr<Timer>;
 
 	/// @brief
@@ -29,6 +28,7 @@ public:
 	virtual bool Awake() override
 	{
 		GetWorld()->AddEvent(EMEventType::ServerStart, GetSelfW<Timer>(), &Timer::Start);
+		GetWorld()->AddEvent(EMEventType::ServerStop, GetSelfW<Timer>(), &Timer::Stop);
 		return true;
 	}
 
@@ -53,12 +53,12 @@ public:
 		pLoop->loop()->killTimer(timerId);
 	}
 
-	uint64_t SetTimeout(uint64_t milliseconds, const std::function<void(uint64_t)>& cb)
+	size_t SetTimeout(size_t milliseconds, const std::function<void(size_t)>& cb)
 	{
 		return pLoop->loop()->setTimeout(milliseconds, cb);
 	}
 
-	uint64_t SetInterval(uint64_t milliseconds, const std::function<void(uint64_t)>& cb)
+	size_t SetInterval(size_t milliseconds, const std::function<void(size_t)>& cb)
 	{
 		return pLoop->loop()->setInterval(milliseconds, cb);
 	}

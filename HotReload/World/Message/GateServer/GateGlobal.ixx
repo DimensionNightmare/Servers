@@ -8,34 +8,28 @@ import FuncHelper;
 import std;
 import ThirdParty.PbGen;
 import Logger;
+import GateServerMessage;
 
-export namespace GateServerMessage
+namespace MsgHandleRegister
 {
 
-	void Exe_ReqUserToken(SocketChannel::CVPtr channel, uint32_t msgId, const std::string& binMsg)
+	HandleRegistry<GMsg::A2g_ReqAuthAccount, GMsg::g2A_ResAuthAccount, EMMsgDeal::Req> Exe_ReqUserToken(
+				[](auto request, auto response, SocketChannel::Ptr channel)
 	{
-		GMsg::A2g_ReqAuthAccount request;
-		
-		if(!request.ParseFromString(binMsg))
-		{
-			return;
-		}
-		
-		GMsg::g2A_ResAuthAccount response;
-
-		std::string binData;
 
 		GateServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<GateServerHelper>(EMSystemType::Server);
 		ProxyEntityManagerHelper::Ptr entityMan = dnServer->GetProxyEntityManager();
-		ProxyEntityHelper::Ptr entity = entityMan->GetEntity(request.accountid());
+		ProxyEntityHelper::Ptr entity = entityMan->GetEntity(request->accountid());
 		if (entity)
 		{
 			//exit
-			if (SocketChannel::CVPtr online = entity->GetChannel())
+			if (SocketChannel::Ptr online = entity->GetChannel())
 			{
 				// kick channel
 				GMsg::S2C_RetAccountReplace notify_request;
-				notify_request.set_serverip(request.serverip());
+				notify_request.set_serverip(request->serverip());
+				
+				std::string binData;
 
 				notify_request.SerializeToString(&binData);
 				MessagePackAndSend(0, EMMsgDeal::Ret, notify_request.GetDescriptor()->full_name(), binData, online);
@@ -46,19 +40,19 @@ export namespace GateServerMessage
 
 
 				//kick game
-				if (uint64_t serverId = entity->RecordServerId())
+				if (size_t serverId = entity->RecordServerId())
 				{
 					LoggerPrint::Log(channel, ELogLevel_Debug, "Send Logic tick User->{}, server:{}", entity->ID(), entity->RecordServerId());
 
 					entity->GetChannel()->deleteContextPtr();
 
 					ServerEntityManagerHelper::Ptr serverEntityMan = dnServer->GetServerEntityManager();
-					if(ServerEntityHelper::CVPtr serverEntity = serverEntityMan->GetEntity(serverId))
+					if(ServerEntityHelper::Ptr serverEntity = serverEntityMan->GetEntity(serverId))
 					{
-						request.set_accountid(entity->ID());
+						request->set_accountid(entity->ID());
 
-						request.SerializeToString(&binData);
-						MessagePackAndSend(0, EMMsgDeal::Redir, request.GetDescriptor()->full_name(), binData, serverEntity->GetChannel());
+						request->SerializeToString(&binData);
+						MessagePackAndSend(0, EMMsgDeal::Redir, request->GetDescriptor()->full_name(), binData, serverEntity->GetChannel());
 					}
 
 				}
@@ -68,7 +62,7 @@ export namespace GateServerMessage
 		}
 		else
 		{
-			entity = entityMan->AddEntity(request.accountid());
+			entity = entityMan->AddEntity(request->accountid());
 
 			std::string token = Md5Hash(GetNowTimeStr());
 			entity->SetToken(token);
@@ -77,8 +71,8 @@ export namespace GateServerMessage
 			entity->SetExpireTime(std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count() + 30);
 		}
 
-		response.set_token(entity->Token());
-		response.set_expiredtimespan(entity->ExpireTime());
+		response->set_token(entity->Token());
+		response->set_expiredtimespan(entity->ExpireTime());
 
 		// entity or token expired
 		if (!entity->TimerId())
@@ -86,10 +80,6 @@ export namespace GateServerMessage
 			entity->SetTimerId(entityMan->CheckEntityCloseTimer(entity->ID()));
 		}
 
-		LoggerPrint::Log(channel, ELogLevel_Debug, "ReqUserToken User: {}!!", request.accountid());
-
-		response.SerializeToString(&binData);
-		MessagePackAndSend(msgId, EMMsgDeal::Res, binData, channel);
-	}
-
+		LoggerPrint::Log(channel, ELogLevel_Debug, "ReqUserToken User: {}!!", request->accountid());
+	});
 }

@@ -32,7 +32,7 @@ using namespace std::chrono;
 
 enum class EMSqlOpType : uint8_t
 {
-	None,
+	None = 0,
 	CreateTable,
 	Insert,
 	Query,
@@ -325,7 +325,7 @@ void SetFieldValueByProtoType(const FieldDescriptor* field, const Reflection* re
 			reflection->SetInt64(&data, field, value.as<int64_t>());
 			break;
 		case FieldDescriptor::CPPTYPE_UINT64:
-			reflection->SetUInt64(&data, field, value.as<uint64_t>());
+			reflection->SetUInt64(&data, field, value.as<size_t>());
 			break;
 		case FieldDescriptor::CPPTYPE_STRING:
 			reflection->SetString(&data, field, value.as<std::string>());

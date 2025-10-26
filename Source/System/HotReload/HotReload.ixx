@@ -17,14 +17,13 @@ protected:
 	}
 public:
 	using Ptr = std::shared_ptr<HotReload>;
-	using CVPtr = const Ptr&;
 
 	/// @brief
 	virtual ~HotReload()
 	{
 		if(oLibHandle != nullptr)
 		{
-			std::cerr << "HotReload Handle not disposed! Please check code!\n" << Platform::GetStackTrace() << std::endl;
+			std::cerr << "HotReload Handle not disposed! Please check code!\n" << Platform::GetStackTrace() << "\n";
 		}
 	}
 
@@ -168,9 +167,9 @@ public:
 
 public:
 	
-	std::function<int(World::CVPtr)> pShutdownHotReload;
+	std::function<int(World::Ptr)> pShutdownHotReload;
 
-	std::function<int(World::CVPtr)> pInitHotReload;
+	std::function<int(World::Ptr)> pInitHotReload;
 
 protected:
 	/// @brief runtime library floder name

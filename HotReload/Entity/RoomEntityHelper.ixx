@@ -24,13 +24,13 @@ public:
 
 	/// @brief the this close timedown destroy timerid.
 	/// @brief authenticate,shutdown and reconnect waiting.
-	uint64_t TimerId() { return iCloseTimerId; }
-	void SetTimerId(uint64_t timerId) { iCloseTimerId = timerId; }
+	size_t TimerId() { return iCloseTimerId; }
+	void SetTimerId(size_t timerId) { iCloseTimerId = timerId; }
 
 	/// @brief net socket set
-	SocketChannel::CVPtr GetChannel() { return pChannel; }
+	SocketChannel::Ptr GetChannel() { return pChannel; }
 
 	/// @brief net socket get
-	void SetChannel(SocketChannel::CVPtr channel) { pChannel = channel; }
+	void SetChannel(SocketChannel::Ptr channel) { pChannel = channel; }
 
 };

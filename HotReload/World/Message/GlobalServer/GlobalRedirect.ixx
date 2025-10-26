@@ -8,27 +8,17 @@ import Task;
 import ServerEntity;
 import ThirdParty.PbGen;
 import Logger;
+import MessagePack;
+import GlobalServerMessage;
 
-export namespace GlobalServerMessage
+namespace MsgHandleRegister
 {
 
-	TaskVoid Msg_ReqAuthAccount(SocketChannel::CVPtr channel, uint32_t msgId, const std::string& binMsg)
+	HandleRegistry<GMsg::A2g_ReqAuthAccount, GMsg::g2A_ResAuthAccount, EMMsgDeal::Redir> Msg_ReqAuthAccount(
+				[](auto request, auto response, SocketChannel::Ptr channel) -> TaskVoid
 	{
-		GMsg::A2g_ReqAuthAccount request;
-		if(!request.ParseFromString(binMsg))
-		{
-			co_return;
-		}
-		GMsg::g2A_ResAuthAccount response;
-
-		FinalExecute final([&response, msgId, channel](){
-			std::string binData;
-			response.SerializeToString(&binData);
-			MessagePackAndSend(msgId, EMMsgDeal::Res, binData, channel);
-		});
-
 		// if has db not need origin
-		GlobalServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<GlobalServerHelper>(EMSystemType::Server);
+		GlobalServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<GlobalServerHelper>(EMSystemType::Server);
 		std::list<ServerEntity::Ptr> serverList = dnServer->GetServerEntityManager()->GetEntitysByType(EMServerType::GateServer);
 
 		std::list<ServerEntityHelper::Ptr> tempList;
@@ -40,49 +30,46 @@ export namespace GlobalServerMessage
 			}
 		}
 
-		tempList.sort([](ServerEntityHelper::CVPtr lhs, ServerEntityHelper::CVPtr rhs) { return lhs->ConnNum() < rhs->ConnNum(); });
+		tempList.sort([](ServerEntityHelper::Ptr lhs, ServerEntityHelper::Ptr rhs) { return lhs->ConnNum() < rhs->ConnNum(); });
 
-
-		std::string binData;
 		if (tempList.empty())
 		{
-			response.set_errorcode(EL10nCode_NotExistGateServer);
+			response->set_errorcode(EL10nCode_NotExistGateServer);
 		}
 		else
 		{
-			ServerEntityHelper::CVPtr entity = tempList.front();
+			ServerEntityHelper::Ptr entity = tempList.front();
 			LoggerPrint::Log(channel, ELogLevel_Debug, "send to GateServer : {}", entity->ID());
 
 			entity->SetConnNum(1);
-
-			// pack data
-			binData = binMsg;
 
 			// data alloc
 			auto taskGen = [](Message* msg) -> Task<Message*>
 				{
 					co_return msg;
 				};
-			auto dataChannel = taskGen(&response);
+			auto dataChannel = taskGen(response);
 
-			ServerProxyHelper::CVPtr serverProxy = dnServer->GetServerProxy();
+			ServerProxyHelper::Ptr serverProxy = dnServer->GetServerProxy();
 			uint32_t msgId = serverProxy->GetMsgId();
 
 			serverProxy->AddMsg(msgId, &dataChannel, 8000);
 			
-			MessagePackAndSend(msgId, EMMsgDeal::Req, request.GetDescriptor()->full_name(), binData, entity->GetChannel());
+			std::string binMsg;
+			request->SerializeToString(&binMsg);
+			MessagePackAndSend(msgId, EMMsgDeal::Req, request->GetDescriptor()->full_name(), binMsg, entity->GetChannel());
 
 			co_await dataChannel;
 			if (dataChannel.HasFlag(EMTaskFlag::Timeout))
 			{
-				response.set_errorcode(EL10nCode_SGlobalReqTimeout);
+				response->set_errorcode(EL10nCode_SGlobalReqTimeout);
 
 			}
 
-			if(response.errorcode() == EL10nCode_None)
+			if(response->errorcode() == EL10nCode_None)
 			{
-				response.set_serverip(entity->ServerIp());
-				response.set_serverport(entity->ServerPort());
+				response->set_serverip(entity->ServerIp());
+				response->set_serverport(entity->ServerPort());
 			}
 			else
 			{
@@ -91,10 +78,9 @@ export namespace GlobalServerMessage
 
 			
 
-			LoggerPrint::Log(channel, ELogLevel_Debug, "{}", response.DebugString());
+			LoggerPrint::Log(channel, ELogLevel_Debug, "Msg_ReqAuthAccount:{}", response->DebugString());
 		}
 
 		co_return;
-	}
-
+	});
 }

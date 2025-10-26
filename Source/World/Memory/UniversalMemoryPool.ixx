@@ -29,12 +29,15 @@ public:
 
 	UniversalMemoryPool(size_t pool_size = 1024 * 1024 * 32) : iPoolSize(pool_size)
 	{
-		pPool = static_cast<void*>(::operator new(iPoolSize));
+		pPool = ::operator new(iPoolSize);
 		AddToFreeList(pPool, iPoolSize);
 	}
 
 	~UniversalMemoryPool()
 	{
+		// 释放桶
+		FreeBucket();
+
 		// 检查泄漏
 		CheckLeaks();
 
@@ -55,8 +58,18 @@ public:
 		return "";
 	}
 
+	void SetMemoryRecordInfo(void* raw_memory, std::source_location&& location)
+	{
+		auto it = mAllocatedRecords.find(raw_memory);
+		if(it != mAllocatedRecords.end())
+		{
+			it->second.location = std::move(location);
+		}
+	}
+
 	template<typename T, typename... Args>
-	std::shared_ptr<T> Allocate(Args&&... args, const std::source_location& loc = std::source_location::current())
+	// requires std::invocable<T,Args...>
+	std::shared_ptr<T> Allocate(Args&&... args)
 	{
 		constexpr size_t size = std::bit_ceil(sizeof(T));
 		void* raw_memory = nullptr;
@@ -73,7 +86,7 @@ public:
 			if (raw_memory)
 			{
 				// 记录分配信息（包含源代码位置）
-				RecordAllocationInfo(raw_memory, size, loc);
+				RecordAllocationInfo(raw_memory, size);
 
 				T* object_ptr = new (raw_memory) T(std::forward<Args>(args)...);
 
@@ -100,7 +113,7 @@ public:
 		}
 	}
 
-private:
+protected:
 	// 尝试快速分配
 	void* TryFastAllocation(size_t size)
 	{
@@ -115,12 +128,12 @@ private:
 
 		// 尝试从桶中快速获取
 		{
-			std::unique_lock lock(sizeBuckets[bucket_index].mutex);
+			std::unique_lock lock(mSizeBuckets[bucket_index].mutex);
 			
-			if (!sizeBuckets[bucket_index].blocks.empty())
+			if (!mSizeBuckets[bucket_index].blocks.empty())
 			{
-				void* addr = sizeBuckets[bucket_index].blocks.back();
-				sizeBuckets[bucket_index].blocks.pop_back();
+				void* addr = mSizeBuckets[bucket_index].blocks.back();
+				mSizeBuckets[bucket_index].blocks.pop_back();
 				return addr;
 			}
 		}
@@ -132,7 +145,7 @@ private:
 	{
 		void* addr = nullptr;
 		
-		std::unique_lock lock(mainMutex);
+		std::unique_lock lock(oMainMutex);
 		if (auto it = FindFreeBlock(size); it != mFreeBlocks.end())
 		{
 			addr = AllocateFromIterator(it, size);
@@ -158,9 +171,9 @@ private:
 			if (remaining <= MaxCachedSize)
 			{
 				size_t bucket_index = GetBucketIndex(remaining);
-				std::unique_lock lock(sizeBuckets[bucket_index].mutex);
+				std::unique_lock lock(mSizeBuckets[bucket_index].mutex);
 				
-				sizeBuckets[bucket_index].blocks.push_back(remaining_addr);
+				mSizeBuckets[bucket_index].blocks.push_back(remaining_addr);
 			}
 			else
 			{
@@ -173,23 +186,27 @@ private:
 	}
 
 	// 添加块到空闲链表（修复死锁）
-	void AddToFreeList(void* addr, size_t size)
+	bool AddToFreeList(void* addr, size_t size)
 	{
 		// 如果大小在缓存范围内，添加到桶中
 		if (size <= MaxCachedSize)
 		{
 			size_t bucket_index = GetBucketIndex(size);
-			std::unique_lock lock(sizeBuckets[bucket_index].mutex);
+			std::unique_lock lock(mSizeBuckets[bucket_index].mutex);
 			
-			sizeBuckets[bucket_index].blocks.push_back(addr);
+			mSizeBuckets[bucket_index].blocks.push_back(addr);
+
+			return true;
 		}
 		// 否则添加到主内存池
 		else
 		{
-			std::unique_lock lock(mainMutex);
+			std::unique_lock lock(oMainMutex);
 			
 			mFreeBlocks.emplace(addr, size);
 		}
+
+		return false;
 	}
 
 	// 获取桶索引
@@ -203,27 +220,22 @@ private:
 	}
 
 	// 记录分配信息
-	void RecordAllocationInfo(
-		void* memory,
-		size_t size,
-		const std::source_location& loc
-	)
+	void RecordAllocationInfo(void* memory, size_t size)
 	{
 		
-		std::unique_lock lock(recordMutex);
+		std::unique_lock lock(oRecordMutex);
 
 		AllocationRecord record;
 		record.size = size;
-		record.location = loc;
 
 		mAllocatedRecords[memory] = record;
 	}
 
 	void RollbackAllocation(void* raw_memory, size_t size)
 	{
-		AddToFreeList(raw_memory, size);
+		if(!AddToFreeList(raw_memory, size)) // 如果没加在桶中
 		{
-			std::unique_lock lock(recordMutex);
+			std::unique_lock lock(oRecordMutex);
 			
 			auto it = mAllocatedRecords.find(raw_memory);
 			if (it != mAllocatedRecords.end())
@@ -242,7 +254,7 @@ private:
 	// 检查内存泄漏
 	void CheckLeaks()
 	{
-		std::shared_lock lock(recordMutex);
+		std::shared_lock lock(oRecordMutex);
 
 		if (!mAllocatedRecords.empty())
 		{
@@ -279,20 +291,30 @@ private:
 		return best_fit;
 	}
 
+	void FreeBucket()
+	{
+		for(SizeBucket& bucket : mSizeBuckets)
+		{
+			for(void* block : bucket.blocks)
+			{
+				mAllocatedRecords.erase(block);
+			}
+		}
+	}
+
+protected:
+
 	void* pPool = nullptr;
 	size_t iPoolSize = 0;
 
 	// 主内存池
 	std::unordered_map<void*, size_t> mFreeBlocks;
-	std::shared_mutex mainMutex;
-	std::shared_mutex recordMutex;
+	std::shared_mutex oMainMutex;
+	std::shared_mutex oRecordMutex;
 
 	// 大小分类桶
-	std::array<SizeBucket, BucketCount> sizeBuckets;
+	std::array<SizeBucket, BucketCount> mSizeBuckets;
 
 	// 分配记录
 	std::unordered_map<void*, AllocationRecord> mAllocatedRecords;
-
-	// 分配的内存块记录
-	std::vector<std::pair<void*, size_t>> allocatedChunks;
 };

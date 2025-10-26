@@ -16,7 +16,6 @@ protected:
 
 public:
 	using Ptr = std::shared_ptr<MdbProxy>;
-	using CVPtr = const Ptr&;
 	
 	virtual ~MdbProxy()
 	{
@@ -37,11 +36,11 @@ public:
 
 	void InitDatabase()
 	{
-		World::CVPtr world = GetWorld();
+		World::Ptr world = GetWorld();
 
 		std::string* value = world->LaunchParam("connection");
 
-		auto connection = P_InstanceHolder->MemPool->Allocate<sw::redis::Redis, const std::string&>(*value);
+		auto connection = P_InstanceHolder->GetMemPool().Allocate<sw::redis::Redis>(*value);
 		
 		connection->ping();
 

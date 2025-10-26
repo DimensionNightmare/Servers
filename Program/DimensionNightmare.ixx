@@ -19,7 +19,7 @@ import ECSW;
 import Logger;
 import Timer;
 
-export enum class EMProgramFlag
+export enum class EMProgramFlag : uint8_t
 {
 	None = 0,
 	ResourceLoadDown = 1,
@@ -96,15 +96,15 @@ export bool InitProgramConfig(ProgramConfig& programConfig)
 		return false;
 	}
 
-	for(auto& serverType : StrSplit(launchConfig["svrType"], ","))
+	for (auto& serverType : StrSplit(launchConfig["svrType"], ","))
 	{
 		bitServerOpenFlag.SetFlag(std::stoi(serverType));
 	}
 
 	launchConfig.erase("svrType");
 
-	uint64_t bitFlagValue = bitServerOpenFlag.GetAllFlagNum();
-	if (bitFlagValue == 0 || bitFlagValue >= (1 << static_cast<uint8_t>(EMServerType::Max)))
+	size_t bitFlagValue = bitServerOpenFlag.GetAllFlagNum();
+	if (bitFlagValue == 0 || bitFlagValue >= (1 << std::to_underlying(EMServerType::Max)))
 	{
 		LoggerPrint::Log(nullptr, ELogLevel_Error, "serverType Not Invalid! ");
 		return false;
@@ -116,14 +116,14 @@ export bool InitProgramConfig(ProgramConfig& programConfig)
 	const char* iniFilePath = "./Config/Server.ini";
 #endif
 
-	if(!std::filesystem::exists(iniFilePath))
+	if (!std::filesystem::exists(iniFilePath))
 	{
 		LoggerPrint::Log(nullptr, ELogLevel_Error, "ConfigIni Not Finded!");
 		return false;
 	}
 
 #ifdef _WIN32
-	#define MAX_SECTION_NAME 512
+#define MAX_SECTION_NAME 512
 	char buffer[MAX_SECTION_NAME] = { 0 };
 	size_t bufferSize = sizeof(buffer);
 	Platform::GetPrivateProfileSectionNamesA(buffer, MAX_SECTION_NAME, iniFilePath);
@@ -141,7 +141,7 @@ export bool InitProgramConfig(ProgramConfig& programConfig)
 			ifstream file(iniFilePath);
 			if (!file.is_open())
 			{
-				cerr << "Failed to open INI file: " << iniFilePath << std::endl;
+				cerr << "Failed to open INI file: " << iniFilePath << "\n";
 				return;
 			}
 
@@ -188,16 +188,16 @@ export bool InitProgramConfig(ProgramConfig& programConfig)
 	}
 #endif
 	auto handler = [&](std::unordered_map<std::string, std::string>& map, std::string& split)
-	{
-		size_t pos = split.find('=');
-		if (pos != std::string::npos)
 		{
-			std::string key = split.substr(0, pos);
+			size_t pos = split.find('=');
+			if (pos != std::string::npos)
+			{
+				std::string key = split.substr(0, pos);
 
-			map.emplace(key, split.substr(pos + 1));
-		}
-	};
-	
+				map.emplace(key, split.substr(pos + 1));
+			}
+		};
+
 
 	for (auto& [mainSection, sectionMap] : iniFileParam)
 	{
@@ -252,7 +252,7 @@ public:
 	bool Init(ProgramConfig& programConfig)
 	{
 		// init auth world
-		P_InstanceHolder->AuthWorld = P_InstanceHolder->MemPool->Allocate<World>();
+		P_InstanceHolder->AuthWorld = P_InstanceHolder->GetMemPool().Allocate<World>();
 		P_InstanceHolder->AuthWorld->MoveLuanchConfigToSelf(programConfig.iniFileConfig["Common"]);
 
 		P_InstanceHolder->AuthWorld->AddSystem<LoggerPrint>();
@@ -260,16 +260,16 @@ public:
 
 		P_InstanceHolder->AuthWorld->AddSystem<HotReload>();
 
-		for(auto& [serverEnum, serverName] : ServerTypeList)
+		for (auto& [serverEnum, serverName] : ServerTypeList)
 		{
 			// set global Launch config
-			if(programConfig.bitServerOpenFlag.HasFlag(serverEnum))
+			if (programConfig.bitServerOpenFlag.HasFlag(serverEnum))
 			{
-				
-				World::CVPtr world = P_InstanceHolder->MemPool->Allocate<World>();
+
+				World::Ptr world = P_InstanceHolder->GetMemPool().Allocate<World>();
 				world->MoveLuanchConfigToSelf(programConfig.iniFileConfig[serverName]);
 
-				if(!InitServer(world))
+				if (!InitServer(world))
 				{
 					world->Dispose();
 					continue;
@@ -289,14 +289,14 @@ public:
 
 	/// @brief create dnServer
 	/// @param pHotDll if mutiServer, will own common
-	bool InitServer(World::CVPtr world)
+	bool InitServer(World::Ptr world)
 	{
 		world->AddSystem<Timer>();
 
 		std::string* value = world->LaunchParam("svrName");
 		EMServerType serverType = EnumName<EMServerType>(*value);
 
-		Server::CVPtr dnServer = world->AddSystem<Server>();
+		Server::Ptr dnServer = world->AddSystem<Server>();
 		dnServer->SetServerType(serverType);
 
 		value = world->LaunchParam("byCtl");
@@ -315,7 +315,7 @@ public:
 				dnServer->AddComponent<ServerEntityManager>();
 				//net
 				dnServer->AddComponent<ServerProxy>();
-				if(value)
+				if (value)
 				{
 					dnServer->AddComponent<ClientProxy>();
 				}
@@ -327,7 +327,7 @@ public:
 				dnServer->AddComponent<RdbProxy>();
 				dnServer->AddComponent<WebProxy>();
 				//net
-				if(value)
+				if (value)
 				{
 					dnServer->AddComponent<ClientProxy>();
 				}
@@ -370,59 +370,68 @@ public:
 
 		return true;
 	}
-	
+
 	/// @brief init command line 
 	void InitCmdHandle()
 	{
-		auto pause = [](std::stringstream* = nullptr)
+		auto pause = [this](std::stringstream* = nullptr)
 			{
-				GEvent.Broadcast(EMEventType::ServerPause	);
+				// GEvent.Broadcast(EMEventType::ServerPause);
+				for (auto world : oWorlds)
+				{
+					world->Broadcast(EMEventType::ServerPause);
+				}
 			};
 
-		auto resume = [](std::stringstream* = nullptr)
+		auto resume = [this](std::stringstream* = nullptr)
 			{
-				GEvent.Broadcast(EMEventType::ServerResume);
+				// GEvent.Broadcast(EMEventType::ServerResume);
+				for (auto world : oWorlds)
+				{
+					world->Broadcast(EMEventType::ServerResume);
+				}
 			};
 
 		auto reloadDll = [this, pause, resume](std::stringstream* ss = nullptr)
 			{
 				pause();
-				
-				HotReload::CVPtr pHotDll = P_InstanceHolder->AuthWorld->GetSystem<HotReload>(EMSystemType::HotReload);
+
+				HotReload::Ptr pHotDll = P_InstanceHolder->AuthWorld->GetSystem<HotReload>(EMSystemType::HotReload);
 
 				//after func
 				auto unloadFunc = pHotDll->pShutdownHotReload;
 
-				if(pHotDll->ReloadHandle([&](){
-
-					for(auto& world : oWorlds)
+				if (pHotDll->ReloadHandle([&]()
 					{
-						unloadFunc(world);
-					}
 
-					unloadFunc = nullptr;
-				}))
+						for (auto& world : oWorlds)
+						{
+							unloadFunc(world);
+						}
+
+						unloadFunc = nullptr;
+					}))
 				{
-					for(auto& world : oWorlds)
+					for (auto& world : oWorlds)
 					{
 						pHotDll->pInitHotReload(world);
 					}
 				}
-				
+
 				resume();
 			};
 
 		auto reloadConfig = [this](std::stringstream* = nullptr)
 			{
-				
+
 			};
 
 		mCmdHandle = {
 			#define one(func) {#func, func}
-			
+
 			one(pause), one(resume), one(reloadDll),
 			one(reloadConfig)
-			
+
 			#undef one
 		};
 
@@ -433,7 +442,7 @@ public:
 		// }
 
 		// LoggerPrint::Log(nullptr, ELogLevel_Normal, "{}", allCommands);
-	}	
+	}
 
 	/// @brief exec command line
 	void ExecCommand(std::string* cmd, std::stringstream* ss)
@@ -442,19 +451,21 @@ public:
 		{
 			mCmdHandle[*cmd](ss);
 		}
-	}	
-
-	void TickMainFrame() {  }
+	}
 
 	virtual void Dispose() override
 	{
+		// event
+		GEvent.Broadcast(EMEventType::ServerStop);
+
 		for (auto it = oWorlds.rbegin(); it != oWorlds.rend(); ++it)
 		{
+			(*it)->Broadcast(EMEventType::ServerStop);
 			(*it)->Dispose();
 		}
-		
+
 		oWorlds.clear();
-		
+
 		World::Dispose();
 
 		mCmdHandle.clear();
@@ -462,13 +473,13 @@ public:
 
 	bool StartWorlds()
 	{
-		HotReload::CVPtr pHotDll = P_InstanceHolder->AuthWorld->GetSystem<HotReload>(EMSystemType::HotReload);
+		HotReload::Ptr pHotDll = P_InstanceHolder->AuthWorld->GetSystem<HotReload>(EMSystemType::HotReload);
 		if (!pHotDll->ReloadHandle())
 		{
 			return false;
 		}
 
-		for(auto world : oWorlds)
+		for (auto world : oWorlds)
 		{
 			if (pHotDll->pInitHotReload(world) != 1)
 			{
@@ -476,13 +487,13 @@ public:
 				return false;
 			}
 
-			
+
 			try
 			{
 				Server::Ptr dnServer = world->GetSystem<Server>(EMSystemType::Server);
 				dnServer->Broadcast(EMEventType::ServerStart);
 			}
-			catch(const std::exception& e)
+			catch (const std::exception& e)
 			{
 				LoggerPrint::Log(world, ELogLevel_Error, "dnserver lunch error! error: {}", e.what());
 				return false;
@@ -493,6 +504,21 @@ public:
 
 
 		return true;
+	}
+
+	virtual void TickMainFrame() override
+	{
+		for (auto world : oWorlds)
+		{
+			try
+			{
+				world->TickMainFrame();
+			}
+			catch (const std::exception& e)
+			{
+				LoggerPrint::Log(world, ELogLevel_Error, "execute server {} TickMainFrame error! error: {}", *world->LaunchParam("svrName"), e.what());
+			}
+		}
 	}
 
 private:
@@ -510,7 +536,7 @@ extern "C"
 {
 	__declspec(dllexport) void GetInstanceHolder(InstanceHolder::Ptr& holder)
 	{
-		holder.reset(P_InstanceHolder.get(), [](InstanceHolder*){});
+		holder.reset(P_InstanceHolder.get(), [](InstanceHolder*) {});
 	}
 }
 

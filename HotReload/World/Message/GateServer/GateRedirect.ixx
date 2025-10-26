@@ -1,7 +1,6 @@
 export module GateServerMessage:GateRedirect;
 
 import GateServerHelper;
-
 import ThirdParty.Libhv;
 import FuncHelper;
 import Task;
@@ -9,32 +8,22 @@ import std;
 import ThirdParty.PbGen;
 import Logger;
 import ThirdParty.Protobuf;
+import GateServerMessage;
 
-export namespace GateServerMessage
+namespace MsgHandleRegister
 {
 
-	TaskVoid Exe_ReqLoadData(SocketChannel::CVPtr channel, uint32_t msgId, const std::string& binMsg)
+	HandleRegistry<GMsg::L2D_ReqLoadData, GMsg::D2L_ResLoadData, EMMsgDeal::Redir> Exe_ReqLoadData(
+				[](auto request, auto response, SocketChannel::Ptr channel) -> TaskVoid
 	{
-		GMsg::L2D_ReqLoadData request;
-		if(!request.ParseFromString(binMsg))
-		{
-			co_return;
-		}
-		GMsg::D2L_ResLoadData response;
-
-		FinalExecute final([&response, msgId, channel](){
-			std::string binData;
-			response.SerializeToString(&binData);
-			MessagePackAndSend(msgId, EMMsgDeal::Res, binData, channel);
-		});
-
+		
 		GateServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<GateServerHelper>(EMSystemType::Server);
 		ServerEntityManagerHelper::Ptr entityMan = dnServer->GetServerEntityManager();
 		const std::list<ServerEntity::Ptr>& dbServers = entityMan->GetEntitysByType(EMServerType::DatabaseServer);
 
 		if (dbServers.empty())
 		{
-			response.set_errorcode(EL10nCode_NotExistDBServer);
+			response->set_errorcode(EL10nCode_NotExistDBServer);
 		}
 		else
 		{
@@ -45,46 +34,38 @@ export namespace GateServerMessage
 				{
 					co_return msg;
 				};
-			auto dataChannel = taskGen(&response);
+			auto dataChannel = taskGen(response);
 
 			ServerProxyHelper::Ptr serverProxy = dnServer->GetServerProxy();
 			uint32_t msgId = serverProxy->GetMsgId();
 			serverProxy->AddMsg(msgId, &dataChannel, 8000);
 
-			MessagePackAndSend(msgId, EMMsgDeal::Req, request.GetDescriptor()->full_name(), binMsg, entity->GetChannel());
+			std::string binMsg;
+			request->SerializeToString(&binMsg);
+			MessagePackAndSend(msgId, EMMsgDeal::Req, request->GetDescriptor()->full_name(), binMsg, entity->GetChannel());
 
 			co_await dataChannel;
 			if (dataChannel.HasFlag(EMTaskFlag::Timeout))
 			{
-				response.set_errorcode(EL10nCode_SGateReqTimeout);
+				response->set_errorcode(EL10nCode_SGateReqTimeout);
 			}
 			
 		}
 
 		co_return;
-	}
+	});
 
-	TaskVoid Exe_ReqSaveData(SocketChannel::CVPtr channel, uint32_t msgId, const std::string& binMsg)
+	HandleRegistry<GMsg::L2D_ReqSaveData, GMsg::D2L_ResSaveData, EMMsgDeal::Redir> Exe_ReqSaveData(
+				[](auto request, auto response, SocketChannel::Ptr channel) -> TaskVoid
 	{
-		GMsg::L2D_ReqSaveData request;
-		if(!request.ParseFromString(binMsg))
-		{
-			co_return;
-		}
-		GMsg::D2L_ResSaveData response;
-		FinalExecute final([&response, msgId, channel](){
-			std::string binData;
-			response.SerializeToString(&binData);
-			MessagePackAndSend(msgId, EMMsgDeal::Res, binData, channel);
-		});
-
+		
 		GateServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<GateServerHelper>(EMSystemType::Server);
 		ServerEntityManagerHelper::Ptr entityMan = dnServer->GetServerEntityManager();
 		const std::list<ServerEntity::Ptr>& dbServers = entityMan->GetEntitysByType(EMServerType::DatabaseServer);
 
 		if (dbServers.empty())
 		{
-			response.set_errorcode(EL10nCode_NotExistDBServer);
+			response->set_errorcode(EL10nCode_NotExistDBServer);
 		}
 		else
 		{
@@ -95,24 +76,25 @@ export namespace GateServerMessage
 				{
 					co_return msg;
 				};
-			auto dataChannel = taskGen(&response);
+			auto dataChannel = taskGen(response);
 
 			ServerProxyHelper::Ptr server = dnServer->GetServerProxy();
 			uint32_t msgId = server->GetMsgId();
 			server->AddMsg(msgId, &dataChannel, 8000);
 
-			MessagePackAndSend(msgId, EMMsgDeal::Req, request.GetDescriptor()->full_name(), binMsg, entity->GetChannel());
+			std::string binMsg;
+			request->SerializeToString(&binMsg);
+			MessagePackAndSend(msgId, EMMsgDeal::Req, request->GetDescriptor()->full_name(), binMsg, entity->GetChannel());
 
 			co_await dataChannel;
 			if (dataChannel.HasFlag(EMTaskFlag::Timeout))
 			{
 				LoggerPrint::Log(channel, ELogLevel_Debug, "requst timeout! ");
-				response.set_errorcode(EL10nCode_SGateReqTimeout);
+				response->set_errorcode(EL10nCode_SGateReqTimeout);
 			}
 			
 		}
 
 		co_return;
-	}
-
+	});
 }

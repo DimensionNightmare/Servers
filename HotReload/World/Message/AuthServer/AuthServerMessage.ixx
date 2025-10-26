@@ -1,27 +1,47 @@
 export module AuthServerMessage;
 
-import :AuthCommon;
-import ApiManager;
 import MessageRegister;
+import std;
 
-export class AuthServerMessageHandle : public MessageRegister
+class Server;
+
+namespace ServerMessage
 {
-
-public:
-
-	void RegApiHandle(Server::CVPtr dnServer) override
+	export std::shared_ptr<MessageRegister> GetMessageHandle()
 	{
-		ApiInit(dnServer);
-	}
+		static std::shared_ptr<MessageRegister> PInstance;
+		if (PInstance == nullptr)
+		{
+			PInstance = std::make_shared<MessageRegister>();
+		}
 
-	void RegMsgHandle()
+		return PInstance;
+	}
+}
+
+namespace MsgHandleRegister
+{
+	struct AuthTag{};
+
+	export template<typename ServerTag = AuthTag>
+	class HandleClientRegistry
 	{
+	public:
+		template<typename Executor>
+		HandleClientRegistry(Executor&& executor)
+		{
+			ServerMessage::GetMessageHandle()->pClientRegistFunc = std::forward<Executor>(executor);
+		}
+	};
 
-	}
-
-	std::function<void(Server::CVPtr)> GetClientRegistFunc()
+	export template<typename ServerTag = AuthTag>
+	class HandleApiRegistry
 	{
-		return &AuthServerMessage::Evt_ReqRegistSrv;
-	}
-	
-};
+	public:
+		template<typename Executor>
+		HandleApiRegistry(Executor&& executor)
+		{
+			ServerMessage::GetMessageHandle()->pApiRegistFunc = std::forward<Executor>(executor);
+		}
+	};
+}

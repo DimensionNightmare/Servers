@@ -15,7 +15,6 @@ protected:
 	}
 public:
 	using Ptr = std::shared_ptr<RoomEntity>;
-	using CVPtr = const Ptr&;
 
 	virtual ~RoomEntity()
 	{
@@ -36,7 +35,7 @@ protected: // dll proxy
 
 	uint32_t IConnNum = 0;
 
-	uint64_t iCloseTimerId = 0;
+	size_t iCloseTimerId = 0;
 
 	SocketChannel::Ptr pChannel;
 	

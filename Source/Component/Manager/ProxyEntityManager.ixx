@@ -28,14 +28,9 @@ public:
 	{
 		EntityManager::Dispose();
 	}
-
-	/// @brief 
-	virtual void TickMainFrame() override
-	{
-	}
 	
 	/// @brief 
-	void EntityCloseTimer(uint64_t timerID)
+	void EntityCloseTimer(size_t timerID)
 	{
 		std::unique_lock ulock(oTimerMutex);
 		if (!mMapTimer.contains(timerID))
@@ -43,7 +38,7 @@ public:
 			return;
 		}
 
-		uint64_t entityId = mMapTimer[timerID];
+		size_t entityId = mMapTimer[timerID];
 
 		mMapTimer.erase(timerID);
 
@@ -57,12 +52,12 @@ public:
 public: // dll proxy
 
 	/// @brief 
-	bool RemoveEntity(uint64_t entityId)
+	bool RemoveEntity(size_t entityId)
 	{
 		if (mEntityMap.contains(entityId))
 		{
 			std::unique_lock ulock(oMapMutex);
-			ProxyEntity::CVPtr entity = mEntityMap[entityId];
+			ProxyEntity::Ptr entity = mEntityMap[entityId];
 			entity->Dispose();
 			mEntityMap.erase(entityId);
 			return true;
@@ -73,9 +68,9 @@ public: // dll proxy
 
 protected:
 
-	ProxyEntity::Ptr _AddEntity(uint64_t entityId)
+	ProxyEntity::Ptr _AddEntity(size_t entityId)
 	{
-		ProxyEntity::Ptr entity = P_InstanceHolder->MemPool->Allocate<ProxyEntity, World::WPtr>(GetOwner()->GetWorldW());
+		ProxyEntity::Ptr entity = P_InstanceHolder->GetMemPool().Allocate<ProxyEntity>(GetOwner()->GetWorldW());
 		entity->SetID(entityId);
 
 		std::unique_lock ulock(oMapMutex);
@@ -84,11 +79,11 @@ protected:
 	}
 	
 	/// @brief 
-	uint64_t _CheckEntityCloseTimer(uint64_t entityId)
+	size_t _CheckEntityCloseTimer(size_t entityId)
 	{
 		FunctionContainer<&ProxyEntityManager::EntityCloseTimer> funcProxy(this);
 
-		uint64_t timerId = GetTimer()->SetTimeout(10000, funcProxy);
+		size_t timerId = GetTimer()->SetTimeout(10000, funcProxy);
 
 		AddTimerRecord(timerId, entityId);
 

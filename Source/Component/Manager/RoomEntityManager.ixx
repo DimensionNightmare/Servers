@@ -30,11 +30,7 @@ public:
 		mEntityMapList.clear();
 	}
 
-	virtual void TickMainFrame() override
-	{
-	}
-
-	void EntityCloseTimer(uint64_t timerID)
+	void EntityCloseTimer(size_t timerID)
 	{
 		std::unique_lock ulock(oTimerMutex);
 		if (!mMapTimer.contains(timerID))
@@ -42,7 +38,7 @@ public:
 			return;
 		}
 
-		uint64_t entityId = mMapTimer[timerID];
+		size_t entityId = mMapTimer[timerID];
 
 		mMapTimer.erase(timerID);
 
@@ -55,11 +51,11 @@ public:
 
 public: // dll proxy
 
-	bool RemoveEntity(uint64_t entityId)
+	bool RemoveEntity(size_t entityId)
 	{
 		if (mEntityMap.contains(entityId))
 		{
-			RoomEntity::CVPtr entity = mEntityMap[entityId];
+			RoomEntity::Ptr entity = mEntityMap[entityId];
 			entity->Dispose();
 			
 			std::unique_lock ulock(oMapMutex);
@@ -73,20 +69,20 @@ public: // dll proxy
 
 protected:
 
-	RoomEntity::Ptr _AddEntity(uint64_t mapId)
+	RoomEntity::Ptr _AddEntity(size_t mapId)
 	{
-		RoomEntity::Ptr entity = P_InstanceHolder->MemPool->Allocate<RoomEntity, World::WPtr>(GetOwner()->GetWorldW());
+		RoomEntity::Ptr entity = P_InstanceHolder->GetMemPool().Allocate<RoomEntity>(GetOwner()->GetWorldW());
 
 		std::unique_lock ulock(oMapMutex);
 		mEntityMap[entity->ID()] = entity;
 		return entity;
 	}
 
-	uint64_t _CheckEntityCloseTimer(uint64_t entityId)
+	size_t _CheckEntityCloseTimer(size_t entityId)
 	{
 		FunctionContainer<&RoomEntityManager::EntityCloseTimer> funcProxy(this);
 
-		uint64_t timerId = GetTimer()->SetTimeout(10000, funcProxy);
+		size_t timerId = GetTimer()->SetTimeout(10000, funcProxy);
 
 		AddTimerRecord(timerId, entityId);
 
@@ -99,9 +95,9 @@ public:
 
 protected:
 	/// @brief 
-	std::unordered_map<uint64_t, std::list<RoomEntity::Ptr>> mEntityMapList;
+	std::unordered_map<size_t, std::list<RoomEntity::Ptr>> mEntityMapList;
 
 	/// @brief 
-	std::atomic<uint64_t> iRoomGenId;
+	std::atomic<size_t> iRoomGenId;
 
 };

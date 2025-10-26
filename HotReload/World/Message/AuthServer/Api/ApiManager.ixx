@@ -3,7 +3,7 @@ export module ApiManager;
 import :ApiAuth;
 import ClientProxyHelper;
 
-export void ApiInit(Server::CVPtr dnServer)
+export void ApiInit(Server::Ptr dnServer)
 {
 	Server::WPtr server = dnServer->GetSelfW<Server>();
 
@@ -19,7 +19,7 @@ export void ApiInit(Server::CVPtr dnServer)
 			}
 
 			Server::Ptr dnServer = server.lock();
-			if(!dnServer) { return !pass; }
+			if(!dnServer || dnServer->IsDisposed()) { return !pass; }
 
 
 			nlohmann::json errData;

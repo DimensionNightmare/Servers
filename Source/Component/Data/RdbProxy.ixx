@@ -8,6 +8,7 @@ import StrUtils;
 
 export enum class EMSqlDbNameEnum : uint16_t
 {
+	None = 0,
 	Account,
 	Nightmare,
 };
@@ -23,7 +24,6 @@ protected:
 
 public:
 	using Ptr = std::shared_ptr<RdbProxy>;
-	using CVPtr = const Ptr&;
 
 	virtual void Dispose() override
 	{
@@ -40,7 +40,7 @@ public:
 
 	void InitDatabase()
 	{
-		World::CVPtr world = GetWorld();
+		World::Ptr world = GetWorld();
 
 		std::string* value = world->LaunchParam("connection");
 		pqxx::connection check(*value);
@@ -62,7 +62,7 @@ public:
 
 			std::string connectStr = std::format("{} dbname = {}", *value, dbName);
 
-			auto connection = P_InstanceHolder->MemPool->Allocate<pqxx::connection, const std::string&>(connectStr);
+			auto connection = P_InstanceHolder->GetMemPool().Allocate<pqxx::connection>(connectStr);
 
 			pRdbProxys.emplace(key, std::move(connection));
 		}

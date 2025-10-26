@@ -19,7 +19,6 @@ protected:
 	friend class UniversalMemoryPool;
 public:
 	using Ptr = std::shared_ptr<L10nText>;
-	using CVPtr = const Ptr&;
 	using WPtr = std::weak_ptr<L10nText>;
 
 	virtual ~L10nText()

@@ -5,11 +5,12 @@ import FuncHelper;
 import Server;
 import ThirdParty.PbGen;
 import Logger;
+import GateServerMessage;
 
-export namespace GateServerMessage
+namespace MsgHandleRegister
 {
 
-	void Evt_RetRegistChild(Server::CVPtr server)
+	void Evt_RetRegistChild(Server::Ptr server)
 	{
 		GateServerHelper::Ptr dnServer = server->GetSelf<GateServerHelper>();
 		ServerEntityManagerHelper::Ptr entityMan = dnServer->GetServerEntityManager();
@@ -19,7 +20,7 @@ export namespace GateServerMessage
 
 		request.set_serverid(dnServer->ID());
 
-		auto AddChild = [&request](ServerEntity::CVPtr serv)
+		auto AddChild = [&request](ServerEntity::Ptr serv)
 			{
 				GMsg::COM_ReqRegistSrv* child = request.add_childs();
 				child->set_serverid(serv->ID());
@@ -27,13 +28,13 @@ export namespace GateServerMessage
 			};
 
 		const std::list<ServerEntity::Ptr>& dbs = entityMan->GetEntitysByType(EMServerType::DatabaseServer);
-		for (ServerEntity::CVPtr serv : dbs)
+		for (ServerEntity::Ptr serv : dbs)
 		{
 			AddChild(serv);
 		}
 
 		const std::list<ServerEntity::Ptr>& logics = entityMan->GetEntitysByType(EMServerType::LogicServer);
-		for (ServerEntity::CVPtr serv : logics)
+		for (ServerEntity::Ptr serv : logics)
 		{
 			AddChild(serv);
 		}
@@ -50,7 +51,7 @@ export namespace GateServerMessage
 	}
 
 	// self request
-	TaskVoid Evt_ReqRegistSrv(Server::CVPtr server)
+	HandleClientRegistry Evt_ReqRegistSrv([](Server::Ptr server) -> TaskVoid
 	{
 		GateServerHelper::Ptr dnServer = server->GetSelf<GateServerHelper>();
 
@@ -115,64 +116,50 @@ export namespace GateServerMessage
 		}
 
 		co_return;
-	}
+	});
 
-	// client request
-	void Msg_ReqRegistSrv(SocketChannel::CVPtr channel, uint32_t msgId, const std::string& binMsg)
+	HandleRegistry<GMsg::COM_ReqRegistSrv, GMsg::COM_ResRegistSrv, EMMsgDeal::Req> Msg_ReqRegistSrv(
+				[](auto request, auto response, SocketChannel::Ptr channel)
 	{
-		GMsg::COM_ReqRegistSrv request;
-		if(!request.ParseFromString(binMsg))
-		{
-			return;
-		}
-
+		
 		GateServerHelper::Ptr server = channel->GetWorld()->GetSystem<GateServerHelper>(EMSystemType::Server);
 		ServerEntityManagerHelper::Ptr entityMan = server->GetServerEntityManager();
 
-		LoggerPrint::Log(server, ELogLevel_Debug, "ip Reqregist: {}, {}", channel->peeraddr(), request.servertype());
+		LoggerPrint::Log(server, ELogLevel_Debug, "ip Reqregist: {}, {}", channel->peeraddr(), request->servertype());
 
-		GMsg::COM_ResRegistSrv response;
-
-		FinalExecute final([&response, msgId, channel](){
-			std::string binData;
-			response.SerializeToString(&binData);
-			MessagePackAndSend(msgId, EMMsgDeal::Res, binData, channel);
-		});
-
-		
-		EMServerType regType = (EMServerType)request.servertype();
-		uint64_t serverId = request.serverid();
+		EMServerType regType = (EMServerType)request->servertype();
+		size_t serverId = request->serverid();
 
 		const std::string& ipPort = channel->localaddr();
 
 		if (regType < EMServerType::DatabaseServer || regType > EMServerType::LogicServer || ipPort.empty())
 		{
-			response.set_errorcode(EL10nCode_RegistServerTypeError);
+			response->set_errorcode(EL10nCode_RegistServerTypeError);
 		}
 
 		//exist?
 		if (ServerEntityHelper::Ptr entity = channel->getContextPtr<ServerEntityHelper>())
 		{
-			response.set_errorcode(EL10nCode_RegistServerChannelExist);
+			response->set_errorcode(EL10nCode_RegistServerChannelExist);
 		}
 
 		else if (entity = entityMan->AddEntity(serverId, regType))
 		{
 			size_t pos = ipPort.find(":");
 			entity->SetServerIp(ipPort.substr(0, pos));
-			entity->SetServerPort(request.serverport());
+			entity->SetServerPort(request->serverport());
 			entity->SetChannel(channel);
 
 			channel->setContextPtr(entity);
 
-			response.set_retservertype(static_cast<uint8_t>(server->GetServerType()));
+			response->set_retservertype(std::to_underlying(server->GetServerType()));
 		}
 		else
 		{
-			response.set_errorcode(EL10nCode_UnkonwOpreator);
+			response->set_errorcode(EL10nCode_UnkonwOpreator);
 		}
 
-		if (response.errorcode() == EL10nCode_None)
+		if (response->errorcode() == EL10nCode_None)
 		{
 			// up to Global
 			GMsg::g2G_RetRegistSrv request;
@@ -186,15 +173,10 @@ export namespace GateServerMessage
 
 			MessagePackAndSend(0, EMMsgDeal::Ret, request.GetDescriptor()->full_name(), binData, clientProxy->GetChannel());
 		}
-	}
+	});
 
-	void Exe_RetHeartbeat(SocketChannel::CVPtr channel, const std::string& binMsg)
+	HandleRegistry<GMsg::COM_RetHeartbeat, void, EMMsgDeal::Ret> Exe_RetHeartbeat(
+				[](auto request, SocketChannel::Ptr channel)
 	{
-		GMsg::COM_RetHeartbeat request;
-		if(!request.ParseFromString(binMsg))
-		{
-			return;
-		}
-	}
-
+	});
 }

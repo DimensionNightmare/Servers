@@ -7,15 +7,17 @@ import Task;
 import ThirdParty.PbGen;
 import Logger;
 
-export namespace DatabaseServerMessage
+import DatabaseServerMessage;
+
+namespace MsgHandleRegister
 {
 
 	// client request
-	TaskVoid Evt_ReqRegistSrv(Server::CVPtr server)
+	HandleClientRegistry Evt_ReqRegistSrv([](Server::Ptr server)->TaskVoid
 	{
-		DatabaseServerHelper::CVPtr dnServer = server->GetSelf<DatabaseServerHelper>();
+		DatabaseServerHelper::Ptr dnServer = server->GetSelf<DatabaseServerHelper>();
 
-		ClientProxyHelper::CVPtr clientProxy = dnServer->GetClientProxy();
+		ClientProxyHelper::Ptr clientProxy = dnServer->GetClientProxy();
 		
 		LoggerPrint::Log(server, ELogLevel_Debug, "database req regist Client:{}, port:{}", clientProxy->remote_host, clientProxy->remote_port);
 		
@@ -69,21 +71,15 @@ export namespace DatabaseServerMessage
 		}
 
 		co_return;
-	}
+	});
 
-	void Exe_RetChangeCtlSrv(SocketChannel::CVPtr channel, const std::string& binMsg)
+	HandleRegistry<GMsg::COM_RetChangeCtlSrv, void, EMMsgDeal::Ret> Exe_RetChangeCtlSrv(
+		[](auto request, SocketChannel::Ptr channel)
 	{
-		GMsg::COM_RetChangeCtlSrv request;
-		if(!request.ParseFromString(binMsg))
-		{
-			return;
-		}
+		DatabaseServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<DatabaseServerHelper>(EMSystemType::Server);
 
-		DatabaseServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<DatabaseServerHelper>(EMSystemType::Server);
+		ClientProxyHelper::Ptr clientProxy = dnServer->GetClientProxy();
 
-		ClientProxyHelper::CVPtr clientProxy = dnServer->GetClientProxy();
-
-		clientProxy->RedirectClient(request.serverport(), request.serverip());
-	}
-
+		clientProxy->RedirectClient(request->serverport(), request->serverip());
+	});
 }

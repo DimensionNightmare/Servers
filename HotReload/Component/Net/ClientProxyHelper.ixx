@@ -19,7 +19,7 @@ public:
 	uint8_t RegistType() { return iRegistType; }
 	void SetRegistType(uint8_t type) { iRegistType = type; }
 
-	void SetRegistEvent(std::function<void(Server::CVPtr)> event)
+	void SetRegistEvent(std::function<void(Server::Ptr)> event)
 	{
 		pRegistEvent = event;
 	}
@@ -76,6 +76,6 @@ public:
 
 	uint32_t GetMsgId() { return ++iMsgId; }
 	
-	SocketChannel::CVPtr GetChannel() { return channel; }
+	SocketChannel::Ptr GetChannel() { return channel; }
 	
 };

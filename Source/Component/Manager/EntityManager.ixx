@@ -22,9 +22,6 @@ public:
 		
 	}
 
-	/// @brief main loop func mount
-	virtual void TickMainFrame() = 0;
-
 	virtual void Dispose() override
 	{
 		for (auto& [id, entity] : mEntityMap)
@@ -41,7 +38,7 @@ public:
 
 public: // dll override
 
-	void AddTimerRecord(uint64_t timerId, uint64_t id)
+	void AddTimerRecord(size_t timerId, size_t id)
 	{
 		std::unique_lock ulock(oTimerMutex);
 		mMapTimer.emplace(timerId, id);
@@ -49,11 +46,11 @@ public: // dll override
 	
 protected: // dll proxy
 
-	std::unordered_map<uint64_t, std::shared_ptr<TEntity>> mEntityMap;
+	std::unordered_map<size_t, std::shared_ptr<TEntity>> mEntityMap;
 	/// @brief mEntityMap Mutex
 	std::shared_mutex oMapMutex;
 	//
-	std::unordered_map<uint64_t, uint64_t> mMapTimer;
+	std::unordered_map<size_t, size_t> mMapTimer;
 	/// @brief mMapTimer Mutex
 	std::shared_mutex oTimerMutex;
 

@@ -25,7 +25,7 @@ export
 		std::function<void()> mFunc;
 	};
 
-	void MessagePackAndSend(uint32_t msgId, EMMsgDeal deal, std::string& data, SocketChannel::CVPtr channel)
+	void MessagePackAndSend(uint32_t msgId, EMMsgDeal deal, std::string& data, SocketChannel::Ptr channel)
 	{
 		MessagePack(msgId, deal, 0, data);
 
@@ -34,7 +34,7 @@ export
 		LoggerPrint::Log(channel, ELogLevel_Debug, "{} Send type={} With Mid:{}", channel->peeraddr().c_str(), (int)deal, msgId);
 	}
 
-	void MessagePackAndSend(uint32_t msgId, EMMsgDeal deal, const std::string& pbName, std::string& data, SocketChannel::CVPtr channel)
+	void MessagePackAndSend(uint32_t msgId, EMMsgDeal deal, const std::string& pbName, std::string& data, SocketChannel::Ptr channel)
 	{
 		MessagePack(msgId, deal, DoStringHash(pbName), data);
 		channel->write(data);
@@ -42,7 +42,7 @@ export
 		LoggerPrint::Log(channel, ELogLevel_Debug, "{} Send type={} With Mid:{}, Mess:{}", channel->peeraddr().c_str(), (int)deal, msgId, pbName);
 	}
 
-	void MessagePackAndSend(uint32_t msgId, EMMsgDeal deal, const std::string& pbName, const std::string& data, SocketChannel::CVPtr channel)
+	void MessagePackAndSend(uint32_t msgId, EMMsgDeal deal, const std::string& pbName, const std::string& data, SocketChannel::Ptr channel)
 	{
 		std::string msgData = data;
 		MessagePack(msgId, deal, DoStringHash(pbName), msgData);

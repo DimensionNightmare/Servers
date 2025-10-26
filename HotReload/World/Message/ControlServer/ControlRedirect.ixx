@@ -10,39 +10,29 @@ import std;
 import ThirdParty.PbGen;
 import Logger;
 import ThirdParty.Protobuf;
+import ControlServerMessage;
 
-export namespace ControlServerMessage
+namespace MsgHandleRegister
 {
 
-	TaskVoid Msg_ReqAuthAccount(SocketChannel::CVPtr channel, uint32_t msgId, const std::string& binMsg)
+	HandleRegistry<GMsg::A2g_ReqAuthAccount, GMsg::g2A_ResAuthAccount, EMMsgDeal::Redir> Msg_ReqAuthAccount(
+		[](auto request, auto response, SocketChannel::Ptr channel) -> TaskVoid
 	{
-		GMsg::A2g_ReqAuthAccount request;
-		if(!request.ParseFromString(binMsg))
-		{
-			co_return;
-		}
-		GMsg::g2A_ResAuthAccount response;
-
-		FinalExecute final([&response, msgId, channel](){
-			std::string binData;
-			response.SerializeToString(&binData);
-			MessagePackAndSend(msgId, EMMsgDeal::Res, binData, channel);
-		});
-
+		
 		ServerEntityHelper::Ptr serverEntity = nullptr;
 
-		ControlServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<ControlServerHelper>(EMSystemType::Server);
+		ControlServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<ControlServerHelper>(EMSystemType::Server);
 
-		ServerEntityManagerHelper::CVPtr manager = dnServer->GetServerEntityManager();
+		ServerEntityManagerHelper::Ptr manager = dnServer->GetServerEntityManager();
 
 		const std::list<ServerEntity::Ptr>& serverList = manager->GetEntitysByType(EMServerType::GlobalServer);
 
 		// std::erase_if(serverList, [](ServerEntity::Ptr itor){return itor ? itor->TimerId() : true; });
 		// serverList.sort([](ServerEntity::Ptr lhs, ServerEntity::Ptr rhs){return lhs->ConnNum() < rhs->ConnNum(); });
 
-		for (ServerEntity::CVPtr server : serverList)
+		for (ServerEntity::Ptr server : serverList)
 		{
-			ServerEntityHelper::CVPtr entityHelper = server->GetSelf<ServerEntityHelper>();
+			ServerEntityHelper::Ptr entityHelper = server->GetSelf<ServerEntityHelper>();
 
 			if (entityHelper->TimerId())
 			{
@@ -63,7 +53,7 @@ export namespace ControlServerMessage
 
 		if (!serverEntity)
 		{
-			response.set_errorcode(EL10nCode_NotExistGlobalServer);
+			response->set_errorcode(EL10nCode_NotExistGlobalServer);
 		}
 		else
 		{
@@ -73,25 +63,29 @@ export namespace ControlServerMessage
 				{
 					co_return msg;
 				};
-			auto dataChannel = taskGen(&response);
+			auto dataChannel = taskGen(response);
 			// wait data parse
 
-			ServerProxyHelper::CVPtr proxy = dnServer->GetServerProxy();
+			ServerProxyHelper::Ptr proxy = dnServer->GetServerProxy();
 
 			uint32_t msgId = proxy->GetMsgId();
 			proxy->AddMsg(msgId, &dataChannel, 9000);
 
-			MessagePackAndSend(msgId, EMMsgDeal::Redir, request.GetDescriptor()->full_name(), binMsg, serverEntity->GetChannel());
+			std::string binMsg;
+			request->SerializeToString(&binMsg);
+			MessagePackAndSend(msgId, EMMsgDeal::Redir, request->GetDescriptor()->full_name(), binMsg, serverEntity->GetChannel());
 
-			co_await dataChannel;
-			if (dataChannel.HasFlag(EMTaskFlag::Timeout))
 			{
-				response.set_errorcode(EL10nCode_SControlReqTimeout);
+				co_await dataChannel;
+				if (dataChannel.HasFlag(EMTaskFlag::Timeout))
+				{
+					response->set_errorcode(EL10nCode_SControlReqTimeout);
+				}
 			}
 
 		}
 
 		co_return;
-	}
+	});
 
 }

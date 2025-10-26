@@ -7,70 +7,58 @@ import FuncHelper;
 import Task;
 import ThirdParty.PbGen;
 import Logger;
+import MessagePack;
+import LogicServerMessage;
 
-export namespace LogicServerMessage
+namespace MsgHandleRegister
 {
-	TaskVoid Msg_ReqLoadEntityData(SocketChannel::CVPtr channel, uint32_t msgId, const std::string& binMsg)
+
+	HandleRegistry<GMsg::d2L_ReqLoadEntityData, GMsg::L2d_ResLoadEntityData, EMMsgDeal::Req> Msg_ReqAuthToken(
+				[](auto request, auto response, SocketChannel::Ptr channel) -> TaskVoid
 	{
-		GMsg::d2L_ReqLoadEntityData request;
-		if(!request.ParseFromString(binMsg))
-		{
-			co_return;
-		}
-		GMsg::L2d_ResLoadEntityData response;
-
-		FinalExecute final([&response, msgId, channel](){
-			std::string binData;
-			response.SerializeToString(&binData);
-			MessagePackAndSend(msgId, EMMsgDeal::Res, binData, channel);
-		});
-
+		
 		GDb::Player player;
-		if (!player.ParseFromString(request.entitydata()))
+		if (!player.ParseFromString(request->entitydata()))
 		{
 			co_return;
 		}
 
-		LogicServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<LogicServerHelper>(EMSystemType::Server);
-		ClientEntityManagerHelper::CVPtr entityMan = dnServer->GetClientEntityManager();
+		LogicServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<LogicServerHelper>(EMSystemType::Server);
+		ClientEntityManagerHelper::Ptr entityMan = dnServer->GetClientEntityManager();
 
-		ClientEntity::CVPtr entity = entityMan->GetEntity(player.accountid());
+		ClientEntity::Ptr entity = entityMan->GetEntity(player.accountid());
 
 		if (!entity)
 		{
-			response.set_errorcode(EL10nCode_NoneClientEntity);
+			response->set_errorcode(EL10nCode_NoneClientEntity);
 		}
 		else
 		{
 			
-			co_await entityMan->LoadEntity(entity->GetSelf<ClientEntityHelper>(), &request, &response);
+			co_await entityMan->LoadEntity(entity->GetSelf<ClientEntityHelper>(), request, response);
 
 		}
 
 		co_return;
-	}
+	});
 
-	void Msg_ReqSaveEntityData(SocketChannel::CVPtr channel, const std::string& binMsg)
+	HandleRegistry<GMsg::d2L_ReqSaveEntityData, void, EMMsgDeal::Ret> Msg_ReqSaveEntityData(
+				[](auto request, SocketChannel::Ptr channel)
 	{
-		GMsg::d2L_ReqSaveEntityData request;
-		if(!request.ParseFromString(binMsg))
-		{
-			return;
-		}
-
+		
 		GDb::Player player;
 		
-		LogicServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<LogicServerHelper>(EMSystemType::Server);
+		LogicServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<LogicServerHelper>(EMSystemType::Server);
 
-		if (!player.ParseFromString(request.entitydata()))
+		if (!player.ParseFromString(request->entitydata()))
 		{
 			LoggerPrint::Log(channel, ELogLevel_Debug, "Save data but parse error!");
 			return;
 		}
 
 		
-		ClientEntityManagerHelper::CVPtr entityMan = dnServer->GetClientEntityManager();
-		ClientEntity::CVPtr entity = entityMan->GetEntity(player.accountid());
+		ClientEntityManagerHelper::Ptr entityMan = dnServer->GetClientEntityManager();
+		ClientEntity::Ptr entity = entityMan->GetEntity(player.accountid());
 
 		if(!entity)
 		{
@@ -86,7 +74,7 @@ export namespace LogicServerMessage
 		if (GDb::Player* dbEntity = entity->GetDbEntity())
 		{
 			dbEntity->MergeFrom(player);
-			if (request.runtimesave())
+			if (request->runtimesave())
 			{
 				entity->SetFlag(EMClientEntityFlag::DBModify);
 			}
@@ -96,6 +84,5 @@ export namespace LogicServerMessage
 		{
 			LoggerPrint::Log(channel, ELogLevel_Debug, "SaveData but dbEntity is null!");
 		}
-
-	}
+	});
 }

@@ -37,7 +37,6 @@ export class Server : public System
 {
 public:
 	using Ptr = std::shared_ptr<Server>;
-	using CVPtr = const Ptr&;
 	using WPtr = std::weak_ptr<Server>;
 	
 protected:

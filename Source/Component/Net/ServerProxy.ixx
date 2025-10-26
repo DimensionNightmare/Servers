@@ -29,7 +29,6 @@ protected:
 
 public:
 	using Ptr = std::shared_ptr<ServerProxy>;
-	using CVPtr = const Ptr&;
 	using WPtr = std::weak_ptr<ServerProxy>;
 
 	virtual ~ServerProxy()
@@ -41,7 +40,7 @@ public:
 	{
 		int16_t inport = 0;
 
-		Server::CVPtr dnServer = GetOwner<Server>();
+		Server::Ptr dnServer = GetOwner<Server>();
 
 		switch(dnServer->GetServerType())
 		{
@@ -53,7 +52,6 @@ public:
 				if (!param)
 				{
 					LoggerPrint::Log(GetWorld(), EL10nCode_SrvNeedIPPort);
-					// return false;
 					return false;
 				}
 
@@ -66,7 +64,6 @@ public:
 		if (listenfd < 0)
 		{
 			LoggerPrint::Log(GetWorld(), EL10nCode_CreateSocket);
-			// return false;
 			return false;
 		}
 
@@ -96,11 +93,14 @@ public:
 		setting.length_field_bytes = 1;
 		setting.length_field_offset = 0;
 		setUnpack(&setting);
-		setThreadNum(1);
+		setThreadNum(4);
 
 		LoggerPrint::Log(GetWorld(), EL10nCode_SrvListenOn, port, listenfd);
 
 		GetWorld()->AddEvent(EMEventType::ServerStart, GetSelfW<ServerProxy>(), &ServerProxy::Start);
+		GetWorld()->AddEvent(EMEventType::ServerStop, GetSelfW<ServerProxy>(), &ServerProxy::End);
+		GetWorld()->AddEvent(EMEventType::ServerPause, GetSelfW<ServerProxy>(), &ServerProxy::Pause);
+		GetWorld()->AddEvent(EMEventType::ServerResume, GetSelfW<ServerProxy>(), &ServerProxy::Resume);
 
 		return true;
 	}
@@ -117,9 +117,47 @@ public:
 	{
 		stop(true);
 	}
+	
+	void Pause()
+	{
+		std::unordered_map<long, bool> looped;
+		while (const hv::EventLoopPtr& pLoop = loop())
+		{
+			long id = pLoop->tid();
+			if (!looped.count(id))
+			{
+				pLoop->pause();
+				looped[id];
+			}
+			else
+			{
+				break;
+			}
+		};
+	}
+
+	void Resume()
+	{
+		std::unordered_map<long, bool> looped;
+		while (const hv::EventLoopPtr& pLoop = loop())
+		{
+			long id = pLoop->tid();
+			if (!looped.count(id))
+			{
+				pLoop->resume();
+				looped[id];
+			}
+			else
+			{
+				break;
+			}
+		};
+	}
 
 	virtual void Dispose() override
 	{
+		Pause();
+
 		Component::Dispose();
 		
 		End();
@@ -130,7 +168,7 @@ public:
 
 public: // dll override
 
-	void MessageTimeoutTimer(uint64_t timerID)
+	void MessageTimeoutTimer(size_t timerID)
 	{
 		uint32_t id = -1;
 		{
@@ -160,7 +198,7 @@ public: // dll override
 
 	}
 
-	void ChannelTimeoutTimer(uint64_t timerID)
+	void ChannelTimeoutTimer(size_t timerID)
 	{
 		uint32_t id = -1;
 		{
@@ -175,7 +213,7 @@ public: // dll override
 		}
 
 		{
-			if (SocketChannel::CVPtr channel = getChannelById(id))
+			if (SocketChannel::Ptr channel = getChannelById(id))
 			{
 				if (!channel->contextPtr())
 				{
@@ -193,7 +231,7 @@ public: // dll override
 		mMapTimer.emplace(timerId, id);
 	}
 
-	void CheckChannelByTimer(SocketChannel::CVPtr channel)
+	void CheckChannelByTimer(SocketChannel::Ptr channel)
 	{
 		FunctionContainer<&ServerProxy::ChannelTimeoutTimer> funcProxy(this);
 		
@@ -205,7 +243,7 @@ public: // dll override
 
 protected:
 
-	void _InitConnectedChannel(SocketChannel::CVPtr channel)
+	void _InitConnectedChannel(SocketChannel::Ptr channel)
 	{
 		// if not regist
 		CheckChannelByTimer(channel);
@@ -214,11 +252,11 @@ protected:
 		// channel->setReadTimeout(15000);
 	}
 	
-	uint64_t _CheckMessageTimeoutTimer(uint32_t breakTime, uint32_t msgId)
+	size_t _CheckMessageTimeoutTimer(uint32_t breakTime, uint32_t msgId)
 	{
 		FunctionContainer<&ServerProxy::MessageTimeoutTimer> funcProxy(this);
 		
-		uint64_t timerId = GetTimer()->SetTimeout(breakTime, funcProxy);
+		size_t timerId = GetTimer()->SetTimeout(breakTime, funcProxy);
 		std::unique_lock ulock(oTimerMutex);
 		mMapTimer[timerId] = msgId;
 		return timerId;
@@ -235,7 +273,7 @@ protected:
 	// unordered_
 	std::unordered_map<uint32_t, Task<Message*>* > mMsgList;
 	//
-	std::unordered_map<uint64_t, uint32_t > mMapTimer;
+	std::unordered_map<size_t, uint32_t > mMapTimer;
 
 	std::shared_mutex oMsgMutex;
 

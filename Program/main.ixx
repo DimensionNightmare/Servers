@@ -10,15 +10,21 @@ import HotReload;
 
 enum class EMLunchType : uint8_t
 {
+	None = 0,
 	GLOBAL,
 	PULL,
 };
 
-#define CloseApp() 		\
-	{ 					\
-		App->Dispose(); \
-		App = nullptr; 	\
-	}
+bool AppRun = false;
+DimensionNightmare::Ptr App;
+std::filesystem::path PidFolderPath;
+
+void CloseApp()
+{
+	AppRun = false;
+	// App->Dispose();
+	// App = nullptr;
+}
 
 #define TIMERSTART(tag) auto tag##_start = std::chrono::system_clock::now(),tag##_end = tag##_start
 #define TIMEREND(tag) tag##_end = std::chrono::system_clock::now()
@@ -27,6 +33,7 @@ enum class EMLunchType : uint8_t
 #define DURATION_us(tag) printf("%s costs %I64d us\n",#tag,std::chrono::duration_cast<std::chrono::microseconds>(tag##_end - tag##_start).count());
 #define DURATION_ns(tag) printf("%s costs %I64d ns\n",#tag,std::chrono::duration_cast<std::chrono::nanoseconds>(tag##_end - tag##_start).count());
 
+void InputThread();
 
 export int main(int argc, char** argv)
 {
@@ -59,11 +66,11 @@ export int main(int argc, char** argv)
 					{
 						std::random_device rd;
 						std::mt19937 gen(rd());
-						std::uniform_int_distribution<uint64_t> dis(0, 99999999999);
+						std::uniform_int_distribution<size_t> dis(0, 99999999999);
 
 						for (int j = 0; j < count; j++)
 						{
-							auto a = P_InstanceHolder->MemPool->Allocate<DimensionNightmare>();
+							auto a = P_InstanceHolder->GetMemPool().Allocate<DimensionNightmare>();
 							// auto a = new DimensionNightmare();
 							// auto ramdon = dis(gen);
 							a->Dispose();
@@ -95,7 +102,7 @@ export int main(int argc, char** argv)
 					{
 						std::random_device rd;
 						std::mt19937 gen(rd());
-						std::uniform_int_distribution<uint64_t> dis(0, 99999999999);
+						std::uniform_int_distribution<size_t> dis(0, 99999999999);
 
 						for (int j = 0; j < count; j++)
 						{
@@ -123,17 +130,13 @@ export int main(int argc, char** argv)
 			two.get();
 		}
 
-		// P_InstanceHolder->MemPool->PrintLockStats(threads);
+		// P_InstanceHolder->GetMemPool().PrintLockStats(threads);
 
 		return 0;
 # endif
 
 	}
 
-	static bool AppRun = false;
-	static DimensionNightmare::Ptr App;
-	static std::filesystem::path pidFolderPath;
-	std::future<void> InputThread;
 	ProgramConfig programConfig;
 
 	for (int i = 1; i < argc; i++)
@@ -171,7 +174,7 @@ export int main(int argc, char** argv)
 		path /= std::format("PID_{}", Platform::GetCurrentProcessId());
 		programConfig.iniFileConfig["Common"].emplace("PidLogFolder", path.string());
 
-		pidFolderPath = path;
+		PidFolderPath = path;
 	}
 
 #ifdef _WIN32
@@ -185,6 +188,8 @@ export int main(int argc, char** argv)
 				// ctrl+c				ctrl+break/pause		close window			logoff					shutdown
 				// CTRL_C_EVENT = 0,	CTRL_BREAK_EVENT = 1,	CTRL_CLOSE_EVENT = 2,	CTRL_LOGOFF_EVENT = 5,	CTRL_SHUTDOWN_EVENT = 6
 				case 0:
+					InputThread();
+					return true;
 				case 1:
 				case 6:
 					while (App && !App->HasFlag(EMProgramFlag::ResourceLoadDown))
@@ -193,11 +198,9 @@ export int main(int argc, char** argv)
 						Platform::Sleep(20);
 					}
 					CloseApp();
-					AppRun = false;
 					return true;
 				case 2:
 					CloseApp();
-					AppRun = false;
 					Platform::Sleep(200);
 					return true;
 			}
@@ -216,12 +219,11 @@ export int main(int argc, char** argv)
 			// LoggerPrint::Log(nullptr, ELogLevel_Error, "Unhandled Exception! info {}",
 			// 	Platform::GetStackTrace(8));
 
-			WriteDumpFile(pidFolderPath / "MiniDump.dmp", ExceptionInfo);
+			WriteDumpFile(PidFolderPath / "MiniDump.dmp", ExceptionInfo);
 
 			P_InstanceHolder->AuthWorld->GetSystem<HotReload>(EMSystemType::HotReload)->SetExcptionState();
 
 			CloseApp();
-			AppRun = false;
 
 			// return 0; // EXCEPTION_CONTINUE_SEARCH
 			return 1; // EXCEPTION_EXECUTE_HANDLER
@@ -238,7 +240,6 @@ export int main(int argc, char** argv)
 	auto CtrlHandler = [](int signal)
 		{
 			LoggerPrint::Log(nullptr, EL10nCode_CmdOpBreak);
-			AppRun = false;
 			CloseApp();
 		};
 	signal(SIGINT, CtrlHandler);
@@ -247,7 +248,6 @@ export int main(int argc, char** argv)
 		{
 			LoggerPrint::Log(nullptr, EL10nCode_UnhandledException);
 
-			AppRun = false;
 			CloseApp();
 			exit(signum);
 		};
@@ -264,7 +264,7 @@ export int main(int argc, char** argv)
 
 #endif
 
-	P_InstanceHolder->MainWorld = App = P_InstanceHolder->MemPool->Allocate<DimensionNightmare>();
+	P_InstanceHolder->MainWorld = App = P_InstanceHolder->GetMemPool().Allocate<DimensionNightmare>();
 	if (!App->Init(programConfig))
 	{
 		CloseApp();
@@ -273,131 +273,9 @@ export int main(int argc, char** argv)
 
 	App->StartWorlds();
 
-	LoggerPrint::Log(nullptr, ELogLevel_Normal, "hello ~ Program Instance addr->(InstanceHolder*){}", static_cast<void*>(P_InstanceHolder.get()));
+	LoggerPrint::Log(nullptr, ELogLevel_Normal, "hello ~ Program Instance addr->(InstanceHolder*){:p}", static_cast<void*>(P_InstanceHolder.get()));
 
 	AppRun = true;
-
-	InputThread = std::async(std::launch::async, [&]()
-		{
-			std::stringstream ss;
-			std::string str;
-
-
-
-			auto quit = [&]()
-				{
-					CloseApp();
-					AppRun = false;
-				};
-
-			auto abort = [&]()
-				{
-					// int a = 100;
-					// int b = 0;
-					// int c = a / b;
-
-					// int* p = nullptr;
-					// *p = 10;
-				};
-
-			auto dump_memory = [&]()
-				{
-					std::string fileName;
-					ss >> fileName;
-					if (!fileName.empty())
-					{
-						fileName.append(".dmp");
-						WriteDumpFile(pidFolderPath / fileName);
-					}
-				};
-
-			auto open = [&]()
-				{
-					std::string allStr = pidFolderPath.string() + " ";
-					while (ss >> str)
-					{
-						allStr += str + " ";
-					}
-
-					LoggerPrint::Log(nullptr, ELogLevel_Normal, "{}", allStr);
-
-#ifdef _WIN32
-					Platform::PROCESS_INFORMATION pinfo{};
-					Platform::STARTUPINFOA startInfo{};
-					startInfo.cb = sizeof(startInfo);
-
-
-					startInfo.dwFlags = 0x00000001; // STARTF_USESHOWWINDOW 0x00000001
-					startInfo.wShowWindow = 1; // SW_SHOWNORMAL 1
-					if (Platform::CreateProcessA(nullptr, allStr.data(), nullptr, nullptr, 0, 0x00000010, nullptr, nullptr, &startInfo, &pinfo)) // CREATE_NEW_CONSOLE 0x00000010
-#elif __unix__
-					if (0)
-#endif
-					{
-						LoggerPrint::Log(nullptr, ELogLevel_Normal, "success");
-					}
-					else
-					{
-						LoggerPrint::Log(nullptr, ELogLevel_Error, "error:{}", Platform::GetLastError());
-					}
-				};
-
-			std::unordered_map<std::string, std::function<void()>> cmdMap =
-			{
-				#define one(func) {#func, func}
-
-				one(quit), one(abort), one(dump_memory), one(open),
-
-				#undef one
-			};
-
-			char ch;
-
-			while (AppRun)
-			{
-				// std::getline(std::cin, str);
-
-				while (AppRun && !Platform::_kbhit())
-				{
-					Platform::Sleep(200);
-				}
-
-				if (!App)
-				{
-					break;
-				}
-
-				ch = Platform::_getch();
-				std::cout << ch;
-				str += ch;
-
-				if (str.back() == '\r' || str.back() == '\n')
-				{
-					ss.clear();
-					ss.str(str);
-					str.clear();
-					ss >> str;
-
-					LoggerPrint::Log(nullptr, ELogLevel_Normal, "<cmd {}>", str);
-
-					if (cmdMap.contains(str))
-					{
-						cmdMap[str]();
-					}
-					else
-					{
-						App->ExecCommand(&str, &ss);
-					}
-
-					LoggerPrint::Log(nullptr, ELogLevel_Normal, "<cmd down>");
-
-					str.clear();
-				}
-
-			}
-		});
-
-	// InputThread.get();
 
 	App->SetFlag(EMProgramFlag::ResourceLoadDown);
 
@@ -409,11 +287,111 @@ export int main(int argc, char** argv)
 
 	Platform::Sleep(50);
 
-	LoggerPrint::Log(nullptr, ELogLevel_Normal, "bye ~");
 POINT_EXIT:
 
+	App = nullptr;
 	P_InstanceHolder->Unload();
+
+	LoggerPrint::Log(nullptr, ELogLevel_Normal, "bye ~");
+	
 	P_InstanceHolder = nullptr;
 
 	return 0;
+}
+
+void InputThread()
+{
+	static std::stringstream ss;
+	static std::string str;
+
+	auto quit = []()
+		{
+			CloseApp();
+		};
+
+	auto abort = []()
+		{
+			// int a = 100;
+			// int b = 0;
+			// int c = a / b;
+
+			// int* p = nullptr;
+			// *p = 10;
+		};
+
+	auto dump_memory = [&]()
+		{
+			std::string fileName;
+			ss >> fileName;
+			if (!fileName.empty())
+			{
+				fileName.append(".dmp");
+				WriteDumpFile(PidFolderPath / fileName);
+			}
+		};
+
+	auto open = []()
+		{
+			std::string allStr = PidFolderPath.string() + " ";
+			while (ss >> str)
+			{
+				allStr += str + " ";
+			}
+
+			LoggerPrint::Log(nullptr, ELogLevel_Normal, "{}", allStr);
+
+#ifdef _WIN32
+			Platform::PROCESS_INFORMATION pinfo{};
+			Platform::STARTUPINFOA startInfo{};
+			startInfo.cb = sizeof(startInfo);
+
+
+			startInfo.dwFlags = 0x00000001; // STARTF_USESHOWWINDOW 0x00000001
+			startInfo.wShowWindow = 1; // SW_SHOWNORMAL 1
+			if (Platform::CreateProcessA(nullptr, allStr.data(), nullptr, nullptr, 0, 0x00000010, nullptr, nullptr, &startInfo, &pinfo)) // CREATE_NEW_CONSOLE 0x00000010
+#elif __unix__
+			if (0)
+#endif
+			{
+				LoggerPrint::Log(nullptr, ELogLevel_Normal, "success");
+			}
+			else
+			{
+				LoggerPrint::Log(nullptr, ELogLevel_Error, "error:{}", Platform::GetLastError());
+			}
+		};
+
+	static std::unordered_map<std::string, std::function<void()>> cmdMap =
+	{
+		#define one(func) {#func, func}
+
+		one(quit), one(abort), one(dump_memory), one(open),
+
+		#undef one
+	};
+
+	std::getline(std::cin, str);
+
+	if(!AppRun || !App)
+	{
+		return;
+	}
+
+	ss.clear();
+	ss.str(str);
+	str.clear();
+	ss >> str;
+
+	LoggerPrint::Log(nullptr, ELogLevel_Normal, "<cmd {}>", str);
+
+	if (cmdMap.contains(str))
+	{
+		cmdMap[str]();
+	}
+	else
+	{
+		App->ExecCommand(&str, &ss);
+	}
+
+	LoggerPrint::Log(nullptr, ELogLevel_Normal, "<cmd down>");
 }

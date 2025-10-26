@@ -144,7 +144,6 @@ public:
 	using BaseT::BaseT;
 
 	using Ptr = std::shared_ptr<Derived>;
-	using CVPtr = const Ptr&;
 
 	BaseT* Base()
 	{

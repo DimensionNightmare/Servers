@@ -15,14 +15,16 @@ using namespace std::chrono;
 
 #define MSGSET writer->response->SetBody
 
-export void ApiAuth(Server::CVPtr server)
+std::atomic<size_t> counter = 0;
+
+export void ApiAuth(Server::Ptr server)
 {
 
 	WebProxyHelper::Ptr webProxyHelper = server->GetComponent<WebProxyHelper>(EMComponentType::WebProxy);
 
-	webProxyHelper->service->POST("/Auth/User/LoginToken", [server](const hv::HttpRequestPtr& req, const hv::HttpResponseWriterPtr& writer)
+	webProxyHelper->service->POST("/Auth/User/LoginToken", [server](hv::HttpRequestPtr req, hv::HttpResponseWriterPtr writer) ->TaskVoid
 		{
-			writer->Begin();
+			
 			nlohmann::json errData;
 
 			std::string authName = req->GetString("AuthName");
@@ -31,11 +33,12 @@ export void ApiAuth(Server::CVPtr server)
 			if (authName.empty() || authName.size() > 32 ||
 				authString.empty() || authString.size() > 64)
 			{
+				writer->Begin();
 				errData["Code"] = http_status::HTTP_STATUS_BAD_REQUEST;
 				errData["Message"] = "param error!";
 				MSGSET(errData.dump());
 				writer->End();
-				return;
+				co_return;
 			}
 
 			GDb::Account accInfo;
@@ -44,11 +47,12 @@ export void ApiAuth(Server::CVPtr server)
 
 			if (!server)
 			{
+				writer->Begin();
 				errData["Code"] = http_status::HTTP_STATUS_BAD_REQUEST;
 				errData["Message"] = "Server Disconnect!";
 				MSGSET(errData.dump());
 				writer->End();
-				return;
+				co_return;
 			}
 
 			AuthServerHelper::Ptr dnServer = server->GetSelf<AuthServerHelper>();
@@ -71,82 +75,88 @@ export void ApiAuth(Server::CVPtr server)
 
 				if (accounts.Result().size() != 1)
 				{
+					writer->Begin();
 					errData["Code"] = http_status::HTTP_STATUS_BAD_REQUEST;
 					errData["Message"] = "not Account!";
 					MSGSET(errData.dump());
 					writer->End();
-					return;
+					co_return;
 				}
 
 				accInfo = *accounts.Result()[0];
 			}
 			catch (const std::exception& e)
 			{
+				writer->Begin();
 				LoggerPrint::Log(server, ELogLevel_Debug, "{}", e.what());
 				errData["Code"] = http_status::HTTP_STATUS_BAD_REQUEST;
 				errData["Message"] = "Server Error!!";
 				MSGSET(errData.dump());
 				writer->End();
-				return;
+				co_return;
 			}
 
-			auto taskGen = [dnServer](GDb::Account accInfo, hv::HttpResponseWriterPtr writer) -> TaskVoid
-				{
-					// HttpResponseWriterPtr writer = writer;	//sharedptr ref count ++
-					GMsg::A2g_ReqAuthAccount request;
-					request.set_accountid(accInfo.accountid());
-					request.set_serverip(writer->peeraddr());
+			GMsg::A2g_ReqAuthAccount request;
+			request.set_accountid(accInfo.accountid());
+			request.set_serverip(writer->peeraddr());
 
-					GMsg::g2A_ResAuthAccount response;
+			GMsg::g2A_ResAuthAccount response;
 
-					ClientProxyHelper::Ptr clientProxy = dnServer->GetClientProxy();
+			ClientProxyHelper::Ptr clientProxy = dnServer->GetClientProxy();
 
-					// pack data
-					std::string binData;
-					request.SerializeToString(&binData);
-					
+			// pack data
+			std::string binData;
+			request.SerializeToString(&binData);
+			
 
-					nlohmann::json retData;
+			nlohmann::json retData;
 
+			{
+				// data alloc
+				auto taskGen = [](Message* msg) -> Task<Message*>
 					{
-						// data alloc
-						auto taskGen = [](Message* msg) -> Task<Message*>
-							{
-								co_return msg;
-							};
+						co_return msg;
+					};
 
-						auto dataChannel = taskGen(&response);
-						
-						uint32_t msgId = clientProxy->GetMsgId();
-						clientProxy->AddMsg(msgId, &dataChannel);
-						MessagePackAndSend(msgId, EMMsgDeal::Redir, request.GetDescriptor()->full_name(), binData, clientProxy->GetChannel());
-						
-						co_await dataChannel;
-						if (dataChannel.HasFlag(EMTaskFlag::Timeout))
-						{
-							retData["Code"] = HTTP_STATUS_REQUEST_TIMEOUT;
+				auto dataChannel = taskGen(&response);
+				
+				uint32_t msgId = clientProxy->GetMsgId();
+				clientProxy->AddMsg(msgId, &dataChannel);
+				MessagePackAndSend(msgId, EMMsgDeal::Redir, request.GetDescriptor()->full_name(), binData, clientProxy->GetChannel());
+				
+				co_await dataChannel;
+				if (dataChannel.HasFlag(EMTaskFlag::Timeout))
+				{
+					retData["Code"] = HTTP_STATUS_REQUEST_TIMEOUT;
 
-							response.set_errorcode(EL10nCode_SAuthReqTimeout);
-						}
-						else
-						{
-							retData["Code"] = HTTP_STATUS_OK;
-						}
+					response.set_errorcode(EL10nCode_SAuthReqTimeout);
+				}
+				else
+				{
+					retData["Code"] = HTTP_STATUS_OK;
+				}
 
-					}
+			}
 
-					binData.clear();
-					auto state = MessageToJsonString(response, &binData);
-					retData["Data"] = nlohmann::json::parse(binData);
-					retData["Data"]["AccountId"] = accInfo.accountid();
+			binData.clear();
 
-					MSGSET(retData.dump());
-					writer->End();
+			if(response.errorcode() == EL10nCode_None)
+			{
+				auto state = MessageToJsonString(response, &binData);
+				retData["Data"] = nlohmann::json::parse(binData);
+				retData["Data"]["AccountId"] = accInfo.accountid();
+			}
+			else
+			{
+				retData["ErrorMessage"] = EL10nCode_Name(response.errorcode());
+			}
 
-					co_return;
-				};
+			writer->Begin();
+			MSGSET(retData.dump());
+			writer->End();
 
-			taskGen(accInfo, writer);
+			co_return;
+				
 		});
 
 	webProxyHelper->service->POST("/Auth/User/RegistUser", [server](const hv::HttpRequestPtr& req, const hv::HttpResponseWriterPtr& writer)

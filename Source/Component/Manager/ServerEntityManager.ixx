@@ -5,6 +5,7 @@ import EntityManager;
 import Server;
 import FuncUtils;
 import Logger;
+import StrUtils;
 
 export class ServerEntityManager : public EntityManager<ServerEntity>
 {
@@ -30,14 +31,9 @@ public:
 
 		mEntityMapList.clear();
 	}
-
+	
 	/// @brief 
-	virtual void TickMainFrame() override
-	{
-	}
-
-	/// @brief 
-	void EntityCloseTimer(uint64_t timerID)
+	void EntityCloseTimer(size_t timerID)
 	{
 		std::unique_lock ulock(oTimerMutex);
 		if (!mMapTimer.contains(timerID))
@@ -45,21 +41,24 @@ public:
 			return;
 		}
 
-		uint64_t entityId = mMapTimer[timerID];
+		size_t entityId = mMapTimer[timerID];
 
 		mMapTimer.erase(timerID);
 
 		if(mEntityMap.count(entityId))
 		{
-			ServerEntity::CVPtr rm = mEntityMap[entityId];
-			if(ServerEntity::CVPtr link = rm->LinkNode())
+			ServerEntity::Ptr rm = mEntityMap[entityId];
+			if(ServerEntity::Ptr link = rm->LinkNode())
 			{
 				link->GetMapLinkNode(rm->GetServerType()).remove(rm);
 			}
 
 			RemoveEntity(entityId);
 			
-			LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "EntityCloseTimer server destory entity");
+			// if(rm->GetChannel())
+			{
+				LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "EntityCloseTimer {} server destory entity, entity:{}, timer:{}", EnumName(rm->GetServerType()), entityId, timerID);
+			}
 			
 		}
 	}
@@ -68,13 +67,13 @@ public:
 public: // dll override
 
 	/// @brief 
-	bool RemoveEntity(uint64_t entityId)
+	bool RemoveEntity(size_t entityId)
 	{
 		if (mEntityMap.contains(entityId))
 		{
-			ServerEntity::CVPtr entity = mEntityMap[entityId];
+			ServerEntity::Ptr entity = mEntityMap[entityId];
 
-			if (ServerEntity::CVPtr owner = entity->LinkNode())
+			if (ServerEntity::Ptr owner = entity->LinkNode())
 			{
 				owner->ClearFlag(EMServerEntityFlag::Locked);
 			}
@@ -92,9 +91,9 @@ public: // dll override
 
 protected:
 
-	ServerEntity::Ptr _AddEntity(uint64_t entityId, EMServerType regType)
+	ServerEntity::Ptr _AddEntity(size_t entityId, EMServerType regType)
 	{
-		ServerEntity::Ptr entity = P_InstanceHolder->MemPool->Allocate<ServerEntity, World::WPtr>(GetOwner()->GetWorldW());
+		ServerEntity::Ptr entity = P_InstanceHolder->GetMemPool().Allocate<ServerEntity>(GetOwner()->GetWorldW());
 		entity->SetID(entityId);
 
 		std::unique_lock ulock(oMapMutex);
@@ -103,11 +102,11 @@ protected:
 	}
 
 	/// @brief 
-	uint64_t _CheckEntityCloseTimer(uint64_t entityId)
+	size_t _CheckEntityCloseTimer(size_t entityId)
 	{
 		FunctionContainer<&ServerEntityManager::EntityCloseTimer> funcProxy(this);
 
-		uint64_t timerId = GetTimer()->SetTimeout(10000, funcProxy);
+		size_t timerId = GetTimer()->SetTimeout(10000, funcProxy);
 
 		AddTimerRecord(timerId, entityId);
 
