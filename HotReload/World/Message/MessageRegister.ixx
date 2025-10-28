@@ -27,7 +27,7 @@ public:
 			auto& handle = mHandleMap[msgHashId];
 			try
 			{
-				handle.second(channel, msgId, msgData);
+				handle(channel, msgId, msgData);
 			}
 			catch (const std::exception& e)
 			{
@@ -47,7 +47,7 @@ public:
 			auto& handle = mHandleRetMap[msgHashId];
 			try
 			{
-				handle.second(channel, msgData);
+				handle(channel, msgData);
 			}
 			catch (const std::exception& e)
 			{
@@ -67,7 +67,7 @@ public:
 			auto& handle = mHandleRedirectMap[msgHashId];
 			try
 			{
-				handle.second(channel, msgId, msgData);
+				handle(channel, msgId, msgData);
 			}
 			catch (const std::exception& e)
 			{
@@ -81,9 +81,9 @@ public:
 	}
 
 public:
-	std::unordered_map<size_t, std::pair<const Message*, std::function<void(SocketChannel::Ptr, uint32_t, const std::string&)>>> mHandleMap;
-	std::unordered_map<size_t, std::pair<const Message*, std::function<void(SocketChannel::Ptr, const std::string&)>>> mHandleRetMap;
-	std::unordered_map<size_t, std::pair<const Message*, std::function<void(SocketChannel::Ptr, uint32_t, const std::string&)>>> mHandleRedirectMap;
+	std::unordered_map<size_t, std::function<void(SocketChannel::Ptr, uint32_t, const std::string&)>> mHandleMap;
+	std::unordered_map<size_t, std::function<void(SocketChannel::Ptr, const std::string&)>> mHandleRetMap;
+	std::unordered_map<size_t, std::function<void(SocketChannel::Ptr, uint32_t, const std::string&)>> mHandleRedirectMap;
 
 	std::function<void(Server::Ptr)> pClientRegistFunc;
 	std::function<void(Server::Ptr)> pApiRegistFunc;
