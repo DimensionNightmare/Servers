@@ -2,13 +2,11 @@ export module GlobalServerMessage:GlobalRedirect;
 
 import FuncHelper;
 import GlobalServerHelper;
-import std;
 import ThirdParty.Libhv;
 import Task;
 import ServerEntity;
 import ThirdParty.PbGen;
 import Logger;
-import MessagePack;
 import GlobalServerMessage;
 
 namespace MsgHandleRegister

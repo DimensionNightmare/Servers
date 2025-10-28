@@ -1,6 +1,4 @@
 module;
-#include <concepts>
-
 #include "GCfg/GCfg.pb.h"
 #include "GDb/GDb.pb.h"
 #include "Server/S_Auth.pb.h"

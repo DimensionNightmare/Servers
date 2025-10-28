@@ -2,15 +2,12 @@ export module DatabaseServerMessage:DatabaseGate;
 
 import DbUtils;
 import DatabaseServerHelper;
-
 import ThirdParty.Libhv;
 import FuncHelper;
 import std.compat;
 import ThirdParty.PbGen;
 import Logger;
-import ThirdParty.Protobuf;
 import MessagePack;
-
 import DatabaseServerMessage;
 
 namespace MsgHandleRegister

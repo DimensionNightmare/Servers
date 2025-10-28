@@ -1,6 +1,5 @@
 export module AuthServerHelper;
 
-import ThirdParty.PbGen;
 import ClientProxyHelper;
 import WebProxyHelper;
 import DbUtils;
@@ -8,7 +7,6 @@ import RdbProxyHelper;
 import StrUtils;
 import Server;
 import MessagePack;
-import ECSW;
 import FuncUtils;
 import Logger;
 import AuthServerMessage;

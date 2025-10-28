@@ -1,6 +1,4 @@
 module;
-#include <concepts>
-
 #if _WIN32
 	#include <windows.h>
 	#include <dbghelp.h>

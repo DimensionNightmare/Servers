@@ -6,7 +6,6 @@ import Server;
 import Task;
 import ThirdParty.PbGen;
 import Logger;
-
 import DatabaseServerMessage;
 
 namespace MsgHandleRegister

@@ -1,7 +1,6 @@
 export module ClientEntityHelper;
 
 import ClientEntity;
-import ThirdParty.PbGen;
 import FuncUtils;
 
 export class ClientEntityHelper : public Helper<ClientEntityHelper, ClientEntity>

@@ -8,7 +8,7 @@ import UniversalMemoryPool;
 import ECSW;
 import HotReload;
 
-enum class EMLunchType : uint8_t
+enum class EMLaunchType : uint8_t
 {
 	None = 0,
 	GLOBAL,

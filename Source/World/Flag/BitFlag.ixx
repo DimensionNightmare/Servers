@@ -5,7 +5,7 @@ import std.compat;
 template <typename T>
 concept HasMaxField = requires {
     { T::Max };
-	requires std::underlying_type_t<T>(T::Max) > 0;
+	requires std::to_underlying(T::Max) > 0;
 };
 
 export template<typename T>

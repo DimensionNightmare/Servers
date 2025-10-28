@@ -1,13 +1,9 @@
 export module GlobalServerMessage:GlobalGate;
 
 import GlobalServerHelper;
-import std;
-import ThirdParty.Libhv;
 import ThirdParty.PbGen;
 import Logger;
-import MessagePack;
 import GlobalServerMessage;
-import StrUtils;
 
 namespace MsgHandleRegister
 {

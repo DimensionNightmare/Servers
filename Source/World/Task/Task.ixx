@@ -10,7 +10,8 @@ export
 	
 	enum class EMTaskFlag : uint16_t
 	{
-		Timeout = 0,
+		None = 0,
+		Timeout = 1,
 		PaserError,
 		TimeCost,
 		Max,
