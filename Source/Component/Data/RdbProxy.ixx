@@ -27,6 +27,8 @@ public:
 
 	virtual void Dispose() override
 	{
+		GetOwner()->RemoveEvent(ID());
+		
 		Component::Dispose();
 
 		pRdbProxys.clear();

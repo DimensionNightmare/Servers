@@ -45,6 +45,8 @@ public:
 
 	virtual void Dispose() override
 	{
+		GetWorld()->RemoveEvent(ID());
+
 		mMsgList.clear();
 		mMapTimer.clear();
 
