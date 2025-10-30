@@ -42,7 +42,7 @@ public:
 		// timeout
 		if (breakTime > 0)
 		{
-			task->TimerId() = CheckMessageTimeoutTimer(breakTime, msgId);
+			task->SetTimerId(CheckMessageTimeoutTimer(breakTime, msgId));
 		}
 		return true;
 	}
@@ -54,7 +54,7 @@ public:
 		{
 			if (Task<Message*>* task = mMsgList[msgId])
 			{
-				if (size_t timerId = task->TimerId())
+				if (size_t timerId = task->GetTimerId())
 				{
 					GetTimer()->KillTimer(timerId);
 					mMapTimer.erase(timerId);
@@ -64,7 +64,7 @@ public:
 		mMsgList.erase(msgId);
 	}
 
-	void MsgMapClear()
+	void ClearMsgMap()
 	{
 		std::unique_lock ulock(oMsgMutex);
 		for (auto& [k, v] : mMsgList)

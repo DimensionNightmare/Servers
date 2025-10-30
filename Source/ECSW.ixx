@@ -159,7 +159,6 @@ export DNEvent GEvent; // dynamic initializer
 
 #pragma endregion
 
-
 #pragma region Object
 
 export class Object : public std::enable_shared_from_this<Object>
@@ -212,7 +211,6 @@ protected:
 
 #pragma endregion
 
-
 #pragma region Component
 
 
@@ -232,10 +230,7 @@ public:
 	{
 	}
 
-	virtual void Dispose() override
-	{
-		Object::Dispose();
-	}
+	virtual void Dispose() override;
 
 	std::shared_ptr<Entity> GetOwner() { return pOwner.expired() ? nullptr : pOwner.lock(); }
 
@@ -370,18 +365,6 @@ protected: // dll proxy
 
 	std::shared_mutex mComponentLock;
 };
-
-std::shared_ptr<World> Component::GetWorld()
-{
-	auto owner = GetOwner();
-	if (!owner)
-	{
-		return nullptr;
-	}
-
-	return owner->GetWorld();
-}
-
 
 #pragma endregion
 
@@ -564,7 +547,7 @@ public:
 		mLuanchConfig = std::move(config);
 	}
 
-	std::string* LaunchParam(const std::string& key)
+	std::string* GetParam(const std::string& key)
 	{
 		if (mLuanchConfig.count(key))
 		{
@@ -614,6 +597,8 @@ private:
 
 };
 
+#pragma endregion
+
 void InstanceHolder::Unload()
 {
 	if (MainWorld)
@@ -631,5 +616,21 @@ void InstanceHolder::Unload()
 	MemPool = nullptr;
 }
 
+std::shared_ptr<World> Component::GetWorld()
+{
+	auto owner = GetOwner();
+	if (!owner)
+	{
+		return nullptr;
+	}
 
-#pragma endregion
+	return owner->GetWorld();
+}
+
+void Component::Dispose()
+{
+	GetOwner()->RemoveEvent(ID());
+	GetWorld()->RemoveEvent(ID());
+
+	Object::Dispose();
+}

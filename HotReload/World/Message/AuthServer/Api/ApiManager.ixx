@@ -24,8 +24,8 @@ export void ApiInit(Server::Ptr dnServer)
 
 			nlohmann::json errData;
 
-			ClientProxyHelper::Ptr clientSock = dnServer->GetComponent<ClientProxyHelper>(EMComponentType::ClientProxy);
-			if (clientSock->GetRegistState() != EMRegistState::Registed)
+			ClientProxyHelper::Ptr clientProxy = dnServer->GetComponent<ClientProxyHelper>(EMComponentType::ClientProxy);
+			if (clientProxy->GetRegistState() != EMRegistState::Registed)
 			{
 				errData["Code"] = http_status::HTTP_STATUS_BAD_REQUEST;
 				errData["Message"] = "Server Disconnect!";

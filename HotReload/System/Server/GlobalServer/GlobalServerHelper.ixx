@@ -66,8 +66,8 @@ public:
 			channel->deleteContextPtr();
 
 			// sendData
-			request.set_serverip(beEntityHelper->ServerIp());
-			request.set_serverport(beEntityHelper->ServerPort());
+			request.set_serverip(beEntityHelper->GetServerIp());
+			request.set_serverport(beEntityHelper->GetServerPort());
 
 			request.SerializeToString(&binData);
 			// timer destory
@@ -323,7 +323,7 @@ public:
 			serverSock->onConnection = nullptr;
 			serverSock->onMessage = nullptr;
 
-			serverSock->MsgMapClear();
+			serverSock->ClearMsgMap();
 		}
 
 		if (ClientProxyHelper::Ptr clientSock = GetClientProxy())
@@ -332,7 +332,7 @@ public:
 			clientSock->onMessage = nullptr;
 			clientSock->SetRegistEvent(nullptr);
 
-			clientSock->MsgMapClear();
+			clientSock->ClearMsgMap();
 		}
 
 		return true;

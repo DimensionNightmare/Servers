@@ -111,7 +111,7 @@ namespace MsgHandleRegister
 			if (entity = entityMan->GetEntity(request->serverid()))
 			{
 				// wait destroy`s destroy
-				if (size_t timerId = entity->TimerId())
+				if (size_t timerId = entity->GetTimerId())
 				{
 					entity->SetTimerId(0);
 					entityMan->GetTimer()->KillTimer(timerId);

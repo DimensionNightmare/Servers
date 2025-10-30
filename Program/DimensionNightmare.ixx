@@ -293,13 +293,17 @@ public:
 	{
 		world->AddSystem<Timer>();
 
-		std::string* value = world->LaunchParam("svrName");
-		EMServerType serverType = EnumName<EMServerType>(*value);
+		std::string* param = world->GetParam("svrName");
+		if(!param)
+		{
+			return false;
+		}
+		EMServerType serverType = EnumName<EMServerType>(*param);
 
 		Server::Ptr dnServer = world->AddSystem<Server>();
 		dnServer->SetServerType(serverType);
 
-		value = world->LaunchParam("byCtl");
+		param = world->GetParam("byCtl");
 
 		switch (serverType)
 		{
@@ -315,7 +319,7 @@ public:
 				dnServer->AddComponent<ServerEntityManager>();
 				//net
 				dnServer->AddComponent<ServerProxy>();
-				if (value)
+				if (param)
 				{
 					dnServer->AddComponent<ClientProxy>();
 				}
@@ -327,7 +331,7 @@ public:
 				dnServer->AddComponent<RdbProxy>();
 				dnServer->AddComponent<WebProxy>();
 				//net
-				if (value)
+				if (param)
 				{
 					dnServer->AddComponent<ClientProxy>();
 				}
@@ -516,7 +520,7 @@ public:
 			}
 			catch (const std::exception& e)
 			{
-				LoggerPrint::Log(world, ELogLevel_Error, "execute server {} TickMainFrame error! error: {}", *world->LaunchParam("svrName"), e.what());
+				LoggerPrint::Log(world, ELogLevel_Error, "execute server {} TickMainFrame error! error: {}", *world->GetParam("svrName"), e.what());
 			}
 		}
 	}

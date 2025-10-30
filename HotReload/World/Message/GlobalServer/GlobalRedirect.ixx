@@ -28,7 +28,7 @@ namespace MsgHandleRegister
 			}
 		}
 
-		tempList.sort([](ServerEntityHelper::Ptr lhs, ServerEntityHelper::Ptr rhs) { return lhs->ConnNum() < rhs->ConnNum(); });
+		tempList.sort([](ServerEntityHelper::Ptr lhs, ServerEntityHelper::Ptr rhs) { return lhs->GetConnNum() < rhs->GetConnNum(); });
 
 		if (tempList.empty())
 		{
@@ -66,8 +66,8 @@ namespace MsgHandleRegister
 
 			if(response->errorcode() == EL10nCode_None)
 			{
-				response->set_serverip(entity->ServerIp());
-				response->set_serverport(entity->ServerPort());
+				response->set_serverip(entity->GetServerIp());
+				response->set_serverport(entity->GetServerPort());
 			}
 			else
 			{

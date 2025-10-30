@@ -138,7 +138,7 @@ public:
 			proxy->SetRegistEvent(nullptr);
 
 			// web use clientMsg
-			proxy->MsgMapClear();
+			proxy->ClearMsgMap();
 		}
 
 		if (WebProxyHelper::Ptr proxy = GetWebProxy())

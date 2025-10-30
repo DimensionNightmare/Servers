@@ -106,9 +106,8 @@ private:
 
 	size_t currentTimestamp() const
 	{
-		return std::chrono::duration_cast<std::chrono::milliseconds>(
-			std::chrono::system_clock::now().time_since_epoch()
-			).count();
+		using namespace std::chrono;
+		return duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
 	}
 
 	size_t waitNextMs(size_t last) const

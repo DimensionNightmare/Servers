@@ -14,7 +14,7 @@ public: // dll override
 
 	/// @brief the this close timedown destroy timerid.
 	/// @brief authenticate,shutdown and reconnect waiting.
-	size_t TimerId() { return iCloseTimerId; }
+	size_t GetTimerId() { return iCloseTimerId; }
 	void SetTimerId(size_t timerId) { iCloseTimerId = timerId; }
 
 	/// @brief net socket set
@@ -24,14 +24,14 @@ public: // dll override
 	void SetChannel(SocketChannel::Ptr channel) { pChannel = channel; }
 
 	/// @brief authenticate token
-	std::string Token() { return sToken; }
+	std::string GetToken() { return sToken; }
 	void SetToken(const std::string& token) { sToken = token; }
 
 	/// @brief authenticate token expire time
-	int64_t ExpireTime() { return iExpireTime; }
+	int64_t GetExpireTime() { return iExpireTime; }
 	void SetExpireTime(int64_t time) { iExpireTime = time; }
 
 	/// @brief alread connected serverid 
-	size_t RecordServerId() { return iRecordServerId; }
+	size_t GetRecordServerId() { return iRecordServerId; }
 	void SetRecordServerId(size_t id) { iRecordServerId = id; }
 };

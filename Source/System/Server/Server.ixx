@@ -62,7 +62,7 @@ public:
 
 	virtual bool Awake() override
 	{
-		if (std::string* value = GetWorld()->LaunchParam("svrIndex"))
+		if (std::string* value = GetWorld()->GetParam("svrIndex"))
 		{
 			bIsPull = true;
 			SetID(stol(*value));

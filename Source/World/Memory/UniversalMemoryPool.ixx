@@ -47,6 +47,8 @@ public:
 
 	std::string GetMemoryRecordInfo(void* raw_memory)
 	{
+		std::shared_lock lock(oRecordMutex);
+
 		auto it = mAllocatedRecords.find(raw_memory);
 		if(it != mAllocatedRecords.end())
 		{
@@ -60,6 +62,8 @@ public:
 
 	void SetMemoryRecordInfo(void* raw_memory, std::source_location&& location)
 	{
+		std::shared_lock lock(oRecordMutex);
+		
 		auto it = mAllocatedRecords.find(raw_memory);
 		if(it != mAllocatedRecords.end())
 		{

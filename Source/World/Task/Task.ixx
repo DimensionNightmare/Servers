@@ -134,7 +134,9 @@ export
 		}
 	public:
 	
-		size_t& TimerId() { return iTimerId; }
+		size_t GetTimerId() { return iTimerId; }
+
+		void SetTimerId(size_t timerId) { iTimerId = timerId; }
 	
 	private:
 	

@@ -71,7 +71,7 @@ protected:
 
 	RoomEntity::Ptr _AddEntity(size_t mapId)
 	{
-		RoomEntity::Ptr entity = P_InstanceHolder->GetMemPool().Allocate<RoomEntity>(GetOwner()->GetWorldW());
+		RoomEntity::Ptr entity = P_InstanceHolder->GetMemPool().Allocate<RoomEntity>(GetWorld());
 
 		std::unique_lock ulock(oMapMutex);
 		mEntityMap[entity->ID()] = entity;

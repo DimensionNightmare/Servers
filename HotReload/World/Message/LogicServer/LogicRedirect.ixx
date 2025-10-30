@@ -140,8 +140,8 @@ namespace MsgHandleRegister
 			{
 				entity->SetRecordRoomId(roomEntity->ID());
 				//combin
-				response->set_serverip(roomEntity->ServerIp());
-				response->set_serverport(roomEntity->ServerPort());
+				response->set_serverip(roomEntity->GetServerIp());
+				response->set_serverport(roomEntity->GetServerPort());
 			}
 
 		}

@@ -24,8 +24,6 @@ public:
 
 	virtual void Dispose() override
 	{
-		GetWorld()->RemoveEvent(ID());
-		
 		End();
 		
 		Component::Dispose();
@@ -36,10 +34,10 @@ public:
 		World::Ptr world = GetWorld();
 
 		uint16_t port = 0;
-		std::string* value = world->LaunchParam("port");
-		if (value)
+		std::string* param = world->GetParam("port");
+		if (param)
 		{
-			port = stoi(*value);
+			port = stoi(*param);
 		}
 
 		setHost("0.0.0.0");

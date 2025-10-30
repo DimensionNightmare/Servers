@@ -120,7 +120,9 @@ export
 		std::stringstream ss(datetime);
 		ss >> std::get_time(&tm, "%Y-%m-%d %H:%M:%S");
 
-		auto tp = std::chrono::system_clock::from_time_t(mktime(&tm));
+		using namespace std::chrono;
+
+		auto tp = system_clock::from_time_t(mktime(&tm));
 
 		if (!microseconds_str.empty())
 		{
@@ -131,7 +133,7 @@ export
 		// time zone
 		// tp -= chrono::hours(timezone_offset);
 
-		double timestamp = std::chrono::duration<double>(tp.time_since_epoch()).count();
+		double timestamp = duration<double>(tp.time_since_epoch()).count();
 		return timestamp;
 	}
 

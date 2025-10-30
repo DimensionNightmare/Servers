@@ -38,9 +38,9 @@ namespace MsgHandleRegister
 
 
 				//kick game
-				if (size_t serverId = entity->RecordServerId())
+				if (size_t serverId = entity->GetRecordServerId())
 				{
-					LoggerPrint::Log(channel, ELogLevel_Debug, "Send Logic tick User->{}, server:{}", entity->ID(), entity->RecordServerId());
+					LoggerPrint::Log(channel, ELogLevel_Debug, "Send Logic tick User->{}, server:{}", entity->ID(), entity->GetRecordServerId());
 
 					entity->GetChannel()->deleteContextPtr();
 
@@ -65,15 +65,16 @@ namespace MsgHandleRegister
 			std::string token = Md5Hash(GetNowTimeStr());
 			entity->SetToken(token);
 			
+			using namespace std::chrono;
 
-			entity->SetExpireTime(std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count() + 30);
+			entity->SetExpireTime(duration_cast<seconds>(system_clock::now().time_since_epoch()).count() + 30);
 		}
 
-		response->set_token(entity->Token());
-		response->set_expiredtimespan(entity->ExpireTime());
+		response->set_token(entity->GetToken());
+		response->set_expiredtimespan(entity->GetExpireTime());
 
 		// entity or token expired
-		if (!entity->TimerId())
+		if (!entity->GetTimerId())
 		{
 			entity->SetTimerId(entityMan->CheckEntityCloseTimer(entity->ID()));
 		}

@@ -93,7 +93,7 @@ protected:
 
 	ServerEntity::Ptr _AddEntity(size_t entityId, EMServerType regType)
 	{
-		ServerEntity::Ptr entity = P_InstanceHolder->GetMemPool().Allocate<ServerEntity>(GetOwner()->GetWorldW());
+		ServerEntity::Ptr entity = P_InstanceHolder->GetMemPool().Allocate<ServerEntity>(GetWorld());
 		entity->SetID(entityId);
 
 		std::unique_lock ulock(oMapMutex);

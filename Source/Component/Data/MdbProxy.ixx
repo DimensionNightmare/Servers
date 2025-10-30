@@ -23,8 +23,6 @@ public:
 
 	virtual void Dispose() override
 	{
-		GetOwner()->RemoveEvent(ID());
-		
 		Component::Dispose();
 		
 		pMdbProxys.clear();
@@ -40,9 +38,13 @@ public:
 	{
 		World::Ptr world = GetWorld();
 
-		std::string* value = world->LaunchParam("connection");
+		std::string* param = world->GetParam("connection");
+		if(!param)
+		{
+			return;
+		}
 
-		auto connection = P_InstanceHolder->GetMemPool().Allocate<sw::redis::Redis>(*value);
+		auto connection = P_InstanceHolder->GetMemPool().Allocate<sw::redis::Redis>(*param);
 		
 		connection->ping();
 

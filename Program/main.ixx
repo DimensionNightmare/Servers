@@ -166,13 +166,13 @@ export int main(int argc, char** argv)
 		programConfig.iniFileConfig["Common"].emplace("ProgramDir", path.string());
 
 		path = path.parent_path();
-		programConfig.iniFileConfig["Common"].emplace("WorkDir", path.string());
+		programConfig.iniFileConfig["Common"].emplace("workDir", path.string());
 
 		path = path / "Runtime/Logs";
 		programConfig.iniFileConfig["Common"].emplace("LogFolder", path.string());
 
 		path /= std::format("PID_{}", Platform::GetCurrentProcessId());
-		programConfig.iniFileConfig["Common"].emplace("PidLogFolder", path.string());
+		programConfig.iniFileConfig["Common"].emplace("pidLogFolder", path.string());
 
 		PidFolderPath = path;
 	}

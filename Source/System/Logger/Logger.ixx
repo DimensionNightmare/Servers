@@ -67,18 +67,18 @@ public:
 		PInstanceLoggerPrint = GetSelf<LoggerPrint>();
 
 		World::Ptr world = GetWorld();
-		std::string* value = world->LaunchParam("LoggerLevel");
-		if (!value)
+		std::string* param = world->GetParam("loggerLevel");
+		if (!param)
 		{
 			return false;
 		}
 
 		ELogLevel logLevel = ELogLevel_Debug;
-		std::string strType = "ELogLevel_" + *value;
+		std::string strType = "ELogLevel_" + *param;
 		ELogLevel_Parse(strType, &logLevel);
 		SetLoggerLevel(logLevel);
 
-		std::filesystem::path path = *world->LaunchParam("PidLogFolder");
+		std::filesystem::path path = *world->GetParam("pidLogFolder");
 		if (!std::filesystem::exists(path))
 		{
 			std::filesystem::create_directories(path);
@@ -170,7 +170,7 @@ protected:
 		std::string* sTitle = nullptr;
 		if (world)
 		{
-			sTitle = world->LaunchParam("svrName");
+			sTitle = world->GetParam("svrName");
 		}
 
 		switch (level)
@@ -207,7 +207,7 @@ protected:
 			std::shared_ptr<std::ofstream> logFile;
 			if (mLogFileMap.count(*serverName) == 0)
 			{
-				std::filesystem::path path = *GetWorld()->LaunchParam("PidLogFolder");
+				std::filesystem::path path = *GetWorld()->GetParam("pidLogFolder");
 				path /= std::format("{}.log", *serverName);
 
 				logFile = AddLogFile(path.string(), std::ios::app);
@@ -256,15 +256,15 @@ bool L10nText::Awake()
 	World::Ptr world = GetWorld();
 
 	LoggerPrint::Ptr pLogger = world->GetSystem<LoggerPrint>(EMSystemType::LoggerPrint);
-	std::string* value = world->LaunchParam("l10nDataPath");
-	if (!value)
+	std::string* param = world->GetParam("l10nDataPath");
+	if (!param)
 	{
 		LoggerPrint::Log(nullptr, ELogLevel_Error, "Launch Param l10nErrPath Error !");
 		return false;
 	}
 
 	mL10nCode.Clear();
-	std::ifstream input(*value, std::ios::in | std::ios::binary);
+	std::ifstream input(*param, std::ios::in | std::ios::binary);
 	if (!input || !mL10nCode.ParseFromIstream(&input))
 	{
 		LoggerPrint::Log(nullptr, ELogLevel_Error, "load I10n Tip Config Error !");
@@ -272,9 +272,10 @@ bool L10nText::Awake()
 	}
 
 	eType = EL10nType_zh_CN;
-	if (value = world->LaunchParam("l10nLang"))
+	param = world->GetParam("l10nLang");
+	if (param)
 	{
-		std::string strType = "EL10nType_" + *value;
+		std::string strType = "EL10nType_" + *param;
 		if (!EL10nType_Parse(strType, &eType))
 		{
 			LoggerPrint::Log(nullptr, ELogLevel_Error, "load I10n l10nLang Error !");

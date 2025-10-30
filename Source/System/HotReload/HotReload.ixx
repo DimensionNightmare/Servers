@@ -30,7 +30,7 @@ public:
 	virtual bool Awake() override
 	{
 		
-		sDllDir = std::filesystem::path() / *GetWorld()->LaunchParam("WorkDir") / sDllDir;
+		sDllDir = std::filesystem::path() / *GetWorld()->GetParam("workDir") / sDllDir;
 
 		return true;
 	}

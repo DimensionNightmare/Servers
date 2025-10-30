@@ -60,7 +60,7 @@ protected:
 
 	ClientEntity::Ptr _AddEntity(size_t entityId)
 	{
-		ClientEntity::Ptr entity = P_InstanceHolder->GetMemPool().Allocate<ClientEntity>(GetOwner()->GetWorldW());;
+		ClientEntity::Ptr entity = P_InstanceHolder->GetMemPool().Allocate<ClientEntity>(GetWorld());
 		entity->SetID(entityId);
 
 		std::unique_lock ulock(oMapMutex);
@@ -71,8 +71,7 @@ protected:
 public:
 	FunctionContainer<&ClientEntityManager::_AddEntity> AddEntity;
 
-protected: // dll proxy
-	ClientProxy::Ptr pSqlClient;
+protected:
 
 	/// @brief if save error. bin data will record to this.
 	std::unordered_map<size_t, std::string> mDbFailure;

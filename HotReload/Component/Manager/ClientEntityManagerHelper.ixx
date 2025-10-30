@@ -46,9 +46,9 @@ public:
 
 	TaskVoid LoadEntity(ClientEntityHelper::Ptr entity, GMsg::d2L_ReqLoadEntityData* inRequest, GMsg::L2d_ResLoadEntityData* inResponse)
 	{
-		ClientProxyHelper::Ptr sqlClient = pSqlClient->GetSelf<ClientProxyHelper>();
+		ClientProxyHelper::Ptr clientProxy = GetOwner()->GetComponent<ClientProxyHelper>(EMComponentType::ClientProxy);
 
-		if (!sqlClient || sqlClient->RegistType() != std::to_underlying(EMServerType::GateServer))
+		if (!clientProxy || clientProxy->RegistType() != std::to_underlying(EMServerType::GateServer))
 		{
 			co_return;
 		}
@@ -142,9 +142,9 @@ public:
 				};
 			auto dataChannel = taskGen(&response);
 
-			uint32_t msgId = sqlClient->GetMsgId();
-			sqlClient->AddMsg(msgId, &dataChannel, 9000);
-			MessagePackAndSend(msgId, EMMsgDeal::Redir, request.GetDescriptor()->full_name(), binData, sqlClient->GetChannel());
+			uint32_t msgId = clientProxy->GetMsgId();
+			clientProxy->AddMsg(msgId, &dataChannel, 9000);
+			MessagePackAndSend(msgId, EMMsgDeal::Redir, request.GetDescriptor()->full_name(), binData, clientProxy->GetChannel());
 
 			co_await dataChannel;
 			if (dataChannel.HasFlag(EMTaskFlag::Timeout))
@@ -237,7 +237,7 @@ public:
 		GMsg::D2L_ResSaveData response;
 
 		{
-			ClientProxyHelper::Ptr sqlClient = pSqlClient->GetSelf<ClientProxyHelper>();
+			ClientProxyHelper::Ptr clientProxy = GetOwner()->GetComponent<ClientProxyHelper>(EMComponentType::ClientProxy);
 
 			auto taskGen = [](Message* msg) -> Task<Message*>
 				{
@@ -245,12 +245,12 @@ public:
 				};
 			auto dataChannel = taskGen(&response);
 
-			uint32_t msgId = sqlClient->GetMsgId();
-			sqlClient->AddMsg(msgId, &dataChannel, 9000);
+			uint32_t msgId = clientProxy->GetMsgId();
+			clientProxy->AddMsg(msgId, &dataChannel, 9000);
 
 			std::string binData;
 			request.SerializeToString(&binData);
-			MessagePackAndSend(msgId, EMMsgDeal::Redir, request.GetDescriptor()->full_name(), binData, sqlClient->GetChannel());
+			MessagePackAndSend(msgId, EMMsgDeal::Redir, request.GetDescriptor()->full_name(), binData, clientProxy->GetChannel());
 
 			co_await dataChannel;
 			if (dataChannel.HasFlag(EMTaskFlag::Timeout))
@@ -285,9 +285,9 @@ public:
 
 		std::function<void(ClientEntityHelper::Ptr, bool)> dealFunc = nullptr;
 		
-		ClientProxyHelper::Ptr sqlClient = pSqlClient->GetSelf<ClientProxyHelper>();
+		ClientProxyHelper::Ptr clientProxy = GetOwner()->GetComponent<ClientProxyHelper>(EMComponentType::ClientProxy);
 
-		if (!sqlClient || sqlClient->RegistType() != uint8_t(EMServerType::GateServer))
+		if (!clientProxy || clientProxy->RegistType() != uint8_t(EMServerType::GateServer))
 		{
 			dealFunc = [this](ClientEntityHelper::Ptr entity, bool offline)
 				{
@@ -333,10 +333,4 @@ public:
 		}
 	}
 	
-	/// @brief server self pointer save. mean connected father node success.
-	void InitSqlConn(ClientProxy::Ptr sockClient)
-	{
-		pSqlClient = sockClient;
-	}
-
 };

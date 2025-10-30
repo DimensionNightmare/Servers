@@ -34,8 +34,6 @@ public:
 
 	virtual void Dispose() override
 	{
-		GetWorld()->RemoveEvent(ID());
-		
 		pLoop = nullptr;
 		System::Dispose();
 	}

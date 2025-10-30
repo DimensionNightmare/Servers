@@ -101,7 +101,7 @@ namespace MsgHandleRegister
 			if (entity = entityMan->GetEntity(request->serverid()))
 			{
 				// wait destroy`s destroy
-				if (size_t timerId = entity->TimerId())
+				if (size_t timerId = entity->GetTimerId())
 				{
 					entity->SetTimerId(0);
 					entityMan->GetTimer()->KillTimer(timerId);
@@ -140,7 +140,7 @@ namespace MsgHandleRegister
 			entity->SetServerIp(ipPort.substr(0, pos));
 			entity->SetServerPort(request->serverport());
 
-			LoggerPrint::Log(channel, ELogLevel_Debug, "ds regist:{}:{}", entity->ServerIp(), entity->ServerPort());
+			LoggerPrint::Log(channel, ELogLevel_Debug, "ds regist:{}:{}", entity->GetServerIp(), entity->GetServerPort());
 
 			entity->SetChannel(channel);
 

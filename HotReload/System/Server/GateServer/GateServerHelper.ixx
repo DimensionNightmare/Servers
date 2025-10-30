@@ -65,7 +65,7 @@ public:
 		size_t entityId = entity->ID();
 
 		ServerEntityHelper::Ptr serverEntity = nullptr;
-		if (size_t serverId = entity->GetSelf<ProxyEntityHelper>()->RecordServerId())
+		if (size_t serverId = entity->GetSelf<ProxyEntityHelper>()->GetRecordServerId())
 		{
 			serverEntity = GetServerEntityManager()->GetEntity(serverId);
 		}
@@ -289,7 +289,7 @@ public:
 			proxy->onConnection = nullptr;
 			proxy->onMessage = nullptr;
 
-			proxy->MsgMapClear();
+			proxy->ClearMsgMap();
 		}
 
 		if (ClientProxyHelper::Ptr proxy = GetClientProxy())
@@ -298,7 +298,7 @@ public:
 			proxy->onMessage = nullptr;
 			proxy->SetRegistEvent(nullptr);
 
-			proxy->MsgMapClear();
+			proxy->ClearMsgMap();
 		}
 
 		return true;

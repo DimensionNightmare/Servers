@@ -23,14 +23,14 @@ namespace MsgHandleRegister
 
 		const std::list<ServerEntity::Ptr>& serverList = manager->GetEntitysByType(EMServerType::GlobalServer);
 
-		// std::erase_if(serverList, [](ServerEntity::Ptr itor){return itor ? itor->TimerId() : true; });
-		// serverList.sort([](ServerEntity::Ptr lhs, ServerEntity::Ptr rhs){return lhs->ConnNum() < rhs->ConnNum(); });
+		// std::erase_if(serverList, [](ServerEntity::Ptr itor){return itor ? itor->GetTimerId() : true; });
+		// serverList.sort([](ServerEntity::Ptr lhs, ServerEntity::Ptr rhs){return lhs->GetConnNum() < rhs->GetConnNum(); });
 
 		for (ServerEntity::Ptr server : serverList)
 		{
 			ServerEntityHelper::Ptr entityHelper = server->GetSelf<ServerEntityHelper>();
 
-			if (entityHelper->TimerId())
+			if (entityHelper->GetTimerId())
 			{
 				continue;
 			}
@@ -41,7 +41,7 @@ namespace MsgHandleRegister
 				continue;
 			}
 
-			if (entityHelper->ConnNum() < serverEntity->ConnNum())
+			if (entityHelper->GetConnNum() < serverEntity->GetConnNum())
 			{
 				serverEntity = entityHelper;
 			}

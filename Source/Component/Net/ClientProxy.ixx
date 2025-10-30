@@ -45,8 +45,6 @@ public:
 
 	virtual void Dispose() override
 	{
-		GetWorld()->RemoveEvent(ID());
-
 		mMsgList.clear();
 		mMapTimer.clear();
 
@@ -57,8 +55,8 @@ public:
 	bool Awake() override
 	{
 		World::Ptr world = GetWorld();
-		std::string* ctlPort = world->LaunchParam("ctlPort");
-		std::string* ctlIp = world->LaunchParam("ctlIp");
+		std::string* ctlPort = world->GetParam("ctlPort");
+		std::string* ctlIp = world->GetParam("ctlIp");
 		if (!ctlPort || !ctlIp)
 		{
 			return false;

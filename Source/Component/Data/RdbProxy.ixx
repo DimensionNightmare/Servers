@@ -27,8 +27,6 @@ public:
 
 	virtual void Dispose() override
 	{
-		GetOwner()->RemoveEvent(ID());
-		
 		Component::Dispose();
 
 		pRdbProxys.clear();
@@ -44,11 +42,20 @@ public:
 	{
 		World::Ptr world = GetWorld();
 
-		std::string* value = world->LaunchParam("connection");
-		pqxx::connection check(*value);
+		std::string* param = world->GetParam("connection");
+		if(!param)
+		{
+			return;
+		}
+
+		pqxx::connection check(*param);
 		pqxx::nontransaction checkTxn(check);
 
-		std::string* names = world->LaunchParam("dbnames");
+		std::string* names = world->GetParam("dbnames");
+		if(!names)
+		{
+			return;
+		}
 		
 		std::vector<std::string> dbNames = StrSplit(*names, ",");
 		
@@ -62,7 +69,7 @@ public:
 				LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "Create Database:{}", dbName);
 			}
 
-			std::string connectStr = std::format("{} dbname = {}", *value, dbName);
+			std::string connectStr = std::format("{} dbname = {}", *param, dbName);
 
 			auto connection = P_InstanceHolder->GetMemPool().Allocate<pqxx::connection>(connectStr);
 

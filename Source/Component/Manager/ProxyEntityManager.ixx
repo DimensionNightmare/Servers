@@ -70,7 +70,7 @@ protected:
 
 	ProxyEntity::Ptr _AddEntity(size_t entityId)
 	{
-		ProxyEntity::Ptr entity = P_InstanceHolder->GetMemPool().Allocate<ProxyEntity>(GetOwner()->GetWorldW());
+		ProxyEntity::Ptr entity = P_InstanceHolder->GetMemPool().Allocate<ProxyEntity>(GetWorld());
 		entity->SetID(entityId);
 
 		std::unique_lock ulock(oMapMutex);

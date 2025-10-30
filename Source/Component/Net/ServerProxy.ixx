@@ -48,7 +48,7 @@ public:
 			case EMServerType::GlobalServer:
 			case EMServerType::AuthServer:
 			{
-				std::string* param = GetWorld()->LaunchParam("port");
+				std::string* param = GetWorld()->GetParam("port");
 				if (!param)
 				{
 					LoggerPrint::Log(GetWorld(), EL10nCode_SrvNeedIPPort);
@@ -156,8 +156,6 @@ public:
 
 	virtual void Dispose() override
 	{
-		GetWorld()->RemoveEvent(ID());
-		
 		Pause();
 
 		Component::Dispose();

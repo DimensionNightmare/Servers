@@ -17,7 +17,7 @@ namespace MsgHandleRegister
 		{
 			if (request->isregist())
 			{
-				if (size_t timerId = entity->TimerId())
+				if (size_t timerId = entity->GetTimerId())
 				{
 					entity->SetTimerId(0);
 					entityMan->GetTimer()->KillTimer(timerId);

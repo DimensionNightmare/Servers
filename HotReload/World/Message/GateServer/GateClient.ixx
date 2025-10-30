@@ -28,7 +28,7 @@ namespace MsgHandleRegister
 			response->set_errorcode(EL10nCode_NoneProxyEntity);
 		}
 		// if not match, timer will destory entity
-		else if (Md5Hash(entity->Token()) != request->token())
+		else if (Md5Hash(entity->GetToken()) != request->token())
 		{
 			LoggerPrint::Log(channel, ELogLevel_Debug, "not match!!");
 			response->set_errorcode(EL10nCode_LoginTokenNotMatch);
@@ -37,7 +37,7 @@ namespace MsgHandleRegister
 		{
 			LoggerPrint::Log(channel, ELogLevel_Debug, "match!!");
 
-			if (size_t timerId = entity->TimerId())
+			if (size_t timerId = entity->GetTimerId())
 			{
 				entity->SetTimerId(0);
 				entityMan->GetTimer()->KillTimer(timerId);
@@ -52,7 +52,7 @@ namespace MsgHandleRegister
 			ServerEntityHelper::Ptr serverEntity = nullptr;
 
 			// <cache> server to load login data
-			if (size_t serverId = entity->RecordServerId())
+			if (size_t serverId = entity->GetRecordServerId())
 			{
 				serverEntity = serverEntityMan->GetEntity(serverId);
 			}

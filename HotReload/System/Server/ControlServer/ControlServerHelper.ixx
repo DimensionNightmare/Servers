@@ -135,7 +135,7 @@ public:
 			proxy->onConnection = nullptr;
 			proxy->onMessage = nullptr;
 
-			proxy->MsgMapClear();
+			proxy->ClearMsgMap();
 		}
 
 		return true;

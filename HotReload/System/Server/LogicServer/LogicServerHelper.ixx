@@ -158,21 +158,19 @@ public:
 						
 						proxyHelper->SetRegistEvent(ServerMessage::GetMessageHandle()->pClientRegistFunc);
 						proxyHelper->InitConnectedChannel(channel);
-
-						GetClientEntityManager()->InitSqlConn(proxyHelper->GetSelf<ClientProxy>());
 					}
 					else
 					{
 						LoggerPrint::Log(GetWorld(), EL10nCode_SrvConnOff, peeraddr, channel->fd(), channel->id());
 
 						std::string originIp;
-						if(std::string* param = GetWorld()->LaunchParam("ctlIp"))
+						if(std::string* param = GetWorld()->GetParam("ctlIp"))
 						{
 							originIp = *param;
 						}
 
 						std::string originPort;
-						if(std::string* param = GetWorld()->LaunchParam("ctlPort"))
+						if(std::string* param = GetWorld()->GetParam("ctlPort"))
 						{
 							originPort = *param;
 						}
@@ -275,7 +273,7 @@ public:
 			proxy->onConnection = nullptr;
 			proxy->onMessage = nullptr;
 
-			proxy->MsgMapClear();
+			proxy->ClearMsgMap();
 		}
 
 		if (ClientProxyHelper::Ptr proxy = GetClientProxy())
@@ -284,7 +282,7 @@ public:
 			proxy->onMessage = nullptr;
 			proxy->SetRegistEvent(nullptr);
 
-			proxy->MsgMapClear();
+			proxy->ClearMsgMap();
 		}
 
 		return true;
