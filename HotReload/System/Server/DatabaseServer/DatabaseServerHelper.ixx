@@ -157,7 +157,7 @@ public:
 		return false;
 	}
 	
-	int HandleServerInit()
+	void HandleServerInit()
 	{
 
 		if (ClientProxyHelper::Ptr proxy = GetClientProxy())
@@ -278,10 +278,10 @@ public:
 
 		}
 
-		return CheckDatabase();
+		CheckDatabase();
 	}
 
-	int HandleServerShutdown()
+	void HandleServerShutdown()
 	{
 		if (ClientProxyHelper::Ptr proxy = GetClientProxy())
 		{
@@ -292,7 +292,7 @@ public:
 			proxy->ClearMsgMap();
 		}
 
-		return true;
+		return;
 	}
 
 };

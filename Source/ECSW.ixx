@@ -15,6 +15,9 @@ export enum EMEventType : uint8_t
 	ServerPause,
 	ServerResume,
 	AppStart,
+	InitHotReload,
+	DeinitHotReload,
+	MovedDeinitHotReload,
 };
 
 export enum class EMComponentType : uint8_t
@@ -58,6 +61,7 @@ class Component;
 class Entity;
 class System;
 class World;
+class Event;
 
 export struct InstanceHolder
 {
@@ -105,21 +109,24 @@ export struct InstanceHolder
 
 export std::shared_ptr<InstanceHolder> P_InstanceHolder;
 
-#pragma region DNEvent
+#pragma region Event
 
-export class DNEvent
+export class Event
 {
 public:
-	template<typename T, typename Callback>
-	void AddEvent(EMEventType type, std::weak_ptr<T> entity, Callback&& callback)
+
+	template<typename T, typename... Args>
+	void AddEvent(EMEventType type, std::weak_ptr<T> entity, void (T::*callback)(Args...))
 	{
+		using FuncProxy = std::function<void(Args...)>;
+		
 		size_t objId = entity.lock()->ID();
 
-		auto lumbdaFunc = [entity, callback]()
+		FuncProxy lumbdaFunc = [entity, callback](Args&&... args)
 			{
 				if (auto origin = entity.lock())
 				{
-					(origin.get()->*callback)();
+					(origin.get()->*callback)(std::forward<Args>(args)...);
 				}
 			};
 
@@ -128,12 +135,44 @@ public:
 		mEventCollection[type][objId] = objId;
 	}
 
-	void Broadcast(EMEventType type)
+	template<typename... Args>
+	void Broadcast(EMEventType type, Args&&... args)
 	{
+		using FuncProxy = std::function<void(Args...)>;
+
 		for (auto& [objId, _] : mEventCollection[type])
 		{
-			mEventIdMap[objId][type]();
+			auto& anyObj = mEventIdMap[objId][type];
+			if(FuncProxy* typedFunc = std::any_cast<FuncProxy>(&anyObj))
+			{
+				(*typedFunc)(std::forward<Args>(args)...);
+			}
 		}
+	}
+
+	void MoveEvent(EMEventType origin, EMEventType target)
+	{
+		mEventCollection[target] = std::move(mEventCollection[origin]);
+		for(auto& [_, objId] : mEventCollection[target])
+		{
+			auto& map = mEventIdMap[objId];
+			map[target] = std::move(map[origin]);
+			map.erase(origin);
+		}
+
+		mEventCollection.erase(origin);
+	}
+
+	void RemoveEvent(EMEventType origin)
+	{
+		auto map = std::move(mEventCollection[origin]);
+		mEventCollection.erase(origin);
+
+		for(auto& [_, objId] : map)
+		{
+			mEventIdMap[objId].erase(origin);
+		}
+		
 	}
 
 	void RemoveEvent(size_t objId)
@@ -151,11 +190,9 @@ public:
 	}
 
 private:
-	std::unordered_map<size_t, std::unordered_map<EMEventType, std::function<void()> > > mEventIdMap;
+	std::unordered_map<size_t, std::unordered_map<EMEventType, std::any > > mEventIdMap;
 	std::unordered_map<EMEventType, std::unordered_map<size_t, size_t>> mEventCollection;
 };
-
-export DNEvent GEvent; // dynamic initializer
 
 #pragma endregion
 
@@ -254,7 +291,7 @@ protected: // dll proxy
 
 #pragma region Entity
 
-export class Entity : public Object, public DNEvent
+export class Entity : public Object
 {
 protected:
 	Entity(std::weak_ptr<World> world) :
@@ -294,28 +331,7 @@ public: // dll override
 		return nullptr;
 	}
 
-	virtual void Dispose() override
-	{
-		Object::Dispose();
-
-		if (mComponents.empty())
-		{
-			return;
-		}
-
-		std::unique_lock ulock(mComponentLock);
-
-		auto it = mComponents.end();
-		do
-		{
-			--it;
-			it->second->Dispose();
-			it = mComponents.erase(it);
-
-		} while (it != mComponents.begin());
-
-		mComponents.clear();
-	}
+	virtual void Dispose() override;
 
 	template<typename T>
 	std::shared_ptr<T> AddComponent(const std::source_location& location = std::source_location::current())
@@ -351,7 +367,6 @@ public: // dll override
 			return;
 		}
 
-		DNEvent::RemoveEvent(it->second->ID());
 		mComponents.erase(type);
 	}
 
@@ -428,7 +443,7 @@ protected:
 
 #pragma region World
 
-export class World : public Object, public DNEvent
+export class World : public Object, public Event
 {
 public:
 	using Ptr = std::shared_ptr<World>;
@@ -629,8 +644,32 @@ std::shared_ptr<World> Component::GetWorld()
 
 void Component::Dispose()
 {
-	GetOwner()->RemoveEvent(ID());
 	GetWorld()->RemoveEvent(ID());
 
 	Object::Dispose();
+}
+
+void Entity::Dispose()
+{
+	GetWorld()->RemoveEvent(ID());
+	
+	Object::Dispose();
+
+	if (mComponents.empty())
+	{
+		return;
+	}
+
+	std::unique_lock ulock(mComponentLock);
+
+	auto it = mComponents.end();
+	do
+	{
+		--it;
+		it->second->Dispose();
+		it = mComponents.erase(it);
+
+	} while (it != mComponents.begin());
+
+	mComponents.clear();
 }

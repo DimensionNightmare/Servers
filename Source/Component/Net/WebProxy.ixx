@@ -57,9 +57,9 @@ public:
 		return true;
 	}
 
-	int Start()
+	void Start()
 	{
-		return start();
+		int state = start();
 	}
 
 	void End()

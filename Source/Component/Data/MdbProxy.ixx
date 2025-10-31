@@ -30,7 +30,7 @@ public:
 
 	virtual bool Awake() override
 	{
-		GetOwner()->AddEvent(EMEventType::ServerStart, GetSelfW<MdbProxy>(), &MdbProxy::InitDatabase);
+		GetWorld()->AddEvent(EMEventType::ServerStart, GetSelfW<MdbProxy>(), &MdbProxy::InitDatabase);
 		return true;
 	}
 

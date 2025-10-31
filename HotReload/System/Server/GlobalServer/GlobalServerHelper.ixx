@@ -123,7 +123,7 @@ public:
 		}
 	}
 
-	int HandleServerInit()
+	void HandleServerInit()
 	{
 		
 		if (ServerProxyHelper::Ptr proxy = GetServerProxy())
@@ -311,11 +311,11 @@ public:
 
 		}
 
-		return true;
+		return;
 
 	}
 
-	int HandleServerShutdown()
+	void HandleServerShutdown()
 	{
 		
 		if (ServerProxyHelper::Ptr serverSock = GetServerProxy())
@@ -335,7 +335,7 @@ public:
 			clientSock->ClearMsgMap();
 		}
 
-		return true;
+		return;
 	}
 
 };

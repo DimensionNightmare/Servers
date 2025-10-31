@@ -1,19 +1,12 @@
 
 export module DLLMAIN;
 
-import GlobalServerHelper;
-import ControlServerHelper;
-import AuthServerHelper;
-import GateServerHelper;
-import DatabaseServerHelper;
-import LogicServerHelper;
 import ThirdParty.Platform;
 import ECSW;
-import Server;
 import ThirdParty.Libhv;
 import std.compat;
 import ThirdParty.Protobuf;
-import HotReload;
+import DimensionNightmareHelper;
 
 #ifdef _WIN32
 	#ifdef HOTRELOAD_BUILD
@@ -28,48 +21,6 @@ import HotReload;
 		#define HOTRELOAD
 	#endif
 #endif
-
-
-int InitHotReload(World::Ptr world)
-{
-	Libhv::hvlog_disable();
-
-	Server::Ptr dnServer = world->GetSystem<Server>(EMSystemType::Server);
-
-	switch (dnServer->GetServerType())
-	{
-		#define one(Type) case EMServerType::Type:{ return dnServer->GetSelf<Type##Helper>()->HandleServerInit(); }
-		one(ControlServer)
-		one(GlobalServer)
-		one(AuthServer)
-		one(GateServer)
-		one(DatabaseServer)
-		one(LogicServer)
-
-		#undef one
-	}
-
-	return 0;
-}
-
-int ShutdownHotReload(World::Ptr world)
-{
-	Server::Ptr dnServer = world->GetSystem<Server>(EMSystemType::Server);
-
-	switch (dnServer->GetServerType())
-	{
-		#define one(Type) case EMServerType::Type: { return dnServer->GetSelf<Type##Helper>()->HandleServerShutdown();}
-		one(ControlServer)
-		one(GlobalServer)
-		one(AuthServer)
-		one(GateServer)
-		one(DatabaseServer)
-		one(LogicServer)
-		#undef one
-	}
-
-	return 0;
-}
 
 extern "C"
 {
@@ -93,19 +44,17 @@ extern "C"
 			// DLL_PROCESS_ATTACH
 			case 1:
 			{
+				Libhv::hvlog_disable();
+				
 				using funcSign = void (*)(InstanceHolder::Ptr&);
 				auto funtPtr = Platform::GetFuncPtr(nullptr, "GetInstanceHolder");
 				if (funcSign func = reinterpret_cast<funcSign>(funtPtr))
 				{
 					func(P_InstanceHolder);
 				
-					HotReload::Ptr pHotDll = P_InstanceHolder->AuthWorld->GetSystem<HotReload>(EMSystemType::HotReload);
-					{
-						pHotDll->pInitHotReload = &InitHotReload;
-					}
-					{	
-						pHotDll->pShutdownHotReload = &ShutdownHotReload;
-					}
+					DimensionNightmareHelper::Ptr MainWorld = P_InstanceHolder->MainWorld->GetSelf<DimensionNightmareHelper>();
+					MainWorld->InitHotReload();
+					MainWorld->DeInitHotReload();
 				}
 				break;
 			}

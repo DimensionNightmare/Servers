@@ -36,7 +36,7 @@ public:
 		return GetComponent<RdbProxyHelper>(EMComponentType::RdbProxy);
 	}
 
-	int HandleServerInit()
+	void HandleServerInit()
 	{
 		ServerMessage::GetMessageHandle()->pApiRegistFunc(GetSelf<Server>());
 		
@@ -126,10 +126,10 @@ public:
 		}
 		
 
-		return true;
+		return;
 	}
 
-	int HandleServerShutdown()
+	void HandleServerShutdown()
 	{
 		if (ClientProxyHelper::Ptr proxy = GetClientProxy())
 		{
@@ -151,7 +151,7 @@ public:
 			}
 		}
 
-		return true;
+		return;
 	}
 
 };

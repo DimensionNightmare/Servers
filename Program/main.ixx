@@ -395,3 +395,15 @@ void InputThread()
 
 	LoggerPrint::Log(nullptr, ELogLevel_Normal, "<cmd down>");
 }
+
+#pragma region Export main space 
+
+extern "C"
+{
+	__declspec(dllexport) void GetInstanceHolder(InstanceHolder::Ptr& holder)
+	{
+		holder.reset(P_InstanceHolder.get(), [](InstanceHolder*) {});
+	}
+}
+
+#pragma endregion

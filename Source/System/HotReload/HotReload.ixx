@@ -37,9 +37,6 @@ public:
 
 	virtual void Dispose() override
 	{
-		pShutdownHotReload = nullptr;
-		pInitHotReload = nullptr;
-
 		FreeHandle();
 		
 		System::Dispose();
@@ -164,12 +161,6 @@ public:
 	{
 		isNormalFree = false;
 	}
-
-public:
-	
-	std::function<int(World::Ptr)> pShutdownHotReload;
-
-	std::function<int(World::Ptr)> pInitHotReload;
 
 protected:
 	/// @brief runtime library floder name

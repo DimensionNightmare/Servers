@@ -380,7 +380,6 @@ public:
 	{
 		auto pause = [this](std::stringstream* = nullptr)
 			{
-				// GEvent.Broadcast(EMEventType::ServerPause);
 				for (auto world : oWorlds)
 				{
 					world->Broadcast(EMEventType::ServerPause);
@@ -389,7 +388,6 @@ public:
 
 		auto resume = [this](std::stringstream* = nullptr)
 			{
-				// GEvent.Broadcast(EMEventType::ServerResume);
 				for (auto world : oWorlds)
 				{
 					world->Broadcast(EMEventType::ServerResume);
@@ -402,24 +400,19 @@ public:
 
 				HotReload::Ptr pHotDll = P_InstanceHolder->AuthWorld->GetSystem<HotReload>(EMSystemType::HotReload);
 
-				//after func
-				auto unloadFunc = pHotDll->pShutdownHotReload;
+				MoveEvent(EMEventType::DeinitHotReload, EMEventType::MovedDeinitHotReload);
 
 				if (pHotDll->ReloadHandle([&]()
 					{
-
-						for (auto& world : oWorlds)
-						{
-							unloadFunc(world);
-						}
-
-						unloadFunc = nullptr;
+						Broadcast(EMEventType::MovedDeinitHotReload);
+						RemoveEvent(EMEventType::MovedDeinitHotReload);
 					}))
 				{
-					for (auto& world : oWorlds)
-					{
-						pHotDll->pInitHotReload(world);
-					}
+					Broadcast(EMEventType::InitHotReload);
+				}
+				else
+				{
+					MoveEvent(EMEventType::MovedDeinitHotReload, EMEventType::DeinitHotReload);
 				}
 
 				resume();
@@ -459,8 +452,6 @@ public:
 
 	virtual void Dispose() override
 	{
-		// event
-		GEvent.Broadcast(EMEventType::ServerStop);
 
 		for (auto it = oWorlds.rbegin(); it != oWorlds.rend(); ++it)
 		{
@@ -483,29 +474,12 @@ public:
 			return false;
 		}
 
+		Broadcast(EMEventType::InitHotReload);
+
 		for (auto world : oWorlds)
 		{
-			if (pHotDll->pInitHotReload(world) != 1)
-			{
-				LoggerPrint::Log(world, ELogLevel_Error, "program lunch OnRegHotReload error!");
-				return false;
-			}
-
-
-			try
-			{
-				Server::Ptr dnServer = world->GetSystem<Server>(EMSystemType::Server);
-				dnServer->Broadcast(EMEventType::ServerStart);
-			}
-			catch (const std::exception& e)
-			{
-				LoggerPrint::Log(world, ELogLevel_Error, "dnserver lunch error! error: {}", e.what());
-				return false;
-			}
-
 			world->Broadcast(EMEventType::ServerStart);
 		}
-
 
 		return true;
 	}
@@ -525,23 +499,10 @@ public:
 		}
 	}
 
-private:
+protected:
 
 	std::vector<World::Ptr> oWorlds;
 
 	/// @brief command line std::function mapping
 	std::unordered_map<std::string, std::function<void(std::stringstream*)>> mCmdHandle;
 };
-
-
-#pragma region Export main space 
-
-extern "C"
-{
-	__declspec(dllexport) void GetInstanceHolder(InstanceHolder::Ptr& holder)
-	{
-		holder.reset(P_InstanceHolder.get(), [](InstanceHolder*) {});
-	}
-}
-
-#pragma endregion

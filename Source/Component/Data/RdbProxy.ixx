@@ -34,7 +34,7 @@ public:
 
 	virtual bool Awake() override
 	{
-		GetOwner()->AddEvent(EMEventType::ServerStart, GetSelfW<RdbProxy>(), &RdbProxy::InitDatabase);
+		GetWorld()->AddEvent(EMEventType::ServerStart, GetSelfW<RdbProxy>(), &RdbProxy::InitDatabase);
 		return true;
 	}
 
