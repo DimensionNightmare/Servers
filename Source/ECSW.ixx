@@ -118,15 +118,15 @@ public:
 	template<typename T, typename... Args>
 	void AddEvent(EMEventType type, std::weak_ptr<T> entity, void (T::*callback)(Args...))
 	{
-		using FuncProxy = std::function<void(Args...)>;
+		using FuncProxy = std::function<void(std::decay_t<Args>...)>;
 		
 		size_t objId = entity.lock()->ID();
 
-		FuncProxy lumbdaFunc = [entity, callback](Args&&... args)
+		FuncProxy lumbdaFunc = [entity, callback](Args... args)
 			{
 				if (auto origin = entity.lock())
 				{
-					(origin.get()->*callback)(std::forward<Args>(args)...);
+					(origin.get()->*callback)(args...);
 				}
 			};
 
@@ -136,9 +136,9 @@ public:
 	}
 
 	template<typename... Args>
-	void Broadcast(EMEventType type, Args&&... args)
+	void Broadcast(EMEventType type, Args... args)
 	{
-		using FuncProxy = std::function<void(Args...)>;
+		using FuncProxy = std::function<void(std::decay_t<Args>...)>;
 
 		for (auto& [objId, _] : mEventCollection[type])
 		{
