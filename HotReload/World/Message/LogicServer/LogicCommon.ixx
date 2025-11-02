@@ -67,7 +67,7 @@ namespace MsgHandleRegister
 
 		RoomEntityManagerHelper::Ptr entityMan = dnServer->GetRoomEntityManager();
 
-		EMServerType regType = (EMServerType)request->servertype();
+		EMServerType regType = static_cast<EMServerType>(request->servertype());
 		const std::string& ipPort = channel->localaddr();
 
 		if (regType != EMServerType::DedicatedServer || ipPort.empty())

@@ -48,7 +48,6 @@ export
 	
 		EMMsgDir opType = EMMsgDir::Inner;
 		EMMsgDeal dealType = EMMsgDeal::Req;
-		uint16_t serverId = 0;
 		uint32_t msgId = 0;
 		size_t msgHashId = 0;
 	};

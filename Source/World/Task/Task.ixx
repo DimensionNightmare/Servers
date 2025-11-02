@@ -17,7 +17,7 @@ export
 
 	};
 
-	template <typename T, bool BeginWait = false>
+	template <typename T>
 	struct Task : public BitFlag<EMTaskFlag>
 	{
 		struct promise_type;
@@ -26,30 +26,38 @@ export
 		{
 			promise_type()
 			{
+				std::cout <<  __FUNCTION__ << "\n";
 			}
 
 			~promise_type()
 			{
+				std::cout <<  __FUNCTION__ << "\n";
 				ReleaseAwaitHandle();
 			}
 
 			Task get_return_object()
 			{
+				std::cout <<  __FUNCTION__ << "\n";
 				return Task{ HandleType::from_promise(*this) };
 			}
 
 			void return_value(const T& value)
 			{
+				std::cout <<  __FUNCTION__ << "\n";
 				oResult = &value;
 			}
 
 			auto initial_suspend()
 			{
-				return std::suspend_always{};
+				std::cout <<  __FUNCTION__ << "\n";
+				// return std::suspend_always{};
+				return std::suspend_never{}; 
+
 			}
 
 			auto final_suspend() noexcept
 			{
+				std::cout <<  __FUNCTION__ << "\n";
 				// Task don't Call by self, need Message handle Tick;
 				return std::suspend_never{};
 			}
@@ -58,6 +66,7 @@ export
 
 			void ReleaseAwaitHandle()
 			{
+				std::cout <<  __FUNCTION__ << "\n";
 				if (pAwaitHandle) { pAwaitHandle.resume(); pAwaitHandle = nullptr; }
 			}
 
@@ -70,11 +79,13 @@ export
 
 		bool await_ready() const noexcept
 		{
+			std::cout <<  __FUNCTION__ << "\n";
 			return false;
 		}
 
 		void await_suspend(std::coroutine_handle<> caller)
 		{
+			std::cout <<  __FUNCTION__ << "\n";
 			tHandle.promise().pAwaitHandle = caller;
 
 			if (HasFlag(EMTaskFlag::TimeCost))
@@ -82,10 +93,7 @@ export
 				oTimePoint = std::chrono::steady_clock::now();
 			}
 
-			if constexpr (!BeginWait)
-			{
-				tHandle.resume();
-			}
+			// tHandle.resume();
 			
 		}
 
@@ -98,20 +106,20 @@ export
 
 		Task(HandleType handle)
 		{
+			std::cout <<  __FUNCTION__ << "\n";
 			tHandle = handle;
 			// SetFlag(EMTaskFlag::TimeCost);
 		}
 
 		~Task()
 		{
+			std::cout <<  __FUNCTION__ << "\n";
 			Destroy();
 		}
 
-		Task(const Task&) = delete;
-		Task& operator=(const Task&) = delete;
-
 		const T& GetResult()
 		{
+			std::cout <<  __FUNCTION__ << "\n";
 			const T* result = tHandle.promise().oResult;
 
 			return *result;
@@ -119,6 +127,7 @@ export
 
 		void Destroy()
 		{
+			std::cout <<  __FUNCTION__ << "\n";
 			if (HasFlag(EMTaskFlag::TimeCost))
 			{
 				// steady_clock::time_point now = steady_clock::now();
@@ -146,6 +155,7 @@ export
 		std::chrono::steady_clock::time_point oTimePoint;
 	};
 
+
 	struct TaskVoid
 	{
 		struct promise_type;
@@ -154,30 +164,36 @@ export
 		{
 			promise_type()
 			{
+				std::cout <<  __FUNCTION__ << "\n";
 			}
 
 			~promise_type()
 			{
+				std::cout <<  __FUNCTION__ << "\n";
 				ReleaseAwaitHandle();
 			}
 
 			void return_void()
 			{
+				std::cout <<  __FUNCTION__ << "\n";
 			}
 
 			TaskVoid get_return_object()
 			{
+				std::cout <<  __FUNCTION__ << "\n";
 				return TaskVoid{ HandleType::from_promise(*this) };
 			}
 
 			auto initial_suspend()
 			{
-				return std::suspend_never{};
-				// return std::suspend_always{}; 
+				std::cout <<  __FUNCTION__ << "\n";
+				// return std::suspend_always{};
+				return std::suspend_never{}; 
 			}
 
 			auto final_suspend() noexcept
 			{
+				std::cout <<  __FUNCTION__ << "\n";
 				return std::suspend_never{};
 				// return std::suspend_always{}; 
 			}
@@ -186,7 +202,12 @@ export
 
 			void ReleaseAwaitHandle()
 			{
-				if (pAwaitHandle) { pAwaitHandle.resume(); pAwaitHandle = nullptr; }
+				std::cout <<  __FUNCTION__ << "\n";
+				if (pAwaitHandle) 
+				{ 
+					pAwaitHandle.resume();
+					pAwaitHandle = nullptr; 
+				}
 			}
 
 			std::coroutine_handle<> pAwaitHandle = nullptr;
@@ -196,31 +217,42 @@ export
 
 		bool await_ready() const noexcept
 		{
-			return false;
+			std::cout <<  __FUNCTION__ << "\n";
+			return true;
 		}
 
 		void await_suspend(std::coroutine_handle<> caller)
 		{
+			std::cout <<  __FUNCTION__ << "\n";
 			tHandle.promise().pAwaitHandle = caller;
+			// tHandle.resume();
 		}
 
 		void await_resume() noexcept
 		{
+			std::cout <<  __FUNCTION__ << "\n";
+			// if (tHandle && !tHandle.done())
+			// {
+			// 	tHandle.resume();
+			// }
 		}
 #pragma endregion
 
 		TaskVoid(HandleType handle)
 		{
+			std::cout <<  __FUNCTION__ << "\n";
 			tHandle = handle;
 		}
 
 		~TaskVoid()
 		{
+			std::cout <<  __FUNCTION__ << "\n";
 			Destroy();
 		}
 
 		void Destroy()
 		{
+			std::cout <<  __FUNCTION__ << "\n";
 			if (tHandle && tHandle.done())
 			{
 				tHandle.destroy();
@@ -239,28 +271,34 @@ export
 		{
 			promise_type()
 			{
+				std::cout <<  __FUNCTION__ << "\n";
 			}
 
 			~promise_type()
 			{
+				std::cout <<  __FUNCTION__ << "\n";
 			}
 
 			MsgTask get_return_object()
 			{
+				std::cout <<  __FUNCTION__ << "\n";
 				return MsgTask{ HandleType::from_promise(*this) };
 			}
 
 			void return_void()
 			{
+				std::cout <<  __FUNCTION__ << "\n";
 			}
 
 			auto initial_suspend()
 			{
+				std::cout <<  __FUNCTION__ << "\n";
 				return std::suspend_always{};
 			}
 
 			auto final_suspend() noexcept
 			{
+				std::cout <<  __FUNCTION__ << "\n";
 				return std::suspend_never{};
 			}
 
@@ -273,21 +311,26 @@ export
 
 		bool await_ready() const noexcept
 		{
+			std::cout <<  __FUNCTION__ << "\n";
 			return false;
 		}
 
 		void await_suspend(std::coroutine_handle<> caller)
 		{
+			std::cout <<  __FUNCTION__ << "\n";
 			tHandle.promise().pAwaitHandle = caller;
 
 			if (HasFlag(EMTaskFlag::TimeCost))
 			{
 				oTimePoint = std::chrono::steady_clock::now();
 			}
+
+			pCallback();
 		}
 
 		void await_resume() noexcept
 		{
+			std::cout <<  __FUNCTION__ << "\n";
 			tHandle.resume();
 		}
 
@@ -295,22 +338,36 @@ export
 
 		MsgTask(HandleType handle)
 		{
+			std::cout <<  __FUNCTION__ << "\n";
 			tHandle = handle;
 			// SetFlag(EMTaskFlag::TimeCost);
 		}
 
 		~MsgTask()
 		{
+			std::cout <<  __FUNCTION__ << "\n";
 			Destroy();
+		}
+
+		void SetCallback(std::function<void()>&& func)
+		{
+			std::cout <<  __FUNCTION__ << "\n";
+			pCallback = std::move(func);
 		}
 
 		void CallResume()
 		{
+			std::cout <<  __FUNCTION__ << "\n";
+			// if(tHandle && !tHandle.done())
+			// {
+			// 	return;
+			// }
 			tHandle.promise().pAwaitHandle.resume();
 		}
 
 		void Destroy()
 		{
+			std::cout <<  __FUNCTION__ << "\n";
 			if (HasFlag(EMTaskFlag::TimeCost))
 			{
 				// steady_clock::time_point now = steady_clock::now();
@@ -342,6 +399,8 @@ export
 		std::chrono::steady_clock::time_point oTimePoint;
 
 		Message* pMessage = nullptr;
+
+		std::function<void()> pCallback;
 	};
 
 	MsgTask MakeMsgTask()

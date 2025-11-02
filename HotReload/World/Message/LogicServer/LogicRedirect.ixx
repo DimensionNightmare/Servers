@@ -74,7 +74,6 @@ namespace MsgHandleRegister
 			entity = entityMan->GetEntity(request->accountid());
 		}
 
-#if 1
 		RoomEntityManagerHelper::Ptr roomEntityMan = dnServer->GetRoomEntityManager();
 		RoomEntityHelper::Ptr roomEntity = nullptr;
 
@@ -141,7 +140,6 @@ namespace MsgHandleRegister
 		}
 
 		LoggerPrint::Log(channel, ELogLevel_Debug, "ds:{}", response->DebugString());
-#endif
 
 		co_return;
 	});

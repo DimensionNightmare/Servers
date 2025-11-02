@@ -21,7 +21,7 @@ namespace MsgHandleRegister
 
 		const std::string& ipPort = channel->localaddr();
 
-		EMServerType regType = (EMServerType)request->servertype();
+		EMServerType regType = static_cast<EMServerType>(request->servertype());
 
 		if (regType < EMServerType::GlobalServer || regType > EMServerType::AuthServer || ipPort.empty())
 		{

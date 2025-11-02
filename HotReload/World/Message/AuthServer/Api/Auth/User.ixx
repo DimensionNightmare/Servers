@@ -16,6 +16,42 @@ using namespace std::chrono;
 
 std::atomic<size_t> counter = 0;
 
+TaskVoid Func0()
+{
+	std::cout << "Task 999 exec" << "\n";
+	co_return;
+}
+
+TaskVoid Func1()
+{
+	co_await Func0();
+	std::cout << "Task 1 exec" << "\n";
+
+	co_return;
+}
+
+TaskVoid Func2()
+{
+	std::cout << "Task 2 exec " << "\n";
+	co_await Func1();
+	co_return;
+}
+
+
+TaskVoid Func3()
+{
+	std::cout << "Task 3 exec" << "\n";
+	co_await Func2();
+	co_return;
+}
+
+TaskVoid Func4()
+{
+	std::cout << "Task 4 exec" << "\n";
+	co_await Func3();
+	co_return;
+}
+
 export void ApiAuth(Server::Ptr server)
 {
 
@@ -278,7 +314,10 @@ export void ApiAuth(Server::Ptr server)
 
 	webProxyHelper->service->POST("/Auth/Test/User", [server](hv::HttpRequestPtr req, hv::HttpResponseWriterPtr writer)->TaskVoid
 		{
+			std::cout << "begin" << "\n";
+			co_await Func4();
 			writer->End();
+			std::cout << "end" << "\n";
 			co_return;
 		});
 }

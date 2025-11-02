@@ -38,15 +38,20 @@ public:
 		}
 
 		auto task = MakeMsgTask();
+
+		auto send = [&](){
+			MessagePackAndSend(msgId, dealType, request, channel);
+		};
 		
 		if(msgId)
 		{
-			std::unique_lock ulock(oMsgMutex);
-
-
-			mMsgList.emplace(msgId, &task);
-
 			task.SetMessage(response);
+			task.SetCallback(send);
+
+			{
+				std::unique_lock ulock(oMsgMutex);
+				mMsgList.emplace(msgId, &task);
+			}
 
 			// timeout
 			if (breakTime > 0)
@@ -54,12 +59,6 @@ public:
 				task.SetTimerId(CheckMessageTimeoutTimer(breakTime, msgId));
 			}
 
-		}
-;
-		MessagePackAndSend(msgId, dealType, request, channel);
-
-		if(msgId)
-		{
 			co_await task;
 
 			if (task.HasFlag(EMTaskFlag::Timeout))
@@ -67,6 +66,11 @@ public:
 				// response->set_errorcode(EL10nCode_CRdbReqTimeout);
 				co_return false;
 			}
+
+		}
+		else
+		{
+			send();
 		}
 
 		co_return true;

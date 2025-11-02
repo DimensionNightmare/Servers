@@ -109,7 +109,7 @@ namespace MsgHandleRegister
 
 		LoggerPrint::Log(server, ELogLevel_Debug, "ip Reqregist: {}, {}", channel->peeraddr(), request->servertype());
 
-		EMServerType regType = (EMServerType)request->servertype();
+		EMServerType regType = static_cast<EMServerType>(request->servertype());
 		size_t serverId = request->serverid();
 
 		const std::string& ipPort = channel->localaddr();

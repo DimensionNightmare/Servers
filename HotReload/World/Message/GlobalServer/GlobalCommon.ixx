@@ -74,7 +74,7 @@ namespace MsgHandleRegister
 			->GetComponent<ServerEntityManagerHelper>(EMComponentType::ServerEntityManager);
 
 
-		EMServerType regType = (EMServerType)request->servertype();
+		EMServerType regType = static_cast<EMServerType>(request->servertype());
 
 		const std::string& ipPort = channel->localaddr();
 
