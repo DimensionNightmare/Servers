@@ -5,6 +5,8 @@ import Logger;
 import ECSW;
 import std.compat;
 import StrUtils;
+import Timer;
+import Server;
 
 export enum class EMSqlDbNameEnum : uint16_t
 {
@@ -34,7 +36,7 @@ public:
 
 	virtual bool Awake() override
 	{
-		GetWorld()->AddEvent(EMEventType::ServerStart, GetSelfW<RdbProxy>(), &RdbProxy::InitDatabase);
+		GetWorld()->AddEvent<&RdbProxy::InitDatabase>(EMEventType::ServerStart, GetSelfW<RdbProxy>());
 		return true;
 	}
 
@@ -48,8 +50,31 @@ public:
 			return;
 		}
 
-		pqxx::connection check(*param);
-		pqxx::nontransaction checkTxn(check);
+		std::shared_ptr<pqxx::connection> connection;
+
+		try
+		{
+			connection = P_InstanceHolder->GetMemPool().Allocate<pqxx::connection>(*param);
+		}
+		catch(pqxx::broken_connection& e)
+		{
+			LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "Can Connect Database:{}, retest", *param);
+			// 重试 retest
+			Timer::Ptr timer = GetWorld()->GetSystem<Timer>(EMSystemType::Timer);
+
+			timer->SetTimeout(3000, [this](size_t)
+			{
+				InitDatabase();
+			});
+			return;
+		}
+		catch(std::exception& e)
+		{
+			LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "Can Connect Database:{}, no retest", e.what());
+			return;
+		}
+
+		pqxx::nontransaction checkTxn(*connection);
 
 		std::string* names = world->GetParam("dbnames");
 		if(!names)
@@ -74,6 +99,12 @@ public:
 			auto connection = P_InstanceHolder->GetMemPool().Allocate<pqxx::connection>(connectStr);
 
 			pRdbProxys.emplace(key, std::move(connection));
+		}
+
+		auto server = GetOwner<Server>();
+		if(server && server->GetServerType() == EMServerType::DatabaseServer)
+		{
+			GetWorld()->Broadcast(EMEventType::InitedRdbConnection);
 		}
 	
 	}

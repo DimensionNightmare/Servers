@@ -6,4 +6,5 @@ export module ThirdParty.RedisPP;
 export namespace sw::redis
 {
 	using sw::redis::Redis;
+	using sw::redis::IoError;
 };

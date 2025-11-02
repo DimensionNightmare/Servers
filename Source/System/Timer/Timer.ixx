@@ -27,8 +27,8 @@ public:
 
 	virtual bool Awake() override
 	{
-		GetWorld()->AddEvent(EMEventType::ServerStart, GetSelfW<Timer>(), &Timer::Start);
-		GetWorld()->AddEvent(EMEventType::ServerStop, GetSelfW<Timer>(), &Timer::Stop);
+		GetWorld()->AddEvent<&Timer::Start>(EMEventType::ServerStart, GetSelfW<Timer>());
+		GetWorld()->AddEvent<&Timer::Stop>(EMEventType::ServerStop, GetSelfW<Timer>());
 		return true;
 	}
 

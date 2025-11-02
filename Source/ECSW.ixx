@@ -4,6 +4,8 @@ import std.compat;
 import ThirdParty.Platform;
 import NumUtils;
 import UniversalMemoryPool;
+import FuncUtils;
+import StrUtils;
 
 #pragma region EnumType
 
@@ -18,6 +20,7 @@ export enum EMEventType : uint8_t
 	InitHotReload,
 	DeinitHotReload,
 	MovedDeinitHotReload,
+	InitedRdbConnection,
 };
 
 export enum class EMComponentType : uint8_t
@@ -115,37 +118,56 @@ export class Event
 {
 public:
 
-	template<typename T, typename... Args>
-	void AddEvent(EMEventType type, std::weak_ptr<T> entity, void (T::*callback)(Args...))
+	template<auto Func>
+	void AddEvent(EMEventType type, std::weak_ptr<typename FunctionTraits<decltype(Func)>::ClassType> entity)
 	{
-		using FuncProxy = std::function<void(std::decay_t<Args>...)>;
-		
-		size_t objId = entity.lock()->ID();
+		using Traits = FunctionTraits<decltype(Func)>;
+    	using Class = typename Traits::ClassType;
+		using ArgType = typename Traits::ArgType;	
 
-		FuncProxy lumbdaFunc = [entity, callback](Args... args)
-			{
-				if (auto origin = entity.lock())
-				{
-					(origin.get()->*callback)(args...);
-				}
-			};
+		if(auto lock = entity.lock())
+		{
+			std::unique_ptr<IEventContainer> handle = std::make_unique<EventContainer<Func> >(entity);
 
-		mEventIdMap[objId][type] = lumbdaFunc;
+			constexpr auto typeHash = TupleTypeHash<ArgType>();
+			handle->mTypeHash = typeHash;
+			#if DN_DEBUG_EVENT
+				constexpr auto typeSign = TupleTypeStr<ArgType>();
+				handle->sTypeSign = typeSign;
+			#endif
 
-		mEventCollection[type][objId] = objId;
+			size_t objId = lock->ID();
+			mEventIdMap[objId][type] = std::move(handle);
+			mEventCollection[type][objId] = objId;
+		}		
+
 	}
 
 	template<typename... Args>
-	void Broadcast(EMEventType type, Args... args)
+	void Broadcast(EMEventType type, Args&&... args)
 	{
-		using FuncProxy = std::function<void(std::decay_t<Args>...)>;
+		constexpr auto typeHash = TupleTypeHash<std::tuple<std::decay_t<Args>...>>();
+
+		auto params = std::forward_as_tuple(std::forward<Args>(args)...);
 
 		for (auto& [objId, _] : mEventCollection[type])
 		{
-			auto& anyObj = mEventIdMap[objId][type];
-			if(FuncProxy* typedFunc = std::any_cast<FuncProxy>(&anyObj))
+			IEventContainer* anyObj = mEventIdMap[objId][type].get();
+			if(anyObj->mTypeHash == typeHash)
 			{
-				(*typedFunc)(std::forward<Args>(args)...);
+				anyObj->Invoke(&params);
+			}
+			else
+			{
+				
+#if DN_DEBUG_EVENT
+				constexpr auto typeSign = TupleTypeStr<std::tuple<std::decay_t<Args>...>>();
+				std::cerr << "Event Sign Not Match!! -> " << EnumName(type) << "\n" 
+					<< anyObj->sTypeSign << "\n"
+					<< typeSign << "\n\n";
+#else
+				std::cerr << "Event Sign Not Match!! -> " << EnumName(type) << "\n\n";
+#endif
 			}
 		}
 	}
@@ -190,7 +212,7 @@ public:
 	}
 
 private:
-	std::unordered_map<size_t, std::unordered_map<EMEventType, std::any > > mEventIdMap;
+	std::unordered_map<size_t, std::unordered_map<EMEventType, std::unique_ptr<IEventContainer> > > mEventIdMap;
 	std::unordered_map<EMEventType, std::unordered_map<size_t, size_t>> mEventCollection;
 };
 
@@ -323,7 +345,7 @@ public: // dll override
 		// std::unique_lock ulock(mComponentLock);
 
 		auto it = mComponents.find(type);
-		if ((!it->second->IsDisposed()); it != mComponents.end())
+		if(it != mComponents.end() && !it->second->IsDisposed())
 		{
 			return std::static_pointer_cast<T>(it->second);
 		}
@@ -361,12 +383,6 @@ public: // dll override
 	{
 		std::unique_lock ulock(mComponentLock);
 
-		auto it = mComponents.find(type);
-		if (it == mComponents.end())
-		{
-			return;
-		}
-
 		mComponents.erase(type);
 	}
 
@@ -401,11 +417,6 @@ public:
 
 	virtual ~System()
 	{
-	}
-
-	virtual void Dispose() override
-	{
-		Entity::Dispose();
 	}
 
 	EMSystemType GetSystemType() { return emSystemType; }
@@ -491,7 +502,7 @@ public:
 		try
 		{
 			auto it = mSystemMap.find(type);
-			if ((!it->second->IsDisposed()); it != mSystemMap.end())
+			if(it != mSystemMap.end() && !it->second->IsDisposed())
 			{
 				auto ptr = std::static_pointer_cast<T>(it->second);
 				return ptr ? ptr : std::weak_ptr<T>{};
@@ -512,7 +523,7 @@ public:
 		try
 		{
 			auto it = mSystemMap.find(type);
-			if ((!it->second->IsDisposed()); it != mSystemMap.end())
+			if(it != mSystemMap.end() && !it->second->IsDisposed())
 			{
 				return std::static_pointer_cast<T>(it->second);
 			}
@@ -525,17 +536,9 @@ public:
 		return nullptr;
 	}
 
-	std::shared_ptr<System> RemoveSystem(EMSystemType type)
+	void RemoveSystem(EMSystemType type)
 	{
-		auto it = mSystemMap.find(type);
-		if (it == mSystemMap.end())
-		{
-			return nullptr;
-		}
-
-		auto system = it->second;
-		mSystemMap.erase(it);
-		return system;
+		mSystemMap.erase(type);
 	}
 
 	virtual void Dispose() override
@@ -570,6 +573,11 @@ public:
 		}
 
 		return nullptr;
+	}
+
+	void SetParam(const std::string& key, const std::string value)
+	{
+		mLuanchConfig[key] = value;
 	}
 
 	// single thread

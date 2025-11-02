@@ -9,6 +9,7 @@ import ThirdParty.PbGen;
 import Logger;
 import MessagePack;
 import DatabaseServerMessage;
+import ThirdParty.Protobuf;
 
 namespace MsgHandleRegister
 {
@@ -21,7 +22,7 @@ namespace MsgHandleRegister
 
 		if (auto connection = dnServer->GetRdbProxy()->GetConnection(EMSqlDbNameEnum::Nightmare))
 		{
-			auto dealFunc = [&](Message* findMsg)
+			auto dealFunc = [&](Message* findMsg, const FieldDescriptor* field)
 				{
 					findMsg->ParseFromString(request->entitydata());
 
@@ -30,8 +31,10 @@ namespace MsgHandleRegister
 
 					auto query = [&]()
 						{
+							
+
 							dbHelper
-								// .SelectByKey(request->keyname())
+								.SelectByKey(field)
 								.Limit(request->limit())
 								.Commit();
 
@@ -66,11 +69,18 @@ namespace MsgHandleRegister
 			{
 				if (const Message* prototype = PbGen::GetPrototype(descriptor))
 				{
+					const FieldDescriptor* field = descriptor->FindFieldByNumber(request->keynumber());
+					if (!field)
+					{
+						response->set_errorcode(EL10nCode_UnkonwOpreator);
+						return;
+					}
+
 					Message* message = prototype->New();
 
 					try
 					{
-						dealFunc(message);
+						dealFunc(message, field);
 					}
 					catch (const std::exception& e)
 					{

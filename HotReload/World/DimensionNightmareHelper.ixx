@@ -30,9 +30,9 @@ public:
 			{
 				#define one(Type) case EMServerType::Type:							\
 				{ 																	\
-					AddEvent(EMEventType::InitHotReload, 							\
-						dnServer->GetSelfW<Type##Helper>(),							\
-						&Type##Helper::HandleServerInit); 							\
+					AddEvent<&Type##Helper::HandleServerInit>(						\
+						EMEventType::InitHotReload, 								\
+						dnServer->GetSelfW<Type##Helper>()); 						\
 					break;															\
 				}
 				one(ControlServer)
@@ -57,9 +57,9 @@ public:
 			{
 				#define one(Type) case EMServerType::Type:							\
 				{ 																	\
-					AddEvent(EMEventType::DeinitHotReload,							\
-						dnServer->GetSelfW<Type##Helper>(),							\
-						&Type##Helper::HandleServerShutdown); 						\
+					AddEvent<&Type##Helper::HandleServerShutdown>(					\
+						EMEventType::DeinitHotReload, 								\
+						dnServer->GetSelfW<Type##Helper>()); 						\
 					break;															\
 				}
 				one(ControlServer)

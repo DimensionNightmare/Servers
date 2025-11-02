@@ -44,10 +44,7 @@ namespace MsgHandleRegister
 			return;
 		}
 
-		// pack data
-		std::string binData;
-		request.SerializeToString(&binData);
-		MessagePackAndSend(0, EMMsgDeal::Ret, request.GetDescriptor()->full_name(), binData, clientProxy->GetChannel());
+		MessagePackAndSend(0, EMMsgDeal::Ret, &request, clientProxy->GetChannel());
 	}
 
 	// self request
@@ -74,32 +71,17 @@ namespace MsgHandleRegister
 
 		request.set_serverport(serverProxy->port);
 
-		// pack data
-		std::string binData;
-		request.SerializeToString(&binData);
-		
-
 		// data alloc
 		GMsg::COM_ResRegistSrv response;
 
+		bool success = co_await clientProxy->AddMsg(EMMsgDeal::Req, &request, &response);
+	
+		if (!success)
 		{
-			auto taskGen = [](Message* msg) -> Task<Message*>
-				{
-					co_return msg;
-				};
-			auto dataChannel = taskGen(&response);
-			
-			uint32_t msgId = clientProxy->GetMsgId();
-			clientProxy->AddMsg(msgId, &dataChannel);
-			MessagePackAndSend(msgId, EMMsgDeal::Req, request.GetDescriptor()->full_name(), binData, clientProxy->GetChannel());
-
-			co_await dataChannel;
-			if (dataChannel.HasFlag(EMTaskFlag::Timeout))
-			{
-				response.set_errorcode(EL10nCode_ReqRegistTimeout);
-			}
-
+			response.set_errorcode(EL10nCode_ReqRegistTimeout);
 		}
+
+		
 
 		if (response.errorcode() == EL10nCode_None)
 		{
@@ -166,12 +148,9 @@ namespace MsgHandleRegister
 			request.set_isregist(true);
 			request.set_serverid(serverId);
 
-			std::string binData;
-			request.SerializeToString(&binData);
-			
 			ClientProxyHelper::Ptr clientProxy = server->GetClientProxy();
 
-			MessagePackAndSend(0, EMMsgDeal::Ret, request.GetDescriptor()->full_name(), binData, clientProxy->GetChannel());
+			MessagePackAndSend(0, EMMsgDeal::Ret, &request, clientProxy->GetChannel());
 		}
 	});
 

@@ -77,22 +77,11 @@ namespace MsgHandleRegister
 			{
 				entity->SetRecordServerId(serverEntity->ID());
 
-				auto taskGen = [](Message* msg) -> Task<Message*>
-					{
-						co_return msg;
-					};
-				auto dataChannel = taskGen(response);
+				ServerProxyHelper::Ptr proxyHelper = dnServer->GetServerProxy();
 
-				ServerProxyHelper::Ptr server = dnServer->GetServerProxy();
-				uint32_t msgId = server->GetMsgId();
-				server->AddMsg(msgId, &dataChannel, 9000);
+				bool success = co_await proxyHelper->AddMsg(EMMsgDeal::Redir, request, response, serverEntity->GetChannel());
 
-				std::string binMsg;
-				request->SerializeToString(&binMsg);
-				MessagePackAndSend(msgId, EMMsgDeal::Redir, request->GetDescriptor()->full_name(), binMsg, serverEntity->GetChannel());
-				
-				co_await dataChannel;
-				if (dataChannel.HasFlag(EMTaskFlag::Timeout))
+				if (!success)
 				{
 					response->set_errorcode(EL10nCode_SGateReqTimeout);
 				}

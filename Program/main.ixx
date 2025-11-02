@@ -370,6 +370,7 @@ void InputThread()
 		#undef one
 	};
 
+	std::cin.clear();
 	std::getline(std::cin, str);
 
 	if(!AppRun || !App)

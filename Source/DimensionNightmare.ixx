@@ -281,9 +281,6 @@ public:
 
 		InitCmdHandle();
 
-		// free manager
-		// RemoveSystem(EMSystemType::HotReload);
-
 		return true;
 	}
 

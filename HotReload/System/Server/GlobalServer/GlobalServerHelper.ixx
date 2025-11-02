@@ -52,7 +52,6 @@ public:
 
 		// alloc gate
 		GMsg::COM_RetChangeCtlSrv request;
-		std::string binData;
 
 		auto registControl = [&](ServerEntityHelper::Ptr beEntityHelper, ServerEntityHelper::Ptr entityHelper) ->bool
 		{
@@ -69,12 +68,11 @@ public:
 			request.set_serverip(beEntityHelper->GetServerIp());
 			request.set_serverport(beEntityHelper->GetServerPort());
 
-			request.SerializeToString(&binData);
 			// timer destory
 			size_t timerId = entityMan->CheckEntityCloseTimer(entityHelper->ID());
 			entityHelper->SetTimerId(timerId);
 
-			MessagePackAndSend(0, EMMsgDeal::Ret, request.GetDescriptor()->full_name(), binData, channel);
+			MessagePackAndSend(0, EMMsgDeal::Ret, &request, channel);
 			entityHelper->SetChannel(nullptr);
 
 			return true;
@@ -128,7 +126,7 @@ public:
 		
 		if (ServerProxyHelper::Ptr proxy = GetServerProxy())
 		{
-			proxy->onConnection = [this](SocketChannel::Ptr channel)
+			proxy->onConnection = [this](const SocketChannel::Ptr& channel)
 				{
 					ServerProxyHelper::Ptr proxyHelper = GetServerProxy();
 
@@ -156,7 +154,7 @@ public:
 					}
 				};
 
-			proxy->onMessage = [this](SocketChannel::Ptr channel, hv::Buffer* buf)
+			proxy->onMessage = [this](const SocketChannel::Ptr& channel, hv::Buffer* buf)
 				{
 					ServerProxyHelper::Ptr proxyHelper = GetServerProxy();
 
@@ -188,12 +186,11 @@ public:
 					}
 					else if (packet->dealType == EMMsgDeal::Res)
 					{
-						if (Task<Message*>* task = proxyHelper->GetMsg(packet->msgId)) //client sock request
+						if (MsgTask* task = proxyHelper->GetMsg(packet->msgId)) //client sock request
 						{
 							proxyHelper->DelMsg(packet->msgId);
-							task->Resume();
 
-							if (Message* message = task->GetResult())
+							if (Message* message = task->GetMessage())
 							{
 								if (!message->ParseFromString(msgData))
 								{
@@ -219,7 +216,7 @@ public:
 
 		if (ClientProxyHelper::Ptr proxy = GetClientProxy())
 		{
-			proxy->onConnection = [this](SocketChannel::Ptr channel)
+			proxy->onConnection = [this](const SocketChannel::Ptr& channel)
 				{
 					ClientProxyHelper::Ptr proxyHelper = GetClientProxy();
 
@@ -254,7 +251,7 @@ public:
 					}
 				};
 
-			proxy->onMessage = [this](SocketChannel::Ptr channel, hv::Buffer* buf)
+			proxy->onMessage = [this](const SocketChannel::Ptr& channel, hv::Buffer* buf)
 				{
 					ClientProxyHelper::Ptr proxyHelper = GetClientProxy();
 
@@ -282,12 +279,11 @@ public:
 					}
 					else if (packet->dealType == EMMsgDeal::Res)
 					{
-						if (Task<Message*>* task = proxyHelper->GetMsg(packet->msgId)) //client sock request
+						if (MsgTask* task = proxyHelper->GetMsg(packet->msgId)) //client sock request
 						{
 							proxyHelper->DelMsg(packet->msgId);
-							task->Resume();
 
-							if (Message* message = task->GetResult())
+							if (Message* message = task->GetMessage())
 							{
 								if (!message->ParseFromString(msgData))
 								{

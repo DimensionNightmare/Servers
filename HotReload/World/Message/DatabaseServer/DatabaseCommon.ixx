@@ -35,26 +35,12 @@ namespace MsgHandleRegister
 		// data alloc
 		GMsg::COM_ResRegistSrv response;
 
+		
+		bool success = co_await clientProxy->AddMsg(EMMsgDeal::Req, &request, &response);
+		
+		if (!success)
 		{
-			auto taskGen = [](Message* msg) -> Task<Message*>
-				{
-					co_return msg;
-				};
-			auto dataChannel = taskGen(&response);
-
-			uint32_t msgId = clientProxy->GetMsgId();
-			clientProxy->AddMsg(msgId, &dataChannel);
-			// pack data
-			std::string binData;
-			request.SerializeToString(&binData);
-			MessagePackAndSend(msgId, EMMsgDeal::Req, request.GetDescriptor()->full_name(), binData, clientProxy->GetChannel());
-
-			co_await dataChannel;
-			if (dataChannel.HasFlag(EMTaskFlag::Timeout))
-			{
-				response.set_errorcode(EL10nCode_ReqRegistTimeout);
-			}
-
+			response.set_errorcode(EL10nCode_ReqRegistTimeout);
 		}
 
 		if (response.errorcode() == EL10nCode_None)

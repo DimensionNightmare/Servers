@@ -34,7 +34,7 @@ public:
 
 		if (ServerProxyHelper::Ptr proxy = GetServerProxy())
 		{
-			proxy->onConnection = [this](SocketChannel::Ptr channel)
+			proxy->onConnection = [this](const SocketChannel::Ptr& channel)
 				{
 					ServerProxyHelper::Ptr proxyHelper = GetServerProxy();
 
@@ -64,7 +64,7 @@ public:
 					}
 				};
 
-			proxy->onMessage = [this](SocketChannel::Ptr channel, hv::Buffer* buf)
+			proxy->onMessage = [this](const SocketChannel::Ptr& channel, hv::Buffer* buf)
 				{
 					ServerProxyHelper::Ptr proxyHelper = GetServerProxy();
 
@@ -96,12 +96,11 @@ public:
 					}
 					else if (packet->dealType == EMMsgDeal::Res)
 					{
-						if (Task<Message*>* task = proxyHelper->GetMsg(packet->msgId)) //client sock request
+						if (MsgTask* task = proxyHelper->GetMsg(packet->msgId)) //client sock request
 						{
 							proxyHelper->DelMsg(packet->msgId);
-							task->Resume();
 
-							if (Message* message = task->GetResult())
+							if (Message* message = task->GetMessage())
 							{
 								if (!message->ParseFromString(msgData))
 								{

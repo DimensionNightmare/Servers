@@ -2,6 +2,9 @@ export module ClientProxyHelper;
 
 import ClientProxy;
 import FuncUtils;
+import FuncHelper;
+import MessagePack;
+import ThirdParty.Protobuf;
 
 export class ClientProxyHelper : public Helper<ClientProxyHelper, ClientProxy>
 {
@@ -25,7 +28,7 @@ public:
 	}
 	
 	// task
-	Task<Message*>* GetMsg(uint32_t msgId)
+	MsgTask* GetMsg(uint32_t msgId)
 	{
 		std::shared_lock lock(oMsgMutex);
 		if (mMsgList.contains(msgId))
@@ -35,16 +38,65 @@ public:
 		return nullptr;
 	}
 
-	bool AddMsg(uint32_t msgId, Task<Message*>* task, uint32_t breakTime = 10000)
+	Task<bool> AddMsg(EMMsgDeal dealType, Message* request, Message* response, SocketChannel::Ptr channel = nullptr, uint32_t breakTime = 10000)
 	{
-		std::unique_lock ulock(oMsgMutex);
-		mMsgList.emplace(msgId, task);
-		// timeout
-		if (breakTime > 0)
+
+		if(!channel)
 		{
-			task->SetTimerId(CheckMessageTimeoutTimer(breakTime, msgId));
+			channel = GetChannel();
 		}
-		return true;
+
+		int msgId = 0;
+
+		switch(dealType)
+		{
+			case EMMsgDeal::Req:
+			case EMMsgDeal::Redir:
+			{
+				msgId = GetMsgId();
+				break;
+			}
+			case EMMsgDeal::Res:
+			case EMMsgDeal::Ret:
+			{
+				// throw
+				break;
+			}
+
+		}
+
+		auto task = MakeMsgTask();
+		
+		if(msgId)
+		{
+			std::unique_lock ulock(oMsgMutex);
+			
+			mMsgList.emplace(msgId, &task);
+
+			task.SetMessage(response);
+
+			// timeout
+			if (breakTime > 0)
+			{
+				task.SetTimerId(CheckMessageTimeoutTimer(breakTime, msgId));
+			}
+
+		}
+
+		MessagePackAndSend(msgId, dealType, request, channel);
+
+		if(msgId)
+		{
+			co_await task;
+
+			if (task.HasFlag(EMTaskFlag::Timeout))
+			{
+				// response->set_errorcode(EL10nCode_CRdbReqTimeout);
+				co_return false;
+			}
+		}
+
+		co_return true;
 	}
 
 	void DelMsg(uint32_t msgId)
@@ -52,7 +104,7 @@ public:
 		std::unique_lock ulock(oMsgMutex);
 		if (mMsgList.contains(msgId))
 		{
-			if (Task<Message*>* task = mMsgList[msgId])
+			if (MsgTask* task = mMsgList[msgId])
 			{
 				if (size_t timerId = task->GetTimerId())
 				{

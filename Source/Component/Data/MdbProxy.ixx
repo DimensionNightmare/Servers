@@ -4,6 +4,7 @@ import ThirdParty.RedisPP;
 import ECSW;
 import std.compat;
 import Logger;
+import Timer;
 
 export class MdbProxy : public Component
 {
@@ -30,7 +31,7 @@ public:
 
 	virtual bool Awake() override
 	{
-		GetWorld()->AddEvent(EMEventType::ServerStart, GetSelfW<MdbProxy>(), &MdbProxy::InitDatabase);
+		GetWorld()->AddEvent<&MdbProxy::InitDatabase>(EMEventType::ServerStart, GetSelfW<MdbProxy>());
 		return true;
 	}
 
@@ -46,7 +47,28 @@ public:
 
 		auto connection = P_InstanceHolder->GetMemPool().Allocate<sw::redis::Redis>(*param);
 		
-		connection->ping();
+		try
+		{
+			connection->ping();
+		}
+		catch(sw::redis::IoError& e)
+		{
+			LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "Can Connect Redis:{}, retest", *param);
+			// 重试 retest
+			Timer::Ptr timer = GetWorld()->GetSystem<Timer>(EMSystemType::Timer);
+
+			timer->SetTimeout(3000, [this](size_t)
+			{
+				InitDatabase();
+			});
+			return;
+		}
+		catch(std::exception& e)
+		{
+			LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "Can Connect Redis:{}, no retest", e.what());
+			return;
+		}
+
 
 		pMdbProxys.emplace(0, std::move(connection));
 	}

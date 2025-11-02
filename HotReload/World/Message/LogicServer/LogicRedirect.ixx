@@ -29,9 +29,7 @@ namespace MsgHandleRegister
 		// cache
 		if (roomEntity)
 		{
-			std::string binMsg;
-			request->SerializeToString(&binMsg);
-			MessagePackAndSend(0, EMMsgDeal::Ret, request->GetDescriptor()->full_name(), binMsg, roomEntity->GetChannel());
+			MessagePackAndSend(0, EMMsgDeal::Ret, request, roomEntity->GetChannel());
 		}
 		else
 		{
@@ -42,7 +40,7 @@ namespace MsgHandleRegister
 		entityMan->RemoveEntity(entity->ID());
 	});
 
-	HandleRegistry<GMsg::C2S_ReqAuthToken, GMsg::S2C_ResAuthToken, EMMsgDeal::Req> Msg_ReqClientLogin(
+	HandleRegistry<GMsg::C2S_ReqAuthToken, GMsg::S2C_ResAuthToken, EMMsgDeal::Redir> Msg_ReqClientLogin(
 				[](auto request, auto response, SocketChannel::Ptr channel) -> TaskVoid
 	{
 		LogicServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<LogicServerHelper>(EMSystemType::Server);
@@ -54,11 +52,20 @@ namespace MsgHandleRegister
 			LoggerPrint::Log(channel, ELogLevel_Debug, "AddEntity Client!");
 
 			// msg will destroy. MessageHandle not will waiting.
-			co_await entityMan->LoadEntity(entity->GetSelf<ClientEntityHelper>(), nullptr, nullptr);
+			bool success = co_await entityMan->LoadEntity(entity, nullptr, nullptr);
 
-			if (!entity->HasFlag(EMClientEntityFlag::DBInited))
+			if(!success)
 			{
-				LoggerPrint::Log(channel, ELogLevel_Debug, "AddEntity Client but not from db!");
+				LoggerPrint::Log(channel, ELogLevel_Debug, "Load Database Error!");
+				
+				co_return;
+			}
+			else
+			{
+				if (!entity->HasFlag(EMClientEntityFlag::DBInited))
+				{
+					LoggerPrint::Log(channel, ELogLevel_Debug, "AddEntity Client but not from db!");
+				}
 			}
 		}
 		else
@@ -114,25 +121,12 @@ namespace MsgHandleRegister
 		// req token
 		if (roomEntity)
 		{
-			auto taskGen = [](Message* msg) -> Task<Message*>
-				{
-					co_return msg;
-				};
-			auto dataChannel = taskGen(response);
-
-			ServerProxyHelper::Ptr server = dnServer->GetServerProxy();
-			uint32_t msgId = server->GetMsgId();
+			ServerProxyHelper::Ptr proxyHelper = dnServer->GetServerProxy();
 
 			// wait data parse
-			server->AddMsg(msgId, &dataChannel, 8000);
-
-			std::string binMsg;
-			request->SerializeToString(&binMsg);
-			MessagePackAndSend(msgId, EMMsgDeal::Req, request->GetDescriptor()->full_name(), binMsg, roomEntity->GetChannel());
-
-			co_await dataChannel;
-
-			if (dataChannel.HasFlag(EMTaskFlag::Timeout))
+			bool success = co_await proxyHelper->AddMsg(EMMsgDeal::Req, request, response, roomEntity->GetChannel());
+		
+			if (!success)
 			{
 				response->set_errorcode(EL10nCode_ReqRegistTimeout);
 			}

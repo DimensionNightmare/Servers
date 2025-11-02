@@ -44,13 +44,13 @@ public:
 		return nullptr;
 	}
 
-	TaskVoid LoadEntity(ClientEntityHelper::Ptr entity, GMsg::d2L_ReqLoadEntityData* inRequest, GMsg::L2d_ResLoadEntityData* inResponse)
+	Task<bool> LoadEntity(ClientEntityHelper::Ptr entity, GMsg::d2L_ReqLoadEntityData* inRequest, GMsg::L2d_ResLoadEntityData* inResponse)
 	{
-		ClientProxyHelper::Ptr clientProxy = GetOwner()->GetComponent<ClientProxyHelper>(EMComponentType::ClientProxy);
+		const ClientProxyHelper::Ptr& clientProxy = GetOwner()->GetComponent<ClientProxyHelper>(EMComponentType::ClientProxy);
 
 		if (!clientProxy || clientProxy->RegistType() != std::to_underlying(EMServerType::GateServer))
 		{
-			co_return;
+			co_return false;
 		}
 
 		
@@ -62,7 +62,7 @@ public:
 				GDb::Player* dbEntity = entity->GetDbEntity();
 				dbEntity->SerializeToString(entitydata);
 			}
-			co_return;
+			co_return false;
 		}
 		else if(entity->HasFlag(EMClientEntityFlag::DBIniting))
 		{
@@ -71,7 +71,7 @@ public:
 			{
 				inResponse->set_errorcode(EL10nCode_DBIniting);
 			}
-			co_return;
+			co_return false;
 		}
 		
 		entity->SetFlag(EMClientEntityFlag::DBIniting);
@@ -82,7 +82,7 @@ public:
 		size_t entityId = entity->ID();
 		std::string keyName = std::format("{}_{}", tablename, entityId);
 
-		MdbProxyHelper::Ptr dbProxy = GetOwner()->GetComponent<MdbProxyHelper>(EMComponentType::MdbProxy);
+		const MdbProxyHelper::Ptr& dbProxy = GetOwner()->GetComponent<MdbProxyHelper>(EMComponentType::MdbProxy);
 		if(auto connection = dbProxy->GetConnection())
 		{
 			// nosql
@@ -102,75 +102,62 @@ public:
 				}
 
 				entity->SetFlag(EMClientEntityFlag::DBInited);
-				co_return;
+				co_return true;
 			}
 		}
 
 		// sql
-		GMsg::L2D_ReqLoadData request;
+		auto request = std::make_shared<GMsg::L2D_ReqLoadData>();
 
 		GDb::Player* dbEntity = entity->GetDbEntity();
 
 		// only query db data
 		if (inRequest)
 		{
-			request.set_tablename(inRequest->tablename());
-			request.set_keynumber(inRequest->keynumber());
-			request.set_entitydata(inRequest->entitydata());
-			request.set_needcreate(inRequest->needcreate());
+			request->set_tablename(inRequest->tablename());
+			request->set_keynumber(inRequest->keynumber());
+			request->set_entitydata(inRequest->entitydata());
+			request->set_needcreate(inRequest->needcreate());
 		}
 		// this mean new Entity branch
 		else
 		{
-			request.set_needcreate(true);
+			request->set_needcreate(true);
 
-			request.set_limit(1);
-			request.set_tablename(tablename);
-			request.set_keynumber(GDb::Player::kAccountIdFieldNumber);
+			request->set_limit(1);
+			request->set_tablename(tablename);
+			request->set_keynumber(GDb::Player::kAccountIdFieldNumber);
 			
-			dbEntity->SerializeToString(request.mutable_entitydata());
+			dbEntity->SerializeToString(request->mutable_entitydata());
 		}
 
+		auto response = std::make_shared<GMsg::D2L_ResLoadData>();
+			
+		bool success = co_await clientProxy->AddMsg(EMMsgDeal::Redir, request.get(), response.get());
 
-		request.SerializeToString(&binData);
-
-		GMsg::D2L_ResLoadData response;
+		if (!success)
 		{
-			auto taskGen = [](Message* msg) -> Task<Message*>
-				{
-					co_return msg;
-				};
-			auto dataChannel = taskGen(&response);
-
-			uint32_t msgId = clientProxy->GetMsgId();
-			clientProxy->AddMsg(msgId, &dataChannel, 9000);
-			MessagePackAndSend(msgId, EMMsgDeal::Redir, request.GetDescriptor()->full_name(), binData, clientProxy->GetChannel());
-
-			co_await dataChannel;
-			if (dataChannel.HasFlag(EMTaskFlag::Timeout))
-			{
-				response.set_errorcode(EL10nCode_CRdbReqTimeout);
-			}
+			response->set_errorcode(EL10nCode_CRdbReqTimeout);
 		}
-		
+
 		entity->ClearFlag(EMClientEntityFlag::DBIniting);
 
-		if (response.errorcode() != EL10nCode_None)
+		if (response->errorcode() != EL10nCode_None)
 		{
 
-			// binData = request.entitydata();
+			// binData = request->entitydata();
 			// BytesToHexString(binData);
 			// mDbFailure[entityId] = binData;
-			LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "Load Db Entity Error id = {}, errorcode = {}! ", entityId, std::to_underlying(response.errorcode()));
-			co_return;
+			LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "Load Db Entity Error id = {}, errorcode = {}! ", entityId, std::to_underlying(response->errorcode()));
+			co_return false;
 		}
 
 		entity->SetFlag(EMClientEntityFlag::DBInited);
 
-		int lenth = response.entitydata_size();
+		int lenth = response->entitydata_size();
 		if (lenth == 1)
 		{
-			const std::string& entityData = response.entitydata(0);
+			const std::string& entityData = response->entitydata(0);
 			entity->SetDbEntity(entityData);
 			
 			if(auto connection = dbProxy->GetConnection())
@@ -187,15 +174,15 @@ public:
 
 		if (inResponse)
 		{
-			inResponse->set_errorcode(response.errorcode());
+			inResponse->set_errorcode(response->errorcode());
 			for (int i = 0; i < lenth; i++)
 			{
 				std::string* bytes = inResponse->add_entitydata();
-				*bytes = response.entitydata(i);
+				*bytes = response->entitydata(i);
 			}
 		}
 
-		co_return;
+		co_return true;
 	}
 
 	/// @brief save entity data to database. this is task.
@@ -239,21 +226,9 @@ public:
 		{
 			ClientProxyHelper::Ptr clientProxy = GetOwner()->GetComponent<ClientProxyHelper>(EMComponentType::ClientProxy);
 
-			auto taskGen = [](Message* msg) -> Task<Message*>
-				{
-					co_return msg;
-				};
-			auto dataChannel = taskGen(&response);
+			bool success = co_await clientProxy->AddMsg(EMMsgDeal::Redir, &request, &response);
 
-			uint32_t msgId = clientProxy->GetMsgId();
-			clientProxy->AddMsg(msgId, &dataChannel, 9000);
-
-			std::string binData;
-			request.SerializeToString(&binData);
-			MessagePackAndSend(msgId, EMMsgDeal::Redir, request.GetDescriptor()->full_name(), binData, clientProxy->GetChannel());
-
-			co_await dataChannel;
-			if (dataChannel.HasFlag(EMTaskFlag::Timeout))
+			if (!success)
 			{
 				response.set_errorcode(EL10nCode_CRdbReqTimeout);
 			}

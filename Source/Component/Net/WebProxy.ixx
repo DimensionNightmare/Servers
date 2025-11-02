@@ -46,8 +46,8 @@ public:
 
 		LoggerPrint::Log(GetWorld(), EL10nCode_SrvListenOn, port, 0);
 
-		GetWorld()->AddEvent(EMEventType::ServerStart, GetSelfW<WebProxy>(), &WebProxy::Start);
-		GetWorld()->AddEvent(EMEventType::ServerStop, GetSelfW<WebProxy>(), &WebProxy::End);
+		GetWorld()->AddEvent<&WebProxy::Start>(EMEventType::ServerStart, GetSelfW<WebProxy>());
+		GetWorld()->AddEvent<&WebProxy::End>(EMEventType::ServerStop, GetSelfW<WebProxy>());
 
 		pService = P_InstanceHolder->GetMemPool().Allocate<hv::HttpService>();
 		

@@ -100,6 +100,9 @@ target_link_libraries(MainSource PUBLIC
 )
 
 set_property(TARGET MainSource PROPERTY CXX_STANDARD 23)
+target_compile_definitions(MainSource 
+    PRIVATE DN_DEBUG_EVENT
+)
 
 ################################ DimensionNightmareServer ################################
 

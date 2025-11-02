@@ -27,10 +27,7 @@ namespace MsgHandleRegister
 				GMsg::S2C_RetAccountReplace notify_request;
 				notify_request.set_serverip(request->serverip());
 				
-				std::string binData;
-
-				notify_request.SerializeToString(&binData);
-				MessagePackAndSend(0, EMMsgDeal::Ret, notify_request.GetDescriptor()->full_name(), binData, online);
+				MessagePackAndSend(0, EMMsgDeal::Ret, &notify_request, online);
 
 				//kick socket
 				online->deleteContextPtr();
@@ -49,8 +46,7 @@ namespace MsgHandleRegister
 					{
 						request->set_accountid(entity->ID());
 
-						request->SerializeToString(&binData);
-						MessagePackAndSend(0, EMMsgDeal::Redir, request->GetDescriptor()->full_name(), binData, serverEntity->GetChannel());
+						MessagePackAndSend(0, EMMsgDeal::Redir, request, serverEntity->GetChannel());
 					}
 
 				}

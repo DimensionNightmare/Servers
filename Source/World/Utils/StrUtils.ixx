@@ -89,6 +89,7 @@ export
 		static zoned_time<system_clock::duration> currentZone(current_zone());
 		currentZone = system_clock::now(); 
 		return std::format("{:%Y-%m-%d %H:%M:%S}", currentZone);
+		// return std::format("{:%Y-%m-%d %H:%M:%S}", system_clock::now());
 	}
 
 	std::string GetNowTimeMiniStr()
@@ -97,6 +98,7 @@ export
 		static zoned_time<seconds> currentZone(current_zone());
 		currentZone = floor<seconds>(system_clock::now()); 
 		return std::format("{:%Y-%m-%d_%H-%M-%S}", currentZone);
+		// return std::format("{:%Y-%m-%d_%H-%M-%S}", system_clock::now());
 	}
 
 	double StringToTimestamp(const std::string& datetimeStr)
@@ -302,6 +304,17 @@ export
 	#endif
 	}
 
+	constexpr size_t DoStringHash(std::string_view str)
+	{
+		// 使用简单的FNV-1a算法
+		size_t hash = 14695981039346656037ULL;
+		for (char c : str) {
+			hash ^= static_cast<size_t>(c);
+			hash *= 1099511628211ULL;
+		}
+		return hash;
+	}
+
 	std::vector<std::string> StrSplit(const std::string& s, const std::string& delimiter)
 	{
 		std::vector<std::string> tokens;
@@ -313,6 +326,25 @@ export
 		}
 		tokens.push_back(s.substr(start));
 		return tokens;
+	}
+
+	template <typename T>
+	constexpr std::string_view TupleTypeStr()
+	{
+	#ifdef _MSC_VER
+		std::string_view funcName = __func__;
+		std::string_view name = __FUNCSIG__;
+		auto start = name.find(funcName) + funcName.size();
+		return name.substr(start);
+	#else
+		throw "Not Impl";
+	#endif
+	}
+
+	template <typename T>
+	constexpr size_t TupleTypeHash()
+	{
+		return DoStringHash(TupleTypeStr<T>());
 	}
 
 }

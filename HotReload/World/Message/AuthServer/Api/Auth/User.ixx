@@ -61,6 +61,16 @@ export void ApiAuth(Server::Ptr server)
 				
 				std::shared_ptr<pqxx::connection> connection = dnServer->GetRdbProxy()->GetConnection(EMSqlDbNameEnum::Account);
 
+				if(!connection)
+				{
+					writer->Begin();
+					errData["Code"] = http_status::HTTP_STATUS_BAD_REQUEST;
+					errData["Message"] = "RDB Disconnect!";
+					MSGSET(errData.dump());
+					writer->End();
+					co_return;
+				}
+
 				pqxx::read_transaction query(*connection);
 				DbSqlHelper<GDb::Account> accounts(&query, dnServer->GetWorld());
 
@@ -103,44 +113,25 @@ export void ApiAuth(Server::Ptr server)
 
 			ClientProxyHelper::Ptr clientProxy = dnServer->GetClientProxy();
 
-			// pack data
-			std::string binData;
-			request.SerializeToString(&binData);
-			
-
+	
 			nlohmann::json retData;
 
+			bool success = co_await clientProxy->AddMsg(EMMsgDeal::Redir, &request, &response);
+			
+			if (!success)
 			{
-				// data alloc
-				auto taskGen = [](Message* msg) -> Task<Message*>
-					{
-						co_return msg;
-					};
+				retData["Code"] = HTTP_STATUS_REQUEST_TIMEOUT;
 
-				auto dataChannel = taskGen(&response);
-				
-				uint32_t msgId = clientProxy->GetMsgId();
-				clientProxy->AddMsg(msgId, &dataChannel);
-				MessagePackAndSend(msgId, EMMsgDeal::Redir, request.GetDescriptor()->full_name(), binData, clientProxy->GetChannel());
-				
-				co_await dataChannel;
-				if (dataChannel.HasFlag(EMTaskFlag::Timeout))
-				{
-					retData["Code"] = HTTP_STATUS_REQUEST_TIMEOUT;
-
-					response.set_errorcode(EL10nCode_SAuthReqTimeout);
-				}
-				else
-				{
-					retData["Code"] = HTTP_STATUS_OK;
-				}
-
+				response.set_errorcode(EL10nCode_SAuthReqTimeout);
 			}
-
-			binData.clear();
+			else
+			{
+				retData["Code"] = HTTP_STATUS_OK;
+			}
 
 			if(response.errorcode() == EL10nCode_None)
 			{
+				std::string binData;
 				auto state = MessageToJsonString(response, &binData);
 				retData["Data"] = nlohmann::json::parse(binData);
 				retData["Data"]["AccountId"] = accInfo.accountid();
@@ -158,7 +149,7 @@ export void ApiAuth(Server::Ptr server)
 				
 		});
 
-	webProxyHelper->service->POST("/Auth/User/RegistUser", [server](const hv::HttpRequestPtr& req, const hv::HttpResponseWriterPtr& writer)
+	webProxyHelper->service->POST("/Auth/User/RegistUser", [server](hv::HttpRequestPtr req, hv::HttpResponseWriterPtr writer)
 		{
 			nlohmann::json errData;
 
@@ -194,6 +185,16 @@ export void ApiAuth(Server::Ptr server)
 			try
 			{
 				std::shared_ptr<pqxx::connection> connection = dnServer->GetRdbProxy()->GetConnection(EMSqlDbNameEnum::Account);
+
+				if(!connection)
+				{
+					writer->Begin();
+					errData["Code"] = http_status::HTTP_STATUS_BAD_REQUEST;
+					errData["Message"] = "RDB Disconnect!";
+					MSGSET(errData.dump());
+					writer->End();
+					return;
+				}
 				
 				pqxx::read_transaction query(*connection);
 				DbSqlHelper<GDb::Account> accounts(&query, dnServer->GetWorld());
@@ -234,6 +235,16 @@ export void ApiAuth(Server::Ptr server)
 			{
 				std::shared_ptr<pqxx::connection> connection = dnServer->GetRdbProxy()->GetConnection(EMSqlDbNameEnum::Account);
 
+				if(!connection)
+				{
+					writer->Begin();
+					errData["Code"] = http_status::HTTP_STATUS_BAD_REQUEST;
+					errData["Message"] = "RDB Disconnect!";
+					MSGSET(errData.dump());
+					writer->End();
+					return;
+				}
+
 				pqxx::work query(*connection);
 				DbSqlHelper<GDb::Account> accounts(&query, dnServer->GetWorld());
 
@@ -265,8 +276,9 @@ export void ApiAuth(Server::Ptr server)
 			writer->End();
 		});
 
-	webProxyHelper->service->POST("/Auth/Test/DB", [server](const hv::HttpRequestPtr& req, const hv::HttpResponseWriterPtr& writer)
+	webProxyHelper->service->POST("/Auth/Test/User", [server](hv::HttpRequestPtr req, hv::HttpResponseWriterPtr writer)->TaskVoid
 		{
-
+			writer->End();
+			co_return;
 		});
 }

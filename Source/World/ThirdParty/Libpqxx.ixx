@@ -17,4 +17,6 @@ export namespace pqxx
 	using pqxx::result;
 	using pqxx::row;
 	using pqxx::work;
+
+	using pqxx::broken_connection;
 }

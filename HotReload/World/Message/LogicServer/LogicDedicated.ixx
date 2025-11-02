@@ -22,7 +22,7 @@ namespace MsgHandleRegister
 		LogicServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<LogicServerHelper>(EMSystemType::Server);
 		ClientEntityManagerHelper::Ptr entityMan = dnServer->GetClientEntityManager();
 
-		ClientEntity::Ptr entity = entityMan->GetEntity(player.accountid());
+		ClientEntityHelper::Ptr entity = entityMan->GetEntity(player.accountid());
 
 		if (!entity)
 		{
@@ -31,7 +31,7 @@ namespace MsgHandleRegister
 		else
 		{
 			
-			co_await entityMan->LoadEntity(entity->GetSelf<ClientEntityHelper>(), request, response);
+			bool success = co_await entityMan->LoadEntity(entity, request, response);
 
 		}
 

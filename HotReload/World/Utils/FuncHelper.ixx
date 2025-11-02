@@ -5,33 +5,29 @@ import ThirdParty.Libhv;
 import StrUtils;
 import Logger;
 import std.compat;
+import ThirdParty.Protobuf;
 
 export 
 {
-	void MessagePackAndSend(uint32_t msgId, EMMsgDeal deal, std::string& data, SocketChannel::Ptr channel)
+
+	void MessagePackAndSend(uint32_t msgId, EMMsgDeal deal, Message* message, SocketChannel::Ptr channel)
 	{
-		MessagePack(msgId, deal, 0, data);
+		size_t hash = 0;
+		std::string msgData;
+		std::string msgName;
 
-		channel->write(data);
+		if(deal != EMMsgDeal::Res)
+		{
+			msgName = message->GetDescriptor()->full_name();
+			hash = DoStringHash(msgName);
+		}
 
-		LoggerPrint::Log(channel, ELogLevel_Debug, "{} Send type={} With Mid:{}", channel->peeraddr().c_str(), EnumName(deal), msgId);
-	}
+		message->SerializeToString(&msgData);
 
-	void MessagePackAndSend(uint32_t msgId, EMMsgDeal deal, const std::string& pbName, std::string& data, SocketChannel::Ptr channel)
-	{
-		MessagePack(msgId, deal, DoStringHash(pbName), data);
-		channel->write(data);
-
-		LoggerPrint::Log(channel, ELogLevel_Debug, "{} Send type={} With Mid:{}, Mess:{}", channel->peeraddr().c_str(), EnumName(deal), msgId, pbName);
-	}
-
-	void MessagePackAndSend(uint32_t msgId, EMMsgDeal deal, const std::string& pbName, const std::string& data, SocketChannel::Ptr channel)
-	{
-		std::string msgData = data;
-		MessagePack(msgId, deal, DoStringHash(pbName), msgData);
+		MessagePack(msgId, deal, hash, msgData);
 		channel->write(msgData);
 
-		LoggerPrint::Log(channel, ELogLevel_Debug, "{} Send type={} With Mid:{}, Mess:{}", channel->peeraddr().c_str(), EnumName(deal), msgId, pbName);
+		LoggerPrint::Log(channel, ELogLevel_Debug, "{} Send type={} With Mid:{}, Mess:{}", channel->peeraddr(), EnumName(deal), msgId, msgName);
 	}
 
 }

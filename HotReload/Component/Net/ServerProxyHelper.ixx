@@ -2,6 +2,9 @@ export module ServerProxyHelper;
 
 import ServerProxy;
 import FuncUtils;
+import FuncHelper;
+import MessagePack;
+import ThirdParty.Protobuf;
 
 export class ServerProxyHelper : public Helper<ServerProxyHelper, ServerProxy>
 {
@@ -15,18 +18,61 @@ public:
 
 	uint32_t GetMsgId() { return ++iMsgId; }
 
-	bool AddMsg(uint32_t msgId, Task<Message*>* task, uint32_t breakTime = 10000)
+	Task<bool> AddMsg(EMMsgDeal dealType, Message* request, Message* response, SocketChannel::Ptr channel, uint32_t breakTime = 10000)
 	{
-		std::unique_lock ulock(oMsgMutex);
-		mMsgList.emplace(msgId, task);
-		if (breakTime > 0)
+		int msgId = 0;
+
+		switch(dealType)
 		{
-			task->SetTimerId(CheckMessageTimeoutTimer(breakTime, msgId));
+			case EMMsgDeal::Req:
+			case EMMsgDeal::Redir:
+			{
+				msgId = GetMsgId();
+				break;
+			}
+			case EMMsgDeal::Ret:
+			{
+				break;
+			}
+
 		}
-		return true;
+
+		auto task = MakeMsgTask();
+		
+		if(msgId)
+		{
+			std::unique_lock ulock(oMsgMutex);
+
+
+			mMsgList.emplace(msgId, &task);
+
+			task.SetMessage(response);
+
+			// timeout
+			if (breakTime > 0)
+			{
+				task.SetTimerId(CheckMessageTimeoutTimer(breakTime, msgId));
+			}
+
+		}
+;
+		MessagePackAndSend(msgId, dealType, request, channel);
+
+		if(msgId)
+		{
+			co_await task;
+
+			if (task.HasFlag(EMTaskFlag::Timeout))
+			{
+				// response->set_errorcode(EL10nCode_CRdbReqTimeout);
+				co_return false;
+			}
+		}
+
+		co_return true;
 	}
 
-	Task<Message*>* GetMsg(uint32_t msgId)
+	MsgTask* GetMsg(uint32_t msgId)
 	{
 		std::shared_lock lock(oMsgMutex);
 		if (mMsgList.contains(msgId))
@@ -41,7 +87,7 @@ public:
 		std::unique_lock ulock(oMsgMutex);
 		if (mMsgList.contains(msgId))
 		{
-			if (Task<Message*>* task = mMsgList[msgId])
+			if (MsgTask* task = mMsgList[msgId])
 			{
 				if (size_t timerId = task->GetTimerId())
 				{

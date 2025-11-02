@@ -1,7 +1,6 @@
 export module MessageRegister;
 
 import Logger;
-import ThirdParty.Protobuf;
 import ThirdParty.Libhv;
 import Server;
 import std;
@@ -168,9 +167,7 @@ protected:
 
 		if constexpr (!std::is_void_v<MsgRes>)
 		{
-			std::string binData;
-			oMsgRes.SerializeToString(&binData);
-			MessagePackAndSend(iMsgId, EMMsgDeal::Res, binData, channel);
+			MessagePackAndSend(iMsgId, EMMsgDeal::Res, &oMsgRes, channel);
 		}
 	}
 

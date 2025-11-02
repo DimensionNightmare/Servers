@@ -41,24 +41,11 @@ namespace MsgHandleRegister
 
 			entity->SetConnNum(1);
 
-			// data alloc
-			auto taskGen = [](Message* msg) -> Task<Message*>
-				{
-					co_return msg;
-				};
-			auto dataChannel = taskGen(response);
+			ServerProxyHelper::Ptr proxyHelper = dnServer->GetServerProxy();
 
-			ServerProxyHelper::Ptr serverProxy = dnServer->GetServerProxy();
-			uint32_t msgId = serverProxy->GetMsgId();
-
-			serverProxy->AddMsg(msgId, &dataChannel, 8000);
+			bool success = co_await proxyHelper->AddMsg(EMMsgDeal::Req, request, response, entity->GetChannel());
 			
-			std::string binMsg;
-			request->SerializeToString(&binMsg);
-			MessagePackAndSend(msgId, EMMsgDeal::Req, request->GetDescriptor()->full_name(), binMsg, entity->GetChannel());
-
-			co_await dataChannel;
-			if (dataChannel.HasFlag(EMTaskFlag::Timeout))
+			if (!success)
 			{
 				response->set_errorcode(EL10nCode_SGlobalReqTimeout);
 

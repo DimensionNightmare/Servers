@@ -9,7 +9,6 @@ import Server;
 import ThirdParty.Libhv;
 import FuncUtils;
 import Timer;
-import ThirdParty.Protobuf;
 
 export enum class EMRegistState : uint8_t
 {
@@ -78,8 +77,8 @@ public:
 		setting.length_field_offset = 0;
 		setUnpack(&setting);
 
-		GetWorld()->AddEvent(EMEventType::ServerStart, GetSelfW<ClientProxy>(), &ClientProxy::Start);
-		GetWorld()->AddEvent(EMEventType::ServerStop, GetSelfW<ClientProxy>(), &ClientProxy::End);
+		GetWorld()->AddEvent<&ClientProxy::Start>(EMEventType::ServerStart, GetSelfW<ClientProxy>());
+		GetWorld()->AddEvent<&ClientProxy::End>(EMEventType::ServerStop, GetSelfW<ClientProxy>());
 
 		return true;
 	}
@@ -141,7 +140,7 @@ public: // dll override
 			if (mMsgList.contains(msgId))
 			{
 				std::unique_lock ulock(oMsgMutex);
-				Task<Message*>* task = mMsgList[msgId];
+				MsgTask* task = mMsgList[msgId];
 				mMsgList.erase(msgId);
 				task->SetFlag(EMTaskFlag::Timeout);
 				task->CallResume();
@@ -162,10 +161,7 @@ public: // dll override
 		// int64_t timespan = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 		// request.set_timespan(timespan);
 
-		// std::string binData;
-		// request.SerializeToString(&binData);
-
-		// MessagePackAndSend(0, EMMsgDeal::Ret, request.GetDescriptor()->full_name(), binData, GetChannel());
+		// MessagePackAndSend(0, EMMsgDeal::Ret, &request, GetChannel());
 	}
 
 	Timer::Ptr GetTimer(){ return pTimer.expired() ? nullptr : pTimer.lock(); }
@@ -226,7 +222,7 @@ protected: // dll proxy
 	std::atomic<uint32_t> iMsgId;
 
 	// unordered_
-	std::unordered_map<uint32_t, Task<Message*>* > mMsgList;
+	std::unordered_map<uint32_t, MsgTask* > mMsgList;
 
 	//
 	std::unordered_map<size_t, uint32_t > mMapTimer;

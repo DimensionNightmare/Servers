@@ -10,7 +10,6 @@ import Server;
 import ThirdParty.Libhv;
 import FuncUtils;
 import Timer;
-import ThirdParty.Protobuf;
 
 export class ServerProxy : public Component, public hv::TcpServerTmpl<SocketChannel>
 {
@@ -97,10 +96,10 @@ public:
 
 		LoggerPrint::Log(GetWorld(), EL10nCode_SrvListenOn, port, listenfd);
 
-		GetWorld()->AddEvent(EMEventType::ServerStart, GetSelfW<ServerProxy>(), &ServerProxy::Start);
-		GetWorld()->AddEvent(EMEventType::ServerStop, GetSelfW<ServerProxy>(), &ServerProxy::End);
-		GetWorld()->AddEvent(EMEventType::ServerPause, GetSelfW<ServerProxy>(), &ServerProxy::Pause);
-		GetWorld()->AddEvent(EMEventType::ServerResume, GetSelfW<ServerProxy>(), &ServerProxy::Resume);
+		GetWorld()->AddEvent<&ServerProxy::Start>(EMEventType::ServerStart, GetSelfW<ServerProxy>());
+		GetWorld()->AddEvent<&ServerProxy::End>(EMEventType::ServerStop, GetSelfW<ServerProxy>());
+		GetWorld()->AddEvent<&ServerProxy::Pause>(EMEventType::ServerPause, GetSelfW<ServerProxy>());
+		GetWorld()->AddEvent<&ServerProxy::Resume>(EMEventType::ServerResume, GetSelfW<ServerProxy>());
 
 		return true;
 	}
@@ -186,7 +185,7 @@ public: // dll override
 			if (mMsgList.contains(id))
 			{
 				std::unique_lock ulock(oMsgMutex);
-				Task<Message*>* task = mMsgList[id];
+				MsgTask* task = mMsgList[id];
 				mMsgList.erase(id);
 				if(task)
 				{
@@ -271,7 +270,7 @@ protected:
 	// only oddnumber
 	std::atomic<uint32_t> iMsgId;
 	// unordered_
-	std::unordered_map<uint32_t, Task<Message*>* > mMsgList;
+	std::unordered_map<uint32_t, MsgTask* > mMsgList;
 	//
 	std::unordered_map<size_t, uint32_t > mMapTimer;
 
