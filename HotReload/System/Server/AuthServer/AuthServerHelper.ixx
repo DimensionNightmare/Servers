@@ -56,7 +56,7 @@ public:
 
 						channel->SetWorld(GetWorldW());
 
-						proxyHelper->SetRegistEvent(ServerMessage::GetMessageHandle()->pClientRegistFunc);
+						GetWorld()->AddEvent<&AuthServerHelper::HandleClientRegist>(EMEventType::ClientProxyRegist, GetSelf<AuthServerHelper>());
 						proxyHelper->InitConnectedChannel(channel);
 					}
 					else
@@ -134,7 +134,6 @@ public:
 		{
 			proxy->onConnection = nullptr;
 			proxy->onMessage = nullptr;
-			proxy->SetRegistEvent(nullptr);
 
 			// web use clientMsg
 			proxy->ClearMsgMap();
@@ -153,4 +152,8 @@ public:
 		return;
 	}
 
+	void HandleClientRegist()
+	{
+		ServerMessage::GetMessageHandle()->pClientRegistFunc(GetSelf<Server>());
+	}
 };

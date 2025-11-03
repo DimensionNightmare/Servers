@@ -57,7 +57,7 @@ Task<int> Func11()
 TaskVoid Func2()
 {
 	std::cout << "Task 2 exec " << "\n";
-	auto aa = co_await Func1();
+	// auto aa = co_await Func1();
 	// co_await Func1();
 	std::cout << "Task 2 after " << "\n";
 	co_return;
@@ -73,8 +73,8 @@ TaskVoid Func3()
 
 TaskVoid Func4()
 {
-	std::cout << "Task 4 exec" << "\n";
-	co_await Func3();
+	// std::cout << "Task 4 exec" << "\n";
+	// co_await Func3();
 	co_return;
 }
 

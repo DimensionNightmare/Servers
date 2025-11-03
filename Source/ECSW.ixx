@@ -21,6 +21,7 @@ export enum EMEventType : uint8_t
 	DeinitHotReload,
 	MovedDeinitHotReload,
 	InitedRdbConnection,
+	ClientProxyRegist,
 };
 
 export enum class EMComponentType : uint8_t

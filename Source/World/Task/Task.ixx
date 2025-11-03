@@ -34,18 +34,18 @@ export
 		{
 			promise_type()
 			{
-				// iTaskId = ++counter;
-				// std::cout << "TaskId:" << iTaskId <<  __FUNCTION__ << std::endl;
+				iTaskId = ++counter;
+				std::cout << "TaskId:" << iTaskId <<  __FUNCTION__ << std::endl;
 			}
 
 			~promise_type()
 			{
-				// std::cout << "TaskId:" << iTaskId <<  __FUNCTION__ << std::endl;
+				std::cout << "TaskId:" << iTaskId <<  __FUNCTION__ << std::endl;
 			}
 
 			Task get_return_object()
 			{
-				// std::cout << "TaskId:" << iTaskId <<  __FUNCTION__ << std::endl;
+				std::cout << "TaskId:" << iTaskId <<  __FUNCTION__ << std::endl;
 				return Task{ HandleType::from_promise(*this) };
 			}
 
@@ -53,7 +53,7 @@ export
         	requires (!std::is_void_v<U>)
 			void return_value(U&& value)
 			{
-				// std::cout << "TaskId:" << iTaskId <<  __FUNCTION__ << std::endl;
+				std::cout << "TaskId:" << iTaskId <<  __FUNCTION__ << std::endl;
 				oResult = std::forward<T>(value);
 
 				bIsDone = true;
@@ -61,15 +61,15 @@ export
 
 			auto initial_suspend()
 			{
-				// std::cout << "TaskId:" << iTaskId <<  __FUNCTION__ << std::endl;
-				// return std::suspend_always{};
-				return std::suspend_never{}; 
+				std::cout << "TaskId:" << iTaskId <<  __FUNCTION__ << std::endl;
+				return std::suspend_always{};
+				// return std::suspend_never{}; 
 
 			}
 
 			auto final_suspend() noexcept
 			{
-				// std::cout << "TaskId:" << iTaskId <<  __FUNCTION__ << std::endl;
+				std::cout << "TaskId:" << iTaskId <<  __FUNCTION__ << std::endl;
 				ReleaseAwaitHandle();
 				// Task don't Call by self, need Message handle Tick;
 				// return std::suspend_always{};
@@ -80,7 +80,7 @@ export
 
 			void ReleaseAwaitHandle()
 			{
-				// std::cout << "TaskId:" << iTaskId <<  __FUNCTION__ << std::endl;
+				std::cout << "TaskId:" << iTaskId <<  __FUNCTION__ << std::endl;
 				if (pAwaitHandle) 
 				{
 					auto handle = pAwaitHandle;
@@ -94,27 +94,28 @@ export
 
 			std::coroutine_handle<> pAwaitHandle = nullptr;
 
-			// int iTaskId = 0;
+			int iTaskId = 0;
 		};
 
 #pragma region Awaitable
 
 		bool await_ready() const noexcept
 		{
-			// std::cout << "TaskId:" << tHandle.promise().iTaskId <<  __FUNCTION__ << std::endl;
+			std::cout << "TaskId:" << tHandle.promise().iTaskId <<  __FUNCTION__ << std::endl;
 
 			return tHandle.promise().bIsDone;
 		}
 
 		void await_suspend(std::coroutine_handle<> caller)
 		{
-			// std::cout << "TaskId:" << tHandle.promise().iTaskId <<  __FUNCTION__ << std::endl;
+			std::cout << "TaskId:" << tHandle.promise().iTaskId <<  __FUNCTION__ << std::endl;
 			tHandle.promise().pAwaitHandle = caller;
+			tHandle.resume();
 		}
 
 		T await_resume()
 		{
-			// std::cout << "TaskId:" << tHandle.promise().iTaskId <<  __FUNCTION__ << std::endl;
+			std::cout << "TaskId:" << tHandle.promise().iTaskId <<  __FUNCTION__ << std::endl;
 
 			if constexpr (std::is_reference_v<T>)
 			{
@@ -139,13 +140,13 @@ export
 		Task(HandleType handle)
 		{
 			tHandle = handle;
-			// std::cout << "TaskId:" << tHandle.promise().iTaskId <<  __FUNCTION__ << std::endl;
+			std::cout << "TaskId:" << tHandle.promise().iTaskId <<  __FUNCTION__ << std::endl;
 			// SetFlag(EMTaskFlag::TimeCost);
 		}
 
 		~Task()
 		{
-			// std::cout << "TaskId:" << tHandle.promise().iTaskId <<  __FUNCTION__ << std::endl;
+			std::cout << "TaskId:" << tHandle.promise().iTaskId <<  __FUNCTION__ << std::endl;
 		}
 
 	public:
@@ -175,47 +176,48 @@ export
 		{
 			promise_type()
 			{
-				// iTaskId = ++counter;
-				// std::cout << "TaskId:" << iTaskId <<  __FUNCTION__ << std::endl;
+				iTaskId = ++counter;
+				std::cout << "TaskId:" << iTaskId <<  __FUNCTION__ << std::endl;
 			}
 
 			~promise_type()
 			{
-				// std::cout << "TaskId:" << iTaskId <<  __FUNCTION__ << std::endl;
+				std::cout << "TaskId:" << iTaskId <<  __FUNCTION__ << std::endl;
 			}
 
 			void return_void()
 			{
-				// std::cout << "TaskId:" << iTaskId <<  __FUNCTION__ << std::endl;
+				std::cout << "TaskId:" << iTaskId <<  __FUNCTION__ << std::endl;
 				bIsDone = true;
 			}
 
 			TaskVoid get_return_object()
 			{
-				// std::cout << "TaskId:" << iTaskId <<  __FUNCTION__ << std::endl;
+				std::cout << "TaskId:" << iTaskId <<  __FUNCTION__ << std::endl;
 				return TaskVoid{ HandleType::from_promise(*this) };
 			}
 
 			// 返回suspend_never 表示无需挂起直接执行函数体
 			auto initial_suspend()
 			{
-				// std::cout << "TaskId:" << iTaskId <<  __FUNCTION__ << std::endl;
-				return std::suspend_never{};
+				std::cout << "TaskId:" << iTaskId <<  __FUNCTION__ << std::endl;
+				// return std::suspend_never{};
+				return std::suspend_always{};
 			}
 
 			auto final_suspend() noexcept
 			{
-				// std::cout << "TaskId:" << iTaskId <<  __FUNCTION__ << std::endl;
-				ReleaseAwaitHandle();
-				return std::suspend_never{};
-				// return std::suspend_always{};
+				std::cout << "TaskId:" << iTaskId <<  __FUNCTION__ << std::endl;
+				// ReleaseAwaitHandle();
+				// return std::suspend_never{};
+				return std::suspend_always{};
 			}
 
 			void unhandled_exception() {}
 
 			void ReleaseAwaitHandle()
 			{
-				// std::cout << "TaskId:" << iTaskId <<  __FUNCTION__ << std::endl;
+				std::cout << "TaskId:" << iTaskId <<  __FUNCTION__ << std::endl;
 
 				if (pAwaitHandle) 
 				{ 
@@ -229,7 +231,7 @@ export
 
 			bool bIsDone = false;
 
-			// int iTaskId = 0;
+			int iTaskId = 0;
 		};
 
 #pragma region Awaitable Start
@@ -237,38 +239,40 @@ export
 		// 根据有没有co_return 决定要不要挂起
 		bool await_ready() const noexcept
 		{
-			// std::cout << "TaskId:" << msgId <<  __FUNCTION__ << std::endl;
+			std::cout << "TaskId:" << msgId <<  __FUNCTION__ << std::endl;
 
 			return tHandle.promise().bIsDone;
 		}
 
 		void await_suspend(std::coroutine_handle<> caller)
 		{
-			// std::cout << "TaskId:" << msgId <<  __FUNCTION__ << std::endl;
+			std::cout << "TaskId:" << msgId <<  __FUNCTION__ << std::endl;
 			tHandle.promise().pAwaitHandle = caller;
+			tHandle.resume();
 		}
 
 		void await_resume() noexcept
 		{
-			// std::cout << "TaskId:" << msgId <<  __FUNCTION__ << std::endl;
+			std::cout << "TaskId:" << msgId <<  __FUNCTION__ << std::endl;
 		}
 #pragma endregion
 
 		TaskVoid(HandleType handle)
 		{
 			tHandle = handle;
-			// msgId = tHandle.promise().iTaskId;
-			// std::cout << "TaskId:" << msgId <<  __FUNCTION__ << std::endl;
+			msgId = tHandle.promise().iTaskId;
+			std::cout << "TaskId:" << msgId <<  __FUNCTION__ << std::endl;
+			tHandle.resume();
 		}
 
 		~TaskVoid()
 		{
-			// std::cout << "TaskId:" << msgId <<  __FUNCTION__ << std::endl;
+			std::cout << "TaskId:" << msgId <<  __FUNCTION__ << std::endl;
 		}
 
 		HandleType tHandle;
 
-		// int msgId = 0;
+		int msgId = 0;
 
 	};
 
@@ -355,12 +359,12 @@ export
 			// 	oTimePoint = std::chrono::steady_clock::now();
 			// }
 
-			pCallback();
+			// pCallback();
 
-			// std::thread([this]() {
-			// 	std::this_thread::sleep_for(std::chrono::seconds(5));
-			// 	Resume();
-			// }).detach();
+			std::thread([this]() {
+				std::this_thread::sleep_for(std::chrono::seconds(5));
+				Resume();
+			}).detach();
 
 		}
 

@@ -176,7 +176,7 @@ public:
 
 						channel->SetWorld(GetWorldW());
 						
-						proxyHelper->SetRegistEvent(ServerMessage::GetMessageHandle()->pClientRegistFunc);
+						GetWorld()->AddEvent<&DatabaseServerHelper::HandleClientRegist>(EMEventType::ClientProxyRegist, GetSelf<DatabaseServerHelper>());
 						proxyHelper->InitConnectedChannel(channel);
 					}
 					else
@@ -286,12 +286,16 @@ public:
 		{
 			proxy->onConnection = nullptr;
 			proxy->onMessage = nullptr;
-			proxy->SetRegistEvent(nullptr);
 
 			proxy->ClearMsgMap();
 		}
 
 		return;
+	}
+
+	void HandleClientRegist()
+	{
+		ServerMessage::GetMessageHandle()->pClientRegistFunc(GetSelf<Server>());
 	}
 
 };

@@ -9,6 +9,7 @@ import Task;
 import ClientProxyHelper;
 import FuncUtils;
 import Logger;
+import Server;
 
 export class ClientEntityManagerHelper : public Helper<ClientEntityManagerHelper, ClientEntityManager>
 {
@@ -262,7 +263,7 @@ public:
 		
 		ClientProxyHelper::Ptr clientProxy = GetOwner()->GetComponent<ClientProxyHelper>(EMComponentType::ClientProxy);
 
-		if (!clientProxy || clientProxy->RegistType() != uint8_t(EMServerType::GateServer))
+		if (!clientProxy || clientProxy->RegistType() != std::to_underlying(EMServerType::GateServer))
 		{
 			dealFunc = [this](ClientEntityHelper::Ptr entity, bool offline)
 				{

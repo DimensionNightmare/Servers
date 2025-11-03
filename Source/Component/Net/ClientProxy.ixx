@@ -107,14 +107,7 @@ public: // dll override
 
 		if (channel->isConnected() && eRegistState != EMRegistState::Registed)
 		{
-			if (pRegistEvent)
-			{
-				pRegistEvent(GetOwner<Server>());
-			}
-			else
-			{
-				// LoggerPrint()(EL10nCode_NotCallbackEvent);
-			}
+			GetWorld()->Broadcast(EMEventType::ClientProxyRegist);
 		}
 		else
 		{
@@ -232,8 +225,6 @@ protected: // dll proxy
 	
 	// callback regist to server‘s servertype
 	uint8_t iRegistType = 0;
-
-	std::function<void(Server::Ptr)> pRegistEvent;
 
 	std::shared_mutex oMsgMutex;
 

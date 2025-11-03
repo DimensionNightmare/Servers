@@ -230,7 +230,7 @@ public:
 
 						channel->SetWorld(GetWorldW());
 
-						proxyHelper->SetRegistEvent(ServerMessage::GetMessageHandle()->pClientRegistFunc);
+						GetWorld()->AddEvent<&GlobalServerHelper::HandleClientRegist>(EMEventType::ClientProxyRegist, GetSelf<GlobalServerHelper>());
 
 						proxyHelper->InitConnectedChannel(channel);
 					}
@@ -314,24 +314,28 @@ public:
 	void HandleServerShutdown()
 	{
 		
-		if (ServerProxyHelper::Ptr serverSock = GetServerProxy())
+		if (ServerProxyHelper::Ptr proxy = GetServerProxy())
 		{
-			serverSock->onConnection = nullptr;
-			serverSock->onMessage = nullptr;
+			proxy->onConnection = nullptr;
+			proxy->onMessage = nullptr;
 
-			serverSock->ClearMsgMap();
+			proxy->ClearMsgMap();
 		}
 
-		if (ClientProxyHelper::Ptr clientSock = GetClientProxy())
+		if (ClientProxyHelper::Ptr proxy = GetClientProxy())
 		{
-			clientSock->onConnection = nullptr;
-			clientSock->onMessage = nullptr;
-			clientSock->SetRegistEvent(nullptr);
+			proxy->onConnection = nullptr;
+			proxy->onMessage = nullptr;
 
-			clientSock->ClearMsgMap();
+			proxy->ClearMsgMap();
 		}
 
 		return;
+	}
+
+	void HandleClientRegist()
+	{
+		ServerMessage::GetMessageHandle()->pClientRegistFunc(GetSelf<Server>());
 	}
 
 };
