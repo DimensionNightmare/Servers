@@ -39,7 +39,7 @@ MsgTask Func00()
 Task<std::shared_ptr<A>> Func1()
 {
 	std::shared_ptr<A> aa = std::shared_ptr<A>(new A);
-	co_await Func0();
+	co_await Func00();
 	std::cout << "Task 1 exec" << "\n";
 
 	co_return aa;
@@ -57,7 +57,8 @@ Task<int> Func11()
 TaskVoid Func2()
 {
 	std::cout << "Task 2 exec " << "\n";
-	auto aa = co_await Func11();
+	auto aa = co_await Func1();
+	// co_await Func1();
 	std::cout << "Task 2 after " << "\n";
 	co_return;
 }
@@ -93,7 +94,7 @@ export void ApiAuth(Server::Ptr server)
 			if (authName.empty() || authName.size() > 32 ||
 				authString.empty() || authString.size() > 64)
 			{
-				writer->Begin();
+				
 				errData["Code"] = http_status::HTTP_STATUS_BAD_REQUEST;
 				errData["Message"] = "param error!";
 				MSGSET(errData.dump());
@@ -107,7 +108,7 @@ export void ApiAuth(Server::Ptr server)
 
 			if (!server)
 			{
-				writer->Begin();
+				
 				errData["Code"] = http_status::HTTP_STATUS_BAD_REQUEST;
 				errData["Message"] = "Server Disconnect!";
 				MSGSET(errData.dump());
@@ -124,7 +125,7 @@ export void ApiAuth(Server::Ptr server)
 
 				if(!connection)
 				{
-					writer->Begin();
+					
 					errData["Code"] = http_status::HTTP_STATUS_BAD_REQUEST;
 					errData["Message"] = "RDB Disconnect!";
 					MSGSET(errData.dump());
@@ -145,7 +146,7 @@ export void ApiAuth(Server::Ptr server)
 
 				if (accounts.Result().size() != 1)
 				{
-					writer->Begin();
+					
 					errData["Code"] = http_status::HTTP_STATUS_BAD_REQUEST;
 					errData["Message"] = "not Account!";
 					MSGSET(errData.dump());
@@ -157,7 +158,7 @@ export void ApiAuth(Server::Ptr server)
 			}
 			catch (const std::exception& e)
 			{
-				writer->Begin();
+				
 				LoggerPrint::Log(server, ELogLevel_Debug, "{}", e.what());
 				errData["Code"] = http_status::HTTP_STATUS_BAD_REQUEST;
 				errData["Message"] = "Server Error!!";
@@ -202,7 +203,7 @@ export void ApiAuth(Server::Ptr server)
 				retData["ErrorMessage"] = EL10nCode_Name(response.errorcode());
 			}
 
-			writer->Begin();
+			
 			MSGSET(retData.dump());
 			writer->End();
 
@@ -249,7 +250,7 @@ export void ApiAuth(Server::Ptr server)
 
 				if(!connection)
 				{
-					writer->Begin();
+					
 					errData["Code"] = http_status::HTTP_STATUS_BAD_REQUEST;
 					errData["Message"] = "RDB Disconnect!";
 					MSGSET(errData.dump());
@@ -298,7 +299,7 @@ export void ApiAuth(Server::Ptr server)
 
 				if(!connection)
 				{
-					writer->Begin();
+					
 					errData["Code"] = http_status::HTTP_STATUS_BAD_REQUEST;
 					errData["Message"] = "RDB Disconnect!";
 					MSGSET(errData.dump());
