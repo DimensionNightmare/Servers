@@ -16,24 +16,49 @@ using namespace std::chrono;
 
 std::atomic<size_t> counter = 0;
 
+class A
+{
+public:
+	A(){}
+
+	std::string a = std::string("zzzzzzzzzccc");
+};
+
 TaskVoid Func0()
 {
 	std::cout << "Task 999 exec" << "\n";
 	co_return;
 }
 
-TaskVoid Func1()
+MsgTask Func00()
 {
+	std::cout << "Task 999 exec" << "\n";
+	co_return;
+}
+
+Task<std::shared_ptr<A>> Func1()
+{
+	std::shared_ptr<A> aa = std::shared_ptr<A>(new A);
 	co_await Func0();
 	std::cout << "Task 1 exec" << "\n";
 
-	co_return;
+	co_return aa;
+}
+
+Task<int> Func11()
+{
+	int i = 100;
+	co_await Func00();
+	std::cout << "Task 1 exec" << "\n";
+
+	co_return i;
 }
 
 TaskVoid Func2()
 {
 	std::cout << "Task 2 exec " << "\n";
-	co_await Func1();
+	auto aa = co_await Func11();
+	std::cout << "Task 2 after " << "\n";
 	co_return;
 }
 

@@ -143,7 +143,7 @@ public: // dll override
 				MsgTask* task = mMsgList[msgId];
 				mMsgList.erase(msgId);
 				task->SetFlag(EMTaskFlag::Timeout);
-				task->CallResume();
+				task->Resume();
 			}
 		}
 	}

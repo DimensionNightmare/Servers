@@ -122,7 +122,7 @@ public:
 
 							}
 
-							task->CallResume();
+							task->Resume();
 						}
 						else
 						{
@@ -246,7 +246,7 @@ public:
 
 							}
 
-							task->CallResume();
+							task->Resume();
 						}
 						else
 						{

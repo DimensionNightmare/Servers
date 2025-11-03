@@ -109,7 +109,7 @@ public:
 
 							}
 
-							task->CallResume();
+							task->Resume();
 						}
 						else
 						{

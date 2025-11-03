@@ -120,7 +120,7 @@ public:
 		std::unique_lock ulock(oMsgMutex);
 		for (auto& [k, v] : mMsgList)
 		{
-			v->CallResume();
+			v->Resume();
 		}
 		mMsgList.clear();
 	}

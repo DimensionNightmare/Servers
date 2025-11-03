@@ -190,7 +190,7 @@ public: // dll override
 				if(task)
 				{
 					task->SetFlag(EMTaskFlag::Timeout);
-					task->CallResume();
+					task->Resume();
 				}
 			}
 		}
