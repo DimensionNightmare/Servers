@@ -39,25 +39,16 @@ MsgTask Func00()
 Task<std::shared_ptr<A>> Func1()
 {
 	std::shared_ptr<A> aa = std::shared_ptr<A>(new A);
-	co_await Func00();
+	// co_await Func00();
 	std::cout << "Task 1 exec" << "\n";
 
 	co_return aa;
 }
 
-Task<int> Func11()
-{
-	int i = 100;
-	co_await Func00();
-	std::cout << "Task 1 exec" << "\n";
-
-	co_return i;
-}
-
 TaskVoid Func2()
 {
 	std::cout << "Task 2 exec " << "\n";
-	// auto aa = co_await Func1();
+	auto aa = co_await Func1();
 	// co_await Func1();
 	std::cout << "Task 2 after " << "\n";
 	co_return;
@@ -73,8 +64,8 @@ TaskVoid Func3()
 
 TaskVoid Func4()
 {
-	// std::cout << "Task 4 exec" << "\n";
-	// co_await Func3();
+	std::cout << "Task 4 exec" << "\n";
+	co_await Func3();
 	co_return;
 }
 

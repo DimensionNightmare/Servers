@@ -55,8 +55,7 @@ public:
 
 	size_t SetTimeout(size_t milliseconds, const std::function<void(size_t)>& cb)
 	{
-		// return pLoop->loop()->setTimeout(milliseconds, cb);
-		return 0;
+		return pLoop->loop()->setTimeout(milliseconds, cb);
 	}
 
 	size_t SetInterval(size_t milliseconds, const std::function<void(size_t)>& cb)
