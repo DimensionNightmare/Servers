@@ -34,7 +34,7 @@ export
 		{
 			promise_type()
 			{
-				iTaskId = ++counter;
+				// iTaskId = ++counter;
 				// std::cout << "TaskId:" << iTaskId <<  __FUNCTION__ << std::endl;
 			}
 
@@ -94,7 +94,7 @@ export
 
 			std::coroutine_handle<> pAwaitHandle = nullptr;
 
-			int iTaskId = 0;
+			// int iTaskId = 0;
 		};
 
 #pragma region Awaitable
@@ -140,7 +140,7 @@ export
 		Task(HandleType handle)
 		{
 			tHandle = handle;
-			msgId = tHandle.promise().iTaskId;
+			// msgId = tHandle.promise().iTaskId;
 			// std::cout << "TaskId:" << msgId <<  __FUNCTION__ << std::endl;
 			// SetFlag(EMTaskFlag::TimeCost);
 			// tHandle.resume();
@@ -174,7 +174,7 @@ export
 
 		size_t iTimerId = 0;
 
-		int msgId = 0;
+		// int msgId = 0;
 
 		std::chrono::steady_clock::time_point oTimePoint;
 	};
@@ -191,7 +191,7 @@ export
 		{
 			promise_type()
 			{
-				iTaskId = ++counter;
+				// iTaskId = ++counter;
 				// std::cout << "TaskId:" << iTaskId <<  __FUNCTION__ << std::endl;
 			}
 
@@ -248,7 +248,7 @@ export
 
 			bool bHasAwaited = false;
 
-			int iTaskId = 0;
+			// int iTaskId = 0;
 		};
 
 #pragma region Awaitable Start
@@ -278,7 +278,7 @@ export
 		TaskVoid(HandleType handle)
 		{
 			tHandle = handle;
-			msgId = tHandle.promise().iTaskId;
+			// msgId = tHandle.promise().iTaskId;
 			// std::cout << "TaskId:" << msgId <<  __FUNCTION__ << std::endl;
 			// tHandle.resume();
 		}
@@ -301,7 +301,7 @@ export
 
 		HandleType tHandle;
 
-		int msgId = 0;
+		// int msgId = 0;
 
 	};
 
@@ -316,7 +316,7 @@ export
 		{
 			promise_type()
 			{
-				iTaskId = ++counter;
+				// iTaskId = ++counter;
 				// std::cout << "TaskId:" << iTaskId <<  __FUNCTION__ << std::endl;
 			}
 
@@ -368,7 +368,7 @@ export
 
 			std::coroutine_handle<> pAwaitHandle = nullptr;
 
-			int iTaskId = 0;
+			// int iTaskId = 0;
 		};
 
 #pragma region Awaitable
@@ -412,7 +412,7 @@ export
 		{
 			tHandle = handle;
 
-			msgId = tHandle.promise().iTaskId;
+			// msgId = tHandle.promise().iTaskId;
 			
 			// std::cout << "TaskId:" << msgId <<  __FUNCTION__ << std::endl;
 		}
@@ -470,7 +470,7 @@ export
 
 		std::function<void()> pCallback;
 
-		int msgId = 0;
+		// int msgId = 0;
 	};
 
 	MsgTask MakeMsgTask()
