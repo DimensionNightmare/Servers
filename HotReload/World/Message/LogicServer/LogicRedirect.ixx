@@ -9,7 +9,7 @@ import LogicServerMessage;
 namespace MsgHandleRegister
 {
 
-	HandleRegistry<GMsg::S2C_RetAccountReplace, void, EMMsgDeal::Ret> Exe_RetAccountReplace(
+	HandleRegistry<GMsg::S2C_RetAccountReplace, void, EMMsgDeal::Ret> Exe_RetAccountReplace =
 				[](auto request, SocketChannel::Ptr channel)
 	{
 		
@@ -38,9 +38,9 @@ namespace MsgHandleRegister
 
 		// close entity save data
 		entityMan->RemoveEntity(entity->ID());
-	});
+	};
 
-	HandleRegistry<GMsg::C2S_ReqAuthToken, GMsg::S2C_ResAuthToken, EMMsgDeal::Redir> Msg_ReqClientLogin(
+	HandleRegistry<GMsg::C2S_ReqAuthToken, GMsg::S2C_ResAuthToken, EMMsgDeal::Redir> Msg_ReqClientLogin =
 				[](auto request, auto response, SocketChannel::Ptr channel) -> TaskVoid
 	{
 		LogicServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<LogicServerHelper>(EMSystemType::Server);
@@ -142,5 +142,5 @@ namespace MsgHandleRegister
 		LoggerPrint::Log(channel, ELogLevel_Debug, "ds:{}", response->DebugString());
 
 		co_return;
-	});
+	};
 }

@@ -12,7 +12,7 @@ namespace MsgHandleRegister
 {
 
 	// client request
-	HandleClientRegistry Evt_ReqRegistSrv([](Server::Ptr server)->TaskVoid
+	HandleClientRegistry Evt_ReqRegistSrv = [](Server::Ptr server)->TaskVoid
 	{
 		GlobalServerHelper::Ptr dnServer = server->GetSelf<GlobalServerHelper>();
 
@@ -60,9 +60,9 @@ namespace MsgHandleRegister
 
 
 		co_return;
-	});
+	};
 
-	HandleRegistry<GMsg::COM_ReqRegistSrv, GMsg::COM_ResRegistSrv, EMMsgDeal::Req> Msg_ReqRegistSrv(
+	HandleRegistry<GMsg::COM_ReqRegistSrv, GMsg::COM_ResRegistSrv, EMMsgDeal::Req> Msg_ReqRegistSrv =
 				[](auto request, auto response, SocketChannel::Ptr channel, auto reply)
 	{
 		
@@ -152,11 +152,11 @@ namespace MsgHandleRegister
 			channel->GetWorld()->PostTask([dnServer](){dnServer->UpdateServerGroup();});
 		}
 
-	});
+	};
 
-	HandleRegistry<GMsg::COM_RetHeartbeat, void, EMMsgDeal::Ret> Exe_RetHeartbeat(
+	HandleRegistry<GMsg::COM_RetHeartbeat, void, EMMsgDeal::Ret> Exe_RetHeartbeat =
 				[](auto request, SocketChannel::Ptr channel)
 	{
 
-	});
+	};
 }

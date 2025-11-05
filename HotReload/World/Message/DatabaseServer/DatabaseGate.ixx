@@ -14,7 +14,7 @@ import ThirdParty.Protobuf;
 namespace MsgHandleRegister
 {
 
-	HandleRegistry<GMsg::L2D_ReqLoadData, GMsg::D2L_ResLoadData, EMMsgDeal::Req> Exe_ReqLoadData(
+	HandleRegistry<GMsg::L2D_ReqLoadData, GMsg::D2L_ResLoadData, EMMsgDeal::Req> Exe_ReqLoadData =
 				[](auto request, auto response, SocketChannel::Ptr channel)
 	{
 		
@@ -106,9 +106,9 @@ namespace MsgHandleRegister
 		{
 			response->set_errorcode(EL10nCode_DBNotConnect);
 		}
-	});
+	};
 
-	HandleRegistry<GMsg::L2D_ReqSaveData, GMsg::D2L_ResSaveData, EMMsgDeal::Req> Exe_ReqSaveData(
+	HandleRegistry<GMsg::L2D_ReqSaveData, GMsg::D2L_ResSaveData, EMMsgDeal::Req> Exe_ReqSaveData =
 				[](auto request, auto response, SocketChannel::Ptr channel)
 	{
 		DatabaseServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<DatabaseServerHelper>(EMSystemType::Server);
@@ -164,6 +164,6 @@ namespace MsgHandleRegister
 		{
 			response->set_errorcode(EL10nCode_DBNotConnect);
 		}
-	});
+	};
 }
 

@@ -10,7 +10,7 @@ import GateServerMessage;
 namespace MsgHandleRegister
 {
 
-	HandleRegistry<GMsg::L2D_ReqLoadData, GMsg::D2L_ResLoadData, EMMsgDeal::Redir> Exe_ReqLoadData(
+	HandleRegistry<GMsg::L2D_ReqLoadData, GMsg::D2L_ResLoadData, EMMsgDeal::Redir> Exe_ReqLoadData =
 				[](auto request, auto response, SocketChannel::Ptr channel) -> TaskVoid
 	{
 		
@@ -39,9 +39,9 @@ namespace MsgHandleRegister
 		}
 
 		co_return;
-	});
+	};
 
-	HandleRegistry<GMsg::L2D_ReqSaveData, GMsg::D2L_ResSaveData, EMMsgDeal::Redir> Exe_ReqSaveData(
+	HandleRegistry<GMsg::L2D_ReqSaveData, GMsg::D2L_ResSaveData, EMMsgDeal::Redir> Exe_ReqSaveData =
 				[](auto request, auto response, SocketChannel::Ptr channel) -> TaskVoid
 	{
 		
@@ -70,5 +70,5 @@ namespace MsgHandleRegister
 		}
 
 		co_return;
-	});
+	};
 }

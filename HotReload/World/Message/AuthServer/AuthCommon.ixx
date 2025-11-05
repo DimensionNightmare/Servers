@@ -13,7 +13,7 @@ namespace MsgHandleRegister
 {
 
 	// client request
-	HandleClientRegistry Evt_ReqRegistSrv([](Server::Ptr server)->TaskVoid
+	HandleClientRegistry Evt_ReqRegistSrv = [](Server::Ptr server)->TaskVoid
 	{
 		AuthServerHelper::Ptr dnServer = server->GetSelf<AuthServerHelper>();
 
@@ -62,7 +62,7 @@ namespace MsgHandleRegister
 		}
 
 		co_return;
-	});
+	};
 
 	HandleApiRegistry Evt_ReqRegistApi(&ApiInit);
 }

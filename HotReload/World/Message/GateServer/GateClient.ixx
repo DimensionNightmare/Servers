@@ -13,7 +13,7 @@ import GateServerMessage;
 namespace MsgHandleRegister
 {
 
-	HandleRegistry<GMsg::C2S_ReqAuthToken, GMsg::S2C_ResAuthToken, EMMsgDeal::Req> Msg_ReqAuthToken(
+	HandleRegistry<GMsg::C2S_ReqAuthToken, GMsg::S2C_ResAuthToken, EMMsgDeal::Req> Msg_ReqAuthToken =
 				[](auto request, auto response, SocketChannel::Ptr channel) -> TaskVoid
 	{
 		
@@ -91,6 +91,6 @@ namespace MsgHandleRegister
 		}
 
 		co_return;
-	});
+	};
 
 }

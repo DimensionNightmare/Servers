@@ -9,7 +9,7 @@ import LogicServerMessage;
 namespace MsgHandleRegister
 {
 
-	HandleRegistry<GMsg::d2L_ReqLoadEntityData, GMsg::L2d_ResLoadEntityData, EMMsgDeal::Req> Msg_ReqAuthToken(
+	HandleRegistry<GMsg::d2L_ReqLoadEntityData, GMsg::L2d_ResLoadEntityData, EMMsgDeal::Req> Msg_ReqAuthToken =
 				[](auto request, auto response, SocketChannel::Ptr channel) -> TaskVoid
 	{
 		
@@ -36,9 +36,9 @@ namespace MsgHandleRegister
 		}
 
 		co_return;
-	});
+	};
 
-	HandleRegistry<GMsg::d2L_ReqSaveEntityData, void, EMMsgDeal::Ret> Msg_ReqSaveEntityData(
+	HandleRegistry<GMsg::d2L_ReqSaveEntityData, void, EMMsgDeal::Ret> Msg_ReqSaveEntityData =
 				[](auto request, SocketChannel::Ptr channel)
 	{
 		
@@ -80,5 +80,5 @@ namespace MsgHandleRegister
 		{
 			LoggerPrint::Log(channel, ELogLevel_Debug, "SaveData but dbEntity is null!");
 		}
-	});
+	};
 }

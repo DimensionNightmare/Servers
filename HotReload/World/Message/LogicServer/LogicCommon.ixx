@@ -12,7 +12,7 @@ namespace MsgHandleRegister
 {
 
 	// client request
-	HandleClientRegistry Evt_ReqRegistSrv([](Server::Ptr server) -> TaskVoid
+	HandleClientRegistry Evt_ReqRegistSrv = [](Server::Ptr server) -> TaskVoid
 	{
 		LogicServerHelper::Ptr dnServer = server->GetSelf<LogicServerHelper>();
 
@@ -55,9 +55,9 @@ namespace MsgHandleRegister
 		}
 
 		co_return;
-	});
+	};
 
-	HandleRegistry<GMsg::d2L_ReqRegistSrv, GMsg::COM_ResRegistSrv, EMMsgDeal::Req> Msg_ReqRegistSrv(
+	HandleRegistry<GMsg::d2L_ReqRegistSrv, GMsg::COM_ResRegistSrv, EMMsgDeal::Req> Msg_ReqRegistSrv =
 				[](auto request, auto response, SocketChannel::Ptr channel)
 	{
 
@@ -133,9 +133,9 @@ namespace MsgHandleRegister
 
 			response->set_retservertype(std::to_underlying(dnServer->GetServerType()));
 		}
-	});
+	};
 
-	HandleRegistry<GMsg::COM_RetChangeCtlSrv, void, EMMsgDeal::Ret> Exe_RetChangeCtlSrv(
+	HandleRegistry<GMsg::COM_RetChangeCtlSrv, void, EMMsgDeal::Ret> Exe_RetChangeCtlSrv =
 				[](auto request, SocketChannel::Ptr channel)
 	{
 		
@@ -143,11 +143,11 @@ namespace MsgHandleRegister
 		ClientProxyHelper::Ptr clientProxy = dnServer->GetClientProxy();
 
 		clientProxy->RedirectClient(request->serverport(), request->serverip());
-	});
+	};
 
-	HandleRegistry<GMsg::COM_RetHeartbeat, void, EMMsgDeal::Ret> Exe_RetHeartbeat(
+	HandleRegistry<GMsg::COM_RetHeartbeat, void, EMMsgDeal::Ret> Exe_RetHeartbeat =
 				[](auto request, SocketChannel::Ptr channel)
 	{
-	});
+	};
 
 }

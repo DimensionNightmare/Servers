@@ -10,7 +10,7 @@ import ControlServerMessage;
 namespace MsgHandleRegister
 {
 
-	HandleRegistry<GMsg::COM_ReqRegistSrv, GMsg::COM_ResRegistSrv, EMMsgDeal::Req> Msg_ReqRegistSrv(
+	HandleRegistry<GMsg::COM_ReqRegistSrv, GMsg::COM_ResRegistSrv, EMMsgDeal::Req> Msg_ReqRegistSrv =
 		[](auto request, auto response, SocketChannel::Ptr channel)
 	{
 		ControlServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<ControlServerHelper>(EMSystemType::Server);
@@ -45,12 +45,12 @@ namespace MsgHandleRegister
 
 			response->set_retservertype(std::to_underlying(dnServer->GetServerType()));
 		}
-	});
+	};
 
-	HandleRegistry<GMsg::COM_RetHeartbeat, void, EMMsgDeal::Ret> Exe_RetHeartbeat(
+	HandleRegistry<GMsg::COM_RetHeartbeat, void, EMMsgDeal::Ret> Exe_RetHeartbeat =
 		[](auto request, SocketChannel::Ptr channel)
 	{
 		
-	});
+	};
 
 }

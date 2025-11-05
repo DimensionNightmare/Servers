@@ -9,10 +9,10 @@ import MessagePack;
 import FuncHelper;
 import Task;
 
-// HandleRegistry<GMsg::C2S_ReqAuthToken, GMsg::S2C_ResAuthToken, EMMsgDeal::Req> Msg_ReqAuthToken(
+// HandleRegistry<GMsg::C2S_ReqAuthToken, GMsg::S2C_ResAuthToken, EMMsgDeal::Req> Msg_ReqAuthToken =
 // 				[](auto request, auto response, SocketChannel::Ptr channel) -> TaskVoid
 // 	{
-// 	});
+// 	};
 
 export struct MessageRegister
 {

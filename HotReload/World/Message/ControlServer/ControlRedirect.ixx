@@ -11,7 +11,7 @@ import ControlServerMessage;
 namespace MsgHandleRegister
 {
 
-	HandleRegistry<GMsg::A2g_ReqAuthAccount, GMsg::g2A_ResAuthAccount, EMMsgDeal::Redir> Msg_ReqAuthAccount(
+	HandleRegistry<GMsg::A2g_ReqAuthAccount, GMsg::g2A_ResAuthAccount, EMMsgDeal::Redir> Msg_ReqAuthAccount =
 		[](auto request, auto response, SocketChannel::Ptr channel) -> TaskVoid
 	{
 		
@@ -65,6 +65,6 @@ namespace MsgHandleRegister
 		}
 
 		co_return;
-	});
+	};
 
 }

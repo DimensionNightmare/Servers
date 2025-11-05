@@ -12,7 +12,7 @@ namespace MsgHandleRegister
 {
 
 	// client request
-	HandleClientRegistry Evt_ReqRegistSrv([](Server::Ptr server)->TaskVoid
+	HandleClientRegistry Evt_ReqRegistSrv = [](Server::Ptr server)->TaskVoid
 	{
 		DatabaseServerHelper::Ptr dnServer = server->GetSelf<DatabaseServerHelper>();
 
@@ -56,9 +56,9 @@ namespace MsgHandleRegister
 		}
 
 		co_return;
-	});
+	};
 
-	HandleRegistry<GMsg::COM_RetChangeCtlSrv, void, EMMsgDeal::Ret> Exe_RetChangeCtlSrv(
+	HandleRegistry<GMsg::COM_RetChangeCtlSrv, void, EMMsgDeal::Ret> Exe_RetChangeCtlSrv =
 		[](auto request, SocketChannel::Ptr channel)
 	{
 		DatabaseServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<DatabaseServerHelper>(EMSystemType::Server);
@@ -66,5 +66,5 @@ namespace MsgHandleRegister
 		ClientProxyHelper::Ptr clientProxy = dnServer->GetClientProxy();
 
 		clientProxy->RedirectClient(request->serverport(), request->serverip());
-	});
+	};
 }

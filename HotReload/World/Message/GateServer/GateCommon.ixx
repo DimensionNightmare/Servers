@@ -48,7 +48,7 @@ namespace MsgHandleRegister
 	}
 
 	// self request
-	HandleClientRegistry Evt_ReqRegistSrv([](Server::Ptr server) -> TaskVoid
+	HandleClientRegistry Evt_ReqRegistSrv = [](Server::Ptr server) -> TaskVoid
 	{
 		GateServerHelper::Ptr dnServer = server->GetSelf<GateServerHelper>();
 
@@ -98,9 +98,9 @@ namespace MsgHandleRegister
 		}
 
 		co_return;
-	});
+	};
 
-	HandleRegistry<GMsg::COM_ReqRegistSrv, GMsg::COM_ResRegistSrv, EMMsgDeal::Req> Msg_ReqRegistSrv(
+	HandleRegistry<GMsg::COM_ReqRegistSrv, GMsg::COM_ResRegistSrv, EMMsgDeal::Req> Msg_ReqRegistSrv =
 				[](auto request, auto response, SocketChannel::Ptr channel)
 	{
 		
@@ -152,10 +152,10 @@ namespace MsgHandleRegister
 
 			MessagePackAndSend(0, EMMsgDeal::Ret, &request, clientProxy->GetChannel());
 		}
-	});
+	};
 
-	HandleRegistry<GMsg::COM_RetHeartbeat, void, EMMsgDeal::Ret> Exe_RetHeartbeat(
+	HandleRegistry<GMsg::COM_RetHeartbeat, void, EMMsgDeal::Ret> Exe_RetHeartbeat =
 				[](auto request, SocketChannel::Ptr channel)
 	{
-	});
+	};
 }

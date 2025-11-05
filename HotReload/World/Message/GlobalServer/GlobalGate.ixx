@@ -8,7 +8,7 @@ import GlobalServerMessage;
 namespace MsgHandleRegister
 {
 
-	HandleRegistry<GMsg::g2G_RetRegistSrv, void, EMMsgDeal::Ret> Exe_RetRegistSrv(
+	HandleRegistry<GMsg::g2G_RetRegistSrv, void, EMMsgDeal::Ret> Exe_RetRegistSrv =
 				[](auto request, SocketChannel::Ptr channel)
 	{
 		GlobalServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<GlobalServerHelper>(EMSystemType::Server);
@@ -36,9 +36,9 @@ namespace MsgHandleRegister
 				dnServer->UpdateServerGroup();
 			}
 		}
-	});
+	};
 
-	HandleRegistry<GMsg::g2G_RetRegistChild, void, EMMsgDeal::Ret> Exe_RetRegistChild(
+	HandleRegistry<GMsg::g2G_RetRegistChild, void, EMMsgDeal::Ret> Exe_RetRegistChild =
 				[](auto request, SocketChannel::Ptr channel)
 	{
 	
@@ -58,5 +58,5 @@ namespace MsgHandleRegister
 			ServerEntityHelper::Ptr servChild = entityMan->AddEntity(child.serverid(), childType);
 			entity->SetMapLinkNode(childType, servChild->GetSelf<ServerEntity>());
 		}
-	});
+	};
 }

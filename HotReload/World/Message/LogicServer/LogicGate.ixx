@@ -8,7 +8,7 @@ import LogicServerMessage;
 namespace MsgHandleRegister
 {
 
-	HandleRegistry<GMsg::g2L_RetProxyOffline, void, EMMsgDeal::Ret> Exe_RetProxyOffline(
+	HandleRegistry<GMsg::g2L_RetProxyOffline, void, EMMsgDeal::Ret> Exe_RetProxyOffline =
 				[](auto request, SocketChannel::Ptr channel)
 	{
 		LogicServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<LogicServerHelper>(EMSystemType::Server);
@@ -24,5 +24,5 @@ namespace MsgHandleRegister
 		}
 
 		LoggerPrint::Log(channel, ELogLevel_Debug, "Recv Client {} Disconnect but not Exist!!", request->entityid());
-	});
+	};
 }

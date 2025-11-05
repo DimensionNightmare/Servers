@@ -11,7 +11,7 @@ import GateServerMessage;
 namespace MsgHandleRegister
 {
 
-	HandleRegistry<GMsg::A2g_ReqAuthAccount, GMsg::g2A_ResAuthAccount, EMMsgDeal::Req> Exe_ReqUserToken(
+	HandleRegistry<GMsg::A2g_ReqAuthAccount, GMsg::g2A_ResAuthAccount, EMMsgDeal::Req> Exe_ReqUserToken =
 				[](auto request, auto response, SocketChannel::Ptr channel)
 	{
 
@@ -76,5 +76,5 @@ namespace MsgHandleRegister
 		}
 
 		LoggerPrint::Log(channel, ELogLevel_Debug, "ReqUserToken User: {}!!", request->accountid());
-	});
+	};
 }
