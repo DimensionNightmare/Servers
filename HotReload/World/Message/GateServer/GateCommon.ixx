@@ -101,7 +101,7 @@ namespace MsgHandleRegister
 	};
 
 	HandleRegistry<GMsg::COM_ReqRegistSrv, GMsg::COM_ResRegistSrv, EMMsgDeal::Req> Msg_ReqRegistSrv =
-				[](auto request, auto response, SocketChannel::Ptr channel)
+				[](auto request, auto response, const SocketChannel::Ptr& channel)
 	{
 		
 		GateServerHelper::Ptr server = channel->GetWorld()->GetSystem<GateServerHelper>(EMSystemType::Server);
@@ -155,7 +155,7 @@ namespace MsgHandleRegister
 	};
 
 	HandleRegistry<GMsg::COM_RetHeartbeat, void, EMMsgDeal::Ret> Exe_RetHeartbeat =
-				[](auto request, SocketChannel::Ptr channel)
+				[](auto request, const SocketChannel::Ptr& channel)
 	{
 	};
 }

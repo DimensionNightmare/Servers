@@ -15,7 +15,7 @@ namespace MsgHandleRegister
 {
 
 	HandleRegistry<GMsg::L2D_ReqLoadData, GMsg::D2L_ResLoadData, EMMsgDeal::Req> Exe_ReqLoadData =
-				[](auto request, auto response, SocketChannel::Ptr channel)
+				[](auto request, auto response, const SocketChannel::Ptr& channel)
 	{
 		
 		DatabaseServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<DatabaseServerHelper>(EMSystemType::Server);
@@ -109,7 +109,7 @@ namespace MsgHandleRegister
 	};
 
 	HandleRegistry<GMsg::L2D_ReqSaveData, GMsg::D2L_ResSaveData, EMMsgDeal::Req> Exe_ReqSaveData =
-				[](auto request, auto response, SocketChannel::Ptr channel)
+				[](auto request, auto response, const SocketChannel::Ptr& channel)
 	{
 		DatabaseServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<DatabaseServerHelper>(EMSystemType::Server);
 

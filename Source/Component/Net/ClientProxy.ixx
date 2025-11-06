@@ -171,7 +171,7 @@ protected:
 		return timerId;
 	}
 
-	void _InitConnectedChannel(SocketChannel::Ptr chanhel)
+	void _InitConnectedChannel(const SocketChannel::Ptr& chanhel)
 	{
 		// chanhel->setHeartbeat(4000, std::bind(&ClientProxy::TickHeartbeat, this));
 		// channel->setWriteTimeout(12000);

@@ -59,7 +59,7 @@ namespace MsgHandleRegister
 	};
 
 	HandleRegistry<GMsg::COM_RetChangeCtlSrv, void, EMMsgDeal::Ret> Exe_RetChangeCtlSrv =
-		[](auto request, SocketChannel::Ptr channel)
+		[](auto request, const SocketChannel::Ptr& channel)
 	{
 		DatabaseServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<DatabaseServerHelper>(EMSystemType::Server);
 

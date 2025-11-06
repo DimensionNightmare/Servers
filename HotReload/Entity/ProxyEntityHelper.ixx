@@ -18,10 +18,10 @@ public: // dll override
 	void SetTimerId(size_t timerId) { iCloseTimerId = timerId; }
 
 	/// @brief net socket set
-	SocketChannel::Ptr GetChannel() { return pChannel; }
+	const SocketChannel::Ptr& GetChannel() { return pChannel; }
 
 	/// @brief net socket get
-	void SetChannel(SocketChannel::Ptr channel) { pChannel = channel; }
+	void SetChannel(const SocketChannel::Ptr& channel) { pChannel = channel; }
 
 	/// @brief authenticate token
 	std::string GetToken() { return sToken; }

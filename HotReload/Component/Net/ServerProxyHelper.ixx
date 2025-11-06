@@ -18,7 +18,7 @@ public:
 
 	uint32_t GetMsgId() { return ++iMsgId; }
 
-	Task<bool> AddMsg(EMMsgDeal dealType, Message* request, Message* response, SocketChannel::Ptr channel, uint32_t breakTime = 10000)
+	Task<bool> AddMsg(EMMsgDeal dealType, Message* request, Message* response, const SocketChannel::Ptr& channel, uint32_t breakTime = 10000)
 	{
 		int msgId = 0;
 

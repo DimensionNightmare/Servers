@@ -39,7 +39,7 @@ namespace MsgHandleRegister
 	};
 
 	HandleRegistry<GMsg::d2L_ReqSaveEntityData, void, EMMsgDeal::Ret> Msg_ReqSaveEntityData =
-				[](auto request, SocketChannel::Ptr channel)
+				[](auto request, const SocketChannel::Ptr& channel)
 	{
 		
 		GDb::Player player;

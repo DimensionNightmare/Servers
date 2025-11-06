@@ -9,7 +9,7 @@ namespace MsgHandleRegister
 {
 
 	HandleRegistry<GMsg::g2L_RetProxyOffline, void, EMMsgDeal::Ret> Exe_RetProxyOffline =
-				[](auto request, SocketChannel::Ptr channel)
+				[](auto request, const SocketChannel::Ptr& channel)
 	{
 		LogicServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<LogicServerHelper>(EMSystemType::Server);
 		ClientEntityManagerHelper::Ptr entityMan = dnServer->GetClientEntityManager();

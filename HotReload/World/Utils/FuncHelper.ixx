@@ -51,7 +51,7 @@ void printHexDump(const std::string& data, const std::string& title = "Hex Dump"
 export 
 {
 
-	void MessagePackAndSend(uint32_t msgId, EMMsgDeal deal, Message* message, SocketChannel::Ptr channel)
+	void MessagePackAndSend(uint32_t msgId, EMMsgDeal deal, Message* message, const SocketChannel::Ptr& channel)
 	{
 		size_t hash = 0;
 		std::string msgData;

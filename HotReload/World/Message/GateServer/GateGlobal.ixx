@@ -12,7 +12,7 @@ namespace MsgHandleRegister
 {
 
 	HandleRegistry<GMsg::A2g_ReqAuthAccount, GMsg::g2A_ResAuthAccount, EMMsgDeal::Req> Exe_ReqUserToken =
-				[](auto request, auto response, SocketChannel::Ptr channel)
+				[](auto request, auto response, const SocketChannel::Ptr& channel)
 	{
 
 		GateServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<GateServerHelper>(EMSystemType::Server);
@@ -21,7 +21,7 @@ namespace MsgHandleRegister
 		if (entity)
 		{
 			//exit
-			if (SocketChannel::Ptr online = entity->GetChannel())
+			if (const SocketChannel::Ptr& online = entity->GetChannel())
 			{
 				// kick channel
 				GMsg::S2C_RetAccountReplace notify_request;

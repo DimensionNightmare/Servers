@@ -10,7 +10,7 @@ namespace MsgHandleRegister
 {
 
 	HandleRegistry<GMsg::S2C_RetAccountReplace, void, EMMsgDeal::Ret> Exe_RetAccountReplace =
-				[](auto request, SocketChannel::Ptr channel)
+				[](auto request, const SocketChannel::Ptr& channel)
 	{
 		
 		LogicServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<LogicServerHelper>(EMSystemType::Server);

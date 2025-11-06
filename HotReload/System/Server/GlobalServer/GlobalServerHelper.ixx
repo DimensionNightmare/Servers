@@ -55,7 +55,7 @@ public:
 
 		auto registControl = [&](ServerEntityHelper::Ptr beEntityHelper, ServerEntityHelper::Ptr entityHelper) ->bool
 		{
-			SocketChannel::Ptr channel = entityHelper->GetChannel();
+			const SocketChannel::Ptr& channel = entityHelper->GetChannel();
 			if(!channel)
 			{
 				return false;

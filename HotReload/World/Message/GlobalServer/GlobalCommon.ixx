@@ -63,7 +63,7 @@ namespace MsgHandleRegister
 	};
 
 	HandleRegistry<GMsg::COM_ReqRegistSrv, GMsg::COM_ResRegistSrv, EMMsgDeal::Req> Msg_ReqRegistSrv =
-				[](auto request, auto response, SocketChannel::Ptr channel, auto reply)
+				[](auto request, auto response, const SocketChannel::Ptr& channel, auto reply)
 	{
 		
 		GlobalServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<GlobalServerHelper>(EMSystemType::Server);
@@ -102,7 +102,7 @@ namespace MsgHandleRegister
 				}
 
 				// already connect
-				if (SocketChannel::Ptr sock = entity->GetChannel())
+				if (const SocketChannel::Ptr& sock = entity->GetChannel())
 				{
 					response->set_errorcode(EL10nCode_PullServerReqRegistAlready);
 				}
@@ -155,7 +155,7 @@ namespace MsgHandleRegister
 	};
 
 	HandleRegistry<GMsg::COM_RetHeartbeat, void, EMMsgDeal::Ret> Exe_RetHeartbeat =
-				[](auto request, SocketChannel::Ptr channel)
+				[](auto request, const SocketChannel::Ptr& channel)
 	{
 
 	};

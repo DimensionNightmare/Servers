@@ -212,7 +212,7 @@ public: // dll override
 		}
 
 		{
-			if (SocketChannel::Ptr channel = getChannelById(id))
+			if (const SocketChannel::Ptr& channel = getChannelById(id))
 			{
 				if (!channel->contextPtr())
 				{
@@ -230,7 +230,7 @@ public: // dll override
 		mMapTimer.emplace(timerId, id);
 	}
 
-	void CheckChannelByTimer(SocketChannel::Ptr channel)
+	void CheckChannelByTimer(const SocketChannel::Ptr& channel)
 	{
 		FunctionContainer<&ServerProxy::ChannelTimeoutTimer> funcProxy(this);
 		
@@ -242,7 +242,7 @@ public: // dll override
 
 protected:
 
-	void _InitConnectedChannel(SocketChannel::Ptr channel)
+	void _InitConnectedChannel(const SocketChannel::Ptr& channel)
 	{
 		// if not regist
 		CheckChannelByTimer(channel);

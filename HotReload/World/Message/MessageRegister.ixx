@@ -19,7 +19,7 @@ export struct MessageRegister
 
 public:
 
-	void MsgHandle(SocketChannel::Ptr channel, uint32_t msgId, size_t msgHashId, const std::string& msgData)
+	void MsgHandle(const SocketChannel::Ptr& channel, uint32_t msgId, size_t msgHashId, const std::string& msgData)
 	{
 		if (mHandleMap.contains(msgHashId))
 		{
@@ -39,7 +39,7 @@ public:
 		}
 	}
 
-	void MsgRetHandle(SocketChannel::Ptr channel, size_t msgHashId, const std::string& msgData)
+	void MsgRetHandle(const SocketChannel::Ptr& channel, size_t msgHashId, const std::string& msgData)
 	{
 		if (mHandleRetMap.contains(msgHashId))
 		{
@@ -59,7 +59,7 @@ public:
 		}
 	}
 
-	void MsgRedirectHandle(SocketChannel::Ptr channel, uint32_t msgId, size_t msgHashId, const std::string& msgData)
+	void MsgRedirectHandle(const SocketChannel::Ptr& channel, uint32_t msgId, size_t msgHashId, const std::string& msgData)
 	{
 		if (mHandleRedirectMap.contains(msgHashId))
 		{
@@ -80,9 +80,9 @@ public:
 	}
 
 public:
-	std::unordered_map<size_t, std::function<void(SocketChannel::Ptr, uint32_t, const std::string&)>> mHandleMap;
-	std::unordered_map<size_t, std::function<void(SocketChannel::Ptr, const std::string&)>> mHandleRetMap;
-	std::unordered_map<size_t, std::function<void(SocketChannel::Ptr, uint32_t, const std::string&)>> mHandleRedirectMap;
+	std::unordered_map<size_t, std::function<void(const SocketChannel::Ptr&, uint32_t, const std::string&)>> mHandleMap;
+	std::unordered_map<size_t, std::function<void(const SocketChannel::Ptr&, const std::string&)>> mHandleRetMap;
+	std::unordered_map<size_t, std::function<void(const SocketChannel::Ptr&, uint32_t, const std::string&)>> mHandleRedirectMap;
 
 	std::function<void(Server::Ptr)> pClientRegistFunc;
 	std::function<void(Server::Ptr)> pApiRegistFunc;
@@ -97,7 +97,7 @@ public:
 	requires std::is_void_v<MsgRes> && std::invocable<Executor, MsgReq*, SocketChannel::Ptr>
 	MessageRegistry(Executor&& executor)
 	{
-		oInvoker = [executor = std::forward<Executor>(executor)](MessageRegistry* self, SocketChannel::Ptr channel)
+		oInvoker = [executor = std::forward<Executor>(executor)](MessageRegistry* self, const SocketChannel::Ptr& channel)
 			{
 				executor(&self->oMsgReq, channel);
 			};
@@ -109,7 +109,7 @@ public:
 		&& std::is_void_v<std::invoke_result_t<Executor, MsgReq*, MsgRes*, SocketChannel::Ptr>>
 	MessageRegistry(Executor&& executor)
 	{
-		oInvoker = [executor = std::forward<Executor>(executor)](MessageRegistry* self, SocketChannel::Ptr channel)
+		oInvoker = [executor = std::forward<Executor>(executor)](MessageRegistry* self, const SocketChannel::Ptr& channel)
 			{
 				executor(&self->oMsgReq, &self->oMsgRes, channel);
 			};
@@ -121,9 +121,9 @@ public:
 		&& std::is_void_v<std::invoke_result_t<Executor, MsgReq*, MsgRes*, SocketChannel::Ptr, std::function<void()>>>
 	MessageRegistry(Executor&& executor)
 	{
-		oInvoker = [executor = std::forward<Executor>(executor)](MessageRegistry* self, SocketChannel::Ptr channel)
+		oInvoker = [executor = std::forward<Executor>(executor)](MessageRegistry* self, const SocketChannel::Ptr& channel)
 			{
-				executor(&self->oMsgReq, &self->oMsgRes, channel, [=](){self->Reply(channel);});
+				executor(&self->oMsgReq, &self->oMsgRes, channel, self->pReplyProxy);
 			};
 	}
 
@@ -135,19 +135,33 @@ public:
 	{
 		bIsCoroutine = true;
 
-		oAsyncInvoker = [executor = std::forward<Executor>(executor)](MessageRegistry* self, SocketChannel::Ptr channel) ->TaskVoid
+		oAsyncInvoker = [executor = std::forward<Executor>(executor)](MessageRegistry* self, const SocketChannel::Ptr& channel) ->TaskVoid
 			{
 				co_await executor(&self->oMsgReq, &self->oMsgRes, channel);
 				co_return;
 			};
 	}
 
-	virtual ~MessageRegistry()
+protected:
+
+	MessageRegistry()
 	{
-		
 	}
 
-protected:
+	MessageRegistry(uint32_t msgId, const SocketChannel::Ptr& channel)
+	{
+		pReplyProxy = [=]() mutable
+		{
+			Reply(msgId, channel);
+		};
+	}
+
+	virtual ~MessageRegistry()
+	{
+		pReplyProxy
+			? pReplyProxy()
+			: void();
+	}
 
 	MessageRegistry(const MessageRegistry& other)
 		: oInvoker(other.oInvoker), oAsyncInvoker(other.oAsyncInvoker)
@@ -156,7 +170,7 @@ protected:
 
 	virtual void RegistMsg(){}
 
-	void Reply(SocketChannel::Ptr channel)
+	void Reply(uint32_t msgId, const SocketChannel::Ptr& channel)
 	{
 		if(bIsReplyed)
 		{
@@ -167,7 +181,7 @@ protected:
 
 		if constexpr (!std::is_void_v<MsgRes>)
 		{
-			MessagePackAndSend(iMsgId, EMMsgDeal::Res, &oMsgRes, channel);
+			MessagePackAndSend(msgId, EMMsgDeal::Res, &oMsgRes, channel);
 		}
 	}
 
@@ -176,48 +190,40 @@ protected:
 		return oMsgReq.ParseFromString(binMsg);
 	}
 
-	void TickMessage(SocketChannel::Ptr channel, const std::string& binMsg)
+	void TickMessage(const SocketChannel::Ptr& channel, const std::string& binMsg)
 	{
-		MessageRegistry exector = *this;
+		MessageRegistry exector;
 
 		if (!exector.ParseRequestMsg(binMsg))
 		{
 			return;
 		}
 
-		exector.oInvoker(&exector, channel);
+		oInvoker(&exector, channel);
 	}
 
-	void TickMessage(SocketChannel::Ptr channel, uint32_t msgId, const std::string& binMsg)
+	void TickMessage(const SocketChannel::Ptr& channel, uint32_t msgId, const std::string& binMsg)
 	{
-		MessageRegistry exector = *this;
+		MessageRegistry exector(msgId, channel);
 
 		if (!exector.ParseRequestMsg(binMsg))
 		{
 			return;
 		}
 
-		exector.iMsgId = msgId;
-
-		exector.oInvoker(&exector, channel);
-
-		exector.Reply(channel);
+		oInvoker(&exector, channel);
 	}
 
-	TaskVoid TickMessageAsync(SocketChannel::Ptr channel, uint32_t msgId, const std::string& binMsg)
+	TaskVoid TickMessageAsync(const SocketChannel::Ptr& channel, uint32_t msgId, const std::string& binMsg)
 	{
-		MessageRegistry exector = *this;
+		MessageRegistry exector(msgId, channel);
 
 		if (!exector.ParseRequestMsg(binMsg))
 		{
 			co_return;
 		}
 
-		exector.iMsgId = msgId;
-
-		co_await exector.oAsyncInvoker(&exector, channel);
-
-		exector.Reply(channel);
+		co_await oAsyncInvoker(&exector, channel);
 
 		co_return;
 	}
@@ -226,13 +232,14 @@ protected:
 
 protected:
 
-	uint32_t iMsgId = 0;
+	// 副本
 	bool bIsReplyed = false;
-
 	MsgReq oMsgReq;
 	std::conditional_t<std::is_void_v<MsgRes>, std::monostate, MsgRes> oMsgRes;
-	std::function<void(MessageRegistry*, SocketChannel::Ptr)> oInvoker;
-	std::function<TaskVoid(MessageRegistry*, SocketChannel::Ptr)> oAsyncInvoker;
-
+	std::function<void()> pReplyProxy;
+	
+	// 唯一执行器 副本不应该持有
+	std::function<void(MessageRegistry*, const SocketChannel::Ptr&)> oInvoker;
+	std::function<TaskVoid(MessageRegistry*, const SocketChannel::Ptr&)> oAsyncInvoker;
 	bool bIsCoroutine = false;
 };

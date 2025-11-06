@@ -9,7 +9,7 @@ namespace MsgHandleRegister
 {
 
 	HandleRegistry<GMsg::g2G_RetRegistSrv, void, EMMsgDeal::Ret> Exe_RetRegistSrv =
-				[](auto request, SocketChannel::Ptr channel)
+				[](auto request, const SocketChannel::Ptr& channel)
 	{
 		GlobalServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<GlobalServerHelper>(EMSystemType::Server);
 		ServerEntityManagerHelper::Ptr entityMan = dnServer->GetServerEntityManager();
@@ -39,7 +39,7 @@ namespace MsgHandleRegister
 	};
 
 	HandleRegistry<GMsg::g2G_RetRegistChild, void, EMMsgDeal::Ret> Exe_RetRegistChild =
-				[](auto request, SocketChannel::Ptr channel)
+				[](auto request, const SocketChannel::Ptr& channel)
 	{
 	
 		GlobalServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<GlobalServerHelper>(EMSystemType::Server);

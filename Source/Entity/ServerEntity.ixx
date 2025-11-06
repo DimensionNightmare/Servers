@@ -48,7 +48,7 @@ public:
 	/// 
 	EMServerType GetServerType() { return emServerType; }
 
-	SocketChannel::Ptr GetChannel() { return pChannel; }
+	const SocketChannel::Ptr& GetChannel() { return pChannel; }
 
 protected: // dll proxy
 	EMServerType emServerType = EMServerType::None;
