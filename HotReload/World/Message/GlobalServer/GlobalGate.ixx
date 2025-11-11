@@ -54,7 +54,7 @@ namespace MsgHandleRegister
 		for (int i = 0; i < request->childs_size(); i++)
 		{
 			const GMsg::COM_ReqRegistSrv& child = request->childs(i);
-			EMServerType childType = (EMServerType)child.servertype();
+			EMServerType childType = static_cast<EMServerType>(child.servertype());
 			ServerEntityHelper::Ptr servChild = entityMan->AddEntity(child.serverid(), childType);
 			entity->SetMapLinkNode(childType, servChild->GetSelf<ServerEntity>());
 		}

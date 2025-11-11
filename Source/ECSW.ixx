@@ -151,7 +151,10 @@ public:
 
 		auto params = std::forward_as_tuple(std::forward<Args>(args)...);
 
-		for (auto& [objId, _] : mEventCollection[type])
+		auto objIds = mEventCollection[type]
+			| std::views::keys;
+
+		for (auto& objId : objIds)
 		{
 			IEventContainer* anyObj = mEventIdMap[objId][type].get();
 			if(anyObj->mTypeHash == typeHash)
@@ -176,7 +179,11 @@ public:
 	void MoveEvent(EMEventType origin, EMEventType target)
 	{
 		mEventCollection[target] = std::move(mEventCollection[origin]);
-		for(auto& [_, objId] : mEventCollection[target])
+
+		auto objIds = mEventCollection[target]
+			| std::views::values;
+
+		for(auto& objId : objIds)
 		{
 			auto& map = mEventIdMap[objId];
 			map[target] = std::move(map[origin]);
@@ -191,7 +198,10 @@ public:
 		auto map = std::move(mEventCollection[origin]);
 		mEventCollection.erase(origin);
 
-		for(auto& [_, objId] : map)
+		auto objIds = map 
+			| std::views::values;
+
+		for(auto& objId : objIds)
 		{
 			mEventIdMap[objId].erase(origin);
 		}
@@ -203,7 +213,10 @@ public:
 		auto it = mEventIdMap.find(objId);
 		if (it != mEventIdMap.end())
 		{
-			for (auto& [type, _] : it->second)
+			auto names = it->second 
+				| std::views::keys;
+
+			for (auto& type : names)
 			{
 				mEventCollection[type].erase(objId);
 			}

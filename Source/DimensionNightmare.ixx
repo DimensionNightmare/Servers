@@ -377,7 +377,7 @@ public:
 	{
 		auto pause = [this](std::stringstream* = nullptr)
 			{
-				for (auto world : oWorlds)
+				for (auto& world : oWorlds)
 				{
 					world->Broadcast(EMEventType::ServerPause);
 				}
@@ -385,7 +385,7 @@ public:
 
 		auto resume = [this](std::stringstream* = nullptr)
 			{
-				for (auto world : oWorlds)
+				for (auto& world : oWorlds)
 				{
 					world->Broadcast(EMEventType::ServerResume);
 				}

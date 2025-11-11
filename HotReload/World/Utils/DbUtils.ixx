@@ -179,100 +179,84 @@ void GetFieldValueByProtoType(const FieldDescriptor* field, const Reflection* re
 
 	const FieldOptions& options = field->options();
 
-	switch (field->cpp_type())
-	{
-		case FieldDescriptor::CPPTYPE_INT32:
-			if (isRepeat)
+	auto cppType = field->cpp_type();
+
+	auto process_repeated_field = [&](auto&& accessor)-> std::string
+		{
+			std::vector<std::string> members = std::views::iota(0, reflection->FieldSize(data, field))
+				| std::views::transform([&](size_t i) { return std::format("{}", std::invoke(accessor, reflection, data, field, i)); })
+				| std::ranges::to<std::vector<std::string>>();
+
+			if(members.empty())
 			{
-				for (int i = 0; i < reflection->FieldSize(data, field); i++)
-				{
-					out += std::format("{},", reflection->GetRepeatedInt32(data, field, i));
-				}
-				out.pop_back();
-				out = std::format("'{{ {} }}'", out);
-			}
-			else
-			{
-				out = std::to_string(reflection->GetInt32(data, field));
-			}
-			break;
-		case FieldDescriptor::CPPTYPE_UINT32:
-			if (isRepeat)
-			{
-				for (int i = 0; i < reflection->FieldSize(data, field); i++)
-				{
-					out += std::format("{},", reflection->GetRepeatedUInt32(data, field, i));
-				}
-				out.pop_back();
-				out = std::format("'{{ {} }}'", out);
-			}
-			else
-			{
-				out = std::to_string(reflection->GetUInt32(data, field));
+				return "{}";
 			}
 
+			auto result = std::accumulate(members.begin(), members.end(), std::string(""), [&](const auto& lhs, const auto& rhs)
+			{
+				if(cppType == FieldDescriptor::CPPTYPE_STRING)
+				{
+					return std::format("'{}',", rhs);
+				}
+				return std::format("{},", rhs);
+			});
+			
+			return std::format("{{ {} }}", result);
+		};
+
+	auto value_getter = [&](auto && accessor, auto && accessorRepeated)
+	{
+		if (isRepeat)
+		{
+			out = process_repeated_field(accessorRepeated);
+		}
+		else
+		{
+			if(cppType == FieldDescriptor::CPPTYPE_STRING)
+			{
+				out = std::format("'{}'", std::invoke(accessor, reflection, data, field));
+			}
+			else
+			{
+				out = std::format("{}", std::invoke(accessor, reflection, data, field));
+			}
+			
+		}
+	};
+
+	switch (cppType)
+	{
+		case FieldDescriptor::CPPTYPE_INT32:
+			value_getter(&Reflection::GetInt32, &Reflection::GetRepeatedInt32);
+			break;
+		case FieldDescriptor::CPPTYPE_UINT32:
+			value_getter(&Reflection::GetUInt32, &Reflection::GetRepeatedUInt32);
 			break;
 		case FieldDescriptor::CPPTYPE_INT64:
-			if (isRepeat)
-			{
-				for (int i = 0; i < reflection->FieldSize(data, field); i++)
-				{
-					out += std::format("{},", reflection->GetRepeatedInt64(data, field, i));
-				}
-				out.pop_back();
-				out = std::format("'{{ {} }}'", out);
-			}
-			else
-			{
-				out = std::to_string(reflection->GetInt64(data, field));
-			}
+			value_getter(&Reflection::GetInt64, &Reflection::GetRepeatedInt64);
 			break;
 		case FieldDescriptor::CPPTYPE_UINT64:
-			if (isRepeat)
-			{
-				for (int i = 0; i < reflection->FieldSize(data, field); i++)
-				{
-					out += std::format("{},", reflection->GetRepeatedUInt64(data, field, i));
-				}
-				out.pop_back();
-				out = std::format("'{{ {} }}'", out);
-			}
-			else
-			{
-				out = std::to_string(reflection->GetUInt64(data, field));
-			}
+			value_getter(&Reflection::GetUInt64, &Reflection::GetRepeatedUInt64);
 			break;
 		case FieldDescriptor::CPPTYPE_STRING:
-			if (isRepeat)
-			{
-				for (int i = 0; i < reflection->FieldSize(data, field); i++)
-				{
-					out += std::format("'{}',", reflection->GetRepeatedString(data, field, i));
-				}
-				out.pop_back();
-				out = std::format("'{{ {} }}'", out);
-			}
-			else
-			{
-				out += std::format("'{}'", reflection->GetString(data, field));
-			}
+			value_getter(&Reflection::GetString, &Reflection::GetRepeatedString);
 			break;
 		case FieldDescriptor::CPPTYPE_MESSAGE:
 			if (isRepeat)
 			{
-				throw std::invalid_argument("Please Regist InsertField::CppType");
+				throw std::invalid_argument("Repeated message fields not supported");
 			}
 			else
 			{
 				const Message& msg = reflection->GetMessage(data, field);
-				msg.SerializeToString(&out);
-				BytesToHexString(out);
-				out = std::format("E'\\\\x{}'", out);
+				std::string serialized;
+				msg.SerializeToString(&serialized);
+				BytesToHexString(serialized);
+				out = std::format("E'\\\\x{}'", serialized);
 			}
 			break;
 		default:
-			throw std::invalid_argument("Please Regist InsertField::CppType");
-			break;
+			throw std::invalid_argument("Unsupported field type");
 	}
 
 	switch (field->cpp_type())
@@ -313,22 +297,72 @@ void SetFieldValueByProtoType(const FieldDescriptor* field, const Reflection* re
 	// 	} while (elem.first != std::array_parser::juncture::done);
 	// }
 
-	switch (field->cpp_type())
+	auto cppType = field->cpp_type();
+	bool isRepeat = field->is_repeated();
+
+	auto process_repeated_field = [&]<typename Type>(auto&& accessor)
+		{
+			pqxx::array_parser parser = value.as_array();
+
+			std::pair<pqxx::array_parser::juncture, std::string> elem;
+
+			auto current = parser.get_next();
+			
+			int index = 0;
+
+			std::stringstream oss;
+			Type param;
+			do
+			{
+				elem = parser.get_next();
+				switch(elem.first)
+				{
+					case pqxx::array_parser::juncture::string_value:
+					{
+						oss << elem.second;
+						oss >> param;
+						std::invoke(accessor, reflection, &data, field, index, param);
+						break;
+					}
+					default:
+					break;
+				}
+
+				index++;
+
+			} while (elem.first != pqxx::array_parser::juncture::done);
+
+		};
+
+	auto value_setter = [&]<typename Type>(auto&& accessor, auto&& accessorRepeated)
+	{
+		if (isRepeat)
+		{
+			process_repeated_field.operator()<Type>(accessorRepeated);
+		}
+		else
+		{
+			std::invoke(accessor, reflection, &data, field, value.as<Type>());
+		}
+	};
+
+	switch (cppType)
 	{
 		case FieldDescriptor::CPPTYPE_INT32:
-			reflection->SetInt32(&data, field, value.as<int32_t>());
+			value_setter.operator()<int>(&Reflection::SetInt32, &Reflection::SetRepeatedInt32);
 			break;
 		case FieldDescriptor::CPPTYPE_UINT32:
-			reflection->SetUInt32(&data, field, value.as<uint32_t>());
+			value_setter.operator()<uint32_t>(&Reflection::SetUInt32, &Reflection::SetRepeatedUInt32);
 			break;
 		case FieldDescriptor::CPPTYPE_INT64:
-			reflection->SetInt64(&data, field, value.as<int64_t>());
+			value_setter.operator()<int64_t>(&Reflection::SetInt64, &Reflection::SetRepeatedInt64);
 			break;
 		case FieldDescriptor::CPPTYPE_UINT64:
-			reflection->SetUInt64(&data, field, value.as<size_t>());
+			value_setter.operator()<uint64_t>(&Reflection::SetUInt64, &Reflection::SetRepeatedUInt64);
 			break;
 		case FieldDescriptor::CPPTYPE_STRING:
-			reflection->SetString(&data, field, value.as<std::string>());
+			using sign = void (Reflection::*)(Message*, const FieldDescriptor*, std::string) const;
+			value_setter.operator()<std::string>(static_cast<sign>(&Reflection::SetString), &Reflection::SetRepeatedString);
 			break;
 		case FieldDescriptor::CPPTYPE_MESSAGE:
 		{

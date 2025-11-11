@@ -38,15 +38,15 @@ namespace MsgHandleRegister
 								.Limit(request->limit())
 								.Commit();
 
-							if (int64_t resSize = dbHelper.Result().size())
-							{
-								for (int64_t cur = 0; cur < resSize; cur++)
-								{
-									std::string* binData = response->add_entitydata();
-									dbHelper.Result()[cur]->SerializeToString(binData);
-								}
+							auto& results = dbHelper.Result();
 
-							}
+							std::ranges::for_each(
+								results,
+								[response](const auto& result)
+								{
+									result->SerializeToString(response->add_entitydata());
+								}
+							);
 						};
 
 					query();

@@ -176,11 +176,7 @@ public:
 		if (inResponse)
 		{
 			inResponse->set_errorcode(response->errorcode());
-			for (int i = 0; i < lenth; i++)
-			{
-				std::string* bytes = inResponse->add_entitydata();
-				*bytes = response->entitydata(i);
-			}
+			inResponse->mutable_entitydata()->Swap(response->mutable_entitydata());
 		}
 
 		co_return true;
@@ -286,17 +282,22 @@ public:
 			dealFunc = std::bind(&ClientEntityManagerHelper::SaveEntity, this, std::placeholders::_1, std::placeholders::_2);
 		}
 
-		for (auto& [ID, entity] : mEntityMap)
-		{
-			if (!entity->GetDbEntity())
-			{
-				LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "SaveEntity not pb Data:{}", ID);
-				continue;
-			}
+		auto entitys = mEntityMap
+			| std::views::values
+			| std::views::filter([](const auto& entity)
+				{
+					return entity->GetDbEntity() != nullptr;
+				})
+			| std::ranges::views::transform([](auto& entity)
+				{
+					return entity->GetSelf<ClientEntityHelper>();
+				});
 
+		for (const auto& entity : entitys)
+		{
 			if(shutdown)
 			{
-				dealFunc(entity->GetSelf<ClientEntityHelper>(), shutdown);
+				dealFunc(entity, shutdown);
 				continue;
 			}
 
@@ -304,7 +305,7 @@ public:
 			{
 				entity->ClearFlag(EMClientEntityFlag::DBModify);
 
-				dealFunc(entity->GetSelf<ClientEntityHelper>(), shutdown);
+				dealFunc(entity, shutdown);
 			}
 		}
 	}

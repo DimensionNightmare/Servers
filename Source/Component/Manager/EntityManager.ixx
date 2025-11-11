@@ -24,7 +24,10 @@ public:
 
 	virtual void Dispose() override
 	{
-		for (auto& [id, entity] : mEntityMap)
+		auto entitys = mEntityMap 
+			| std::views::values;
+			
+		for (auto& entity : entitys)
 		{
 			entity->Dispose();
 		}

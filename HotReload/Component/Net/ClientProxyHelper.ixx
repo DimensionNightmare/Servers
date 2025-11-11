@@ -113,10 +113,15 @@ public:
 	void ClearMsgMap()
 	{
 		std::unique_lock ulock(oMsgMutex);
-		for (auto& [k, v] : mMsgList)
+
+		auto msgs = mMsgList
+			| std::views::values;
+
+		for (const auto& msg : msgs)
 		{
-			v->Resume();
+			msg->Resume();
 		}
+		
 		mMsgList.clear();
 	}
 

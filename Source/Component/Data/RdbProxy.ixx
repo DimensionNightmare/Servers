@@ -82,9 +82,7 @@ public:
 			return;
 		}
 		
-		std::vector<std::string> dbNames = StrSplit(*names, ",");
-		
-		for (std::string& dbName : dbNames)
+		for (std::string& dbName : StrSplit(*names, ","))
 		{
 			EMSqlDbNameEnum key = EnumName<EMSqlDbNameEnum>(dbName); // check vaild = assert
 			

@@ -315,7 +315,7 @@ export
 		return hash;
 	}
 
-	std::vector<std::string> StrSplit(const std::string& s, const std::string& delimiter)
+	std::vector<std::string> StrSplit(const std::string& s, const std::string_view& delimiter)
 	{
 		std::vector<std::string> tokens;
 		size_t start = 0, end = s.find(delimiter);

@@ -19,24 +19,18 @@ namespace MsgHandleRegister
 		GlobalServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<GlobalServerHelper>(EMSystemType::Server);
 		std::list<ServerEntity::Ptr> serverList = dnServer->GetServerEntityManager()->GetEntitysByType(EMServerType::GateServer);
 
-		std::list<ServerEntityHelper::Ptr> tempList;
-		for (ServerEntity::Ptr& server : serverList)
-		{
-			if (server->HasFlag(EMServerEntityFlag::Locked))
-			{
-				tempList.emplace_back(server->GetSelf<ServerEntityHelper>());
-			}
-		}
+		auto selects = serverList 
+			| std::ranges::views::transform([](const auto& server){
+				return server->GetSelf<ServerEntityHelper>();
+			})
+			| std::views::filter([](const auto& server){
+				return server->HasFlag(EMServerEntityFlag::Locked) == true;
+			})
+			;
 
-		tempList.sort([](ServerEntityHelper::Ptr lhs, ServerEntityHelper::Ptr rhs) { return lhs->GetConnNum() < rhs->GetConnNum(); });
-
-		if (tempList.empty())
+		if ( auto it = std::ranges::min_element(selects, std::greater{}, &ServerEntityHelper::GetConnNum); it != selects.end())
 		{
-			response->set_errorcode(EL10nCode_NotExistGateServer);
-		}
-		else
-		{
-			ServerEntityHelper::Ptr entity = tempList.front();
+			ServerEntityHelper::Ptr entity = *it;
 			LoggerPrint::Log(channel, ELogLevel_Debug, "send to GateServer : {}", entity->ID());
 
 			entity->SetConnNum(1);
@@ -61,9 +55,11 @@ namespace MsgHandleRegister
 				entity->SetConnNum(-1);
 			}
 
-			
-
 			LoggerPrint::Log(channel, ELogLevel_Debug, "Msg_ReqAuthAccount:{}", response->DebugString());
+		}
+		else
+		{
+			response->set_errorcode(EL10nCode_NotExistGateServer);
 		}
 
 		co_return;

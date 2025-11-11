@@ -41,8 +41,17 @@ public:
 	{
 		ServerEntityManagerHelper::Ptr entityMan = GetServerEntityManager();
 
-		std::list<ServerEntity::Ptr>& gates = entityMan->GetEntitysByType(EMServerType::GateServer);
-		if (gates.empty())
+		auto validGates = entityMan->GetEntitysByType(EMServerType::GateServer)
+			| std::views::filter([](const auto& gate)
+				{
+					return gate->HasFlag(EMServerEntityFlag::Locked) == false;
+				})
+			| std::ranges::views::transform([](const auto& gate)
+				{
+					return gate->GetSelf<ServerEntityHelper>();
+				});
+
+		if (validGates.empty())
 		{
 			return;
 		}
@@ -78,22 +87,17 @@ public:
 			return true;
 		};
 
-		for (ServerEntity::Ptr& gate : gates)
+	
+		for (const auto& gate : validGates)
 		{
-			if (gate->HasFlag(EMServerEntityFlag::Locked))
-			{
-				continue;
-			}
-
-			ServerEntityHelper::Ptr gateHelper = gate->GetSelf<ServerEntityHelper>();
-
+			
 			std::list<ServerEntity::Ptr>& gatesDb = gate->GetMapLinkNode(EMServerType::DatabaseServer);
 			std::list<ServerEntity::Ptr>& gatesLogic = gate->GetMapLinkNode(EMServerType::LogicServer);
 			if (!dbs.empty() && gatesDb.size() < 1)
 			{
 				ServerEntityHelper::Ptr dbHelper = dbs.front()->GetSelf<ServerEntityHelper>();
 				// dbs.pop_front();
-				if(registControl(gateHelper, dbHelper))
+				if(registControl(gate, dbHelper))
 				{
 					entityMan->UnMountEntity(dbHelper);
 					gatesDb.emplace_back(dbHelper);
@@ -104,7 +108,7 @@ public:
 			{
 				ServerEntityHelper::Ptr logicHelper = logics.front()->GetSelf<ServerEntityHelper>();
 				// logics.pop_front();
-				if(registControl(gateHelper, logicHelper))
+				if(registControl(gate, logicHelper))
 				{
 					entityMan->UnMountEntity(logicHelper);
 					gatesLogic.emplace_back(logicHelper);

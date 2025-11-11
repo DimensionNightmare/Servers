@@ -88,7 +88,7 @@ export namespace Platform
 		unsigned short frames = CaptureStackBackTrace(1, 128, stack, NULL);
 
 		std::ostringstream oss;
-		SYMBOL_INFO* symbol = (SYMBOL_INFO*)malloc(sizeof(SYMBOL_INFO) + 256 * sizeof(char));
+		SYMBOL_INFO* symbol = static_cast<SYMBOL_INFO*>(malloc(sizeof(SYMBOL_INFO) + 256 * sizeof(char)));
 		symbol->MaxNameLen = 255;
 		symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
 
@@ -98,7 +98,7 @@ export namespace Platform
 
 		for (unsigned int i = begin; i < frames; i++)
 		{
-			DWORD64 address = (DWORD64)(stack[i]);
+			DWORD64 address = reinterpret_cast<DWORD64>(stack[i]);
 			SymFromAddr(process, address, 0, symbol);
 			if (SymGetLineFromAddr64(process, address, &displacement, &line))
 			{
@@ -107,7 +107,7 @@ export namespace Platform
 			}
 			else
 			{
-				oss << "#" << i << " " << symbol->Name << " (0x" << (void*)address << ")\n";
+				oss << "#" << i << " " << symbol->Name << " (0x" << stack[i] << ")\n";
 			}
 		}
 
