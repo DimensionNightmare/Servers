@@ -77,4 +77,25 @@ namespace MsgHandleRegister
 
 		LoggerPrint::Log(channel, ELogLevel_Debug, "ReqUserToken User: {}!!", request->accountid());
 	};
+
+	HandleRegistry<GMsg::A2g_ReqLogicServerIp, GMsg::g2A_ResLogicServerIp, EMMsgDeal::Req> Exe_ResLogicServerIp =
+				[](auto request, auto response, const SocketChannel::Ptr& channel)
+	{
+
+		GateServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<GateServerHelper>(EMSystemType::Server);
+		
+		ServerEntityManagerHelper::Ptr serverEntityMan = dnServer->GetServerEntityManager();
+		std::list<ServerEntity::Ptr> serverEntityList = serverEntityMan->GetEntitysByType(EMServerType::LogicServer);
+		if(serverEntityList.size() > 0)
+		{
+			auto serverEntity = serverEntityList.front()->GetSelf<ServerEntityHelper>();
+			response->set_serverip(serverEntity->GetServerIp());
+			response->set_serverport(serverEntity->GetServerPort());
+		}
+		else
+		{
+
+		}
+		
+	};
 }

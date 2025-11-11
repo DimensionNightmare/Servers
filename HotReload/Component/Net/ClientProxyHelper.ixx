@@ -95,7 +95,6 @@ public:
 
 	void DelMsg(uint32_t msgId)
 	{
-		std::unique_lock ulock(oMsgMutex);
 		if (mMsgList.contains(msgId))
 		{
 			if (MsgTask* task = mMsgList[msgId])
@@ -107,7 +106,11 @@ public:
 				}
 			}
 		}
-		mMsgList.erase(msgId);
+		
+		{
+			std::unique_lock ulock(oMsgMutex);
+			mMsgList.erase(msgId);
+		}
 	}
 
 	void ClearMsgMap()

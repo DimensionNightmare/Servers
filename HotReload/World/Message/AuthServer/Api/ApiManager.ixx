@@ -2,6 +2,7 @@ export module ApiManager;
 
 import :ApiAuth;
 import ClientProxyHelper;
+import :ApiDevelopment;
 
 export void ApiInit(Server::Ptr dnServer)
 {
@@ -37,4 +38,5 @@ export void ApiInit(Server::Ptr dnServer)
 		};
 
 	ApiAuth(dnServer);
+	ApiDevelopment(dnServer);
 }

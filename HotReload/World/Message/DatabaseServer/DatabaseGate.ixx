@@ -128,6 +128,8 @@ namespace MsgHandleRegister
 
 					txn.commit();
 
+
+					// LoggerPrint::Log(channel, ELogLevel_Debug, "Save Data Success! data={}", findMsg->DebugString());
 				};
 
 			if (const Descriptor* descriptor = PbGen::FindMessageTypeByName(request->tablename()))

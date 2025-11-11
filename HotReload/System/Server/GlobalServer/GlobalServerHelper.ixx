@@ -234,6 +234,7 @@ public:
 
 						channel->SetWorld(GetWorldW());
 
+						GetWorld()->RemoveEvent(EMEventType::ClientProxyRegist);
 						GetWorld()->AddEvent<&GlobalServerHelper::HandleClientRegist>(EMEventType::ClientProxyRegist, GetSelf<GlobalServerHelper>());
 
 						proxyHelper->InitConnectedChannel(channel);

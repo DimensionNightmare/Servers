@@ -68,6 +68,8 @@ export namespace GMsg
 	// Auth <-> Gate
 	using GMsg::A2g_ReqAuthAccount;
 	using GMsg::g2A_ResAuthAccount;
+	using GMsg::A2g_ReqLogicServerIp;
+	using GMsg::g2A_ResLogicServerIp;
 	
 	// Global <-> Gate
 	using GMsg::g2G_RetRegistSrv;

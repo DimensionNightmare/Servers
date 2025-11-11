@@ -32,6 +32,10 @@ namespace MsgHandleRegister
 		{
 			
 			bool success = co_await entityMan->LoadEntity(entity, request, response);
+			if (!success)
+			{
+				LoggerPrint::Log(channel, ELogLevel_Debug, "Load Entity d2L_ReqLoadEntityData error id = {}!", player.accountid());
+			}
 
 		}
 
@@ -56,11 +60,6 @@ namespace MsgHandleRegister
 		ClientEntityManagerHelper::Ptr entityMan = dnServer->GetClientEntityManager();
 		ClientEntity::Ptr entity = entityMan->GetEntity(player.accountid());
 
-		if(!entity)
-		{
-			return;
-		}
-
 		if (!entity)
 		{
 			LoggerPrint::Log(channel, ELogLevel_Debug, "ReqSaveData not entity!");
@@ -70,10 +69,21 @@ namespace MsgHandleRegister
 		if (GDb::Player* dbEntity = entity->GetDbEntity())
 		{
 			dbEntity->MergeFrom(player);
-			if (request->runtimesave())
+			// if (request->runtimesave())
 			{
 				entity->SetFlag(EMClientEntityFlag::DBModify);
 			}
+
+			// if(!entityMan->GetSaveTimerId())
+			// {
+			// 	size_t timerId = entityMan->GetTimer()->SetTimeout(5000, [entityMan](size_t)
+			// 	{
+			// 		entityMan->CheckSaveEntity();
+			// 		entityMan->SetSaveTimerId(0);
+			// 	});
+
+			// 	entityMan->SetSaveTimerId(timerId);
+			// }
 			
 		}
 		else

@@ -100,6 +100,12 @@ public: // dll override
 
 	void TickRegistEvent(size_t timerID)
 	{
+		if(timerID != mRegisterTimeId)
+		{
+			GetTimer()->KillTimer(timerID);
+			return;
+		}
+
 		if (eRegistState == EMRegistState::Registing)
 		{
 			return;
@@ -111,7 +117,7 @@ public: // dll override
 		}
 		else
 		{
-			GetTimer()->KillTimer(timerID);
+			mRegisterTimeId = 0;
 		}
 	}
 
@@ -180,13 +186,16 @@ protected:
 
 		if (eRegistState == EMRegistState::None)
 		{
-			GetTimer()->SetInterval(1000, funcProxy);
+			mRegisterTimeId = GetTimer()->SetInterval(1000, funcProxy);
 		}
 	}
 
 	void _RedirectClient(uint16_t port, const std::string& ip)
 	{
 		LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "reclient to {}:{}", ip, port);
+
+		// 在注册中时
+		mRegisterTimeId = 0;
 
 		eRegistState = EMRegistState::None;
 		closesocket();
@@ -222,6 +231,8 @@ protected: // dll proxy
 
 	// status
 	EMRegistState eRegistState = EMRegistState::None;
+
+	size_t mRegisterTimeId = 0;
 	
 	// callback regist to server‘s servertype
 	uint8_t iRegistType = 0;

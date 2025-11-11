@@ -176,6 +176,7 @@ public:
 
 						channel->SetWorld(GetWorldW());
 						
+						GetWorld()->RemoveEvent(EMEventType::ClientProxyRegist);
 						GetWorld()->AddEvent<&DatabaseServerHelper::HandleClientRegist>(EMEventType::ClientProxyRegist, GetSelf<DatabaseServerHelper>());
 						proxyHelper->InitConnectedChannel(channel);
 					}

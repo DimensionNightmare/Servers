@@ -30,7 +30,6 @@ public:
 
 	virtual void Dispose() override
 	{
-		// CheckSaveEntity(true);
 
 		EntityManager::Dispose();
 
@@ -75,5 +74,7 @@ protected:
 
 	/// @brief if save error. bin data will record to this.
 	std::unordered_map<size_t, std::string> mDbFailure;
+
+	size_t iSaveTimerId = 0;
 	
 };

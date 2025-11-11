@@ -19,6 +19,8 @@ namespace MsgHandleRegister
 
 		ClientProxyHelper::Ptr clientProxy = dnServer->GetClientProxy();
 
+		WebProxyHelper::Ptr webProxy = dnServer->GetWebProxy();
+
 		uint32_t msgId = clientProxy->GetMsgId();
 
 		LoggerPrint::Log(server, ELogLevel_Debug, "Client:{}, port:{}", clientProxy->remote_host, clientProxy->remote_port);
@@ -33,6 +35,8 @@ namespace MsgHandleRegister
 		{
 			request.set_ispull(true);
 		}
+
+		request.set_serverport(webProxy->port);
 
 		if(WebProxyHelper::Ptr serverProxy = dnServer->GetWebProxy())
 		{

@@ -56,6 +56,9 @@ public:
 
 						channel->SetWorld(GetWorldW());
 
+						
+						GetWorld()->RemoveEvent(EMEventType::ClientProxyRegist);
+
 						GetWorld()->AddEvent<&AuthServerHelper::HandleClientRegist>(EMEventType::ClientProxyRegist, GetSelf<AuthServerHelper>());
 						proxyHelper->InitConnectedChannel(channel);
 					}

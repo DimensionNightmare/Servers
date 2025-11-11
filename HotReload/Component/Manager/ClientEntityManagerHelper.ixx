@@ -51,6 +51,7 @@ public:
 
 		if (!clientProxy || clientProxy->RegistType() != std::to_underlying(EMServerType::GateServer))
 		{
+			LoggerPrint::Log(clientProxy, ELogLevel_Debug, "client proxy not vaild or not gate server!");
 			co_return false;
 		}
 
@@ -61,9 +62,13 @@ public:
 			{
 				std::string* entitydata = inResponse->add_entitydata();
 				GDb::Player* dbEntity = entity->GetDbEntity();
-				dbEntity->SerializeToString(entitydata);
+				if(!dbEntity->SerializeToString(entitydata))
+				{
+					LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "SerializeToString error on LoadEntity id = {}!", dbEntity->accountid());
+					co_return false;
+				}
 			}
-			co_return false;
+			co_return true;
 		}
 		else if(entity->HasFlag(EMClientEntityFlag::DBIniting))
 		{
@@ -310,4 +315,14 @@ public:
 		}
 	}
 	
+
+	size_t GetSaveTimerId()
+	{
+		return iSaveTimerId;
+	}
+
+	void SetSaveTimerId(size_t timerId)
+	{
+		iSaveTimerId = timerId;
+	}
 };

@@ -18,6 +18,8 @@ namespace MsgHandleRegister
 
 		ClientProxyHelper::Ptr clientProxy = dnServer->GetClientProxy();
 
+		ServerProxyHelper::Ptr serverProxy = dnServer->GetServerProxy();
+
 		LoggerPrint::Log(server, ELogLevel_Debug, "Client:{}, port:{}", clientProxy->remote_host, clientProxy->remote_port);
 
 		clientProxy->SetRegistState(EMRegistState::Registing);
@@ -31,6 +33,8 @@ namespace MsgHandleRegister
 		{
 			request.set_ispull(true);
 		}
+
+		request.set_serverport(serverProxy->port);
 		
 		// data alloc
 		GMsg::COM_ResRegistSrv response;
@@ -125,7 +129,7 @@ namespace MsgHandleRegister
 			entity->SetServerIp(ipPort.substr(0, pos));
 			entity->SetServerPort(request->serverport());
 
-			LoggerPrint::Log(channel, ELogLevel_Debug, "ds regist:{}:{}", entity->GetServerIp(), entity->GetServerPort());
+			LoggerPrint::Log(channel, ELogLevel_Debug, "ds regist:{}:{}, mapId:{}", entity->GetServerIp(), entity->GetServerPort(), request->mapid());
 
 			entity->SetChannel(channel);
 
