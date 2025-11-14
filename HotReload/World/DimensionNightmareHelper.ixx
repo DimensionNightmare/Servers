@@ -22,7 +22,7 @@ public:
 
 	void InitHotReload()
 	{
-		for(auto world : oWorlds)
+		for(const auto& world : oWorlds)
 		{
 			Server::Ptr dnServer = world->GetSystem<Server>(EMSystemType::Server);
 	
@@ -49,7 +49,7 @@ public:
 
 	void DeInitHotReload()
 	{
-		for(auto world : oWorlds)
+		for(const auto& world : oWorlds)
 		{
 			Server::Ptr dnServer = world->GetSystem<Server>(EMSystemType::Server);
 	

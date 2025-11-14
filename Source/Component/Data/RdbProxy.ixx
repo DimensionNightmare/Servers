@@ -82,7 +82,7 @@ public:
 			return;
 		}
 		
-		for (std::string& dbName : StrSplit(*names, ","))
+		for (const auto& dbName : StrSplit(*names, ","))
 		{
 			EMSqlDbNameEnum key = EnumName<EMSqlDbNameEnum>(dbName); // check vaild = assert
 			

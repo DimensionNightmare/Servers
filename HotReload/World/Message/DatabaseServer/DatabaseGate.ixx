@@ -20,14 +20,13 @@ namespace MsgHandleRegister
 		
 		DatabaseServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<DatabaseServerHelper>(EMSystemType::Server);
 
-		if (auto connection = dnServer->GetRdbProxy()->GetConnection(EMSqlDbNameEnum::Nightmare))
+		if (auto transcation = dnServer->GetRdbProxy()->GetTransaction(EMSqlDbNameEnum::Nightmare, false))
 		{
 			auto dealFunc = [&](Message* findMsg, const FieldDescriptor* field)
 				{
 					findMsg->ParseFromString(request->entitydata());
 
-					pqxx::work txn(*connection);
-					DbSqlHelper dbHelper(&txn, channel->GetWorld(), findMsg);
+					DbSqlHelper dbHelper(transcation.get(), channel->GetWorld(), findMsg);
 
 					auto query = [&]()
 						{
@@ -61,7 +60,7 @@ namespace MsgHandleRegister
 							query();
 						}
 
-						txn.commit();
+						transcation->commit();
 					}
 				};
 
@@ -113,20 +112,19 @@ namespace MsgHandleRegister
 	{
 		DatabaseServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<DatabaseServerHelper>(EMSystemType::Server);
 
-		if (auto connection = dnServer->GetRdbProxy()->GetConnection(EMSqlDbNameEnum::Nightmare))
+		if (auto transcation = dnServer->GetRdbProxy()->GetTransaction(EMSqlDbNameEnum::Nightmare, false))
 		{
 			auto dealFunc = [&](Message* findMsg)
 				{
 					findMsg->ParseFromString(request->entitydata());
 
-					pqxx::work txn(*connection);
-					DbSqlHelper dbHelper(&txn, channel->GetWorld(), findMsg);
+					DbSqlHelper dbHelper(transcation.get(), channel->GetWorld(), findMsg);
 
 					dbHelper
 						.UpdateByKey(request->keynumber())
 						.Commit();
 
-					txn.commit();
+					transcation->commit();
 
 
 					// LoggerPrint::Log(channel, ELogLevel_Debug, "Save Data Success! data={}", findMsg->DebugString());

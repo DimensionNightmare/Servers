@@ -8,15 +8,16 @@ export module ThirdParty.Libpqxx;
 
 export namespace pqxx
 {
-	using pqxx::dbtransaction;
+	using pqxx::transaction_base;
+
 	using pqxx::nontransaction;
 	using pqxx::read_transaction;
+	using pqxx::work;
 	
 	using pqxx::connection;
 	using pqxx::field;
 	using pqxx::result;
 	using pqxx::row;
-	using pqxx::work;
 
 	using pqxx::broken_connection;
 }

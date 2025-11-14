@@ -37,7 +37,7 @@ namespace MsgHandleRegister
 
 			ServerProxyHelper::Ptr proxyHelper = dnServer->GetServerProxy();
 
-			bool success = co_await proxyHelper->AddMsg(EMMsgDeal::Req, request, response, entity->GetChannel());
+			bool success = co_await proxyHelper->AddMsg(EMMsgDeal::Req, request, entity->GetChannel(), response);
 			
 			if (!success)
 			{
@@ -71,39 +71,35 @@ namespace MsgHandleRegister
 		
 		// if has db not need origin
 		GlobalServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<GlobalServerHelper>(EMSystemType::Server);
-		std::list<ServerEntity::Ptr> serverList = dnServer->GetServerEntityManager()->GetEntitysByType(EMServerType::GateServer);
+		auto servers = dnServer->GetServerEntityManager()->GetEntitysByType(EMServerType::GateServer)
+			| std::views::filter([](const auto& param){
+				return param->HasFlag(EMServerEntityFlag::Locked) == true;
+			})
+			| std::views::transform([](const auto& param){
+				return param->GetSelf<ServerEntityHelper>();
+			})
+			;
 
-		std::list<ServerEntityHelper::Ptr> tempList;
-		for (ServerEntity::Ptr& server : serverList)
+		if (auto it = std::ranges::min_element(servers, {}, &ServerEntityHelper::GetConnNum); it != servers.end())
 		{
-			if (server->HasFlag(EMServerEntityFlag::Locked))
-			{
-				tempList.emplace_back(server->GetSelf<ServerEntityHelper>());
-			}
-		}
-
-		tempList.sort([](ServerEntityHelper::Ptr lhs, ServerEntityHelper::Ptr rhs) { return lhs->GetConnNum() < rhs->GetConnNum(); });
-
-		if (tempList.empty())
-		{
-			response->set_errorcode(EL10nCode_NotExistGateServer);
-		}
-		else
-		{
-			ServerEntityHelper::Ptr entity = tempList.front();
+			ServerEntityHelper::Ptr entity = *it;
 			LoggerPrint::Log(channel, ELogLevel_Debug, "send to GateServer : {}", entity->ID());
-
+			
 			ServerProxyHelper::Ptr proxyHelper = dnServer->GetServerProxy();
-
-			bool success = co_await proxyHelper->AddMsg(EMMsgDeal::Req, request, response, entity->GetChannel());
+			
+			bool success = co_await proxyHelper->AddMsg(EMMsgDeal::Req, request, entity->GetChannel(), response);
 			
 			if (!success)
 			{
 				response->set_errorcode(EL10nCode_SGlobalReqTimeout);
-
+				
 			}
-
+			
 			LoggerPrint::Log(channel, ELogLevel_Debug, "Msg_ReqLogicServerIp:{}", response->DebugString());
+		}
+		else
+		{
+			response->set_errorcode(EL10nCode_NotExistGateServer);
 		}
 
 		co_return;

@@ -162,6 +162,14 @@ export
 			}
 		}
 
+		void Resume()
+		{
+			if(tHandle && !tHandle.done())
+			{
+				tHandle.resume();
+			}
+		}
+
 	public:
 
 		size_t GetTimerId() { return iTimerId; }

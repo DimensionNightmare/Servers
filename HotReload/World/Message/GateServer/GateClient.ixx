@@ -79,7 +79,7 @@ namespace MsgHandleRegister
 
 				ServerProxyHelper::Ptr proxyHelper = dnServer->GetServerProxy();
 
-				bool success = co_await proxyHelper->AddMsg(EMMsgDeal::Redir, request, response, serverEntity->GetChannel());
+				bool success = co_await proxyHelper->AddMsg(EMMsgDeal::Redir, request, serverEntity->GetChannel(), response);
 
 				if (!success)
 				{

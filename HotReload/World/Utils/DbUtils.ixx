@@ -450,7 +450,7 @@ class DbSqlHelper : public IDbSqlHelper
 
 public:
 
-	DbSqlHelper(pqxx::dbtransaction* work, World::Ptr world, TMessage* entity = nullptr)
+	DbSqlHelper(pqxx::transaction_base* work, World::Ptr world, TMessage* entity = nullptr)
 	{
 		pWork = work;
 		pWorld = world;
@@ -608,7 +608,7 @@ public:
 				}
 
 				// change type
-				for (std::string& param : params)
+				for (const auto& param : params)
 				{
 					tempstr += param + " ";
 				}
@@ -629,7 +629,7 @@ public:
 			else
 			{
 				InitFieldByProtoType(descriptor->field(i), params, primaryKey);
-				for (std::string& param : params)
+				for (const auto& param : params)
 				{
 					tempstr += param + " ";
 				}
@@ -641,13 +641,13 @@ public:
 		}
 
 		// remove col
-		for (auto& iter : sqlColInfo)
+		for (const auto& iter : sqlColInfo)
 		{
 			mEles[""].emplace_back(std::format("{}\"{}\" DROP COLUMN \"{}\";\n", opTypeStr, GetName(), iter.first));
 		}
 
 		// after change
-		for(auto& iter : histroy)
+		for (const auto& iter : histroy)
 		{
 			mEles[""].emplace_back(iter);
 		}
@@ -1063,13 +1063,13 @@ public:
 		{
 			stream << descriptor->field(i)->name();
 			InitFieldByProtoType(descriptor->field(i), out, primaryKey);
-			for (const std::string& property : out)
+			for (const auto& property : out)
 			{
 				stream << property;
 			}
 		}
 
-		for (auto& key : primaryKey)
+		for (const auto& key : primaryKey)
 		{
 			stream << key;
 		}
@@ -1180,7 +1180,7 @@ private:
 					}
 
 					ss << SQuote << fieldName << SQuote;
-					for (std::string& props : mEles[fieldName])
+					for (const auto& props : mEles[fieldName])
 					{
 						ss << SSpace << props;
 					}
@@ -1195,7 +1195,7 @@ private:
 				for (; it != itEnd; it++)
 				{
 					ss << it->first;
-					for (std::string& props : it->second)
+					for (const auto& props : it->second)
 					{
 						ss << SSpace << props;
 					}
@@ -1306,7 +1306,7 @@ private:
 
 				for (it = mEles.begin(); it != itEnd; it++)
 				{
-					for (std::string& cond : it->second)
+					for (const auto& cond : it->second)
 					{
 						if (!hasCondition)
 						{
@@ -1379,7 +1379,7 @@ private:
 
 					for (it = mEles.begin(); it != itEnd; it++)
 					{
-						for (std::string& cond : it->second)
+						for (const auto& cond : it->second)
 						{
 							if (!hasCondition)
 							{
@@ -1399,9 +1399,9 @@ private:
 			}
 			case EMSqlOpType::UpdateTable:
 			{
-				for (auto& [k, items] : mEles)
+				for (const auto& [k, items] : mEles)
 				{
-					for (auto& statement : items)
+					for (const auto& statement : items)
 					{
 						ss << statement;
 					}
@@ -1453,7 +1453,7 @@ private:
 
 	void ReleaseResult()
 	{
-		for (auto& it : mResult)
+		for (const auto& it : mResult)
 		{
 			delete it;
 		}
@@ -1468,7 +1468,7 @@ private:
 	// create table, instert
 	std::unordered_map<std::string, std::list<std::string>> mEles;
 
-	pqxx::dbtransaction* pWork = nullptr;
+	pqxx::transaction_base* pWork = nullptr;
 
 	std::string sSqlStatement;
 

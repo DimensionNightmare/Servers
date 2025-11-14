@@ -27,7 +27,7 @@ public:
 		auto entitys = mEntityMap 
 			| std::views::values;
 			
-		for (auto& entity : entitys)
+		for (const auto& entity : entitys)
 		{
 			entity->Dispose();
 		}

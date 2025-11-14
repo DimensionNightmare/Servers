@@ -160,7 +160,7 @@ public: // dll override
 		// int64_t timespan = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 		// request.set_timespan(timespan);
 
-		// MessagePackAndSend(0, EMMsgDeal::Ret, &request, GetChannel());
+		// AddMsg(EMMsgDeal::Ret, &request);
 	}
 
 	Timer::Ptr GetTimer(){ return pTimer.expired() ? nullptr : pTimer.lock(); }

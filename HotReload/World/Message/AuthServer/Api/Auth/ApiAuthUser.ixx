@@ -112,9 +112,9 @@ export void ApiAuth(Server::Ptr server)
 			try
 			{
 				
-				std::shared_ptr<pqxx::connection> connection = dnServer->GetRdbProxy()->GetConnection(EMSqlDbNameEnum::Account);
+				auto transcation = dnServer->GetRdbProxy()->GetTransaction(EMSqlDbNameEnum::Account);
 
-				if(!connection)
+				if(!transcation)
 				{
 					
 					errData["Code"] = http_status::HTTP_STATUS_BAD_REQUEST;
@@ -124,8 +124,7 @@ export void ApiAuth(Server::Ptr server)
 					co_return;
 				}
 
-				pqxx::read_transaction query(*connection);
-				DbSqlHelper<GDb::Account> accounts(&query, dnServer->GetWorld());
+				DbSqlHelper<GDb::Account> accounts(transcation.get(), dnServer->GetWorld());
 
 				accounts
 					.InitEntity(accInfo)
@@ -146,6 +145,8 @@ export void ApiAuth(Server::Ptr server)
 				}
 
 				accInfo = *accounts.Result()[0];
+
+				transcation->commit();
 			}
 			catch (const std::exception& e)
 			{
@@ -237,9 +238,9 @@ export void ApiAuth(Server::Ptr server)
 
 			try
 			{
-				std::shared_ptr<pqxx::connection> connection = dnServer->GetRdbProxy()->GetConnection(EMSqlDbNameEnum::Account);
+				auto transcation = dnServer->GetRdbProxy()->GetTransaction(EMSqlDbNameEnum::Account);
 
-				if(!connection)
+				if(!transcation)
 				{
 					
 					errData["Code"] = http_status::HTTP_STATUS_BAD_REQUEST;
@@ -249,8 +250,7 @@ export void ApiAuth(Server::Ptr server)
 					return;
 				}
 				
-				pqxx::read_transaction query(*connection);
-				DbSqlHelper<GDb::Account> accounts(&query, dnServer->GetWorld());
+				DbSqlHelper<GDb::Account> accounts(transcation.get(), dnServer->GetWorld());
 
 				accounts
 					.InitEntity(accInfo)
@@ -286,9 +286,9 @@ export void ApiAuth(Server::Ptr server)
 
 			try
 			{
-				std::shared_ptr<pqxx::connection> connection = dnServer->GetRdbProxy()->GetConnection(EMSqlDbNameEnum::Account);
+				auto transcation = dnServer->GetRdbProxy()->GetTransaction(EMSqlDbNameEnum::Account, false);
 
-				if(!connection)
+				if(!transcation)
 				{
 					
 					errData["Code"] = http_status::HTTP_STATUS_BAD_REQUEST;
@@ -298,12 +298,11 @@ export void ApiAuth(Server::Ptr server)
 					return;
 				}
 
-				pqxx::work query(*connection);
-				DbSqlHelper<GDb::Account> accounts(&query, dnServer->GetWorld());
+				DbSqlHelper<GDb::Account> accounts(transcation.get(), dnServer->GetWorld());
 
 				accounts.InitEntity(accInfo).Insert().Commit();
 
-				query.commit();
+				transcation->commit();
 
 				if (accounts.IsSuccess())
 				{

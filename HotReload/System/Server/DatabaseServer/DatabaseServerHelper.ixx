@@ -65,12 +65,11 @@ public:
 				GDb::SingleTon kv;
 				std::string schemaMd5;
 
-				for (auto& [dbNameEnum, dbEntitys] : registTable)
+				for (const auto& [dbNameEnum, dbEntitys] : registTable)
 				{
-					if (auto connection = proxy->GetConnection(dbNameEnum))
+					if (auto transcation = proxy->GetTransaction(dbNameEnum, false))
 					{
-						pqxx::work txn(*connection);
-						DbSqlHelper<GDb::SingleTon> singleTon(&txn, GetWorld());
+						DbSqlHelper<GDb::SingleTon> singleTon(transcation.get(), GetWorld());
 						singleTon.InitEntity(kv);
 
 						if (!singleTon.IsExist())
@@ -79,9 +78,9 @@ public:
 							singleTon.CreateTable().Commit();
 						}
 
-						for (Message* dbEntity : dbEntitys)
+						for (const auto& dbEntity : dbEntitys)
 						{
-							DbSqlHelper helper(&txn, GetWorld(), dbEntity);
+							DbSqlHelper helper(transcation.get(), GetWorld(), dbEntity);
 
 							const std::string& tableName = helper.GetName();
 							kv.set_key(std::format("{}_Schema", tableName));
@@ -141,7 +140,7 @@ public:
 							
 						}
 
-						txn.commit();
+						transcation->commit();
 					}
 				}
 			}

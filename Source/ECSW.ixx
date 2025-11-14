@@ -154,7 +154,7 @@ public:
 		auto objIds = mEventCollection[type]
 			| std::views::keys;
 
-		for (auto& objId : objIds)
+		for (const auto& objId : objIds)
 		{
 			IEventContainer* anyObj = mEventIdMap[objId][type].get();
 			if(anyObj->mTypeHash == typeHash)
@@ -183,7 +183,7 @@ public:
 		auto objIds = mEventCollection[target]
 			| std::views::values;
 
-		for(auto& objId : objIds)
+		for (const auto& objId : objIds)
 		{
 			auto& map = mEventIdMap[objId];
 			map[target] = std::move(map[origin]);
@@ -201,7 +201,7 @@ public:
 		auto objIds = map 
 			| std::views::values;
 
-		for(auto& objId : objIds)
+		for (const auto& objId : objIds)
 		{
 			mEventIdMap[objId].erase(origin);
 		}
@@ -216,7 +216,7 @@ public:
 			auto names = it->second 
 				| std::views::keys;
 
-			for (auto& type : names)
+			for (const auto& type : names)
 			{
 				mEventCollection[type].erase(objId);
 			}

@@ -96,7 +96,7 @@ export bool InitProgramConfig(ProgramConfig& programConfig)
 		return false;
 	}
 
-	for (auto& serverType : StrSplit(launchConfig["svrType"], ","))
+	for (const auto& serverType : StrSplit(launchConfig["svrType"], ","))
 	{
 		bitServerOpenFlag.SetFlag(std::stoi(serverType));
 	}
@@ -216,7 +216,7 @@ export bool InitProgramConfig(ProgramConfig& programConfig)
 			handler(sectionMap, split);
 		}
 #elif __unix__
-		for (const std::string& keyValuePair : sectionVal[mainSection])
+		for (const auto& keyValuePair : sectionVal[mainSection])
 		{
 			std::string split(keyValuePair);
 			handler(split);
@@ -260,7 +260,7 @@ public:
 
 		P_InstanceHolder->AuthWorld->AddSystem<HotReload>();
 
-		for (auto& [serverEnum, serverName] : ServerTypeList)
+		for (const auto& [serverEnum, serverName] : ServerTypeList)
 		{
 			// set global Launch config
 			if (programConfig.bitServerOpenFlag.HasFlag(serverEnum))
@@ -377,7 +377,7 @@ public:
 	{
 		auto pause = [this](std::stringstream* = nullptr)
 			{
-				for (auto& world : oWorlds)
+				for (const auto& world : oWorlds)
 				{
 					world->Broadcast(EMEventType::ServerPause);
 				}
@@ -385,7 +385,7 @@ public:
 
 		auto resume = [this](std::stringstream* = nullptr)
 			{
-				for (auto& world : oWorlds)
+				for (const auto& world : oWorlds)
 				{
 					world->Broadcast(EMEventType::ServerResume);
 				}
@@ -430,7 +430,7 @@ public:
 		};
 
 		// std::string allCommands = "Commands: \n\t\t";
-		// for (auto& [k, v] : mCmdHandle)
+		// for (const auto& [k, v] : mCmdHandle)
 		// {
 		// 	allCommands += k + "\n\t\t";
 		// }
@@ -473,7 +473,7 @@ public:
 
 		Broadcast(EMEventType::InitHotReload);
 
-		for (auto world : oWorlds)
+		for (const auto& world : oWorlds)
 		{
 			world->Broadcast(EMEventType::ServerStart);
 		}
@@ -483,7 +483,7 @@ public:
 
 	virtual void TickMainFrame() override
 	{
-		for (auto world : oWorlds)
+		for (const auto& world : oWorlds)
 		{
 			try
 			{

@@ -266,7 +266,7 @@ protected:
 			std::cerr << "Leaked " << mAllocatedRecords.size()
 				<< " block(s) of memory\n";
 
-			for (auto& [addr, record] : mAllocatedRecords)
+			for (const auto& [addr, record] : mAllocatedRecords)
 			{
 				std::cerr << "Leaked block at: " << std::format("{}", addr) << "\n"
 					<< "  Size: " << record.size << " bytes\n"
@@ -297,7 +297,7 @@ protected:
 
 	void FreeBucket()
 	{
-		for(SizeBucket& bucket : mSizeBuckets)
+		for(const auto& bucket : mSizeBuckets)
 		{
 			for(void* block : bucket.blocks)
 			{

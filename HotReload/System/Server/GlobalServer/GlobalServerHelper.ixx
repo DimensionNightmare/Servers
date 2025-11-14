@@ -56,11 +56,19 @@ public:
 			return;
 		}
 
-		std::list<ServerEntity::Ptr>& dbs = entityMan->GetEntitysByType(EMServerType::DatabaseServer);
-		std::list<ServerEntity::Ptr>& logics = entityMan->GetEntitysByType(EMServerType::LogicServer);
+		auto dbs = entityMan->GetEntitysByType(EMServerType::DatabaseServer)
+			| std::views::transform([](const auto& param){
+				return param->GetSelf<ServerEntityHelper>();
+			});
+
+		auto logics = entityMan->GetEntitysByType(EMServerType::LogicServer)
+			| std::views::transform([](const auto& param){
+				return param->GetSelf<ServerEntityHelper>();
+			});
 
 		// alloc gate
 		GMsg::COM_RetChangeCtlSrv request;
+		ServerProxyHelper::Ptr proxyHelper = GetServerProxy();
 
 		auto registControl = [&](ServerEntityHelper::Ptr beEntityHelper, ServerEntityHelper::Ptr entityHelper) ->bool
 		{
@@ -81,7 +89,8 @@ public:
 			size_t timerId = entityMan->CheckEntityCloseTimer(entityHelper->ID());
 			entityHelper->SetTimerId(timerId);
 
-			MessagePackAndSend(0, EMMsgDeal::Ret, &request, channel);
+			proxyHelper->AddMsg(EMMsgDeal::Ret, &request, channel).Resume();
+
 			entityHelper->SetChannel(nullptr);
 
 			return true;
@@ -95,7 +104,7 @@ public:
 			std::list<ServerEntity::Ptr>& gatesLogic = gate->GetMapLinkNode(EMServerType::LogicServer);
 			if (!dbs.empty() && gatesDb.size() < 1)
 			{
-				ServerEntityHelper::Ptr dbHelper = dbs.front()->GetSelf<ServerEntityHelper>();
+				ServerEntityHelper::Ptr dbHelper = dbs.front();
 				// dbs.pop_front();
 				if(registControl(gate, dbHelper))
 				{
@@ -106,7 +115,7 @@ public:
 
 			if (!logics.empty() && gatesLogic.size() < 1)
 			{
-				ServerEntityHelper::Ptr logicHelper = logics.front()->GetSelf<ServerEntityHelper>();
+				ServerEntityHelper::Ptr logicHelper = logics.front();
 				// logics.pop_front();
 				if(registControl(gate, logicHelper))
 				{

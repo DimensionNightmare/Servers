@@ -21,9 +21,7 @@ namespace MsgHandleRegister
 
 		ServerEntityManagerHelper::Ptr manager = dnServer->GetServerEntityManager();
 
-		const std::list<ServerEntity::Ptr>& serverList = manager->GetEntitysByType(EMServerType::GlobalServer);
-
-		auto selects = serverList
+		auto selects = manager->GetEntitysByType(EMServerType::GlobalServer)
 			| std::views::transform([](const auto& server)
 				{
 					return server->GetSelf<ServerEntityHelper>();
@@ -37,7 +35,7 @@ namespace MsgHandleRegister
 		{
 			ServerProxyHelper::Ptr proxyHelper = dnServer->GetServerProxy();
 
-			bool success = co_await proxyHelper->AddMsg(EMMsgDeal::Redir, request, response, (*it)->GetChannel());
+			bool success = co_await proxyHelper->AddMsg(EMMsgDeal::Redir, request, (*it)->GetChannel(), response);
 
 			if (!success)
 			{
@@ -63,46 +61,29 @@ namespace MsgHandleRegister
 
 		ServerEntityManagerHelper::Ptr manager = dnServer->GetServerEntityManager();
 
-		const std::list<ServerEntity::Ptr>& serverList = manager->GetEntitysByType(EMServerType::GlobalServer);
+		auto servers = manager->GetEntitysByType(EMServerType::GlobalServer)
+			| std::views::transform([](const auto& param){
+				return param->GetSelf<ServerEntityHelper>();
+			})
+			| std::views::filter([](const auto& param){
+				return param->GetTimerId() == 0;
+			});
 
-		// std::erase_if(serverList, [](ServerEntity::Ptr itor){return itor ? itor->GetTimerId() : true; });
-		// serverList.sort([](ServerEntity::Ptr lhs, ServerEntity::Ptr rhs){return lhs->GetConnNum() < rhs->GetConnNum(); });
 
-		for (ServerEntity::Ptr server : serverList)
-		{
-			ServerEntityHelper::Ptr entityHelper = server->GetSelf<ServerEntityHelper>();
-
-			if (entityHelper->GetTimerId())
-			{
-				continue;
-			}
-
-			if (!serverEntity)
-			{
-				serverEntity = entityHelper;
-				continue;
-			}
-
-			if (entityHelper->GetConnNum() < serverEntity->GetConnNum())
-			{
-				serverEntity = entityHelper;
-			}
-		}
-
-		if (!serverEntity)
-		{
-			response->set_errorcode(EL10nCode_NotExistGlobalServer);
-		}
-		else
+		if (auto it = std::ranges::min_element(servers, {}, &ServerEntityHelper::GetConnNum); it != servers.end())
 		{
 			ServerProxyHelper::Ptr proxyHelper = dnServer->GetServerProxy();
-
-			bool success = co_await proxyHelper->AddMsg(EMMsgDeal::Redir, request, response, serverEntity->GetChannel());
-
+			
+			bool success = co_await proxyHelper->AddMsg(EMMsgDeal::Redir, request, (*it)->GetChannel(), response);
+			
 			if (!success)
 			{
 				response->set_errorcode(EL10nCode_SControlReqTimeout);
 			}
+		}
+		else
+		{
+			response->set_errorcode(EL10nCode_NotExistGlobalServer);
 
 		}
 

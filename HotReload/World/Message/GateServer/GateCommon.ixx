@@ -28,13 +28,13 @@ namespace MsgHandleRegister
 			};
 
 		const std::list<ServerEntity::Ptr>& dbs = entityMan->GetEntitysByType(EMServerType::DatabaseServer);
-		for (ServerEntity::Ptr serv : dbs)
+		for (const auto& serv : dbs)
 		{
 			AddChild(serv);
 		}
 
 		const std::list<ServerEntity::Ptr>& logics = entityMan->GetEntitysByType(EMServerType::LogicServer);
-		for (ServerEntity::Ptr serv : logics)
+		for (const auto& serv : logics)
 		{
 			AddChild(serv);
 		}
@@ -44,7 +44,7 @@ namespace MsgHandleRegister
 			return;
 		}
 
-		MessagePackAndSend(0, EMMsgDeal::Ret, &request, clientProxy->GetChannel());
+		clientProxy->AddMsg(EMMsgDeal::Ret, &request).Resume();
 	}
 
 	// self request
@@ -150,7 +150,7 @@ namespace MsgHandleRegister
 
 			ClientProxyHelper::Ptr clientProxy = server->GetClientProxy();
 
-			MessagePackAndSend(0, EMMsgDeal::Ret, &request, clientProxy->GetChannel());
+			clientProxy->AddMsg(EMMsgDeal::Ret, &request).Resume();
 		}
 	};
 

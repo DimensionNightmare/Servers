@@ -33,7 +33,7 @@ public:
 		return nullptr;
 	}
 
-	Task<bool> AddMsg(EMMsgDeal dealType, Message* request, Message* response, uint32_t breakTime = 10000)
+	Task<bool> AddMsg(EMMsgDeal dealType, Message* request, Message* response = nullptr, uint32_t breakTime = 10000)
 	{
 		int msgId = 0;
 

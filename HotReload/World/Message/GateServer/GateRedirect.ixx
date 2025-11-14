@@ -29,7 +29,7 @@ namespace MsgHandleRegister
 		
 			ServerProxyHelper::Ptr proxyHelper = dnServer->GetServerProxy();
 			
-			bool success = co_await proxyHelper->AddMsg(EMMsgDeal::Req, request, response, entity->GetChannel());
+			bool success = co_await proxyHelper->AddMsg(EMMsgDeal::Req, request, entity->GetChannel(), response);
 
 			if (!success)
 			{
@@ -59,7 +59,7 @@ namespace MsgHandleRegister
 
 			ServerProxyHelper::Ptr proxyHelper = dnServer->GetServerProxy();
 	
-			bool success = co_await proxyHelper->AddMsg(EMMsgDeal::Req, request, response, entity->GetChannel());
+			bool success = co_await proxyHelper->AddMsg(EMMsgDeal::Req, request, entity->GetChannel(), response);
 
 			if (!success)
 			{

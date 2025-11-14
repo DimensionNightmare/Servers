@@ -29,7 +29,9 @@ namespace MsgHandleRegister
 		// cache
 		if (roomEntity)
 		{
-			MessagePackAndSend(0, EMMsgDeal::Ret, request, roomEntity->GetChannel());
+			ServerProxyHelper::Ptr proxyHelper = dnServer->GetServerProxy();
+				
+			proxyHelper->AddMsg(EMMsgDeal::Ret, request, roomEntity->GetChannel()).Resume();
 		}
 		else
 		{
@@ -123,7 +125,7 @@ namespace MsgHandleRegister
 			ServerProxyHelper::Ptr proxyHelper = dnServer->GetServerProxy();
 
 			// wait data parse
-			bool success = co_await proxyHelper->AddMsg(EMMsgDeal::Req, request, response, roomEntity->GetChannel());
+			bool success = co_await proxyHelper->AddMsg(EMMsgDeal::Req, request, roomEntity->GetChannel(), response);
 		
 			if (!success)
 			{

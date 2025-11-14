@@ -26,8 +26,10 @@ namespace MsgHandleRegister
 				// kick channel
 				GMsg::S2C_RetAccountReplace notify_request;
 				notify_request.set_serverip(request->serverip());
+
+				ServerProxyHelper::Ptr proxyHelper = dnServer->GetServerProxy();
 				
-				MessagePackAndSend(0, EMMsgDeal::Ret, &notify_request, online);
+				proxyHelper->AddMsg(EMMsgDeal::Ret, &notify_request, online).Resume();
 
 				//kick socket
 				online->deleteContextPtr();
@@ -46,7 +48,9 @@ namespace MsgHandleRegister
 					{
 						request->set_accountid(entity->ID());
 
-						MessagePackAndSend(0, EMMsgDeal::Redir, request, serverEntity->GetChannel());
+						ServerProxyHelper::Ptr proxyHelper = dnServer->GetServerProxy();
+				
+						proxyHelper->AddMsg(EMMsgDeal::Redir, request, serverEntity->GetChannel()).Resume();
 					}
 
 				}

@@ -52,7 +52,9 @@ public:
 		GMsg::g2G_RetRegistSrv request;
 		request.set_serverid(entity->ID());
 		request.set_isregist(false);
-		MessagePackAndSend(0, EMMsgDeal::Ret, &request, GetClientProxy()->GetChannel());
+
+		ClientProxyHelper::Ptr proxyHelper = GetClientProxy();
+		proxyHelper->AddMsg(EMMsgDeal::Ret, &request).Resume();
 
 		GetServerEntityManager()->RemoveEntity(entity->ID());
 	}
@@ -72,7 +74,10 @@ public:
 		{
 			GMsg::g2L_RetProxyOffline request;
 			request.set_entityid(entityId);
-			MessagePackAndSend(0, EMMsgDeal::Ret, &request, serverEntity->GetChannel());
+
+			ServerProxyHelper::Ptr proxyHelper = GetServerProxy();
+
+			proxyHelper->AddMsg(EMMsgDeal::Ret, &request, serverEntity->GetChannel()).Resume();
 		}
 
 		entityMan->RemoveEntity(entityId);
