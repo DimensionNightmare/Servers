@@ -67,9 +67,9 @@ public:
 
 				for (const auto& [dbNameEnum, dbEntitys] : registTable)
 				{
-					if (auto transcation = proxy->GetTransaction(dbNameEnum, false))
+					if (auto transaction = proxy->GetTransaction(dbNameEnum, false))
 					{
-						DbSqlHelper<GDb::SingleTon> singleTon(transcation.get(), GetWorld());
+						DbSqlHelper<GDb::SingleTon> singleTon(transaction.get(), GetWorld());
 						singleTon.InitEntity(kv);
 
 						if (!singleTon.IsExist())
@@ -80,7 +80,7 @@ public:
 
 						for (const auto& dbEntity : dbEntitys)
 						{
-							DbSqlHelper helper(transcation.get(), GetWorld(), dbEntity);
+							DbSqlHelper helper(transaction.get(), GetWorld(), dbEntity);
 
 							const std::string& tableName = helper.GetName();
 							kv.set_key(std::format("{}_Schema", tableName));
@@ -140,7 +140,7 @@ public:
 							
 						}
 
-						transcation->commit();
+						transaction->commit();
 					}
 				}
 			}

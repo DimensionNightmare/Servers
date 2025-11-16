@@ -112,9 +112,9 @@ export void ApiAuth(Server::Ptr server)
 			try
 			{
 				
-				auto transcation = dnServer->GetRdbProxy()->GetTransaction(EMSqlDbNameEnum::Account);
+				auto transaction = dnServer->GetRdbProxy()->GetTransaction(EMSqlDbNameEnum::Account);
 
-				if(!transcation)
+				if(!transaction)
 				{
 					
 					errData["Code"] = http_status::HTTP_STATUS_BAD_REQUEST;
@@ -124,7 +124,7 @@ export void ApiAuth(Server::Ptr server)
 					co_return;
 				}
 
-				DbSqlHelper<GDb::Account> accounts(transcation.get(), dnServer->GetWorld());
+				DbSqlHelper<GDb::Account> accounts(transaction.get(), dnServer->GetWorld());
 
 				accounts
 					.InitEntity(accInfo)
@@ -146,7 +146,7 @@ export void ApiAuth(Server::Ptr server)
 
 				accInfo = *accounts.Result()[0];
 
-				transcation->commit();
+				transaction->commit();
 			}
 			catch (const std::exception& e)
 			{
@@ -238,9 +238,9 @@ export void ApiAuth(Server::Ptr server)
 
 			try
 			{
-				auto transcation = dnServer->GetRdbProxy()->GetTransaction(EMSqlDbNameEnum::Account);
+				auto transaction = dnServer->GetRdbProxy()->GetTransaction(EMSqlDbNameEnum::Account);
 
-				if(!transcation)
+				if(!transaction)
 				{
 					
 					errData["Code"] = http_status::HTTP_STATUS_BAD_REQUEST;
@@ -250,7 +250,7 @@ export void ApiAuth(Server::Ptr server)
 					return;
 				}
 				
-				DbSqlHelper<GDb::Account> accounts(transcation.get(), dnServer->GetWorld());
+				DbSqlHelper<GDb::Account> accounts(transaction.get(), dnServer->GetWorld());
 
 				accounts
 					.InitEntity(accInfo)
@@ -286,9 +286,9 @@ export void ApiAuth(Server::Ptr server)
 
 			try
 			{
-				auto transcation = dnServer->GetRdbProxy()->GetTransaction(EMSqlDbNameEnum::Account, false);
+				auto transaction = dnServer->GetRdbProxy()->GetTransaction(EMSqlDbNameEnum::Account, false);
 
-				if(!transcation)
+				if(!transaction)
 				{
 					
 					errData["Code"] = http_status::HTTP_STATUS_BAD_REQUEST;
@@ -298,11 +298,11 @@ export void ApiAuth(Server::Ptr server)
 					return;
 				}
 
-				DbSqlHelper<GDb::Account> accounts(transcation.get(), dnServer->GetWorld());
+				DbSqlHelper<GDb::Account> accounts(transaction.get(), dnServer->GetWorld());
 
 				accounts.InitEntity(accInfo).Insert().Commit();
 
-				transcation->commit();
+				transaction->commit();
 
 				if (accounts.IsSuccess())
 				{
@@ -330,10 +330,34 @@ export void ApiAuth(Server::Ptr server)
 
 	webProxyHelper->service->POST("/Auth/Test/User", [server](hv::HttpRequestPtr req, hv::HttpResponseWriterPtr writer)->TaskVoid
 		{
-			std::cout << "begin" << "\n";
-			co_await Func4();
+			// std::cout << "begin" << "\n";
+			// co_await Func4();
+			// writer->End();
+			// std::cout << "end" << "\n";
+
+			try
+			{
+				AuthServerHelper::Ptr dnServer = server->GetSelf<AuthServerHelper>();
+
+				if(auto transaction = dnServer->GetMdbProxy()->GetTransaction())
+				{
+					auto result = transaction->hset("hello", "world", "1").exec().get<bool>(0);
+					LoggerPrint::Log(server, ELogLevel_Debug, "{}", result);
+				}
+
+				if(auto transaction = dnServer->GetMdbProxy()->GetTransaction())
+				{
+					auto result = transaction->hget("hello", "world").exec().get<std::string>(0);
+					LoggerPrint::Log(server, ELogLevel_Debug, "{}", result);
+				}
+			}
+			catch(std::exception& e)
+			{
+				LoggerPrint::Log(server, ELogLevel_Debug, "1232:{}", e.what());
+			}
+
 			writer->End();
-			std::cout << "end" << "\n";
+
 			co_return;
 		});
 }

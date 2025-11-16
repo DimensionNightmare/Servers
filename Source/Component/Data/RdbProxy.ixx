@@ -44,7 +44,7 @@ public:
 	{
 		World::Ptr world = GetWorld();
 
-		std::string* param = world->GetParam("connection");
+		std::string* param = world->GetParam("rdbConnection");
 		if(!param)
 		{
 			return;

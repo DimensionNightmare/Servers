@@ -326,6 +326,7 @@ public:
 			{
 				// db
 				dnServer->AddComponent<RdbProxy>();
+				dnServer->AddComponent<MdbProxy>();
 				dnServer->AddComponent<WebProxy>();
 				//net
 				if (param)

@@ -65,7 +65,6 @@ class Component;
 class Entity;
 class System;
 class World;
-class Event;
 
 export struct InstanceHolder
 {
@@ -115,12 +114,15 @@ export std::shared_ptr<InstanceHolder> P_InstanceHolder;
 
 #pragma region Event
 
-export class Event
+export 
+template<typename EnumT> // enum class only. enum dont.
+requires std::is_enum_v<EnumT> && !std::is_scoped_enum_v<EnumT>
+class Event
 {
 public:
 
 	template<auto Func>
-	void AddEvent(EMEventType type, std::weak_ptr<typename FunctionTraits<decltype(Func)>::ClassType> entity)
+	void AddEvent(EnumT type, std::weak_ptr<typename FunctionTraits<decltype(Func)>::ClassType> entity)
 	{
 		using Traits = FunctionTraits<decltype(Func)>;
     	using Class = typename Traits::ClassType;
@@ -145,7 +147,7 @@ public:
 	}
 
 	template<typename... Args>
-	void Broadcast(EMEventType type, Args&&... args)
+	void Broadcast(EnumT type, Args&&... args)
 	{
 		constexpr auto typeHash = TupleTypeHash<std::tuple<std::decay_t<Args>...>>();
 
@@ -176,7 +178,7 @@ public:
 		}
 	}
 
-	void MoveEvent(EMEventType origin, EMEventType target)
+	void MoveEvent(EnumT origin, EnumT target)
 	{
 		mEventCollection[target] = std::move(mEventCollection[origin]);
 
@@ -193,7 +195,7 @@ public:
 		mEventCollection.erase(origin);
 	}
 
-	void RemoveEvent(EMEventType origin)
+	void RemoveEvent(EnumT origin)
 	{
 		auto map = std::move(mEventCollection[origin]);
 		mEventCollection.erase(origin);
@@ -226,8 +228,8 @@ public:
 	}
 
 private:
-	std::unordered_map<size_t, std::unordered_map<EMEventType, std::unique_ptr<IEventContainer> > > mEventIdMap;
-	std::unordered_map<EMEventType, std::unordered_map<size_t, size_t>> mEventCollection;
+	std::unordered_map<size_t, std::unordered_map<EnumT, std::unique_ptr<IEventContainer> > > mEventIdMap;
+	std::unordered_map<EnumT, std::unordered_map<size_t, size_t>> mEventCollection;
 };
 
 #pragma endregion
@@ -468,7 +470,7 @@ protected:
 
 #pragma region World
 
-export class World : public Object, public Event
+export class World : public Object, public Event<EMEventType>
 {
 public:
 	using Ptr = std::shared_ptr<World>;

@@ -10,6 +10,7 @@ import MessagePack;
 import FuncUtils;
 import Logger;
 import AuthServerMessage;
+import MdbProxyHelper;
 
 export class AuthServerHelper : public Helper<AuthServerHelper, Server>
 {
@@ -34,6 +35,11 @@ public:
 	RdbProxyHelper::Ptr GetRdbProxy()
 	{ 
 		return GetComponent<RdbProxyHelper>(EMComponentType::RdbProxy);
+	}
+
+	MdbProxyHelper::Ptr GetMdbProxy()
+	{ 
+		return GetComponent<MdbProxyHelper>(EMComponentType::MdbProxy);
 	}
 
 	void HandleServerInit()

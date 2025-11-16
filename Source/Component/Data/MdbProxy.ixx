@@ -39,7 +39,7 @@ public:
 	{
 		World::Ptr world = GetWorld();
 
-		std::string* param = world->GetParam("connection");
+		std::string* param = world->GetParam("mdbConnection");
 		if(!param)
 		{
 			return;

@@ -89,13 +89,10 @@ public:
 		std::string keyName = std::format("{}_{}", tablename, entityId);
 
 		const MdbProxyHelper::Ptr& dbProxy = GetOwner()->GetComponent<MdbProxyHelper>(EMComponentType::MdbProxy);
-		if(auto connection = dbProxy->GetConnection())
+		if(auto transaction = dbProxy->GetTransaction())
 		{
 			// nosql
-			if (auto res = connection->get(keyName))
-			{
-				binData = res.value();
-			}
+			binData = transaction->get(keyName).exec().get<std::string>(0);
 
 			if (!binData.empty())
 			{
@@ -166,9 +163,11 @@ public:
 			const std::string& entityData = response->entitydata(0);
 			entity->SetDbEntity(entityData);
 			
-			if(auto connection = dbProxy->GetConnection())
+			if(auto transaction = dbProxy->GetTransaction())
 			{
-				connection->set(keyName, entityData);
+				auto result = transaction->setex(keyName, 600, entityData)
+					.exec().get<bool>(0);
+				
 			}
 
 		}
@@ -246,10 +245,11 @@ public:
 
 		// nosql
 		MdbProxyHelper::Ptr dbProxy = GetOwner()->GetComponent<MdbProxyHelper>(EMComponentType::MdbProxy);
-		if(auto connection = dbProxy->GetConnection())
+		if(auto transaction = dbProxy->GetTransaction())
 		{
 			std::string keyName = std::format("{}_{}", tablename, entityId);
-			connection->set(keyName, entitydata);
+			auto result = transaction->setex(keyName, 600, entitydata)
+				.exec().get<bool>(0);
 		}
 
 		mDbFailure.erase(entityId);
