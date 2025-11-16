@@ -9,7 +9,7 @@ import StrUtils;
 
 #pragma region EnumType
 
-export enum EMEventType : uint8_t
+export enum class EMEventType : uint8_t
 {
 	None = 0,
 	ServerStart,
@@ -114,14 +114,15 @@ export std::shared_ptr<InstanceHolder> P_InstanceHolder;
 
 #pragma region Event
 
-export 
-template<typename EnumT> // enum class only. enum dont.
-requires std::is_enum_v<EnumT> && !std::is_scoped_enum_v<EnumT>
+export  // enum class only. enum dont.
+template<typename EnumT, bool HasKey = true>
+requires std::is_enum_v<EnumT>
 class Event
 {
 public:
 
 	template<auto Func>
+	requires (HasKey)
 	void AddEvent(EnumT type, std::weak_ptr<typename FunctionTraits<decltype(Func)>::ClassType> entity)
 	{
 		using Traits = FunctionTraits<decltype(Func)>;
@@ -134,16 +135,41 @@ public:
 
 			constexpr auto typeHash = TupleTypeHash<ArgType>();
 			handle->mTypeHash = typeHash;
-			#if DN_DEBUG_EVENT
-				constexpr auto typeSign = TupleTypeStr<ArgType>();
-				handle->sTypeSign = typeSign;
-			#endif
+
+#if DN_DEBUG_EVENT
+			constexpr auto typeSign = TupleTypeStr<ArgType>();
+			handle->sTypeSign = typeSign;
+#endif
 
 			size_t objId = lock->ID();
+
 			mEventIdMap[objId][type] = std::move(handle);
+
 			mEventCollection[type][objId] = objId;
 		}		
 
+	}
+
+	template<typename Callable>
+	requires (!HasKey)
+	void AddEvent(EnumT type, Callable func)
+	{
+		using Traits = FunctionTraits<Callable>;
+		using ArgType = typename Traits::ArgType;
+
+		// EventCallableContainer<Callable> proxy(func);
+
+		std::unique_ptr<IEventContainer> handle = std::make_unique<EventCallableContainer<Callable> >(std::move(func));
+
+		constexpr auto typeHash = TupleTypeHash<ArgType>();
+		handle->mTypeHash = typeHash;
+
+#if DN_DEBUG_EVENT
+		constexpr auto typeSign = TupleTypeStr<ArgType>();
+		handle->sTypeSign = typeSign;
+#endif
+
+		mEventCollectionWithoutId[type].emplace_back(std::move(handle));
 	}
 
 	template<typename... Args>
@@ -153,65 +179,103 @@ public:
 
 		auto params = std::forward_as_tuple(std::forward<Args>(args)...);
 
-		auto objIds = mEventCollection[type]
-			| std::views::keys;
-
-		for (const auto& objId : objIds)
+		auto dealFunc = [&](IEventContainer* handle)
 		{
-			IEventContainer* anyObj = mEventIdMap[objId][type].get();
-			if(anyObj->mTypeHash == typeHash)
+			if(handle->mTypeHash == typeHash)
 			{
-				anyObj->Invoke(&params);
+				handle->Invoke(&params);
 			}
 			else
 			{
-				
 #if DN_DEBUG_EVENT
 				constexpr auto typeSign = TupleTypeStr<std::tuple<std::decay_t<Args>...>>();
 				std::cerr << "Event Sign Not Match!! -> " << EnumName(type) << "\n" 
-					<< anyObj->sTypeSign << "\n"
+					<< handle->sTypeSign << "\n"
 					<< typeSign << "\n\n";
 #else
 				std::cerr << "Event Sign Not Match!! -> " << EnumName(type) << "\n\n";
 #endif
 			}
+		};
+
+		if constexpr(HasKey)
+		{
+			auto handles = mEventCollection[type]
+				| std::views::keys
+				| std::views::transform([&](const auto& param){
+					return mEventIdMap[param][type].get();
+				}); 
+
+			for (const auto& handle : handles)
+			{
+				dealFunc(handle);
+			}
 		}
+		else
+		{
+			for (const auto& handle : mEventCollectionWithoutId[type])
+			{
+				dealFunc(handle.get());
+			}
+		}
+
 	}
 
 	void MoveEvent(EnumT origin, EnumT target)
 	{
-		mEventCollection[target] = std::move(mEventCollection[origin]);
 
-		auto objIds = mEventCollection[target]
-			| std::views::values;
-
-		for (const auto& objId : objIds)
+		if constexpr(HasKey)
 		{
-			auto& map = mEventIdMap[objId];
-			map[target] = std::move(map[origin]);
-			map.erase(origin);
+			mEventCollection[target] = std::move(mEventCollection[origin]);
+			
+			auto objIds = mEventCollection[target]
+				| std::views::values;
+
+			for (const auto& objId : objIds)
+			{
+				auto& map = mEventIdMap[objId];
+				map[target] = std::move(map[origin]);
+				map.erase(origin);
+			}
+
+			mEventCollection.erase(origin);
+		}
+		else
+		{
+			mEventCollectionWithoutId[target] = std::move(mEventCollectionWithoutId[origin]);
 		}
 
-		mEventCollection.erase(origin);
 	}
+
 
 	void RemoveEvent(EnumT origin)
 	{
-		auto map = std::move(mEventCollection[origin]);
-		mEventCollection.erase(origin);
-
-		auto objIds = map 
-			| std::views::values;
-
-		for (const auto& objId : objIds)
+		if constexpr(HasKey)
 		{
-			mEventIdMap[objId].erase(origin);
+			auto map = std::move(mEventCollection[origin]);
+			mEventCollection.erase(origin);
+
+			auto objIds = map 
+				| std::views::values;
+
+			for (const auto& objId : objIds)
+			{
+				mEventIdMap[objId].erase(origin);
+			}
 		}
-		
+		else
+		{
+			mEventCollectionWithoutId.erase(origin);
+		}
 	}
 
 	void RemoveEvent(size_t objId)
 	{
+		if constexpr(!HasKey)
+		{
+			static_assert(HasKey, "Event Not Key Suport");
+		}
+
 		auto it = mEventIdMap.find(objId);
 		if (it != mEventIdMap.end())
 		{
@@ -227,9 +291,11 @@ public:
 		}
 	}
 
-private:
+protected:
 	std::unordered_map<size_t, std::unordered_map<EnumT, std::unique_ptr<IEventContainer> > > mEventIdMap;
 	std::unordered_map<EnumT, std::unordered_map<size_t, size_t>> mEventCollection;
+
+	std::unordered_map<EnumT, std::list<std::unique_ptr<IEventContainer> >> mEventCollectionWithoutId;
 };
 
 #pragma endregion

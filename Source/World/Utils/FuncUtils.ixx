@@ -84,6 +84,18 @@ export
 		using ArgType = std::tuple<std::decay_t<Args>...>;
 	};
 
+	template<typename Ret, typename... Args>
+	struct FunctionTraits<std::function<Ret(Args...)>>
+	{
+		using ReturnType = Ret;
+		using ClassType = void;
+		static constexpr bool IsMemberFunction = false;
+		static constexpr size_t Arity = sizeof...(Args);
+
+		using ArgType = std::tuple<std::decay_t<Args>...>;
+		using ArgTypeOrigin = std::tuple<Args&&...>;
+	};
+	
 #pragma endregion
 
 #pragma region EventContainer
@@ -169,6 +181,54 @@ export
 					if(IsValid())
 					{
 						InvokeSelf(std::forward<Args>(args)...);
+					}
+				}, *tuplePtr);
+
+			return true;
+		}
+	};
+
+	template<typename Callable>
+	// template<typename Ret, typename... Args>
+	class EventCallableContainer : public IEventContainer
+	{
+	private:
+		// using Callable = std::function<Ret(Args...)>;
+		Callable mProxy;
+
+		using Traits = FunctionTraits<Callable>;
+		using ReturnType = typename Traits::ReturnType;
+		using ArgTypeOrigin = typename Traits::ArgTypeOrigin;
+
+	public:
+	
+		EventCallableContainer(Callable func)
+		{
+			mProxy = std::move(func);
+		}
+
+		~EventCallableContainer(){}
+
+		ReturnType InvokeSelf(auto&&... args) const
+		{
+			if (IsValid())
+			{
+				return mProxy(args...);
+			}
+			throw std::runtime_error("Instance expired for member function");
+		}
+
+		bool IsValid() const { return mProxy != nullptr; }
+
+		virtual bool Invoke(void* param) override
+		{
+			auto* tuplePtr = static_cast<ArgTypeOrigin*>(param);
+
+			std::apply([this](auto&&... args)
+				{
+					if(IsValid())
+					{
+						InvokeSelf(args...);
 					}
 				}, *tuplePtr);
 
