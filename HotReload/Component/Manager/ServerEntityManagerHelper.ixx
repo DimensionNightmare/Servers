@@ -29,7 +29,7 @@ public:
 	{
 		if (!mEntityMap.contains(entityId))
 		{
-			ServerEntity::Ptr entity = Base()->AddEntity(entityId, regType);
+			ServerEntity::Ptr entity = GetBase()->AddEntity(entityId, regType);
 			mEntityMapList[regType].emplace_back(entity);
 			
 			ServerEntityHelper::Ptr helper = entity->GetSelf<ServerEntityHelper>();

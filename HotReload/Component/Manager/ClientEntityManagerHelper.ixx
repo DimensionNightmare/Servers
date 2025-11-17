@@ -25,7 +25,7 @@ public:
 	{
 		if (!mEntityMap.contains(entityId))
 		{
-			ClientEntity::Ptr entity = Base()->AddEntity(entityId);
+			ClientEntity::Ptr entity = GetBase()->AddEntity(entityId);
 			entity->GetDbEntity()->set_accountid(entityId);
 
 			return entity->GetSelf<ClientEntityHelper>();

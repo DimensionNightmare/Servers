@@ -18,7 +18,7 @@ public:
 	{
 		if (!mEntityMap.contains(entityId))
 		{
-			ProxyEntity::Ptr entity = Base()->AddEntity(entityId);
+			ProxyEntity::Ptr entity = GetBase()->AddEntity(entityId);
 			return entity->GetSelf<ProxyEntityHelper>();
 		}
 

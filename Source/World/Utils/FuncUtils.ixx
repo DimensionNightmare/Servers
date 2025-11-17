@@ -238,52 +238,35 @@ export
 
 }
 
-
-template <typename T>
-struct HasMemberVariables
-{
-private:
-	template <typename U>
-	static auto HasMember(int) -> decltype(
-		// 尝试访问成员变量
-		std::declval<U>().*(&U::__dummy_member_check),
-		std::true_type{}
-		);
-
-	template <typename>
-	static std::false_type HasMember(...);
-
-public:
-	static constexpr bool value = decltype(HasMember<T>(0))::value;
+template<typename Derived, typename Base>
+concept NoMemberDerived = requires {
+    // requires std::derived_from<Derived, Base>;
+    requires sizeof(Derived) == sizeof(Base);
 };
 
-export template <typename Derived, typename BaseT>
-class Helper : public BaseT
+export template <typename Derived, typename Base>
+// requires NoMemberDerived<Derived, Base>
+class Helper : public Base
 {
 public:
-	// using Base::Base;
 
+	using Base::Base;
+	using Ptr = std::shared_ptr<Derived>;
+	
 	Helper() = delete;
 	Helper(Helper&) = delete;
 	Helper(const Helper&) = delete;
 	Helper(Helper&&) = delete;
 	~Helper() = default;
-
+	
 	Helper& operator=(const Helper&) = delete;
 	Helper& operator=(Helper&&) = delete;
-
+	
 	void* operator new(size_t) = delete;
 	void operator delete(void*) = delete;
-
-	using BaseT::BaseT;
-
-	using Ptr = std::shared_ptr<Derived>;
-
-	BaseT* Base()
+	
+	Base* GetBase()
 	{
-		static_assert(std::is_base_of_v<BaseT, Derived>, "T must inherit from BaseT");
-		return static_cast<BaseT*>(this);
+		return static_cast<Base*>(this);
 	}
-
-	static_assert(!HasMemberVariables<Derived>::value, "Derived must not have member variables");
 };

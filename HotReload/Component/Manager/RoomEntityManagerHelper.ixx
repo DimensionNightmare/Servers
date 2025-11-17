@@ -16,7 +16,7 @@ public:
 
 	RoomEntityHelper::Ptr AddEntity(uint32_t entityId)
 	{
-		RoomEntity::Ptr entity = Base()->AddEntity(entityId);
+		RoomEntity::Ptr entity = GetBase()->AddEntity(entityId);
 		mEntityMapList[entityId].emplace_back(entity);
 
 		RoomEntityHelper::Ptr helper = entity->GetSelf<RoomEntityHelper>();
