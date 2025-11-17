@@ -157,11 +157,7 @@ export
 				return mProxy(instance.get(), args...);
 			}
 			
-			if constexpr (!std::is_void_v<Ret>)
-			{
-				static Ret ret{};
-				return ret;
-			}
+			throw std::runtime_error("Tick EventContainer Error");
 		}
 
 		bool IsValid() const
@@ -238,14 +234,7 @@ export
 
 }
 
-template<typename Derived, typename Base>
-concept NoMemberDerived = requires {
-    // requires std::derived_from<Derived, Base>;
-    requires sizeof(Derived) == sizeof(Base);
-};
-
 export template <typename Derived, typename Base>
-// requires NoMemberDerived<Derived, Base>
 class Helper : public Base
 {
 public:
