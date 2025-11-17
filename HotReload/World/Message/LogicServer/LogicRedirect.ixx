@@ -98,7 +98,8 @@ namespace MsgHandleRegister
 				mapId = mapRecord->curpoint().mapid();
 			}
 			// new player use default 1
-			else
+
+			if(mapId == 0)
 			{
 				mapId++;
 

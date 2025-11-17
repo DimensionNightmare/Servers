@@ -8,4 +8,5 @@ export namespace sw::redis
 	using sw::redis::Redis;
 	using sw::redis::IoError;
 	using sw::redis::Transaction;
+	using sw::redis::OptionalString;
 };

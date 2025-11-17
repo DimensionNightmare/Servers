@@ -91,8 +91,18 @@ public:
 		const MdbProxyHelper::Ptr& dbProxy = GetOwner()->GetComponent<MdbProxyHelper>(EMComponentType::MdbProxy);
 		if(auto transaction = dbProxy->GetTransaction())
 		{
-			// nosql
-			binData = transaction->get(keyName).exec().get<std::string>(0);
+			try
+			{
+				// nosql
+                if (auto optValue = transaction->get(keyName).exec().get<sw::redis::OptionalString>(0))
+				{
+					binData = *optValue;
+                }
+			}
+			catch(std::exception& e)
+			{
+				LoggerPrint::Log(GetWorld(), ELogLevel_Error, "entity Load Redis err {} ", e.what());
+			}
 
 			if (!binData.empty())
 			{
@@ -203,7 +213,11 @@ public:
 		{
 			GDef_MapPointRecord* mapInfo = dbEntity->mutable_mapinfo();
 			GDef_MapPoint* curpoint = mapInfo->mutable_curpoint();
+			
 			GDef_Vector3* property_location = dbEntity->mutable_propertyentity()->mutable_location();
+			property_location->set_x(std::floor(property_location->x()));
+			property_location->set_y(std::floor(property_location->y()));
+			property_location->set_z(std::floor(property_location->z()));
 			*curpoint->mutable_point() = *property_location;
 			property_location->Clear();
 
