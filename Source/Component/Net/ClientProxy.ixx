@@ -169,7 +169,7 @@ protected:
 
 	size_t _CheckMessageTimeoutTimer(uint32_t breakTime, uint32_t msgId)
 	{
-		FunctionContainer<&ClientProxy::MessageTimeoutTimer> funcProxy(this);
+		EventContainer<&ClientProxy::MessageTimeoutTimer> funcProxy(this);
 
 		size_t timerId = GetTimer()->SetTimeout(breakTime, funcProxy);
 		std::unique_lock ulock(oTimerMutex);
@@ -182,7 +182,7 @@ protected:
 		// chanhel->setHeartbeat(4000, std::bind(&ClientProxy::TickHeartbeat, this));
 		// channel->setWriteTimeout(12000);
 
-		FunctionContainer<&ClientProxy::TickRegistEvent> funcProxy(this);
+		EventContainer<&ClientProxy::TickRegistEvent> funcProxy(this);
 
 		if (eRegistState == EMRegistState::None)
 		{
@@ -212,11 +212,11 @@ protected:
 
 public:
 
-	FunctionContainer<&ClientProxy::_InitConnectedChannel> InitConnectedChannel;
+	EventContainer<&ClientProxy::_InitConnectedChannel> InitConnectedChannel;
 
-	FunctionContainer<&ClientProxy::_CheckMessageTimeoutTimer> CheckMessageTimeoutTimer;
+	EventContainer<&ClientProxy::_CheckMessageTimeoutTimer> CheckMessageTimeoutTimer;
 
-	FunctionContainer<&ClientProxy::_RedirectClient> RedirectClient;
+	EventContainer<&ClientProxy::_RedirectClient> RedirectClient;
 
 protected: // dll proxy
 

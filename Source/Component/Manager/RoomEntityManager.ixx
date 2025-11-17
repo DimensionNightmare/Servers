@@ -80,7 +80,7 @@ protected:
 
 	size_t _CheckEntityCloseTimer(size_t entityId)
 	{
-		FunctionContainer<&RoomEntityManager::EntityCloseTimer> funcProxy(this);
+		EventContainer<&RoomEntityManager::EntityCloseTimer> funcProxy(this);
 
 		size_t timerId = GetTimer()->SetTimeout(10000, funcProxy);
 
@@ -90,8 +90,8 @@ protected:
 	}
 
 public:
-	FunctionContainer<&RoomEntityManager::_AddEntity> AddEntity;
-	FunctionContainer<&RoomEntityManager::_CheckEntityCloseTimer> CheckEntityCloseTimer;
+	EventContainer<&RoomEntityManager::_AddEntity> AddEntity;
+	EventContainer<&RoomEntityManager::_CheckEntityCloseTimer> CheckEntityCloseTimer;
 
 protected:
 	/// @brief 

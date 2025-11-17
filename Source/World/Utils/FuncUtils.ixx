@@ -1,61 +1,10 @@
 export module FuncUtils;
 
 import std;
+import StrUtils;
 
 export
 {
-#pragma region FunctionContainer 
-	template <auto Func>
-	struct FunctionContainer;
-
-	template <typename Ret, typename... Args, Ret(*Func)(Args...)>
-	struct FunctionContainer<Func>
-	{
-	public:
-		FunctionContainer()
-		{
-			mProxy = [this](Args... args) -> Ret
-				{
-					return (*Func)(std::forward<Args>(args)...);
-				};
-		}
-
-		Ret operator()(Args... args) const
-		{
-			return mProxy(std::forward<Args>(args)...);
-		}
-
-		std::function<Ret(Args...)> mProxy;
-	};
-
-	template <typename Ret, typename Class, typename... Args, Ret(Class::* Func)(Args...)>
-	struct FunctionContainer<Func>
-	{
-	public:
-		FunctionContainer(Class* instance)
-		{
-			pInstance = instance;
-			mProxy = [](Class* obj, Args&&... args) -> Ret
-				{
-					return (obj->*Func)(std::forward<Args>(args)...);
-				};
-		}
-
-		Ret operator()(Args... args) const
-		{
-			if (!pInstance)
-			{
-				throw std::runtime_error("Instance not set for member function");
-			}
-			return mProxy(pInstance, std::forward<Args>(args)...);
-		}
-
-	private:
-		Class* pInstance = nullptr;
-		std::function<Ret(Class*, Args...)> mProxy;
-	};
-
-#pragma endregion
 
 #pragma region FunctionTraits
 
@@ -66,34 +15,34 @@ export
 	struct FunctionTraits<Ret(*)(Args...)>
 	{
 		using ReturnType = Ret;
-		using ClassType = void;
-		static constexpr bool IsMemberFunction = false;
-		static constexpr size_t Arity = sizeof...(Args);
-
 		using ArgType = std::tuple<std::decay_t<Args>...>;
+		
+		static constexpr bool IsMemberFunction = false;
 	};
 
 	template<typename Ret, typename Class, typename... Args>
 	struct FunctionTraits<Ret(Class::*)(Args...)>
 	{
 		using ReturnType = Ret;
-		using ClassType = Class;
-		static constexpr bool IsMemberFunction = true;
-		static constexpr size_t Arity = sizeof...(Args);
-
 		using ArgType = std::tuple<std::decay_t<Args>...>;
+
+		using ClassType = Class;
+
+		static constexpr bool IsMemberFunction = true;
+
 	};
 
 	template<typename Ret, typename... Args>
-	struct FunctionTraits<std::function<Ret(Args...)>>
+	struct FunctionTraits<std::function<Ret(Args...)> >
 	{
 		using ReturnType = Ret;
-		using ClassType = void;
-		static constexpr bool IsMemberFunction = false;
-		static constexpr size_t Arity = sizeof...(Args);
-
 		using ArgType = std::tuple<std::decay_t<Args>...>;
-		using ArgTypeOrigin = std::tuple<Args&&...>;
+
+		using ArgTypeForaward = std::tuple<Args&&...>;
+
+		using FuncSign = std::function<Ret(Args...)>;
+		
+		static constexpr bool IsMemberFunction = false;
 	};
 	
 #pragma endregion
@@ -114,57 +63,105 @@ export
 	template<auto Func>
 	class EventContainer;
 
+	template<typename Func>
+	class DynamicEventContainer;
+
 
 	template<typename Ret, typename... Args, Ret(*Func)(Args...)>
-	class EventContainer<Func>
+	class EventContainer<Func> : public IEventContainer
 	{
-	private:
-		std::function<Ret(Args...)> mProxy;
-
+		using Traits = FunctionTraits<decltype(Func)>;
+		using ArgType = typename Traits::ArgType;
 	public:
-	
+
 		EventContainer()
 		{
-			mProxy = [](Args... args) -> Ret
-				{
-					return Func(std::forward<Args>(args)...);
-				};
+			constexpr auto typeHash = TupleTypeHash<ArgType>();
+			mTypeHash = typeHash;
+
+#if DN_DEBUG_EVENT
+			constexpr auto typeSign = TupleTypeStr<ArgType>();
+			sTypeSign = typeSign;
+#endif
 		}
 
-		EventContainer(std::nullptr_t) : EventContainer() {} // 兼容性构造函数
+		~EventContainer(){}
 
-		Ret operator()(Args... args) const
+		Ret operator()(auto&&... args) const
 		{
-			return mProxy(std::forward<Args>(args)...);
+			return Func(args...);
 		}
 
-		bool IsValid() const { return true; }
+		virtual bool Invoke(void* param) override
+		{
+			auto* tuplePtr = static_cast<std::tuple<Args&&...>*>(param);
+
+			std::apply([this](auto&&... args)
+				{
+					this->operator()(args...);
+				}, *tuplePtr);
+
+			return true;
+		}
 	};
 
 	template<typename Ret, typename Class, typename... Args, Ret(Class::* Func)(Args...)>
 	class EventContainer<Func> : public IEventContainer
 	{
+		using Traits = FunctionTraits<decltype(Func)>;
+		using ArgType = typename Traits::ArgType;
 	private:
+		// 事件代理
 		std::weak_ptr<Class> pInstance;
+
+		// 空间代理
+		Class* pInstanceOrigin = nullptr;
 		std::function<Ret(Class*, Args...)> mProxy;
 
 	public:
-	
-		EventContainer(std::weak_ptr<Class> instance) : pInstance(instance)
+
+		EventContainer()
 		{
-			mProxy = [](Class* obj, Args&&... args) -> Ret
+			constexpr auto typeHash = TupleTypeHash<ArgType>();
+			mTypeHash = typeHash;
+
+#if DN_DEBUG_EVENT
+			constexpr auto typeSign = TupleTypeStr<ArgType>();
+			sTypeSign = typeSign;
+#endif
+			mProxy = [](Class* obj, auto&&... args) -> Ret
 				{
-					return (obj->*Func)(std::forward<Args>(args)...);
+					return (obj->*Func)(args...);
 				};
 		}
 
-		Ret InvokeSelf(Args&&... args) const
+		EventContainer(Class* instance) : EventContainer()
 		{
+			pInstanceOrigin = instance;
+		}
+	
+		EventContainer(std::weak_ptr<Class> instance) : EventContainer()
+		{
+			pInstance = instance;
+		}
+
+		Ret operator()(auto&&... args) const
+		{
+			if(pInstanceOrigin)
+			{
+				return mProxy(pInstanceOrigin, args...);
+			}
+
 			if (auto instance = pInstance.lock())
 			{
-				return mProxy(instance.get(), std::forward<Args>(args)...);
+				return mProxy(instance.get(), args...);
 			}
-			throw std::runtime_error("Instance expired for member function");
+			
+			if constexpr (!std::is_void_v<Ret>)
+			{
+				static Ret ret{};
+				return ret;
+			}
 		}
 
 		bool IsValid() const
@@ -180,7 +177,7 @@ export
 				{
 					if(IsValid())
 					{
-						InvokeSelf(std::forward<Args>(args)...);
+						(*this)(args...);;
 					}
 				}, *tuplePtr);
 
@@ -188,47 +185,48 @@ export
 		}
 	};
 
-	template<typename Callable>
-	// template<typename Ret, typename... Args>
-	class EventCallableContainer : public IEventContainer
+	template<typename Func>
+	class DynamicEventContainer : public IEventContainer
 	{
 	private:
-		// using Callable = std::function<Ret(Args...)>;
-		Callable mProxy;
+		Func mProxy;
 
-		using Traits = FunctionTraits<Callable>;
-		using ReturnType = typename Traits::ReturnType;
-		using ArgTypeOrigin = typename Traits::ArgTypeOrigin;
+		using Traits = FunctionTraits<Func>;
+		using Ret = typename Traits::ReturnType;
+		using ArgType = typename Traits::ArgType;
+		using ArgTypeForaward = typename Traits::ArgTypeForaward;
 
 	public:
 	
-		EventCallableContainer(Callable func)
+		DynamicEventContainer(Func* func) : mProxy(std::move(*func))
 		{
-			mProxy = std::move(func);
+			constexpr auto typeHash = TupleTypeHash<ArgType>();
+			mTypeHash = typeHash;
+
+#if DN_DEBUG_EVENT
+			constexpr auto typeSign = TupleTypeStr<ArgType>();
+			sTypeSign = typeSign;
+#endif
 		}
 
-		~EventCallableContainer(){}
+		~DynamicEventContainer(){}
 
-		ReturnType InvokeSelf(auto&&... args) const
+		Ret operator()(auto&&... args) const
 		{
-			if (IsValid())
-			{
-				return mProxy(args...);
-			}
-			throw std::runtime_error("Instance expired for member function");
+			return mProxy(args...);
 		}
 
 		bool IsValid() const { return mProxy != nullptr; }
 
 		virtual bool Invoke(void* param) override
 		{
-			auto* tuplePtr = static_cast<ArgTypeOrigin*>(param);
+			auto* tuplePtr = static_cast<ArgTypeForaward*>(param);
 
 			std::apply([this](auto&&... args)
 				{
 					if(IsValid())
 					{
-						InvokeSelf(args...);
+						(*this)(args...);
 					}
 				}, *tuplePtr);
 

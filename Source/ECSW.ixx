@@ -115,31 +115,18 @@ export std::shared_ptr<InstanceHolder> P_InstanceHolder;
 #pragma region Event
 
 export  // enum class only. enum dont.
-template<typename EnumT, bool HasKey = true>
+template<typename EnumT>
 requires std::is_enum_v<EnumT>
 class Event
 {
 public:
 
 	template<auto Func>
-	requires (HasKey)
 	void AddEvent(EnumT type, std::weak_ptr<typename FunctionTraits<decltype(Func)>::ClassType> entity)
 	{
-		using Traits = FunctionTraits<decltype(Func)>;
-    	using Class = typename Traits::ClassType;
-		using ArgType = typename Traits::ArgType;	
-
 		if(auto lock = entity.lock())
 		{
 			std::unique_ptr<IEventContainer> handle = std::make_unique<EventContainer<Func> >(entity);
-
-			constexpr auto typeHash = TupleTypeHash<ArgType>();
-			handle->mTypeHash = typeHash;
-
-#if DN_DEBUG_EVENT
-			constexpr auto typeSign = TupleTypeStr<ArgType>();
-			handle->sTypeSign = typeSign;
-#endif
 
 			size_t objId = lock->ID();
 
@@ -150,25 +137,21 @@ public:
 
 	}
 
-	template<typename Callable>
-	requires (!HasKey)
-	void AddEvent(EnumT type, Callable func)
+	void AddEvent(EnumT type, auto&& func)
 	{
-		using Traits = FunctionTraits<Callable>;
-		using ArgType = typename Traits::ArgType;
+		using Traits = FunctionTraits<std::decay_t<decltype(func)>>;
+		using FuncSign = typename Traits::FuncSign;
 
-		// EventCallableContainer<Callable> proxy(func);
+		std::unique_ptr<IEventContainer> handle = std::make_unique<DynamicEventContainer<FuncSign>>(&func);
 
-		std::unique_ptr<IEventContainer> handle = std::make_unique<EventCallableContainer<Callable> >(std::move(func));
+		mEventCollectionWithoutId[type].emplace_back(std::move(handle));
+	}
 
-		constexpr auto typeHash = TupleTypeHash<ArgType>();
-		handle->mTypeHash = typeHash;
-
-#if DN_DEBUG_EVENT
-		constexpr auto typeSign = TupleTypeStr<ArgType>();
-		handle->sTypeSign = typeSign;
-#endif
-
+	template<auto Func>
+	void AddEvent(EnumT type)
+	{
+		std::unique_ptr<IEventContainer> handle = std::make_unique<EventContainer<Func> >();
+				
 		mEventCollectionWithoutId[type].emplace_back(std::move(handle));
 	}
 
@@ -198,7 +181,6 @@ public:
 			}
 		};
 
-		if constexpr(HasKey)
 		{
 			auto handles = mEventCollection[type]
 				| std::views::keys
@@ -211,7 +193,7 @@ public:
 				dealFunc(handle);
 			}
 		}
-		else
+		
 		{
 			for (const auto& handle : mEventCollectionWithoutId[type])
 			{
@@ -224,7 +206,6 @@ public:
 	void MoveEvent(EnumT origin, EnumT target)
 	{
 
-		if constexpr(HasKey)
 		{
 			mEventCollection[target] = std::move(mEventCollection[origin]);
 			
@@ -240,7 +221,7 @@ public:
 
 			mEventCollection.erase(origin);
 		}
-		else
+		
 		{
 			mEventCollectionWithoutId[target] = std::move(mEventCollectionWithoutId[origin]);
 		}
@@ -250,7 +231,6 @@ public:
 
 	void RemoveEvent(EnumT origin)
 	{
-		if constexpr(HasKey)
 		{
 			auto map = std::move(mEventCollection[origin]);
 			mEventCollection.erase(origin);
@@ -263,7 +243,7 @@ public:
 				mEventIdMap[objId].erase(origin);
 			}
 		}
-		else
+		
 		{
 			mEventCollectionWithoutId.erase(origin);
 		}
@@ -271,11 +251,6 @@ public:
 
 	void RemoveEvent(size_t objId)
 	{
-		if constexpr(!HasKey)
-		{
-			static_assert(HasKey, "Event Not Key Suport");
-		}
-
 		auto it = mEventIdMap.find(objId);
 		if (it != mEventIdMap.end())
 		{

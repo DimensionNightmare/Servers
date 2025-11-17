@@ -104,7 +104,7 @@ protected:
 	/// @brief 
 	size_t _CheckEntityCloseTimer(size_t entityId)
 	{
-		FunctionContainer<&ServerEntityManager::EntityCloseTimer> funcProxy(this);
+		EventContainer<&ServerEntityManager::EntityCloseTimer> funcProxy(this);
 
 		size_t timerId = GetTimer()->SetTimeout(10000, funcProxy);
 
@@ -115,8 +115,8 @@ protected:
 
 public:
 
-	FunctionContainer<&ServerEntityManager::_AddEntity> AddEntity;
-	FunctionContainer<&ServerEntityManager::_CheckEntityCloseTimer> CheckEntityCloseTimer;
+	EventContainer<&ServerEntityManager::_AddEntity> AddEntity;
+	EventContainer<&ServerEntityManager::_CheckEntityCloseTimer> CheckEntityCloseTimer;
 
 protected: // dll proxy
 	/// @brief 

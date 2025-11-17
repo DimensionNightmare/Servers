@@ -232,7 +232,7 @@ public: // dll override
 
 	void CheckChannelByTimer(const SocketChannel::Ptr& channel)
 	{
-		FunctionContainer<&ServerProxy::ChannelTimeoutTimer> funcProxy(this);
+		EventContainer<&ServerProxy::ChannelTimeoutTimer> funcProxy(this);
 		
 		size_t timerId = GetTimer()->SetTimeout(5000, funcProxy);
 		AddTimerRecord(timerId, channel->id());
@@ -253,7 +253,7 @@ protected:
 	
 	size_t _CheckMessageTimeoutTimer(uint32_t breakTime, uint32_t msgId)
 	{
-		FunctionContainer<&ServerProxy::MessageTimeoutTimer> funcProxy(this);
+		EventContainer<&ServerProxy::MessageTimeoutTimer> funcProxy(this);
 		
 		size_t timerId = GetTimer()->SetTimeout(breakTime, funcProxy);
 		std::unique_lock ulock(oTimerMutex);
@@ -262,9 +262,9 @@ protected:
 	}
 public:
 	// cant init in tcpclient this class
-	FunctionContainer<&ServerProxy::_InitConnectedChannel> InitConnectedChannel;
+	EventContainer<&ServerProxy::_InitConnectedChannel> InitConnectedChannel;
 
-	FunctionContainer<&ServerProxy::_CheckMessageTimeoutTimer> CheckMessageTimeoutTimer;
+	EventContainer<&ServerProxy::_CheckMessageTimeoutTimer> CheckMessageTimeoutTimer;
 
 protected:
 	// only oddnumber

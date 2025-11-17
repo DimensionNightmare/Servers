@@ -57,7 +57,7 @@ public:
 
 	/// @brief l10n imp. find get.
 	// FindFunctionPtr pPBMapFindFunc = nullptr;
-	FunctionContainer<&L10nText::_GetTipText> GetTipText;
+	EventContainer<&L10nText::_GetTipText> GetTipText;
 
 private:
 

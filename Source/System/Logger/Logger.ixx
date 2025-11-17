@@ -241,7 +241,7 @@ protected:
 
 public:
 
-	FunctionContainer<&LoggerPrint::_AddLogFile> AddLogFile;
+	EventContainer<&LoggerPrint::_AddLogFile> AddLogFile;
 
 protected:
 	L10nText::WPtr pL10nText;

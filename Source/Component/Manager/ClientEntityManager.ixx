@@ -68,7 +68,7 @@ protected:
 	}
 
 public:
-	FunctionContainer<&ClientEntityManager::_AddEntity> AddEntity;
+	EventContainer<&ClientEntityManager::_AddEntity> AddEntity;
 
 protected:
 
