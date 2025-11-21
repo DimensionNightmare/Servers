@@ -19,12 +19,13 @@ export class ServerEntity : public Entity, public BitFlag<EMServerEntityFlag>
 {
 protected:
 	friend class UniversalMemoryPool;
-	ServerEntity(World::WPtr world):Entity(world)
+	ServerEntity(World::CVPtr world):Entity(world)
 	{
 		eEntityType = EMEntityType::Server;
 	}
 public:
 	using Ptr = std::shared_ptr<ServerEntity>;
+	using CVPtr = const Ptr&;
 
 	virtual ~ServerEntity()
 	{
@@ -33,14 +34,14 @@ public:
 
 	virtual void Dispose() override
 	{
-		Entity::Dispose();
-
 		pLink = nullptr;
 		mMapLink.clear();
+		
+		Entity::Dispose();
 	}
 	
 	/// @brief this server father node
-	ServerEntity::Ptr LinkNode() { return pLink; }
+	ServerEntity::CVPtr LinkNode() { return pLink; }
 
 	/// @brief this server childs get
 	std::list<ServerEntity::Ptr>& GetMapLinkNode(EMServerType type) { return mMapLink[type]; }
@@ -48,7 +49,7 @@ public:
 	/// 
 	EMServerType GetServerType() { return emServerType; }
 
-	const SocketChannel::Ptr& GetChannel() { return pChannel; }
+	SocketChannel::CVPtr GetChannel() { return pChannel; }
 
 protected: // dll proxy
 	EMServerType emServerType = EMServerType::None;

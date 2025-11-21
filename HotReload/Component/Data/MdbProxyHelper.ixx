@@ -53,7 +53,7 @@ public:
 				// lost connection. reconnect
 				isReconnection = true;
 			}
-			catch(std::exception& e)
+			catch(const std::exception& e)
 			{
 				break;
 			}
@@ -68,14 +68,12 @@ protected:
 
 	const std::shared_ptr<sw::redis::Redis>& GetConnection()
 	{
-		static std::shared_ptr<sw::redis::Redis> conn;
-
 		if (pMdbProxys.contains(0))
 		{
 			return pMdbProxys[0];
 		}
 
-		return conn;
+		return nullptr;
 	}
 	
 };

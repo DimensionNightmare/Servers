@@ -14,7 +14,7 @@ public: // dll override
 
 	void SetServerType(EMServerType type) { emServerType = type; }
 
-	void SetLinkNode(ServerEntity::Ptr node) { pLink = node; }
+	void SetLinkNode(ServerEntity::CVPtr node) { pLink = node; }
 
 	std::string GetServerIp() { return sServIp; }
 	void SetServerIp(const std::string& ip) { sServIp = ip; }
@@ -27,7 +27,7 @@ public: // dll override
 	void SetConnNum(int div) { IConnNum += div; }
 
 	/// @brief this server child add
-	void SetMapLinkNode(EMServerType type, ServerEntity::Ptr node)
+	void SetMapLinkNode(EMServerType type, ServerEntity::CVPtr node)
 	{
 		if (type <= EMServerType::None || type >= EMServerType::Max)
 		{
@@ -44,9 +44,9 @@ public: // dll override
 	void SetTimerId(size_t timerId) { iCloseTimerId = timerId; }
 
 	/// @brief net socket set
-	const SocketChannel::Ptr& GetChannel() { return pChannel; }
+	SocketChannel::CVPtr GetChannel() { return pChannel; }
 
 	/// @brief net socket get
-	void SetChannel(const SocketChannel::Ptr& channel) { pChannel = channel; }
+	void SetChannel(SocketChannel::CVPtr channel) { pChannel = channel; }
 
 };

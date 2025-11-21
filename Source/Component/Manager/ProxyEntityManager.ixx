@@ -11,7 +11,7 @@ protected:
 
 	friend class UniversalMemoryPool;
 	/// @brief timer manager create
-	ProxyEntityManager(System::WPtr system):EntityManager(system)
+	ProxyEntityManager(System::CVPtr system):EntityManager(system)
 		,CheckEntityCloseTimer(this)
 		,AddEntity(this)
 	{
@@ -57,7 +57,7 @@ public: // dll proxy
 		if (mEntityMap.contains(entityId))
 		{
 			std::unique_lock ulock(oMapMutex);
-			ProxyEntity::Ptr entity = mEntityMap[entityId];
+			ProxyEntity::Ptr entity = std::move(mEntityMap[entityId]);
 			entity->Dispose();
 			mEntityMap.erase(entityId);
 			return true;

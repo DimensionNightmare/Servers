@@ -51,6 +51,7 @@ export class SocketChannel : public hv::SocketChannel
 {
 public:
 	using Ptr = std::shared_ptr<SocketChannel>;
+	using CVPtr = const Ptr&;
 
 	virtual ~SocketChannel()
 	{
@@ -63,12 +64,50 @@ public:
 	}
 
 
-	void SetWorld(World::WPtr world) 
+	void SetWorld(World::CVPtr world) 
 	{
 		pWorld = world;
 	}
 
-	World::Ptr GetWorld() { return pWorld.lock(); }
+	World::Ptr GetWorld()
+	{
+		if(pWorld.expired())
+		{
+			return nullptr;
+		}
+		return pWorld.lock();
+	}
+
+	struct EntityProxy
+	{
+		EntityProxy(Entity::CVPtr entity)
+		{
+			pWPtr = entity;
+		}
+
+		Entity::WPtr pWPtr;
+	};
+
+	void SetEntity(Entity::CVPtr entity)
+	{
+		setContextPtr(std::make_shared<EntityProxy>(entity));
+	}
+
+	template<typename T>
+	std::shared_ptr<T> GetEntity()
+	{
+		auto proxy = getContextPtr<EntityProxy>();
+		if(!proxy)
+		{
+			return nullptr;
+		}
+		if(proxy->pWPtr.expired())
+		{
+			return nullptr;
+		}
+
+		return std::static_pointer_cast<T>(proxy->pWPtr.lock());
+	}
 protected:
 
 	World::WPtr pWorld;

@@ -4,16 +4,20 @@ import GlobalServerHelper;
 import ThirdParty.PbGen;
 import Logger;
 import GlobalServerMessage;
+import FuncHelper;
+import ThirdParty.Libhv;
+import Task;
+import ServerEntity;
 
 namespace MsgHandleRegister
 {
 
 	HandleRegistry<GMsg::g2G_RetRegistSrv, void, EMMsgDeal::Ret> Exe_RetRegistSrv =
-				[](auto request, const SocketChannel::Ptr& channel)
+				[](auto request, SocketChannel::CVPtr channel)
 	{
-		GlobalServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<GlobalServerHelper>(EMSystemType::Server);
-		ServerEntityManagerHelper::Ptr entityMan = dnServer->GetServerEntityManager();
-		if (ServerEntityHelper::Ptr entity = entityMan->GetEntity(request->serverid()))
+		GlobalServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<GlobalServerHelper>(EMSystemType::Server);
+		ServerEntityManagerHelper::CVPtr entityMan = dnServer->GetServerEntityManager();
+		if (ServerEntityHelper::CVPtr entity = entityMan->GetEntity(request->serverid()))
 		{
 			if (request->isregist())
 			{
@@ -25,7 +29,7 @@ namespace MsgHandleRegister
 			}
 			else
 			{
-				ServerEntity::Ptr owner = channel->getContextPtr<ServerEntity>();
+				ServerEntity::CVPtr owner = channel->getContextPtr<ServerEntity>();
 				// remove and unlock
 				owner->GetMapLinkNode(entity->GetServerType()).remove(entity);
 				owner->ClearFlag(EMServerEntityFlag::Locked);
@@ -39,13 +43,13 @@ namespace MsgHandleRegister
 	};
 
 	HandleRegistry<GMsg::g2G_RetRegistChild, void, EMMsgDeal::Ret> Exe_RetRegistChild =
-				[](auto request, const SocketChannel::Ptr& channel)
+				[](auto request, SocketChannel::CVPtr channel)
 	{
 	
-		GlobalServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<GlobalServerHelper>(EMSystemType::Server);
-		ServerEntityManagerHelper::Ptr entityMan = dnServer->GetServerEntityManager();
+		GlobalServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<GlobalServerHelper>(EMSystemType::Server);
+		ServerEntityManagerHelper::CVPtr entityMan = dnServer->GetServerEntityManager();
 
-		ServerEntityHelper::Ptr entity = entityMan->GetEntity(request->serverid());
+		ServerEntityHelper::CVPtr entity = entityMan->GetEntity(request->serverid());
 		if(!entity)
 		{
 			return;
@@ -59,4 +63,99 @@ namespace MsgHandleRegister
 			entity->SetMapLinkNode(childType, servChild->GetSelf<ServerEntity>());
 		}
 	};
+
+	HandleRegistry<GMsg::A2g_ReqAuthAccount, GMsg::g2A_ResAuthAccount, EMMsgDeal::Redir> Msg_ReqAuthAccount =
+				[](auto request, auto response, SocketChannel::Ptr channel) -> TaskVoid
+	{
+		// if has db not need origin
+		GlobalServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<GlobalServerHelper>(EMSystemType::Server);
+
+		auto selects = dnServer->GetServerEntityManager()->GetEntitysByType(EMServerType::GateServer) 
+			| std::ranges::views::transform([](const auto& server){
+				return server->GetSelf<ServerEntityHelper>();
+			})
+			| std::views::filter([](const auto& server){
+				return server->HasFlag(EMServerEntityFlag::Locked) == true;
+			})
+			;
+
+		if ( auto it = std::ranges::min_element(selects, std::greater{}, &ServerEntityHelper::GetConnNum); it != selects.end())
+		{
+			ServerEntityHelper::CVPtr entity = *it;
+			LoggerPrint::Log(channel, ELogLevel_Debug, "send to GateServer : {}", entity->ID());
+
+			entity->SetConnNum(1);
+
+			ServerProxyHelper::CVPtr proxyHelper = dnServer->GetServerProxy();
+
+			bool success = co_await proxyHelper->AddMsg(EMMsgDeal::Req, request, entity->GetChannel(), response);
+			
+			if (!success)
+			{
+				response->set_errorcode(EL10nCode_SGlobalReqTimeout);
+
+			}
+
+			if(response->errorcode() == EL10nCode_None)
+			{
+				response->set_serverip(entity->GetServerIp());
+				response->set_serverport(entity->GetServerPort());
+			}
+			else
+			{
+				entity->SetConnNum(-1);
+			}
+
+			LoggerPrint::Log(channel, ELogLevel_Debug, "Msg_ReqAuthAccount:{}", response->DebugString());
+		}
+		else
+		{
+			response->set_errorcode(EL10nCode_NotExistGateServer);
+		}
+
+		co_return;
+	};
+
+	HandleRegistry<GMsg::A2g_ReqLogicServerIp, GMsg::g2A_ResLogicServerIp, EMMsgDeal::Redir> Msg_ReqLogicServerIp =
+		[](auto request, auto response, SocketChannel::Ptr channel) -> TaskVoid
+	{
+		
+		// if has db not need origin
+		GlobalServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<GlobalServerHelper>(EMSystemType::Server);
+
+		auto selects = dnServer->GetServerEntityManager()->GetEntitysByType(EMServerType::GateServer)
+			| std::views::filter([](const auto& param){
+				return param->HasFlag(EMServerEntityFlag::Locked) == true;
+			})
+			| std::views::transform([](const auto& param){
+				return param->GetSelf<ServerEntityHelper>();
+			})
+			;
+
+		if (auto it = std::ranges::min_element(selects, {}, &ServerEntityHelper::GetConnNum); it != selects.end())
+		{
+			ServerEntityHelper::CVPtr entity = *it;
+			LoggerPrint::Log(channel, ELogLevel_Debug, "send to GateServer : {}", entity->ID());
+			
+			ServerProxyHelper::CVPtr proxyHelper = dnServer->GetServerProxy();
+			
+			bool success = co_await proxyHelper->AddMsg(EMMsgDeal::Req, request, entity->GetChannel(), response);
+			
+			if (!success)
+			{
+				response->set_errorcode(EL10nCode_SGlobalReqTimeout);
+				
+			}
+			
+			LoggerPrint::Log(channel, ELogLevel_Debug, "Msg_ReqLogicServerIp:{}", response->DebugString());
+		}
+		else
+		{
+			response->set_errorcode(EL10nCode_NotExistGateServer);
+		}
+
+		co_return;
+	};
+
+
 }

@@ -1,4 +1,4 @@
-export module ControlServerMessage:ControlRedirect;
+export module ControlServerMessage:ControlGlobal;
 
 import ControlServerHelper;
 import ServerEntityHelper;
@@ -15,13 +15,13 @@ namespace MsgHandleRegister
 		[](auto request, auto response, SocketChannel::Ptr channel) -> TaskVoid
 	{
 		
-		ServerEntityHelper::Ptr serverEntity = nullptr;
+		ServerEntityHelper::CVPtr serverEntity = nullptr;
 
-		ControlServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<ControlServerHelper>(EMSystemType::Server);
+		ControlServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<ControlServerHelper>(EMSystemType::Server);
 
-		ServerEntityManagerHelper::Ptr manager = dnServer->GetServerEntityManager();
+		ServerEntityManagerHelper::CVPtr entityMan = dnServer->GetServerEntityManager();
 
-		auto selects = manager->GetEntitysByType(EMServerType::GlobalServer)
+		auto selects = entityMan->GetEntitysByType(EMServerType::GlobalServer)
 			| std::views::transform([](const auto& server)
 				{
 					return server->GetSelf<ServerEntityHelper>();
@@ -33,7 +33,7 @@ namespace MsgHandleRegister
 
 		if (auto it = std::ranges::min_element(selects, std::greater{}, &ServerEntityHelper::GetConnNum); it != selects.end())
 		{
-			ServerProxyHelper::Ptr proxyHelper = dnServer->GetServerProxy();
+			ServerProxyHelper::CVPtr proxyHelper = dnServer->GetServerProxy();
 
 			bool success = co_await proxyHelper->AddMsg(EMMsgDeal::Redir, request, (*it)->GetChannel(), response);
 
@@ -55,13 +55,13 @@ namespace MsgHandleRegister
 		[](auto request, auto response, SocketChannel::Ptr channel) -> TaskVoid
 	{
 		
-		ServerEntityHelper::Ptr serverEntity = nullptr;
+		ServerEntityHelper::CVPtr serverEntity = nullptr;
 
-		ControlServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<ControlServerHelper>(EMSystemType::Server);
+		ControlServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<ControlServerHelper>(EMSystemType::Server);
 
-		ServerEntityManagerHelper::Ptr manager = dnServer->GetServerEntityManager();
+		ServerEntityManagerHelper::CVPtr entityMan = dnServer->GetServerEntityManager();
 
-		auto servers = manager->GetEntitysByType(EMServerType::GlobalServer)
+		auto selects = entityMan->GetEntitysByType(EMServerType::GlobalServer)
 			| std::views::transform([](const auto& param){
 				return param->GetSelf<ServerEntityHelper>();
 			})
@@ -70,9 +70,9 @@ namespace MsgHandleRegister
 			});
 
 
-		if (auto it = std::ranges::min_element(servers, {}, &ServerEntityHelper::GetConnNum); it != servers.end())
+		if (auto it = std::ranges::min_element(selects, {}, &ServerEntityHelper::GetConnNum); it != selects.end())
 		{
-			ServerProxyHelper::Ptr proxyHelper = dnServer->GetServerProxy();
+			ServerProxyHelper::CVPtr proxyHelper = dnServer->GetServerProxy();
 			
 			bool success = co_await proxyHelper->AddMsg(EMMsgDeal::Redir, request, (*it)->GetChannel(), response);
 			

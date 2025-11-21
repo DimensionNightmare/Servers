@@ -19,7 +19,7 @@ export class ClientEntity : public Entity, public BitFlag<EMClientEntityFlag>
 {
 protected:
 	friend class UniversalMemoryPool;
-	ClientEntity(World::WPtr world):Entity(world)
+	ClientEntity(World::CVPtr world):Entity(world)
 	{
 		eEntityType = EMEntityType::Client;
 
@@ -29,6 +29,7 @@ protected:
 
 public:
 	using Ptr = std::shared_ptr<ClientEntity>;
+	using CVPtr = const Ptr&;
 	virtual ~ClientEntity()
 	{
 		
@@ -36,9 +37,9 @@ public:
 
 	virtual void Dispose() override
 	{
-		Entity::Dispose();
-
 		pDbEntity = nullptr;
+		
+		Entity::Dispose();
 	}
 	
 public: // dll override

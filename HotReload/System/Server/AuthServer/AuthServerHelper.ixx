@@ -48,9 +48,9 @@ public:
 		
 		if (ClientProxyHelper::Ptr proxy = GetClientProxy())
 		{
-			proxy->onConnection = [this](const SocketChannel::Ptr& channel)
+			proxy->onConnection = [this](SocketChannel::CVPtr channel)
 				{
-					ClientProxyHelper::Ptr proxyHelper = GetClientProxy();
+					ClientProxyHelper::CVPtr proxyHelper = GetClientProxy();
 
 					if(!proxyHelper){ return ;}
 
@@ -60,7 +60,7 @@ public:
 					{
 						LoggerPrint::Log(GetWorld(), EL10nCode_CliConnOn, peeraddr, channel->fd(), channel->id());
 
-						channel->SetWorld(GetWorldW());
+						channel->SetWorld(GetWorld());
 
 						
 						GetWorld()->RemoveEvent(EMEventType::ClientProxyRegist);
@@ -86,9 +86,9 @@ public:
 					}
 				};
 
-			proxy->onMessage = [this](const SocketChannel::Ptr& channel, hv::Buffer* buf)
+			proxy->onMessage = [this](SocketChannel::CVPtr channel, hv::Buffer* buf)
 				{
-					ClientProxyHelper::Ptr proxyHelper = GetClientProxy();
+					ClientProxyHelper::CVPtr proxyHelper = GetClientProxy();
 
 					if(!proxyHelper){ return ;}
 					

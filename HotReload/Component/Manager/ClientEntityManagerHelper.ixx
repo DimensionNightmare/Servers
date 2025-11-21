@@ -34,7 +34,7 @@ public:
 		return nullptr;
 	}
 
-	ClientEntityHelper::Ptr GetEntity(size_t entityId)
+	ClientEntityHelper::CVPtr GetEntity(size_t entityId)
 	{
 		std::shared_lock lock(oMapMutex);
 		if (mEntityMap.contains(entityId))
@@ -47,7 +47,7 @@ public:
 
 	Task<bool> LoadEntity(ClientEntityHelper::Ptr entity, GMsg::d2L_ReqLoadEntityData* inRequest, GMsg::L2d_ResLoadEntityData* inResponse)
 	{
-		const ClientProxyHelper::Ptr& clientProxy = GetOwner()->GetComponent<ClientProxyHelper>(EMComponentType::ClientProxy);
+		ClientProxyHelper::CVPtr clientProxy = GetOwner()->GetComponent<ClientProxyHelper>(EMComponentType::ClientProxy);
 
 		if (!clientProxy || clientProxy->RegistType() != std::to_underlying(EMServerType::GateServer))
 		{
@@ -88,7 +88,7 @@ public:
 		size_t entityId = entity->ID();
 		std::string keyName = std::format("{}_{}", tablename, entityId);
 
-		const MdbProxyHelper::Ptr& dbProxy = GetOwner()->GetComponent<MdbProxyHelper>(EMComponentType::MdbProxy);
+		MdbProxyHelper::CVPtr dbProxy = GetOwner()->GetComponent<MdbProxyHelper>(EMComponentType::MdbProxy);
 		if(auto transaction = dbProxy->GetTransaction())
 		{
 			try
@@ -99,7 +99,7 @@ public:
 					binData = *optValue;
                 }
 			}
-			catch(std::exception& e)
+			catch(const std::exception& e)
 			{
 				LoggerPrint::Log(GetWorld(), ELogLevel_Error, "entity Load Redis err {} ", e.what());
 			}
@@ -197,7 +197,7 @@ public:
 	}
 
 	/// @brief save entity data to database. this is task.
-	TaskVoid SaveEntity(ClientEntityHelper::Ptr entity, bool offline = false)
+	TaskVoid SaveEntity(ClientEntityHelper::CVPtr entity, bool offline = false)
 	{
 		size_t entityId = entity->ID();
 
@@ -239,7 +239,7 @@ public:
 		GMsg::D2L_ResSaveData response;
 
 		{
-			ClientProxyHelper::Ptr clientProxy = GetOwner()->GetComponent<ClientProxyHelper>(EMComponentType::ClientProxy);
+			ClientProxyHelper::CVPtr clientProxy = GetOwner()->GetComponent<ClientProxyHelper>(EMComponentType::ClientProxy);
 
 			bool success = co_await clientProxy->AddMsg(EMMsgDeal::Redir, &request, &response);
 
@@ -258,7 +258,7 @@ public:
 		}
 
 		// nosql
-		MdbProxyHelper::Ptr dbProxy = GetOwner()->GetComponent<MdbProxyHelper>(EMComponentType::MdbProxy);
+		MdbProxyHelper::CVPtr dbProxy = GetOwner()->GetComponent<MdbProxyHelper>(EMComponentType::MdbProxy);
 		if(auto transaction = dbProxy->GetTransaction())
 		{
 			std::string keyName = std::format("{}_{}", tablename, entityId);
@@ -274,13 +274,13 @@ public:
 	void CheckSaveEntity(bool shutdown = false)
 	{
 
-		std::function<void(ClientEntityHelper::Ptr, bool)> dealFunc = nullptr;
+		std::function<void(ClientEntityHelper::CVPtr, bool)> dealFunc = nullptr;
 		
-		ClientProxyHelper::Ptr clientProxy = GetOwner()->GetComponent<ClientProxyHelper>(EMComponentType::ClientProxy);
+		ClientProxyHelper::CVPtr clientProxy = GetOwner()->GetComponent<ClientProxyHelper>(EMComponentType::ClientProxy);
 
 		if (!clientProxy || clientProxy->RegistType() != std::to_underlying(EMServerType::GateServer))
 		{
-			dealFunc = [this](ClientEntityHelper::Ptr entity, bool offline)
+			dealFunc = [this](ClientEntityHelper::CVPtr entity, bool offline)
 				{
 					std::string binData;
 					size_t entityId = entity->ID();
@@ -307,7 +307,7 @@ public:
 				{
 					return entity->GetDbEntity() != nullptr;
 				})
-			| std::ranges::views::transform([](auto& entity)
+			| std::ranges::views::transform([](const auto& entity)
 				{
 					return entity->GetSelf<ClientEntityHelper>();
 				});

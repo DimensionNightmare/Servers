@@ -39,7 +39,7 @@ public:
 
 	bool CheckDatabase()
 	{
-		if(RdbProxyHelper::Ptr proxy = GetRdbProxy())
+		if(RdbProxyHelper::CVPtr proxy = GetRdbProxy())
 		{
 			try
 			{
@@ -161,9 +161,9 @@ public:
 
 		if (ClientProxyHelper::Ptr proxy = GetClientProxy())
 		{
-			proxy->onConnection = [this](const SocketChannel::Ptr& channel)
+			proxy->onConnection = [this](SocketChannel::CVPtr channel)
 				{
-					ClientProxyHelper::Ptr proxyHelper = GetClientProxy();
+					ClientProxyHelper::CVPtr proxyHelper = GetClientProxy();
 
 					if(!proxyHelper){ return ;}
 
@@ -173,7 +173,7 @@ public:
 					{
 						LoggerPrint::Log(GetWorld(), EL10nCode_SrvConnOn, peeraddr, channel->fd(), channel->id());
 
-						channel->SetWorld(GetWorldW());
+						channel->SetWorld(GetWorld());
 						
 						GetWorld()->RemoveEvent(EMEventType::ClientProxyRegist);
 						GetWorld()->AddEvent<&DatabaseServerHelper::HandleClientRegist>(EMEventType::ClientProxyRegist, GetSelf<DatabaseServerHelper>());
@@ -207,7 +207,7 @@ public:
 
 								proxyHelper->GetTimer()->SetTimeout(200, [this, originIp, originPort](size_t timerID)
 									{
-										ClientProxyHelper::Ptr proxyHelper = GetClientProxy();
+										ClientProxyHelper::CVPtr proxyHelper = GetClientProxy();
 										if(!proxyHelper){ return ;}
 										proxyHelper->RedirectClient(std::stoi(originPort), originIp);
 									});
@@ -222,9 +222,9 @@ public:
 					}
 				};
 
-			proxy->onMessage = [this](const SocketChannel::Ptr& channel, hv::Buffer* buf)
+			proxy->onMessage = [this](SocketChannel::CVPtr channel, hv::Buffer* buf)
 				{
-					ClientProxyHelper::Ptr proxyHelper = GetClientProxy();
+					ClientProxyHelper::CVPtr proxyHelper = GetClientProxy();
 
 					if(!proxyHelper){ return ;}
 

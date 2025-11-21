@@ -10,17 +10,17 @@ import GateServerMessage;
 namespace MsgHandleRegister
 {
 
-	void Evt_RetRegistChild(Server::Ptr server)
+	void Evt_RetRegistChild(Server::CVPtr server)
 	{
-		GateServerHelper::Ptr dnServer = server->GetSelf<GateServerHelper>();
-		ServerEntityManagerHelper::Ptr entityMan = dnServer->GetServerEntityManager();
-		ClientProxyHelper::Ptr clientProxy = dnServer->GetClientProxy();
+		GateServerHelper::CVPtr dnServer = server->GetSelf<GateServerHelper>();
+		ServerEntityManagerHelper::CVPtr entityMan = dnServer->GetServerEntityManager();
+		ClientProxyHelper::CVPtr clientProxy = dnServer->GetClientProxy();
 
 		GMsg::g2G_RetRegistChild request;
 
 		request.set_serverid(dnServer->ID());
 
-		auto AddChild = [&request](ServerEntity::Ptr serv)
+		auto AddChild = [&request](ServerEntity::CVPtr serv)
 			{
 				GMsg::COM_ReqRegistSrv* child = request.add_childs();
 				child->set_serverid(serv->ID());
@@ -50,10 +50,10 @@ namespace MsgHandleRegister
 	// self request
 	HandleClientRegistry Evt_ReqRegistSrv = [](Server::Ptr server) -> TaskVoid
 	{
-		GateServerHelper::Ptr dnServer = server->GetSelf<GateServerHelper>();
+		GateServerHelper::CVPtr dnServer = server->GetSelf<GateServerHelper>();
 
-		ClientProxyHelper::Ptr clientProxy = dnServer->GetClientProxy();
-		ServerProxyHelper::Ptr serverProxy = dnServer->GetServerProxy();
+		ClientProxyHelper::CVPtr clientProxy = dnServer->GetClientProxy();
+		ServerProxyHelper::CVPtr serverProxy = dnServer->GetServerProxy();
 
 		LoggerPrint::Log(server, ELogLevel_Debug, "Client:{}, port:{}", clientProxy->remote_host, clientProxy->remote_port);
 
@@ -101,11 +101,11 @@ namespace MsgHandleRegister
 	};
 
 	HandleRegistry<GMsg::COM_ReqRegistSrv, GMsg::COM_ResRegistSrv, EMMsgDeal::Req> Msg_ReqRegistSrv =
-				[](auto request, auto response, const SocketChannel::Ptr& channel)
+				[](auto request, auto response, SocketChannel::CVPtr channel)
 	{
 		
-		GateServerHelper::Ptr server = channel->GetWorld()->GetSystem<GateServerHelper>(EMSystemType::Server);
-		ServerEntityManagerHelper::Ptr entityMan = server->GetServerEntityManager();
+		GateServerHelper::CVPtr server = channel->GetWorld()->GetSystem<GateServerHelper>(EMSystemType::Server);
+		ServerEntityManagerHelper::CVPtr entityMan = server->GetServerEntityManager();
 
 		LoggerPrint::Log(server, ELogLevel_Debug, "ip Reqregist: {}, {}", channel->peeraddr(), request->servertype());
 
@@ -119,8 +119,10 @@ namespace MsgHandleRegister
 			response->set_errorcode(EL10nCode_RegistServerTypeError);
 		}
 
+		ServerEntityHelper::Ptr entity;
+
 		//exist?
-		if (ServerEntityHelper::Ptr entity = channel->getContextPtr<ServerEntityHelper>())
+		if (entity = channel->getContextPtr<ServerEntityHelper>())
 		{
 			response->set_errorcode(EL10nCode_RegistServerChannelExist);
 		}
@@ -132,7 +134,7 @@ namespace MsgHandleRegister
 			entity->SetServerPort(request->serverport());
 			entity->SetChannel(channel);
 
-			channel->setContextPtr(entity);
+			channel->SetEntity(entity);
 
 			response->set_retservertype(std::to_underlying(server->GetServerType()));
 		}
@@ -148,14 +150,14 @@ namespace MsgHandleRegister
 			request.set_isregist(true);
 			request.set_serverid(serverId);
 
-			ClientProxyHelper::Ptr clientProxy = server->GetClientProxy();
+			ClientProxyHelper::CVPtr clientProxy = server->GetClientProxy();
 
 			clientProxy->AddMsg(EMMsgDeal::Ret, &request).Resume();
 		}
 	};
 
 	HandleRegistry<GMsg::COM_RetHeartbeat, void, EMMsgDeal::Ret> Exe_RetHeartbeat =
-				[](auto request, const SocketChannel::Ptr& channel)
+				[](auto request, SocketChannel::CVPtr channel)
 	{
 	};
 }

@@ -10,16 +10,16 @@ import AuthServerHelper;
 #define MSGSET writer->response->SetBody
 
 
-export void ApiDevelopment(Server::Ptr server)
+export void ApiDevelopment(Server::CVPtr server)
 {
-	WebProxyHelper::Ptr webProxyHelper = server->GetComponent<WebProxyHelper>(EMComponentType::WebProxy);
+	WebProxyHelper::CVPtr webProxyHelper = server->GetComponent<WebProxyHelper>(EMComponentType::WebProxy);
 
-	webProxyHelper->service->POST("/Develop/Server/LogicRandInfo", [server](hv::HttpRequestPtr req, hv::HttpResponseWriterPtr writer) ->TaskVoid
+	webProxyHelper->service->POST("/Develop/Server/LogicRandInfo", [server](hv::HttpRequestPtr req, hv::HttpResponseWriterPtr writer) -> TaskVoid
 		{
 			nlohmann::json retData;
 
-			AuthServerHelper::Ptr dnServer = server->GetSelf<AuthServerHelper>();
-			ClientProxyHelper::Ptr clientProxy = dnServer->GetClientProxy();
+			AuthServerHelper::CVPtr dnServer = server->GetSelf<AuthServerHelper>();
+			ClientProxyHelper::CVPtr clientProxy = dnServer->GetClientProxy();
 
 			GMsg::A2g_ReqLogicServerIp request;
 			GMsg::g2A_ResLogicServerIp response;

@@ -13,13 +13,13 @@ namespace MsgHandleRegister
 {
 
 	// client request
-	HandleClientRegistry Evt_ReqRegistSrv = [](Server::Ptr server)->TaskVoid
+	HandleClientRegistry Evt_ReqRegistSrv = [](Server::Ptr server)-> TaskVoid
 	{
-		AuthServerHelper::Ptr dnServer = server->GetSelf<AuthServerHelper>();
+		AuthServerHelper::CVPtr dnServer = server->GetSelf<AuthServerHelper>();
 
-		ClientProxyHelper::Ptr clientProxy = dnServer->GetClientProxy();
+		ClientProxyHelper::CVPtr clientProxy = dnServer->GetClientProxy();
 
-		WebProxyHelper::Ptr webProxy = dnServer->GetWebProxy();
+		WebProxyHelper::CVPtr webProxy = dnServer->GetWebProxy();
 
 		uint32_t msgId = clientProxy->GetMsgId();
 
@@ -38,7 +38,7 @@ namespace MsgHandleRegister
 
 		request.set_serverport(webProxy->port);
 
-		if(WebProxyHelper::Ptr serverProxy = dnServer->GetWebProxy())
+		if(WebProxyHelper::CVPtr serverProxy = dnServer->GetWebProxy())
 		{
 			request.set_serverport(serverProxy->port);
 		}

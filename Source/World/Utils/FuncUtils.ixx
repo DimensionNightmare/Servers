@@ -140,7 +140,7 @@ export
 			pInstanceOrigin = instance;
 		}
 	
-		EventContainer(std::weak_ptr<Class> instance) : EventContainer()
+		EventContainer(const std::shared_ptr<Class>& instance) : EventContainer()
 		{
 			pInstance = instance;
 		}
@@ -241,6 +241,7 @@ public:
 
 	using Base::Base;
 	using Ptr = std::shared_ptr<Derived>;
+	using CVPtr = const Ptr&;
 	
 	Helper() = delete;
 	Helper(Helper&) = delete;

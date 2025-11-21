@@ -8,38 +8,38 @@ module;
 #include "Server/S_Gate.pb.h"
 #include "Client/C_Auth.pb.h"
 #include "Server/S_Logic.pb.h"
+#include "Client/C_Room.pb.h"
 export module ThirdParty.PbGen;
 
 import ThirdParty.Protobuf;
-
-// make_wrapper using  to export static Function
-
-template <typename F>
-concept NoArgCallable = requires(F f) {
-    { std::invoke(f) } -> std::same_as<void>;
-};
-
-template <NoArgCallable F>
-auto make_wrapper(F&& f) {
-    return [f=std::forward<F>(f)]() { 
-        f(); 
-    };
-}
-
-template <typename F>
-auto make_wrapper(F&& f) requires (!NoArgCallable<F>) {
-    return [f=std::forward<F>(f)](auto&&... args) -> decltype(auto) {
-        return f(std::forward<decltype(args)>(args)...);
-    };
-}
 
 export
 {
 	using ::GDef_MapPointRecord;
 	using ::GDef_Vector3;
 	using ::GDef_MapPoint;
+
+	enum CustomFieldOptions
+	{
+		e_primary_key = 1,
+		e_len_limit = 2,
+		e_unique = 3,
+		e_default = 4,
+		e_datetime = 5,
+		e_autogen = 6,
+	};
+
+	std::shared_ptr<Message> operator "" _GMsg(const char* name, size_t n)
+	{
+		auto descipt = Proto::FindMessageTypeByName(std::string(name, n));
+
+		auto message = Proto::GetPrototype(descipt);
+
+		return std::shared_ptr<Message>(message->New());
+	}
 }
 
+export namespace _GMsg1 = ::GMsg;
 
 
 export namespace GMsg
@@ -64,6 +64,8 @@ export namespace GMsg
 
 	// Gate <-> Logic
 	using GMsg::g2L_RetProxyOffline;
+	using GMsg::S2C_ReqGetRoom;
+	using GMsg::S2C_ResGetRoom;
 
 	// Auth <-> Gate
 	using GMsg::A2g_ReqAuthAccount;
@@ -86,10 +88,6 @@ export namespace GDb
 	using GDb::Account;
 	using GDb::Player;
 	using GDb::SingleTon;
-
-	using AccountPtr = std::shared_ptr<GDb::Account>;
-	using PlayerPtr = std::shared_ptr<GDb::Player>;
-	using SingleTonPtr = std::shared_ptr<GDb::SingleTon>;
 }
 
 export namespace PbGen

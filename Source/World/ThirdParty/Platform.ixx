@@ -16,25 +16,6 @@ export module ThirdParty.Platform;
 
 import std.compat;
 
-template <typename F>
-concept NoArgCallable = requires(F f) {
-    { std::invoke(f) } -> std::same_as<void>;
-};
-
-template <NoArgCallable F>
-auto make_wrapper(F&& f) {
-    return [f=std::forward<F>(f)]() { 
-        f(); 
-    };
-}
-
-template <typename F>
-auto make_wrapper(F&& f) requires (!NoArgCallable<F>) {
-    return [f=std::forward<F>(f)](auto&&... args) -> decltype(auto) {
-        return f(std::forward<decltype(args)>(args)...);
-    };
-}
-
 #ifdef _WIN32
 
 export namespace Platform

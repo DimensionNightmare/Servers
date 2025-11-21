@@ -19,12 +19,12 @@ public:
 		RoomEntity::Ptr entity = GetBase()->AddEntity(entityId);
 		mEntityMapList[entityId].emplace_back(entity);
 
-		RoomEntityHelper::Ptr helper = entity->GetSelf<RoomEntityHelper>();
+		RoomEntityHelper::CVPtr helper = entity->GetSelf<RoomEntityHelper>();
 		helper->SetMapID(entityId);
 		return helper;
 	}
 
-	void MountEntity(RoomEntityHelper::Ptr entity)
+	void MountEntity(RoomEntityHelper::CVPtr entity)
 	{
 		std::unique_lock ulock(oMapMutex);
 		if (mEntityMap.contains(entity->ID()))
@@ -33,13 +33,13 @@ public:
 		}
 	}
 
-	void UnMountEntity(RoomEntityHelper::Ptr entity)
+	void UnMountEntity(RoomEntityHelper::CVPtr entity)
 	{
 		std::unique_lock ulock(oMapMutex);
 		mEntityMapList[entity->MapID()].remove(entity);
 	}
 
-	RoomEntityHelper::Ptr GetEntity(size_t entityId)
+	RoomEntityHelper::CVPtr GetEntity(size_t entityId)
 	{
 		std::shared_lock lock(oMapMutex);
 		if (mEntityMap.contains(entityId))

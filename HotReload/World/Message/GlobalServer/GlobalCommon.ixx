@@ -12,13 +12,13 @@ namespace MsgHandleRegister
 {
 
 	// client request
-	HandleClientRegistry Evt_ReqRegistSrv = [](Server::Ptr server)->TaskVoid
+	HandleClientRegistry Evt_ReqRegistSrv = [](Server::Ptr server)-> TaskVoid
 	{
-		GlobalServerHelper::Ptr dnServer = server->GetSelf<GlobalServerHelper>();
+		GlobalServerHelper::CVPtr dnServer = server->GetSelf<GlobalServerHelper>();
 
-		ClientProxyHelper::Ptr clientProxy = dnServer->GetClientProxy();
+		ClientProxyHelper::CVPtr clientProxy = dnServer->GetClientProxy();
 
-		ServerProxyHelper::Ptr serverProxy = dnServer->GetServerProxy();
+		ServerProxyHelper::CVPtr serverProxy = dnServer->GetServerProxy();
 
 		LoggerPrint::Log(server, ELogLevel_Debug, "Client:{}, port:{}", clientProxy->remote_host, clientProxy->remote_port);
 
@@ -63,14 +63,14 @@ namespace MsgHandleRegister
 	};
 
 	HandleRegistry<GMsg::COM_ReqRegistSrv, GMsg::COM_ResRegistSrv, EMMsgDeal::Req> Msg_ReqRegistSrv =
-				[](auto request, auto response, const SocketChannel::Ptr& channel, auto reply)
+				[](auto request, auto response, SocketChannel::CVPtr channel, auto reply)
 	{
 		
-		GlobalServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<GlobalServerHelper>(EMSystemType::Server);
+		GlobalServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<GlobalServerHelper>(EMSystemType::Server);
 
 		LoggerPrint::Log(channel, ELogLevel_Debug, "ip Reqregist: {}, {}", channel->peeraddr(), request->servertype());
 
-		ServerEntityManagerHelper::Ptr entityMan = dnServer
+		ServerEntityManagerHelper::CVPtr entityMan = dnServer
 			->GetComponent<ServerEntityManagerHelper>(EMComponentType::ServerEntityManager);
 
 
@@ -78,13 +78,15 @@ namespace MsgHandleRegister
 
 		const std::string& ipPort = channel->localaddr();
 
+		ServerEntityHelper::Ptr entity;
+
 		if (regType < EMServerType::GateServer || regType > EMServerType::LogicServer || ipPort.empty())
 		{
 			response->set_errorcode(EL10nCode_RegistServerTypeError);
 		}
 
 		//exist?
-		else if (ServerEntityHelper::Ptr entity = channel->getContextPtr<ServerEntityHelper>())
+		else if (entity = channel->getContextPtr<ServerEntityHelper>())
 		{
 			response->set_errorcode(EL10nCode_RegistServerChannelExist);
 		}
@@ -102,14 +104,14 @@ namespace MsgHandleRegister
 				}
 
 				// already connect
-				if (const SocketChannel::Ptr& sock = entity->GetChannel())
+				if (SocketChannel::CVPtr sock = entity->GetChannel())
 				{
 					response->set_errorcode(EL10nCode_PullServerReqRegistAlready);
 				}
 				else
 				{
 					entity->SetChannel(channel);
-					channel->setContextPtr(entity);
+					channel->SetEntity(entity);
 					// entity->SetLinkNode(nullptr);
 
 					size_t pos = ipPort.find(":");
@@ -136,7 +138,7 @@ namespace MsgHandleRegister
 			entity->SetServerPort(request->serverport());
 			entity->SetChannel(channel);
 
-			channel->setContextPtr(entity);
+			channel->SetEntity(entity);
 
 			response->set_retservertype(std::to_underlying(dnServer->GetServerType()));
 		}
@@ -155,7 +157,7 @@ namespace MsgHandleRegister
 	};
 
 	HandleRegistry<GMsg::COM_RetHeartbeat, void, EMMsgDeal::Ret> Exe_RetHeartbeat =
-				[](auto request, const SocketChannel::Ptr& channel)
+				[](auto request, SocketChannel::CVPtr channel)
 	{
 
 	};

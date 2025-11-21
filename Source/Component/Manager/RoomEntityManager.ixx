@@ -11,7 +11,7 @@ protected:
 
 	friend class UniversalMemoryPool;
 	/// @brief timer manager create
-	RoomEntityManager(System::WPtr system):EntityManager(system)
+	RoomEntityManager(System::CVPtr system):EntityManager(system)
 		,CheckEntityCloseTimer(this)
 		,AddEntity(this)
 	{
@@ -25,9 +25,9 @@ public:
 
 	virtual void Dispose() override
 	{
-		EntityManager::Dispose();
-
 		mEntityMapList.clear();
+		
+		EntityManager::Dispose();
 	}
 
 	void EntityCloseTimer(size_t timerID)
@@ -55,7 +55,7 @@ public: // dll proxy
 	{
 		if (mEntityMap.contains(entityId))
 		{
-			RoomEntity::Ptr entity = mEntityMap[entityId];
+			RoomEntity::Ptr entity = std::move(mEntityMap[entityId]);
 			entity->Dispose();
 			
 			std::unique_lock ulock(oMapMutex);

@@ -12,7 +12,7 @@ export class ServerEntityManager : public EntityManager<ServerEntity>
 protected:
 	friend class UniversalMemoryPool;
 	/// @brief timer manager create
-	ServerEntityManager(System::WPtr system):EntityManager(system)
+	ServerEntityManager(System::CVPtr system):EntityManager(system)
 		,CheckEntityCloseTimer(this)
 		,AddEntity(this)
 	{
@@ -27,9 +27,9 @@ public:
 
 	virtual void Dispose() override
 	{
-		EntityManager::Dispose();
-
 		mEntityMapList.clear();
+		
+		EntityManager::Dispose();
 	}
 	
 	/// @brief 
@@ -48,7 +48,7 @@ public:
 		if(mEntityMap.count(entityId))
 		{
 			ServerEntity::Ptr rm = mEntityMap[entityId];
-			if(ServerEntity::Ptr link = rm->LinkNode())
+			if(ServerEntity::CVPtr link = rm->LinkNode())
 			{
 				link->GetMapLinkNode(rm->GetServerType()).remove(rm);
 			}
@@ -71,18 +71,19 @@ public: // dll override
 	{
 		if (mEntityMap.contains(entityId))
 		{
-			ServerEntity::Ptr entity = mEntityMap[entityId];
+			ServerEntity::Ptr entity = std::move(mEntityMap[entityId]);
 
-			if (ServerEntity::Ptr owner = entity->LinkNode())
+			if (ServerEntity::CVPtr owner = entity->LinkNode())
 			{
 				owner->ClearFlag(EMServerEntityFlag::Locked);
 			}
 
-			entity->Dispose();
-
 			std::unique_lock ulock(oMapMutex);
 			mEntityMapList[entity->GetServerType()].remove(entity);
 			mEntityMap.erase(entityId);
+
+			entity->Dispose();
+			
 			return true;
 		}
 

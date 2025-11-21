@@ -130,6 +130,6 @@ public:
 
 	uint32_t GetMsgId() { return ++iMsgId; }
 	
-	const SocketChannel::Ptr& GetChannel() { return channel; }
+	SocketChannel::CVPtr GetChannel() { return channel; }
 	
 };

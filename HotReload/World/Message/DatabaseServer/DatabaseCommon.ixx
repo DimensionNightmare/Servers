@@ -12,11 +12,11 @@ namespace MsgHandleRegister
 {
 
 	// client request
-	HandleClientRegistry Evt_ReqRegistSrv = [](Server::Ptr server)->TaskVoid
+	HandleClientRegistry Evt_ReqRegistSrv = [](Server::Ptr server)-> TaskVoid
 	{
-		DatabaseServerHelper::Ptr dnServer = server->GetSelf<DatabaseServerHelper>();
+		DatabaseServerHelper::CVPtr dnServer = server->GetSelf<DatabaseServerHelper>();
 
-		ClientProxyHelper::Ptr clientProxy = dnServer->GetClientProxy();
+		ClientProxyHelper::CVPtr clientProxy = dnServer->GetClientProxy();
 		
 		LoggerPrint::Log(server, ELogLevel_Debug, "database req regist Client:{}, port:{}", clientProxy->remote_host, clientProxy->remote_port);
 		
@@ -59,11 +59,11 @@ namespace MsgHandleRegister
 	};
 
 	HandleRegistry<GMsg::COM_RetChangeCtlSrv, void, EMMsgDeal::Ret> Exe_RetChangeCtlSrv =
-		[](auto request, const SocketChannel::Ptr& channel)
+		[](auto request, SocketChannel::CVPtr channel)
 	{
-		DatabaseServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<DatabaseServerHelper>(EMSystemType::Server);
+		DatabaseServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<DatabaseServerHelper>(EMSystemType::Server);
 
-		ClientProxyHelper::Ptr clientProxy = dnServer->GetClientProxy();
+		ClientProxyHelper::CVPtr clientProxy = dnServer->GetClientProxy();
 
 		clientProxy->RedirectClient(request->serverport(), request->serverip());
 	};

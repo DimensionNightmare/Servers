@@ -12,22 +12,22 @@ namespace MsgHandleRegister
 {
 
 	HandleRegistry<GMsg::A2g_ReqAuthAccount, GMsg::g2A_ResAuthAccount, EMMsgDeal::Req> Exe_ReqUserToken =
-				[](auto request, auto response, const SocketChannel::Ptr& channel)
+				[](auto request, auto response, SocketChannel::CVPtr channel)
 	{
 
-		GateServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<GateServerHelper>(EMSystemType::Server);
-		ProxyEntityManagerHelper::Ptr entityMan = dnServer->GetProxyEntityManager();
+		GateServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<GateServerHelper>(EMSystemType::Server);
+		ProxyEntityManagerHelper::CVPtr entityMan = dnServer->GetProxyEntityManager();
 		ProxyEntityHelper::Ptr entity = entityMan->GetEntity(request->accountid());
 		if (entity)
 		{
 			//exit
-			if (const SocketChannel::Ptr& online = entity->GetChannel())
+			if (SocketChannel::CVPtr online = entity->GetChannel())
 			{
 				// kick channel
 				GMsg::S2C_RetAccountReplace notify_request;
 				notify_request.set_serverip(request->serverip());
 
-				ServerProxyHelper::Ptr proxyHelper = dnServer->GetServerProxy();
+				ServerProxyHelper::CVPtr proxyHelper = dnServer->GetServerProxy();
 				
 				proxyHelper->AddMsg(EMMsgDeal::Ret, &notify_request, online).Resume();
 
@@ -43,12 +43,12 @@ namespace MsgHandleRegister
 
 					entity->GetChannel()->deleteContextPtr();
 
-					ServerEntityManagerHelper::Ptr serverEntityMan = dnServer->GetServerEntityManager();
-					if(ServerEntityHelper::Ptr serverEntity = serverEntityMan->GetEntity(serverId))
+					ServerEntityManagerHelper::CVPtr serverEntityMan = dnServer->GetServerEntityManager();
+					if(ServerEntityHelper::CVPtr serverEntity = serverEntityMan->GetEntity(serverId))
 					{
 						request->set_accountid(entity->ID());
 
-						ServerProxyHelper::Ptr proxyHelper = dnServer->GetServerProxy();
+						ServerProxyHelper::CVPtr proxyHelper = dnServer->GetServerProxy();
 				
 						proxyHelper->AddMsg(EMMsgDeal::Redir, request, serverEntity->GetChannel()).Resume();
 					}
@@ -83,16 +83,24 @@ namespace MsgHandleRegister
 	};
 
 	HandleRegistry<GMsg::A2g_ReqLogicServerIp, GMsg::g2A_ResLogicServerIp, EMMsgDeal::Req> Exe_ResLogicServerIp =
-				[](auto request, auto response, const SocketChannel::Ptr& channel)
+				[](auto request, auto response, SocketChannel::CVPtr channel)
 	{
 
-		GateServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<GateServerHelper>(EMSystemType::Server);
-		
-		ServerEntityManagerHelper::Ptr serverEntityMan = dnServer->GetServerEntityManager();
-		std::list<ServerEntity::Ptr> serverEntityList = serverEntityMan->GetEntitysByType(EMServerType::LogicServer);
-		if(serverEntityList.size() > 0)
+		GateServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<GateServerHelper>(EMSystemType::Server);
+
+		auto selects = dnServer->GetServerEntityManager()->GetEntitysByType(EMServerType::LogicServer)
+			| std::views::transform([](const auto& param){
+				return param->GetSelf<ServerEntityHelper>();
+			})
+			| std::views::filter([](const auto& param)
+				{
+					return param->GetTimerId() == 0;
+				})
+			;
+
+		if(auto it = std::ranges::min_element(selects, std::greater{}, &ServerEntityHelper::GetConnNum); it != selects.end())
 		{
-			auto serverEntity = serverEntityList.front()->GetSelf<ServerEntityHelper>();
+			ServerEntityHelper::CVPtr serverEntity = *it;
 			response->set_serverip(serverEntity->GetServerIp());
 			response->set_serverport(serverEntity->GetServerPort());
 		}

@@ -8,7 +8,7 @@ export class Timer : public System
 protected:
 	friend class UniversalMemoryPool;
 	/// @brief
-	Timer(World::WPtr world):System(world)
+	Timer(World::CVPtr world):System(world)
 	{
 		emSystemType = EMSystemType::Timer;
 
@@ -17,6 +17,7 @@ protected:
 	}
 public:
 	using Ptr = std::shared_ptr<Timer>;
+	using CVPtr = const Ptr&;
 	using WPtr = std::weak_ptr<Timer>;
 
 	/// @brief
@@ -27,14 +28,15 @@ public:
 
 	virtual bool Awake() override
 	{
-		GetWorld()->AddEvent<&Timer::Start>(EMEventType::ServerStart, GetSelfW<Timer>());
-		GetWorld()->AddEvent<&Timer::Stop>(EMEventType::ServerStop, GetSelfW<Timer>());
+		GetWorld()->AddEvent<&Timer::Start>(EMEventType::ServerStart, GetSelf<Timer>());
+		GetWorld()->AddEvent<&Timer::Stop>(EMEventType::ServerStop, GetSelf<Timer>());
 		return true;
 	}
 
 	virtual void Dispose() override
 	{
 		pLoop = nullptr;
+		
 		System::Dispose();
 	}
 

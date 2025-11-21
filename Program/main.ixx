@@ -7,6 +7,7 @@ import Logger;
 import UniversalMemoryPool;
 import ECSW;
 import HotReload;
+import ThirdParty.Libhv;
 
 enum class EMLaunchType : uint8_t
 {
@@ -15,15 +16,12 @@ enum class EMLaunchType : uint8_t
 	PULL,
 };
 
-bool AppRun = false;
-DimensionNightmare::Ptr App;
-std::filesystem::path PidFolderPath;
+bool BAppRun = false;
+DimensionNightmare::Ptr PApp;
 
 void CloseApp()
 {
-	AppRun = false;
-	// App->Dispose();
-	// App = nullptr;
+	BAppRun = false;
 }
 
 #define TIMERSTART(tag) auto tag##_start = std::chrono::system_clock::now(),tag##_end = tag##_start
@@ -37,7 +35,7 @@ void InputThread();
 
 export int main(int argc, char** argv)
 {
-
+	Libhv::hvlog_disable();
 #ifdef _WIN32
 	system("chcp 65001");
 	Platform::SetDebugFlag();
@@ -166,15 +164,13 @@ export int main(int argc, char** argv)
 		programConfig.iniFileConfig["Common"].emplace("ProgramDir", path.string());
 
 		path = path.parent_path();
-		programConfig.iniFileConfig["Common"].emplace("workDir", path.string());
+		programConfig.iniFileConfig["Common"].emplace("WorkDir", path.string());
 
 		path = path / "Runtime/Logs";
 		programConfig.iniFileConfig["Common"].emplace("LogFolder", path.string());
-
-		path /= std::format("PID_{}", Platform::GetCurrentProcessId());
-		programConfig.iniFileConfig["Common"].emplace("pidLogFolder", path.string());
-
-		PidFolderPath = path;
+		
+		std::string pid = std::format("{}", Platform::GetCurrentProcessId());
+		programConfig.iniFileConfig["Common"].emplace("Pid", pid);
 	}
 
 #ifdef _WIN32
@@ -192,7 +188,7 @@ export int main(int argc, char** argv)
 					return true;
 				case 1:
 				case 6:
-					while (App && !App->HasFlag(EMProgramFlag::ResourceLoadDown))
+					while (PApp && !PApp->HasFlag(EMProgramFlag::ResourceLoadDown))
 					{
 						// wait resource load down
 						Platform::Sleep(20);
@@ -219,7 +215,10 @@ export int main(int argc, char** argv)
 			// LoggerPrint::Log(nullptr, ELogLevel_Error, "Unhandled Exception! info {}",
 			// 	Platform::GetStackTrace(8));
 
-			WriteDumpFile(PidFolderPath / "MiniDump.dmp", ExceptionInfo);
+			std::filesystem::path loggerPath = *P_InstanceHolder->AuthWorld->GetParam("LogFolder");
+			std::string pid = *P_InstanceHolder->AuthWorld->GetParam("Pid");
+
+			WriteDumpFile(loggerPath / std::format("MiniDump_Pid_{}.dmp", pid), ExceptionInfo);
 
 			P_InstanceHolder->AuthWorld->GetSystem<HotReload>(EMSystemType::HotReload)->SetExcptionState();
 
@@ -264,24 +263,24 @@ export int main(int argc, char** argv)
 
 #endif
 
-	P_InstanceHolder->MainWorld = App = P_InstanceHolder->GetMemPool().Allocate<DimensionNightmare>();
-	if (!App->Init(programConfig))
+	P_InstanceHolder->MainWorld = PApp = P_InstanceHolder->GetMemPool().Allocate<DimensionNightmare>();
+	if (!PApp->Init(programConfig))
 	{
 		CloseApp();
 		goto POINT_EXIT;
 	}
 
-	App->StartWorlds();
+	PApp->StartWorlds();
 
 	LoggerPrint::Log(nullptr, ELogLevel_Normal, "hello ~ Program Instance addr->(InstanceHolder*){:p}", static_cast<void*>(P_InstanceHolder.get()));
 
-	AppRun = true;
+	BAppRun = true;
 
-	App->SetFlag(EMProgramFlag::ResourceLoadDown);
+	PApp->SetFlag(EMProgramFlag::ResourceLoadDown);
 
-	while (AppRun && App)
+	while (BAppRun && PApp)
 	{
-		App->TickMainFrame();
+		PApp->TickMainFrame();
 		Platform::Sleep(1);
 	}
 
@@ -289,7 +288,7 @@ export int main(int argc, char** argv)
 
 POINT_EXIT:
 
-	App = nullptr;
+	PApp = nullptr;
 	P_InstanceHolder->Unload();
 
 	LoggerPrint::Log(nullptr, ELogLevel_Normal, "bye ~");
@@ -325,14 +324,17 @@ void InputThread()
 			ss >> fileName;
 			if (!fileName.empty())
 			{
-				fileName.append(".dmp");
-				WriteDumpFile(PidFolderPath / fileName);
+				std::filesystem::path loggerPath = *P_InstanceHolder->AuthWorld->GetParam("LogFolder");
+				std::string pid = *P_InstanceHolder->AuthWorld->GetParam("Pid");
+				WriteDumpFile(loggerPath / std::format("{}_Pid_{}.dmp", fileName, pid));
 			}
 		};
 
 	auto open = []()
 		{
-			std::string allStr = PidFolderPath.string() + " ";
+			std::filesystem::path program = *P_InstanceHolder->AuthWorld->GetParam("ProgramDir");
+
+			std::string allStr = program.string() + " ";
 			while (ss >> str)
 			{
 				allStr += str + " ";
@@ -373,7 +375,7 @@ void InputThread()
 	std::cin.clear();
 	std::getline(std::cin, str);
 
-	if(!AppRun || !App)
+	if(!BAppRun || !PApp)
 	{
 		return;
 	}
@@ -391,7 +393,7 @@ void InputThread()
 	}
 	else
 	{
-		App->ExecCommand(&str, &ss);
+		PApp->ExecCommand(&str, &ss);
 	}
 
 	LoggerPrint::Log(nullptr, ELogLevel_Normal, "<cmd down>");
@@ -401,9 +403,9 @@ void InputThread()
 
 extern "C"
 {
-	__declspec(dllexport) void GetInstanceHolder(InstanceHolder::Ptr& holder)
+	__declspec(dllexport) void GetInstanceHolder(InstanceHolder::CVPtr holder)
 	{
-		holder.reset(P_InstanceHolder.get(), [](InstanceHolder*) {});
+		const_cast<InstanceHolder::Ptr&>(holder).reset(P_InstanceHolder.get(), [](InstanceHolder*) {});
 	}
 }
 

@@ -10,13 +10,14 @@ export class MdbProxy : public Component
 {
 protected:
 	friend class UniversalMemoryPool;
-	MdbProxy(System::WPtr system):Component(system)
+	MdbProxy(System::CVPtr system):Component(system)
 	{
 		eComponentType = EMComponentType::MdbProxy;
 	}
 
 public:
 	using Ptr = std::shared_ptr<MdbProxy>;
+	using CVPtr = const Ptr&;
 	
 	virtual ~MdbProxy()
 	{
@@ -24,20 +25,20 @@ public:
 
 	virtual void Dispose() override
 	{
-		Component::Dispose();
-		
 		pMdbProxys.clear();
+		
+		Component::Dispose();
 	}
 
 	virtual bool Awake() override
 	{
-		GetWorld()->AddEvent<&MdbProxy::InitDatabase>(EMEventType::ServerStart, GetSelfW<MdbProxy>());
+		GetWorld()->AddEvent<&MdbProxy::InitDatabase>(EMEventType::ServerStart, GetSelf<MdbProxy>());
 		return true;
 	}
 
 	void InitDatabase()
 	{
-		World::Ptr world = GetWorld();
+		World::CVPtr world = GetWorld();
 
 		std::string* param = world->GetParam("mdbConnection");
 		if(!param)
@@ -55,7 +56,7 @@ public:
 		{
 			LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "Can Connect Redis:{}, retest", *param);
 			// 重试 retest
-			Timer::Ptr timer = GetWorld()->GetSystem<Timer>(EMSystemType::Timer);
+			Timer::CVPtr timer = GetWorld()->GetSystem<Timer>(EMSystemType::Timer);
 
 			timer->SetTimeout(3000, [this](size_t)
 			{
@@ -63,7 +64,7 @@ public:
 			});
 			return;
 		}
-		catch(std::exception& e)
+		catch(const std::exception& e)
 		{
 			LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "Can Connect Redis:{}, no retest", e.what());
 			return;

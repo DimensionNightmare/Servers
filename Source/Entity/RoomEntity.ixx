@@ -9,12 +9,13 @@ export class RoomEntity : public Entity
 {
 protected:
 	friend class UniversalMemoryPool;
-	RoomEntity(World::WPtr world):Entity(world)
+	RoomEntity(World::CVPtr world):Entity(world)
 	{
 		eEntityType = EMEntityType::Room;
 	}
 public:
 	using Ptr = std::shared_ptr<RoomEntity>;
+	using CVPtr = const Ptr&;
 
 	virtual ~RoomEntity()
 	{

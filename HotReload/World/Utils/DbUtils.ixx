@@ -450,7 +450,7 @@ class DbSqlHelper : public IDbSqlHelper
 
 public:
 
-	DbSqlHelper(pqxx::transaction_base* work, World::Ptr world, TMessage* entity = nullptr)
+	DbSqlHelper(pqxx::transaction_base* work, World::CVPtr world, TMessage* entity = nullptr)
 	{
 		pWork = work;
 		pWorld = world;
@@ -1077,7 +1077,7 @@ public:
 		return Md5Hash(stream.str());
 	}
 
-	World::Ptr GetWorld(){ return pWorld;}
+	World::CVPtr GetWorld(){ return pWorld;}
 private:
 
 	bool ChangeSqlType(EMSqlOpType type)

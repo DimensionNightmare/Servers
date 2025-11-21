@@ -22,7 +22,7 @@ export class ClientProxy : public Component, public hv::TcpClientTmpl<SocketChan
 protected:
 
 	friend class UniversalMemoryPool;
-	ClientProxy(System::WPtr system):Component(system)
+	ClientProxy(System::CVPtr system):Component(system)
 		,TcpClientTmpl(nullptr)
 		,CheckMessageTimeoutTimer(this)
 		,InitConnectedChannel(this)
@@ -30,12 +30,12 @@ protected:
 	{
 		eComponentType = EMComponentType::ClientProxy;
 		
-		pTimer = GetWorld()->GetSystemW<Timer>(EMSystemType::Timer);
+		pTimer = GetWorld()->GetSystem<Timer>(EMSystemType::Timer);
 	}
 public:
 
 	using Ptr = std::shared_ptr<ClientProxy>;
-	using WPtr = std::weak_ptr<ClientProxy>;
+	using CVPtr = const Ptr&;
 
 	virtual ~ClientProxy()
 	{
@@ -48,12 +48,13 @@ public:
 		mMapTimer.clear();
 
 		End();
+		
 		Component::Dispose();
 	}
 
 	bool Awake() override
 	{
-		World::Ptr world = GetWorld();
+		World::CVPtr world = GetWorld();
 		std::string* ctlPort = world->GetParam("ctlPort");
 		std::string* ctlIp = world->GetParam("ctlIp");
 		if (!ctlPort || !ctlIp)
@@ -77,8 +78,8 @@ public:
 		setting.length_field_offset = 0;
 		setUnpack(&setting);
 
-		GetWorld()->AddEvent<&ClientProxy::Start>(EMEventType::ServerStart, GetSelfW<ClientProxy>());
-		GetWorld()->AddEvent<&ClientProxy::End>(EMEventType::ServerStop, GetSelfW<ClientProxy>());
+		GetWorld()->AddEvent<&ClientProxy::Start>(EMEventType::ServerStart, GetSelf<ClientProxy>());
+		GetWorld()->AddEvent<&ClientProxy::End>(EMEventType::ServerStop, GetSelf<ClientProxy>());
 
 		return true;
 	}
@@ -177,7 +178,7 @@ protected:
 		return timerId;
 	}
 
-	void _InitConnectedChannel(const SocketChannel::Ptr& chanhel)
+	void _InitConnectedChannel(SocketChannel::CVPtr chanhel)
 	{
 		// chanhel->setHeartbeat(4000, std::bind(&ClientProxy::TickHeartbeat, this));
 		// channel->setWriteTimeout(12000);

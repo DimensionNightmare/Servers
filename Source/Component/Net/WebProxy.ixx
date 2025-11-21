@@ -10,13 +10,13 @@ export class WebProxy : public Component, public hv::HttpServer
 protected:
 
 	friend class UniversalMemoryPool;
-	WebProxy(System::WPtr system):Component(system)
+	WebProxy(System::CVPtr system):Component(system)
 	{
 		eComponentType = EMComponentType::WebProxy;
 	}
 public:
 	using Ptr = std::shared_ptr<WebProxy>;
-	using WPtr = std::weak_ptr<WebProxy>;
+	using CVPtr = const Ptr&;
 	virtual ~WebProxy()
 	{
 
@@ -31,7 +31,7 @@ public:
 
 	bool Awake() override
 	{
-		World::Ptr world = GetWorld();
+		World::CVPtr world = GetWorld();
 
 		uint16_t port = 0;
 		std::string* param = world->GetParam("port");
@@ -46,8 +46,8 @@ public:
 
 		LoggerPrint::Log(GetWorld(), EL10nCode_SrvListenOn, port, 0);
 
-		GetWorld()->AddEvent<&WebProxy::Start>(EMEventType::ServerStart, GetSelfW<WebProxy>());
-		GetWorld()->AddEvent<&WebProxy::End>(EMEventType::ServerStop, GetSelfW<WebProxy>());
+		GetWorld()->AddEvent<&WebProxy::Start>(EMEventType::ServerStart, GetSelf<WebProxy>());
+		GetWorld()->AddEvent<&WebProxy::End>(EMEventType::ServerStop, GetSelf<WebProxy>());
 
 		pService = P_InstanceHolder->GetMemPool().Allocate<hv::HttpService>();
 		

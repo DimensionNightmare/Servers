@@ -46,13 +46,13 @@ extern "C"
 			{
 				Libhv::hvlog_disable();
 				
-				using funcSign = void (*)(InstanceHolder::Ptr&);
+				using funcSign = void (*)(InstanceHolder::CVPtr);
 				auto funtPtr = Platform::GetFuncPtr(nullptr, "GetInstanceHolder");
 				if (funcSign func = reinterpret_cast<funcSign>(funtPtr))
 				{
 					func(P_InstanceHolder);
 				
-					DimensionNightmareHelper::Ptr MainWorld = P_InstanceHolder->MainWorld->GetSelf<DimensionNightmareHelper>();
+					DimensionNightmareHelper::CVPtr MainWorld = P_InstanceHolder->MainWorld->GetSelf<DimensionNightmareHelper>();
 					MainWorld->InitHotReload();
 					MainWorld->DeInitHotReload();
 				}

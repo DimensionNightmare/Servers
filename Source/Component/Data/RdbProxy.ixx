@@ -19,30 +19,31 @@ export class RdbProxy : public Component
 {
 protected:
 	friend class UniversalMemoryPool;
-	RdbProxy(System::WPtr system):Component(system)
+	RdbProxy(System::CVPtr system):Component(system)
 	{
 		eComponentType = EMComponentType::RdbProxy;
 	}
 
 public:
 	using Ptr = std::shared_ptr<RdbProxy>;
+	using CVPtr = const Ptr&;
 
 	virtual void Dispose() override
 	{
-		Component::Dispose();
-
 		pRdbProxys.clear();
+		
+		Component::Dispose();
 	}
 
 	virtual bool Awake() override
 	{
-		GetWorld()->AddEvent<&RdbProxy::InitDatabase>(EMEventType::ServerStart, GetSelfW<RdbProxy>());
+		GetWorld()->AddEvent<&RdbProxy::InitDatabase>(EMEventType::ServerStart, GetSelf<RdbProxy>());
 		return true;
 	}
 
 	void InitDatabase()
 	{
-		World::Ptr world = GetWorld();
+		World::CVPtr world = GetWorld();
 
 		std::string* param = world->GetParam("rdbConnection");
 		if(!param)
@@ -60,7 +61,7 @@ public:
 		{
 			LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "Can Connect Database:{}, retest", *param);
 			// 重试 retest
-			Timer::Ptr timer = GetWorld()->GetSystem<Timer>(EMSystemType::Timer);
+			Timer::CVPtr timer = GetWorld()->GetSystem<Timer>(EMSystemType::Timer);
 
 			timer->SetTimeout(3000, [this](size_t)
 			{
@@ -68,7 +69,7 @@ public:
 			});
 			return;
 		}
-		catch(std::exception& e)
+		catch(const std::exception& e)
 		{
 			LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "Can Connect Database:{}, no retest", e.what());
 			return;

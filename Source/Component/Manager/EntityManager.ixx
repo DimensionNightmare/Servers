@@ -2,7 +2,6 @@ export module EntityManager;
 
 import Logger;
 import ECSW;
-import ThirdParty.Libhv;
 import Timer;
 
 export template<class TEntity = Entity>
@@ -10,9 +9,9 @@ class EntityManager : public Component
 {
 protected:
 	/// @brief timer manager create
-	EntityManager(System::WPtr system):Component(system)
+	EntityManager(System::CVPtr system):Component(system)
 	{
-		pTimer = GetWorld()->GetSystemW<Timer>(EMSystemType::Timer);
+		pTimer = GetWorld()->GetSystem<Timer>(EMSystemType::Timer);
 	}
 	
 public:
@@ -27,8 +26,9 @@ public:
 		auto entitys = mEntityMap 
 			| std::views::values;
 			
-		for (const auto& entity : entitys)
+		for (const auto& one : entitys)
 		{
+			auto entity = std::move(one);
 			entity->Dispose();
 		}
 		

@@ -26,6 +26,7 @@ export class UniversalMemoryPool
 
 public:
 	using Ptr = std::shared_ptr<UniversalMemoryPool>;
+	using CVPtr = const Ptr&;
 
 	UniversalMemoryPool(size_t pool_size = 1024 * 1024 * 32) : iPoolSize(pool_size)
 	{

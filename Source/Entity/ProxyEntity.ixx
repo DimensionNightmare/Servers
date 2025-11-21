@@ -9,12 +9,13 @@ export class ProxyEntity : public Entity
 {
 protected:
 	friend class UniversalMemoryPool;
-	ProxyEntity(World::WPtr world):Entity(world)
+	ProxyEntity(World::CVPtr world):Entity(world)
 	{
 		eEntityType = EMEntityType::Proxy;
 	}
 public:
 	using Ptr = std::shared_ptr<ProxyEntity>;
+	using CVPtr = const Ptr&;
 	virtual ~ProxyEntity()
 	{
 	}

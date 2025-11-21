@@ -16,19 +16,19 @@ export class ServerProxy : public Component, public hv::TcpServerTmpl<SocketChan
 protected:
 
 	friend class UniversalMemoryPool;
-	ServerProxy(System::WPtr system):Component(system)
+	ServerProxy(System::CVPtr system):Component(system)
 		,TcpServerTmpl(nullptr)
 		,CheckMessageTimeoutTimer(this)
 		,InitConnectedChannel(this)
 	{
 		eComponentType = EMComponentType::ServerProxy;
 		
-		pTimer = GetWorld()->GetSystemW<Timer>(EMSystemType::Timer);
+		pTimer = GetWorld()->GetSystem<Timer>(EMSystemType::Timer);
 	}
 
 public:
 	using Ptr = std::shared_ptr<ServerProxy>;
-	using WPtr = std::weak_ptr<ServerProxy>;
+	using CVPtr = const Ptr&;
 
 	virtual ~ServerProxy()
 	{
@@ -39,7 +39,7 @@ public:
 	{
 		int16_t inport = 0;
 
-		Server::Ptr dnServer = GetOwner<Server>();
+		auto dnServer = GetOwner<Server>();
 
 		switch(dnServer->GetServerType())
 		{
@@ -96,10 +96,10 @@ public:
 
 		LoggerPrint::Log(GetWorld(), EL10nCode_SrvListenOn, port, listenfd);
 
-		GetWorld()->AddEvent<&ServerProxy::Start>(EMEventType::ServerStart, GetSelfW<ServerProxy>());
-		GetWorld()->AddEvent<&ServerProxy::End>(EMEventType::ServerStop, GetSelfW<ServerProxy>());
-		GetWorld()->AddEvent<&ServerProxy::Pause>(EMEventType::ServerPause, GetSelfW<ServerProxy>());
-		GetWorld()->AddEvent<&ServerProxy::Resume>(EMEventType::ServerResume, GetSelfW<ServerProxy>());
+		GetWorld()->AddEvent<&ServerProxy::Start>(EMEventType::ServerStart, GetSelf<ServerProxy>());
+		GetWorld()->AddEvent<&ServerProxy::End>(EMEventType::ServerStop, GetSelf<ServerProxy>());
+		GetWorld()->AddEvent<&ServerProxy::Pause>(EMEventType::ServerPause, GetSelf<ServerProxy>());
+		GetWorld()->AddEvent<&ServerProxy::Resume>(EMEventType::ServerResume, GetSelf<ServerProxy>());
 
 		return true;
 	}
@@ -157,12 +157,12 @@ public:
 	{
 		Pause();
 
-		Component::Dispose();
-		
 		End();
-
+		
 		mMsgList.clear();
 		mMapTimer.clear();
+		
+		Component::Dispose();
 	}
 
 public: // dll override
@@ -212,7 +212,7 @@ public: // dll override
 		}
 
 		{
-			if (const SocketChannel::Ptr& channel = getChannelById(id))
+			if (SocketChannel::CVPtr channel = getChannelById(id))
 			{
 				if (!channel->contextPtr())
 				{
@@ -230,7 +230,7 @@ public: // dll override
 		mMapTimer.emplace(timerId, id);
 	}
 
-	void CheckChannelByTimer(const SocketChannel::Ptr& channel)
+	void CheckChannelByTimer(SocketChannel::CVPtr channel)
 	{
 		EventContainer<&ServerProxy::ChannelTimeoutTimer> funcProxy(this);
 		
@@ -242,7 +242,7 @@ public: // dll override
 
 protected:
 
-	void _InitConnectedChannel(const SocketChannel::Ptr& channel)
+	void _InitConnectedChannel(SocketChannel::CVPtr channel)
 	{
 		// if not regist
 		CheckChannelByTimer(channel);

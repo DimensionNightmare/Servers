@@ -39,9 +39,9 @@ public:
 
 	void UpdateServerGroup()
 	{
-		ServerEntityManagerHelper::Ptr entityMan = GetServerEntityManager();
+		ServerEntityManagerHelper::CVPtr entityMan = GetServerEntityManager();
 
-		auto validGates = entityMan->GetEntitysByType(EMServerType::GateServer)
+		auto selects = entityMan->GetEntitysByType(EMServerType::GateServer)
 			| std::views::filter([](const auto& gate)
 				{
 					return gate->HasFlag(EMServerEntityFlag::Locked) == false;
@@ -51,7 +51,7 @@ public:
 					return gate->GetSelf<ServerEntityHelper>();
 				});
 
-		if (validGates.empty())
+		if (selects.empty())
 		{
 			return;
 		}
@@ -68,11 +68,11 @@ public:
 
 		// alloc gate
 		GMsg::COM_RetChangeCtlSrv request;
-		ServerProxyHelper::Ptr proxyHelper = GetServerProxy();
+		ServerProxyHelper::CVPtr proxyHelper = GetServerProxy();
 
-		auto registControl = [&](ServerEntityHelper::Ptr beEntityHelper, ServerEntityHelper::Ptr entityHelper) ->bool
+		auto registControl = [&](ServerEntityHelper::CVPtr beEntityHelper, ServerEntityHelper::CVPtr entityHelper) ->bool
 		{
-			const SocketChannel::Ptr& channel = entityHelper->GetChannel();
+			SocketChannel::CVPtr channel = entityHelper->GetChannel();
 			if(!channel)
 			{
 				return false;
@@ -97,14 +97,14 @@ public:
 		};
 
 	
-		for (const auto& gate : validGates)
+		for (const auto& gate : selects)
 		{
 			
 			std::list<ServerEntity::Ptr>& gatesDb = gate->GetMapLinkNode(EMServerType::DatabaseServer);
 			std::list<ServerEntity::Ptr>& gatesLogic = gate->GetMapLinkNode(EMServerType::LogicServer);
 			if (!dbs.empty() && gatesDb.size() < 1)
 			{
-				ServerEntityHelper::Ptr dbHelper = dbs.front();
+				ServerEntityHelper::CVPtr dbHelper = dbs.front();
 				// dbs.pop_front();
 				if(registControl(gate, dbHelper))
 				{
@@ -115,7 +115,7 @@ public:
 
 			if (!logics.empty() && gatesLogic.size() < 1)
 			{
-				ServerEntityHelper::Ptr logicHelper = logics.front();
+				ServerEntityHelper::CVPtr logicHelper = logics.front();
 				// logics.pop_front();
 				if(registControl(gate, logicHelper))
 				{
@@ -139,9 +139,9 @@ public:
 		
 		if (ServerProxyHelper::Ptr proxy = GetServerProxy())
 		{
-			proxy->onConnection = [this](const SocketChannel::Ptr& channel)
+			proxy->onConnection = [this](SocketChannel::CVPtr channel)
 				{
-					ServerProxyHelper::Ptr proxyHelper = GetServerProxy();
+					ServerProxyHelper::CVPtr proxyHelper = GetServerProxy();
 
 					if(!proxyHelper){ return ;}
 
@@ -150,7 +150,7 @@ public:
 					{
 						LoggerPrint::Log(GetWorld(), EL10nCode_CliConnOn, peeraddr, channel->fd(), channel->id());
 
-						channel->SetWorld(GetWorldW());
+						channel->SetWorld(GetWorld());
 
 						proxyHelper->InitConnectedChannel(channel);
 					}
@@ -158,16 +158,16 @@ public:
 					{
 						LoggerPrint::Log(GetWorld(), EL10nCode_CliConnOff, peeraddr, channel->fd(), channel->id());
 
-						if (ServerEntity::Ptr entity = channel->getContextPtr<ServerEntity>())
+						if (ServerEntity::CVPtr entity = channel->getContextPtr<ServerEntity>())
 						{
-							ServerEntityManagerHelper::Ptr entityMan = GetServerEntityManager();
+							ServerEntityManagerHelper::CVPtr entityMan = GetServerEntityManager();
 							entityMan->RemoveEntity(entity->ID());
 							channel->deleteContextPtr();
 						}
 					}
 				};
 
-			proxy->onMessage = [this](const SocketChannel::Ptr& channel, hv::Buffer* buf)
+			proxy->onMessage = [this](SocketChannel::CVPtr channel, hv::Buffer* buf)
 				{
 					ServerProxyHelper::Ptr proxyHelper = GetServerProxy();
 
@@ -229,9 +229,9 @@ public:
 
 		if (ClientProxyHelper::Ptr proxy = GetClientProxy())
 		{
-			proxy->onConnection = [this](const SocketChannel::Ptr& channel)
+			proxy->onConnection = [this](SocketChannel::CVPtr channel)
 				{
-					ClientProxyHelper::Ptr proxyHelper = GetClientProxy();
+					ClientProxyHelper::CVPtr proxyHelper = GetClientProxy();
 
 					if(!proxyHelper){ return ;}
 
@@ -241,7 +241,7 @@ public:
 					{
 						LoggerPrint::Log(GetWorld(), EL10nCode_SrvConnOn, peeraddr, channel->fd(), channel->id());
 
-						channel->SetWorld(GetWorldW());
+						channel->SetWorld(GetWorld());
 
 						GetWorld()->RemoveEvent(EMEventType::ClientProxyRegist);
 						GetWorld()->AddEvent<&GlobalServerHelper::HandleClientRegist>(EMEventType::ClientProxyRegist, GetSelf<GlobalServerHelper>());
@@ -265,9 +265,9 @@ public:
 					}
 				};
 
-			proxy->onMessage = [this](const SocketChannel::Ptr& channel, hv::Buffer* buf)
+			proxy->onMessage = [this](SocketChannel::CVPtr channel, hv::Buffer* buf)
 				{
-					ClientProxyHelper::Ptr proxyHelper = GetClientProxy();
+					ClientProxyHelper::CVPtr proxyHelper = GetClientProxy();
 
 					if(!proxyHelper){ return ;}
 
@@ -328,7 +328,7 @@ public:
 	void HandleServerShutdown()
 	{
 		
-		if (ServerProxyHelper::Ptr proxy = GetServerProxy())
+		if (ServerProxyHelper::CVPtr proxy = GetServerProxy())
 		{
 			proxy->onConnection = nullptr;
 			proxy->onMessage = nullptr;
@@ -336,7 +336,7 @@ public:
 			proxy->ClearMsgMap();
 		}
 
-		if (ClientProxyHelper::Ptr proxy = GetClientProxy())
+		if (ClientProxyHelper::CVPtr proxy = GetClientProxy())
 		{
 			proxy->onConnection = nullptr;
 			proxy->onMessage = nullptr;

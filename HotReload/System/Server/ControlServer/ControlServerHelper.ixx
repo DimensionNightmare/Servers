@@ -34,9 +34,9 @@ public:
 
 		if (ServerProxyHelper::Ptr proxy = GetServerProxy())
 		{
-			proxy->onConnection = [this](const SocketChannel::Ptr& channel)
+			proxy->onConnection = [this](SocketChannel::CVPtr channel)
 				{
-					ServerProxyHelper::Ptr proxyHelper = GetServerProxy();
+					ServerProxyHelper::CVPtr proxyHelper = GetServerProxy();
 
 					if(!proxyHelper){ return ;}
 
@@ -45,7 +45,7 @@ public:
 					{
 						LoggerPrint::Log(GetWorld(), EL10nCode_CliConnOn, peeraddr, channel->fd(), channel->id());
 
-						channel->SetWorld(GetWorldW());
+						channel->SetWorld(GetWorld());
 						
 						proxyHelper->InitConnectedChannel(channel);
 					}
@@ -54,9 +54,9 @@ public:
 						LoggerPrint::Log(GetWorld(), EL10nCode_CliConnOff, peeraddr, channel->fd(), channel->id());
 
 						// not used
-						if (ServerEntity::Ptr entity = channel->getContextPtr<ServerEntity>())
+						if (ServerEntity::CVPtr entity = channel->getContextPtr<ServerEntity>())
 						{
-							ServerEntityManagerHelper::Ptr entityMan = GetServerEntityManager();
+							ServerEntityManagerHelper::CVPtr entityMan = GetServerEntityManager();
 							entityMan->RemoveEntity(entity->ID());
 							channel->deleteContextPtr();
 						}
@@ -64,9 +64,9 @@ public:
 					}
 				};
 
-			proxy->onMessage = [this](const SocketChannel::Ptr& channel, hv::Buffer* buf)
+			proxy->onMessage = [this](SocketChannel::CVPtr channel, hv::Buffer* buf)
 				{
-					ServerProxyHelper::Ptr proxyHelper = GetServerProxy();
+					ServerProxyHelper::CVPtr proxyHelper = GetServerProxy();
 
 					if(!proxyHelper){ return ;}
 					

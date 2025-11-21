@@ -10,13 +10,14 @@ export class HotReload : public System
 protected:
 	friend class UniversalMemoryPool;
 	/// @brief
-	HotReload(World::WPtr world):System(world)
+	HotReload(World::CVPtr world):System(world)
 	{
 		emSystemType = EMSystemType::HotReload;
 		
 	}
 public:
 	using Ptr = std::shared_ptr<HotReload>;
+	using CVPtr = const Ptr&;
 
 	/// @brief
 	virtual ~HotReload()
@@ -30,7 +31,7 @@ public:
 	virtual bool Awake() override
 	{
 		
-		sDllDir = std::filesystem::path() / *GetWorld()->GetParam("workDir") / sDllDir;
+		sDllDir = std::filesystem::path() / *GetWorld()->GetParam("WorkDir") / sDllDir;
 
 		return true;
 	}

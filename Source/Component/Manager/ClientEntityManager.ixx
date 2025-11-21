@@ -16,7 +16,7 @@ protected:
 
 	friend class UniversalMemoryPool;
 	/// @brief timer manager create
-	ClientEntityManager(System::WPtr system):EntityManager(system)
+	ClientEntityManager(System::CVPtr system):EntityManager(system)
 		,AddEntity(this)
 	{
 		eComponentType = EMComponentType::ClientEntityManager;
@@ -30,10 +30,9 @@ public:
 
 	virtual void Dispose() override
 	{
+		mDbFailure.clear();
 
 		EntityManager::Dispose();
-
-		mDbFailure.clear();
 	}
 
 public: // dll proxy
@@ -44,7 +43,7 @@ public: // dll proxy
 		if (mEntityMap.contains(entityId))
 		{
 			LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "destory client entity");
-			ClientEntity::Ptr& entity = mEntityMap[entityId];
+			ClientEntity::Ptr entity = std::move(mEntityMap[entityId]);
 			entity->Dispose();
 
 			std::unique_lock ulock(oMapMutex);

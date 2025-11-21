@@ -15,10 +15,10 @@ namespace MsgHandleRegister
 {
 
 	HandleRegistry<GMsg::L2D_ReqLoadData, GMsg::D2L_ResLoadData, EMMsgDeal::Req> Exe_ReqLoadData =
-				[](auto request, auto response, const SocketChannel::Ptr& channel)
+				[](auto request, auto response, SocketChannel::CVPtr channel)
 	{
 		
-		DatabaseServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<DatabaseServerHelper>(EMSystemType::Server);
+		DatabaseServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<DatabaseServerHelper>(EMSystemType::Server);
 
 		if (auto transaction = dnServer->GetRdbProxy()->GetTransaction(EMSqlDbNameEnum::Nightmare, false))
 		{
@@ -64,9 +64,9 @@ namespace MsgHandleRegister
 					}
 				};
 
-			if (const Descriptor* descriptor = PbGen::FindMessageTypeByName(request->tablename()))
+			if (const Descriptor* descriptor = Proto::FindMessageTypeByName(request->tablename()))
 			{
-				if (const Message* prototype = PbGen::GetPrototype(descriptor))
+				if (const Message* prototype = Proto::GetPrototype(descriptor))
 				{
 					const FieldDescriptor* field = descriptor->FindFieldByNumber(request->keynumber());
 					if (!field)
@@ -108,9 +108,9 @@ namespace MsgHandleRegister
 	};
 
 	HandleRegistry<GMsg::L2D_ReqSaveData, GMsg::D2L_ResSaveData, EMMsgDeal::Req> Exe_ReqSaveData =
-				[](auto request, auto response, const SocketChannel::Ptr& channel)
+				[](auto request, auto response, SocketChannel::CVPtr channel)
 	{
-		DatabaseServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<DatabaseServerHelper>(EMSystemType::Server);
+		DatabaseServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<DatabaseServerHelper>(EMSystemType::Server);
 
 		if (auto transaction = dnServer->GetRdbProxy()->GetTransaction(EMSqlDbNameEnum::Nightmare, false))
 		{
@@ -130,9 +130,9 @@ namespace MsgHandleRegister
 					// LoggerPrint::Log(channel, ELogLevel_Debug, "Save Data Success! data={}", findMsg->DebugString());
 				};
 
-			if (const Descriptor* descriptor = PbGen::FindMessageTypeByName(request->tablename()))
+			if (const Descriptor* descriptor = Proto::FindMessageTypeByName(request->tablename()))
 			{
-				if (const Message* prototype = PbGen::GetPrototype(descriptor))
+				if (const Message* prototype = Proto::GetPrototype(descriptor))
 				{
 					Message* message = prototype->New();
 

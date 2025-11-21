@@ -69,6 +69,7 @@ class World;
 export struct InstanceHolder
 {
 	using Ptr = std::shared_ptr<InstanceHolder>;
+	using CVPtr = const Ptr&;
 	InstanceHolder()
 	{
 		MemPool = std::make_shared<UniversalMemoryPool>();
@@ -122,19 +123,22 @@ class Event
 public:
 
 	template<auto Func>
-	void AddEvent(EnumT type, std::weak_ptr<typename FunctionTraits<decltype(Func)>::ClassType> entity)
+	bool AddEvent(EnumT type, std::shared_ptr<typename FunctionTraits<decltype(Func)>::ClassType> entity)
 	{
-		if(auto lock = entity.lock())
+		if(!entity)
 		{
-			std::unique_ptr<IEventContainer> handle = std::make_unique<EventContainer<Func> >(entity);
+			return false;
+		}
 
-			size_t objId = lock->ID();
+		std::unique_ptr<IEventContainer> handle = std::make_unique<EventContainer<Func> >(entity);
 
-			mEventIdMap[objId][type] = std::move(handle);
+		size_t objId = entity->ID();
 
-			mEventCollection[type][objId] = objId;
-		}		
+		mEventIdMap[objId][type] = std::move(handle);
 
+		mEventCollection[type][objId] = objId;
+
+		return true;
 	}
 
 	void AddEvent(EnumT type, auto&& func)
@@ -281,6 +285,7 @@ export class Object : public std::enable_shared_from_this<Object>
 {
 public:
 	using Ptr = std::shared_ptr<Object>;
+	using CVPtr = const Ptr&;
 
 	Object() = default;
 
@@ -313,9 +318,6 @@ public: // dll override
 	template<typename T>
 	std::shared_ptr<T> GetSelf() { return std::static_pointer_cast<T>(shared_from_this()); }
 
-	template<typename T>
-	std::weak_ptr<T> GetSelfW() { return GetSelf<T>(); }
-
 	bool IsDisposed() { return bIsDisposed; }
 
 protected:
@@ -333,13 +335,14 @@ protected:
 export class Component : public Object
 {
 protected:
-	Component(std::weak_ptr<Entity> owner) :
+	Component(const std::shared_ptr<Entity>& owner) :
 		pOwner(owner)
 	{
 
 	}
 public:
 	using Ptr = std::shared_ptr<Component>;
+	using CVPtr = const Ptr&;
 
 	/// @brief this component owner
 	virtual ~Component()
@@ -373,7 +376,7 @@ protected: // dll proxy
 export class Entity : public Object
 {
 protected:
-	Entity(std::weak_ptr<World> world) :
+	Entity(const std::shared_ptr<World>& world) :
 		pWorld(world)
 	{
 
@@ -381,6 +384,9 @@ protected:
 
 public:
 	using Ptr = std::shared_ptr<Entity>;
+	using CVPtr = const Ptr&;
+
+	using WPtr = std::weak_ptr<Entity>;
 
 	virtual ~Entity()
 	{
@@ -392,8 +398,6 @@ public: // dll override
 	EMEntityType GetEntityType() { return eEntityType; }
 
 	std::shared_ptr<World> GetWorld() { return pWorld.expired() ? nullptr : pWorld.lock(); }
-
-	std::weak_ptr<World> GetWorldW() { return pWorld; }
 
 	template<typename T>
 	std::shared_ptr<T> GetComponent(EMComponentType type)
@@ -418,7 +422,7 @@ public: // dll override
 		static_assert(std::is_base_of_v<Component, T>, "T must inherit from component");
 		try
 		{
-			std::shared_ptr<T> component = P_InstanceHolder->GetMemPool(location).Allocate<T>(shared_from_this());
+			std::shared_ptr<T> component = P_InstanceHolder->GetMemPool(location).Allocate<T>(GetSelf<Entity>());
 			if (!component->Awake())
 			{
 				component->Dispose();
@@ -462,7 +466,7 @@ export class System : public Entity
 {
 protected:
 
-	System(std::weak_ptr<World> world)
+	System(const std::shared_ptr<World>& world)
 		: Entity(world)
 	{
 	}
@@ -470,7 +474,7 @@ protected:
 
 public:
 	using Ptr = std::shared_ptr<System>;
-	using WPtr = std::weak_ptr<System>;
+	using CVPtr = const Ptr&;
 
 	virtual ~System()
 	{
@@ -484,7 +488,7 @@ public:
 		static_assert(std::is_base_of_v<Component, T>, "T must inherit from component");
 		try
 		{
-			std::shared_ptr<T> component = P_InstanceHolder->GetMemPool(location).Allocate<T>(GetSelfW<System>());
+			std::shared_ptr<T> component = P_InstanceHolder->GetMemPool(location).Allocate<T>(GetSelf<System>());
 			if (!component->Awake())
 			{
 				component->Dispose();
@@ -515,6 +519,7 @@ export class World : public Object, public Event<EMEventType>
 {
 public:
 	using Ptr = std::shared_ptr<World>;
+	using CVPtr = const Ptr&;
 	using WPtr = std::weak_ptr<World>;
 
 	World() = default;
@@ -522,11 +527,7 @@ public:
 	virtual ~World()
 	{
 	}
-
-	void AddSystem(System::Ptr system)
-	{
-		mSystemMap.emplace(system->GetSystemType(), system);
-	}
+	
 
 	template<typename T = System>
 	std::shared_ptr<T> AddSystem(const std::source_location& location = std::source_location::current())
@@ -534,7 +535,7 @@ public:
 		static_assert(std::is_base_of_v<System, T>, "T must inherit from System");
 		try
 		{
-			std::shared_ptr<T> system = P_InstanceHolder->GetMemPool(location).Allocate<T>(GetSelfW<World>());
+			std::shared_ptr<T> system = P_InstanceHolder->GetMemPool(location).Allocate<T>(GetSelf<World>());
 			if (!system->Awake())
 			{
 				system->Dispose();
@@ -550,27 +551,6 @@ public:
 		}
 
 		return nullptr;
-	}
-
-	template<typename T = System>
-	std::weak_ptr<T> GetSystemW(EMSystemType type)
-	{
-		static_assert(std::is_base_of_v<System, T>, "T must inherit from System");
-		try
-		{
-			auto it = mSystemMap.find(type);
-			if(it != mSystemMap.end() && !it->second->IsDisposed())
-			{
-				auto ptr = std::static_pointer_cast<T>(it->second);
-				return ptr ? ptr : std::weak_ptr<T>{};
-			}
-		}
-		catch (const std::exception& e)
-		{
-			std::cerr << e.what() << '\n';
-		}
-
-		return {};
 	}
 
 	template<typename T = System>
@@ -600,21 +580,19 @@ public:
 
 	virtual void Dispose() override
 	{
-		Object::Dispose();
-
-		if (mSystemMap.empty())
+		if (!mSystemMap.empty())
 		{
-			return;
+			auto it = mSystemMap.end();
+			do
+			{
+				--it;
+				it->second->Dispose();
+			} while (it != mSystemMap.begin());
+			
+			mSystemMap.clear();
 		}
 
-		auto it = mSystemMap.end();
-		do
-		{
-			--it;
-			it->second->Dispose();
-		} while (it != mSystemMap.begin());
-
-		mSystemMap.clear();
+		Object::Dispose();
 	}
 
 	void MoveLuanchConfigToSelf(std::unordered_map<std::string, std::string>& config)
@@ -632,7 +610,7 @@ public:
 		return nullptr;
 	}
 
-	void SetParam(const std::string& key, const std::string value)
+	void SetParam(std::string key, const std::string value)
 	{
 		mLuanchConfig[key] = value;
 	}
@@ -698,13 +676,12 @@ void InstanceHolder::Unload()
 
 std::shared_ptr<World> Component::GetWorld()
 {
-	auto owner = GetOwner();
-	if (!owner)
+	if (auto owner = GetOwner())
 	{
-		return nullptr;
+		return owner->GetWorld();
 	}
-
-	return owner->GetWorld();
+	
+	return nullptr;
 }
 
 void Component::Dispose()
@@ -718,23 +695,21 @@ void Entity::Dispose()
 {
 	GetWorld()->RemoveEvent(ID());
 	
-	Object::Dispose();
-
-	if (mComponents.empty())
+	if (!mComponents.empty())
 	{
-		return;
+		std::unique_lock ulock(mComponentLock);
+	
+		auto it = mComponents.end();
+		do
+		{
+			--it;
+			it->second->Dispose();
+			it = mComponents.erase(it);
+	
+		} while (it != mComponents.begin());
+	
+		mComponents.clear();
 	}
 
-	std::unique_lock ulock(mComponentLock);
-
-	auto it = mComponents.end();
-	do
-	{
-		--it;
-		it->second->Dispose();
-		it = mComponents.erase(it);
-
-	} while (it != mComponents.begin());
-
-	mComponents.clear();
+	Object::Dispose();
 }

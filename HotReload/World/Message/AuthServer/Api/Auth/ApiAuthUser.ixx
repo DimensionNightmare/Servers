@@ -69,12 +69,12 @@ TaskVoid Func4()
 	co_return;
 }
 
-export void ApiAuth(Server::Ptr server)
+export void ApiAuth(Server::CVPtr server)
 {
 
-	WebProxyHelper::Ptr webProxyHelper = server->GetComponent<WebProxyHelper>(EMComponentType::WebProxy);
+	WebProxyHelper::CVPtr webProxyHelper = server->GetComponent<WebProxyHelper>(EMComponentType::WebProxy);
 
-	webProxyHelper->service->POST("/Auth/User/LoginToken", [server](hv::HttpRequestPtr req, hv::HttpResponseWriterPtr writer) ->TaskVoid
+	webProxyHelper->service->POST("/Auth/User/LoginToken", [server](hv::HttpRequestPtr req, hv::HttpResponseWriterPtr writer) -> TaskVoid
 		{
 			
 			nlohmann::json errData;
@@ -107,7 +107,7 @@ export void ApiAuth(Server::Ptr server)
 				co_return;
 			}
 
-			AuthServerHelper::Ptr dnServer = server->GetSelf<AuthServerHelper>();
+			AuthServerHelper::CVPtr dnServer = server->GetSelf<AuthServerHelper>();
 
 			try
 			{
@@ -165,7 +165,7 @@ export void ApiAuth(Server::Ptr server)
 
 			GMsg::g2A_ResAuthAccount response;
 
-			ClientProxyHelper::Ptr clientProxy = dnServer->GetClientProxy();
+			ClientProxyHelper::CVPtr clientProxy = dnServer->GetClientProxy();
 
 	
 			nlohmann::json retData;
@@ -234,7 +234,7 @@ export void ApiAuth(Server::Ptr server)
 				return;
 			}
 
-			AuthServerHelper::Ptr dnServer = server->GetSelf<AuthServerHelper>();
+			AuthServerHelper::CVPtr dnServer = server->GetSelf<AuthServerHelper>();
 
 			try
 			{
@@ -328,7 +328,7 @@ export void ApiAuth(Server::Ptr server)
 			writer->End();
 		});
 
-	webProxyHelper->service->POST("/Auth/Test/User", [server](hv::HttpRequestPtr req, hv::HttpResponseWriterPtr writer)->TaskVoid
+	webProxyHelper->service->POST("/Auth/Test/User", [server](hv::HttpRequestPtr req, hv::HttpResponseWriterPtr writer)-> TaskVoid
 		{
 			// std::cout << "begin" << "\n";
 			// co_await Func4();
@@ -337,7 +337,7 @@ export void ApiAuth(Server::Ptr server)
 
 			try
 			{
-				AuthServerHelper::Ptr dnServer = server->GetSelf<AuthServerHelper>();
+				AuthServerHelper::CVPtr dnServer = server->GetSelf<AuthServerHelper>();
 
 				if(auto transaction = dnServer->GetMdbProxy()->GetTransaction())
 				{
@@ -351,7 +351,7 @@ export void ApiAuth(Server::Ptr server)
 					LoggerPrint::Log(server, ELogLevel_Debug, "{}", result);
 				}
 			}
-			catch(std::exception& e)
+			catch(const std::exception& e)
 			{
 				LoggerPrint::Log(server, ELogLevel_Debug, "1232:{}", e.what());
 			}

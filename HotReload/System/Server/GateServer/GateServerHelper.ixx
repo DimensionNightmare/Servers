@@ -46,22 +46,22 @@ public:
 	}
 
 	/// @brief send close to change socket
-	void ServerEntityCloseEvent(Entity::Ptr entity)
+	void ServerEntityCloseEvent(Entity::CVPtr entity)
 	{
 		// up to Global
 		GMsg::g2G_RetRegistSrv request;
 		request.set_serverid(entity->ID());
 		request.set_isregist(false);
 
-		ClientProxyHelper::Ptr proxyHelper = GetClientProxy();
+		ClientProxyHelper::CVPtr proxyHelper = GetClientProxy();
 		proxyHelper->AddMsg(EMMsgDeal::Ret, &request).Resume();
 
 		GetServerEntityManager()->RemoveEntity(entity->ID());
 	}
 
-	void ProxyEntityCloseEvent(Entity::Ptr entity)
+	void ProxyEntityCloseEvent(Entity::CVPtr entity)
 	{
-		ProxyEntityManagerHelper::Ptr entityMan = GetProxyEntityManager();
+		ProxyEntityManagerHelper::CVPtr entityMan = GetProxyEntityManager();
 		size_t entityId = entity->ID();
 
 		ServerEntityHelper::Ptr serverEntity = nullptr;
@@ -75,7 +75,7 @@ public:
 			GMsg::g2L_RetProxyOffline request;
 			request.set_entityid(entityId);
 
-			ServerProxyHelper::Ptr proxyHelper = GetServerProxy();
+			ServerProxyHelper::CVPtr proxyHelper = GetServerProxy();
 
 			proxyHelper->AddMsg(EMMsgDeal::Ret, &request, serverEntity->GetChannel()).Resume();
 		}
@@ -88,9 +88,9 @@ public:
 
 		if (ServerProxyHelper::Ptr proxy = GetServerProxy())
 		{
-			proxy->onConnection = [this](const SocketChannel::Ptr& channel)
+			proxy->onConnection = [this](SocketChannel::CVPtr channel)
 				{
-					ServerProxyHelper::Ptr proxyHelper = GetServerProxy();
+					ServerProxyHelper::CVPtr proxyHelper = GetServerProxy();
 
 					if(!proxyHelper){ return ;}
 
@@ -99,14 +99,14 @@ public:
 					{
 						LoggerPrint::Log(GetWorld(), EL10nCode_CliConnOn, peeraddr, channel->fd(), channel->id());
 
-						channel->SetWorld(GetWorldW());
+						channel->SetWorld(GetWorld());
 
 						proxyHelper->InitConnectedChannel(channel);
 					}
 					else
 					{
 						LoggerPrint::Log(GetWorld(), EL10nCode_CliConnOff, peeraddr, channel->fd(), channel->id());
-						if (Entity::Ptr entity = channel->getContextPtr<Entity>())
+						if (Entity::CVPtr entity = channel->getContextPtr<Entity>())
 						{
 							switch (entity->GetEntityType())
 							{
@@ -126,9 +126,9 @@ public:
 					}
 				};
 
-			proxy->onMessage = [this](const SocketChannel::Ptr& channel, hv::Buffer* buf)
+			proxy->onMessage = [this](SocketChannel::CVPtr channel, hv::Buffer* buf)
 				{
-					ServerProxyHelper::Ptr proxyHelper = GetServerProxy();
+					ServerProxyHelper::CVPtr proxyHelper = GetServerProxy();
 
 					if(!proxyHelper){ return ;}
 
@@ -188,9 +188,9 @@ public:
 
 		if (ClientProxyHelper::Ptr proxy = GetClientProxy())
 		{
-			proxy->onConnection = [this](const SocketChannel::Ptr& channel)
+			proxy->onConnection = [this](SocketChannel::CVPtr channel)
 				{
-					ClientProxyHelper::Ptr proxyHelper = GetClientProxy();
+					ClientProxyHelper::CVPtr proxyHelper = GetClientProxy();
 
 					if(!proxyHelper){ return ;}
 
@@ -200,7 +200,7 @@ public:
 					{
 						LoggerPrint::Log(GetWorld(), EL10nCode_SrvConnOn, peeraddr, channel->fd(), channel->id());
 
-						channel->SetWorld(GetWorldW());
+						channel->SetWorld(GetWorld());
 						
 						GetWorld()->RemoveEvent(EMEventType::ClientProxyRegist);
 						GetWorld()->AddEvent<&GateServerHelper::HandleClientRegist>(EMEventType::ClientProxyRegist, GetSelf<GateServerHelper>());
@@ -223,9 +223,9 @@ public:
 					}
 				};
 
-			proxy->onMessage = [this](const SocketChannel::Ptr& channel, hv::Buffer* buf)
+			proxy->onMessage = [this](SocketChannel::CVPtr channel, hv::Buffer* buf)
 				{
-					ClientProxyHelper::Ptr proxyHelper = GetClientProxy();
+					ClientProxyHelper::CVPtr proxyHelper = GetClientProxy();
 
 					if(!proxyHelper){ return ;}
 

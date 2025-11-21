@@ -8,7 +8,7 @@ import FuncUtils;
 export class L10nText : public System
 {
 protected:
-	L10nText(World::WPtr world) : System(world)
+	L10nText(World::CVPtr world) : System(world)
 		// create code space ..0.0..
 		, GetTipText(this)
 	{
@@ -19,6 +19,7 @@ protected:
 	friend class UniversalMemoryPool;
 public:
 	using Ptr = std::shared_ptr<L10nText>;
+	using CVPtr = const Ptr&;
 	using WPtr = std::weak_ptr<L10nText>;
 
 	virtual ~L10nText()
@@ -46,7 +47,7 @@ protected:
 		auto finder = map.find(type);
 		if (finder == map.end())
 		{
-			throw std::invalid_argument(std::format("I10n Tip Config not exist this type {}", PbGen::EL10nCode_Name_(type)));
+			throw std::invalid_argument(std::format("I10n Tip Config not exist this type {}", EL10nCode_Name(type)));
 		}
 		
 		logLevel = finder->second.level();

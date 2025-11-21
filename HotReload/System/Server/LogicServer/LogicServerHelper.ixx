@@ -52,9 +52,9 @@ public:
 		
 		if (ServerProxyHelper::Ptr proxy = GetServerProxy())
 		{
-			proxy->onConnection = [this](const SocketChannel::Ptr& channel)
+			proxy->onConnection = [this](SocketChannel::CVPtr channel)
 				{
-					ServerProxyHelper::Ptr proxyHelper = GetServerProxy();
+					ServerProxyHelper::CVPtr proxyHelper = GetServerProxy();
 
 					if(!proxyHelper){ return ;}
 
@@ -63,23 +63,23 @@ public:
 					{
 						LoggerPrint::Log(GetWorld(), EL10nCode_CliConnOn, peeraddr, channel->fd(), channel->id());
 
-						channel->SetWorld(GetWorldW());
+						channel->SetWorld(GetWorld());
 					}
 					else
 					{
 						LoggerPrint::Log(GetWorld(), EL10nCode_CliConnOff, peeraddr, channel->fd(), channel->id());
-						if (RoomEntity::Ptr entity = channel->getContextPtr<RoomEntity>())
+						if (RoomEntity::CVPtr entity = channel->getContextPtr<RoomEntity>())
 						{
-							RoomEntityManagerHelper::Ptr entityMan = GetRoomEntityManager();
+							RoomEntityManagerHelper::CVPtr entityMan = GetRoomEntityManager();
 							entityMan->RemoveEntity(entity->ID());
 							channel->deleteContextPtr();
 						}
 					}
 				};
 
-			proxy->onMessage = [this](const SocketChannel::Ptr& channel, hv::Buffer* buf)
+			proxy->onMessage = [this](SocketChannel::CVPtr channel, hv::Buffer* buf)
 				{
-					ServerProxyHelper::Ptr proxyHelper = GetServerProxy();
+					ServerProxyHelper::CVPtr proxyHelper = GetServerProxy();
 
 					if(!proxyHelper){ return ;}
 
@@ -141,9 +141,9 @@ public:
 		if (ClientProxyHelper::Ptr proxy = GetClientProxy())
 		{
 			//client will re_create please check
-			proxy->onConnection = [this](const SocketChannel::Ptr& channel)
+			proxy->onConnection = [this](SocketChannel::CVPtr channel)
 				{
-					ClientProxyHelper::Ptr proxyHelper = GetClientProxy();
+					ClientProxyHelper::CVPtr proxyHelper = GetClientProxy();
 
 					if(!proxyHelper){ return ;}
 
@@ -153,7 +153,7 @@ public:
 					{
 						LoggerPrint::Log(GetWorld(), EL10nCode_SrvConnOn, peeraddr, channel->fd(), channel->id());
 
-						channel->SetWorld(GetWorldW());
+						channel->SetWorld(GetWorld());
 						
 						GetWorld()->RemoveEvent(EMEventType::ClientProxyRegist);
 						GetWorld()->AddEvent<&LogicServerHelper::HandleClientRegist>(EMEventType::ClientProxyRegist, GetSelf<LogicServerHelper>());
@@ -185,7 +185,7 @@ public:
 								LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "orgin not match peeraddr {} reclient ~", origin);
 								proxyHelper->GetTimer()->SetTimeout(200, [this, originIp, originPort](size_t timerID)
 									{
-										ClientProxyHelper::Ptr proxyHelper = GetClientProxy();
+										ClientProxyHelper::CVPtr proxyHelper = GetClientProxy();
 
 										if(!proxyHelper){ return ;}
 										proxyHelper->RedirectClient(std::stoi(originPort), originIp);
@@ -202,9 +202,9 @@ public:
 					}
 				};
 
-			proxy->onMessage = [this](const SocketChannel::Ptr& channel, hv::Buffer* buf)
+			proxy->onMessage = [this](SocketChannel::CVPtr channel, hv::Buffer* buf)
 				{
-					ClientProxyHelper::Ptr proxyHelper = GetClientProxy();
+					ClientProxyHelper::CVPtr proxyHelper = GetClientProxy();
 
 					if(!proxyHelper){ return ;}
 

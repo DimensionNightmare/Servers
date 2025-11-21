@@ -3,7 +3,6 @@ export module Server;
 import Logger;
 import ECSW;
 import std.compat;
-import ThirdParty.Libhv;
 
 export enum class EMServerType : uint8_t
 {
@@ -37,16 +36,15 @@ export class Server : public System
 {
 public:
 	using Ptr = std::shared_ptr<Server>;
+	using CVPtr = const Ptr&;
 	using WPtr = std::weak_ptr<Server>;
 	
 protected:
 	friend class UniversalMemoryPool;
 	
-	Server(World::WPtr world):System(world)
+	Server(World::CVPtr world):System(world)
 	{
 		emSystemType = EMSystemType::Server;
-
-		Libhv::hvlog_disable();
 	}
 public:
 	

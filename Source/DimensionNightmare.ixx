@@ -18,6 +18,7 @@ import std.compat;
 import ECSW;
 import Logger;
 import Timer;
+import L10nText;
 
 export enum class EMProgramFlag : uint8_t
 {
@@ -236,6 +237,7 @@ export class DimensionNightmare : public World, public BitFlag<EMProgramFlag>
 public:
 
 	using Ptr = std::shared_ptr<DimensionNightmare>;
+	using CVPtr = const Ptr&;
 
 	/// @brief
 	DimensionNightmare()
@@ -266,7 +268,7 @@ public:
 			if (programConfig.bitServerOpenFlag.HasFlag(serverEnum))
 			{
 
-				World::Ptr world = P_InstanceHolder->GetMemPool().Allocate<World>();
+				World::CVPtr world = P_InstanceHolder->GetMemPool().Allocate<World>();
 				world->MoveLuanchConfigToSelf(programConfig.iniFileConfig[serverName]);
 
 				if (!InitServer(world))
@@ -286,7 +288,7 @@ public:
 
 	/// @brief create dnServer
 	/// @param pHotDll if mutiServer, will own common
-	bool InitServer(World::Ptr world)
+	bool InitServer(World::CVPtr world)
 	{
 		world->AddSystem<Timer>();
 
@@ -297,7 +299,7 @@ public:
 		}
 		EMServerType serverType = EnumName<EMServerType>(*param);
 
-		Server::Ptr dnServer = world->AddSystem<Server>();
+		Server::CVPtr dnServer = world->AddSystem<Server>();
 		dnServer->SetServerType(serverType);
 
 		param = world->GetParam("byCtl");
@@ -396,7 +398,7 @@ public:
 			{
 				pause();
 
-				HotReload::Ptr pHotDll = P_InstanceHolder->AuthWorld->GetSystem<HotReload>(EMSystemType::HotReload);
+				HotReload::CVPtr pHotDll = P_InstanceHolder->AuthWorld->GetSystem<HotReload>(EMSystemType::HotReload);
 
 				MoveEvent(EMEventType::DeinitHotReload, EMEventType::MovedDeinitHotReload);
 
@@ -453,20 +455,21 @@ public:
 
 		for (auto it = oWorlds.rbegin(); it != oWorlds.rend(); ++it)
 		{
-			(*it)->Broadcast(EMEventType::ServerStop);
-			(*it)->Dispose();
+			World::Ptr world = std::move(*it);
+			world->Broadcast(EMEventType::ServerStop);
+			world->Dispose();
 		}
 
 		oWorlds.clear();
 
-		World::Dispose();
-
 		mCmdHandle.clear();
+		
+		World::Dispose();
 	}
 
 	bool StartWorlds()
 	{
-		HotReload::Ptr pHotDll = P_InstanceHolder->AuthWorld->GetSystem<HotReload>(EMSystemType::HotReload);
+		HotReload::CVPtr pHotDll = P_InstanceHolder->AuthWorld->GetSystem<HotReload>(EMSystemType::HotReload);
 		if (!pHotDll->ReloadHandle())
 		{
 			return false;

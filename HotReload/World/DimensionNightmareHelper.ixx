@@ -24,7 +24,7 @@ public:
 	{
 		for(const auto& world : oWorlds)
 		{
-			Server::Ptr dnServer = world->GetSystem<Server>(EMSystemType::Server);
+			Server::CVPtr dnServer = world->GetSystem<Server>(EMSystemType::Server);
 	
 			switch (dnServer->GetServerType())
 			{
@@ -32,7 +32,7 @@ public:
 				{ 																	\
 					AddEvent<&Type##Helper::HandleServerInit>(						\
 						EMEventType::InitHotReload, 								\
-						dnServer->GetSelfW<Type##Helper>()); 						\
+						dnServer->GetSelf<Type##Helper>()); 						\
 					break;															\
 				}
 				one(ControlServer)
@@ -51,7 +51,7 @@ public:
 	{
 		for(const auto& world : oWorlds)
 		{
-			Server::Ptr dnServer = world->GetSystem<Server>(EMSystemType::Server);
+			Server::CVPtr dnServer = world->GetSystem<Server>(EMSystemType::Server);
 	
 			switch (dnServer->GetServerType())
 			{
@@ -59,7 +59,7 @@ public:
 				{ 																	\
 					AddEvent<&Type##Helper::HandleServerShutdown>(					\
 						EMEventType::DeinitHotReload, 								\
-						dnServer->GetSelfW<Type##Helper>()); 						\
+						dnServer->GetSelf<Type##Helper>()); 						\
 					break;															\
 				}
 				one(ControlServer)

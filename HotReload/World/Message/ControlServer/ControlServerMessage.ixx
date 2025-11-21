@@ -7,7 +7,7 @@ import std;
 
 namespace ServerMessage
 {
-	export std::shared_ptr<MessageRegister> GetMessageHandle()
+	export MessageRegister::CVPtr GetMessageHandle()
 	{
 		static std::shared_ptr<MessageRegister> PInstance;
 		if (PInstance == nullptr)

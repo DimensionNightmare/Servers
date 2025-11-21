@@ -9,12 +9,12 @@ namespace MsgHandleRegister
 {
 
 	HandleRegistry<GMsg::g2L_RetProxyOffline, void, EMMsgDeal::Ret> Exe_RetProxyOffline =
-				[](auto request, const SocketChannel::Ptr& channel)
+				[](auto request, SocketChannel::CVPtr channel)
 	{
-		LogicServerHelper::Ptr dnServer = channel->GetWorld()->GetSystem<LogicServerHelper>(EMSystemType::Server);
-		ClientEntityManagerHelper::Ptr entityMan = dnServer->GetClientEntityManager();
+		LogicServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<LogicServerHelper>(EMSystemType::Server);
+		ClientEntityManagerHelper::CVPtr entityMan = dnServer->GetClientEntityManager();
 
-		if (ClientEntity::Ptr entity = entityMan->GetEntity(request->entityid()))
+		if (ClientEntity::CVPtr entity = entityMan->GetEntity(request->entityid()))
 		{
 			LoggerPrint::Log(channel, ELogLevel_Debug, "Recv Client {} Disconnect !!", entity->ID());
 

@@ -61,7 +61,7 @@ public:
 				// lost connection. reconnect
 				isReconnection = true;
 			}
-			catch(std::exception& e)
+			catch(const std::exception& e)
 			{
 				break;
 			}
@@ -76,13 +76,11 @@ private:
 
 	const std::shared_ptr<pqxx::connection>& GetConnection(EMSqlDbNameEnum dbName)
 	{
-		static std::shared_ptr<pqxx::connection> conn;
-
 		if (pRdbProxys.contains(dbName))
 		{
 			return pRdbProxys[dbName];
 		}
 		
-		return conn;
+		return nullptr;
 	}
 };
