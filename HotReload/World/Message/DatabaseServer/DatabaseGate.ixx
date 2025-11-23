@@ -15,10 +15,10 @@ namespace MsgHandleRegister
 {
 
 	HandleRegistry<GMsg::L2D_ReqLoadData, GMsg::D2L_ResLoadData, EMMsgDeal::Req> Exe_ReqLoadData =
-				[](auto request, auto response, SocketChannel::CVPtr channel)
+				[](World::Ptr world, SocketChannel::Ptr channel, auto request, auto response)
 	{
 		
-		DatabaseServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<DatabaseServerHelper>(EMSystemType::Server);
+		DatabaseServerHelper::CVPtr dnServer = world->GetSystem<DatabaseServerHelper>(EMSystemType::Server);
 
 		if (auto transaction = dnServer->GetRdbProxy()->GetTransaction(EMSqlDbNameEnum::Nightmare, false))
 		{
@@ -26,18 +26,16 @@ namespace MsgHandleRegister
 				{
 					findMsg->ParseFromString(request->entitydata());
 
-					DbSqlHelper dbHelper(transaction.get(), channel->GetWorld(), findMsg);
+					DbSqlHelper dbHelper(transaction.get(), world, findMsg);
 
 					auto query = [&]()
 						{
-							
-
 							dbHelper
 								.SelectByKey(field)
 								.Limit(request->limit())
 								.Commit();
 
-							auto& results = dbHelper.Result();
+							const auto& results = dbHelper.GetResult();
 
 							std::ranges::for_each(
 								results,
@@ -83,7 +81,7 @@ namespace MsgHandleRegister
 					}
 					catch (const std::exception& e)
 					{
-						LoggerPrint::Log(channel, ELogLevel_Debug, "{}", e.what());
+						LoggerPrint::Log(world, ELogLevel_Debug, "{}", e.what());
 						response->set_errorcode(EL10nCode_UnkonwOpreator);
 					}
 
@@ -108,9 +106,10 @@ namespace MsgHandleRegister
 	};
 
 	HandleRegistry<GMsg::L2D_ReqSaveData, GMsg::D2L_ResSaveData, EMMsgDeal::Req> Exe_ReqSaveData =
-				[](auto request, auto response, SocketChannel::CVPtr channel)
+				[](World::Ptr world, SocketChannel::Ptr channel, auto request, auto response)
 	{
-		DatabaseServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<DatabaseServerHelper>(EMSystemType::Server);
+		
+		DatabaseServerHelper::CVPtr dnServer = world->GetSystem<DatabaseServerHelper>(EMSystemType::Server);
 
 		if (auto transaction = dnServer->GetRdbProxy()->GetTransaction(EMSqlDbNameEnum::Nightmare, false))
 		{
@@ -118,7 +117,7 @@ namespace MsgHandleRegister
 				{
 					findMsg->ParseFromString(request->entitydata());
 
-					DbSqlHelper dbHelper(transaction.get(), channel->GetWorld(), findMsg);
+					DbSqlHelper dbHelper(transaction.get(), world, findMsg);
 
 					dbHelper
 						.UpdateByKey(request->keynumber())
@@ -127,7 +126,7 @@ namespace MsgHandleRegister
 					transaction->commit();
 
 
-					// LoggerPrint::Log(channel, ELogLevel_Debug, "Save Data Success! data={}", findMsg->DebugString());
+					// LoggerPrint::Log(world, ELogLevel_Debug, "Save Data Success! data={}", findMsg->DebugString());
 				};
 
 			if (const Descriptor* descriptor = Proto::FindMessageTypeByName(request->tablename()))
@@ -142,7 +141,7 @@ namespace MsgHandleRegister
 					}
 					catch (const std::exception& e)
 					{
-						LoggerPrint::Log(channel, ELogLevel_Debug, "{}", e.what());
+						LoggerPrint::Log(world, ELogLevel_Debug, "{}", e.what());
 						response->set_errorcode(EL10nCode_UnkonwOpreator);
 					}
 

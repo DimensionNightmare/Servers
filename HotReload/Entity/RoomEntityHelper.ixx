@@ -28,7 +28,7 @@ public:
 	void SetTimerId(size_t timerId) { iCloseTimerId = timerId; }
 
 	/// @brief net socket set
-	SocketChannel::CVPtr GetChannel() { return pChannel; }
+	SocketChannel::Ptr GetChannel() { return pChannel; }
 
 	/// @brief net socket get
 	void SetChannel(SocketChannel::CVPtr channel) { pChannel = channel; }

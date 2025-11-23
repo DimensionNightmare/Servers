@@ -13,9 +13,10 @@ namespace MsgHandleRegister
 {
 
 	HandleRegistry<GMsg::g2G_RetRegistSrv, void, EMMsgDeal::Ret> Exe_RetRegistSrv =
-				[](auto request, SocketChannel::CVPtr channel)
+				[](World::Ptr world, SocketChannel::Ptr channel, auto request)
 	{
-		GlobalServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<GlobalServerHelper>(EMSystemType::Server);
+		
+		GlobalServerHelper::CVPtr dnServer = world->GetSystem<GlobalServerHelper>(EMSystemType::Server);
 		ServerEntityManagerHelper::CVPtr entityMan = dnServer->GetServerEntityManager();
 		if (ServerEntityHelper::CVPtr entity = entityMan->GetEntity(request->serverid()))
 		{
@@ -29,24 +30,23 @@ namespace MsgHandleRegister
 			}
 			else
 			{
-				ServerEntity::CVPtr owner = channel->getContextPtr<ServerEntity>();
+				ServerEntity::CVPtr owner = channel->GetEntity<ServerEntity>();
 				// remove and unlock
 				owner->GetMapLinkNode(entity->GetServerType()).remove(entity);
 				owner->ClearFlag(EMServerEntityFlag::Locked);
 
-				LoggerPrint::Log(channel, ELogLevel_Debug, "Global get notify release gate lock!");
+				LoggerPrint::Log(world, ELogLevel_Debug, "Global get notify release gate lock!");
 
-				entityMan->RemoveEntity(request->serverid());
+				entityMan->DisposeEntity(entity);
 				dnServer->UpdateServerGroup();
 			}
 		}
 	};
 
 	HandleRegistry<GMsg::g2G_RetRegistChild, void, EMMsgDeal::Ret> Exe_RetRegistChild =
-				[](auto request, SocketChannel::CVPtr channel)
+				[](World::Ptr world, SocketChannel::Ptr channel, auto request)
 	{
-	
-		GlobalServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<GlobalServerHelper>(EMSystemType::Server);
+				GlobalServerHelper::CVPtr dnServer = world->GetSystem<GlobalServerHelper>(EMSystemType::Server);
 		ServerEntityManagerHelper::CVPtr entityMan = dnServer->GetServerEntityManager();
 
 		ServerEntityHelper::CVPtr entity = entityMan->GetEntity(request->serverid());
@@ -59,19 +59,20 @@ namespace MsgHandleRegister
 		{
 			const GMsg::COM_ReqRegistSrv& child = request->childs(i);
 			EMServerType childType = static_cast<EMServerType>(child.servertype());
-			ServerEntityHelper::Ptr servChild = entityMan->AddEntity(child.serverid(), childType);
+			ServerEntityHelper::CVPtr servChild = entityMan->AddEntity(child.serverid(), childType);
+			servChild->SetLinkNode(entity);
 			entity->SetMapLinkNode(childType, servChild->GetSelf<ServerEntity>());
 		}
 	};
 
 	HandleRegistry<GMsg::A2g_ReqAuthAccount, GMsg::g2A_ResAuthAccount, EMMsgDeal::Redir> Msg_ReqAuthAccount =
-				[](auto request, auto response, SocketChannel::Ptr channel) -> TaskVoid
+				[](World::Ptr world, SocketChannel::Ptr channel, auto request, auto response) -> TaskVoid
 	{
-		// if has db not need origin
-		GlobalServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<GlobalServerHelper>(EMSystemType::Server);
+				// if has db not need origin
+		GlobalServerHelper::CVPtr dnServer = world->GetSystem<GlobalServerHelper>(EMSystemType::Server);
 
 		auto selects = dnServer->GetServerEntityManager()->GetEntitysByType(EMServerType::GateServer) 
-			| std::ranges::views::transform([](const auto& server){
+			| std::views::transform([](const auto& server){
 				return server->GetSelf<ServerEntityHelper>();
 			})
 			| std::views::filter([](const auto& server){
@@ -82,13 +83,11 @@ namespace MsgHandleRegister
 		if ( auto it = std::ranges::min_element(selects, std::greater{}, &ServerEntityHelper::GetConnNum); it != selects.end())
 		{
 			ServerEntityHelper::CVPtr entity = *it;
-			LoggerPrint::Log(channel, ELogLevel_Debug, "send to GateServer : {}", entity->ID());
+			LoggerPrint::Log(world, ELogLevel_Debug, "send to GateServer : {}", entity->ID());
 
 			entity->SetConnNum(1);
 
-			ServerProxyHelper::CVPtr proxyHelper = dnServer->GetServerProxy();
-
-			bool success = co_await proxyHelper->AddMsg(EMMsgDeal::Req, request, entity->GetChannel(), response);
+			bool success = co_await dnServer->GetServerProxy()->AddMsg(EMMsgDeal::Req, request, entity->GetChannel(), response);
 			
 			if (!success)
 			{
@@ -106,7 +105,7 @@ namespace MsgHandleRegister
 				entity->SetConnNum(-1);
 			}
 
-			LoggerPrint::Log(channel, ELogLevel_Debug, "Msg_ReqAuthAccount:{}", response->DebugString());
+			LoggerPrint::Log(world, ELogLevel_Debug, "Msg_ReqAuthAccount:{}", response->DebugString());
 		}
 		else
 		{
@@ -117,11 +116,11 @@ namespace MsgHandleRegister
 	};
 
 	HandleRegistry<GMsg::A2g_ReqLogicServerIp, GMsg::g2A_ResLogicServerIp, EMMsgDeal::Redir> Msg_ReqLogicServerIp =
-		[](auto request, auto response, SocketChannel::Ptr channel) -> TaskVoid
+		[](World::Ptr world, SocketChannel::Ptr channel, auto request, auto response) -> TaskVoid
 	{
 		
 		// if has db not need origin
-		GlobalServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<GlobalServerHelper>(EMSystemType::Server);
+		GlobalServerHelper::CVPtr dnServer = world->GetSystem<GlobalServerHelper>(EMSystemType::Server);
 
 		auto selects = dnServer->GetServerEntityManager()->GetEntitysByType(EMServerType::GateServer)
 			| std::views::filter([](const auto& param){
@@ -135,7 +134,7 @@ namespace MsgHandleRegister
 		if (auto it = std::ranges::min_element(selects, {}, &ServerEntityHelper::GetConnNum); it != selects.end())
 		{
 			ServerEntityHelper::CVPtr entity = *it;
-			LoggerPrint::Log(channel, ELogLevel_Debug, "send to GateServer : {}", entity->ID());
+			LoggerPrint::Log(world, ELogLevel_Debug, "send to GateServer : {}", entity->ID());
 			
 			ServerProxyHelper::CVPtr proxyHelper = dnServer->GetServerProxy();
 			
@@ -147,7 +146,7 @@ namespace MsgHandleRegister
 				
 			}
 			
-			LoggerPrint::Log(channel, ELogLevel_Debug, "Msg_ReqLogicServerIp:{}", response->DebugString());
+			LoggerPrint::Log(world, ELogLevel_Debug, "Msg_ReqLogicServerIp:{}", response->DebugString());
 		}
 		else
 		{

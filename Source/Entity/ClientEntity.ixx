@@ -42,7 +42,7 @@ public:
 		Entity::Dispose();
 	}
 	
-public: // dll override
+public: 
 
 	/// @brief db entity get
 

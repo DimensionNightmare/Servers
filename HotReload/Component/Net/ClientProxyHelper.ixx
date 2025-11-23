@@ -57,7 +57,7 @@ public:
 		auto task = MakeMsgTask();
 
 		auto send = [&](){
-			MessagePackAndSend(msgId, dealType, request, GetChannel());
+			MessagePackAndSend(msgId, dealType, request, GetChannel(), GetWorld());
 		};
 		
 		if(msgId)
@@ -130,6 +130,6 @@ public:
 
 	uint32_t GetMsgId() { return ++iMsgId; }
 	
-	SocketChannel::CVPtr GetChannel() { return channel; }
+	SocketChannel::Ptr GetChannel() { return channel; }
 	
 };

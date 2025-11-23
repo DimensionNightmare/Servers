@@ -15,12 +15,6 @@ namespace LogColor
     const std::string RESET		= "\033[0m" ;
 };
 
-template <typename T>
-concept HasGetWorld = requires(T t)
-{
-	{ t->GetWorld() } -> std::same_as<World::Ptr>;
-};
-
 export class LoggerPrint : public System
 {
 
@@ -129,18 +123,6 @@ public:
 	static void Log(World::CVPtr world, EL10nCode code, Args&&... args)
 	{
 		GetInstance()->Record(world, code, std::forward<Args>(args)...);
-	}
-
-	template <HasGetWorld T, typename... Args>
-	static void Log(T owner, EL10nCode code, Args&&... args)
-	{
-		Log(owner->GetWorld(), code, std::forward<Args>(args)...);
-	}
-
-	template <HasGetWorld T, typename... Args>
-	static void Log(T owner, ELogLevel level, const std::format_string<Args...>& fmt, Args&&... args)
-	{
-		Log(owner->GetWorld(), level, fmt, std::forward<Args>(args)...);
 	}
 
 protected:

@@ -68,7 +68,7 @@ public:
 		}
 		while(true);
 
-		return std::move(transaction);
+		return transaction;
 	}
 
 	

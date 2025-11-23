@@ -43,9 +43,7 @@ public:
 				}
 				
 				connection->ping();
-				auto redisTranscation = connection->transaction(false, false);
-				transaction = std::make_unique<sw::redis::Transaction>(std::move(redisTranscation));
-
+				transaction = std::make_unique<sw::redis::Transaction>(connection->transaction(false, false));
 				break;
 			}
 			catch(const sw::redis::IoError& e)
@@ -60,13 +58,13 @@ public:
 		}
 		while(true);
 
-		return std::move(transaction);
+		return transaction;
 	}
 
 
 protected:
 
-	const std::shared_ptr<sw::redis::Redis>& GetConnection()
+	std::shared_ptr<sw::redis::Redis> GetConnection()
 	{
 		if (pMdbProxys.contains(0))
 		{

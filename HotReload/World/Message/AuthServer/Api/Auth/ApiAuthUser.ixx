@@ -134,7 +134,9 @@ export void ApiAuth(Server::CVPtr server)
 					.Limit(2)
 					.Commit();
 
-				if (accounts.Result().size() != 1)
+				const auto& results = accounts.GetResult();
+
+				if (results.size() != 1)
 				{
 					
 					errData["Code"] = http_status::HTTP_STATUS_BAD_REQUEST;
@@ -144,14 +146,14 @@ export void ApiAuth(Server::CVPtr server)
 					co_return;
 				}
 
-				accInfo = *accounts.Result()[0];
+				accInfo.Swap(results[0].get());
 
 				transaction->commit();
 			}
 			catch (const std::exception& e)
 			{
 				
-				LoggerPrint::Log(server, ELogLevel_Debug, "{}", e.what());
+				LoggerPrint::Log(server->GetWorld(), ELogLevel_Debug, "{}", e.what());
 				errData["Code"] = http_status::HTTP_STATUS_BAD_REQUEST;
 				errData["Message"] = "Server Error!!";
 				MSGSET(errData.dump());
@@ -269,7 +271,7 @@ export void ApiAuth(Server::CVPtr server)
 			}
 			catch (const std::exception& e)
 			{
-				LoggerPrint::Log(server, ELogLevel_Debug, "{}", e.what());
+				LoggerPrint::Log(server->GetWorld(), ELogLevel_Debug, "{}", e.what());
 				errData["Code"] = http_status::HTTP_STATUS_BAD_REQUEST;
 				errData["Message"] = "Regist Error!!";
 				MSGSET(errData.dump());
@@ -319,7 +321,7 @@ export void ApiAuth(Server::CVPtr server)
 			}
 			catch (const std::exception& e)
 			{
-				LoggerPrint::Log(server, ELogLevel_Debug, "{}", e.what());
+				LoggerPrint::Log(server->GetWorld(), ELogLevel_Debug, "{}", e.what());
 				errData["Code"] = http_status::HTTP_STATUS_BAD_REQUEST;
 				errData["Message"] = "Regist Error!!";
 				MSGSET(errData.dump());
@@ -335,25 +337,31 @@ export void ApiAuth(Server::CVPtr server)
 			// writer->End();
 			// std::cout << "end" << "\n";
 
+			AuthServerHelper::CVPtr dnServer = server->GetSelf<AuthServerHelper>();
+			World::CVPtr world = dnServer->GetWorld();
+
 			try
 			{
-				AuthServerHelper::CVPtr dnServer = server->GetSelf<AuthServerHelper>();
 
 				if(auto transaction = dnServer->GetMdbProxy()->GetTransaction())
 				{
 					auto result = transaction->hset("hello", "world", "1").exec().get<bool>(0);
-					LoggerPrint::Log(server, ELogLevel_Debug, "{}", result);
+					LoggerPrint::Log(world, ELogLevel_Debug, "{}", result);
+					
 				}
 
 				if(auto transaction = dnServer->GetMdbProxy()->GetTransaction())
 				{
-					auto result = transaction->hget("hello", "world").exec().get<std::string>(0);
-					LoggerPrint::Log(server, ELogLevel_Debug, "{}", result);
+					auto result = transaction->hget("hello", "world").exec().get<sw::redis::OptionalString>(0);
+					if(result)
+					{
+						LoggerPrint::Log(world, ELogLevel_Debug, "{}", *result);
+					}
 				}
 			}
 			catch(const std::exception& e)
 			{
-				LoggerPrint::Log(server, ELogLevel_Debug, "1232:{}", e.what());
+				LoggerPrint::Log(world, ELogLevel_Debug, "1232:{}", e.what());
 			}
 
 			writer->End();

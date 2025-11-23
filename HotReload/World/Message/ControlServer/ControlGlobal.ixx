@@ -12,12 +12,10 @@ namespace MsgHandleRegister
 {
 
 	HandleRegistry<GMsg::A2g_ReqAuthAccount, GMsg::g2A_ResAuthAccount, EMMsgDeal::Redir> Msg_ReqAuthAccount =
-		[](auto request, auto response, SocketChannel::Ptr channel) -> TaskVoid
+		[](World::Ptr world, SocketChannel::Ptr channel, auto request, auto response) -> TaskVoid
 	{
 		
-		ServerEntityHelper::CVPtr serverEntity = nullptr;
-
-		ControlServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<ControlServerHelper>(EMSystemType::Server);
+		ControlServerHelper::CVPtr dnServer = world->GetSystem<ControlServerHelper>(EMSystemType::Server);
 
 		ServerEntityManagerHelper::CVPtr entityMan = dnServer->GetServerEntityManager();
 
@@ -52,12 +50,10 @@ namespace MsgHandleRegister
 	};
 
 	HandleRegistry<GMsg::A2g_ReqLogicServerIp, GMsg::g2A_ResLogicServerIp, EMMsgDeal::Redir> Msg_ReqLogicServerIp =
-		[](auto request, auto response, SocketChannel::Ptr channel) -> TaskVoid
+		[](World::Ptr world, SocketChannel::Ptr channel, auto request, auto response) -> TaskVoid
 	{
 		
-		ServerEntityHelper::CVPtr serverEntity = nullptr;
-
-		ControlServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<ControlServerHelper>(EMSystemType::Server);
+		ControlServerHelper::CVPtr dnServer = world->GetSystem<ControlServerHelper>(EMSystemType::Server);
 
 		ServerEntityManagerHelper::CVPtr entityMan = dnServer->GetServerEntityManager();
 

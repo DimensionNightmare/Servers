@@ -47,34 +47,34 @@ namespace MsgHandleRegister
 			switch (msgDeal)
 			{
 				case EMMsgDeal::Req:
-					ServerMessage::GetMessageHandle()->mHandleMap.emplace(msgHash, [this](auto a, auto b, auto c) 
+					ServerMessage::GetMessageHandle()->mHandleMap.emplace(msgHash, [this](const auto& a, const auto& b, const auto& c, const auto& d) 
 					{ 
 						if(!this->bIsCoroutine)
 						{
-							this->TickMessage(a, b, c); 
+							this->TickMessage(a, b, c, d); 
 						}
 						else
 						{
-							this->TickMessageAsync(a, b, c); 
+							this->TickMessageAsync(a, b, c, d); 
 						}
 					});
 					break;
 				case EMMsgDeal::Ret:
-					ServerMessage::GetMessageHandle()->mHandleRetMap.emplace(msgHash, [this](auto a, auto b) 
+					ServerMessage::GetMessageHandle()->mHandleRetMap.emplace(msgHash, [this](const auto& a, const auto& b, const auto& c) 
 					{ 
-						this->TickMessage(a, b); 
+						this->TickMessage(a, b, c); 
 					});
 					break;
 				case EMMsgDeal::Redir:
-					ServerMessage::GetMessageHandle()->mHandleRedirectMap.emplace(msgHash, [this](auto a, auto b, auto c) 
+					ServerMessage::GetMessageHandle()->mHandleRedirectMap.emplace(msgHash, [this](const auto& a, const auto& b, const auto& c, const auto& d) 
 					{
 						if(!this->bIsCoroutine)
 						{
-							this->TickMessage(a, b, c); 
+							this->TickMessage(a, b, c, d); 
 						}
 						else
 						{
-							this->TickMessageAsync(a, b, c); 
+							this->TickMessageAsync(a, b, c, d); 
 						}
 					});
 					break;

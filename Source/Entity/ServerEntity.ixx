@@ -41,15 +41,19 @@ public:
 	}
 	
 	/// @brief this server father node
-	ServerEntity::CVPtr LinkNode() { return pLink; }
+	ServerEntity::Ptr LinkNode() { return pLink; }
+
+	void SetLinkNode(ServerEntity::CVPtr node) { pLink = node; }
 
 	/// @brief this server childs get
 	std::list<ServerEntity::Ptr>& GetMapLinkNode(EMServerType type) { return mMapLink[type]; }
+
+	const std::unordered_map<EMServerType, std::list<ServerEntity::Ptr>>& GetMapLink() { return mMapLink; }
 	
 	/// 
 	EMServerType GetServerType() { return emServerType; }
 
-	SocketChannel::CVPtr GetChannel() { return pChannel; }
+	SocketChannel::Ptr GetChannel() { return pChannel; }
 
 protected: // dll proxy
 	EMServerType emServerType = EMServerType::None;

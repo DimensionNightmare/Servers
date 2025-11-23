@@ -46,31 +46,28 @@ public:
 	{
 		ServerMessage::GetMessageHandle()->pApiRegistFunc(GetSelf<Server>());
 		
-		if (ClientProxyHelper::Ptr proxy = GetClientProxy())
+		if (ClientProxyHelper::CVPtr proxy = GetClientProxy())
 		{
 			proxy->onConnection = [this](SocketChannel::CVPtr channel)
 				{
 					ClientProxyHelper::CVPtr proxyHelper = GetClientProxy();
 
-					if(!proxyHelper){ return ;}
-
 					const std::string& peeraddr = channel->peeraddr();
+
+					World::CVPtr world = GetWorld();
 
 					if (channel->isConnected())
 					{
-						LoggerPrint::Log(GetWorld(), EL10nCode_CliConnOn, peeraddr, channel->fd(), channel->id());
+						LoggerPrint::Log(world, EL10nCode_CliConnOn, peeraddr, channel->fd(), channel->id());
 
-						channel->SetWorld(GetWorld());
+						world->RemoveEvent(EMEventType::ClientProxyRegist);
 
-						
-						GetWorld()->RemoveEvent(EMEventType::ClientProxyRegist);
-
-						GetWorld()->AddEvent<&AuthServerHelper::HandleClientRegist>(EMEventType::ClientProxyRegist, GetSelf<AuthServerHelper>());
+						world->AddEvent<&AuthServerHelper::HandleClientRegist>(EMEventType::ClientProxyRegist, GetSelf<AuthServerHelper>());
 						proxyHelper->InitConnectedChannel(channel);
 					}
 					else
 					{
-						LoggerPrint::Log(GetWorld(), EL10nCode_CliConnOff, peeraddr, channel->fd(), channel->id());
+						LoggerPrint::Log(world, EL10nCode_CliConnOff, peeraddr, channel->fd(), channel->id());
 
 						if (proxyHelper->GetRegistState() == EMRegistState::Registed)
 						{
@@ -88,13 +85,7 @@ public:
 
 			proxy->onMessage = [this](SocketChannel::CVPtr channel, hv::Buffer* buf)
 				{
-					ClientProxyHelper::CVPtr proxyHelper = GetClientProxy();
-
-					if(!proxyHelper){ return ;}
-					
 					MessagePacket* packet = MessagePacket::From(buf->data());
-
-					LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "c {} Recv type={} With Mid:{}", channel->peeraddr(), EnumName(packet->dealType), packet->msgId);
 
 					if(packet->pkgLenth > 2 * 1024)
 					{
@@ -106,6 +97,8 @@ public:
 
 					if (packet->dealType == EMMsgDeal::Res)
 					{
+						ClientProxyHelper::CVPtr proxyHelper = GetClientProxy();
+
 						if (MsgTask* task = proxyHelper->GetMsg(packet->msgId)) //client sock request
 						{
 							proxyHelper->DelMsg(packet->msgId);
@@ -139,7 +132,7 @@ public:
 
 	void HandleServerShutdown()
 	{
-		if (ClientProxyHelper::Ptr proxy = GetClientProxy())
+		if (ClientProxyHelper::CVPtr proxy = GetClientProxy())
 		{
 			proxy->onConnection = nullptr;
 			proxy->onMessage = nullptr;
@@ -148,12 +141,11 @@ public:
 			proxy->ClearMsgMap();
 		}
 
-		if (WebProxyHelper::Ptr proxy = GetWebProxy())
+		if (WebProxyHelper::CVPtr proxy = GetWebProxy())
 		{
 			if(proxy->service)
 			{
-				std::function<int(const hv::HttpContextPtr&)> funcReplace = nullptr;
-				proxy->service->preprocessor = funcReplace;
+				proxy->service->preprocessor = std::function<int(const hv::HttpContextPtr&)>();
 				proxy->service->pathHandlers.clear();
 			}
 		}

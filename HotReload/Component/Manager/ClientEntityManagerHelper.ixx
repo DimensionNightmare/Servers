@@ -34,7 +34,7 @@ public:
 		return nullptr;
 	}
 
-	ClientEntityHelper::CVPtr GetEntity(size_t entityId)
+	ClientEntityHelper::Ptr GetEntity(size_t entityId)
 	{
 		std::shared_lock lock(oMapMutex);
 		if (mEntityMap.contains(entityId))
@@ -49,9 +49,11 @@ public:
 	{
 		ClientProxyHelper::CVPtr clientProxy = GetOwner()->GetComponent<ClientProxyHelper>(EMComponentType::ClientProxy);
 
+		World::CVPtr world = GetWorld();
+
 		if (!clientProxy || clientProxy->RegistType() != std::to_underlying(EMServerType::GateServer))
 		{
-			LoggerPrint::Log(clientProxy, ELogLevel_Debug, "client proxy not vaild or not gate server!");
+			LoggerPrint::Log(world, ELogLevel_Debug, "client proxy not vaild or not gate server!");
 			co_return false;
 		}
 
@@ -64,7 +66,7 @@ public:
 				GDb::Player* dbEntity = entity->GetDbEntity();
 				if(!dbEntity->SerializeToString(entitydata))
 				{
-					LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "SerializeToString error on LoadEntity id = {}!", dbEntity->accountid());
+					LoggerPrint::Log(world, ELogLevel_Debug, "SerializeToString error on LoadEntity id = {}!", dbEntity->accountid());
 					co_return false;
 				}
 			}
@@ -72,7 +74,7 @@ public:
 		}
 		else if(entity->HasFlag(EMClientEntityFlag::DBIniting))
 		{
-			LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "entity {} is DBIniting. return .", entity->ID());
+			LoggerPrint::Log(world, ELogLevel_Debug, "entity {} is DBIniting. return .", entity->ID());
 			if (inResponse)
 			{
 				inResponse->set_errorcode(EL10nCode_DBIniting);
@@ -101,7 +103,7 @@ public:
 			}
 			catch(const std::exception& e)
 			{
-				LoggerPrint::Log(GetWorld(), ELogLevel_Error, "entity Load Redis err {} ", e.what());
+				LoggerPrint::Log(world, ELogLevel_Error, "entity Load Redis err {} ", e.what());
 			}
 
 			if (!binData.empty())
@@ -161,7 +163,7 @@ public:
 			// binData = request->entitydata();
 			// BytesToHexString(binData);
 			// mDbFailure[entityId] = binData;
-			LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "Load Db Entity Error id = {}, errorcode = {}! ", entityId, std::to_underlying(response->errorcode()));
+			LoggerPrint::Log(world, ELogLevel_Debug, "Load Db Entity Error id = {}, errorcode = {}! ", entityId, std::to_underlying(response->errorcode()));
 			co_return false;
 		}
 
@@ -183,7 +185,7 @@ public:
 		}
 		else if(lenth > 1)
 		{
-			LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "Load Db Entity mutiply data!");
+			LoggerPrint::Log(world, ELogLevel_Debug, "Load Db Entity mutiply data!");
 		}
 
 
@@ -197,7 +199,7 @@ public:
 	}
 
 	/// @brief save entity data to database. this is task.
-	TaskVoid SaveEntity(ClientEntityHelper::CVPtr entity, bool offline = false)
+	TaskVoid SaveEntity(ClientEntityHelper::Ptr entity, bool offline = false)
 	{
 		size_t entityId = entity->ID();
 
@@ -274,7 +276,7 @@ public:
 	void CheckSaveEntity(bool shutdown = false)
 	{
 
-		std::function<void(ClientEntityHelper::CVPtr, bool)> dealFunc = nullptr;
+		std::function<void(ClientEntityHelper::CVPtr, bool)> dealFunc;
 		
 		ClientProxyHelper::CVPtr clientProxy = GetOwner()->GetComponent<ClientProxyHelper>(EMComponentType::ClientProxy);
 
@@ -307,7 +309,7 @@ public:
 				{
 					return entity->GetDbEntity() != nullptr;
 				})
-			| std::ranges::views::transform([](const auto& entity)
+			| std::views::transform([](const auto& entity)
 				{
 					return entity->GetSelf<ClientEntityHelper>();
 				});

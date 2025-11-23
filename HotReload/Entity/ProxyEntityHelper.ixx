@@ -10,7 +10,7 @@ private:
 	ProxyEntityHelper() = delete;
 	~ProxyEntityHelper() = default;
 
-public: // dll override
+public: 
 
 	/// @brief the this close timedown destroy timerid.
 	/// @brief authenticate,shutdown and reconnect waiting.
@@ -18,7 +18,7 @@ public: // dll override
 	void SetTimerId(size_t timerId) { iCloseTimerId = timerId; }
 
 	/// @brief net socket set
-	SocketChannel::CVPtr GetChannel() { return pChannel; }
+	SocketChannel::Ptr GetChannel() { return pChannel; }
 
 	/// @brief net socket get
 	void SetChannel(SocketChannel::CVPtr channel) { pChannel = channel; }

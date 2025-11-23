@@ -35,26 +35,24 @@ public:
 		EntityManager::Dispose();
 	}
 
-public: // dll proxy
 
-	bool RemoveEntity(size_t entityId)
+protected:
+
+	ClientEntity::Ptr RemoveEntity(size_t entityId)
 	{
+		ClientEntity::Ptr entity;
 
 		if (mEntityMap.contains(entityId))
 		{
 			LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "destory client entity");
-			ClientEntity::Ptr entity = std::move(mEntityMap[entityId]);
-			entity->Dispose();
 
 			std::unique_lock ulock(oMapMutex);
+			entity = std::move(mEntityMap[entityId]);
 			mEntityMap.erase(entityId);
-			return true;
 		}
 
-		return false;
+		return entity;
 	}
-
-protected:
 
 	ClientEntity::Ptr _AddEntity(size_t entityId)
 	{

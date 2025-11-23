@@ -59,9 +59,9 @@ public:
 		}
 		catch(pqxx::broken_connection& e)
 		{
-			LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "Can Connect Database:{}, retest", *param);
+			LoggerPrint::Log(world, ELogLevel_Debug, "Can Connect Database:{}, retest", *param);
 			// 重试 retest
-			Timer::CVPtr timer = GetWorld()->GetSystem<Timer>(EMSystemType::Timer);
+			Timer::CVPtr timer = world->GetSystem<Timer>(EMSystemType::Timer);
 
 			timer->SetTimeout(3000, [this](size_t)
 			{
@@ -71,7 +71,7 @@ public:
 		}
 		catch(const std::exception& e)
 		{
-			LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "Can Connect Database:{}, no retest", e.what());
+			LoggerPrint::Log(world, ELogLevel_Debug, "Can Connect Database:{}, no retest", e.what());
 			return;
 		}
 
@@ -90,20 +90,18 @@ public:
 			if (!checkTxn.query_value<bool>(std::format("SELECT EXISTS (SELECT 1 FROM pg_database WHERE datname = '{}');", dbName)))
 			{
 				checkTxn.exec(std::format("CREATE DATABASE \"{}\";", dbName));
-				LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "Create Database:{}", dbName);
+				LoggerPrint::Log(world, ELogLevel_Debug, "Create Database:{}", dbName);
 			}
 
 			std::string connectStr = std::format("{} dbname = {}", *param, dbName);
 
-			auto connection = P_InstanceHolder->GetMemPool().Allocate<pqxx::connection>(connectStr);
-
-			pRdbProxys.emplace(key, std::move(connection));
+			pRdbProxys.emplace(key, P_InstanceHolder->GetMemPool().Allocate<pqxx::connection>(connectStr));
 		}
 
 		auto server = GetOwner<Server>();
 		if(server && server->GetServerType() == EMServerType::DatabaseServer)
 		{
-			GetWorld()->Broadcast(EMEventType::InitedRdbConnection);
+			world->Broadcast(EMEventType::InitedRdbConnection);
 		}
 	
 	}

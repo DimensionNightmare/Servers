@@ -41,6 +41,9 @@ public:
 	{
 		if(RdbProxyHelper::CVPtr proxy = GetRdbProxy())
 		{
+
+			World::CVPtr world = GetWorld();
+
 			try
 			{
 				#define REMOVE_CV(TYPE) static_cast<Message*>(const_cast<TYPE*>(TYPE::internal_default_instance()))
@@ -69,18 +72,18 @@ public:
 				{
 					if (auto transaction = proxy->GetTransaction(dbNameEnum, false))
 					{
-						DbSqlHelper<GDb::SingleTon> singleTon(transaction.get(), GetWorld());
+						DbSqlHelper<GDb::SingleTon> singleTon(transaction.get(), world);
 						singleTon.InitEntity(kv);
 
 						if (!singleTon.IsExist())
 						{
-							LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "Create Table:SingleTon");
+							LoggerPrint::Log(world, ELogLevel_Debug, "Create Table:SingleTon");
 							singleTon.CreateTable().Commit();
 						}
 
 						for (const auto& dbEntity : dbEntitys)
 						{
-							DbSqlHelper helper(transaction.get(), GetWorld(), dbEntity);
+							DbSqlHelper helper(transaction.get(), world, dbEntity);
 
 							const std::string& tableName = helper.GetName();
 							kv.set_key(std::format("{}_Schema", tableName));
@@ -91,7 +94,7 @@ public:
 							if (!helper.IsExist())
 							{
 
-								LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "Create Table:{}", tableName);
+								LoggerPrint::Log(world, ELogLevel_Debug, "Create Table:{}", tableName);
 								helper.CreateTable().Commit();
 
 								hasCreated = true;
@@ -111,9 +114,10 @@ public:
 
 							if (singleTon.IsSuccess())
 							{
-								if(singleTon.Result().size() > 0)
+								const auto& results = singleTon.GetResult();
+								if(results.size() > 0)
 								{
-									kv = *singleTon.Result()[0];
+									kv = *results[0];
 									if (schemaMd5 == kv.value())
 									{
 										continue;
@@ -131,7 +135,7 @@ public:
 								
 							}
 
-							LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "not match md5:\n{}\n{}", schemaMd5, kv.value());
+							LoggerPrint::Log(world, ELogLevel_Debug, "not match md5:\n{}\n{}", schemaMd5, kv.value());
 							helper.UpdateTable().Commit();
 
 
@@ -146,7 +150,7 @@ public:
 			}
 			catch (const std::exception& e)
 			{
-				LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "{}", e.what());
+				LoggerPrint::Log(world, ELogLevel_Debug, "{}", e.what());
 				return false;
 			}
 
@@ -159,38 +163,36 @@ public:
 	void HandleServerInit()
 	{
 
-		if (ClientProxyHelper::Ptr proxy = GetClientProxy())
+		if (ClientProxyHelper::CVPtr proxy = GetClientProxy())
 		{
 			proxy->onConnection = [this](SocketChannel::CVPtr channel)
 				{
 					ClientProxyHelper::CVPtr proxyHelper = GetClientProxy();
 
-					if(!proxyHelper){ return ;}
-
 					const std::string& peeraddr = channel->peeraddr();
+
+					World::CVPtr world = GetWorld();
 
 					if (channel->isConnected())
 					{
-						LoggerPrint::Log(GetWorld(), EL10nCode_SrvConnOn, peeraddr, channel->fd(), channel->id());
+						LoggerPrint::Log(world, EL10nCode_SrvConnOn, peeraddr, channel->fd(), channel->id());
 
-						channel->SetWorld(GetWorld());
-						
-						GetWorld()->RemoveEvent(EMEventType::ClientProxyRegist);
-						GetWorld()->AddEvent<&DatabaseServerHelper::HandleClientRegist>(EMEventType::ClientProxyRegist, GetSelf<DatabaseServerHelper>());
+						world->RemoveEvent(EMEventType::ClientProxyRegist);
+						world->AddEvent<&DatabaseServerHelper::HandleClientRegist>(EMEventType::ClientProxyRegist, GetSelf<DatabaseServerHelper>());
 						proxyHelper->InitConnectedChannel(channel);
 					}
 					else
 					{
-						LoggerPrint::Log(GetWorld(), EL10nCode_SrvConnOff, peeraddr, channel->fd(), channel->id());
+						LoggerPrint::Log(world, EL10nCode_SrvConnOff, peeraddr, channel->fd(), channel->id());
 
 						std::string originIp;
-						if(std::string* param = GetWorld()->GetParam("ctlIp"))
+						if(std::string* param = world->GetParam("ctlIp"))
 						{
 							originIp = *param;
 						}
 
 						std::string originPort;
-						if(std::string* param = GetWorld()->GetParam("ctlPort"))
+						if(std::string* param = world->GetParam("ctlPort"))
 						{
 							originPort = *param;
 						}
@@ -203,12 +205,12 @@ public:
 
 							if (proxyHelper->isConnected())
 							{
-								LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "orgin not match peeraddr {} reclient ~", origin);
+								LoggerPrint::Log(world, ELogLevel_Debug, "orgin not match peeraddr {} reclient ~", origin);
 
 								proxyHelper->GetTimer()->SetTimeout(200, [this, originIp, originPort](size_t timerID)
 									{
 										ClientProxyHelper::CVPtr proxyHelper = GetClientProxy();
-										if(!proxyHelper){ return ;}
+										
 										proxyHelper->RedirectClient(std::stoi(originPort), originIp);
 									});
 							}
@@ -224,17 +226,13 @@ public:
 
 			proxy->onMessage = [this](SocketChannel::CVPtr channel, hv::Buffer* buf)
 				{
-					ClientProxyHelper::CVPtr proxyHelper = GetClientProxy();
-
-					if(!proxyHelper){ return ;}
-
 					MessagePacket* packet = MessagePacket::From(buf->data());
 
-					LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "c {} Recv type={} With Mid:{}", channel->peeraddr(), EnumName(packet->dealType), packet->msgId);
+					World::CVPtr world = GetWorld();
 
 					if(packet->pkgLenth > 2 * 1024)
 					{
-						LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "Recv byte len limit={}", packet->pkgLenth);
+						LoggerPrint::Log(world, ELogLevel_Debug, "Recv byte len limit={}", packet->pkgLenth);
 						return;
 					}
 					
@@ -242,14 +240,16 @@ public:
 
 					if (packet->dealType == EMMsgDeal::Req)
 					{
-						ServerMessage::GetMessageHandle()->MsgHandle(channel, packet->msgId, packet->msgHashId, msgData);
+						ServerMessage::GetMessageHandle()->MsgHandle(world, channel, packet->msgId, packet->msgHashId, msgData);
 					}
 					else if (packet->dealType == EMMsgDeal::Ret)
 					{
-						ServerMessage::GetMessageHandle()->MsgRetHandle(channel, packet->msgHashId, msgData);
+						ServerMessage::GetMessageHandle()->MsgRetHandle(world, channel, packet->msgHashId, msgData);
 					}
 					else if (packet->dealType == EMMsgDeal::Res)
 					{
+						ClientProxyHelper::CVPtr proxyHelper = GetClientProxy();
+
 						if (MsgTask* task = proxyHelper->GetMsg(packet->msgId)) // client sock request
 						{
 							proxyHelper->DelMsg(packet->msgId);
@@ -266,12 +266,12 @@ public:
 						}
 						else
 						{
-							LoggerPrint::Log(GetWorld(), EL10nCode_MsgFind);
+							LoggerPrint::Log(world, EL10nCode_MsgFind);
 						}
 					}
 					else
 					{
-						LoggerPrint::Log(GetWorld(), EL10nCode_MsgDealType);
+						LoggerPrint::Log(world, EL10nCode_MsgDealType);
 					}
 				};
 
@@ -282,7 +282,7 @@ public:
 
 	void HandleServerShutdown()
 	{
-		if (ClientProxyHelper::Ptr proxy = GetClientProxy())
+		if (ClientProxyHelper::CVPtr proxy = GetClientProxy())
 		{
 			proxy->onConnection = nullptr;
 			proxy->onMessage = nullptr;

@@ -42,31 +42,30 @@ public:
 
 		mMapTimer.erase(timerID);
 
-		if (RemoveEntity(entityId))
+		if (auto entity = RemoveEntity(entityId))
 		{
-			LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "destory proxy Timer entity");
-		}
-
-	}
-
-public: // dll proxy
-
-	/// @brief 
-	bool RemoveEntity(size_t entityId)
-	{
-		if (mEntityMap.contains(entityId))
-		{
-			std::unique_lock ulock(oMapMutex);
-			ProxyEntity::Ptr entity = std::move(mEntityMap[entityId]);
 			entity->Dispose();
-			mEntityMap.erase(entityId);
-			return true;
+			LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "destory proxy Timer entity {}", entity->ID());
 		}
 
-		return false;
 	}
 
 protected:
+
+	/// @brief 
+	ProxyEntity::Ptr RemoveEntity(size_t entityId)
+	{
+		ProxyEntity::Ptr entity;
+
+		if (mEntityMap.contains(entityId))
+		{
+			std::unique_lock ulock(oMapMutex);
+			entity = std::move(mEntityMap[entityId]);
+			mEntityMap.erase(entityId);
+		}
+
+		return entity;
+	}
 
 	ProxyEntity::Ptr _AddEntity(size_t entityId)
 	{

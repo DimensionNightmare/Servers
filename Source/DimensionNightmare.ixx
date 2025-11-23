@@ -455,9 +455,9 @@ public:
 
 		for (auto it = oWorlds.rbegin(); it != oWorlds.rend(); ++it)
 		{
-			World::Ptr world = std::move(*it);
-			world->Broadcast(EMEventType::ServerStop);
-			world->Dispose();
+			auto entity = std::move(*it);
+			entity->Broadcast(EMEventType::ServerStop);
+			entity->Dispose();
 		}
 
 		oWorlds.clear();

@@ -11,24 +11,25 @@ import ProxyEntityHelper;
 namespace MsgHandleRegister
 {
 	HandleRegistry<GMsg::S2C_ReqGetRoom, GMsg::S2C_ResGetRoom, EMMsgDeal::Req> S2C_ReqGetRoom =
-				[](auto request, auto response, SocketChannel::Ptr channel) -> TaskVoid
+				[](World::Ptr world, SocketChannel::Ptr channel, auto request, auto response) -> TaskVoid
 	{
 		ProxyEntityHelper::CVPtr entity = channel->GetEntity<ProxyEntityHelper>();
 		if (!entity)
 		{
-			LoggerPrint::Log(channel, ELogLevel_Debug, "noaccount {}!!", request->accountid());
+			LoggerPrint::Log(world, ELogLevel_Debug, "noaccount {}!!", request->accountid());
 			response->set_errorcode(EL10nCode_NoneProxyEntity);
 			co_return;
 		}
 
 		request->set_accountid(entity->ID());
 
-		GateServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<GateServerHelper>(EMSystemType::Server);
+		
+		GateServerHelper::CVPtr dnServer = world->GetSystem<GateServerHelper>(EMSystemType::Server);
 		
 		ServerEntityManagerHelper::CVPtr entityMan = dnServer->GetServerEntityManager();
 		
 		//DS Server
-		ServerEntityHelper::Ptr serverEntity = nullptr;
+		ServerEntityHelper::Ptr serverEntity;
 
 		// <cache> server to load login data
 		if (size_t serverId = entity->GetRecordServerId())
@@ -55,7 +56,7 @@ namespace MsgHandleRegister
 			}
 			else
 			{
-				LoggerPrint::Log(channel, ELogLevel_Debug, "Msg_ReqAuthToken not LogicServer !!");
+				LoggerPrint::Log(world, ELogLevel_Debug, "Msg_ReqAuthToken not LogicServer !!");
 				response->set_errorcode(EL10nCode_NotExistLogicServer);
 			}
 		}

@@ -12,10 +12,10 @@ namespace MsgHandleRegister
 {
 
 	HandleRegistry<GMsg::A2g_ReqAuthAccount, GMsg::g2A_ResAuthAccount, EMMsgDeal::Req> Exe_ReqUserToken =
-				[](auto request, auto response, SocketChannel::CVPtr channel)
+				[](World::Ptr world, SocketChannel::Ptr channel, auto request, auto response)
 	{
-
-		GateServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<GateServerHelper>(EMSystemType::Server);
+		
+		GateServerHelper::CVPtr dnServer = world->GetSystem<GateServerHelper>(EMSystemType::Server);
 		ProxyEntityManagerHelper::CVPtr entityMan = dnServer->GetProxyEntityManager();
 		ProxyEntityHelper::Ptr entity = entityMan->GetEntity(request->accountid());
 		if (entity)
@@ -32,16 +32,13 @@ namespace MsgHandleRegister
 				proxyHelper->AddMsg(EMMsgDeal::Ret, &notify_request, online).Resume();
 
 				//kick socket
-				online->deleteContextPtr();
 				online->close();
 
 
 				//kick game
 				if (size_t serverId = entity->GetRecordServerId())
 				{
-					LoggerPrint::Log(channel, ELogLevel_Debug, "Send Logic tick User->{}, server:{}", entity->ID(), entity->GetRecordServerId());
-
-					entity->GetChannel()->deleteContextPtr();
+					LoggerPrint::Log(world, ELogLevel_Debug, "Send Logic tick User->{}, server:{}", entity->ID(), entity->GetRecordServerId());
 
 					ServerEntityManagerHelper::CVPtr serverEntityMan = dnServer->GetServerEntityManager();
 					if(ServerEntityHelper::CVPtr serverEntity = serverEntityMan->GetEntity(serverId))
@@ -79,14 +76,14 @@ namespace MsgHandleRegister
 			entity->SetTimerId(entityMan->CheckEntityCloseTimer(entity->ID()));
 		}
 
-		LoggerPrint::Log(channel, ELogLevel_Debug, "ReqUserToken User: {}!!", request->accountid());
+		LoggerPrint::Log(world, ELogLevel_Debug, "ReqUserToken User: {}!!", request->accountid());
 	};
 
 	HandleRegistry<GMsg::A2g_ReqLogicServerIp, GMsg::g2A_ResLogicServerIp, EMMsgDeal::Req> Exe_ResLogicServerIp =
-				[](auto request, auto response, SocketChannel::CVPtr channel)
+				[](World::Ptr world, SocketChannel::Ptr channel, auto request, auto response)
 	{
-
-		GateServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<GateServerHelper>(EMSystemType::Server);
+		
+		GateServerHelper::CVPtr dnServer = world->GetSystem<GateServerHelper>(EMSystemType::Server);
 
 		auto selects = dnServer->GetServerEntityManager()->GetEntitysByType(EMServerType::LogicServer)
 			| std::views::transform([](const auto& param){

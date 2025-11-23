@@ -22,7 +22,7 @@ public:
 		
 	}
 
-public: // dll override
+public: 
 
 	uint32_t MapID() { return iMapId; }
 

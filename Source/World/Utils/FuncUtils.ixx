@@ -72,6 +72,9 @@ export
 	{
 		using Traits = FunctionTraits<decltype(Func)>;
 		using ArgType = typename Traits::ArgType;
+
+		// 内存空间
+		std::function<Ret(Args...)> mProxy;
 	public:
 
 		EventContainer()
@@ -83,13 +86,17 @@ export
 			constexpr auto typeSign = TupleTypeStr<ArgType>();
 			sTypeSign = typeSign;
 #endif
+			mProxy = [](auto&&... args) -> Ret
+				{
+					return Func(args...);
+				};
 		}
 
 		~EventContainer(){}
 
 		Ret operator()(auto&&... args) const
 		{
-			return Func(args...);
+			return mProxy(args...);
 		}
 
 		virtual bool Invoke(void* param) override
@@ -116,6 +123,8 @@ export
 
 		// 空间代理
 		Class* pInstanceOrigin = nullptr;
+
+		// 内存空间
 		std::function<Ret(Class*, Args...)> mProxy;
 
 	public:

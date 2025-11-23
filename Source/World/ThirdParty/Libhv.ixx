@@ -55,7 +55,7 @@ public:
 
 	virtual ~SocketChannel()
 	{
-		
+		deleteContextPtr();
 	}
 
 	SocketChannel(hio_t* io) : hv::SocketChannel(io)
@@ -63,23 +63,10 @@ public:
 		
 	}
 
-
-	void SetWorld(World::CVPtr world) 
-	{
-		pWorld = world;
-	}
-
-	World::Ptr GetWorld()
-	{
-		if(pWorld.expired())
-		{
-			return nullptr;
-		}
-		return pWorld.lock();
-	}
-
 	struct EntityProxy
 	{
+		using Ptr = std::shared_ptr<EntityProxy>;
+
 		EntityProxy(Entity::CVPtr entity)
 		{
 			pWPtr = entity;
@@ -96,7 +83,7 @@ public:
 	template<typename T>
 	std::shared_ptr<T> GetEntity()
 	{
-		auto proxy = getContextPtr<EntityProxy>();
+		EntityProxy::Ptr proxy = getContextPtr<EntityProxy>();
 		if(!proxy)
 		{
 			return nullptr;
@@ -110,7 +97,6 @@ public:
 	}
 protected:
 
-	World::WPtr pWorld;
 };
 
 export namespace Libhv

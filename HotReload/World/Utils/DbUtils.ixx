@@ -183,7 +183,7 @@ void GetFieldValueByProtoType(const FieldDescriptor* field, const Reflection* re
 
 	auto process_repeated_field = [&](auto&& accessor)-> std::string
 		{
-			std::vector<std::string> members = std::views::iota(0, reflection->FieldSize(data, field))
+			auto members = std::views::iota(0, reflection->FieldSize(data, field))
 				| std::views::transform([&](size_t i) { return std::format("{}", std::invoke(accessor, reflection, data, field, i)); })
 				| std::ranges::to<std::vector<std::string>>();
 
@@ -464,7 +464,7 @@ public:
 
 	const std::string& GetName() { return pEntity->GetDescriptor()->name(); }
 
-	const std::vector<TMessage*>& Result() { return mResult; }
+	const std::vector<std::shared_ptr<TMessage>>& GetResult() { return mResult; }
 
 	uint32_t ResultCount() { return iQueryCount; }
 
@@ -1077,7 +1077,7 @@ public:
 		return Md5Hash(stream.str());
 	}
 
-	World::CVPtr GetWorld(){ return pWorld;}
+	World::Ptr GetWorld(){ return pWorld;}
 private:
 
 	bool ChangeSqlType(EMSqlOpType type)
@@ -1432,7 +1432,8 @@ private:
 
 		for (int row = 0; row < result.size(); row++)
 		{
-			TMessage* gen = pEntity->New();
+			std::shared_ptr<TMessage> gen;
+			gen.reset(pEntity->New());
 
 			pqxx::row rowInfo = result[row];
 			for (int col = 0; col < rowInfo.size(); col++)
@@ -1453,15 +1454,15 @@ private:
 
 	void ReleaseResult()
 	{
-		for (const auto& it : mResult)
-		{
-			delete it;
-		}
+		// for (const auto& it : mResult)
+		// {
+		// 	delete it;
+		// }
 		mResult.clear();
 	}
 private:
 
-	std::vector<TMessage*> mResult;
+	std::vector<std::shared_ptr<TMessage>> mResult;
 
 	EMSqlOpType eType = EMSqlOpType::None;
 
@@ -1482,5 +1483,5 @@ private:
 
 	TMessage* pEntity = nullptr;
 
-	World::Ptr pWorld = nullptr;
+	World::Ptr pWorld;
 };

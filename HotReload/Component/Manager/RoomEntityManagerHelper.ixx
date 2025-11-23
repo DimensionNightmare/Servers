@@ -19,7 +19,7 @@ public:
 		RoomEntity::Ptr entity = GetBase()->AddEntity(entityId);
 		mEntityMapList[entityId].emplace_back(entity);
 
-		RoomEntityHelper::CVPtr helper = entity->GetSelf<RoomEntityHelper>();
+		RoomEntityHelper::Ptr helper = entity->GetSelf<RoomEntityHelper>();
 		helper->SetMapID(entityId);
 		return helper;
 	}
@@ -39,7 +39,7 @@ public:
 		mEntityMapList[entity->MapID()].remove(entity);
 	}
 
-	RoomEntityHelper::CVPtr GetEntity(size_t entityId)
+	RoomEntityHelper::Ptr GetEntity(size_t entityId)
 	{
 		std::shared_lock lock(oMapMutex);
 		if (mEntityMap.contains(entityId))

@@ -10,11 +10,9 @@ private:
 	ServerEntityHelper() = delete;
 	~ServerEntityHelper() = default;
 
-public: // dll override
+public: 
 
 	void SetServerType(EMServerType type) { emServerType = type; }
-
-	void SetLinkNode(ServerEntity::CVPtr node) { pLink = node; }
 
 	std::string GetServerIp() { return sServIp; }
 	void SetServerIp(const std::string& ip) { sServIp = ip; }
@@ -44,7 +42,7 @@ public: // dll override
 	void SetTimerId(size_t timerId) { iCloseTimerId = timerId; }
 
 	/// @brief net socket set
-	SocketChannel::CVPtr GetChannel() { return pChannel; }
+	SocketChannel::Ptr GetChannel() { return pChannel; }
 
 	/// @brief net socket get
 	void SetChannel(SocketChannel::CVPtr channel) { pChannel = channel; }

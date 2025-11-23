@@ -10,7 +10,7 @@ namespace MsgHandleRegister
 {
 
 	HandleRegistry<GMsg::d2L_ReqLoadEntityData, GMsg::L2d_ResLoadEntityData, EMMsgDeal::Req> Msg_ReqAuthToken =
-				[](auto request, auto response, SocketChannel::Ptr channel) -> TaskVoid
+				[](World::Ptr world, SocketChannel::Ptr channel, auto request, auto response) -> TaskVoid
 	{
 		
 		GDb::Player player;
@@ -19,7 +19,8 @@ namespace MsgHandleRegister
 			co_return;
 		}
 
-		LogicServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<LogicServerHelper>(EMSystemType::Server);
+		
+		LogicServerHelper::CVPtr dnServer = world->GetSystem<LogicServerHelper>(EMSystemType::Server);
 		ClientEntityManagerHelper::CVPtr entityMan = dnServer->GetClientEntityManager();
 
 		ClientEntityHelper::CVPtr entity = entityMan->GetEntity(player.accountid());
@@ -34,7 +35,7 @@ namespace MsgHandleRegister
 			bool success = co_await entityMan->LoadEntity(entity, request, response);
 			if (!success)
 			{
-				LoggerPrint::Log(channel, ELogLevel_Debug, "Load Entity d2L_ReqLoadEntityData error id = {}!", player.accountid());
+				LoggerPrint::Log(world, ELogLevel_Debug, "Load Entity d2L_ReqLoadEntityData error id = {}!", player.accountid());
 			}
 
 		}
@@ -43,16 +44,16 @@ namespace MsgHandleRegister
 	};
 
 	HandleRegistry<GMsg::d2L_ReqSaveEntityData, void, EMMsgDeal::Ret> Msg_ReqSaveEntityData =
-				[](auto request, SocketChannel::CVPtr channel)
+				[](World::Ptr world, SocketChannel::Ptr channel, auto request)
 	{
 		
 		GDb::Player player;
 		
-		LogicServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<LogicServerHelper>(EMSystemType::Server);
+		LogicServerHelper::CVPtr dnServer = world->GetSystem<LogicServerHelper>(EMSystemType::Server);
 
 		if (!player.ParseFromString(request->entitydata()))
 		{
-			LoggerPrint::Log(channel, ELogLevel_Debug, "Save data but parse error!");
+			LoggerPrint::Log(world, ELogLevel_Debug, "Save data but parse error!");
 			return;
 		}
 
@@ -62,7 +63,7 @@ namespace MsgHandleRegister
 
 		if (!entity)
 		{
-			LoggerPrint::Log(channel, ELogLevel_Debug, "ReqSaveData not entity!");
+			LoggerPrint::Log(world, ELogLevel_Debug, "ReqSaveData not entity!");
 			return;
 		}
 
@@ -88,21 +89,21 @@ namespace MsgHandleRegister
 		}
 		else
 		{
-			LoggerPrint::Log(channel, ELogLevel_Debug, "SaveData but dbEntity is null!");
+			LoggerPrint::Log(world, ELogLevel_Debug, "SaveData but dbEntity is null!");
 		}
 	};
 
 	HandleRegistry<GMsg::S2C_RetAccountReplace, void, EMMsgDeal::Ret> Exe_RetAccountReplace =
-				[](auto request, SocketChannel::CVPtr channel)
+				[](World::Ptr world, SocketChannel::Ptr channel, auto request)
 	{
 		
-		LogicServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<LogicServerHelper>(EMSystemType::Server);
+		LogicServerHelper::CVPtr dnServer = world->GetSystem<LogicServerHelper>(EMSystemType::Server);
 		ClientEntityManagerHelper::CVPtr entityMan = dnServer->GetClientEntityManager();
 
 		ClientEntityHelper::CVPtr entity = entityMan->GetEntity(request->accountid());
 		if (!entity)
 		{
-			LoggerPrint::Log(channel, ELogLevel_Debug, "Client Entity Kick Not Exist !");
+			LoggerPrint::Log(world, ELogLevel_Debug, "Client Entity Kick Not Exist !");
 			return;
 		}
 
@@ -118,17 +119,18 @@ namespace MsgHandleRegister
 		}
 		else
 		{
-			LoggerPrint::Log(channel, ELogLevel_Debug, "Client Entity Kick Server Not Exist !");
+			LoggerPrint::Log(world, ELogLevel_Debug, "Client Entity Kick Server Not Exist !");
 		}
 
 		// close entity save data
-		entityMan->RemoveEntity(entity->ID());
+		entityMan->DisposeEntity(entity);
 	};
 
 	HandleRegistry<GMsg::S2C_ReqGetRoom, GMsg::S2C_ResGetRoom, EMMsgDeal::Redir> Msg_ReqGetRoom =
-				[](auto request, auto response, SocketChannel::Ptr channel) -> TaskVoid
+				[](World::Ptr world, SocketChannel::Ptr channel, auto request, auto response) -> TaskVoid
 	{
-		LogicServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<LogicServerHelper>(EMSystemType::Server);
+		
+		LogicServerHelper::CVPtr dnServer = world->GetSystem<LogicServerHelper>(EMSystemType::Server);
 		ClientEntityManagerHelper::CVPtr entityMan = dnServer->GetClientEntityManager();
 
 		ClientEntityHelper::CVPtr entity = entityMan->GetEntity(request->accountid());
@@ -138,7 +140,7 @@ namespace MsgHandleRegister
 		}
 
 		RoomEntityManagerHelper::CVPtr roomEntityMan = dnServer->GetRoomEntityManager();
-		RoomEntityHelper::Ptr roomEntity = nullptr;
+		RoomEntityHelper::Ptr roomEntity;
 
 		// cache
 		if (size_t roomId = entity->RecordRoomId())
@@ -180,7 +182,7 @@ namespace MsgHandleRegister
 			else
 			{
 				response->set_errorcode(EL10nCode_NotDsServer);
-				LoggerPrint::Log(channel, ELogLevel_Debug, "not ds Server");
+				LoggerPrint::Log(world, ELogLevel_Debug, "not ds Server");
 			}
 			
 		}
@@ -207,7 +209,7 @@ namespace MsgHandleRegister
 
 		}
 
-		LoggerPrint::Log(channel, ELogLevel_Debug, "ds:{}", response->DebugString());
+		LoggerPrint::Log(world, ELogLevel_Debug, "ds:{}", response->DebugString());
 
 		co_return;
 	};

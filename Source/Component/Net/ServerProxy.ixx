@@ -39,7 +39,9 @@ public:
 	{
 		int16_t inport = 0;
 
-		auto dnServer = GetOwner<Server>();
+		Server::CVPtr dnServer = GetOwner<Server>();
+
+		World::CVPtr world = GetWorld();
 
 		switch(dnServer->GetServerType())
 		{
@@ -47,10 +49,10 @@ public:
 			case EMServerType::GlobalServer:
 			case EMServerType::AuthServer:
 			{
-				std::string* param = GetWorld()->GetParam("port");
+				std::string* param = world->GetParam("port");
 				if (!param)
 				{
-					LoggerPrint::Log(GetWorld(), EL10nCode_SrvNeedIPPort);
+					LoggerPrint::Log(world, EL10nCode_SrvNeedIPPort);
 					return false;
 				}
 
@@ -62,7 +64,7 @@ public:
 		int listenfd = createsocket(inport, "0.0.0.0");
 		if (listenfd < 0)
 		{
-			LoggerPrint::Log(GetWorld(), EL10nCode_CreateSocket);
+			LoggerPrint::Log(world, EL10nCode_CreateSocket);
 			return false;
 		}
 
@@ -78,7 +80,7 @@ public:
 			int addrLen = sizeof(addr);
 			if (Platform::getsockname(listenfd, reinterpret_cast<struct Platform::sockaddr*>(&addr), &addrLen) < 0)
 			{
-				LoggerPrint::Log(GetWorld(), EL10nCode_GetSocketName);
+				LoggerPrint::Log(world, EL10nCode_GetSocketName);
 				return false;
 			}
 
@@ -94,12 +96,12 @@ public:
 		setUnpack(&setting);
 		setThreadNum(4);
 
-		LoggerPrint::Log(GetWorld(), EL10nCode_SrvListenOn, port, listenfd);
+		LoggerPrint::Log(world, EL10nCode_SrvListenOn, port, listenfd);
 
-		GetWorld()->AddEvent<&ServerProxy::Start>(EMEventType::ServerStart, GetSelf<ServerProxy>());
-		GetWorld()->AddEvent<&ServerProxy::End>(EMEventType::ServerStop, GetSelf<ServerProxy>());
-		GetWorld()->AddEvent<&ServerProxy::Pause>(EMEventType::ServerPause, GetSelf<ServerProxy>());
-		GetWorld()->AddEvent<&ServerProxy::Resume>(EMEventType::ServerResume, GetSelf<ServerProxy>());
+		world->AddEvent<&ServerProxy::Start>(EMEventType::ServerStart, GetSelf<ServerProxy>());
+		world->AddEvent<&ServerProxy::End>(EMEventType::ServerStop, GetSelf<ServerProxy>());
+		world->AddEvent<&ServerProxy::Pause>(EMEventType::ServerPause, GetSelf<ServerProxy>());
+		world->AddEvent<&ServerProxy::Resume>(EMEventType::ServerResume, GetSelf<ServerProxy>());
 
 		return true;
 	}
@@ -165,7 +167,7 @@ public:
 		Component::Dispose();
 	}
 
-public: // dll override
+public: 
 
 	void MessageTimeoutTimer(size_t timerID)
 	{
@@ -214,7 +216,7 @@ public: // dll override
 		{
 			if (SocketChannel::CVPtr channel = getChannelById(id))
 			{
-				if (!channel->contextPtr())
+				if (!channel->GetEntity<Entity>())
 				{
 					LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "ChannelTimeoutTimer dnServer destory entity\n");
 					channel->close();

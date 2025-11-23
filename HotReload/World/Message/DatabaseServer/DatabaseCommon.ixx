@@ -17,15 +17,17 @@ namespace MsgHandleRegister
 		DatabaseServerHelper::CVPtr dnServer = server->GetSelf<DatabaseServerHelper>();
 
 		ClientProxyHelper::CVPtr clientProxy = dnServer->GetClientProxy();
+
+		World::CVPtr world = server->GetWorld();
 		
-		LoggerPrint::Log(server, ELogLevel_Debug, "database req regist Client:{}, port:{}", clientProxy->remote_host, clientProxy->remote_port);
+		LoggerPrint::Log(world, ELogLevel_Debug, "database req regist Client:{}, port:{}", clientProxy->remote_host, clientProxy->remote_port);
 		
 		clientProxy->SetRegistState(EMRegistState::Registing);
 
 		GMsg::COM_ReqRegistSrv request;
 
 		request.set_serverid(dnServer->ID());
-		request.set_servertype((int)dnServer->GetServerType());
+		request.set_servertype(std::to_underlying(dnServer->GetServerType()));
 
 		if (dnServer->IsPullServer())
 		{
@@ -50,7 +52,7 @@ namespace MsgHandleRegister
 		}
 		else
 		{
-			LoggerPrint::Log(server, response.errorcode());
+			LoggerPrint::Log(world, response.errorcode());
 			// dnServer->IsRun() = false; //exit application
 			clientProxy->SetRegistState(EMRegistState::None);
 		}
@@ -59,9 +61,10 @@ namespace MsgHandleRegister
 	};
 
 	HandleRegistry<GMsg::COM_RetChangeCtlSrv, void, EMMsgDeal::Ret> Exe_RetChangeCtlSrv =
-		[](auto request, SocketChannel::CVPtr channel)
+		[](World::Ptr world, SocketChannel::Ptr channel, auto request)
 	{
-		DatabaseServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<DatabaseServerHelper>(EMSystemType::Server);
+		
+		DatabaseServerHelper::CVPtr dnServer = world->GetSystem<DatabaseServerHelper>(EMSystemType::Server);
 
 		ClientProxyHelper::CVPtr clientProxy = dnServer->GetClientProxy();
 

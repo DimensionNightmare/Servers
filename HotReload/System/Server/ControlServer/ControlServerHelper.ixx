@@ -32,33 +32,30 @@ public:
 	void HandleServerInit()
 	{
 
-		if (ServerProxyHelper::Ptr proxy = GetServerProxy())
+		if (ServerProxyHelper::CVPtr proxy = GetServerProxy())
 		{
 			proxy->onConnection = [this](SocketChannel::CVPtr channel)
 				{
 					ServerProxyHelper::CVPtr proxyHelper = GetServerProxy();
 
-					if(!proxyHelper){ return ;}
+					World::CVPtr world = GetWorld();
 
 					const std::string& peeraddr = channel->peeraddr();
 					if (channel->isConnected())
 					{
-						LoggerPrint::Log(GetWorld(), EL10nCode_CliConnOn, peeraddr, channel->fd(), channel->id());
+						LoggerPrint::Log(world, EL10nCode_CliConnOn, peeraddr, channel->fd(), channel->id());
 
-						channel->SetWorld(GetWorld());
-						
 						proxyHelper->InitConnectedChannel(channel);
 					}
 					else
 					{
-						LoggerPrint::Log(GetWorld(), EL10nCode_CliConnOff, peeraddr, channel->fd(), channel->id());
+						LoggerPrint::Log(world, EL10nCode_CliConnOff, peeraddr, channel->fd(), channel->id());
 
 						// not used
-						if (ServerEntity::CVPtr entity = channel->getContextPtr<ServerEntity>())
+						if (ServerEntity::CVPtr entity = channel->GetEntity<ServerEntity>())
 						{
 							ServerEntityManagerHelper::CVPtr entityMan = GetServerEntityManager();
-							entityMan->RemoveEntity(entity->ID());
-							channel->deleteContextPtr();
+							entityMan->DisposeEntity(entity);
 						}
 
 					}
@@ -66,17 +63,13 @@ public:
 
 			proxy->onMessage = [this](SocketChannel::CVPtr channel, hv::Buffer* buf)
 				{
-					ServerProxyHelper::CVPtr proxyHelper = GetServerProxy();
-
-					if(!proxyHelper){ return ;}
-					
 					MessagePacket* packet = MessagePacket::From(buf->data());
 
-					LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "s {} Recv type={} With Mid:{}", channel->peeraddr(), EnumName(packet->dealType), packet->msgId);
+					World::CVPtr world = GetWorld();
 
 					if(packet->pkgLenth > 2 * 1024)
 					{
-						LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "Recv byte len limit={}", packet->pkgLenth);
+						LoggerPrint::Log(world, ELogLevel_Debug, "Recv byte len limit={}", packet->pkgLenth);
 						return;
 					}
 					
@@ -84,18 +77,20 @@ public:
 					
 					if (packet->dealType == EMMsgDeal::Req)
 					{
-						ServerMessage::GetMessageHandle()->MsgHandle(channel, packet->msgId, packet->msgHashId, msgData);
+						ServerMessage::GetMessageHandle()->MsgHandle(world, channel, packet->msgId, packet->msgHashId, msgData);
 					}
 					else if (packet->dealType == EMMsgDeal::Ret)
 					{
-						ServerMessage::GetMessageHandle()->MsgRetHandle(channel, packet->msgHashId, msgData);
+						ServerMessage::GetMessageHandle()->MsgRetHandle(world, channel, packet->msgHashId, msgData);
 					}
 					else if (packet->dealType == EMMsgDeal::Redir)
 					{
-						ServerMessage::GetMessageHandle()->MsgRedirectHandle(channel, packet->msgId, packet->msgHashId, msgData);
+						ServerMessage::GetMessageHandle()->MsgRedirectHandle(world, channel, packet->msgId, packet->msgHashId, msgData);
 					}
 					else if (packet->dealType == EMMsgDeal::Res)
 					{
+						ServerProxyHelper::CVPtr proxyHelper = GetServerProxy();
+
 						if (MsgTask* task = proxyHelper->GetMsg(packet->msgId)) //client sock request
 						{
 							proxyHelper->DelMsg(packet->msgId);
@@ -113,12 +108,12 @@ public:
 						}
 						else
 						{
-							LoggerPrint::Log(GetWorld(), EL10nCode_MsgFind);
+							LoggerPrint::Log(world, EL10nCode_MsgFind);
 						}
 					}
 					else
 					{
-						LoggerPrint::Log(GetWorld(), EL10nCode_MsgDealType);
+						LoggerPrint::Log(world, EL10nCode_MsgDealType);
 					}
 				};
 
@@ -129,7 +124,7 @@ public:
 
 	void HandleServerShutdown()
 	{
-		if (ServerProxyHelper::Ptr proxy = GetServerProxy())
+		if (ServerProxyHelper::CVPtr proxy = GetServerProxy())
 		{
 			proxy->onConnection = nullptr;
 			proxy->onMessage = nullptr;

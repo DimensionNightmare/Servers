@@ -44,10 +44,10 @@ public:
 		setPort(port);
 		// setThreadNum(4);
 
-		LoggerPrint::Log(GetWorld(), EL10nCode_SrvListenOn, port, 0);
+		LoggerPrint::Log(world, EL10nCode_SrvListenOn, port, 0);
 
-		GetWorld()->AddEvent<&WebProxy::Start>(EMEventType::ServerStart, GetSelf<WebProxy>());
-		GetWorld()->AddEvent<&WebProxy::End>(EMEventType::ServerStop, GetSelf<WebProxy>());
+		world->AddEvent<&WebProxy::Start>(EMEventType::ServerStart, GetSelf<WebProxy>());
+		world->AddEvent<&WebProxy::End>(EMEventType::ServerStop, GetSelf<WebProxy>());
 
 		pService = P_InstanceHolder->GetMemPool().Allocate<hv::HttpService>();
 		

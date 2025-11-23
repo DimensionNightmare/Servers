@@ -24,7 +24,7 @@ namespace MsgHandleRegister
 			{
 				GMsg::COM_ReqRegistSrv* child = request.add_childs();
 				child->set_serverid(serv->ID());
-				child->set_servertype((uint32_t)serv->GetServerType());
+				child->set_servertype(std::to_underlying(serv->GetServerType()));
 			};
 
 		const std::list<ServerEntity::Ptr>& dbs = entityMan->GetEntitysByType(EMServerType::DatabaseServer);
@@ -55,14 +55,16 @@ namespace MsgHandleRegister
 		ClientProxyHelper::CVPtr clientProxy = dnServer->GetClientProxy();
 		ServerProxyHelper::CVPtr serverProxy = dnServer->GetServerProxy();
 
-		LoggerPrint::Log(server, ELogLevel_Debug, "Client:{}, port:{}", clientProxy->remote_host, clientProxy->remote_port);
+		World::CVPtr world = dnServer->GetWorld();
+
+		LoggerPrint::Log(world, ELogLevel_Debug, "Client:{}, port:{}", clientProxy->remote_host, clientProxy->remote_port);
 
 		clientProxy->SetRegistState(EMRegistState::Registing);
 
 		GMsg::COM_ReqRegistSrv request;
 
 		request.set_serverid(dnServer->ID());
-		request.set_servertype((int)dnServer->GetServerType());
+		request.set_servertype(std::to_underlying(dnServer->GetServerType()));
 
 		if (dnServer->IsPullServer())
 		{
@@ -92,7 +94,7 @@ namespace MsgHandleRegister
 		}
 		else
 		{
-			LoggerPrint::Log(server, response.errorcode());
+			LoggerPrint::Log(world, response.errorcode());
 			// dnServer->IsRun() = false; //exit application
 			clientProxy->SetRegistState(EMRegistState::None);
 		}
@@ -101,13 +103,13 @@ namespace MsgHandleRegister
 	};
 
 	HandleRegistry<GMsg::COM_ReqRegistSrv, GMsg::COM_ResRegistSrv, EMMsgDeal::Req> Msg_ReqRegistSrv =
-				[](auto request, auto response, SocketChannel::CVPtr channel)
+				[](World::Ptr world, SocketChannel::Ptr channel, auto request, auto response)
 	{
 		
-		GateServerHelper::CVPtr server = channel->GetWorld()->GetSystem<GateServerHelper>(EMSystemType::Server);
+		GateServerHelper::CVPtr server = world->GetSystem<GateServerHelper>(EMSystemType::Server);
 		ServerEntityManagerHelper::CVPtr entityMan = server->GetServerEntityManager();
 
-		LoggerPrint::Log(server, ELogLevel_Debug, "ip Reqregist: {}, {}", channel->peeraddr(), request->servertype());
+		LoggerPrint::Log(world, ELogLevel_Debug, "ip Reqregist: {}, {}", channel->peeraddr(), request->servertype());
 
 		EMServerType regType = static_cast<EMServerType>(request->servertype());
 		size_t serverId = request->serverid();
@@ -122,7 +124,7 @@ namespace MsgHandleRegister
 		ServerEntityHelper::Ptr entity;
 
 		//exist?
-		if (entity = channel->getContextPtr<ServerEntityHelper>())
+		if (entity = channel->GetEntity<ServerEntityHelper>())
 		{
 			response->set_errorcode(EL10nCode_RegistServerChannelExist);
 		}
@@ -157,7 +159,7 @@ namespace MsgHandleRegister
 	};
 
 	HandleRegistry<GMsg::COM_RetHeartbeat, void, EMMsgDeal::Ret> Exe_RetHeartbeat =
-				[](auto request, SocketChannel::CVPtr channel)
+				[](World::Ptr world, SocketChannel::Ptr channel, auto request)
 	{
 	};
 }

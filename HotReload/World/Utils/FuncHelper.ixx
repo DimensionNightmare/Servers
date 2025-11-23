@@ -51,7 +51,7 @@ void printHexDump(const std::string& data, const std::string& title = "Hex Dump"
 export 
 {
 
-	void MessagePackAndSend(uint32_t msgId, EMMsgDeal deal, Message* message, SocketChannel::CVPtr channel)
+	void MessagePackAndSend(uint32_t msgId, EMMsgDeal deal, Message* message, SocketChannel::CVPtr channel, World::CVPtr world)
 	{
 		size_t hash = 0;
 		std::string msgData;
@@ -68,7 +68,7 @@ export
 		MessagePack(msgId, deal, hash, msgData);
 		channel->write(msgData);
 
-		LoggerPrint::Log(channel, ELogLevel_Debug, "{} Send type={} With Mid:{}, Mess:{}", channel->peeraddr(), EnumName(deal), msgId, msgName);
+		LoggerPrint::Log(world, ELogLevel_Debug, "{} Send type={} With Mid:{}, Mess:{}", channel->peeraddr(), EnumName(deal), msgId, msgName);
 		// printHexDump(msgData);
 	}
 

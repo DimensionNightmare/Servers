@@ -24,12 +24,12 @@ public:
 	virtual void Dispose() override
 	{
 		auto entitys = mEntityMap 
-			| std::views::values;
+			| std::views::keys
+			| std::ranges::to<std::vector<size_t>>();
 			
-		for (const auto& one : entitys)
+		for (const auto& entityId : entitys)
 		{
-			auto entity = std::move(one);
-			entity->Dispose();
+			DisposeEntity(mEntityMap[entityId]);
 		}
 		
 		mEntityMap.clear();
@@ -39,13 +39,31 @@ public:
 
 	Timer::Ptr GetTimer(){ return pTimer.expired() ? nullptr : pTimer.lock(); }
 
-public: // dll override
+	template<typename T>
+	void DisposeEntity(const std::shared_ptr<T>& entity)
+	{
+		int useCount = entity.use_count();
+		if (auto temp = RemoveEntity(entity->ID()))
+		{
+			if(useCount == 1)
+			{
+				temp->Dispose();
+				return;
+			}
+		}
+
+		entity->Dispose();
+	}
+
+protected: 
 
 	void AddTimerRecord(size_t timerId, size_t id)
 	{
 		std::unique_lock ulock(oTimerMutex);
 		mMapTimer.emplace(timerId, id);
 	}
+
+	virtual TEntity::Ptr RemoveEntity(size_t entityId) = 0;
 	
 protected: // dll proxy
 

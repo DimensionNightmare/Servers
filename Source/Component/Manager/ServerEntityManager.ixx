@@ -45,52 +45,63 @@ public:
 
 		mMapTimer.erase(timerID);
 
-		if(mEntityMap.count(entityId))
+		if (auto entity = RemoveEntity(entityId))
 		{
-			ServerEntity::Ptr rm = mEntityMap[entityId];
-			if(ServerEntity::CVPtr link = rm->LinkNode())
-			{
-				link->GetMapLinkNode(rm->GetServerType()).remove(rm);
-			}
-
-			RemoveEntity(entityId);
-			
+			entity->Dispose();
 			// if(rm->GetChannel())
 			{
-				LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "EntityCloseTimer {} server destory entity, entity:{}, timer:{}", EnumName(rm->GetServerType()), entityId, timerID);
+				LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "EntityCloseTimer {} server destory entity, entity:{}, timer:{}", EnumName(entity->GetServerType()), entityId, timerID);
 			}
-			
 		}
 	}
 
-
-public: // dll override
-
-	/// @brief 
-	bool RemoveEntity(size_t entityId)
-	{
-		if (mEntityMap.contains(entityId))
-		{
-			ServerEntity::Ptr entity = std::move(mEntityMap[entityId]);
-
-			if (ServerEntity::CVPtr owner = entity->LinkNode())
-			{
-				owner->ClearFlag(EMServerEntityFlag::Locked);
-			}
-
-			std::unique_lock ulock(oMapMutex);
-			mEntityMapList[entity->GetServerType()].remove(entity);
-			mEntityMap.erase(entityId);
-
-			entity->Dispose();
-			
-			return true;
-		}
-
-		return false;
-	}
 
 protected:
+
+	/// @brief 
+	ServerEntity::Ptr RemoveEntity(size_t entityId)
+	{
+		ServerEntity::Ptr entity;
+
+		if (mEntityMap.contains(entityId))
+		{
+			std::unique_lock ulock(oMapMutex);
+			entity = std::move(mEntityMap[entityId]);
+
+			// remove link
+
+			auto RemoveLink = [](ServerEntity::CVPtr entity)
+			{
+				if (ServerEntity::CVPtr owner = entity->LinkNode())
+				{
+					owner->ClearFlag(EMServerEntityFlag::Locked);
+					owner->GetMapLinkNode(entity->GetServerType()).remove(entity);
+
+					entity->SetLinkNode(nullptr);
+				}
+			};
+
+			// 不是gate
+			RemoveLink(entity);
+
+			//是gate
+			auto allChild = entity->GetMapLink()
+				| std::views::values
+				| std::views::join
+				| std::ranges::to<std::vector<ServerEntity::Ptr>>();
+
+			for(const auto& child : allChild)
+			{
+				RemoveLink(child);
+			}
+
+
+			mEntityMapList[entity->GetServerType()].remove(entity);
+			mEntityMap.erase(entityId);
+		}
+
+		return entity;
+	}
 
 	ServerEntity::Ptr _AddEntity(size_t entityId, EMServerType regType)
 	{

@@ -11,10 +11,10 @@ namespace MsgHandleRegister
 {
 
 	HandleRegistry<GMsg::L2D_ReqLoadData, GMsg::D2L_ResLoadData, EMMsgDeal::Redir> Exe_ReqLoadData =
-				[](auto request, auto response, SocketChannel::Ptr channel) -> TaskVoid
+				[](World::Ptr world, SocketChannel::Ptr channel, auto request, auto response) -> TaskVoid
 	{
 		
-		GateServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<GateServerHelper>(EMSystemType::Server);
+		GateServerHelper::CVPtr dnServer = world->GetSystem<GateServerHelper>(EMSystemType::Server);
 
 		ServerEntityManagerHelper::CVPtr entityMan = dnServer->GetServerEntityManager();
 
@@ -51,10 +51,10 @@ namespace MsgHandleRegister
 	};
 
 	HandleRegistry<GMsg::L2D_ReqSaveData, GMsg::D2L_ResSaveData, EMMsgDeal::Redir> Exe_ReqSaveData =
-				[](auto request, auto response, SocketChannel::CVPtr channel) -> TaskVoid
+				[](World::Ptr world, SocketChannel::Ptr channel, auto request, auto response) -> TaskVoid
 	{
 		
-		GateServerHelper::CVPtr dnServer = channel->GetWorld()->GetSystem<GateServerHelper>(EMSystemType::Server);
+		GateServerHelper::CVPtr dnServer = world->GetSystem<GateServerHelper>(EMSystemType::Server);
 		ServerEntityManagerHelper::CVPtr entityMan = dnServer->GetServerEntityManager();
 
 		auto selects = entityMan->GetEntitysByType(EMServerType::DatabaseServer)
@@ -81,7 +81,7 @@ namespace MsgHandleRegister
 
 			if (!success)
 			{
-				LoggerPrint::Log(channel, ELogLevel_Debug, "requst timeout! ");
+				LoggerPrint::Log(world, ELogLevel_Debug, "requst timeout! ");
 				response->set_errorcode(EL10nCode_SGateReqTimeout);
 			}
 			

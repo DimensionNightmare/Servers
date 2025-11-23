@@ -2,8 +2,6 @@ export module UniversalMemoryPool;
 
 import std.compat;
 
-// import Logger;
-
 export class UniversalMemoryPool
 {
 	static constexpr size_t MaxCachedSize = 4096; // 最大缓存块大小
@@ -96,8 +94,7 @@ public:
 				T* object_ptr = new (raw_memory) T(std::forward<Args>(args)...);
 
 				return {
-					object_ptr
-					, [this, raw_memory, size](T* ptr)
+					object_ptr, [this, raw_memory, size](T* ptr)
 					{
 						ptr->~T();
 						RollbackAllocation(raw_memory, size);

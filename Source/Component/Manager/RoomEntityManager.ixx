@@ -42,32 +42,31 @@ public:
 
 		mMapTimer.erase(timerID);
 
-		if (RemoveEntity(entityId))
+		if (auto entity = RemoveEntity(entityId))
 		{
-			LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "EntityCloseTimer Room destory entity");
-		}
-
-	}
-
-public: // dll proxy
-
-	bool RemoveEntity(size_t entityId)
-	{
-		if (mEntityMap.contains(entityId))
-		{
-			RoomEntity::Ptr entity = std::move(mEntityMap[entityId]);
 			entity->Dispose();
-			
-			std::unique_lock ulock(oMapMutex);
-			mEntityMapList[entity->MapID()].remove(entity);
-			mEntityMap.erase(entityId);
-			return true;
+			LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "EntityCloseTimer Room destory entity {}", entity->ID());
 		}
 
-		return false;
 	}
 
 protected:
+
+	RoomEntity::Ptr RemoveEntity(size_t entityId)
+	{
+		RoomEntity::Ptr entity;
+
+		if (mEntityMap.contains(entityId))
+		{
+			
+			std::unique_lock ulock(oMapMutex);
+			entity = std::move(mEntityMap[entityId]);
+			mEntityMapList[entity->MapID()].remove(entity);
+			mEntityMap.erase(entityId);
+		}
+
+		return entity;
+	}
 
 	RoomEntity::Ptr _AddEntity(size_t mapId)
 	{

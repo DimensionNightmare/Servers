@@ -21,15 +21,17 @@ namespace MsgHandleRegister
 
 		WebProxyHelper::CVPtr webProxy = dnServer->GetWebProxy();
 
+		World::CVPtr world = server->GetWorld();
+
 		uint32_t msgId = clientProxy->GetMsgId();
 
-		LoggerPrint::Log(server, ELogLevel_Debug, "Client:{}, port:{}", clientProxy->remote_host, clientProxy->remote_port);
+		LoggerPrint::Log(world, ELogLevel_Debug, "Client:{}, port:{}", clientProxy->remote_host, clientProxy->remote_port);
 		
 		clientProxy->SetRegistState(EMRegistState::Registing);
 
 		GMsg::COM_ReqRegistSrv request;
 		request.set_serverid(dnServer->ID());
-		request.set_servertype((int)dnServer->GetServerType());
+		request.set_servertype(std::to_underlying(dnServer->GetServerType()));
 
 		if (dnServer->IsPullServer())
 		{
@@ -60,7 +62,7 @@ namespace MsgHandleRegister
 		}
 		else
 		{
-			LoggerPrint::Log(server, response.errorcode());
+			LoggerPrint::Log(world, response.errorcode());
 			// server->IsRun() = false; //exit application
 			clientProxy->SetRegistState(EMRegistState::None);
 		}

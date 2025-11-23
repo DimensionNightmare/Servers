@@ -130,12 +130,8 @@ public:
 			return false;
 		}
 
-		std::unique_ptr<IEventContainer> handle = std::make_unique<EventContainer<Func> >(entity);
-
 		size_t objId = entity->ID();
-
-		mEventIdMap[objId][type] = std::move(handle);
-
+		mEventIdMap[objId][type] = std::make_unique< EventContainer<Func> >(entity);
 		mEventCollection[type][objId] = objId;
 
 		return true;
@@ -146,17 +142,13 @@ public:
 		using Traits = FunctionTraits<std::decay_t<decltype(func)>>;
 		using FuncSign = typename Traits::FuncSign;
 
-		std::unique_ptr<IEventContainer> handle = std::make_unique<DynamicEventContainer<FuncSign>>(&func);
-
-		mEventCollectionWithoutId[type].emplace_back(std::move(handle));
+		mEventCollectionWithoutId[type].emplace_back(std::make_unique< DynamicEventContainer<FuncSign> >(&func));
 	}
 
 	template<auto Func>
 	void AddEvent(EnumT type)
 	{
-		std::unique_ptr<IEventContainer> handle = std::make_unique<EventContainer<Func> >();
-				
-		mEventCollectionWithoutId[type].emplace_back(std::move(handle));
+		mEventCollectionWithoutId[type].emplace_back(std::make_unique< EventContainer<Func> >());
 	}
 
 	template<typename... Args>
@@ -298,11 +290,12 @@ public:
 			if (P_InstanceHolder->MemPool)
 			{
 				std::cerr << "Object not disposed! Please check code!\n" << P_InstanceHolder->MemPool->GetMemoryRecordInfo(this) << "\n";
+				__debugbreak();
 			}
 		}
 	}
 
-public: // dll override
+public: 
 
 	size_t ID() { return iId; }
 
@@ -311,6 +304,14 @@ public: // dll override
 	virtual void Dispose()
 	{
 		bIsDisposed = true;
+
+		int useCount = weak_from_this().use_count();
+
+		if(useCount > 1)
+		{
+			std::cerr << "Object disposed Has Other Owner! Please check Other Obj!\n";
+			__debugbreak();
+		}
 	}
 
 	virtual bool Awake() { return true; }
@@ -392,7 +393,7 @@ public:
 	{
 	}
 
-public: // dll override
+public: 
 
 	/// @brief entity type total enum
 	EMEntityType GetEntityType() { return eEntityType; }

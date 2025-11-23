@@ -74,7 +74,7 @@ public:
 
 	bool IsPullServer() { return bIsPull;}
 	
-public: // dll override
+public: 
 
 protected:
 

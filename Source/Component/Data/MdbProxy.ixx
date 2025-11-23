@@ -54,9 +54,9 @@ public:
 		}
 		catch(sw::redis::IoError& e)
 		{
-			LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "Can Connect Redis:{}, retest", *param);
+			LoggerPrint::Log(world, ELogLevel_Debug, "Can Connect Redis:{}, retest", *param);
 			// 重试 retest
-			Timer::CVPtr timer = GetWorld()->GetSystem<Timer>(EMSystemType::Timer);
+			Timer::CVPtr timer = world->GetSystem<Timer>(EMSystemType::Timer);
 
 			timer->SetTimeout(3000, [this](size_t)
 			{
@@ -66,12 +66,12 @@ public:
 		}
 		catch(const std::exception& e)
 		{
-			LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "Can Connect Redis:{}, no retest", e.what());
+			LoggerPrint::Log(world, ELogLevel_Debug, "Can Connect Redis:{}, no retest", e.what());
 			return;
 		}
 
 
-		pMdbProxys.emplace(0, std::move(connection));
+		pMdbProxys.emplace(0, connection);
 	}
 
 protected:

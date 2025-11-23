@@ -14,7 +14,7 @@ private:
 
 public:
 
-	ServerEntityHelper::CVPtr GetEntity(size_t entityId)
+	ServerEntityHelper::Ptr GetEntity(size_t entityId)
 	{
 		std::shared_lock lock(oMapMutex);
 		if (mEntityMap.contains(entityId))
@@ -32,7 +32,7 @@ public:
 			ServerEntity::Ptr entity = GetBase()->AddEntity(entityId, regType);
 			mEntityMapList[regType].emplace_back(entity);
 			
-			ServerEntityHelper::CVPtr helper = entity->GetSelf<ServerEntityHelper>();
+			ServerEntityHelper::Ptr helper = entity->GetSelf<ServerEntityHelper>();
 			helper->SetServerType(regType);
 			return helper;
 		}

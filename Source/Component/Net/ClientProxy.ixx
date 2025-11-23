@@ -78,8 +78,8 @@ public:
 		setting.length_field_offset = 0;
 		setUnpack(&setting);
 
-		GetWorld()->AddEvent<&ClientProxy::Start>(EMEventType::ServerStart, GetSelf<ClientProxy>());
-		GetWorld()->AddEvent<&ClientProxy::End>(EMEventType::ServerStop, GetSelf<ClientProxy>());
+		world->AddEvent<&ClientProxy::Start>(EMEventType::ServerStart, GetSelf<ClientProxy>());
+		world->AddEvent<&ClientProxy::End>(EMEventType::ServerStop, GetSelf<ClientProxy>());
 
 		return true;
 	}
@@ -97,7 +97,7 @@ public:
 		stop(true);
 	}
 
-public: // dll override
+public: 
 
 	void TickRegistEvent(size_t timerID)
 	{
