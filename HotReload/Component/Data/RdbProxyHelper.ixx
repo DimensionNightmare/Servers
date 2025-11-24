@@ -2,6 +2,8 @@ export module RdbProxyHelper;
 
 import RdbProxy;
 import FuncUtils;
+import Logger;
+import StrUtils;
 
 export class RdbProxyHelper : public Helper<RdbProxyHelper, RdbProxy>
 {
@@ -59,10 +61,12 @@ public:
 			catch(pqxx::broken_connection& e)
 			{
 				// lost connection. reconnect
+				LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "Can Connect 'R' Database:{}, retest {}", EnumName(dbName), e.what());
 				isReconnection = true;
 			}
 			catch(const std::exception& e)
 			{
+				LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "Can Connect 'R' Database:{} broke, retest {}", EnumName(dbName), e.what());
 				break;
 			}
 		}
@@ -76,11 +80,12 @@ private:
 
 	const std::shared_ptr<pqxx::connection>& GetConnection(EMSqlDbNameEnum dbName)
 	{
+		static std::shared_ptr<pqxx::connection> None;
 		if (pRdbProxys.contains(dbName))
 		{
 			return pRdbProxys[dbName];
 		}
 		
-		return nullptr;
+		return None;
 	}
 };

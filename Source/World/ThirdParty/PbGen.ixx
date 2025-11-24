@@ -39,9 +39,6 @@ export
 	}
 }
 
-export namespace _GMsg1 = ::GMsg;
-
-
 export namespace GMsg
 {
 	using GMsg::COM_RetHeartbeat;

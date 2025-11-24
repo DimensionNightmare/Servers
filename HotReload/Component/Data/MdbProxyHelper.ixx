@@ -2,6 +2,7 @@ export module MdbProxyHelper;
 
 import MdbProxy;
 import FuncUtils;
+import Logger;
 
 export class MdbProxyHelper : public Helper<MdbProxyHelper, MdbProxy>
 {
@@ -48,11 +49,13 @@ public:
 			}
 			catch(const sw::redis::IoError& e)
 			{
+				LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "Can Connect 'M' Database, retest {}", e.what());
 				// lost connection. reconnect
 				isReconnection = true;
 			}
 			catch(const std::exception& e)
 			{
+				LoggerPrint::Log(GetWorld(), ELogLevel_Debug, "Can Connect 'M' Database broke, retest {}", e.what());
 				break;
 			}
 		}

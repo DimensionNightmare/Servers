@@ -24,11 +24,11 @@ public:
 
 public: 
 
-	uint32_t MapID() { return iMapId; }
+	size_t MapID() { return iMapId; }
 
 protected: // dll proxy
 
-	uint32_t iMapId = 0;
+	size_t iMapId = 0;
 
 	std::string sServIp;
 

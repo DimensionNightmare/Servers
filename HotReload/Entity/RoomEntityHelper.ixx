@@ -12,7 +12,7 @@ private:
 
 public:
 
-	void SetMapID(uint32_t mapId) { iMapId = mapId; }
+	void SetMapID(size_t mapId) { iMapId = mapId; }
 
 	std::string GetServerIp() { return sServIp; }
 	void SetServerIp(const std::string& ip) { sServIp = ip; }

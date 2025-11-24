@@ -59,7 +59,7 @@ public:
 		}
 		catch(pqxx::broken_connection& e)
 		{
-			LoggerPrint::Log(world, ELogLevel_Debug, "Can Connect Database:{}, retest", *param);
+			LoggerPrint::Log(world, ELogLevel_Debug, "Can Connect Database:{}, retest {}", *param, e.what());
 			// 重试 retest
 			Timer::CVPtr timer = world->GetSystem<Timer>(EMSystemType::Timer);
 

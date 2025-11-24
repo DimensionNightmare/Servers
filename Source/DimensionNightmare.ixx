@@ -105,7 +105,8 @@ export bool InitProgramConfig(ProgramConfig& programConfig)
 	launchConfig.erase("svrType");
 
 	size_t bitFlagValue = bitServerOpenFlag.GetAllFlagNum();
-	if (bitFlagValue == 0 || bitFlagValue >= (1 << std::to_underlying(EMServerType::Max)))
+	constexpr int maxBitFlag = 1 << std::to_underlying(EMServerType::Max);
+	if (bitFlagValue == 0 || bitFlagValue >= maxBitFlag)
 	{
 		LoggerPrint::Log(nullptr, ELogLevel_Error, "serverType Not Invalid! ");
 		return false;

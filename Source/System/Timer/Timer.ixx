@@ -56,12 +56,12 @@ public:
 		pLoop->loop()->killTimer(timerId);
 	}
 
-	size_t SetTimeout(size_t milliseconds, const std::function<void(size_t)>& cb)
+	size_t SetTimeout(int milliseconds, const std::function<void(size_t)>& cb)
 	{
 		return pLoop->loop()->setTimeout(milliseconds, cb);
 	}
 
-	size_t SetInterval(size_t milliseconds, const std::function<void(size_t)>& cb)
+	size_t SetInterval(int milliseconds, const std::function<void(size_t)>& cb)
 	{
 		return pLoop->loop()->setInterval(milliseconds, cb);
 	}

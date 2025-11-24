@@ -54,7 +54,7 @@ public:
 		}
 		catch(sw::redis::IoError& e)
 		{
-			LoggerPrint::Log(world, ELogLevel_Debug, "Can Connect Redis:{}, retest", *param);
+			LoggerPrint::Log(world, ELogLevel_Debug, "Can Connect Redis:{}, retest, {}", *param, e.what());
 			// 重试 retest
 			Timer::CVPtr timer = world->GetSystem<Timer>(EMSystemType::Timer);
 
