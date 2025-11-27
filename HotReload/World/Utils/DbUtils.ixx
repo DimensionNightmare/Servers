@@ -1049,7 +1049,7 @@ private:
 				bExecResult = true;
 				break;
 			case EMSqlOpType::Insert:
-				bExecResult = (result.affected_rows() == static_cast<pqxx::result::size_type>(iExecResultCount));
+				bExecResult = (result.affected_rows() == iExecResultCount);
 				break;
 			default:
 				throw std::invalid_argument("Please Imp SetResult Case!");
