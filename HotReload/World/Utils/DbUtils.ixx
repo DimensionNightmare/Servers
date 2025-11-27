@@ -10,25 +10,27 @@ import ECSW;
 
 using namespace std::chrono;
 
-// statement
-#define SSMBegin "("
-#define SSMEnd ")"
-#define SEnd ";"
-#define SSplit ","
-#define SSpace " "
-#define SDefault "DEFAULT"
-#define SCombo " AND "
-#define SNOT "NOT"
-#define SPrimaryKey "PRIMARY KEY"
-#define SNULL "NULL"
-#define SNOTNULL "NOT NULL"
-#define SISNULL "IS NULL"
-#define SNOTISNULL SNOT SSpace SISNULL
-#define SWHERE " WHERE "
-#define SSELECTALL "*"
-#define SUPDATE "UPDATE"
-#define SUPDATECOND "UPDATECOND"
-#define SQuote "\""
+// SQL statement constants
+namespace SqlConst {
+	inline constexpr std::string_view Begin = "(";
+	inline constexpr std::string_view End = ")";
+	inline constexpr std::string_view Semicolon = ";";
+	inline constexpr std::string_view Comma = ",";
+	inline constexpr std::string_view Space = " ";
+	inline constexpr std::string_view Default = "DEFAULT";
+	inline constexpr std::string_view Combo = " AND ";
+	inline constexpr std::string_view Not = "NOT";
+	inline constexpr std::string_view PrimaryKey = "PRIMARY KEY";
+	inline constexpr std::string_view Null = "NULL";
+	inline constexpr std::string_view NotNull = "NOT NULL";
+	inline constexpr std::string_view IsNull = "IS NULL";
+	inline constexpr std::string_view NotIsNull = "NOT IS NULL";
+	inline constexpr std::string_view Where = " WHERE ";
+	inline constexpr std::string_view SelectAll = "*";
+	inline constexpr std::string_view Update = "UPDATE";
+	inline constexpr std::string_view UpdateCond = "UPDATECOND";
+	inline constexpr std::string_view Quote = "\"";
+}
 
 enum class EMSqlOpType : uint8_t
 {
@@ -41,57 +43,40 @@ enum class EMSqlOpType : uint8_t
 	UpdateTable,
 };
 
-const char* GetOpTypeBySqlOpType(EMSqlOpType eType)
+[[nodiscard]] constexpr const char* GetOpTypeBySqlOpType(EMSqlOpType eType) noexcept
 {
 	switch (eType)
 	{
-#define ONE(type, name) \
-		case type: \
-			return name;
-		ONE(EMSqlOpType::CreateTable, "CREATE TABLE ");
-		ONE(EMSqlOpType::Insert, "INSERT INTO ");
-		ONE(EMSqlOpType::Query, "SELECT ");
-		ONE(EMSqlOpType::Update, "UPDATE ");
-		ONE(EMSqlOpType::Delete, "DELETE FROM ");
-		ONE(EMSqlOpType::UpdateTable, "ALTER TABLE ");
-#undef ONE
-		default:
-			throw std::invalid_argument("Please Check EMSqlOpType");
-			break;
+		case EMSqlOpType::CreateTable: return "CREATE TABLE ";
+		case EMSqlOpType::Insert: return "INSERT INTO ";
+		case EMSqlOpType::Query: return "SELECT ";
+		case EMSqlOpType::Update: return "UPDATE ";
+		case EMSqlOpType::Delete: return "DELETE FROM ";
+		case EMSqlOpType::UpdateTable: return "ALTER TABLE ";
+		default: return "";
 	}
-
-	return "";
 }
 
 
-const std::string SqlTableColQuery = R"delim(SELECT
+inline constexpr std::string_view SqlTableColQuery = R"delim(SELECT
 column_name
 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = '{}';)delim";
 
-const char* GetDbTypeByProtoType(FieldDescriptor::CppType pbType)
+[[nodiscard]] constexpr const char* GetDbTypeByProtoType(FieldDescriptor::CppType pbType) noexcept
 {
-	// http://postgres.cn/docs/9.4/datatype-numeric.html#DATATYPE-INT
 	switch (pbType)
 	{
-#define ONE(type, name) \
-		case type:          \
-			return #name;
-		ONE(FieldDescriptor::CPPTYPE_INT32, integer);
-		ONE(FieldDescriptor::CPPTYPE_UINT32, integer);
-		ONE(FieldDescriptor::CPPTYPE_INT64, bigint);
-		ONE(FieldDescriptor::CPPTYPE_UINT64, bigint);
-		ONE(FieldDescriptor::CPPTYPE_STRING, character varying);
-		ONE(FieldDescriptor::CPPTYPE_MESSAGE, bytea);
-#undef ONE
-		default:
-			throw std::invalid_argument("Please Check CppType");
-			break;
+		case FieldDescriptor::CPPTYPE_INT32: return "integer";
+		case FieldDescriptor::CPPTYPE_UINT32: return "integer";
+		case FieldDescriptor::CPPTYPE_INT64: return "bigint";
+		case FieldDescriptor::CPPTYPE_UINT64: return "bigint";
+		case FieldDescriptor::CPPTYPE_STRING: return "character varying";
+		case FieldDescriptor::CPPTYPE_MESSAGE: return "bytea";
+		default: return "";
 	}
-
-	return "";
 }
 
-void DirectFieldNameByProtoType(const FieldDescriptor* field, std::string& out)
+void DirectFieldNameByProtoType([[maybe_unused]] const FieldDescriptor* field, [[maybe_unused]] std::string& out) noexcept
 {
 	// if (field->options().HasExtension(e_datetime))
 	// {
@@ -100,9 +85,13 @@ void DirectFieldNameByProtoType(const FieldDescriptor* field, std::string& out)
 }
 
 // init table
-void InitFieldByProtoType(const FieldDescriptor* field, std::list<std::string>& out, std::list<std::string>& keys)
+void InitFieldByProtoType(const FieldDescriptor* field, std::vector<std::string>& out, std::vector<std::string>& keys)
 {
 	const char* typeStr = GetDbTypeByProtoType(field->cpp_type());
+	if (!typeStr || typeStr[0] == '\0')
+	{
+		throw std::invalid_argument("Please Check CppType");
+	}
 
 	out.emplace_back(typeStr);
 
@@ -117,10 +106,6 @@ void InitFieldByProtoType(const FieldDescriptor* field, std::list<std::string>& 
 			{
 				out.back().append(std::format("({})", lenLimit));
 			}
-			// else
-			// {
-			// 	out.back().assign("text");
-			// }
 			break;
 		}
 		case FieldDescriptor::CPPTYPE_UINT32:
@@ -145,12 +130,12 @@ void InitFieldByProtoType(const FieldDescriptor* field, std::list<std::string>& 
 
 	if (!field->is_optional())
 	{
-		out.emplace_back(SNOTNULL);
+		out.emplace_back(SqlConst::NotNull);
 	}
 
 	if (const std::string& defaultStr = PbGen::GetStringFieldOptions(options, e_default); !defaultStr.empty())
 	{
-		out.emplace_back(std::format("{0} {1}", SDefault, defaultStr));
+		out.emplace_back(std::format("{0} {1}", SqlConst::Default, defaultStr));
 	}
 
 	if (PbGen::GetNumberFieldOptions(options, e_primary_key))
@@ -164,6 +149,26 @@ void InitFieldByProtoType(const FieldDescriptor* field, std::list<std::string>& 
 	}
 }
 
+// Helper to format repeated field values
+template<typename T, typename Getter>
+void FormatRepeatedField(const FieldDescriptor* field, const Reflection* reflection, Message& data, std::string& out, Getter getter)
+{
+	const int fieldSize = reflection->FieldSize(data, field);
+	if (fieldSize == 0)
+	{
+		out = "'{ }'";
+		return;
+	}
+	
+	out.reserve(fieldSize * 8); // Pre-allocate space
+	for (int i = 0; i < fieldSize; i++)
+	{
+		out += std::format("{},", getter(reflection, data, field, i));
+	}
+	out.pop_back();
+	out = std::format("'{{ {} }}'", out);
+}
+
 // get field data
 void GetFieldValueByProtoType(const FieldDescriptor* field, const Reflection* reflection, Message& data, std::string& out)
 {
@@ -171,12 +176,11 @@ void GetFieldValueByProtoType(const FieldDescriptor* field, const Reflection* re
 
 	if (field->is_optional() && !reflection->HasField(data, field))
 	{
-		out = SNULL;
+		out = SqlConst::Null;
 		return;
 	}
 
-	bool isRepeat = field->is_repeated();
-
+	const bool isRepeat = field->is_repeated();
 	const FieldOptions& options = field->options();
 
 	switch (field->cpp_type())
@@ -184,12 +188,10 @@ void GetFieldValueByProtoType(const FieldDescriptor* field, const Reflection* re
 		case FieldDescriptor::CPPTYPE_INT32:
 			if (isRepeat)
 			{
-				for (int i = 0; i < reflection->FieldSize(data, field); i++)
-				{
-					out += std::format("{},", reflection->GetRepeatedInt32(data, field, i));
-				}
-				out.pop_back();
-				out = std::format("'{{ {} }}'", out);
+				FormatRepeatedField<int32_t>(field, reflection, data, out,
+					[](const Reflection* r, Message& d, const FieldDescriptor* f, int i) {
+						return r->GetRepeatedInt32(d, f, i);
+					});
 			}
 			else
 			{
@@ -199,28 +201,23 @@ void GetFieldValueByProtoType(const FieldDescriptor* field, const Reflection* re
 		case FieldDescriptor::CPPTYPE_UINT32:
 			if (isRepeat)
 			{
-				for (int i = 0; i < reflection->FieldSize(data, field); i++)
-				{
-					out += std::format("{},", reflection->GetRepeatedUInt32(data, field, i));
-				}
-				out.pop_back();
-				out = std::format("'{{ {} }}'", out);
+				FormatRepeatedField<uint32_t>(field, reflection, data, out,
+					[](const Reflection* r, Message& d, const FieldDescriptor* f, int i) {
+						return r->GetRepeatedUInt32(d, f, i);
+					});
 			}
 			else
 			{
 				out = std::to_string(reflection->GetUInt32(data, field));
 			}
-
 			break;
 		case FieldDescriptor::CPPTYPE_INT64:
 			if (isRepeat)
 			{
-				for (int i = 0; i < reflection->FieldSize(data, field); i++)
-				{
-					out += std::format("{},", reflection->GetRepeatedInt64(data, field, i));
-				}
-				out.pop_back();
-				out = std::format("'{{ {} }}'", out);
+				FormatRepeatedField<int64_t>(field, reflection, data, out,
+					[](const Reflection* r, Message& d, const FieldDescriptor* f, int i) {
+						return r->GetRepeatedInt64(d, f, i);
+					});
 			}
 			else
 			{
@@ -230,12 +227,10 @@ void GetFieldValueByProtoType(const FieldDescriptor* field, const Reflection* re
 		case FieldDescriptor::CPPTYPE_UINT64:
 			if (isRepeat)
 			{
-				for (int i = 0; i < reflection->FieldSize(data, field); i++)
-				{
-					out += std::format("{},", reflection->GetRepeatedUInt64(data, field, i));
-				}
-				out.pop_back();
-				out = std::format("'{{ {} }}'", out);
+				FormatRepeatedField<uint64_t>(field, reflection, data, out,
+					[](const Reflection* r, Message& d, const FieldDescriptor* f, int i) {
+						return r->GetRepeatedUInt64(d, f, i);
+					});
 			}
 			else
 			{
@@ -245,16 +240,25 @@ void GetFieldValueByProtoType(const FieldDescriptor* field, const Reflection* re
 		case FieldDescriptor::CPPTYPE_STRING:
 			if (isRepeat)
 			{
-				for (int i = 0; i < reflection->FieldSize(data, field); i++)
+				const int fieldSize = reflection->FieldSize(data, field);
+				if (fieldSize == 0)
 				{
-					out += std::format("'{}',", reflection->GetRepeatedString(data, field, i));
+					out = "'{ }'";
 				}
-				out.pop_back();
-				out = std::format("'{{ {} }}'", out);
+				else
+				{
+					out.reserve(fieldSize * 16);
+					for (int i = 0; i < fieldSize; i++)
+					{
+						out += std::format("'{}',", reflection->GetRepeatedString(data, field, i));
+					}
+					out.pop_back();
+					out = std::format("'{{ {} }}'", out);
+				}
 			}
 			else
 			{
-				out += std::format("'{}'", reflection->GetString(data, field));
+				out = std::format("'{}'", reflection->GetString(data, field));
 			}
 			break;
 		case FieldDescriptor::CPPTYPE_MESSAGE:
@@ -272,47 +276,24 @@ void GetFieldValueByProtoType(const FieldDescriptor* field, const Reflection* re
 			break;
 		default:
 			throw std::invalid_argument("Please Regist InsertField::CppType");
-			break;
 	}
 
-	switch (field->cpp_type())
+	// Check string length limit
+	if (field->cpp_type() == FieldDescriptor::CPPTYPE_STRING)
 	{
-		case FieldDescriptor::CPPTYPE_STRING: // len_limit
+		if (int len_limit = PbGen::GetNumberFieldOptions(options, e_len_limit))
 		{
-			if (int len_limit = PbGen::GetNumberFieldOptions(options, e_len_limit))
+			if (out.size() > static_cast<size_t>(len_limit))
 			{
-				if (out.size() > len_limit)
-				{
-					throw std::invalid_argument(std::format("field {} lenth > {} limit !!!", field->name(), len_limit));
-				}
+				throw std::invalid_argument(std::format("field {} lenth > {} limit !!!", field->name(), len_limit));
 			}
-			break;
 		}
-		default:
-			break;
 	}
 }
 
 //set field data
-void SetFieldValueByProtoType(const FieldDescriptor* field, const Reflection* reflection, Message& data, pqxx::field value, bool isQueryAll)
+void SetFieldValueByProtoType(const FieldDescriptor* field, const Reflection* reflection, Message& data, pqxx::field value, [[maybe_unused]] bool isQueryAll)
 {
-	// if (field->is_repeated())
-	// {
-	// 	array_parser arr = value.as_array();
-	// 	pair<array_parser::juncture, std::string> elem;
-	// 	int index = 0;
-	// 	do
-	// 	{
-	// 		elem = arr.get_ne();
-	// 		if (elem.first == std::array_parser::juncture::string_value)
-	// 		{
-	// 			reflection->AddBool(&data, field, false);
-	// 			reflection->SetRepeatedBool(&data, field, index, elem.second == "t");
-	// 			index++;
-	// 		}
-	// 	} while (elem.first != std::array_parser::juncture::done);
-	// }
-
 	switch (field->cpp_type())
 	{
 		case FieldDescriptor::CPPTYPE_INT32:
@@ -336,28 +317,22 @@ void SetFieldValueByProtoType(const FieldDescriptor* field, const Reflection* re
 			{
 				throw std::invalid_argument("Please Regist SelectField::Type");
 			}
-			else
-			{
-				Message* msg = reflection->MutableMessage(&data, field);
-				std::string msgData = value.as<std::string>();
-				msgData = msgData.substr(2);
-				HexStringToBytes(msgData);
-				msg->ParseFromString(msgData);
-			}
+			Message* msg = reflection->MutableMessage(&data, field);
+			std::string msgData = value.as<std::string>();
+			msgData = msgData.substr(2);
+			HexStringToBytes(msgData);
+			msg->ParseFromString(msgData);
+			break;
 		}
-		break;
 		default:
 			throw std::invalid_argument("Please Regist SelectField::Type");
-			break;
 	}
 }
 
 // get default field data
-void GetFieldDefaultValueByProtoType(const FieldDescriptor* field, std::string& out)
+void GetFieldDefaultValueByProtoType(const FieldDescriptor* field, std::string& out) noexcept
 {
 	out.clear();
-
-	const FieldOptions& options = field->options();
 
 	if (field->is_repeated())
 	{
@@ -371,43 +346,36 @@ void GetFieldDefaultValueByProtoType(const FieldDescriptor* field, std::string& 
 		case FieldDescriptor::CPPTYPE_UINT32:
 		case FieldDescriptor::CPPTYPE_INT64:
 		case FieldDescriptor::CPPTYPE_UINT64:
-		{
 			out = "0";
-		}
-		break;
+			break;
 		case FieldDescriptor::CPPTYPE_STRING:
-		{
 			out = "''";
-		}
-		break;
+			break;
 		case FieldDescriptor::CPPTYPE_MESSAGE:
-		{
 			out = "E'\\\\x'";
-		}
-		break;
+			break;
 		default:
-			throw std::invalid_argument("Please Regist InsertField::CppType");
+			// For unknown types, leave empty - caller should handle
 			break;
 	}
-
 }
 
 class IDbSqlHelper
 {
 public:
-	~IDbSqlHelper() = default;
+	virtual ~IDbSqlHelper() = default;
 
-	virtual bool IsExist() = 0;
+	[[nodiscard]] virtual bool IsExist() = 0;
 
 	virtual IDbSqlHelper& CreateTable() = 0;
 
 	virtual IDbSqlHelper& UpdateTable() = 0;
 
-	virtual bool Commit() = 0;
+	[[nodiscard]] virtual bool Commit() = 0;
 
-	virtual const std::string& GetName() = 0;
+	[[nodiscard]] virtual const std::string& GetName() = 0;
 
-	virtual std::string GetTableSchemaMd5() = 0;
+	[[nodiscard]] virtual std::string GetTableSchemaMd5() = 0;
 };
 
 export template <class TMessage = Message>
@@ -416,25 +384,31 @@ class DbSqlHelper : public IDbSqlHelper
 
 public:
 
-	DbSqlHelper(pqxx::dbtransaction* work, World::Ptr world, TMessage* entity = nullptr)
+	DbSqlHelper(pqxx::dbtransaction* work, World::Ptr world, TMessage* entity = nullptr) noexcept
+		: pWork(work), pWorld(world), pEntity(entity)
 	{
-		pWork = work;
-		pWorld = world;
-		pEntity = entity;
 	}
 
-	virtual ~DbSqlHelper()
+	~DbSqlHelper() override
 	{
 		ReleaseResult();
 	}
 
-	const std::string& GetName() { return pEntity->GetDescriptor()->name(); }
+	// Non-copyable
+	DbSqlHelper(const DbSqlHelper&) = delete;
+	DbSqlHelper& operator=(const DbSqlHelper&) = delete;
 
-	const std::vector<TMessage*>& Result() { return mResult; }
+	// Movable
+	DbSqlHelper(DbSqlHelper&&) noexcept = default;
+	DbSqlHelper& operator=(DbSqlHelper&&) noexcept = default;
 
-	uint32_t ResultCount() { return iQueryCount; }
+	[[nodiscard]] const std::string& GetName() override { return pEntity->GetDescriptor()->name(); }
 
-	bool Commit()
+	[[nodiscard]] const std::vector<TMessage*>& Result() const noexcept { return mResult; }
+
+	[[nodiscard]] uint32_t ResultCount() const noexcept { return iQueryCount; }
+
+	[[nodiscard]] bool Commit() override
 	{
 		BuildSqlStatement();
 
@@ -464,13 +438,14 @@ public:
 	}
 
 	// create table
-	DbSqlHelper<TMessage>& CreateTable()
+	DbSqlHelper<TMessage>& CreateTable() override
 	{
 		ChangeSqlType(EMSqlOpType::CreateTable);
 
 		const Descriptor* descriptor = pEntity->GetDescriptor();
 
-		std::list<std::string> primaryKey;
+		std::vector<std::string> primaryKey;
+		primaryKey.reserve(4);
 
 		for (int i = 0; i < descriptor->field_count(); i++)
 		{
@@ -482,83 +457,79 @@ public:
 				throw std::runtime_error("Not imp!!!");
 			}
 
-			std::list<std::string> params;
+			std::vector<std::string> params;
+			params.reserve(8);
 			InitFieldByProtoType(field, params, primaryKey);
 
 			// unregist type
-			if (params.size() == 0)
+			if (params.empty())
 			{
 				continue;
 			}
 
-			mEles.emplace(make_pair(field->name(), params));
+			mEles.emplace(field->name(), std::vector<std::string>(params.begin(), params.end()));
 		}
 
-		if (mEles.contains(SPrimaryKey))
+		if (mEles.contains(std::string(SqlConst::PrimaryKey)))
 		{
 			throw std::invalid_argument("Not Allow Exist 'PRIMARY KEY' map key!");
 		}
 
-		if (primaryKey.size())
+		if (!primaryKey.empty())
 		{
-			std::string temp = SSMBegin;
-			for (auto it = primaryKey.begin(); it != primaryKey.end(); it++)
+			std::string temp;
+			temp.reserve(64);
+			temp = SqlConst::Begin;
+			for (size_t i = 0; i < primaryKey.size(); ++i)
 			{
-				temp += *it;
-
-				if (next(it) != primaryKey.end())
+				temp += primaryKey[i];
+				if (i + 1 < primaryKey.size())
 				{
-					temp += SSplit;
+					temp += SqlConst::Comma;
 				}
 			}
+			temp += SqlConst::End;
 
-			temp += SSMEnd;
+			std::vector<std::string> keyList;
+			keyList.emplace_back(std::move(temp));
 
-			primaryKey.clear();
-			primaryKey.emplace_back(temp);
-
-			mEles.emplace(make_pair(SPrimaryKey, primaryKey));
+			mEles.emplace(std::string(SqlConst::PrimaryKey), std::move(keyList));
 		}
 
 		return *this;
 	}
 
-	DbSqlHelper<TMessage>& UpdateTable()
+	DbSqlHelper<TMessage>& UpdateTable() override
 	{
 		ChangeSqlType(EMSqlOpType::UpdateTable);
 
 		pqxx::result result = pWork->exec(vformat(SqlTableColQuery, make_format_args(GetName())));
 
 		std::unordered_map<std::string, int> sqlColInfo;
+		sqlColInfo.reserve(result.size());
 
-		for (int row = 0; row < result.size(); row++)
+		for (size_t row = 0; row < result.size(); row++)
 		{
-			const std::string& name = result[row][0].as<std::string>();
-
-			sqlColInfo[name] = row;
-
+			sqlColInfo[result[row][0].as<std::string>()] = static_cast<int>(row);
 		}
 
 		const Descriptor* descriptor = pEntity->GetDescriptor();
 
-		// clear CONSTRAINT
-		// result = pWork->exec( std::format("SELECT conname FROM pg_constraint WHERE conrelid = '{}'::regclass;", GetName()) );
-		// for (int row = 0; row < result.size(); row++)
-		// {
-		// 	pWork->exec(std::format("ALTER TABLE {} DROP CONSTRAINT {};", GetName(), result[0][0].as<std::string>()));
-		// }
-
-		std::list<std::string> primaryKey;
+		std::vector<std::string> primaryKey;
+		primaryKey.reserve(4);
 		std::string tempstr;
-		std::string opTypeStr = GetOpTypeBySqlOpType(eType);
+		tempstr.reserve(128);
+		const char* opTypeStr = GetOpTypeBySqlOpType(eType);
 
-		std::list<std::string> histroy;
+		std::vector<std::string> history;
+		history.reserve(descriptor->field_count() * 2);
 
 		// check col
 		for (int i = 0; i < descriptor->field_count(); i++)
 		{
 			const std::string& colName = descriptor->field(i)->name();
-			std::list<std::string> params;
+			std::vector<std::string> params;
+			params.reserve(8);
 
 			const FieldDescriptor* field = descriptor->field(i);
 
@@ -567,23 +538,24 @@ public:
 			{
 				InitFieldByProtoType(field, params, primaryKey);
 
-				// can not null
+				// can not null - remove NOT NULL from params
 				if (!field->is_optional())
 				{
-					params.remove(SNOTNULL);
+					std::erase(params, std::string(SqlConst::NotNull));
 				}
 
 				// change type
-				for (std::string& param : params)
+				for (const std::string& param : params)
 				{
-					tempstr += param + " ";
+					tempstr += param;
+					tempstr += ' ';
 				}
 
-				histroy.emplace_back(std::format("{0}\"{1}\" ADD COLUMN \"new_{2}\" {3};\nUPDATE \"{1}\" SET \"new_{2}\" = \"{2}\";\n{0}\"{1}\" DROP COLUMN \"{2}\";\n{0}\"{1}\" RENAME COLUMN \"new_{2}\" TO \"{2}\";\n", opTypeStr, GetName(), colName, tempstr));
+				history.emplace_back(std::format("{0}\"{1}\" ADD COLUMN \"new_{2}\" {3};\nUPDATE \"{1}\" SET \"new_{2}\" = \"{2}\";\n{0}\"{1}\" DROP COLUMN \"{2}\";\n{0}\"{1}\" RENAME COLUMN \"new_{2}\" TO \"{2}\";\n", opTypeStr, GetName(), colName, tempstr));
 
 				if (!field->is_optional())
 				{
-					histroy.emplace_back(std::format("{0}\"{1}\" ALTER COLUMN \"{2}\" SET NOT NULL;\n", opTypeStr, GetName(), colName));
+					history.emplace_back(std::format("{0}\"{1}\" ALTER COLUMN \"{2}\" SET NOT NULL;\n", opTypeStr, GetName(), colName));
 				}
 
 				tempstr.clear();
@@ -595,27 +567,27 @@ public:
 			else
 			{
 				InitFieldByProtoType(descriptor->field(i), params, primaryKey);
-				for (std::string& param : params)
+				for (const std::string& param : params)
 				{
-					tempstr += param + " ";
+					tempstr += param;
+					tempstr += ' ';
 				}
 				// ALTER TABLE tablename ADD COLUMN column_name data_type [column_constraint];
-				histroy.emplace_back(std::format("{}\"{}\" ADD COLUMN \"{}\" {};\n", opTypeStr, GetName(), colName, tempstr));
+				history.emplace_back(std::format("{}\"{}\" ADD COLUMN \"{}\" {};\n", opTypeStr, GetName(), colName, tempstr));
 				tempstr.clear();
 			}
-
 		}
 
 		// remove col
-		for (auto& iter : sqlColInfo)
+		for (const auto& [colName, _] : sqlColInfo)
 		{
-			mEles[""].emplace_back(std::format("{}\"{}\" DROP COLUMN \"{}\";\n", opTypeStr, GetName(), iter.first));
+			mEles[""].emplace_back(std::format("{}\"{}\" DROP COLUMN \"{}\";\n", opTypeStr, GetName(), colName));
 		}
 
 		// after change
-		for(auto& iter : histroy)
+		for (auto& item : history)
 		{
-			mEles[""].emplace_back(iter);
+			mEles[""].emplace_back(std::move(item));
 		}
 
 		return *this;
@@ -696,7 +668,7 @@ public:
 	{
 		ChangeSqlType(EMSqlOpType::Query);
 
-		if (mEles.contains(SSELECTALL))
+		if (mEles.contains(std::string(SqlConst::SelectAll)))
 		{
 			throw std::invalid_argument("exist other select statement!!");
 		}
@@ -713,8 +685,7 @@ public:
 	{
 		const Descriptor* descriptor = pEntity->GetDescriptor();
 		const FieldDescriptor* field = descriptor->FindFieldByNumber(EnumValue);
-		if (!field 
-		)
+		if (!field)
 		{
 			return *this;
 		}
@@ -730,7 +701,6 @@ public:
 		if (!PbGen::GetNumberFieldOptions(options, e_primary_key))
 		{
 			throw std::invalid_argument(std::format(" {} is not table {} key!", field->name(), GetName()));
-			return *this;
 		}
 
 		std::string value;
@@ -739,10 +709,9 @@ public:
 		if (value.empty())
 		{
 			throw std::invalid_argument(std::format(" table {} key is not set!", GetName()));
-			return *this;
 		}
 
-		mEles[SSELECTALL].emplace_back(std::format("\"{}\"={}", field->name(), value));
+		mEles[std::string(SqlConst::SelectAll)].emplace_back(std::format("\"{}\"={}", field->name(), value));
 
 		return *this;
 	}
@@ -752,8 +721,7 @@ public:
 	{
 		const Descriptor* descriptor = pEntity->GetDescriptor();
 		const FieldDescriptor* field = descriptor->FindFieldByNumber(EnumValue);
-		if (!field 
-		)
+		if (!field)
 		{
 			return *this;
 		}
@@ -761,12 +729,12 @@ public:
 		return SelectByKey(field);
 	}
 
-	DbSqlHelper<TMessage>& SelectAll(bool foreach = false, bool quertCount = false)
+	DbSqlHelper<TMessage>& SelectAll(bool forEach = false, bool queryCount = false)
 	{
 		ChangeSqlType(EMSqlOpType::Query);
 
 		// not default
-		if (foreach)
+		if (forEach)
 		{
 			const Descriptor* descriptor = pEntity->GetDescriptor();
 			for (int i = 0; i < descriptor->field_count(); i++)
@@ -777,9 +745,9 @@ public:
 		}
 
 		// not default
-		iQueryCount = quertCount;
+		iQueryCount = queryCount;
 
-		mEles[SSELECTALL];
+		mEles[std::string(SqlConst::SelectAll)];
 
 		if (mEles.size() > 1)
 		{
@@ -798,13 +766,14 @@ public:
 
 		value = std::format("{}\"{}\"{}{}", splicing, field->name(), cond, value);
 
-		if (mEles.contains(SSELECTALL))
+		const std::string selectAllKey(SqlConst::SelectAll);
+		if (mEles.contains(selectAllKey))
 		{
-			mEles[SSELECTALL].emplace_back(value);
+			mEles[selectAllKey].emplace_back(std::move(value));
 		}
 		else
 		{
-			mEles.begin()->second.emplace_back(value);
+			mEles.begin()->second.emplace_back(std::move(value));
 		}
 
 		return *this;
@@ -815,8 +784,7 @@ public:
 	{
 		const Descriptor* descriptor = pEntity->GetDescriptor();
 		const FieldDescriptor* field = descriptor->FindFieldByNumber(EnumValue);
-		if (!field 
-		)
+		if (!field)
 		{
 			return *this;
 		}
@@ -833,7 +801,7 @@ public:
 		std::string value;
 		GetFieldValueByProtoType(field, reflection, *pEntity, value);
 
-		mEles[SUPDATE].emplace_back(std::format("\"{}\"={}", field->name(), value));
+		mEles[std::string(SqlConst::Update)].emplace_back(std::format("\"{}\"={}", field->name(), value));
 
 		return *this;
 	}
@@ -862,7 +830,6 @@ public:
 		if (!PbGen::GetNumberFieldOptions(options, e_primary_key))
 		{
 			throw std::invalid_argument(std::format(" {} is not table {} key!", field->name(), GetName()));
-			return *this;
 		}
 
 		std::string value;
@@ -871,10 +838,9 @@ public:
 		if (value.empty())
 		{
 			throw std::invalid_argument(std::format(" table {} key is not set!", GetName()));
-			return *this;
 		}
 
-		mEles[SUPDATECOND].emplace_back(std::format("\"{}\"={}", field->name(), value));
+		mEles[std::string(SqlConst::UpdateCond)].emplace_back(std::format("\"{}\"={}", field->name(), value));
 
 		for (int i = 0; i < descriptor->field_count(); i++)
 		{
@@ -884,7 +850,7 @@ public:
 			}
 		}
 
-		if (mEles[SUPDATE].empty())
+		if (mEles[std::string(SqlConst::Update)].empty())
 		{
 			throw std::invalid_argument(std::format(" table {} Not Update Data!", GetName()));
 		}
@@ -930,7 +896,7 @@ public:
 		
 		value = std::format("{}\"{}\"{}{}", splicing, field->name(), cond, value);
 
-		mEles[SUPDATECOND].emplace_back(value);
+		mEles[std::string(SqlConst::UpdateCond)].emplace_back(std::move(value));
 
 		return *this;
 	}
@@ -961,7 +927,7 @@ public:
 
 		value = std::format("{}\"{}\"{}{}", splicing, field->name(), cond, value);
 
-		mEles[SUPDATECOND].emplace_back(value);
+		mEles[std::string(SqlConst::UpdateCond)].emplace_back(std::move(value));
 
 		return *this;
 	}
@@ -980,15 +946,14 @@ public:
 		return DeleteCond(field, cond, splicing);
 	}
 
-	[[nodiscard]]
-	bool IsSuccess()
+	[[nodiscard]] bool IsSuccess() noexcept
 	{
-		bool success = bExecResult;
+		const bool success = bExecResult;
 		bExecResult = false;
 		return success;
 	}
 
-	bool IsExist()
+	[[nodiscard]] bool IsExist() override
 	{
 		return pWork->query_value<bool>(std::format("SELECT EXISTS ( SELECT 1 FROM pg_catalog.pg_tables WHERE schemaname = 'public' AND tablename = '{}');", GetName()));
 	}
@@ -1005,42 +970,47 @@ public:
 		return *this;
 	}
 
-	std::string GetBuildSqlStatement()
+	[[nodiscard]] std::string GetBuildSqlStatement()
 	{
 		BuildSqlStatement();
 		return sSqlStatement;
 	}
 
-	DbSqlHelper<TMessage>& InitEntity(TMessage& entity)
+	DbSqlHelper<TMessage>& InitEntity(TMessage& entity) noexcept
 	{
 		pEntity = &entity;
 		return *this;
 	}
 
-	std::string GetTableSchemaMd5()
+	[[nodiscard]] std::string GetTableSchemaMd5() override
 	{
 		const Descriptor* descriptor = pEntity->GetDescriptor();
 
-		std::stringstream stream;
-		std::list<std::string> out;
-		std::list<std::string> primaryKey;
-		stream << "";
+		std::string result;
+		result.reserve(512);
+		
+		std::vector<std::string> out;
+		out.reserve(8);
+		std::vector<std::string> primaryKey;
+		primaryKey.reserve(4);
+		
 		for (int i = 0; i < descriptor->field_count(); i++)
 		{
-			stream << descriptor->field(i)->name();
+			result += descriptor->field(i)->name();
+			out.clear();
 			InitFieldByProtoType(descriptor->field(i), out, primaryKey);
 			for (const std::string& property : out)
 			{
-				stream << property;
+				result += property;
 			}
 		}
 
-		for (auto& key : primaryKey)
+		for (const auto& key : primaryKey)
 		{
-			stream << key;
+			result += key;
 		}
 
-		return Md5Hash(stream.str());
+		return Md5Hash(result);
 	}
 private:
 
@@ -1049,7 +1019,6 @@ private:
 		if (eType != EMSqlOpType::None && eType != type)
 		{
 			throw std::invalid_argument("Not Commit to Change OpType");
-			return false;
 		}
 
 		eType = type;
@@ -1063,41 +1032,28 @@ private:
 		switch (eType)
 		{
 			case EMSqlOpType::Query:
-			{
 				bExecResult = true;
-
 				if (!iQueryCount)
 				{
-					PaserQuery(result);
+					ParseQuery(result);
 				}
 				else
 				{
 					iQueryCount = result[0][0].as<uint32_t>();
 				}
-	
 				break;
-			}
 			case EMSqlOpType::Update:
 			case EMSqlOpType::Delete:
 			case EMSqlOpType::UpdateTable:
-			{
-				bExecResult = true;
-				break;
-			}
-			case EMSqlOpType::Insert:
-			{
-				bExecResult = result.affected_rows() == iExecResultCount;
-				break;
-			}
 			case EMSqlOpType::CreateTable:
-			{
 				bExecResult = true;
 				break;
-			}
+			case EMSqlOpType::Insert:
+				bExecResult = (result.affected_rows() == static_cast<pqxx::result::size_type>(iExecResultCount));
+				break;
 			default:
 				throw std::invalid_argument("Please Imp SetResult Case!");
 		}
-
 	}
 
 	void BuildSqlStatement()
@@ -1107,9 +1063,8 @@ private:
 			return;
 		}
 
-		std::stringstream ss;
-
-		ss << "";
+		std::string ss;
+		ss.reserve(512);
 
 		std::string limit;
 
@@ -1122,15 +1077,15 @@ private:
 		{
 			case EMSqlOpType::CreateTable:
 			{
-				ss << std::format("{} \"{}\"", GetOpTypeBySqlOpType(eType), GetName());
+				ss += std::format("{} \"{}\"", GetOpTypeBySqlOpType(eType), GetName());
 
-				if (!mEles.size())
+				if (mEles.empty())
 				{
 					// data null
 					return;
 				}
 
-				ss << SSMBegin;
+				ss += SqlConst::Begin;
 
 				const Descriptor* descriptor = pEntity->GetDescriptor();
 
@@ -1143,118 +1098,126 @@ private:
 						continue;
 					}
 
-					ss << SQuote << fieldName << SQuote;
-					for (std::string& props : mEles[fieldName])
+					ss += SqlConst::Quote;
+					ss += fieldName;
+					ss += SqlConst::Quote;
+					for (const std::string& props : mEles[fieldName])
 					{
-						ss << SSpace << props;
+						ss += SqlConst::Space;
+						ss += props;
 					}
 
-					ss << SSplit;
+					ss += SqlConst::Comma;
 
 					mEles.erase(fieldName);
 				}
 
 				auto it = mEles.begin();
-				auto itEnd = mEles.end();
-				for (; it != itEnd; it++)
+				const auto itEnd = mEles.end();
+				for (; it != itEnd; ++it)
 				{
-					ss << it->first;
-					for (std::string& props : it->second)
+					ss += it->first;
+					for (const std::string& props : it->second)
 					{
-						ss << SSpace << props;
+						ss += SqlConst::Space;
+						ss += props;
 					}
 
-					if (next(it) != itEnd)
+					if (std::next(it) != itEnd)
 					{
-						ss << SSplit;
+						ss += SqlConst::Comma;
 					}
 					else
 					{
-						ss << SSMEnd;
+						ss += SqlConst::End;
 					}
 				}
-				ss << SEnd;
+				ss += SqlConst::Semicolon;
 
 				iExecResultCount = 1;
 				break;
 			}
 			case EMSqlOpType::Insert:
 			{
-				ss << std::format("{} \"{}\"", GetOpTypeBySqlOpType(eType), GetName());
+				ss += std::format("{} \"{}\"", GetOpTypeBySqlOpType(eType), GetName());
 
-				if (!mEles.size())
+				if (mEles.empty())
 				{
 					// key null
 					return;
 				}
 
-				size_t dataLen = mEles.begin()->second.size();
-				if (!dataLen)
+				const size_t dataLen = mEles.begin()->second.size();
+				if (dataLen == 0)
 				{
 					// value null
 					return;
 				}
 
-				ss << SSMBegin;
+				ss += SqlConst::Begin;
 				auto it = mEles.begin();
-				auto itEnd = mEles.end();
-				std::vector<std::list<std::string>> mapping;
-				for (; it != itEnd; it++)
+				const auto itEnd = mEles.end();
+				std::vector<std::vector<std::string>> mapping;
+				mapping.reserve(mEles.size());
+				
+				for (; it != itEnd; ++it)
 				{
-					ss << SQuote << it->first << SQuote;
+					ss += SqlConst::Quote;
+					ss += it->first;
+					ss += SqlConst::Quote;
 
-					mapping.emplace_back(it->second);
+					mapping.emplace_back(it->second.begin(), it->second.end());
 
-					if (next(it) != itEnd)
+					if (std::next(it) != itEnd)
 					{
-						ss << SSplit;
+						ss += SqlConst::Comma;
 					}
 					else
 					{
-						ss << SSMEnd;
+						ss += SqlConst::End;
 					}
 				}
 
-				ss << "VALUES";
+				ss += "VALUES";
 
-				size_t mappingSize = mapping.size() - 1;
-				for (int lst = 0; lst < dataLen; lst++)
+				const size_t mappingSize = mapping.size();
+				for (size_t lst = 0; lst < dataLen; ++lst)
 				{
-					ss << SSMBegin;
-					for (int pos = 0; pos < mapping.size(); pos++)
+					ss += SqlConst::Begin;
+					for (size_t pos = 0; pos < mappingSize; ++pos)
 					{
-						ss << mapping[pos].front();
-						mapping[pos].pop_front();
-						if (mappingSize != pos)
+						ss += mapping[pos][lst];
+						if (pos + 1 < mappingSize)
 						{
-							ss << SSplit;
+							ss += SqlConst::Comma;
 						}
 					}
-					ss << SSMEnd;
+					ss += SqlConst::End;
 
-					if (lst + 1 != dataLen)
+					if (lst + 1 < dataLen)
 					{
-						ss << SSplit;
+						ss += SqlConst::Comma;
 					}
 
-					iExecResultCount = iExecResultCount + 1;
+					++iExecResultCount;
 				}
-				ss << SEnd;
+				ss += SqlConst::Semicolon;
 				break;
 			}
 			case EMSqlOpType::Query:
 			{
 				std::string selectElems;
+				selectElems.reserve(128);
 				auto it = mEles.begin();
-				auto itEnd = mEles.end();
-				for (; it != itEnd; it++)
+				const auto itEnd = mEles.end();
+				for (; it != itEnd; ++it)
 				{
 					if (!iQueryCount)
 					{
 						selectElems.append(it->first);
-						if (next(it) != itEnd)
+						if (std::next(it) != itEnd)
 						{
-							selectElems += SSplit;
+							selectElems += SqlConst::Comma;
 						}
 					}
 					else
@@ -1264,110 +1227,112 @@ private:
 					}
 				}
 
-				ss << std::format("{}{} FROM \"{}\"", GetOpTypeBySqlOpType(eType), selectElems, GetName());
+				ss += std::format("{}{} FROM \"{}\"", GetOpTypeBySqlOpType(eType), selectElems, GetName());
 
 				bool hasCondition = false;
 
-				for (it = mEles.begin(); it != itEnd; it++)
+				for (it = mEles.begin(); it != itEnd; ++it)
 				{
-					for (std::string& cond : it->second)
+					for (const std::string& cond : it->second)
 					{
 						if (!hasCondition)
 						{
 							hasCondition = true;
-							ss << SWHERE;
+							ss += SqlConst::Where;
 						}
 
-						ss << cond;
+						ss += cond;
 					}
 				}
 
-				ss << limit;
+				ss += limit;
 
-				ss << SEnd;
+				ss += SqlConst::Semicolon;
 				break;
 			}
 			case EMSqlOpType::Update:
 			{
-				auto& updates = mEles[SUPDATE];
-				if (!updates.size())
+				const std::string updateKey(SqlConst::Update);
+				auto& updates = mEles[updateKey];
+				if (updates.empty())
 				{
 					throw std::invalid_argument("NOT SET UPDATE PROPERTY !");
 				}
 
 				std::string selectElems;
+				selectElems.reserve(128);
 				auto it = updates.begin();
-				auto itEnd = updates.end();
-				for (; it != itEnd; it++)
+				const auto itEnd = updates.end();
+				for (; it != itEnd; ++it)
 				{
 					selectElems.append(*it);
 
-					if (next(it) != itEnd)
+					if (std::next(it) != itEnd)
 					{
-						selectElems += SSplit;
+						selectElems += SqlConst::Comma;
 					}
 				}
 
-				ss << std::format("{}\"{}\" SET {}", GetOpTypeBySqlOpType(eType), GetName(), selectElems);
+				ss += std::format("{}\"{}\" SET {}", GetOpTypeBySqlOpType(eType), GetName(), selectElems);
 
-				auto& updateConds = mEles[SUPDATECOND];
+				auto& updateConds = mEles[std::string(SqlConst::UpdateCond)];
 
 				bool hasCondition = false;
 
-				for (auto condIt = updateConds.begin(); condIt != updateConds.end(); condIt++)
+				for (auto condIt = updateConds.begin(); condIt != updateConds.end(); ++condIt)
 				{
 					if (!hasCondition)
 					{
 						hasCondition = true;
-						ss << SWHERE;
+						ss += SqlConst::Where;
 					}
 
-					ss << *condIt;
+					ss += *condIt;
 				}
 
-				ss << limit;
+				ss += limit;
 
-				ss << SEnd;
+				ss += SqlConst::Semicolon;
 				break;
 			}
 			case EMSqlOpType::Delete:
 			{
-				ss << std::format("{} \"{}\"", GetOpTypeBySqlOpType(eType), GetName());
+				ss += std::format("{} \"{}\"", GetOpTypeBySqlOpType(eType), GetName());
 
 				bool hasCondition = false;
 
-				if (mEles.size())
+				if (!mEles.empty())
 				{
 					auto it = mEles.begin();
-					auto itEnd = mEles.end();
+					const auto itEnd = mEles.end();
 
-					for (it = mEles.begin(); it != itEnd; it++)
+					for (; it != itEnd; ++it)
 					{
-						for (std::string& cond : it->second)
+						for (const std::string& cond : it->second)
 						{
 							if (!hasCondition)
 							{
 								hasCondition = true;
-								ss << SWHERE;
+								ss += SqlConst::Where;
 							}
 
-							ss << cond;
+							ss += cond;
 						}
 					}
 				}
 
-				ss << limit;
+				ss += limit;
 
-				ss << SEnd;
+				ss += SqlConst::Semicolon;
 				break;
 			}
 			case EMSqlOpType::UpdateTable:
 			{
-				for (auto& [k, items] : mEles)
+				for (const auto& [key, items] : mEles)
 				{
-					for (auto& statement : items)
+					for (const auto& statement : items)
 					{
-						ss << statement;
+						ss += statement;
 					}
 				}
 				break;
@@ -1376,15 +1341,16 @@ private:
 				throw std::invalid_argument("Please Imp BuildSqlStatement Case!");
 		}
 
-		sSqlStatement = ss.str();
+		sSqlStatement = std::move(ss);
 	}
 
-	void PaserQuery(pqxx::result& result)
+	void ParseQuery(pqxx::result& result)
 	{
 		ReleaseResult();
 
 		std::vector<std::string> keys;
-		for (int col = 0; col < result.columns(); ++col)
+		keys.reserve(result.columns());
+		for (pqxx::row_size_type col = 0; col < result.columns(); ++col)
 		{
 			keys.emplace_back(result.column_name(col));
 		}
@@ -1392,14 +1358,15 @@ private:
 		const Descriptor* descriptor = pEntity->GetDescriptor();
 		const Reflection* reflection = pEntity->GetReflection();
 
-		bool isQueryAll = mEles.contains(SSELECTALL);
+		const bool isQueryAll = mEles.contains(std::string(SqlConst::SelectAll));
 
-		for (int row = 0; row < result.size(); row++)
+		mResult.reserve(result.size());
+		for (size_t row = 0; row < result.size(); ++row)
 		{
 			TMessage* gen = pEntity->New();
 
-			pqxx::row rowInfo = result[row];
-			for (int col = 0; col < rowInfo.size(); col++)
+			const pqxx::row& rowInfo = result[row];
+			for (pqxx::row_size_type col = 0; col < rowInfo.size(); ++col)
 			{
 				if (rowInfo[col].is_null())
 				{
@@ -1415,11 +1382,11 @@ private:
 		}
 	}
 
-	void ReleaseResult()
+	void ReleaseResult() noexcept
 	{
-		for (auto& it : mResult)
+		for (auto* item : mResult)
 		{
-			delete it;
+			delete item;
 		}
 		mResult.clear();
 	}
@@ -1429,8 +1396,8 @@ private:
 
 	EMSqlOpType eType = EMSqlOpType::None;
 
-	// create table, instert
-	std::unordered_map<std::string, std::list<std::string>> mEles;
+	// create table, insert
+	std::unordered_map<std::string, std::vector<std::string>> mEles;
 
 	pqxx::dbtransaction* pWork = nullptr;
 
