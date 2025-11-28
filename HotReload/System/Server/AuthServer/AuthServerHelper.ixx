@@ -50,20 +50,19 @@ public:
 		{
 			proxy->onConnection = [this](SocketChannel::CVPtr channel)
 				{
-					ClientProxyHelper::CVPtr proxyHelper = GetClientProxy();
-
-					const std::string& peeraddr = channel->peeraddr();
-
 					World::CVPtr world = GetWorld();
+					
+					ClientProxyHelper::CVPtr proxyHelper = GetClientProxy();
+					
+					const std::string& peeraddr = channel->peeraddr();
 
 					if (channel->isConnected())
 					{
 						LoggerPrint::Log(world, EL10nCode_CliConnOn, peeraddr, channel->fd(), channel->id());
-
-						world->RemoveEvent(EMEventType::ClientProxyRegist);
-
-						world->AddEvent<&AuthServerHelper::HandleClientRegist>(EMEventType::ClientProxyRegist, GetSelf<AuthServerHelper>());
 						proxyHelper->InitConnectedChannel(channel);
+						
+						world->RemoveEvent(EMEventType::ClientProxyRegist);
+						world->AddEvent<&AuthServerHelper::HandleClientRegist>(EMEventType::ClientProxyRegist, GetSelf<AuthServerHelper>());
 					}
 					else
 					{
@@ -75,11 +74,6 @@ public:
 						}
 
 						proxyHelper->SetRegistType(0);
-					}
-
-					if (proxyHelper->isReconnect())
-					{
-
 					}
 				};
 

@@ -36,16 +36,17 @@ public:
 		{
 			proxy->onConnection = [this](SocketChannel::CVPtr channel)
 				{
+					World::CVPtr world = GetWorld();
+					
 					ServerProxyHelper::CVPtr proxyHelper = GetServerProxy();
 
-					World::CVPtr world = GetWorld();
-
 					const std::string& peeraddr = channel->peeraddr();
+					
 					if (channel->isConnected())
 					{
 						LoggerPrint::Log(world, EL10nCode_CliConnOn, peeraddr, channel->fd(), channel->id());
-
 						proxyHelper->InitConnectedChannel(channel);
+
 					}
 					else
 					{

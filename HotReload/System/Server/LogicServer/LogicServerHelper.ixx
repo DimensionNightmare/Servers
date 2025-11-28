@@ -54,11 +54,11 @@ public:
 		{
 			proxy->onConnection = [this](SocketChannel::CVPtr channel)
 				{
-					ServerProxyHelper::CVPtr proxyHelper = GetServerProxy();
-
-					const std::string& peeraddr = channel->peeraddr();
-
 					World::CVPtr world = GetWorld();
+					
+					ServerProxyHelper::CVPtr proxyHelper = GetServerProxy();
+					
+					const std::string& peeraddr = channel->peeraddr();
 
 					if (channel->isConnected())
 					{
@@ -139,19 +139,19 @@ public:
 			//client will re_create please check
 			proxy->onConnection = [this](SocketChannel::CVPtr channel)
 				{
-					ClientProxyHelper::CVPtr proxyHelper = GetClientProxy();
-
-					const std::string& peeraddr = channel->peeraddr();
-
 					World::CVPtr world = GetWorld();
+					
+					ClientProxyHelper::CVPtr proxyHelper = GetClientProxy();
+					
+					const std::string& peeraddr = channel->peeraddr();
 
 					if (channel->isConnected())
 					{
 						LoggerPrint::Log(world, EL10nCode_SrvConnOn, peeraddr, channel->fd(), channel->id());
+						proxyHelper->InitConnectedChannel(channel);
 						
 						world->RemoveEvent(EMEventType::ClientProxyRegist);
 						world->AddEvent<&LogicServerHelper::HandleClientRegist>(EMEventType::ClientProxyRegist, GetSelf<LogicServerHelper>());
-						proxyHelper->InitConnectedChannel(channel);
 					}
 					else
 					{
@@ -177,21 +177,16 @@ public:
 							if (proxyHelper->isConnected())
 							{
 								LoggerPrint::Log(world, ELogLevel_Debug, "orgin not match peeraddr {} reclient ~", origin);
-								proxyHelper->GetTimer()->SetTimeout(200, [this, originIp, originPort](size_t timerID)
+								world->PostTask([this, originIp, originPort]()
 									{
 										ClientProxyHelper::CVPtr proxyHelper = GetClientProxy();
-
+										
 										proxyHelper->RedirectClient(std::stoi(originPort), originIp);
-
 									});
 							}
 						}
 
 						proxyHelper->SetRegistType(0);
-					}
-
-					if (proxyHelper->isReconnect())
-					{
 					}
 				};
 

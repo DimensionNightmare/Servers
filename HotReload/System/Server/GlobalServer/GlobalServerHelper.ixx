@@ -139,17 +139,17 @@ public:
 		{
 			proxy->onConnection = [this](SocketChannel::CVPtr channel)
 				{
-					ServerProxyHelper::CVPtr proxyHelper = GetServerProxy();
-
-					const std::string& peeraddr = channel->peeraddr();
-
 					World::CVPtr world = GetWorld();
+					
+					ServerProxyHelper::CVPtr proxyHelper = GetServerProxy();
+					
+					const std::string& peeraddr = channel->peeraddr();
 
 					if (channel->isConnected())
 					{
 						LoggerPrint::Log(world, EL10nCode_CliConnOn, peeraddr, channel->fd(), channel->id());
-
 						proxyHelper->InitConnectedChannel(channel);
+
 					}
 					else
 					{
@@ -228,11 +228,11 @@ public:
 		{
 			proxy->onConnection = [this](SocketChannel::CVPtr channel)
 				{
-					ClientProxyHelper::CVPtr proxyHelper = GetClientProxy();
-
-					const std::string& peeraddr = channel->peeraddr();
-
 					World::CVPtr world = GetWorld();
+					
+					ClientProxyHelper::CVPtr proxyHelper = GetClientProxy();
+					
+					const std::string& peeraddr = channel->peeraddr();
 
 					if (channel->isConnected())
 					{
@@ -252,11 +252,6 @@ public:
 						}
 
 						proxyHelper->SetRegistType(0);
-					}
-
-					if (proxyHelper->isReconnect())
-					{
-
 					}
 				};
 
