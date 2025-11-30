@@ -44,7 +44,7 @@ public:
 
 					auto newConnection = P_InstanceHolder->GetMemPool().Allocate<pqxx::connection>(connection->connection_string());
 					connection->close();
-					const_cast<std::shared_ptr<pqxx::connection>&>(connection).swap(newConnection);
+					*connection = std::move(*newConnection);
 				}
 
 				if(isReadOnly)
@@ -78,7 +78,7 @@ public:
 	
 private:
 
-	const std::shared_ptr<pqxx::connection>& GetConnection(EMSqlDbNameEnum dbName)
+	std::shared_ptr<pqxx::connection> GetConnection(EMSqlDbNameEnum dbName)
 	{
 		static std::shared_ptr<pqxx::connection> None;
 		if (pRdbProxys.contains(dbName))

@@ -123,7 +123,7 @@ public:
 		std::uniform_int_distribution<int>  u(10000, 99999);
 
 		int randNum = u(gen);
-		std::filesystem::path newDllDir = sDllDir.parent_path()/ "Runtime/HotReload" / std::format("Runtime_{}", randNum);
+		std::filesystem::path newDllDir = sDllDir.parent_path() / "Runtime" / "HotReload" / std::format("Runtime_{}", randNum);
 		try
 		{
 			std::filesystem::create_directories(newDllDir);
@@ -161,6 +161,18 @@ public:
 	void SetExcptionState()
 	{
 		isNormalFree = false;
+	}
+
+	void Clear()
+	{
+		try
+		{
+			std::filesystem::remove_all(sDllDir.parent_path() / "Runtime" / "HotReload");
+		}
+		catch (const std::exception& e)
+		{
+			LoggerPrint::Log(nullptr, ELogLevel_Debug, "filesystem:{}", e.what());
+		}
 	}
 
 protected:

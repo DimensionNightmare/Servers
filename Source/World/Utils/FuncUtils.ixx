@@ -16,6 +16,7 @@ export
 	{
 		using ReturnType = Ret;
 		using ArgType = std::tuple<std::decay_t<Args>...>;
+		using ArgTypeForaward = std::tuple<Args&&...>;
 		
 		static constexpr bool IsMemberFunction = false;
 	};
@@ -25,6 +26,7 @@ export
 	{
 		using ReturnType = Ret;
 		using ArgType = std::tuple<std::decay_t<Args>...>;
+		using ArgTypeForaward = std::tuple<Args&&...>;
 
 		using ClassType = Class;
 
@@ -37,7 +39,6 @@ export
 	{
 		using ReturnType = Ret;
 		using ArgType = std::tuple<std::decay_t<Args>...>;
-
 		using ArgTypeForaward = std::tuple<Args&&...>;
 
 		using FuncSign = std::function<Ret(Args...)>;
@@ -72,6 +73,7 @@ export
 	{
 		using Traits = FunctionTraits<decltype(Func)>;
 		using ArgType = typename Traits::ArgType;
+		using ArgTypeForaward = typename Traits::ArgTypeForaward;
 
 		// 内存空间
 		std::function<Ret(Args...)> mProxy;
@@ -101,7 +103,7 @@ export
 
 		virtual bool Invoke(void* param) override
 		{
-			auto* tuplePtr = static_cast<std::tuple<Args&&...>*>(param);
+			auto* tuplePtr = static_cast<ArgTypeForaward*>(param);
 
 			std::apply([this](auto&&... args)
 				{
@@ -117,6 +119,7 @@ export
 	{
 		using Traits = FunctionTraits<decltype(Func)>;
 		using ArgType = typename Traits::ArgType;
+		using ArgTypeForaward = typename Traits::ArgTypeForaward;
 	private:
 		// 事件代理
 		std::weak_ptr<Class> pInstance;
@@ -176,7 +179,7 @@ export
 
 		virtual bool Invoke(void* param) override
 		{
-			auto* tuplePtr = static_cast<std::tuple<Args&&...>*>(param);
+			auto* tuplePtr = static_cast<ArgTypeForaward*>(param);
 
 			std::apply([this](auto&&... args)
 				{
@@ -214,7 +217,7 @@ export
 #endif
 		}
 
-		~DynamicEventContainer(){}
+		virtual ~DynamicEventContainer(){}
 
 		Ret operator()(auto&&... args) const
 		{

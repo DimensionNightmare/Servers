@@ -261,7 +261,7 @@ public:
 		P_InstanceHolder->AuthWorld->AddSystem<LoggerPrint>();
 		P_InstanceHolder->AuthWorld->AddSystem<L10nText>();
 
-		P_InstanceHolder->AuthWorld->AddSystem<HotReload>();
+		P_InstanceHolder->AuthWorld->AddSystem<HotReload>()->Clear();
 
 		for (const auto& [serverEnum, serverName] : ServerTypeList)
 		{
