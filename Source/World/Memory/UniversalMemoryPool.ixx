@@ -2,20 +2,20 @@ export module UniversalMemoryPool;
 
 import std.compat;
 
+/// @brief Universal memory pool with thread-safe allocation and leak detection
 export class UniversalMemoryPool
 {
-	static constexpr size_t MaxCachedSize = 4096; // 最大缓存块大小
+	static constexpr size_t MaxCachedSize = 4096; // Maximum cached block size
+	static constexpr size_t BucketCount = 16;     // Number of size buckets
 
-	static constexpr size_t BucketCount = 16; // 桶数量
-
-	// 分配记录
+	/// @brief Allocation record for leak detection
 	struct AllocationRecord
 	{
-		size_t size;
-		std::source_location location;
+		size_t size{};
+		std::source_location location{};
 	};
 
-	// 大小分类桶
+	/// @brief Size-based bucket for fast allocation
 	struct SizeBucket
 	{
 		std::shared_mutex mutex;
@@ -26,7 +26,7 @@ public:
 	using Ptr = std::shared_ptr<UniversalMemoryPool>;
 	using CVPtr = const Ptr&;
 
-	UniversalMemoryPool(size_t pool_size = 1024 * 1024 * 32) : iPoolSize(pool_size)
+	explicit UniversalMemoryPool(size_t pool_size = 1024 * 1024 * 32) : iPoolSize(pool_size)
 	{
 		pPool = ::operator new(iPoolSize);
 		AddToFreeList(pPool, iPoolSize);
@@ -34,67 +34,64 @@ public:
 
 	~UniversalMemoryPool()
 	{
-		// 释放桶
 		FreeBucket();
-
-		// 检查泄漏
 		CheckLeaks();
-
-		// 释放主内存池
 		::operator delete(pPool);
 	}
 
-	std::string GetMemoryRecordInfo(void* raw_memory)
+	// Non-copyable, non-movable
+	UniversalMemoryPool(const UniversalMemoryPool&) = delete;
+	UniversalMemoryPool& operator=(const UniversalMemoryPool&) = delete;
+	UniversalMemoryPool(UniversalMemoryPool&&) = delete;
+	UniversalMemoryPool& operator=(UniversalMemoryPool&&) = delete;
+
+	[[nodiscard]] std::string GetMemoryRecordInfo(void* raw_memory)
 	{
 		std::shared_lock lock(oRecordMutex);
 
-		auto it = mAllocatedRecords.find(raw_memory);
-		if(it != mAllocatedRecords.end())
+		if (auto it = mAllocatedRecords.find(raw_memory); it != mAllocatedRecords.end())
 		{
 			const auto& location = it->second.location;
-
 			return std::format("{},{},{}", location.file_name(), location.line(), location.function_name());
 		}
 
-		return "";
+		return {};
 	}
 
 	void SetMemoryRecordInfo(void* raw_memory, std::source_location&& location)
 	{
 		std::shared_lock lock(oRecordMutex);
 		
-		auto it = mAllocatedRecords.find(raw_memory);
-		if(it != mAllocatedRecords.end())
+		if (auto it = mAllocatedRecords.find(raw_memory); it != mAllocatedRecords.end())
 		{
 			it->second.location = std::move(location);
 		}
 	}
 
 	template<typename T, typename... Args>
-	// requires std::invocable<T,Args...>
-	std::shared_ptr<T> Allocate(Args&&... args)
+	[[nodiscard]] std::shared_ptr<T> Allocate(Args&&... args)
 	{
 		constexpr size_t size = std::bit_ceil(sizeof(T));
 		void* raw_memory = nullptr;
 
 		try
 		{
-			// 尝试快速分配
+			// Try fast allocation first
 			raw_memory = TryFastAllocation(size);
-			if (!raw_memory)
+			if (!raw_memory) [[unlikely]]
 			{
 				raw_memory = AllocateRaw(size);
 			}
 
-			if (raw_memory)
+			if (raw_memory) [[likely]]
 			{
-				// 记录分配信息（包含源代码位置）
 				RecordAllocationInfo(raw_memory, size);
 
 				T* object_ptr = new (raw_memory) T(std::forward<Args>(args)...);
 
 				return {
-					object_ptr, [this, raw_memory, size](T* ptr)
+					object_ptr, 
+					[this, raw_memory, size](T* ptr) noexcept
 					{
 						ptr->~T();
 						RollbackAllocation(raw_memory, size);
@@ -102,7 +99,6 @@ public:
 				};
 			}
 
-			// return std::shared_ptr<T>(new T(std::forward<Args>(args)...));
 			return nullptr;
 		}
 		catch (...)
@@ -116,34 +112,30 @@ public:
 	}
 
 protected:
-	// 尝试快速分配
-	void* TryFastAllocation(size_t size)
+	/// @brief Try fast allocation from size bucket
+	[[nodiscard]] void* TryFastAllocation(size_t size) noexcept
 	{
-		// 只尝试缓存小到中等大小的块
-		if (size > MaxCachedSize)
+		if (size > MaxCachedSize) [[unlikely]]
 		{
 			return nullptr;
 		}
 
-		// 获取桶索引
 		size_t bucket_index = GetBucketIndex(size);
 
-		// 尝试从桶中快速获取
+		std::unique_lock lock(mSizeBuckets[bucket_index].mutex);
+		
+		if (!mSizeBuckets[bucket_index].blocks.empty()) [[likely]]
 		{
-			std::unique_lock lock(mSizeBuckets[bucket_index].mutex);
-			
-			if (!mSizeBuckets[bucket_index].blocks.empty())
-			{
-				void* addr = mSizeBuckets[bucket_index].blocks.back();
-				mSizeBuckets[bucket_index].blocks.pop_back();
-				return addr;
-			}
+			void* addr = mSizeBuckets[bucket_index].blocks.back();
+			mSizeBuckets[bucket_index].blocks.pop_back();
+			return addr;
 		}
+
 		return nullptr;
 	}
 
-	// 核心分配函数
-	void* AllocateRaw(size_t size)
+	/// @brief Core allocation from main pool
+	[[nodiscard]] void* AllocateRaw(size_t size)
 	{
 		void* addr = nullptr;
 		
@@ -156,25 +148,22 @@ protected:
 		return addr;
 	}
 
-	// 辅助函数：从迭代器分配（修复死锁）
+	/// @brief Allocate from iterator with block splitting
 	void* AllocateFromIterator(auto it, size_t size)
 	{
 		void* addr = it->first;
 		size_t block_size = it->second;
 		void* raw_memory = addr;
 
-		if (block_size >= size)
+		if (block_size >= size) [[likely]]
 		{
-			// 将剩余块添加到合适的空闲链表
 			size_t remaining = block_size - size;
 			void* remaining_addr = static_cast<uint8_t*>(addr) + size;
 
-			// 直接添加剩余块，避免调用AddToFreeList
 			if (remaining <= MaxCachedSize)
 			{
 				size_t bucket_index = GetBucketIndex(remaining);
 				std::unique_lock lock(mSizeBuckets[bucket_index].mutex);
-				
 				mSizeBuckets[bucket_index].blocks.push_back(remaining_addr);
 			}
 			else
@@ -187,82 +176,58 @@ protected:
 		return raw_memory;
 	}
 
-	// 添加块到空闲链表（修复死锁）
-	bool AddToFreeList(void* addr, size_t size)
+	/// @brief Add block to free list
+	bool AddToFreeList(void* addr, size_t size) noexcept
 	{
-		// 如果大小在缓存范围内，添加到桶中
 		if (size <= MaxCachedSize)
 		{
 			size_t bucket_index = GetBucketIndex(size);
 			std::unique_lock lock(mSizeBuckets[bucket_index].mutex);
-			
 			mSizeBuckets[bucket_index].blocks.push_back(addr);
-
 			return true;
 		}
-		// 否则添加到主内存池
 		else
 		{
 			std::unique_lock lock(oMainMutex);
-			
 			mFreeBlocks.emplace(addr, size);
 		}
 
 		return false;
 	}
 
-	// 获取桶索引
-	size_t GetBucketIndex(size_t size)
+	/// @brief Calculate bucket index using bit width
+	[[nodiscard]] static constexpr size_t GetBucketIndex(size_t size) noexcept
 	{
-		// 使用位宽计算桶索引
-		return std::min<size_t>(
-			std::bit_width(size),
-			BucketCount - 1
-		);
+		return std::min<size_t>(std::bit_width(size), BucketCount - 1);
 	}
 
-	// 记录分配信息
+	/// @brief Record allocation for leak detection
 	void RecordAllocationInfo(void* memory, size_t size)
 	{
-		
 		std::unique_lock lock(oRecordMutex);
 
-		AllocationRecord record;
-		record.size = size;
-
-		mAllocatedRecords[memory] = record;
+		mAllocatedRecords[memory] = AllocationRecord{ .size = size };
 	}
 
-	void RollbackAllocation(void* raw_memory, size_t size)
+	/// @brief Rollback allocation on failure or deallocation
+	void RollbackAllocation(void* raw_memory, size_t size) noexcept
 	{
-		if(!AddToFreeList(raw_memory, size)) // 如果没加在桶中
+		if (!AddToFreeList(raw_memory, size))
 		{
 			std::unique_lock lock(oRecordMutex);
-			
-			auto it = mAllocatedRecords.find(raw_memory);
-			if (it != mAllocatedRecords.end())
-			{
-				mAllocatedRecords.erase(it);
-			}
-			// *** maybe second BucketFree
-			// else
-			// {
-			// 	std::cerr << "Warning: Attempted to rollback untracked memory at "
-			// 		<< std::format("{}", raw_memory) << "\n";
-			// }
+			mAllocatedRecords.erase(raw_memory);
 		}
 	}
 
-	// 检查内存泄漏
-	void CheckLeaks()
+	/// @brief Check for memory leaks on destruction
+	void CheckLeaks() const
 	{
 		std::shared_lock lock(oRecordMutex);
 
-		if (!mAllocatedRecords.empty())
+		if (!mAllocatedRecords.empty()) [[unlikely]]
 		{
 			std::cerr << "\n\n*** MEMORY LEAK DETECTED ***\n";
-			std::cerr << "Leaked " << mAllocatedRecords.size()
-				<< " block(s) of memory\n";
+			std::cerr << "Leaked " << mAllocatedRecords.size() << " block(s) of memory\n";
 
 			for (const auto& [addr, record] : mAllocatedRecords)
 			{
@@ -276,15 +241,14 @@ protected:
 		}
 	}
 
-	// 查找合适空闲块（优化版）
-	auto FindFreeBlock(size_t size)
+	/// @brief Find best-fit free block
+	[[nodiscard]] auto FindFreeBlock(size_t size)
 	{
-		// 使用高效算法查找最佳匹配块
 		auto best_fit = mFreeBlocks.end();
 
 		for (auto it = mFreeBlocks.begin(); it != best_fit; ++it)
 		{
-			if (it->second >= size)
+			if (it->second >= size) [[likely]]
 			{
 				return it;
 			}
@@ -293,11 +257,12 @@ protected:
 		return best_fit;
 	}
 
+	/// @brief Free all bucket memory
 	void FreeBucket()
 	{
-		for(const auto& bucket : mSizeBuckets)
+		for (const auto& bucket : mSizeBuckets)
 		{
-			for(void* block : bucket.blocks)
+			for (void* block : bucket.blocks)
 			{
 				mAllocatedRecords.erase(block);
 			}
@@ -305,18 +270,17 @@ protected:
 	}
 
 protected:
-
 	void* pPool = nullptr;
 	size_t iPoolSize = 0;
 
-	// 主内存池
+	// Main memory pool
 	std::unordered_map<void*, size_t> mFreeBlocks;
-	std::shared_mutex oMainMutex;
-	std::shared_mutex oRecordMutex;
+	mutable std::shared_mutex oMainMutex;
+	mutable std::shared_mutex oRecordMutex;
 
-	// 大小分类桶
+	// Size buckets for fast allocation
 	std::array<SizeBucket, BucketCount> mSizeBuckets;
 
-	// 分配记录
+	// Allocation records for leak detection
 	std::unordered_map<void*, AllocationRecord> mAllocatedRecords;
 };
