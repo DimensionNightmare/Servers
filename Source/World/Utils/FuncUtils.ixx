@@ -8,9 +8,11 @@ export
 
 #pragma region FunctionTraits
 
+	/// @brief Type traits for function types
 	template<typename T>
 	struct FunctionTraits;
 
+	/// @brief Specialization for function pointers
 	template<typename Ret, typename... Args>
 	struct FunctionTraits<Ret(*)(Args...)>
 	{
@@ -21,6 +23,7 @@ export
 		static constexpr bool IsMemberFunction = false;
 	};
 
+	/// @brief Specialization for member function pointers
 	template<typename Ret, typename Class, typename... Args>
 	struct FunctionTraits<Ret(Class::*)(Args...)>
 	{
@@ -31,11 +34,11 @@ export
 		using ClassType = Class;
 
 		static constexpr bool IsMemberFunction = true;
-
 	};
 
+	/// @brief Specialization for std::function
 	template<typename Ret, typename... Args>
-	struct FunctionTraits<std::function<Ret(Args...)> >
+	struct FunctionTraits<std::function<Ret(Args...)>>
 	{
 		using ReturnType = Ret;
 		using ArgType = std::tuple<std::decay_t<Args>...>;
@@ -50,6 +53,7 @@ export
 
 #pragma region EventContainer
 	
+	/// @brief Interface for event containers using virtual dispatch
 	struct IEventContainer
 	{
 		size_t mTypeHash = 0;
@@ -58,6 +62,7 @@ export
 		std::string_view sTypeSign;
 #endif
 
+		virtual ~IEventContainer() = default;
 		virtual bool Invoke(void* param) = 0;
 	};
 
@@ -67,18 +72,17 @@ export
 	template<typename Func>
 	class DynamicEventContainer;
 
-
+	/// @brief Event container for static function pointers
 	template<typename Ret, typename... Args, Ret(*Func)(Args...)>
-	class EventContainer<Func> : public IEventContainer
+	class EventContainer<Func> final : public IEventContainer
 	{
 		using Traits = FunctionTraits<decltype(Func)>;
 		using ArgType = typename Traits::ArgType;
 		using ArgTypeForaward = typename Traits::ArgTypeForaward;
 
-		// 内存空间
 		std::function<Ret(Args...)> mProxy;
-	public:
 
+	public:
 		EventContainer()
 		{
 			constexpr auto typeHash = TupleTypeHash<ArgType>();
@@ -89,49 +93,45 @@ export
 			sTypeSign = typeSign;
 #endif
 			mProxy = [](auto&&... args) -> Ret
-				{
-					return Func(args...);
-				};
+			{
+				return Func(std::forward<decltype(args)>(args)...);
+			};
 		}
 
-		~EventContainer(){}
+		~EventContainer() override = default;
 
 		Ret operator()(auto&&... args) const
 		{
-			return mProxy(args...);
+			return mProxy(std::forward<decltype(args)>(args)...);
 		}
 
-		virtual bool Invoke(void* param) override
+		bool Invoke(void* param) override
 		{
 			auto* tuplePtr = static_cast<ArgTypeForaward*>(param);
 
 			std::apply([this](auto&&... args)
-				{
-					this->operator()(args...);
-				}, *tuplePtr);
+			{
+				(*this)(std::forward<decltype(args)>(args)...);
+			}, *tuplePtr);
 
 			return true;
 		}
 	};
 
+	/// @brief Event container for member function pointers
 	template<typename Ret, typename Class, typename... Args, Ret(Class::* Func)(Args...)>
-	class EventContainer<Func> : public IEventContainer
+	class EventContainer<Func> final : public IEventContainer
 	{
 		using Traits = FunctionTraits<decltype(Func)>;
 		using ArgType = typename Traits::ArgType;
 		using ArgTypeForaward = typename Traits::ArgTypeForaward;
+
 	private:
-		// 事件代理
 		std::weak_ptr<Class> pInstance;
-
-		// 空间代理
 		Class* pInstanceOrigin = nullptr;
-
-		// 内存空间
 		std::function<Ret(Class*, Args...)> mProxy;
 
 	public:
-
 		EventContainer()
 		{
 			constexpr auto typeHash = TupleTypeHash<ArgType>();
@@ -142,59 +142,62 @@ export
 			sTypeSign = typeSign;
 #endif
 			mProxy = [](Class* obj, auto&&... args) -> Ret
-				{
-					return (obj->*Func)(args...);
-				};
+			{
+				return (obj->*Func)(std::forward<decltype(args)>(args)...);
+			};
 		}
 
-		EventContainer(Class* instance) : EventContainer()
+		explicit EventContainer(Class* instance) : EventContainer()
 		{
 			pInstanceOrigin = instance;
 		}
 	
-		EventContainer(const std::shared_ptr<Class>& instance) : EventContainer()
+		explicit EventContainer(const std::shared_ptr<Class>& instance) : EventContainer()
 		{
 			pInstance = instance;
 		}
 
+		~EventContainer() override = default;
+
 		Ret operator()(auto&&... args) const
 		{
-			if(pInstanceOrigin)
+			if (pInstanceOrigin) [[likely]]
 			{
-				return mProxy(pInstanceOrigin, args...);
+				return mProxy(pInstanceOrigin, std::forward<decltype(args)>(args)...);
 			}
 
-			if (auto instance = pInstance.lock())
+			if (auto instance = pInstance.lock()) [[likely]]
 			{
-				return mProxy(instance.get(), args...);
+				return mProxy(instance.get(), std::forward<decltype(args)>(args)...);
 			}
 			
 			throw std::runtime_error("Tick EventContainer Error");
 		}
 
-		bool IsValid() const
+		[[nodiscard]] bool IsValid() const noexcept
 		{
-			return !pInstance.expired();
+			return pInstanceOrigin != nullptr || !pInstance.expired();
 		}
 
-		virtual bool Invoke(void* param) override
+		bool Invoke(void* param) override
 		{
 			auto* tuplePtr = static_cast<ArgTypeForaward*>(param);
 
 			std::apply([this](auto&&... args)
+			{
+				if (IsValid()) [[likely]]
 				{
-					if(IsValid())
-					{
-						(*this)(args...);;
-					}
-				}, *tuplePtr);
+					(*this)(std::forward<decltype(args)>(args)...);
+				}
+			}, *tuplePtr);
 
 			return true;
 		}
 	};
 
+	/// @brief Event container for dynamic function objects
 	template<typename Func>
-	class DynamicEventContainer : public IEventContainer
+	class DynamicEventContainer final : public IEventContainer
 	{
 	private:
 		Func mProxy;
@@ -205,8 +208,7 @@ export
 		using ArgTypeForaward = typename Traits::ArgTypeForaward;
 
 	public:
-	
-		DynamicEventContainer(Func* func) : mProxy(std::move(*func))
+		explicit DynamicEventContainer(Func* func) : mProxy(std::move(*func))
 		{
 			constexpr auto typeHash = TupleTypeHash<ArgType>();
 			mTypeHash = typeHash;
@@ -217,26 +219,29 @@ export
 #endif
 		}
 
-		virtual ~DynamicEventContainer(){}
+		~DynamicEventContainer() override = default;
 
 		Ret operator()(auto&&... args) const
 		{
-			return mProxy(args...);
+			return mProxy(std::forward<decltype(args)>(args)...);
 		}
 
-		bool IsValid() const { return mProxy != nullptr; }
+		[[nodiscard]] bool IsValid() const noexcept 
+		{ 
+			return static_cast<bool>(mProxy); 
+		}
 
-		virtual bool Invoke(void* param) override
+		bool Invoke(void* param) override
 		{
 			auto* tuplePtr = static_cast<ArgTypeForaward*>(param);
 
 			std::apply([this](auto&&... args)
+			{
+				if (IsValid()) [[likely]]
 				{
-					if(IsValid())
-					{
-						(*this)(args...);
-					}
-				}, *tuplePtr);
+					(*this)(std::forward<decltype(args)>(args)...);
+				}
+			}, *tuplePtr);
 
 			return true;
 		}
@@ -246,15 +251,16 @@ export
 
 }
 
+/// @brief CRTP helper class for type-safe inheritance
 export template <typename Derived, typename Base>
 class Helper : public Base
 {
 public:
-
 	using Base::Base;
 	using Ptr = std::shared_ptr<Derived>;
 	using CVPtr = const Ptr&;
 	
+	// Delete all copy/move operations and memory management
 	Helper() = delete;
 	Helper(Helper&) = delete;
 	Helper(const Helper&) = delete;
@@ -267,8 +273,13 @@ public:
 	void* operator new(size_t) = delete;
 	void operator delete(void*) = delete;
 	
-	Base* GetBase()
+	[[nodiscard]] Base* GetBase() noexcept
 	{
 		return static_cast<Base*>(this);
+	}
+
+	[[nodiscard]] const Base* GetBase() const noexcept
+	{
+		return static_cast<const Base*>(this);
 	}
 };

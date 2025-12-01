@@ -14,23 +14,41 @@ class BitFlag
 {
 public:
 	using NumType = std::underlying_type_t<T>;
-	// using MaxTypeNum = std::numeric_limits<NumType>::max();
+	static constexpr NumType MaxValue = std::to_underlying(T::Max);
 
-	constexpr void CheckBounds(NumType flag) const {
-		if (flag >= std::to_underlying(T::Max)) {
+	void CheckBounds(this auto&& self, NumType flag) {
+		if (flag >= MaxValue) [[unlikely]] {
 			throw std::out_of_range("Flag value out of bounds");
 		}
     }
 
-	bool HasFlag(T flag) { return oFlags.test(std::to_underlying(flag)); }
-	void SetFlag(T flag) { oFlags.set(std::to_underlying(flag)); }
-	void SetFlag(NumType flag) { CheckBounds(flag); oFlags.set(flag);}
-	void ClearFlag(T flag) { oFlags.reset(std::to_underlying(flag)); }
-	size_t GetAllFlagNum() { return oFlags.to_ullong(); }
-	size_t GetAllFlagCount() { return oFlags.count(); }
-private:
+	[[nodiscard]] constexpr bool HasFlag(this auto const& self, T flag) noexcept { 
+		return self.oFlags.test(std::to_underlying(flag)); 
+	}
+	
+	constexpr void SetFlag(this auto&& self, T flag) noexcept { 
+		self.oFlags.set(std::to_underlying(flag)); 
+	}
+	
+	constexpr void SetFlag(this auto&& self, NumType flag) { 
+		self.CheckBounds(flag); 
+		self.oFlags.set(flag);
+	}
+	
+	constexpr void ClearFlag(this auto&& self, T flag) noexcept { 
+		self.oFlags.reset(std::to_underlying(flag)); 
+	}
+	
+	[[nodiscard]] constexpr size_t GetAllFlagNum(this auto const& self) noexcept { 
+		return self.oFlags.to_ullong(); 
+	}
+	
+	[[nodiscard]] constexpr size_t GetAllFlagCount(this auto const& self) noexcept { 
+		return self.oFlags.count(); 
+	}
 
-	static_assert(std::to_underlying(T::Max) <= std::numeric_limits<size_t>::max(), 
+private:
+	static_assert(MaxValue <= std::numeric_limits<size_t>::max(), 
                  "T::Max exceeds std::bitset size limit");
-	std::bitset<std::to_underlying(T::Max)> oFlags;
+	std::bitset<MaxValue> oFlags{};
 };

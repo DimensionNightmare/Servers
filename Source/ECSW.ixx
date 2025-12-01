@@ -70,21 +70,23 @@ export struct InstanceHolder
 {
 	using Ptr = std::shared_ptr<InstanceHolder>;
 	using CVPtr = const Ptr&;
+
 	InstanceHolder()
 	{
 		MemPool = std::make_shared<UniversalMemoryPool>();
 	}
 
+	/// @brief Context for memory pool allocation with source location tracking
 	struct MemPoolContext
 	{
 		std::source_location oLocation;
 		UniversalMemoryPool::Ptr pMemPool;
 
 		template<typename T, typename... Args>
-		std::shared_ptr<T> Allocate(Args&&... args)
+		[[nodiscard]] std::shared_ptr<T> Allocate(Args&&... args)
 		{
-			std::shared_ptr<T> object = pMemPool->Allocate<T>(std::forward<Args>(args)...);
-			if (object)
+			auto object = pMemPool->Allocate<T>(std::forward<Args>(args)...);
+			if (object) [[likely]]
 			{
 				pMemPool->SetMemoryRecordInfo(object.get(), std::move(oLocation));
 			}
@@ -95,62 +97,65 @@ export struct InstanceHolder
 	void Unload();
 
 	UniversalMemoryPool::Ptr MemPool;
-
 	std::shared_ptr<World> AuthWorld;
-
 	std::shared_ptr<World> MainWorld;
 
-	MemPoolContext GetMemPool(const std::source_location& location = std::source_location::current())
+	[[nodiscard]] MemPoolContext GetMemPool(const std::source_location& location = std::source_location::current()) noexcept
 	{
-		MemPoolContext context;
-		context.oLocation = std::move(location);
-		context.pMemPool = MemPool;
-
-		return context;
+		return MemPoolContext{
+			.oLocation = location,
+			.pMemPool = MemPool
+		};
 	}
-
 };
 
 export std::shared_ptr<InstanceHolder> P_InstanceHolder;
 
 #pragma region Event
 
-export  // enum class only. enum dont.
-template<typename EnumT>
+/// @brief Type-safe event system using enum types
+export template<typename EnumT>
 requires std::is_enum_v<EnumT>
 class Event
 {
 public:
-
+	/// @brief Register a member function as event handler
 	template<auto Func>
 	bool AddEvent(EnumT type, std::shared_ptr<typename FunctionTraits<decltype(Func)>::ClassType> entity)
 	{
-		if(!entity)
+		if (!entity) [[unlikely]]
 		{
 			return false;
 		}
 
 		size_t objId = entity->ID();
-		mEventIdMap[objId][type] = std::make_unique< EventContainer<Func> >(entity);
+		mEventIdMap[objId][type] = std::make_unique<EventContainer<Func>>(entity);
 		mEventCollection[type][objId] = objId;
 
 		return true;
 	}
 
+	/// @brief Register a callable as event handler
 	void AddEvent(EnumT type, auto&& func)
 	{
 		using Traits = FunctionTraits<std::decay_t<decltype(func)>>;
 		using FuncSign = typename Traits::FuncSign;
 
-		mEventCollectionWithoutId[type].emplace_back(std::make_unique< DynamicEventContainer<FuncSign> >(&func));
+		mEventCollectionWithoutId[type].emplace_back(
+			std::make_unique<DynamicEventContainer<FuncSign>>(&func)
+		);
 	}
 
+	/// @brief Register a static function as event handler
 	template<auto Func>
 	void AddEvent(EnumT type)
 	{
-		mEventCollectionWithoutId[type].emplace_back(std::make_unique< EventContainer<Func> >());
+		mEventCollectionWithoutId[type].emplace_back(
+			std::make_unique<EventContainer<Func>>()
+		);
 	}
 
+	/// @brief Broadcast event to all registered handlers
 	template<typename... Args>
 	void Broadcast(EnumT type, Args&&... args)
 	{
@@ -160,7 +165,7 @@ public:
 
 		auto dealFunc = [&](IEventContainer* handle)
 		{
-			if(handle->mTypeHash == typeHash)
+			if (handle->mTypeHash == typeHash) [[likely]]
 			{
 				handle->Invoke(&params);
 			}
@@ -177,10 +182,11 @@ public:
 			}
 		};
 
+		// Process object-bound events
 		{
 			auto handles = mEventCollection[type]
 				| std::views::keys
-				| std::views::transform([&](const auto& param){
+				| std::views::transform([this, type](const auto& param) {
 					return mEventIdMap[param][type].get();
 				}); 
 
@@ -190,25 +196,22 @@ public:
 			}
 		}
 		
+		// Process standalone events
 		{
 			for (const auto& handle : mEventCollectionWithoutId[type])
 			{
 				dealFunc(handle.get());
 			}
 		}
-
 	}
 
+	/// @brief Move events from one type to another
 	void MoveEvent(EnumT origin, EnumT target)
 	{
-
 		{
 			mEventCollection[target] = std::move(mEventCollection[origin]);
 			
-			auto objIds = mEventCollection[target]
-				| std::views::values;
-
-			for (const auto& objId : objIds)
+			for (const auto& objId : mEventCollection[target] | std::views::values)
 			{
 				auto& map = mEventIdMap[objId];
 				map[target] = std::move(map[origin]);
@@ -221,20 +224,16 @@ public:
 		{
 			mEventCollectionWithoutId[target] = std::move(mEventCollectionWithoutId[origin]);
 		}
-
 	}
 
-
+	/// @brief Remove all events of a type
 	void RemoveEvent(EnumT origin)
 	{
 		{
 			auto map = std::move(mEventCollection[origin]);
 			mEventCollection.erase(origin);
 
-			auto objIds = map 
-				| std::views::values;
-
-			for (const auto& objId : objIds)
+			for (const auto& objId : map | std::views::values)
 			{
 				mEventIdMap[objId].erase(origin);
 			}
@@ -245,15 +244,12 @@ public:
 		}
 	}
 
+	/// @brief Remove all events for an object
 	void RemoveEvent(size_t objId)
 	{
-		auto it = mEventIdMap.find(objId);
-		if (it != mEventIdMap.end())
+		if (auto it = mEventIdMap.find(objId); it != mEventIdMap.end())
 		{
-			auto names = it->second 
-				| std::views::keys;
-
-			for (const auto& type : names)
+			for (const auto& type : it->second | std::views::keys)
 			{
 				mEventCollection[type].erase(objId);
 			}
@@ -263,16 +259,16 @@ public:
 	}
 
 protected:
-	std::unordered_map<size_t, std::unordered_map<EnumT, std::unique_ptr<IEventContainer> > > mEventIdMap;
+	std::unordered_map<size_t, std::unordered_map<EnumT, std::unique_ptr<IEventContainer>>> mEventIdMap;
 	std::unordered_map<EnumT, std::unordered_map<size_t, size_t>> mEventCollection;
-
-	std::unordered_map<EnumT, std::list<std::unique_ptr<IEventContainer> >> mEventCollectionWithoutId;
+	std::unordered_map<EnumT, std::list<std::unique_ptr<IEventContainer>>> mEventCollectionWithoutId;
 };
 
 #pragma endregion
 
 #pragma region Object
 
+/// @brief Base object class with automatic disposal tracking
 export class Object : public std::enable_shared_from_this<Object>
 {
 public:
@@ -280,34 +276,34 @@ public:
 	using CVPtr = const Ptr&;
 
 	Object() = default;
+	Object(const Object&) = delete;
+	Object& operator=(const Object&) = delete;
+	Object(Object&&) = delete;
+	Object& operator=(Object&&) = delete;
 
 	virtual ~Object()
 	{
-		if (!bIsDisposed)
+		if (!bIsDisposed) [[unlikely]]
 		{
-			// throw std::runtime_error("Object not disposed! Please check code!");
 			std::cerr << "Object not disposed! Please check code!\n" << Platform::GetStackTrace() << "\n";
-			if (P_InstanceHolder->MemPool)
+			if (P_InstanceHolder && P_InstanceHolder->MemPool)
 			{
-				std::cerr << "Object not disposed! Please check code!\n" << P_InstanceHolder->MemPool->GetMemoryRecordInfo(this) << "\n";
+				std::cerr << "Object not disposed! Please check code!\n" 
+					<< P_InstanceHolder->MemPool->GetMemoryRecordInfo(this) << "\n";
 				__debugbreak();
 			}
 		}
 	}
 
-public: 
+	[[nodiscard]] size_t ID() const noexcept { return iId; }
 
-	size_t ID() { return iId; }
-
-	void SetID(size_t id) { iId = id; }
+	void SetID(size_t id) noexcept { iId = id; }
 
 	virtual void Dispose()
 	{
 		bIsDisposed = true;
 
-		int useCount = weak_from_this().use_count();
-
-		if(useCount > 1)
+		if (int useCount = weak_from_this().use_count(); useCount > 1) [[unlikely]]
 		{
 			std::cerr << "Object disposed Has Other Owner! Please check Other Obj!\n";
 			__debugbreak();
@@ -317,14 +313,15 @@ public:
 	virtual bool Awake() { return true; }
 
 	template<typename T>
-	std::shared_ptr<T> GetSelf() { return std::static_pointer_cast<T>(shared_from_this()); }
+	[[nodiscard]] std::shared_ptr<T> GetSelf() 
+	{ 
+		return std::static_pointer_cast<T>(shared_from_this()); 
+	}
 
-	bool IsDisposed() { return bIsDisposed; }
+	[[nodiscard]] bool IsDisposed() const noexcept { return bIsDisposed; }
 
 protected:
-
 	size_t iId = SFIdGenerator.nextId();
-
 	bool bIsDisposed = false;
 };
 
@@ -333,40 +330,40 @@ protected:
 #pragma region Component
 
 
+/// @brief Component base class attached to entities
 export class Component : public Object
 {
 protected:
-	Component(const std::shared_ptr<Entity>& owner) :
-		pOwner(owner)
+	explicit Component(const std::shared_ptr<Entity>& owner) noexcept
+		: pOwner(owner)
 	{
-
 	}
+
 public:
 	using Ptr = std::shared_ptr<Component>;
 	using CVPtr = const Ptr&;
 
-	/// @brief this component owner
-	virtual ~Component()
-	{
+	~Component() override = default;
+
+	void Dispose() override;
+
+	[[nodiscard]] std::shared_ptr<Entity> GetOwner() noexcept 
+	{ 
+		return pOwner.expired() ? nullptr : pOwner.lock(); 
 	}
 
-	virtual void Dispose() override;
-
-	std::shared_ptr<Entity> GetOwner() { return pOwner.expired() ? nullptr : pOwner.lock(); }
-
 	template<typename T>
-	std::shared_ptr<T> GetOwner() { return std::static_pointer_cast<T>(GetOwner()); }
+	[[nodiscard]] std::shared_ptr<T> GetOwner() noexcept 
+	{ 
+		return std::static_pointer_cast<T>(GetOwner()); 
+	}
 
-	std::shared_ptr<World> GetWorld();
+	[[nodiscard]] std::shared_ptr<World> GetWorld();
 
-public:
+	[[nodiscard]] EMComponentType GetComponentType() const noexcept { return eComponentType; }
 
-	EMComponentType GetComponentType() { return eComponentType; }
-
-protected: // dll proxy
-
+protected:
 	EMComponentType eComponentType = EMComponentType::None;
-
 	std::weak_ptr<Entity> pOwner;
 };
 
@@ -374,57 +371,49 @@ protected: // dll proxy
 
 #pragma region Entity
 
+/// @brief Entity base class with component management
 export class Entity : public Object
 {
 protected:
-	Entity(const std::shared_ptr<World>& world) :
-		pWorld(world)
+	explicit Entity(const std::shared_ptr<World>& world) noexcept
+		: pWorld(world)
 	{
-
 	}
 
 public:
 	using Ptr = std::shared_ptr<Entity>;
 	using CVPtr = const Ptr&;
-
 	using WPtr = std::weak_ptr<Entity>;
 
-	virtual ~Entity()
-	{
+	~Entity() override = default;
+
+	[[nodiscard]] EMEntityType GetEntityType() const noexcept { return eEntityType; }
+
+	[[nodiscard]] std::shared_ptr<World> GetWorld() noexcept 
+	{ 
+		return pWorld.expired() ? nullptr : pWorld.lock(); 
 	}
 
-public: 
-
-	/// @brief entity type total enum
-	EMEntityType GetEntityType() { return eEntityType; }
-
-	std::shared_ptr<World> GetWorld() { return pWorld.expired() ? nullptr : pWorld.lock(); }
-
 	template<typename T>
-	std::shared_ptr<T> GetComponent(EMComponentType type)
+	[[nodiscard]] std::shared_ptr<T> GetComponent(EMComponentType type) noexcept
 	{
-		// this while lock when dispose***
-		// std::unique_lock ulock(mComponentLock);
-
-		auto it = mComponents.find(type);
-		if(it != mComponents.end() && !it->second->IsDisposed())
+		if (auto it = mComponents.find(type); it != mComponents.end() && !it->second->IsDisposed())
 		{
 			return std::static_pointer_cast<T>(it->second);
 		}
-
 		return nullptr;
 	}
 
-	virtual void Dispose() override;
+	void Dispose() override;
 
 	template<typename T>
-	std::shared_ptr<T> AddComponent(const std::source_location& location = std::source_location::current())
+	[[nodiscard]] std::shared_ptr<T> AddComponent(const std::source_location& location = std::source_location::current())
 	{
-		static_assert(std::is_base_of_v<Component, T>, "T must inherit from component");
+		static_assert(std::is_base_of_v<Component, T>, "T must inherit from Component");
 		try
 		{
-			std::shared_ptr<T> component = P_InstanceHolder->GetMemPool(location).Allocate<T>(GetSelf<Entity>());
-			if (!component->Awake())
+			auto component = P_InstanceHolder->GetMemPool(location).Allocate<T>(GetSelf<Entity>());
+			if (!component->Awake()) [[unlikely]]
 			{
 				component->Dispose();
 				return nullptr;
@@ -437,25 +426,19 @@ public:
 		{
 			std::cerr << e.what() << '\n';
 		}
-
 		return nullptr;
 	}
 
 	void RemoveComponent(EMComponentType type)
 	{
 		std::unique_lock ulock(mComponentLock);
-
 		mComponents.erase(type);
 	}
 
-protected: // dll proxy
-
+protected:
 	EMEntityType eEntityType = EMEntityType::None;
-
 	std::weak_ptr<World> pWorld;
-
 	std::unordered_map<EMComponentType, std::shared_ptr<Component>> mComponents;
-
 	std::shared_mutex mComponentLock;
 };
 
@@ -463,34 +446,31 @@ protected: // dll proxy
 
 #pragma region System
 
+/// @brief System entity with specialized component management
 export class System : public Entity
 {
 protected:
-
-	System(const std::shared_ptr<World>& world)
+	explicit System(const std::shared_ptr<World>& world) noexcept
 		: Entity(world)
 	{
 	}
-
 
 public:
 	using Ptr = std::shared_ptr<System>;
 	using CVPtr = const Ptr&;
 
-	virtual ~System()
-	{
-	}
+	~System() override = default;
 
-	EMSystemType GetSystemType() { return emSystemType; }
+	[[nodiscard]] EMSystemType GetSystemType() const noexcept { return emSystemType; }
 
 	template<typename T>
-	std::shared_ptr<T> AddComponent(const std::source_location& location = std::source_location::current())
+	[[nodiscard]] std::shared_ptr<T> AddComponent(const std::source_location& location = std::source_location::current())
 	{
-		static_assert(std::is_base_of_v<Component, T>, "T must inherit from component");
+		static_assert(std::is_base_of_v<Component, T>, "T must inherit from Component");
 		try
 		{
-			std::shared_ptr<T> component = P_InstanceHolder->GetMemPool(location).Allocate<T>(GetSelf<System>());
-			if (!component->Awake())
+			auto component = P_InstanceHolder->GetMemPool(location).Allocate<T>(GetSelf<System>());
+			if (!component->Awake()) [[unlikely]]
 			{
 				component->Dispose();
 				return nullptr;
@@ -502,12 +482,10 @@ public:
 		{
 			std::cerr << e.what() << '\n';
 		}
-
 		return nullptr;
 	}
 
 protected:
-
 	EMSystemType emSystemType = EMSystemType::None;
 };
 
@@ -516,6 +494,7 @@ protected:
 
 #pragma region World
 
+/// @brief World class managing systems and events
 export class World : public Object, public Event<EMEventType>
 {
 public:
@@ -524,20 +503,16 @@ public:
 	using WPtr = std::weak_ptr<World>;
 
 	World() = default;
-
-	virtual ~World()
-	{
-	}
-	
+	~World() override = default;
 
 	template<typename T = System>
-	std::shared_ptr<T> AddSystem(const std::source_location& location = std::source_location::current())
+	[[nodiscard]] std::shared_ptr<T> AddSystem(const std::source_location& location = std::source_location::current())
 	{
 		static_assert(std::is_base_of_v<System, T>, "T must inherit from System");
 		try
 		{
-			std::shared_ptr<T> system = P_InstanceHolder->GetMemPool(location).Allocate<T>(GetSelf<World>());
-			if (!system->Awake())
+			auto system = P_InstanceHolder->GetMemPool(location).Allocate<T>(GetSelf<World>());
+			if (!system->Awake()) [[unlikely]]
 			{
 				system->Dispose();
 				return nullptr;
@@ -550,27 +525,17 @@ public:
 		{
 			std::cerr << e.what() << '\n';
 		}
-
 		return nullptr;
 	}
 
 	template<typename T = System>
-	std::shared_ptr<T> GetSystem(EMSystemType type)
+	[[nodiscard]] std::shared_ptr<T> GetSystem(EMSystemType type) noexcept
 	{
 		static_assert(std::is_base_of_v<System, T>, "T must inherit from System");
-		try
+		if (auto it = mSystemMap.find(type); it != mSystemMap.end() && !it->second->IsDisposed())
 		{
-			auto it = mSystemMap.find(type);
-			if(it != mSystemMap.end() && !it->second->IsDisposed())
-			{
-				return std::static_pointer_cast<T>(it->second);
-			}
+			return std::static_pointer_cast<T>(it->second);
 		}
-		catch (const std::exception& e)
-		{
-			std::cerr << e.what() << '\n';
-		}
-
 		return nullptr;
 	}
 
@@ -579,47 +544,42 @@ public:
 		mSystemMap.erase(type);
 	}
 
-	virtual void Dispose() override
+	void Dispose() override
 	{
 		if (!mSystemMap.empty())
 		{
-			auto it = mSystemMap.end();
-			do
+			for (auto it = mSystemMap.rbegin(); it != mSystemMap.rend(); ++it)
 			{
-				--it;
 				it->second->Dispose();
-			} while (it != mSystemMap.begin());
-			
+			}
 			mSystemMap.clear();
 		}
 
 		Object::Dispose();
 	}
 
-	void MoveLuanchConfigToSelf(std::unordered_map<std::string, std::string>& config)
+	void MoveLuanchConfigToSelf(std::unordered_map<std::string, std::string>& config) noexcept
 	{
 		mLuanchConfig = std::move(config);
 	}
 
-	std::string* GetParam(const std::string& key)
+	[[nodiscard]] std::string* GetParam(const std::string& key) noexcept
 	{
-		if (mLuanchConfig.count(key))
+		if (auto it = mLuanchConfig.find(key); it != mLuanchConfig.end())
 		{
-			return &mLuanchConfig[key];
+			return &it->second;
 		}
-
 		return nullptr;
 	}
 
-	void SetParam(std::string key, const std::string value)
+	void SetParam(std::string key, std::string value)
 	{
-		mLuanchConfig[key] = value;
+		mLuanchConfig[std::move(key)] = std::move(value);
 	}
 
-	// single thread
 	void PostTask(std::function<void()> task)
 	{
-		std::lock_guard<std::mutex> lock(oQueueMutex);
+		std::lock_guard lock(oQueueMutex);
 		mTasks.push(std::move(task));
 	}
 
@@ -629,31 +589,24 @@ public:
 	}
 
 protected:
-
 	void TickTask()
 	{
-		std::lock_guard<std::mutex> lock(oQueueMutex);
-		if (mTasks.empty())
+		std::lock_guard lock(oQueueMutex);
+		if (mTasks.empty()) [[likely]]
 		{
 			return;
 		}
 
 		auto task = std::move(mTasks.front());
 		mTasks.pop();
-
 		task();
 	}
 
 private:
-
 	std::unordered_map<std::string, std::string> mLuanchConfig;
-
 	std::unordered_map<EMSystemType, std::shared_ptr<System>> mSystemMap;
-
 	std::queue<std::function<void()>> mTasks;
-
 	std::mutex oQueueMutex;
-
 };
 
 #pragma endregion

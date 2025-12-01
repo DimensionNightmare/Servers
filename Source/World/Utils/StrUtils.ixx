@@ -4,8 +4,9 @@ import std.compat;
 
 export
 {
+	/// @brief Compile-time enum name extraction using NTTP
 	template <auto value>
-	constexpr auto EnumName()
+	[[nodiscard]] consteval auto EnumName() noexcept
 	{
 		std::string_view name;
 	#if __GNUC__ || __clang__
@@ -21,11 +22,12 @@ export
 		name = std::string_view{ name.data() + start, end - start };
 		start = name.rfind("::");
 	#endif
-		return start == std::string_view::npos ? name :std::string_view{ name.data() + start + 2, name.size() - start - 2 };
+		return start == std::string_view::npos ? name : std::string_view{ name.data() + start + 2, name.size() - start - 2 };
 	}
 
+	/// @brief Compile-time calculation of max enum value
 	template <typename T, size_t N = 0>
-	constexpr auto EnumMax()
+	[[nodiscard]] consteval auto EnumMax() noexcept
 	{
 		constexpr auto value = static_cast<T>(N);
 		if constexpr (EnumName<value>().find(")") == std::string_view::npos)
@@ -38,13 +40,13 @@ export
 		}
 	}
 
-	/// @brief enum class must continue
-	/// @tparam T
-	/// @param value
-	/// @return
+	/// @brief Get enum name from value (enum class must be continuous)
+	/// @tparam T Enum type
+	/// @param value Enum value
+	/// @return String view of enum name
 	template <typename T>
 	requires std::is_enum_v<T>
-	constexpr auto EnumName(T value)
+	[[nodiscard]] constexpr auto EnumName(T value) noexcept
 	{
 		constexpr auto num = EnumMax<T>();
 		constexpr auto names = []<size_t... Is>(std::index_sequence<Is...>)
@@ -57,9 +59,10 @@ export
 		return names[std::to_underlying(value)];
 	}
 
+	/// @brief Get enum value from string name
 	template <typename T>
 	requires std::is_enum_v<T>
-	constexpr auto EnumName(std::string_view value)
+	[[nodiscard]] constexpr auto EnumName(std::string_view value)
 	{
 		constexpr auto num = EnumMax<T>();
 		constexpr auto names = []<size_t... Is>(std::index_sequence<Is...>)
@@ -70,10 +73,9 @@ export
 			};
 		}(std::make_index_sequence<num>{});
 
-		auto it = find(names.begin(), names.end(), value);
-		if (it != names.end())
+		if (auto it = std::ranges::find(names, value); it != names.end()) [[likely]]
 		{
-			return static_cast<T>(distance(names.begin(), it));
+			return static_cast<T>(std::ranges::distance(names.begin(), it));
 		}
 		throw std::invalid_argument("Unknown enum name");
 	}
@@ -82,75 +84,72 @@ export
 
 export
 {
-	
-	std::string GetNowTimeStr()
+	/// @brief Get current time as formatted string
+	[[nodiscard]] inline std::string GetNowTimeStr()
 	{
 		using namespace std::chrono;
 		static zoned_time<system_clock::duration> currentZone(current_zone());
 		currentZone = system_clock::now(); 
 		return std::format("{:%Y-%m-%d %H:%M:%S}", currentZone);
-		// return std::format("{:%Y-%m-%d %H:%M:%S}", system_clock::now());
 	}
 
-	std::string GetNowTimeMiniStr()
+	/// @brief Get current time as compact formatted string
+	[[nodiscard]] inline std::string GetNowTimeMiniStr()
 	{
 		using namespace std::chrono;
 		static zoned_time<seconds> currentZone(current_zone());
 		currentZone = floor<seconds>(system_clock::now()); 
 		return std::format("{:%Y-%m-%d_%H-%M-%S}", currentZone);
-		// return std::format("{:%Y-%m-%d_%H-%M-%S}", system_clock::now());
 	}
 
-	double StringToTimestamp(const std::string& datetimeStr)
+	/// @brief Convert datetime string to timestamp
+	[[nodiscard]] inline double StringToTimestamp(const std::string& datetimeStr)
 	{
-
-		std::regex pattern(R"((\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\.?(\d{6})?(\+|-)(\d{2}))");
+		static const std::regex pattern(R"((\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\.?(\d{6})?(\+|-)(\d{2}))");
 		std::smatch match;
 
-		if (!regex_match(datetimeStr, match, pattern))
+		if (!std::regex_match(datetimeStr, match, pattern)) [[unlikely]]
 		{
 			throw std::runtime_error("Invalid datetime std::format");
 		}
 
 		std::string datetime = match[1];
-
 		std::string microseconds_str = match[2];
-
-		int timezone_offset = stoi(match[4]);
+		[[maybe_unused]] int timezone_offset = std::stoi(match[4]);
 
 		std::tm tm = {};
-		std::stringstream ss(datetime);
+		std::istringstream ss(datetime);
 		ss >> std::get_time(&tm, "%Y-%m-%d %H:%M:%S");
 
 		using namespace std::chrono;
 
-		auto tp = system_clock::from_time_t(mktime(&tm));
+		auto tp = system_clock::from_time_t(std::mktime(&tm));
 
 		if (!microseconds_str.empty())
 		{
-			int microseconds = stoi(microseconds_str);
+			int microseconds = std::stoi(microseconds_str);
 			tp += std::chrono::microseconds(microseconds);
 		}
 
-		// time zone
-		// tp -= chrono::hours(timezone_offset);
-
-		double timestamp = duration<double>(tp.time_since_epoch()).count();
-		return timestamp;
+		return duration<double>(tp.time_since_epoch()).count();
 	}
 
 }
 
 #pragma region MD5
 
-#define LEFTROTATE(x, c) (((x) << (c)) | ((x) >> (32 - (c))))
+/// @brief Left rotation for MD5 algorithm
+constexpr uint32_t LeftRotate(uint32_t x, int c) noexcept
+{
+	return (x << c) | (x >> (32 - c));
+}
 
-const uint32_t MD5_INIT_CONSTANTS[] =
+constexpr std::array<uint32_t, 4> MD5_INIT_CONSTANTS =
 {
 	0x67452301, 0xEFCDAB89, 0x98BADCFE, 0x10325476
 };
 
-const int MD5_ROTATE_COUNT[] =
+constexpr std::array<int, 64> MD5_ROTATE_COUNT =
 {
 	7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22,
 	5, 9, 14, 20, 5, 9, 14, 20, 5, 9, 14, 20, 5, 9, 14, 20,
@@ -158,7 +157,7 @@ const int MD5_ROTATE_COUNT[] =
 	6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15, 21
 };
 
-const uint32_t MD5_CONSTANTS[] =
+constexpr std::array<uint32_t, 64> MD5_CONSTANTS =
 {
 	0xd76aa478, 0xe8c7b756, 0x242070db, 0xc1bdceee,
 	0xf57c0faf, 0x4787c62a, 0xa8304613, 0xfd469501,
@@ -178,7 +177,7 @@ const uint32_t MD5_CONSTANTS[] =
 	0xf7537e82, 0xbd3af235, 0x2ad7d2bb, 0xeb86d391,
 };
 
-std::string PaddingMessage(const std::string& message)
+[[nodiscard]] inline std::string PaddingMessage(const std::string& message)
 {
 	size_t messageLength = message.length() * 8;
 	size_t paddingLength = (messageLength % 512 < 448) ? (448 - messageLength % 512) : (960 - messageLength % 512);
@@ -190,13 +189,13 @@ std::string PaddingMessage(const std::string& message)
 
 	for (int i = 0; i < 8; ++i)
 	{
-		paddedMessage += (char)((messageLength >> (i * 8)) & 0xFF);
+		paddedMessage += static_cast<char>((messageLength >> (i * 8)) & 0xFF);
 	}
 
 	return paddedMessage;
 }
 
-export std::string Md5Hash(const std::string& message)
+export [[nodiscard]] inline std::string Md5Hash(const std::string& message)
 {
 	uint32_t a = MD5_INIT_CONSTANTS[0];
 	uint32_t b = MD5_INIT_CONSTANTS[1];
@@ -240,7 +239,7 @@ export std::string Md5Hash(const std::string& message)
 			uint32_t temp = dTemp;
 			dTemp = cTemp;
 			cTemp = bTemp;
-			bTemp = bTemp + LEFTROTATE((aTemp + f + MD5_CONSTANTS[j] + chunks[i * 16 + g]), MD5_ROTATE_COUNT[j]);
+			bTemp = bTemp + LeftRotate(aTemp + f + MD5_CONSTANTS[j] + chunks[i * 16 + g], MD5_ROTATE_COUNT[j]);
 			aTemp = temp;
 		}
 
@@ -256,7 +255,7 @@ export std::string Md5Hash(const std::string& message)
 	{
 		for (int i = 0; i < 4; ++i)
 		{
-			result += (char)((val >> (i * 8)) & 0xFF);
+			result += static_cast<char>((val >> (i * 8)) & 0xFF);
 		}
 	}
 
@@ -273,8 +272,8 @@ export std::string Md5Hash(const std::string& message)
 
 export
 {
-
-	void BytesToHexString(std::string& bytes)
+	/// @brief Convert bytes to hex string representation
+	inline void BytesToHexString(std::string& bytes)
 	{
 		std::ostringstream oss;
 		oss << std::hex << std::setfill('0');
@@ -285,17 +284,20 @@ export
 		bytes = oss.str();
 	}
 
-	void HexStringToBytes(std::string& hexString)
+	/// @brief Convert hex string to bytes
+	inline void HexStringToBytes(std::string& hexString)
 	{
-		std::string byteString = hexString;
+		std::string byteString = std::move(hexString);
 		hexString.clear();
+		hexString.reserve(byteString.length() / 2);
 		for (size_t i = 0; i < byteString.length(); i += 2)
 		{
 			hexString += static_cast<unsigned char>(std::stoi(byteString.substr(i, 2), nullptr, 16));
 		}
 	}
 
-	size_t DoStringHash(const std::string& str)
+	/// @brief Calculate hash of a string
+	[[nodiscard]] inline size_t DoStringHash(const std::string& str)
 	{
 	#ifdef _WIN32
 			return std::hash<std::string>::_Do_hash(str);
@@ -304,32 +306,34 @@ export
 	#endif
 	}
 
-	constexpr size_t DoStringHash(std::string_view str)
+	/// @brief Compile-time FNV-1a hash implementation
+	[[nodiscard]] constexpr size_t DoStringHash(std::string_view str) noexcept
 	{
-		// 使用简单的FNV-1a算法
-		size_t hash = 14695981039346656037ULL;
+		constexpr size_t FNV_OFFSET_BASIS = 14695981039346656037ULL;
+		constexpr size_t FNV_PRIME = 1099511628211ULL;
+		
+		size_t hash = FNV_OFFSET_BASIS;
 		for (char c : str) {
 			hash ^= static_cast<size_t>(c);
-			hash *= 1099511628211ULL;
+			hash *= FNV_PRIME;
 		}
 		return hash;
 	}
 
-	std::vector<std::string> StrSplit(const std::string& s, const std::string_view& delimiter)
+	/// @brief Split string by delimiter using ranges
+	[[nodiscard]] inline auto StrSplit(const std::string& s, std::string_view delimiter)
 	{
-		std::vector<std::string> tokens;
-		size_t start = 0, end = s.find(delimiter);
-		while (end != std::string::npos) {
-			tokens.push_back(s.substr(start, end - start));
-			start = end + delimiter.length();
-			end = s.find(delimiter, start);
-		}
-		tokens.push_back(s.substr(start));
-		return tokens;
+		return s 
+			| std::views::split(delimiter)
+			| std::views::transform([](auto&& range) {
+				return std::string(std::ranges::begin(range), std::ranges::end(range));
+			})
+			| std::ranges::to<std::vector<std::string>>();
 	}
 
+	/// @brief Get type string for tuple at compile-time
 	template <typename T>
-	constexpr std::string_view TupleTypeStr()
+	[[nodiscard]] constexpr std::string_view TupleTypeStr() noexcept
 	{
 	#ifdef _MSC_VER
 		std::string_view funcName = __func__;
@@ -337,12 +341,13 @@ export
 		auto start = name.find(funcName) + funcName.size();
 		return name.substr(start);
 	#else
-		throw "Not Impl";
+		return "TupleTypeStr not implemented for this compiler";
 	#endif
 	}
 
+	/// @brief Calculate compile-time hash for tuple type
 	template <typename T>
-	constexpr size_t TupleTypeHash()
+	[[nodiscard]] constexpr size_t TupleTypeHash() noexcept
 	{
 		return DoStringHash(TupleTypeStr<T>());
 	}
