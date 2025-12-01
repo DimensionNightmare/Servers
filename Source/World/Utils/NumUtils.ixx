@@ -30,7 +30,7 @@ private:
 	const size_t id_shift_;
 
 public:
-	constexpr LockFreeSnowflake(size_t datacenter, size_t worker)
+	LockFreeSnowflake(size_t datacenter, size_t worker)
 		: datacenter_id_(datacenter),
 		  worker_id_(worker),
 		  id_shift_(DATACENTER_BITS + WORKER_BITS + SEQUENCE_BITS)

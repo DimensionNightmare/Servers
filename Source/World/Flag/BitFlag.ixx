@@ -16,7 +16,7 @@ public:
 	using NumType = std::underlying_type_t<T>;
 	static constexpr NumType MaxValue = std::to_underlying(T::Max);
 
-	constexpr void CheckBounds(this auto&& self, NumType flag) {
+	void CheckBounds(this auto&& self, NumType flag) {
 		if (flag >= MaxValue) [[unlikely]] {
 			throw std::out_of_range("Flag value out of bounds");
 		}

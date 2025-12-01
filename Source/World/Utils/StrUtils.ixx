@@ -341,7 +341,7 @@ export
 		auto start = name.find(funcName) + funcName.size();
 		return name.substr(start);
 	#else
-		return "Not Impl";
+		return "TupleTypeStr not implemented for this compiler";
 	#endif
 	}
 
